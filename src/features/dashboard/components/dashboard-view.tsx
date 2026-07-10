@@ -2,7 +2,8 @@ import { AppHeader } from "@/components/app-header";
 import { Card } from "@/components/ui/card";
 import { GraduationCap, BookOpen, Calendar, TrendingUp } from "lucide-react";
 import { useAppStore } from "@/stores/app-store";
-import { courses, lessons, weeklyAttendance, GIORNI } from "@/lib/mock-data";
+import { courses, lessons, weeklyAttendance } from "@/lib/mock-data";
+import { GIORNI } from "@/lib/utils";
 import { levelColor } from "@/features/courses";
 import {
   ResponsiveContainer,

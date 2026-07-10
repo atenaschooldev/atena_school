@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import {
   Select,
@@ -7,89 +6,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { lessons, courses, GIORNI } from "@/lib/mock-data";
+import { lessons, courses } from "@/lib/mock-data";
+import { GIORNI } from "@/lib/utils";
 import { levelColor } from "@/features/courses";
-import { useAppStore } from "@/stores/app-store";
 import { Check, X, Clock } from "lucide-react";
-
-type Stato = "presente" | "assente" | "ritardo";
-
-function StatCard({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: string | number;
-  tone: "success" | "destructive" | "warning";
-}) {
-  const toneClass = {
-    success: "bg-success/10 text-success",
-    destructive: "bg-destructive/10 text-destructive",
-    warning: "bg-warning/15 text-warning-foreground",
-  }[tone];
-  return (
-    <div className="rounded-xl border bg-card p-4">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div
-        className={`text-2xl font-semibold tabular mt-2 inline-block px-2 py-0.5 rounded ${toneClass}`}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-interface ToggleBtnProps {
-  active: boolean;
-  onClick: () => void;
-  tone: "success" | "destructive" | "warning";
-  icon: React.ReactNode;
-  label: string;
-}
-
-function ToggleBtn({ active, onClick, tone, icon, label }: ToggleBtnProps) {
-  const activeCls = {
-    success: "bg-success text-success-foreground border-success",
-    destructive: "bg-destructive text-destructive-foreground border-destructive",
-    warning: "bg-warning text-warning-foreground border-warning",
-  }[tone];
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={onClick}
-      className={`h-8 gap-1.5 text-xs ${active ? activeCls : ""}`}
-      title={label}
-    >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </Button>
-  );
-}
+import { useAttendance } from "../hooks/use-attendance";
+import { StatCard } from "./stat-card";
+import { ToggleBtn } from "./toggle-btn";
 
 export function PresenzeView() {
-  const students = useAppStore((s) => s.students);
-  const [lessonId, setLessonId] = useState(lessons[0].id);
-  const lesson = lessons.find((l) => l.id === lessonId)!;
-  const corso = courses.find((c) => c.id === lesson.corsoId)!;
-  const iscritti = useMemo(
-    () => students.filter((s) => s.corsiIds.includes(corso.id)),
-    [students, corso.id],
-  );
-
-  const [attendance, setAttendance] = useState<Record<string, Stato>>(() =>
-    Object.fromEntries(iscritti.map((s) => [s.id, "presente" as Stato])),
-  );
-
-  const totali = { presente: 0, assente: 0, ritardo: 0 };
-  Object.values(attendance).forEach((v) => totali[v]++);
-  const pct = iscritti.length ? Math.round((totali.presente / iscritti.length) * 100) : 0;
+  const { lessonId, setLessonId, corso, iscritti, attendance, updateAttendance, totali, pct } =
+    useAttendance();
 
   return (
     <>
@@ -131,7 +60,7 @@ export function PresenzeView() {
             </div>
           )}
           {iscritti.map((s) => {
-            const cur = attendance[s.id];
+            const cur = attendance[s.id] || "presente";
             return (
               <div key={s.id} className="flex items-center gap-3 p-3 pl-6">
                 <Avatar className="h-9 w-9">
@@ -149,21 +78,21 @@ export function PresenzeView() {
                 <div className="flex gap-1">
                   <ToggleBtn
                     active={cur === "presente"}
-                    onClick={() => setAttendance({ ...attendance, [s.id]: "presente" })}
+                    onClick={() => updateAttendance(s.id, "presente")}
                     tone="success"
                     icon={<Check className="h-4 w-4" />}
                     label="Presente"
                   />
                   <ToggleBtn
                     active={cur === "ritardo"}
-                    onClick={() => setAttendance({ ...attendance, [s.id]: "ritardo" })}
+                    onClick={() => updateAttendance(s.id, "ritardo")}
                     tone="warning"
                     icon={<Clock className="h-4 w-4" />}
                     label="Ritardo"
                   />
                   <ToggleBtn
                     active={cur === "assente"}
-                    onClick={() => setAttendance({ ...attendance, [s.id]: "assente" })}
+                    onClick={() => updateAttendance(s.id, "assente")}
                     tone="destructive"
                     icon={<X className="h-4 w-4" />}
                     label="Assente"

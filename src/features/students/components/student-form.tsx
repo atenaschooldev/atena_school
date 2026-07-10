@@ -1,8 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
 import { useAppStore, LEVELS_UI } from "@/stores/app-store";
-import { courses, CONTRATTI } from "@/lib/mock-data";
-import type { Level } from "@/features/courses";
+import { courses } from "@/lib/mock-data";
+import { levelColorSolid, type Level } from "@/features/courses";
+import { CONTRATTI } from "@/lib/utils";
 import type { StudentStatus, StudentFormValues } from "../types";
 import { X, Mail, Phone, Calendar, User, Check, Lock, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -37,23 +38,6 @@ export function StudentForm({ initialValues, onSubmit, onCancel, submitLabel }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
-  };
-
-  const solidLevelColor = (l: Level): string => {
-    switch (l) {
-      case "A1":
-        return "bg-chart-2 border-chart-2 text-white shadow-sm";
-      case "A2":
-        return "bg-chart-3 border-chart-3 text-white shadow-sm";
-      case "B1":
-        return "bg-chart-1 border-chart-1 text-white shadow-sm";
-      case "B2":
-        return "bg-chart-5 border-chart-5 text-white shadow-sm";
-      case "C1":
-        return "bg-chart-4 border-chart-4 text-white shadow-sm";
-      case "C2":
-        return "bg-primary border-primary text-white shadow-sm";
-    }
   };
 
   const filteredCourses = courses.filter(
@@ -267,7 +251,7 @@ export function StudentForm({ initialValues, onSubmit, onCancel, submitLabel }: 
                   className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all duration-150 cursor-pointer border select-none
                     ${
                       isSelected
-                        ? solidLevelColor(l)
+                        ? levelColorSolid(l)
                         : "bg-muted/20 border-border/40 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:scale-[1.02] active:scale-98"
                     }`}
                 >

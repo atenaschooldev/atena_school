@@ -57,8 +57,6 @@ type State = {
   setTableActions: (actions: TableActions | null) => void;
 };
 
-
-
 export const useAppStore = create<State>()(
   persist(
     (set) => ({

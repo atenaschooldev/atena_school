@@ -9,8 +9,12 @@
 ```
 students/
 ├── components/
-│   ├── student-form.tsx      # Форма создания/редактирования студента
-│   └── studenti-view.tsx     # Основная страница отображения (таблица/карточки)
+│   ├── student-badges.tsx    # Чистые компоненты выбора уровня/статуса (LevelBadgeSelector, StatusBadgeSelector)
+│   ├── student-card.tsx      # Чистый UI-компонент карточки студента (StudentCard)
+│   ├── student-form.tsx      # Форма создания/редактирования студента (StudentForm)
+│   └── studenti-view.tsx     # Главная страница (разметка, оркестрация компонентов)
+├── hooks/
+│   └── use-students.ts       # Бизнес-логика, Zustand селекторы, CRUD методы (useStudents)
 ├── index.ts                  # Точка экспорта Public API фичи
 └── types.ts                  # Описание интерфейсов и типов данных студента
 ```
@@ -19,30 +23,36 @@ students/
 
 ## 1. Типы данных (`types.ts`)
 
-* **`Student`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/types.ts))
+- **`Student`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/types.ts))
   Интерфейс, описывающий полную структуру записи студента:
-  * `id`: Строковый уникальный идентификатор.
-  * `nome`, `cognome`: Имя и фамилия.
-  * `email`, `telefono`: Контактные данные.
-  * `livello`: Уровень знания языка (`Level` из модуля `courses`).
-  * `dataNascita`: Дата рождения (строка в формате ISO).
-  * `corsiIds`: Массив ID курсов, на которые записан студент.
-  * `documenti`: Количество привязанных электронных документов.
-  * `stato`: Статус обучения (`attivo`, `sospeso`, `ritirato`).
-  * `dataIscrizione`: Дата зачисления.
-  * `foto`: URL фотографии студента (опционально).
-  * `contratto`: Ссылка на электронный договор (опционально).
+  - `id`: Строковый уникальный идентификатор.
+  - `nome`, `cognome`: Имя и фамилия.
+  - `email`, `telefono`: Контактные данные.
+  - `livello`: Уровень знания языка (`Level` из модуля `courses`).
+  - `dataNascita`: Дата рождения (строка в формате ISO).
+  - `corsiIds`: Массив ID курсов, на которые записан студент.
+  - `documenti`: Количество привязанных электронных документов.
+  - `stato`: Статус обучения (`attivo`, `sospeso`, `ritirato`).
+  - `dataIscrizione`: Дата зачисления.
+  - `foto`: URL фотографии студента (опционально).
+  - `contratto`: Ссылка на электронный договор (опционально).
 
 ---
 
-## 2. Основные компоненты
+## 2. Логика и Состояние (`hooks/use-students.ts`)
 
-* **`StudentiView`** ([studenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/studenti-view.tsx))
-  Центральный контейнер интерфейса студентов. Поддерживает:
-  * **Табличный вид**: На базе общего переиспользуемого компонента `DataTable` с сортировкой, экспортом в CSV, быстрым переключением колонок.
-  * **Вид карточек**: Для наглядного графического отображения профилей студентов.
-  * **Интерактивные бейджи**: Возможность мгновенного изменения языкового уровня (`Level`) или статуса (`StudentStatus`) студента прямо из таблицы/карточки через всплывающее меню `PillSelect`.
-  * **Форматирование даты**: Безопасное форматирование даты рождения и даты зачисления с помощью утилиты `formatDateSafe`.
+- **`useStudents`** ([use-students.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/hooks/use-students.ts))
+  Кастомный хук, инкапсулирующий всю бизнес-логику страницы. Извлекает состояние и действия из глобального стора (Zustand), управляет локальным состоянием диалогов создания/редактирования/просмотра контрактов и экспортирует типизированные обработчики событий (`handleNewClick`, `handleLevelChange`, `handleStatusChange`, `handleFormSubmit` и т.д.).
 
-* **`StudentForm`** ([student-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-form.tsx))
-  Компонент модальной формы добавления или редактирования существующего профиля ученика. Проверяет корректность заполнения обязательных полей (почта, телефон) и управляет связыванием студента со списком доступных языковых курсов.
+---
+
+## 3. Компоненты Отображения (UI)
+
+- **`StudentiView`** ([studenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/studenti-view.tsx))
+  Легковесный оркестратор экрана. Загружает состояние из `useStudents`, объявляет колонки таблицы и рендерит интерфейс на базе `DataTable`. Не содержит в себе бизнес-логики.
+- **`StudentCard`** ([student-card.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-card.tsx))
+  Чистый UI-компонент карточки студента для плиточного вида. Получает все обработчики изменений напрямую через Props.
+- **`LevelBadgeSelector`** и **`StatusBadgeSelector`** ([student-badges.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-badges.tsx))
+  Вспомогательные бейджи-кнопки для быстрой смены параметров через выпадающие меню `PillSelect`. Работают независимо от стора.
+- **`StudentForm`** ([student-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-form.tsx))
+  Форма добавления и редактирования профиля, управляющая связями студента с доступными курсами.

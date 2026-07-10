@@ -9,13 +9,25 @@
 ```
 payments/
 ├── components/
-│   └── pagamenti-view.tsx    # Экран просмотра оплат
-└── index.ts                  # Точка экспорта Public API фичи
+│   ├── payments-placeholder.tsx # Презентационный UI-компонент заглушки (PaymentsPlaceholder)
+│   └── pagamenti-view.tsx       # Главная страница (разметка, интеграция хука)
+├── hooks/
+│   └── use-payments.ts          # Кастомный хук логики оплат (usePayments)
+└── index.ts                     # Точка экспорта Public API фичи
 ```
 
 ---
 
-## 1. Функционал
+## 1. Логика и Состояние (`hooks/use-payments.ts`)
 
-* **`PagamentiView`** ([pagamenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/payments/components/pagamenti-view.tsx))
-  Заглушка-экран для будущего расширения финансовой аналитики. Содержит структуру для вывода реестра оплат, фильтрации по счетам и квитанциям, а также отслеживания задолженностей по рассрочкам студентов.
+- **`usePayments`** ([use-payments.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/payments/hooks/use-payments.ts))
+  Кастомный хук для управления состоянием оплат. На данный момент возвращает базовые параметры, такие как глобальный поиск.
+
+---
+
+## 2. Компоненты Отображения (UI)
+
+- **`PagamentiView`** ([pagamenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/payments/components/pagamenti-view.tsx))
+  Главный контейнер страницы оплат.
+- **`PaymentsPlaceholder`** ([payments-placeholder.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/payments/components/payments-placeholder.tsx))
+  Презентационный компонент-заглушка для будущего расширения финансовой аналитики, реестра оплат, счетов и квитанций.

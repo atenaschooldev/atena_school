@@ -9,8 +9,11 @@
 ```
 teachers/
 ├── components/
-│   ├── teacher-form.tsx      # Форма добавления/редактирования преподавателя
-│   └── insegnanti-view.tsx   # Главная страница просмотра списка преподавателей
+│   ├── teacher-card.tsx      # Чистый UI-компонент карточки преподавателя (TeacherCard)
+│   ├── teacher-form.tsx      # Форма добавления/редактирования преподавателя (TeacherForm)
+│   └── insegnanti-view.tsx   # Главная страница (разметка, оркестрация компонентов)
+├── hooks/
+│   └── use-teachers.ts       # Бизнес-логика, Zustand селекторы, CRUD методы (useTeachers)
 ├── index.ts                  # Точка экспорта Public API фичи
 └── types.ts                  # Интерфейсы и типы данных преподавателя
 ```
@@ -19,29 +22,34 @@ teachers/
 
 ## 1. Типы данных (`types.ts`)
 
-* **`Teacher`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/types.ts))
+- **`Teacher`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/types.ts))
   Интерфейс, содержащий поля:
-  * `id`: Уникальный строковый идентификатор.
-  * `nome`, `cognome`: Имя и фамилия учителя.
-  * `email`, `telefono`: Контактные данные.
-  * `corsiIds`: Список идентификаторов курсов, которые ведет данный учитель.
-  * `oreSettimana`: Нагрузка часов преподавания в неделю.
-  * `stato`: Рабочий статус (`attivo`, `in-ferie`, `non-attivo`).
-  * `esperienzaAnni`, `esperienzaMesi`: Опыт работы преподавателя (в годах и месяцах).
-  * `dataNascita`: Дата рождения.
-  * `dataAssunzione`: Дата приема на работу в школу.
-  * `foto`: Ссылка на фото-аватарку (опционально).
-  * `documenti`: Количество прикрепленных кадровых документов.
+  - `id`: Уникальный строковый идентификатор.
+  - `nome`, `cognome`: Имя и фамилия учителя.
+  - `email`, `telefono`: Контактные данные.
+  - `corsiIds`: Список идентификаторов курсов, которые ведет данный учитель.
+  - `oreSettimana`: Нагрузка часов преподавания в неделю.
+  - `stato`: Рабочий статус (`attivo`, `in-ferie`, `non-attivo`).
+  - `esperienzaAnni`, `esperienzaMesi`: Опыт работы преподавателя (в годах и месяцах).
+  - `dataNascita`: Дата рождения.
+  - `dataAssunzione`: Дата приема на работу в школу.
+  - `foto`: Ссылка на фото-аватарку (опционально).
+  - `documenti`: Количество прикрепленных кадровых документов.
 
 ---
 
-## 2. Основные компоненты
+## 2. Логика и Состояние (`hooks/use-teachers.ts`)
 
-* **`InsegnantiView`** ([insegnanti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/insegnanti-view.tsx))
-  Отображает список учителей в виде таблицы `DataTable` или сетки карточек.
-  * Карточки преподавателей визуализируют ключевые метрики: еженедельную часовую нагрузку, общий опыт работы и дату приема на работу.
-  * Дата рождения и зачисления форматируется через безопасный хелпер `formatDateSafe`.
-  * Интегрировано модальное окно просмотра кадровых документов преподавателя с использованием `DocumentPreviewDialog`.
+- **`useTeachers`** ([use-teachers.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/hooks/use-teachers.ts))
+  Кастомный хук для управления бизнес-логикой страницы преподавателей. Управляет Zustand-экшенами, состояниями модального окна добавления/редактирования преподавателей и предпросмотром контрактов.
 
-* **`TeacherForm`** ([teacher-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/teacher-form.tsx))
+---
+
+## 3. Компоненты Отображения (UI)
+
+- **`InsegnantiView`** ([insegnanti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/insegnanti-view.tsx))
+  Легковесный оркестратор страницы преподавателей. Использует хук `useTeachers` для получения состояния и отрендеривает таблицу `DataTable` или сетку карточек.
+- **`TeacherCard`** ([teacher-card.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/teacher-card.tsx))
+  Чистый презентационный UI-компонент карточки преподавателя. Принимает данные преподавателя и callback-обработчики изменений как Props.
+- **`TeacherForm`** ([teacher-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/teacher-form.tsx))
   Диалоговое окно добавления нового учителя или изменения параметров существующего сотрудника. Позволяет задать расписание рабочих часов и связать преподавателя с курсами.

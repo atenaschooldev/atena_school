@@ -5,6 +5,7 @@ import { type Lesson } from "@/features/schedule";
 import { type Grade } from "@/features/grades";
 import { type Attendance } from "@/features/attendance";
 import { type DocumentRecord } from "@/features/documents";
+import { calcolaEta, GIORNI, CONTRATTI } from "./utils";
 
 export const teachers: Teacher[] = [
   {
@@ -561,24 +562,7 @@ export const weeklyAttendance = [
   { giorno: "Sab", presenza: 78 },
 ];
 
-export const GIORNI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
-
-export function calcolaEta(dataNascita: string): number {
-  const oggi = new Date();
-  const nascita = new Date(dataNascita);
-  let eta = oggi.getFullYear() - nascita.getFullYear();
-  const m = oggi.getMonth() - nascita.getMonth();
-  if (m < 0 || (m === 0 && oggi.getDate() < nascita.getDate())) eta--;
-  return eta;
-}
-
-export const CONTRATTI = [
-  "Standard mensile",
-  "Standard annuale",
-  "Premium annuale",
-  "Trial gratuito",
-  "Corporate / Aziendale",
-] as const;
+export { calcolaEta, GIORNI, CONTRATTI };
 
 export const documents: DocumentRecord[] = [
   {

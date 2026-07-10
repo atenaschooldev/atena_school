@@ -54,8 +54,6 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     onSubmit(form);
   };
 
-
-
   const filteredTeachers = teachers.filter((t) =>
     `${t.nome} ${t.cognome}`.toLowerCase().includes(searchQuery.toLowerCase()),
   );

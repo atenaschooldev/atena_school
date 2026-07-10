@@ -9,34 +9,46 @@
 ```
 grades/
 ├── components/
-│   └── valutazioni-view.tsx  # Таблица оценок по курсам
-├── index.ts                  # Точка экспорта Public API фичи
-└── types.ts                  # Структура данных успеваемости
+│   ├── grades-table.tsx     # Чистый UI-компонент таблицы оценок (GradesTable)
+│   └── valutazioni-view.tsx # Главная страница (разметка, выбор курса)
+├── hooks/
+│   └── use-grades.ts        # Кастомный хук логики успеваемости (useGrades)
+├── index.ts                 # Точка экспорта Public API фичи
+└── types.ts                 # Структура данных успеваемости
 ```
 
 ---
 
 ## 1. Типы данных (`types.ts`)
 
-* **`Grade`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/types.ts))
+- **`Grade`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/types.ts))
   Содержит показатели баллов по шкале 0-100 для четырех основных языковых навыков:
-  * `studentId`: Идентификатор ученика.
-  * `corsoId`: Идентификатор курса.
-  * `speaking`: Навык разговорной речи.
-  * `listening`: Навык восприятия речи на слух.
-  * `reading`: Навык чтения.
-  * `writing`: Навык письменной речи.
+  - `studentId`: Идентификатор ученика.
+  - `corsoId`: Идентификатор курса.
+  - `speaking`: Навык разговорной речи.
+  - `listening`: Навык восприятия речи на слух.
+  - `reading`: Навык чтения.
+  - `writing`: Навык письменной речи.
 
 ---
 
-## 2. Основные компоненты
+## 2. Логика и Состояние (`hooks/use-grades.ts`)
 
-* **`ValutazioniView`** ([valutazioni-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/components/valutazioni-view.tsx))
-  Отображает матрицу успеваемости в виде таблицы для выбранного курса:
-  * Позволяет выбрать курс из выпадающего списка.
-  * Рассчитывает средний балл (`media`) на лету для каждого ученика на основе четырех навыков.
-  * Раскрашивает бейджи среднего балла в зависимости от успешности:
-    * `85+`: Зеленый (Отлично)
-    * `70-84`: Синий (Хорошо)
-    * `55-69`: Желтый (Удовлетворительно)
-    * `<55`: Красный (Неудовлетворительно)
+- **`useGrades`** ([use-grades.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/hooks/use-grades.ts))
+  Кастомный хук для управления бизнес-логикой успеваемости:
+  - Выбор и фильтрация студентов по курсу.
+  - Расчет среднего балла (`media`) на лету.
+  - Динамическое определение цветов бейджей на основе баллов.
+
+---
+
+## 3. Компоненты Отображения (UI)
+
+- **`ValutazioniView`** ([valutazioni-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/components/valutazioni-view.tsx))
+  Главная страница журнала успеваемости. Позволяет выбрать курс из выпадающего списка и рендерит общую таблицу результатов.
+- **`GradesTable`** ([grades-table.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/grades/components/grades-table.tsx))
+  Чистый презентационный UI-компонент таблицы успеваемости для выбранного курса. Раскрашивает бейджи успеваемости:
+  - `85+`: Зеленый (Отлично)
+  - `70-84`: Синий (Хорошо)
+  - `55-69`: Желтый (Удовлетворительно)
+  - `<55`: Красный (Неудовлетворительно)

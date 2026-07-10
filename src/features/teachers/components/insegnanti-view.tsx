@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { AppHeader } from "@/components/app-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { courses } from "@/lib/mock-data";
 import { DataTable } from "@/components/data-table";
 import type { TableCol } from "@/components/data-table";
-import { useAppStore } from "@/stores/app-store";
-import { DocumentPreviewDialog, type DocumentRecord } from "@/features/documents";
-import { Eye, Mail, Phone, Briefcase, Calendar, Pencil, Trash2 } from "lucide-react";
+import { DocumentPreviewDialog } from "@/features/documents";
+import { Eye } from "lucide-react";
 import { formatDateSafe } from "@/lib/utils";
-import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TeacherForm } from "./teacher-form";
-import type { Teacher, TeacherFormValues } from "../types";
+import type { Teacher } from "../types";
+import { useTeachers } from "../hooks/use-teachers";
+import { TeacherCard } from "./teacher-card";
 
 const getCols = (onViewDoc: (t: Teacher) => void): TableCol<Teacher>[] => [
   {
@@ -254,8 +254,8 @@ const getCols = (onViewDoc: (t: Teacher) => void): TableCol<Teacher>[] => [
           return c ? (
             <Badge
               key={cid}
-              variant="secondary"
-              className="text-[10px] rounded-full whitespace-nowrap"
+              variant="outline"
+              className="card-badge font-semibold rounded-lg px-2.5 py-0.5 bg-muted/30 text-muted-foreground border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all cursor-default"
             >
               {c.nome}
             </Badge>
@@ -312,89 +312,32 @@ const getCols = (onViewDoc: (t: Teacher) => void): TableCol<Teacher>[] => [
 const STORAGE_KEY = "atena-insegnanti-cols-v5";
 
 export function InsegnantiView() {
-  const teachers = useAppStore((s) => s.teachers);
-  const addTeacher = useAppStore((s) => s.addTeacher);
-  const updateTeacher = useAppStore((s) => s.updateTeacher);
-  const removeTeacher = useAppStore((s) => s.removeTeacher);
-  const documents = useAppStore((s) => s.documents);
-
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Teacher | null>(null);
-
-  const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const {
+    teachers,
+    open,
+    editing,
+    previewDoc,
+    previewOpen,
+    initialFormValues,
+    handleNewClick,
+    handleEditClick,
+    handleDeleteClick,
+    handleDeleteSelected,
+    handleFormSubmit,
+    handleViewDocument,
+    handleCloseDialog,
+    handleClosePreview,
+  } = useTeachers();
 
   const defaultCols = useMemo(() => {
-    return getCols((teacher) => {
-      const doc = documents.find(
-        (d) =>
-          d.studentName.toLowerCase() === teacher.nome.toLowerCase() &&
-          d.studentLastName.toLowerCase() === teacher.cognome.toLowerCase(),
-      );
-      if (doc) {
-        setPreviewDoc(doc);
-        setPreviewOpen(true);
-      } else {
-        toast.error("Nessun contratto di assunzione trovato per questo insegnante.");
-      }
-    });
-  }, [documents]);
-
-  const handleFormSubmit = (formData: TeacherFormValues) => {
-    const payload = {
-      ...formData,
-      oreSettimana: editing ? editing.oreSettimana : 0,
-    };
-    if (editing) {
-      updateTeacher(editing.id, payload);
-      toast.success("Insegnante aggiornato");
-    } else {
-      addTeacher(payload);
-      toast.success("Insegnante creato");
-    }
-    setOpen(false);
-    setEditing(null);
-  };
-
-  const initialFormValues = useMemo<TeacherFormValues>(() => {
-    if (editing) {
-      return {
-        nome: editing.nome,
-        cognome: editing.cognome,
-        email: editing.email,
-        telefono: editing.telefono || "",
-        esperienzaAnni: editing.esperienzaAnni || 0,
-        esperienzaMesi: editing.esperienzaMesi || 0,
-        stato: editing.stato || "attivo",
-        dataNascita: editing.dataNascita || "",
-        dataAssunzione: editing.dataAssunzione || "",
-        foto: editing.foto || "",
-        corsiIds: editing.corsiIds || [],
-      };
-    }
-    return {
-      nome: "",
-      cognome: "",
-      email: "",
-      telefono: "",
-      esperienzaAnni: 0,
-      esperienzaMesi: 0,
-      stato: "attivo",
-      dataNascita: "",
-      dataAssunzione: new Date().toISOString().slice(0, 10),
-      foto: "",
-      corsiIds: [],
-    };
-  }, [editing]);
+    return getCols(handleViewDocument);
+  }, [handleViewDocument]);
 
   return (
     <>
       <AppHeader
         searchPlaceholder="Cerca insegnanti..."
-        onNew={() => {
-          setEditing(null);
-          setOpen(true);
-        }}
+        onNew={handleNewClick}
         newLabel="Insegnanti"
         tableKey="insegnanti"
       />
@@ -406,206 +349,19 @@ export function InsegnantiView() {
           tableKey="insegnanti"
           footerLabelSingular="insegnante"
           footerLabelPlural="insegnanti"
-          onRowEdit={(t) => {
-            setEditing(t);
-            setOpen(true);
-          }}
-          onRowDelete={(t) => {
-            removeTeacher(t.id);
-            toast.success("Insegnante eliminato");
-          }}
-          onDeleteSelected={(ids) => {
-            ids.forEach((id) => removeTeacher(id));
-            toast.success("Insegnanti eliminati");
-          }}
-          renderCard={(t) => {
-            const initials = `${t.nome[0]}${t.cognome[0]}`;
-            const experienceText =
-              t.esperienzaAnni > 0 || t.esperienzaMesi > 0
-                ? `${t.esperienzaAnni} ${t.esperienzaAnni === 1 ? "anno" : "anni"}${t.esperienzaMesi > 0 ? ` e ${t.esperienzaMesi} ${t.esperienzaMesi === 1 ? "mese" : "mesi"}` : ""}`
-                : "Nessuna";
-            const formattedHireDate = formatDateSafe(t.dataAssunzione);
-            return (
-              <div className="flex flex-col h-full bg-card rounded-2xl overflow-hidden border border-border/40 hover:border-primary/30 shadow-sm hover:shadow-lg transition-all duration-300 select-none group relative">
-                {/* ── Header band ── */}
-                <div
-                  className={`card-header relative shrink-0 px-5 pt-6 pb-12 text-center
-                  ${t.stato === "attivo" ? "bg-gradient-to-br from-emerald-500/10 to-primary/5" : "bg-gradient-to-br from-amber-500/10 to-amber-500/3"}`}
-                >
-                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditing(t);
-                        setOpen(true);
-                      }}
-                      className="h-7 w-7 bg-background/95 hover:text-primary rounded-full flex items-center justify-center shadow border border-border/50 cursor-pointer"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTeacher(t.id);
-                        toast.success("Insegnante eliminato");
-                      }}
-                      className="h-7 w-7 bg-destructive text-white rounded-full flex items-center justify-center shadow cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <div className="relative inline-block">
-                    <Avatar className="card-avatar h-24 w-24 border-4 border-background shadow-xl">
-                      {t.foto && <AvatarImage src={t.foto} alt={`${t.nome} ${t.cognome}`} />}
-                      <AvatarFallback className="card-avatar-initials text-2xl font-bold bg-primary/10 text-primary">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span
-                      className={`card-status-dot absolute bottom-1 right-1 h-5 w-5 rounded-full border-[3px] border-background shadow
-                      ${t.stato === "attivo" ? "bg-emerald-500" : "bg-amber-400"}`}
-                    />
-                  </div>
-                  <h3 className="card-title mt-3 font-extrabold text-lg text-foreground tracking-tight group-hover:text-primary transition-colors">
-                    {t.nome} {t.cognome}
-                  </h3>
-                  <p className="card-subtitle text-sm text-muted-foreground mt-1">
-                    {t.stato === "attivo" ? "Attivo" : "In ferie"}
-                  </p>
-                </div>
-
-                {/* ── Stat chips ── */}
-                <div className="-mt-6 px-4 shrink-0 relative z-10">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "Esperienza", value: `${t.esperienzaAnni}a ${t.esperienzaMesi}m` },
-                      { label: "Assunto", value: formattedHireDate },
-                      { label: "Corsi", value: String(t.corsiIds.length) },
-                    ].map(({ label, value }) => (
-                      <div
-                        key={label}
-                        className="card-chip bg-background border border-border/40 rounded-xl px-2 py-2.5 text-center shadow-sm"
-                      >
-                        <p className="card-chip-label text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                          {label}
-                        </p>
-                        <p className="card-chip-value text-sm font-bold text-foreground mt-0.5 truncate">
-                          {value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ── Info chips grid + courses ── */}
-                <div className="flex-1 flex flex-col px-4 pt-4 pb-4 min-h-0">
-                  <div className="grid grid-cols-2 gap-2">
-                    {/* Email — full width */}
-                    <a
-                      href={`mailto:${t.email}`}
-                      className="col-span-2 group/chip flex items-center gap-2.5 bg-muted/20 hover:bg-primary/5 border border-border/30 hover:border-primary/30 rounded-xl px-3 card-chip transition-all duration-200 cursor-pointer"
-                    >
-                      <Mail className="card-info-icon shrink-0 text-muted-foreground/50 group-hover/chip:text-primary/70 transition-colors" />
-                      <div className="min-w-0">
-                        <p className="card-chip-label font-bold text-muted-foreground uppercase tracking-wider">
-                          Email
-                        </p>
-                        <p className="card-chip-value font-semibold text-foreground truncate">
-                          {t.email}
-                        </p>
-                      </div>
-                    </a>
-
-                    {/* Telefono */}
-                    {t.telefono ? (
-                      <a
-                        href={`tel:${t.telefono}`}
-                        className="group/chip flex items-center gap-2.5 bg-muted/20 hover:bg-primary/5 border border-border/30 hover:border-primary/30 rounded-xl px-3 card-chip transition-all duration-200 cursor-pointer"
-                      >
-                        <Phone className="card-info-icon shrink-0 text-muted-foreground/50 group-hover/chip:text-primary/70 transition-colors" />
-                        <div className="min-w-0">
-                          <p className="card-chip-label font-bold text-muted-foreground uppercase tracking-wider">
-                            Tel
-                          </p>
-                          <p className="card-chip-value font-semibold text-foreground font-mono truncate">
-                            {t.telefono}
-                          </p>
-                        </div>
-                      </a>
-                    ) : (
-                      <div className="bg-muted/10 border border-border/20 rounded-xl px-3 card-chip opacity-50">
-                        <p className="card-chip-label font-bold text-muted-foreground uppercase tracking-wider">
-                          Tel
-                        </p>
-                        <p className="card-chip-value text-muted-foreground italic">—</p>
-                      </div>
-                    )}
-
-                    {/* Nato il */}
-                    <div className="flex items-center gap-2.5 bg-muted/20 border border-border/30 rounded-xl px-3 card-chip">
-                      <Calendar className="card-info-icon shrink-0 text-muted-foreground/50" />
-                      <div className="min-w-0">
-                        <p className="card-chip-label font-bold text-muted-foreground uppercase tracking-wider">
-                          Nato il
-                        </p>
-                        <p className="card-chip-value font-semibold text-foreground truncate">
-                          {formatDateSafe(t.dataNascita)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Ore settimana — full width */}
-                    <div className="col-span-2 flex items-center gap-2.5 bg-muted/20 border border-border/30 rounded-xl px-3 card-chip">
-                      <Briefcase className="card-info-icon shrink-0 text-muted-foreground/50" />
-                      <div className="min-w-0">
-                        <p className="card-chip-label font-bold text-muted-foreground uppercase tracking-wider">
-                          Ore/settimana
-                        </p>
-                        <p className="card-chip-value font-semibold text-foreground truncate">
-                          {t.oreSettimana} ore
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Spacer */}
-                  <div className="flex-1" />
-
-                  {/* Course badges */}
-                  <div className="pt-3 border-t border-border/30">
-                    {t.corsiIds.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {t.corsiIds.map((cid) => {
-                          const c = courses.find((x) => x.id === cid);
-                          return c ? (
-                            <Badge
-                              key={cid}
-                              variant="outline"
-                              className="card-badge font-semibold rounded-lg px-2.5 py-0.5 bg-muted/30 text-muted-foreground border-border/40 hover:bg-primary/5 hover:text-primary hover:border-primary/20 transition-all cursor-default"
-                            >
-                              {c.nome}
-                            </Badge>
-                          ) : null;
-                        })}
-                      </div>
-                    ) : (
-                      <p className="card-badge text-muted-foreground/60 italic text-center">
-                        Nessun corso assegnato
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          }}
+          onRowEdit={handleEditClick}
+          onRowDelete={handleDeleteClick}
+          onDeleteSelected={handleDeleteSelected}
+          renderCard={(t) => (
+            <TeacherCard teacher={t} onEdit={handleEditClick} onDelete={handleDeleteClick} />
+          )}
         />
       </main>
 
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          setOpen(v);
-          if (!v) setEditing(null);
+          if (!v) handleCloseDialog();
         }}
       >
         <DialogContent className="sm:max-w-3xl p-6 rounded-2xl border border-border/50 shadow-xl bg-background/95 backdrop-blur-md">
@@ -625,10 +381,7 @@ export function InsegnantiView() {
             key={editing ? editing.id : "new"}
             initialValues={initialFormValues}
             onSubmit={handleFormSubmit}
-            onCancel={() => {
-              setOpen(false);
-              setEditing(null);
-            }}
+            onCancel={handleCloseDialog}
             submitLabel={editing ? "Salva Modifiche" : "Crea Insegnante"}
           />
         </DialogContent>
@@ -637,10 +390,7 @@ export function InsegnantiView() {
       <DocumentPreviewDialog
         documentRecord={previewDoc}
         isOpen={previewOpen}
-        onClose={() => {
-          setPreviewOpen(false);
-          setPreviewDoc(null);
-        }}
+        onClose={handleClosePreview}
       />
     </>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { courses, teachers, lessons, GIORNI } from "@/lib/mock-data";
+import { courses, teachers, lessons } from "@/lib/mock-data";
+import { GIORNI } from "@/lib/utils";
 import type { Lesson, LessonFormValues } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
