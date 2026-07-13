@@ -249,6 +249,8 @@ Business routes should remain semantically identical.
 
 # 12. Design System
 
+See [Design-System.md](./Design-System.md).
+
 Single source of truth:
 
 - colors
