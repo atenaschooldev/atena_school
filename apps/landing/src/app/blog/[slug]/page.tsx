@@ -1,6 +1,6 @@
 import { getBlogPosts, getSingleBlogPost } from "@/lib/data";
 import Link from "next/link";
-import { CaretLeft, Calendar, ShareNetwork } from "@phosphor-icons/react";
+import { CaretLeft, Calendar, ShareNetwork } from "@/components/Icons";
 import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
