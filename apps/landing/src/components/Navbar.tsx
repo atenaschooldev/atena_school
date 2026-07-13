@@ -170,8 +170,8 @@ const Navbar = () => {
         : "-translate-y-full opacity-0"
     } ${
       isTransparent 
-        ? "pt-[calc(1.25rem+env(safe-area-inset-top))] pb-5 px-4 md:px-8" 
-        : "pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 px-4 md:px-8"
+        ? "py-5 px-4 md:px-8" 
+        : "py-3 px-4 md:px-8"
     }`}>
       <div className={`mx-auto max-w-7xl pointer-events-auto transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
         isTransparent 

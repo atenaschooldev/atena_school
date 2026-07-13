@@ -6,7 +6,7 @@ const Footer = () => {
   const t = useTranslations("footer");
 
   return (
-    <footer className="relative bg-foreground text-primary-foreground pt-12 pb-8 px-4 mt-[-2px] after:content-[''] after:absolute after:top-full after:left-0 after:right-0 after:h-[150px] after:bg-foreground after:pointer-events-none md:after:hidden">
+    <footer className="relative bg-foreground text-primary-foreground pt-12 pb-8 px-4 mt-[-2px]">
       {/* Top wave — transitions from page background into the dark footer */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[50px] fill-background">

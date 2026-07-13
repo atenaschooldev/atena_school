@@ -143,7 +143,7 @@ export default function DashboardPage() {
   const totalHours = bookings.length; // Approximate 1 hr per booking
 
   return (
-    <main className="min-h-screen pt-[calc(8rem+env(safe-area-inset-top))] pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-32 pb-20 px-4 bg-[#f8f9fa]">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">

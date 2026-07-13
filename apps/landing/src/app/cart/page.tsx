@@ -161,7 +161,7 @@ export default function CartPage() {
   );
 
   return (
-    <main className="min-h-screen pt-[calc(8rem+env(safe-area-inset-top))] pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-32 pb-20 px-4 bg-[#f8f9fa]">
       <div className="max-w-5xl mx-auto">
         <header className="mb-12">
           <div className="flex items-center gap-3 mb-4">
