@@ -1,8 +1,8 @@
 import React from "react";
 import { getTranslations } from "next-intl/server";
-import CourseCard from "@/features/courses/components/CourseCard";
 import { getCourses, getShopItems } from "@/lib/data";
 import CourseSchema from "@/features/courses/components/CourseSchema";
+import CoursesCatalog from "@/features/courses/components/CoursesCatalog";
 
 // Local asset imports
 import imgKids from "@/assets/course-kids.jpg";
@@ -40,41 +40,33 @@ export async function generateMetadata() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
   const title = 'Corsi di lingua';
   const description = 'Scopri tutti i corsi di inglese, recupero scolastico, preparazione universitaria e certificazioni EIPASS di Atena School a Cittanova.';
-  const url = `${siteUrl}/courses`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: url,
+      canonical: `${siteUrl}/courses`,
       languages: {
-        'it': url,
-        'x-default': url,
+        'it': `${siteUrl}/courses`,
+        'x-default': `${siteUrl}/courses`,
       },
     },
     robots: {
       index: true,
       follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-      },
     },
     openGraph: {
       type: 'website',
       locale: 'it_IT',
-      url,
+      url: `${siteUrl}/courses`,
       siteName: 'Atena School',
       title,
       description,
-      images: [{ url: `${siteUrl}/og-default.jpg`, width: 1200, height: 630, alt: title }],
     },
-    twitter: { 
-      card: 'summary_large_image', 
-      title, 
+    twitter: {
+      card: 'summary_large_image',
+      title,
       description,
-      site: '@atenaschool',
-      creator: '@atenaschool',
     },
   };
 }
@@ -82,6 +74,7 @@ export async function generateMetadata() {
 export default async function CoursesPage() {
   const t = await getTranslations("coursesPage");
 
+  // Parallel fetch for courses and shop items from Supabase
   const [supabaseCourses, shopItems] = await Promise.all([
     getCourses(),
     getShopItems()
@@ -117,7 +110,6 @@ export default async function CoursesPage() {
       };
     });
   } else {
-    // Static fallback
     courseSections = [
       {
         id: 'language',
@@ -151,6 +143,61 @@ export default async function CoursesPage() {
     });
   }
 
+  // Resolve all sections into clean structures
+  const resolvedSections = courseSections.map((section) => {
+    let resolvedCourses: any[] = [];
+
+    if (section.courses) {
+      resolvedCourses = section.courses.map((course: any) => {
+        const itemTitle = course.title_it || course.name;
+        const itemDesc = course.description_it || course.description || "";
+        const itemPrice = course.price ? `${course.price}€` : undefined;
+
+        const lowerName = (course.name || "").toLowerCase();
+        let itemImage = course.photo_url || undefined;
+        if (!itemImage) {
+          const matchedKey = Object.keys(localImageMap).find(key => {
+            const cleanKey = key.replace('_', '');
+            const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
+            return cleanName.includes(cleanKey) || cleanName.includes('eipass') || cleanName.includes('certipass');
+          });
+          itemImage = matchedKey ? localImageMap[matchedKey] : imgIt;
+        }
+
+        return {
+          id: course.id,
+          title: itemTitle,
+          description: itemDesc,
+          image: itemImage,
+          price: itemPrice,
+          type: course.type || 'course'
+        };
+      });
+    } else if (section.items) {
+      resolvedCourses = section.items.map((itemKey) => {
+        const match = supabaseCourses?.find(sc => sc.slug === itemKey);
+        const itemTitle = match?.title_it || t(`items.${itemKey}.title`);
+        const itemDesc = match?.description_it || t(`items.${itemKey}.description`);
+        const itemPrice = match?.price_eur ? `${match.price_eur}€` : undefined;
+
+        return {
+          id: match?.id || itemKey,
+          title: itemTitle,
+          description: itemDesc,
+          image: match?.image_url || localImageMap[itemKey],
+          price: itemPrice,
+          type: 'course'
+        };
+      });
+    }
+
+    return {
+      id: section.id,
+      title: section.title,
+      courses: resolvedCourses
+    };
+  });
+
   return (
     <main className="min-h-screen bg-background pt-24 pb-20 relative overflow-hidden">
       {/* Background decorative ornaments */}
@@ -171,95 +218,21 @@ export default async function CoursesPage() {
         <div className="h-1.5 w-32 bg-primary mx-auto mt-8 rounded-full" />
       </header>
 
-      <section className="max-w-7xl mx-auto px-4 py-24 relative z-10">
-        {courseSections.map((section) => (
-          <div key={section.id} className="mb-28 last:mb-0">
-            <div className="flex items-center gap-6 mb-12">
-              <h2 
-                className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                {section.title}
-              </h2>
-              <div className="h-[2px] flex-grow bg-gradient-to-r from-primary/60 via-secondary/40 to-transparent" />
-            </div>
+      {/* Render Course schemas for SEO */}
+      {resolvedSections.map((section) => 
+        section.courses.map((course) => (
+          <CourseSchema
+            key={`schema-${course.id}`}
+            name={course.title}
+            description={course.description}
+            image={typeof course.image === 'string' ? course.image : undefined}
+            price={course.price}
+          />
+        ))
+      )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {section.courses ? (
-                section.courses.map((course: any) => {
-                  const itemTitle = course.title_it || course.name;
-                  const itemDesc = course.description_it || course.description || "";
-                  const itemPrice = course.price ? `${course.price}€` : undefined;
-
-                  const lowerName = (course.name || "").toLowerCase();
-                  let itemImage = course.photo_url || undefined;
-                  if (!itemImage) {
-                    const matchedKey = Object.keys(localImageMap).find(key => {
-                      const cleanKey = key.replace('_', '');
-                      const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
-                      return cleanName.includes(cleanKey) || cleanName.includes('eipass') || cleanName.includes('certipass');
-                    });
-                    if (matchedKey) {
-                      itemImage = localImageMap[matchedKey];
-                    } else {
-                      // Fallback to general IT courses image
-                      itemImage = imgIt;
-                    }
-                  }
-
-                  return (
-                    <React.Fragment key={course.id}>
-                      <CourseSchema
-                        name={itemTitle}
-                        description={itemDesc}
-                        image={typeof itemImage === 'string' ? itemImage : undefined}
-                        price={itemPrice}
-                      />
-                      <CourseCard
-                        id={course.id}
-                        title={itemTitle}
-                        description={itemDesc}
-                        image={itemImage}
-                        category={section.title}
-                        price={itemPrice}
-                        type={course.type || 'course'}
-                      />
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                section.items?.map((itemKey) => {
-                  // Try to find matching supabase course by slug
-                  const match = supabaseCourses?.find(sc => sc.slug === itemKey);
-                  const itemTitle = match?.title_it || t(`items.${itemKey}.title`);
-                  const itemDesc = match?.description_it || t(`items.${itemKey}.description`);
-                  const itemPrice = match?.price_eur ? `${match.price_eur}€` : undefined;
-
-                  return (
-                    <React.Fragment key={itemKey}>
-                      <CourseSchema
-                        name={itemTitle}
-                        description={itemDesc}
-                        image={match?.image_url}
-                        price={itemPrice}
-                      />
-                      <CourseCard
-                        id={match?.id}
-                        title={itemTitle}
-                        description={itemDesc}
-                        image={match?.image_url || localImageMap[itemKey]}
-                        category={section.title}
-                        price={itemPrice}
-                        type="course"
-                      />
-                    </React.Fragment>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        ))}
-      </section>
+      {/* Interactive Catalog Component */}
+      <CoursesCatalog sections={resolvedSections} />
     </main>
   );
 }

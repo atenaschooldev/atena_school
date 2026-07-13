@@ -17,8 +17,8 @@ interface CourseCardProps {
 const CourseCard = ({ id, title, description, image, category, price, type = "course", onCtaClick }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
 
-  const content = (
-    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-border/50 flex flex-col h-full">
+  const cardContent = (
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-border/50 flex flex-col h-full active:scale-[0.98]">
       <div className="relative h-48 w-full overflow-hidden">
         {image ? (
           <Image
@@ -57,29 +57,28 @@ const CourseCard = ({ id, title, description, image, category, price, type = "co
           ) : (
             <div />
           )}
-          {id ? (
-            <Link 
-              href={`/book/${type}/${id}`}
-              className="flex items-center gap-1 text-xs font-bold uppercase tracking-tighter text-foreground hover:text-primary transition-colors"
-            >
-              {t("cta")}
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          ) : (
-            <button 
-              onClick={onCtaClick}
-              className="flex items-center gap-1 text-xs font-bold uppercase tracking-tighter text-foreground hover:text-primary transition-colors"
-            >
-              {t("cta")}
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
+          <span className="flex items-center gap-1 text-xs font-black uppercase tracking-wider text-primary group-hover:translate-x-1 transition-transform duration-300">
+            {t("cta")}
+            <ChevronRight className="w-4 h-4" />
+          </span>
         </div>
       </div>
     </div>
   );
 
-  return content;
+  if (id) {
+    return (
+      <Link href={`/book/${type}/${id}`} className="block h-full no-underline">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return (
+    <div onClick={onCtaClick} className="block h-full cursor-pointer">
+      {cardContent}
+    </div>
+  );
 };
 
 export default CourseCard;
