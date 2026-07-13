@@ -1,0 +1,333 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "Chi siamo",
+    "courses": "I nostri corsi",
+    "book": "Prenota online",
+    "blog": "Blog",
+    "contact": "Contattaci"
+  },
+  "hero": {
+    "title": "ATENA SCHOOL",
+    "cambridge": "Cambridge English",
+    "qualifications": "Qualifications",
+    "tagline": "\"Con le lingue, ti senti a casa ovunque\"",
+    "author": "Edward De Waal"
+  },
+  "about": {
+    "title": "Chi siamo",
+    "p1": "La nostra scuola si chiama Atena School non a caso. Il nome è un omaggio alla dea della saggezza, una figura che per gli antichi greci era protettrice delle arti, della conoscenza e della guerra strategica. La sua forza e la sua intelligenza non erano solo doti innate, ma il frutto di studio e preparazione, proprio come l'apprendimento. Abbiamo scelto la dea Atena per far capire la nostra missione: unire la ricchezza della cultura classica, che è nelle radici della nostra terra, con il mondo moderno e le sue sfide.",
+    "p2": "Il richiamo a una figura femminile così potente non è casuale. Noi, le due fondatrici, crediamo fortemente nel potere della conoscenza e nella forza delle donne. Per questo, abbiamo voluto che il nome della nostra scuola fosse un simbolo della saggezza e dell'empowerment femminile. Vogliamo che la cultura e l'educazione siano strumenti di potere, e vogliamo metterli nelle mani di chiunque voglia crescere e imparare.",
+    "p3": "Oltre alle certificazioni Cambridge English per le lingue, offriamo corsi di preparazione e certificazione Certipass/EIPASS (European Informatics Passport), ideali per studenti, docenti e professionisti che desiderano certificare le proprie competenze informatiche riconosciute a livello europeo.",
+    "cta": "Contattaci"
+  },
+  "testimonials": {
+    "title": "Cosa dicono di noi",
+    "list": [
+      {
+        "quote": "Ad ottobre dell’anno scorso mi sono iscritta all’Atena School per frequentare il corso B2 nonostante nella scuola che frequentavo precedentemente mi avevano detto che non ero ancora pronta e che per sicurezza avrei dovuto prima fare il B1+. Sin dall’inizio le mie insegnanti, Elisabetta e Rita, mi hanno detto che ero nelle condizioni di raggiungere l’obbiettivo che mi ero prefissata, studiando e seguendo i consigli che entrambe mi davano. Ricordo con grandissima emozione il giorno in cui Elisabetta mi ha chiamata per dirmi che avevo superato l’esame, ce l’avevo fatta! La cosa che più ho apprezzato durante l’anno è stato il modo in cui le insegnanti mi hanno seguita, quasi come se fossero lezioni singole private. Ciò mi è servito per non arrendermi e per imparare la lingua con costanza e assiduità. È stato davvero un bel percorso.",
+        "author": "Alice, 15 anni"
+      },
+      {
+        "quote": "Sono davvero soddisfatto delle lezioni di inglese che ho seguito per migliorare le mie competenze linguistiche per lavoro. La mia insegnante è stata molto professionale e paziente, e ha saputo adattare le lezioni alle mie esigenze specifiche",
+        "author": "Andrea, 30 anni"
+      },
+      {
+        "quote": "Atena school è una scuola piccola, con differenti corsi di inglese che variano in base all’età. Io l’ho frequentata per 3 anni quasi 4. L’ambiente è abbastanza tranquillo. I risultati sono ottimi, ma si hanno solo se si ha voglia di lavorare! Ho fatto anche 2 esami, preparati molto bene, anche se all’inizio si è ansiosi, alla fine tutto va bene.",
+        "author": "Violante, 13 anni"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contattaci",
+    "form": {
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "email": "Email",
+      "message": "Messaggio",
+      "submit": "Invia"
+    }
+  },
+  "coursesPage": {
+    "title": "I Nostri Corsi",
+    "subtitle": "Percorsi formativi su misura per ogni esigenza",
+    "sections": {
+      "language": "Corsi di lingua",
+      "academic": "Recupero materie scolastiche",
+      "certipass": "Certificazioni Certipass / EIPASS"
+    },
+    "items": {
+      "kids": {
+        "title": "Kids",
+        "description": "Il corso di inglese è progettato per bambini a partire dai 4 anni. Attraverso attività divertenti e attive, i piccoli studenti possono acquisire competenze linguistiche in modo naturale e coinvolgente. Il programma si concentra sulla pronuncia e sulla comprensione, creando un ambiente stimolante per l'apprendimento."
+      },
+      "starters": {
+        "title": "Starters",
+        "description": "Il corso Starters si rivolge a chi inizia a studiare inglese, rendendo l'esperienza divertente. Sviluppa le quattro abilità linguistiche di base (ascolto, conversazione, lettura, scrittura) con attività giocose e un linguaggio semplice. Prepara per il primo esame ufficiale Cambridge."
+      },
+      "movers": {
+        "title": "Movers",
+        "description": "Il corso Movers è per chi ha già le basi dell'inglese. Consolida le quattro abilità con vocabolario più ampio e strutture grammaticali più complesse. Prepara per l'esame Cambridge di livello intermedio, un passo fondamentale verso la certificazione Flyers."
+      },
+      "flyers": {
+        "title": "Flyers",
+        "description": "Il corso Flyers è per chi ha una conoscenza consolidata dell'inglese. Il programma rafforza le quattro abilità linguistiche con l'uso di frasi più complesse e un vocabolario più ricco, preparandoli a comunicare in situazioni di uso comune. Il corso è un passo importante verso i livelli successivi, come A2 Key for Schools."
+      },
+      "a2key": {
+        "title": "A2 Key",
+        "description": "Il corso A2 Key è rivolto a chi ha una conoscenza di base dell'inglese e desidera ottenere la prima certificazione Cambridge. Il programma mira a sviluppare la capacità di comunicare in situazioni quotidiane, sia scritte che orali, usando un linguaggio semplice e chiaro. Il corso è un passo cruciale per gli apprendenti che vogliono ottenere una certificazione ufficiale e passare ai livelli successivi, come il B1 Preliminary."
+      },
+      "b1": {
+        "title": "B1 Preliminary",
+        "description": "Il corso B1 Preliminary si rivolge a chi ha una conoscenza intermedia dell'inglese e vuole acquisire competenze pratiche per la vita di tutti i giorni. Il programma si concentra sull'uso della lingua in situazioni reali, come la comprensione di testi semplici, la scrittura di email e la partecipazione a conversazioni su argomenti familiari. L'obiettivo è preparare gli apprendenti all'esame B1, una certificazione che attesta un livello di autonomia nell'uso della lingua."
+      },
+      "b2": {
+        "title": "B2 First",
+        "description": "Il corso B2 First è pensato per chi ha un livello intermedio-superiore e desidera un uso più fluente e articolato dell'inglese. Il programma approfondisce le abilità linguistiche per comprendere testi complessi, partecipare a discussioni su argomenti astratti e scrivere testi dettagliati. Questo corso prepara all'esame B2 First, un certificato ampiamente riconosciuto che attesta la capacità di lavorare o studiare in un contesto anglofono."
+      },
+      "c1": {
+        "title": "C1 Advanced",
+        "description": "Il corso Cambridge C1 (CAE) prepara all'esame avanzato di inglese \"Cambridge English: Advanced\". È progettato per chi vuole usare l'inglese con sicurezza in contesti accademici o professionali, sviluppando tutte le competenze linguistiche (lettura, scrittura, ascolto e conversazione) fino a un livello di fluidità e precisione."
+      },
+      "doposcuola": {
+        "title": "Doposcuola",
+        "description": "Il nostro doposcuola offre un supporto personalizzato a studenti di tutte le età, dalle elementari alle superiori. Aiutiamo i più piccoli a consolidare le basi, i ragazzi delle medie a trovare un metodo di studio efficace, e gli studenti delle superiori a prepararsi al meglio per gli esami. Il nostro obiettivo è affiancare ogni studente nel suo percorso, trasformando il tempo del doposcuola in un'opportunità di crescita e autonomia."
+      },
+      "recovery": {
+        "title": "Recupero materie scolastiche",
+        "description": "Siamo specializzati nel recupero di materie scolastiche. Offriamo un supporto mirato per superare i debiti e consolidare le basi, con un approccio personalizzato e tutor qualificati. Il nostro obiettivo è trasformare le lacune in punti di forza, помогая студентам вернуть уверенность и достичь устойчивых результатов."
+      },
+      "university": {
+        "title": "Preparazione esami universitari",
+        "description": "Supporto specializzato nella preparazione agli esami universitari. Offriamo un aiuto su misura per affrontare ogni prova con successo, con un focus su: Organizzazione dello studio, Approfondimento dei concetti, Strategie d'esame. Ti aiutiamo a raggiungere i tuoi obiettivi accademici con sicurezza e metodo."
+      },
+      "it_courses": {
+        "title": "Corsi di informatica",
+        "description": "Office Revolution: Sfrutta al massimo la suite Microsoft. Office Pro: Massimizza la tua produttività. Excel Power: Da principiante a esperto. Word & Co.: Scrivi documenti perfetti. Presentazioni Vincenti: Corso di PowerPoint."
+      },
+      "eipass_user": {
+        "title": "EIPASS 7 Moduli User",
+        "description": "La certificazione informatica EIPASS 7 Moduli User attesta il possesso delle competenze digitali intermedie, allineate al framework europeo e-CF. Copre l'uso del PC, internet, videoscrittura, fogli di calcolo, sicurezza informatica e collaborazione online."
+      },
+      "eipass_basic": {
+        "title": "EIPASS Basic",
+        "description": "Certificazione informatica essenziale per acquisire e dimostrare abilità digitali di base. Copre l'utilizzo del sistema operativo, la navigazione web sicura, e i fondamenti dell'elaborazione testi."
+      }
+    },
+    "cta": "Maggiori Informazioni"
+  },
+  "booking": {
+    "title": "Prenota la tua lezione",
+    "description": "Inizia il tuo viaggio verso il successo linguistico. Prenota oggi stesso un test di livello o una lezione di prova gratuita con i nostri esperti.",
+    "cta": "Prenota ora"
+  },
+  "shop": {
+    "title": "I nostri prezzi",
+    "subtitle": "Trasparenza e qualità. Scegli il percorso più adatto alle tue esigenze.",
+    "cta": "Prenota ora",
+    "categories": {
+      "language": "Corsi di Lingua",
+      "tutoring": "Tutoraggio & Doposcuola",
+      "specialized": "Specialistico"
+    },
+    "items": [
+      {
+        "id": "kids",
+        "title": "Corso Inglese Kids",
+        "duration": "Terminato",
+        "price": "60€",
+        "category": "language"
+      },
+      {
+        "id": "young",
+        "title": "Corso Inglese Young Learners",
+        "duration": "Terminato",
+        "price": "90€",
+        "category": "language"
+      },
+      {
+        "id": "a2",
+        "title": "Corso Inglese A2",
+        "duration": "1 ora 15 minuti",
+        "price": "90€",
+        "category": "language"
+      },
+      {
+        "id": "b1",
+        "title": "Corso Inglese B1",
+        "duration": "1 ora 15 minuti",
+        "price": "110€",
+        "category": "language"
+      },
+      {
+        "id": "b2",
+        "title": "Corso Inglese B2",
+        "duration": "1 ora 30 minuti",
+        "price": "120€",
+        "category": "language"
+      },
+      {
+        "id": "c1",
+        "title": "Corso Inglese C1",
+        "duration": "1 ora 40 minuti",
+        "price": "150€",
+        "category": "language"
+      },
+      {
+        "id": "tutor",
+        "title": "Tutoraggio privato",
+        "duration": "1 ora",
+        "price": "20€",
+        "category": "tutoring"
+      },
+      {
+        "id": "afterschool",
+        "title": "Doposcuola scuole elementari",
+        "duration": "3 ore",
+        "price": "20€",
+        "category": "tutoring"
+      },
+      {
+        "id": "university",
+        "title": "Preparazione esami universitari",
+        "duration": "1 ora",
+        "price": "35€",
+        "category": "specialized"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 Atena School. Tutti i diritti riservati."
+  },
+  "cookieBanner": {
+    "title": "Gestione dei Cookie",
+    "description": "Utilizziamo i cookie per migliorare la tua esperienza di navigazione, servire pubblicità o contenuti personalizzati e analizzare il nostro traffico. Facendo clic su \"Accetta tutto\", acconsenti al nostro utilizzo dei cookie.",
+    "acceptAll": "Accetta tutto",
+    "decline": "Rifiuta",
+    "settings": "Impostazioni",
+    "save": "Salva preferenze",
+    "categories": {
+      "mandatory": {
+        "title": "Necessari",
+        "description": "Questi cookie sono essenziali per il corretto funzionamento del sito."
+      },
+      "analytics": {
+        "title": "Analitici",
+        "description": "Questi cookie ci aiutano a capire come i visitatori interagiscono con il sito."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Utilizzati per tracciare i visitatori sui siti web per mostrare annunci pertinenti."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Informativa sulla Privacy",
+    "lastUpdated": "Ultimo aggiornamento: 10 Aprile 2026",
+    "content": {
+      "intro": "Presso Atena School, attribuiamo grande importanza alla protezione dei tuoi dati personali. Questa Informativa sulla Privacy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni.",
+      "sections": [
+        {
+          "title": "1. Titolare del Trattamento",
+          "text": "Il titolare del trattamento dei dati è Atena School, con sede in Cittanova, Italia. Email di contatto: info@atenaschool.it"
+        },
+        {
+          "title": "2. Dati Raccolti",
+          "text": "Raccogliamo dati forniti volontariamente tramite moduli di contatto e iscrizione (nome, email, telefono) e dati di navigazione tramite cookie."
+        },
+        {
+          "title": "3. Finalità del Trattamento",
+          "text": "I tuoi dati vengono utilizzati per gestire le iscrizioni ai corsi, rispondere alle richieste di informazioni e migliorare i nostri servizi."
+        },
+        {
+          "title": "4. Diritti dell'Interessato",
+          "text": "Hai il diritto di accedere, rettificare o cancellare i tuoi dati personali in qualsiasi momento contattandoci via email."
+        }
+      ]
+    }
+  },
+  "cookies": {
+    "title": "Informativa sui Cookie",
+    "lastUpdated": "Ultimo aggiornamento: 10 Aprile 2026",
+    "description": "Questa pagina spiega cosa sono i cookie e come li utilizziamo sul sito di Atena School.",
+    "sections": [
+      {
+        "title": "Cosa sono i cookie?",
+        "text": "I cookie sono piccoli file di testo memorizzati sul tuo dispositivo quando visiti un sito web. Ci aiutano a far funzionare il sito in modo efficiente."
+      },
+      {
+        "title": "Tipi di cookie utilizzati",
+        "text": "Utilizziamo cookie tecnici necessari per il sito, cookie analitici (Google Analytics) per monitorare le prestazioni e cookie di marketing per contenuti personalizzati."
+      },
+      {
+        "title": "Come gestire i cookie",
+        "text": "Puoi modificare le tue preferenze in qualsiasi momento tramite il nostro banner dei cookie o le impostazioni del tuo browser."
+      }
+    ]
+  },
+  "auth": {
+    "login": {
+      "title": "Bentornato",
+      "subtitle": "Accedi al tuo account per continuare",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Accedi",
+      "oauth": "Oppure continua con",
+      "noAccount": "Non hai un account? Registrati",
+      "forgotPassword": "Password dimenticata?",
+      "error": "Email o password non corretta"
+    },
+    "register": {
+      "title": "Crea un account",
+      "subtitle": "Inizia la tua avventura con Atena School",
+      "fullName": "Nome Completo",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Registrati",
+      "oauth": "Oppure registrati con",
+      "hasAccount": "Hai già un account? Accedi",
+      "success": "Account creato! Controlla la tua email per confermare.",
+      "backToLogin": "Torna al login"
+    },
+    "forgotPassword": {
+      "title": "Recupera password",
+      "subtitle": "Inserisci la tua email per ricevere un link di ripristino",
+      "email": "Email",
+      "submit": "Invia link",
+      "success": "Link inviato! Controlla la tua email.",
+      "backToLogin": "Torna al login"
+    },
+    "resetPassword": {
+      "title": "Nuova password",
+      "subtitle": "Inserisci la tua nuova password",
+      "newPassword": "Nuova Password",
+      "submit": "Salva password",
+      "success": "Password aggiornata con successo!"
+    }
+  },
+  "booking": {
+    "title": "Prenota la tua lezione",
+    "description": "Scegli la data e l'orario più comodi per te.",
+    "cta": "Aggiungi al Carrello",
+    "success": "Prenotazione aggiunta con successo!",
+    "summary": "Riepilogo",
+    "service": "Servizio",
+    "teacher": "Insegnante",
+    "location": "Sede",
+    "date": "Data",
+    "time": "Orario",
+    "total": "Totale",
+    "back": "Torna alla lista"
+  },
+  "cart": {
+    "title": "Il tuo Carrello",
+    "empty": "Il tuo carrello è vuoto",
+    "summary": "Riepilogo Ordine",
+    "pay": "Paga Ora (Stripe)",
+    "notAvailable": "Nessun pacchetto trovato nel database."
+  },
+  "teachers": {
+    "title": "I Nostri Insegnanti",
+    "empty": "Presto in arrivo..."
+  }
+}

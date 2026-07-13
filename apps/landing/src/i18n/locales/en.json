@@ -1,0 +1,39 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "courses": "Our Courses",
+    "book": "Book Online",
+    "blog": "Blog"
+  },
+  "hero": {
+    "title": "ATENA SCHOOL",
+    "cambridge": "Cambridge English",
+    "qualifications": "Qualifications",
+    "tagline": "\"With languages, you feel at home everywhere\"",
+    "author": "Edward De Waal"
+  },
+  "about": {
+    "title": "About Us",
+    "p1": "Atena School was born from the passion for languages and the desire to create a stimulating and welcoming environment where every student can feel at home. Our mission is to make language learning an engaging and accessible experience for everyone.",
+    "p2": "Founded in Cittanova, Calabria, the school offers English courses for every level, preparation for Cambridge certifications and much more. Our qualified teachers use innovative methods to guarantee concrete results.",
+    "cta": "Contact Us"
+  },
+  "testimonials": {
+    "quote": "\"Thanks to Atena School, I have improved my English incredibly. The environment is fantastic and the teachers are very prepared and helpful. I recommend it to everyone!\"",
+    "author": "Maria R., Student"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send"
+    }
+  },
+  "footer": {
+    "copyright": "© 2026 Atena School. All rights reserved."
+  }
+}

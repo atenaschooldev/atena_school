@@ -1,0 +1,333 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "courses": "Our Courses",
+    "book": "Book Online",
+    "blog": "Blog",
+    "contact": "Contact Us"
+  },
+  "hero": {
+    "title": "ATENA SCHOOL",
+    "cambridge": "Cambridge English",
+    "qualifications": "Qualifications",
+    "tagline": "\"With languages, you feel at home everywhere\"",
+    "author": "Edward De Waal"
+  },
+  "about": {
+    "title": "About us",
+    "p1": "Our school is called Atena School for a reason. The name is a tribute to the goddess of wisdom, a figure who for the ancient Greeks was the protector of the arts, knowledge, and strategic warfare. Her strength and intelligence were not just innate gifts, but the result of study and preparation, just like learning. We chose the goddess Athena to express our mission: merging the richness of classical culture, which lies in the roots of our land, with the modern world and its challenges.",
+    "p2": "The reference to such a powerful female figure is not coincidental. We, the two founders, strongly believe in the power of knowledge and the strength of women. For this reason, we wanted the name of our school to be a symbol of wisdom and female empowerment. We want culture and education to be instruments of power, and we want to put them in the hands of anyone who wants to grow and learn.",
+    "p3": "In addition to Cambridge English certifications for languages, we offer preparation and certification courses for Certipass/EIPASS (European Informatics Passport), ideal for students, teachers, and professionals wishing to certify their IT skills recognized at European level.",
+    "cta": "Contact Us"
+  },
+  "testimonials": {
+    "title": "What our students say",
+    "list": [
+      {
+        "quote": "In October of last year, I enrolled at Atena School for the B2 course, even though my previous school told me I wasn't ready and should take B1+ first. From the beginning, my teachers, Elisabetta and Rita, assured me I could reach my goal by studying and following their advice. I remember with great emotion the day Elisabetta called to tell me I had passed—I did it! What I appreciated most was how the teachers followed my progress, almost like private lessons. This helped me never give up and learn with consistency. It was truly a wonderful journey.",
+        "author": "Alice, 15 years"
+      },
+      {
+        "quote": "I am truly satisfied with the English lessons I took to improve my language skills for work. My teacher was very professional and patient, and knew exactly how to adapt the lessons to my specific needs.",
+        "author": "Andrea, 30 years"
+      },
+      {
+        "quote": "Atena School is a small school with various English courses tailored to different ages. I attended for almost four years. The environment is quite peaceful. The results are excellent, but you only see them if you're willing to work hard! I've taken two exams, both very well-prepared; even if you're nervous at first, everything turns out well in the end.",
+        "author": "Violante, 13 years"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contact Us",
+    "form": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "message": "Message",
+      "submit": "Send"
+    }
+  },
+  "coursesPage": {
+    "title": "Our Courses",
+    "subtitle": "Tailor-made educational paths for every need",
+    "sections": {
+      "language": "Language Courses",
+      "academic": "Academic Recovery",
+      "certipass": "Certipass / EIPASS Certifications"
+    },
+    "items": {
+      "kids": {
+        "title": "Kids",
+        "description": "The English course is designed for children starting from age 4. Through fun and active activities, young students can acquire language skills in a natural and engaging way. The program focuses on pronunciation and comprehension, creating a stimulating environment for learning."
+      },
+      "starters": {
+        "title": "Starters",
+        "description": "The Starters course is aimed at those beginning to study English, making the experience fun. It develops the four basic language skills (listening, speaking, reading, writing) with playful activities and simple language. It prepares for the first official Cambridge exam."
+      },
+      "movers": {
+        "title": "Movers",
+        "description": "The Movers course is for those who already have the basics of English. It consolidates the four skills with a broader vocabulary and more complex grammatical structures. It prepares for the intermediate level Cambridge exam, a fundamental step towards the Flyers certification."
+      },
+      "flyers": {
+        "title": "Flyers",
+        "description": "The Flyers course is for those with a consolidated knowledge of English. The program strengthens the four language skills with the use of more complex sentences and a richer vocabulary, preparing them to communicate in common situations. The course is an important step towards subsequent levels, such as A2 Key for Schools."
+      },
+      "a2key": {
+        "title": "A2 Key",
+        "description": "The A2 Key course is aimed at those who have a basic knowledge of English and wish to obtain the first Cambridge certification. The program aims to develop the ability to communicate in everyday situations, both written and oral, using simple and clear language. The course is a crucial step for learners who want to obtain an official certification and move on to subsequent levels, such as B1 Preliminary."
+      },
+      "b1": {
+        "title": "B1 Preliminary",
+        "description": "The B1 Preliminary course is aimed at those who have an intermediate knowledge of English and want to acquire practical skills for everyday life. The program focuses on using the language in real situations, such as understanding simple texts, writing emails, and participating in conversations on familiar topics. The goal is to prepare learners for the B1 exam, a certification that attests to a level of autonomy in using the language."
+      },
+      "b2": {
+        "title": "B2 First",
+        "description": "The B2 First course is designed for those at an upper-intermediate level who desire a more fluent and articulate use of English. The program deepens language skills to understand complex texts, participate in discussions on abstract topics, and write detailed texts. This course prepares for the B2 First exam, a widely recognized certificate that attests to the ability to work or study in an English-speaking context."
+      },
+      "c1": {
+        "title": "C1 Advanced",
+        "description": "The Cambridge C1 (CAE) course prepares for the advanced English exam \"Cambridge English: Advanced\". It is designed for those who want to use English with confidence in academic or professional contexts, developing all language skills (reading, writing, listening, and speaking) to a level of fluency and precision."
+      },
+      "doposcuola": {
+        "title": "After-school Support",
+        "description": "Our after-school program offers personalized support to students of all ages, from elementary to high school. We help younger children consolidate their basics, middle schoolers find an effective study method, and high schoolers prepare best for their exams. Our goal is to support every student in their journey, turning after-school time into an opportunity for growth and autonomy."
+      },
+      "recovery": {
+        "title": "Academic Subject Recovery",
+        "description": "We specialize in the recovery of school subjects. We offer targeted support to overcome academic gaps and consolidate basics, with a personalized approach and qualified tutors. Our goal is to transform weaknesses into strengths, helping students regain confidence and achieve lasting results."
+      },
+      "university": {
+        "title": "University Exam Preparation",
+        "description": "Specialized support in preparation for university exams. We offer tailored help to successfully face every test, with a focus on: Study organization, Deepening concepts, Exam strategies. We help you reach your academic goals with confidence and method."
+      },
+      "it_courses": {
+        "title": "IT Courses",
+        "description": "Office Revolution: Make the most of the Microsoft suite. Office Pro: Maximize your productivity. Excel Power: From beginner to expert. Word & Co.: Write perfect documents. Winning Presentations: PowerPoint course."
+      },
+      "eipass_user": {
+        "title": "EIPASS 7 Moduli User",
+        "description": "The EIPASS 7 Moduli User certification validates intermediate digital skills aligned with the European e-CF framework. Covers PC usage, internet, word processing, spreadsheets, cybersecurity, and online collaboration."
+      },
+      "eipass_basic": {
+        "title": "EIPASS Basic",
+        "description": "Essential informatics certification to acquire and demonstrate basic digital skills. Covers operating system usage, secure web browsing, and word processing fundamentals."
+      }
+    },
+    "cta": "More Information"
+  },
+  "booking": {
+    "title": "Book Your Lesson",
+    "description": "Start your journey to linguistic excellence. Book a level assessment or a free trial lesson today with our expert instructors.",
+    "cta": "Book now"
+  },
+  "shop": {
+    "title": "Our Prices",
+    "subtitle": "Transparency and quality. Choose the path that best suits your needs.",
+    "cta": "Book now",
+    "categories": {
+      "language": "Language Courses",
+      "tutoring": "Tutoring & After-school",
+      "specialized": "Specialized"
+    },
+    "items": [
+      {
+        "id": "kids",
+        "title": "English for Kids",
+        "duration": "Full Module",
+        "price": "60€",
+        "category": "language"
+      },
+      {
+        "id": "young",
+        "title": "Young Learners English",
+        "duration": "Full Module",
+        "price": "90€",
+        "category": "language"
+      },
+      {
+        "id": "a2",
+        "title": "A2 English Course",
+        "duration": "1 hour 15 minutes",
+        "price": "90€",
+        "category": "language"
+      },
+      {
+        "id": "b1",
+        "title": "B1 English Course",
+        "duration": "1 hour 15 minutes",
+        "price": "110€",
+        "category": "language"
+      },
+      {
+        "id": "b2",
+        "title": "B2 English Course",
+        "duration": "1 hour 30 minutes",
+        "price": "120€",
+        "category": "language"
+      },
+      {
+        "id": "c1",
+        "title": "C1 English Course",
+        "duration": "1 hour 40 minutes",
+        "price": "150€",
+        "category": "language"
+      },
+      {
+        "id": "tutor",
+        "title": "Private Tutoring",
+        "duration": "1 hour",
+        "price": "20€",
+        "category": "tutoring"
+      },
+      {
+        "id": "afterschool",
+        "title": "After-school Support (Elementary)",
+        "duration": "3 hours",
+        "price": "20€",
+        "category": "tutoring"
+      },
+      {
+        "id": "university",
+        "title": "University Exam Prep",
+        "duration": "1 hour",
+        "price": "35€",
+        "category": "specialized"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 Atena School. All rights reserved."
+  },
+  "cookieBanner": {
+    "title": "Cookie Management",
+    "description": "We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking \"Accept All\", you consent to our use of cookies.",
+    "acceptAll": "Accept All",
+    "decline": "Decline",
+    "settings": "Settings",
+    "save": "Save preferences",
+    "categories": {
+      "mandatory": {
+        "title": "Necessary",
+        "description": "These cookies are essential for the proper functioning of the site."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "These cookies help us understand how visitors interact with the site."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Used to track visitors across websites to display relevant ads."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: April 10, 2026",
+    "content": {
+      "intro": "At Atena School, we attach great importance to the protection of your personal data. This Privacy Policy explains how we collect, use, and protect your information.",
+      "sections": [
+        {
+          "title": "1. Data Controller",
+          "text": "The data controller is Atena School, located in Cittanova, Italy. Contact email: info@atenaschool.it"
+        },
+        {
+          "title": "2. Collected Data",
+          "text": "We collect data voluntarily provided through contact and registration forms (name, email, phone) and browsing data through cookies."
+        },
+        {
+          "title": "3. Purposes of Processing",
+          "text": "Your data is used to manage course registrations, respond to information requests, and improve our services."
+        },
+        {
+          "title": "4. User Rights",
+          "text": "You have the right to access, rectify, or delete your personal data at any time by contacting us via email."
+        }
+      ]
+    }
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "lastUpdated": "Last updated: April 10, 2026",
+    "description": "This page explains what cookies are and how we use them on the Atena School website.",
+    "sections": [
+      {
+        "title": "What are cookies?",
+        "text": "Cookies are small text files stored on your device when you visit a website. They help us make the site work efficiently."
+      },
+      {
+        "title": "Types of cookies used",
+        "text": "We use technical cookies necessary for the site, analytical cookies (Google Analytics) to monitor performance, and marketing cookies for personalized content."
+      },
+      {
+        "title": "How to manage cookies",
+        "text": "You can change your preferences at any time through our cookie banner or your browser settings."
+      }
+    ]
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account to continue",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign In",
+      "oauth": "Or continue with",
+      "noAccount": "Don't have an account? Sign up",
+      "forgotPassword": "Forgot password?",
+      "error": "Invalid email or password"
+    },
+    "register": {
+      "title": "Create an Account",
+      "subtitle": "Start your journey with Atenas School",
+      "fullName": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign Up",
+      "oauth": "Or sign up with",
+      "hasAccount": "Already have an account? Sign in",
+      "success": "Account created! Check your email for confirmation.",
+      "backToLogin": "Back to login"
+    },
+    "forgotPassword": {
+      "title": "Recover password",
+      "subtitle": "Enter your email to receive a reset link",
+      "email": "Email",
+      "submit": "Send link",
+      "success": "Link sent! Check your email.",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "New password",
+      "subtitle": "Enter your new password",
+      "newPassword": "New Password",
+      "submit": "Save password",
+      "success": "Password updated successfully!"
+    }
+  },
+  "booking": {
+    "title": "Book Your Lesson",
+    "description": "Choose the most convenient date and time for you.",
+    "cta": "Add to Cart",
+    "success": "Booking added successfully!",
+    "summary": "Summary",
+    "service": "Service",
+    "teacher": "Teacher",
+    "location": "Location",
+    "date": "Date",
+    "time": "Time",
+    "total": "Total",
+    "back": "Back to list"
+  },
+  "cart": {
+    "title": "Your Cart",
+    "empty": "Your cart is empty",
+    "summary": "Order Summary",
+    "pay": "Pay Now (Stripe)",
+    "notAvailable": "No items found in the database."
+  },
+  "teachers": {
+    "title": "Our Teachers",
+    "empty": "Coming soon..."
+  }
+}

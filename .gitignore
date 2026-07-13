@@ -7,26 +7,66 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-.output
-.vinxi
-.tanstack/**
-.nitro
-*.local
+# Dependencies
+node_modules/
 
-# Wrangler / Cloudflare
-.wrangler/
+# Compilation/Build Artifacts
+dist/
+dist-ssr/
+.output/
+.vinxi/
+.tanstack/
+.nitro/
+.next/
+out/
+.expo/
+*.tsbuildinfo
+build/
+
+# Local Environment Variables & Secrets (CRITICAL)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.staging
+.env.production
+*.env
 .dev.vars
 
-# Editor directories and files
+# Certificates, Keys & Credentials
+*.pem
+*.key
+*.pub
+*.pfx
+*.p12
+*.p8
+*.jks
+*.keystore
+*.mobileprovision
+*.provisionprofile
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+secring.gpg
+gpg.key
+
+# Cloudflare & Wrangler
+.wrangler/
+
+# IDEs & System Files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+
+# Turborepo cache
+.turbo/
