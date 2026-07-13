@@ -22,8 +22,15 @@ const ContactSection = ({ data }: ContactSectionProps) => {
   const email = data?.email || "atenaschool20@gmail.com";
 
   return (
-    <section id="contact" className="py-20 px-4 bg-muted">
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
+    <section id="contact" className="relative py-28 px-4 bg-muted overflow-hidden">
+      {/* Top wave transition from Testimonials (background/white) to Contact (muted) */}
+      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-background">
+          <path d="M1200 120L0 120 309.19 8C462.66-8 637.34-8 790.81 8L1200 120Z"></path>
+        </svg>
+      </div>
+
+      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 relative z-20">
         {/* Info */}
         <div>
           <h2 className="text-3xl font-bold text-primary mb-8">{t("title")}</h2>

@@ -26,8 +26,15 @@ export default function TeachersSection({ data }: TeachersSectionProps) {
   }
 
   return (
-    <section className="py-16 px-4 bg-background">
-      <div className="max-w-7xl mx-auto">
+    <section id="teachers" className="relative py-24 px-4 bg-muted/35 overflow-hidden">
+      {/* Top wave transition from About */}
+      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-background">
+          <path d="M1200 120L0 120 309.19 8C462.66-8 637.34-8 790.81 8L1200 120Z"></path>
+        </svg>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-20">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
             {t("title")}

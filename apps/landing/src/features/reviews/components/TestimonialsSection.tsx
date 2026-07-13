@@ -54,12 +54,19 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-16 px-4 bg-background relative overflow-hidden">
+    <section className="py-24 px-4 bg-background relative overflow-hidden">
+      {/* Top wave transition from Teachers (muted/35) to Testimonials (background/white) */}
+      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-muted/35">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,1,321.39,56.44Z"></path>
+        </svg>
+      </div>
+
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
+      <div className="absolute top-12 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl" />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative z-20">
         <div className="text-center mb-10 px-4">
           <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-foreground mb-3">
             {t("title")}
