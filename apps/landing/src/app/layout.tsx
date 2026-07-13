@@ -47,6 +47,8 @@ export async function generateMetadata() {
       title,
       description,
       images: [`${siteUrl}/og-default.jpg`],
+      site: '@atenaschool',
+      creator: '@atenaschool',
     },
   };
 }
