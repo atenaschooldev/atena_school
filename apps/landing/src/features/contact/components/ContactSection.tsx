@@ -26,7 +26,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
   const vat = data?.vat || "P.IVA/C.F. 03321620803";
 
   return (
-    <section id="contact" className="relative py-28 px-4 bg-background overflow-hidden">
+    <section id="contact" className="relative py-16 px-4 bg-background overflow-hidden">
       {/* Top wave transition from Testimonials (bg-muted) to Contact (background/white) */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-muted">
@@ -68,7 +68,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               href="https://www.instagram.com/atenaschool_srls/"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-80 transition"
+              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-secondary hover:text-secondary-foreground hover:scale-110 transition-all duration-300"
             >
               <span className="sr-only">Instagram</span>
               <InstagramLogo className="w-5 h-5" />
@@ -77,7 +77,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               href="https://www.facebook.com/CSAtena7"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-80 transition active:scale-90 duration-300"
+              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-secondary hover:text-secondary-foreground hover:scale-110 transition-all duration-300 active:scale-90"
             >
               <span className="sr-only">Facebook</span>
               <FacebookLogo className="w-5 h-5" />

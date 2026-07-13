@@ -4,16 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
 import SplashScreen, { SPLASH_COOKIE_NAME } from '@/components/SplashScreen';
-import { Playfair_Display } from 'next/font/google';
 import '@/index.css';
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-playfair',
-  display: 'swap',
-});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
@@ -102,7 +93,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${playfair.variable} antialiased`} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
           <SplashScreen />
           <div className="flex flex-col min-h-screen">

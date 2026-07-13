@@ -272,7 +272,7 @@ export default function BookingPage({
                         const timeStr = selectedTime!;
                         router.push(`/checkout/${type}/${id}?date=${dateStr}&time=${timeStr}&slot_id=${selectedSlotId}`);
                       }}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
+                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
                     >
                       Continua
                     </button>

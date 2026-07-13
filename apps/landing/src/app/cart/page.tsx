@@ -263,7 +263,7 @@ export default function CartPage() {
                   <button
                     disabled={processing}
                     onClick={handleCheckout}
-                    className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50"
+                    className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all flex items-center justify-center gap-3 shadow-xl shadow-primary/20 disabled:opacity-50"
                   >
                     {processing ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-background"></div>

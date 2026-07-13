@@ -7,7 +7,7 @@ const BookingSection = () => {
   const t = useTranslations("booking");
 
   return (
-    <section id="booking" className="py-20 px-4 bg-primary/5 relative overflow-hidden">
+    <section id="booking" className="py-12 px-4 bg-primary/5 relative overflow-hidden">
       {/* Decorative blurry shapes */}
       <div className="absolute top-1/2 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute top-1/2 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
@@ -27,7 +27,7 @@ const BookingSection = () => {
 
         <a 
           href="#contact" 
-          className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-bold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 group"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-bold hover:bg-secondary hover:text-secondary-foreground transition-all duration-300 shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 group"
         >
           {t("cta")}
           <CaretRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

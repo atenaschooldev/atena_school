@@ -168,7 +168,7 @@ function RegisterForm() {
 
               <div className="pt-1">
                 <Button 
-                  className="w-full h-10 lg:h-12 text-sm font-bold uppercase tracking-widest bg-primary hover:bg-primary/95 text-primary-foreground rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-primary/15 hover:shadow-primary/25 flex items-center justify-center gap-2" 
+                  className="w-full h-10 lg:h-12 text-sm font-bold uppercase tracking-widest bg-primary hover:bg-secondary text-primary-foreground hover:text-secondary-foreground rounded-xl transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-primary/15 hover:shadow-primary/25 flex items-center justify-center gap-2" 
                   type="submit" 
                   disabled={loading}
                 >

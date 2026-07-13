@@ -121,7 +121,6 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
               <div className="flex items-center gap-6 mb-10">
                 <h2
                   className="text-2xl md:text-4xl font-black uppercase tracking-tight text-foreground whitespace-nowrap"
-                  style={{ fontFamily: "var(--font-playfair), serif" }}
                 >
                   {section.title}
                 </h2>

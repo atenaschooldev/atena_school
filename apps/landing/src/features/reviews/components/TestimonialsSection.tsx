@@ -59,7 +59,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-24 px-4 bg-muted relative overflow-hidden">
+    <section className="py-16 px-4 bg-muted relative overflow-hidden">
       {/* Top wave transition from Teachers (background/white) to Testimonials (bg-muted) */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-background">
@@ -92,7 +92,6 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                     <Quotes className="w-8 h-8 text-primary/20 mb-6" />
                     <blockquote 
                       className="text-lg md:text-xl lg:text-2xl italic text-foreground/90 leading-snug mb-8 font-medium"
-                      style={{ fontFamily: "var(--font-playfair), serif" }}
                     >
                       "{item[`quote_${locale}`] || item.quote}"
                     </blockquote>
@@ -145,7 +144,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         </div>
 
         {/* Google Map */}
-        <div className="max-w-6xl mx-auto mt-16 rounded-2xl overflow-hidden shadow-xl border border-border/50 bg-card">
+        <div className="max-w-6xl mx-auto mt-10 rounded-2xl overflow-hidden shadow-xl border border-border/50 bg-card">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3121.5!2d16.0781!3d38.3561!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x131153d3a3e6b8b7%3A0x0!2sViale+Giacomo+Matteotti+11%2C+89022+Cittanova+RC!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit&q=Viale+Giacomo+Matteotti+11,+89022+Cittanova+RC"
             width="100%"

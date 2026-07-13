@@ -75,7 +75,7 @@ export default function CookieBanner() {
               <Button variant="outline" size="sm" onClick={handleDeclineAll}>
                 {t("decline")}
               </Button>
-              <Button size="sm" onClick={handleAcceptAll} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <Button size="sm" onClick={handleAcceptAll} className="bg-primary text-primary-foreground hover:bg-secondary hover:text-secondary-foreground transition-all">
                 {t("acceptAll")}
               </Button>
             </div>

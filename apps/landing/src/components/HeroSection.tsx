@@ -1,9 +1,11 @@
+"use client";
+
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
+import { MapPin, Medal, ShieldCheck, ArrowRight } from "@phosphor-icons/react";
 import heroDefault from "@/../public/hero-london.webp";
-import logoDefault from "@/../public/athena-logo.webp";
-import cambridgeLogo from "@/assets/cambridge.webp";
-import eipassLogo from "@/assets/eipass.webp";
+import EipassCard from "@/components/EipassCard";
+import CambridgeCard from "@/components/CambridgeCard";
 
 interface HeroSectionProps {
   data?: any;
@@ -17,10 +19,9 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const title = data?.[`title_${locale}`] || t("title");
   const tagline = data?.[`tagline_${locale}`] || t("tagline");
   const backgroundImage = data?.image_url || heroDefault;
-  const logoImage = data?.logo_url || logoDefault;
 
   return (
-    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
+    <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background pt-24 pb-16 lg:py-0">
       {/* Background with advanced overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
@@ -30,66 +31,129 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           className="object-cover animate-zoom-breathing [will-change:transform]"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/65 to-primary/45" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/90 via-black/75 via-[#043569]/40 to-[#F8861D]/25" />
       </div>
 
       {/* Decorative glowing orbs */}
-      <div className="glow-orb w-[400px] h-[400px] bg-primary top-10 right-10" />
-      <div className="glow-orb w-[500px] h-[500px] bg-secondary bottom-10 left-10" />
+      <div className="glow-orb w-[400px] h-[400px] bg-primary/20 top-10 right-10 blur-3xl rounded-full absolute pointer-events-none" />
+      <div className="glow-orb w-[500px] h-[500px] bg-secondary/10 bottom-10 left-10 blur-3xl rounded-full absolute pointer-events-none" />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 pt-28 pb-16 max-w-5xl mx-auto">
-        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 -translate-y-4 md:-translate-y-5 rounded-full bg-black/40 backdrop-blur-[6px] border-2 border-white/20 hover:border-primary/50 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-500 hover:rotate-3 group cursor-pointer animate-in fade-in slide-in-from-top-6 duration-700">
-          <div className="relative w-full h-full translate-x-[-2px] translate-y-[-4px]">
-            <Image
-              src={logoImage}
-              alt="Atena School Logo"
-              fill
-              className="object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] group-hover:scale-105 transition-transform duration-300"
-            />
+      {/* Content Grid */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-12 lg:mt-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+          
+          {/* Left Column - Content Area */}
+          <div className="lg:col-span-7 flex flex-col items-start text-left">
+
+            {/* Location Pin */}
+            <div className="flex items-center gap-1.5 text-[#F8861D] font-bold text-[10px] sm:text-xs uppercase tracking-widest mb-3 sm:mb-4">
+              <MapPin size={14} className="text-[#F8861D]" weight="bold" />
+              <span>{t("location")}</span>
+            </div>
+
+            {/* Main Heading */}
+            <h1
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white mb-4 sm:mb-6 uppercase leading-[1.1] drop-shadow-sm"
+            >
+              {title}
+            </h1>
+
+            {/* Tagline */}
+            <p
+              className="font-serif text-base sm:text-lg md:text-xl lg:text-2xl italic text-white/90 max-w-xl leading-relaxed font-light drop-shadow mb-3 sm:mb-4"
+            >
+              {tagline}
+            </p>
+            
+            {/* Author */}
+            <p className="text-[10px] sm:text-xs text-white/50 mb-6 sm:mb-8 tracking-widest uppercase font-semibold">— {t("author")}</p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-start w-full">
+              <a
+                href="#contact"
+                className="group inline-flex w-full sm:w-auto items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-6 py-3.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+              >
+                {t("cta_booking")}
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" weight="bold" />
+              </a>
+              <a
+                href="/courses"
+                className="inline-flex w-full sm:w-auto items-center justify-center border border-white/30 hover:border-white/60 bg-white/5 hover:bg-white/10 text-white px-6 py-3.5 rounded-full font-bold text-sm transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+              >
+                {t("cta_courses")}
+              </a>
+            </div>
           </div>
+
+          {/* Right Column - Glassmorphic Accent Panel */}
+          <div className="lg:col-span-5 w-full flex flex-col items-center justify-center lg:items-end mt-4 lg:mt-0">
+            <div className="w-full max-w-[400px] bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col gap-5 sm:gap-6">
+              
+              {/* Badges Container */}
+              <div className="flex flex-col gap-4 w-full">
+                <CambridgeCard className="max-w-none shadow-none hover:scale-100" />
+                <EipassCard className="max-w-none shadow-none hover:scale-100" />
+              </div>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-white/10" />
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="flex flex-col">
+                  <span className="text-white font-black text-xs sm:text-sm tracking-wide leading-none whitespace-nowrap">
+                    {t("seo_miur_val")}
+                  </span>
+                  <span className="text-white/50 text-[9px] font-bold uppercase tracking-wider mt-1.5">
+                    {t("seo_miur_lbl")}
+                  </span>
+                </div>
+                <div className="flex flex-col border-x border-white/10">
+                  <span className="text-[#F8861D] font-black text-xs sm:text-sm tracking-wide leading-none whitespace-nowrap">
+                    {t("seo_exams_val")}
+                  </span>
+                  <span className="text-white/50 text-[9px] font-bold uppercase tracking-wider mt-1.5">
+                    {t("seo_exams_lbl")}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white font-black text-xs sm:text-sm tracking-wide leading-none whitespace-nowrap">
+                    {t("seo_voucher_val")}
+                  </span>
+                  <span className="text-white/50 text-[9px] font-bold uppercase tracking-wider mt-1.5">
+                    {t("seo_voucher_lbl")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="w-full h-px bg-white/10" />
+
+              {/* Features bullet points */}
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-3 items-start">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/10 text-[#F8861D] shrink-0 mt-0.5">
+                    <Medal size={18} weight="bold" />
+                  </div>
+                  <p className="text-white/80 text-xs leading-relaxed text-left">
+                    {t("feature_cert")}
+                  </p>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 shrink-0 mt-0.5">
+                    <ShieldCheck size={18} weight="bold" />
+                  </div>
+                  <p className="text-white/80 text-xs leading-relaxed text-left">
+                    {t("feature_audience")}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
-
-        <h1
-          className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 uppercase drop-shadow-sm"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
-        >
-          {title}
-        </h1>
-
-        {/* Dual Accreditation Badges */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-          {/* Cambridge Badge */}
-          <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:-rotate-1 transition-all duration-300 flex items-center justify-center h-20">
-            <Image
-              src={cambridgeLogo}
-              alt="Cambridge English Qualifications"
-              width={200}
-              height={56}
-              className="object-contain h-14 w-[200px]"
-              priority
-            />
-          </div>
-          {/* EIPASS / Certipass Badge */}
-          <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex items-center justify-center h-20">
-            <Image
-              src={eipassLogo}
-              alt="EIPASS Accredited Center"
-              width={160}
-              height={64}
-              className="object-contain h-16 w-[160px]"
-              priority
-            />
-          </div>
-        </div>
-
-        <p
-          className="text-2xl md:text-3xl italic text-white/90 max-w-3xl leading-relaxed font-light drop-shadow"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
-        >
-          {tagline}
-        </p>
-        <p className="text-sm text-white/60 mt-4 tracking-widest uppercase font-semibold">— {t("author")}</p>
       </div>
 
       {/* Curved bottom transition to About */}

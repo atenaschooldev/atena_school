@@ -26,9 +26,9 @@ export default function TeachersSection({ data }: TeachersSectionProps) {
   }
 
   return (
-    <section id="teachers" className="relative py-24 px-4 bg-background overflow-hidden">
+    <section id="teachers" className="relative py-16 px-4 bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto relative z-20">
-        <div className="text-center mb-16">
+        <div className="text-center mb-10">
           <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
             {t("title")}
           </h2>

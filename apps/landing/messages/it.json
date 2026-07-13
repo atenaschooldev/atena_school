@@ -12,7 +12,20 @@
     "cambridge": "Cambridge English",
     "qualifications": "Qualifications",
     "tagline": "\"Con le lingue, ti senti a casa ovunque\"",
-    "author": "Edward De Waal"
+    "author": "Edward De Waal",
+    "accreditations": "Certificazioni Internazionali e Partner Ufficiali",
+    "location": "Cittanova, Calabria",
+    "badge_text": "Cambridge English & EIPASS Center",
+    "cta_booking": "Prenota una consulenza",
+    "cta_courses": "Scopri i corsi",
+    "seo_miur_val": "LINGUE",
+    "seo_miur_lbl": "Inglese",
+    "seo_exams_val": "DIGITALE",
+    "seo_exams_lbl": "Informatica",
+    "seo_voucher_val": "STUDIO",
+    "seo_voucher_lbl": "Doposcuola",
+    "feature_cert": "Percorsi personalizzati individuali o in piccoli gruppi per seguire al meglio ogni studente.",
+    "feature_audience": "Supporto allo studio mirato per superare le difficoltà scolastiche ed esami universitari."
   },
   "about": {
     "title": "Chi siamo",

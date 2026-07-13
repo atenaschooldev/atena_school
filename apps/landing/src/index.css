@@ -4,11 +4,32 @@
 @import "@repo/design/theme.css";
 @source "../../../packages/ui";
 
+:root {
+  --primary: #043569;
+  --primary-foreground: #ffffff;
+  --secondary: #F8861D;
+  --secondary-foreground: #ffffff;
+  --accent: #fff5eb;
+  --accent-foreground: #043569;
+  --ring: #F8861D;
+}
+
+.dark {
+  --primary: #F8861D;
+  --primary-foreground: #043569;
+  --secondary: #043569;
+  --secondary-foreground: #ffffff;
+  --accent: #1e130a;
+  --accent-foreground: #F8861D;
+  --ring: #F8861D;
+}
+
 @theme {
   --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Clash Display", Georgia, serif;
   
   --animate-zoom-breathing: zoom-breathing 24s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
 
   @keyframes zoom-breathing {
     0% {
@@ -16,6 +37,15 @@
     }
     100% {
       transform: scale(1.1) translateZ(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
     }
   }
 

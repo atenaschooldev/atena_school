@@ -330,7 +330,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     <button
                       onClick={() => document.getElementById("submit-checkout-btn")?.click()}
                       disabled={submitting}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
+                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
                     >
                       {submitting ? "..." : "Paga e Finalizza"}
                     </button>
