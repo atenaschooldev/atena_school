@@ -3,7 +3,7 @@
 import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { List, X, ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const Navbar = () => {
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [cartCount, setCartCount] = useState(0);
+  const suppressHideRef = useRef(false);
   const supabase = createClient();
 
   const fetchCartCount = async () => {
@@ -82,7 +83,9 @@ const Navbar = () => {
 
       // Hide on scroll down, show on scroll up
       if (currentScrollY > lastScrollY && currentScrollY > 120) {
-        setIsVisible(false);
+        if (!suppressHideRef.current) {
+          setIsVisible(false);
+        }
       } else {
         setIsVisible(true);
       }
@@ -134,6 +137,17 @@ const Navbar = () => {
     }
   };
 
+  const handleLinkClick = (href: string) => {
+    setOpen(false);
+    setIsVisible(true);
+    
+    // Suppress hiding during hash jumps and scroll animation transitions
+    suppressHideRef.current = true;
+    setTimeout(() => {
+      suppressHideRef.current = false;
+    }, 1500);
+  };
+
   const navLinks = [
     { label: t("home"), href: "/" },
     { label: t("about"), href: "/#about" },
@@ -163,7 +177,11 @@ const Navbar = () => {
       }`}>
         {/* Logo */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 transform hover:scale-105 hover:rotate-3 active:scale-95 transition-all duration-300">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 transform hover:scale-105 hover:rotate-3 active:scale-95 transition-all duration-300"
+            onClick={() => handleLinkClick("/")}
+          >
             <Image 
               src={logo} 
               alt="Atena School" 
@@ -185,6 +203,7 @@ const Navbar = () => {
                   ? "text-white/95 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
                   : "text-foreground/80 hover:text-primary hover:bg-primary/5"
               }`}
+              onClick={() => handleLinkClick(l.href)}
             >
               {l.label}
             </Link>
@@ -236,6 +255,7 @@ const Navbar = () => {
                   ? "text-white border-white/30 hover:border-white hover:bg-white/10" 
                   : "text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/25"
               }`}
+              onClick={() => handleLinkClick("/auth/login")}
             >
               Login
             </Link>
@@ -261,7 +281,7 @@ const Navbar = () => {
               key={l.href}
               href={l.href as any}
               className="flex items-center justify-between py-3 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 active:scale-[0.98]"
-              onClick={() => setOpen(false)}
+              onClick={() => handleLinkClick(l.href)}
             >
               <span>{l.label}</span>
               <span className="text-muted-foreground/30 font-light">➔</span>
