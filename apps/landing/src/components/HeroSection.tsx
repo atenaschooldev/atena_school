@@ -52,7 +52,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
         <h1
           className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 uppercase drop-shadow-sm"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          style={{ fontFamily: "var(--font-playfair), serif" }}
         >
           {title}
         </h1>
@@ -66,7 +66,8 @@ const HeroSection = ({ data }: HeroSectionProps) => {
               alt="Cambridge English Qualifications"
               width={200}
               height={56}
-              className="object-contain h-14 w-auto"
+              className="object-contain h-14 w-[200px]"
+              priority
             />
           </div>
           {/* EIPASS / Certipass Badge */}
@@ -76,14 +77,15 @@ const HeroSection = ({ data }: HeroSectionProps) => {
               alt="EIPASS Accredited Center"
               width={160}
               height={64}
-              className="object-contain h-16 w-auto"
+              className="object-contain h-16 w-[160px]"
+              priority
             />
           </div>
         </div>
 
         <p
           className="text-2xl md:text-3xl italic text-white/90 max-w-3xl leading-relaxed font-light drop-shadow"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          style={{ fontFamily: "var(--font-playfair), serif" }}
         >
           {tagline}
         </p>

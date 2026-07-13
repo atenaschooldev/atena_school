@@ -26,7 +26,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           <span className="text-xs font-bold uppercase tracking-[0.25em] text-primary/80 mb-3 block">
             Atena School
           </span>
-          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground" style={{ fontFamily: "var(--font-playfair), serif" }}>
             {title}
           </h2>
           <div className="w-12 h-1 bg-primary mt-6 mx-auto rounded-full" />
@@ -38,7 +38,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
             <h3
               className="text-3xl md:text-4xl font-semibold leading-tight text-foreground/90 tracking-tight"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "var(--font-playfair), serif" }}
             >
               Unire la ricchezza della cultura classica con il mondo moderno e le sue sfide.
             </h3>
@@ -58,7 +58,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           <div className="lg:col-span-7 space-y-8">
             <div
               className="text-lg md:text-xl text-foreground/80 leading-relaxed space-y-6 font-light"
-              style={{ fontFamily: "'Playfair Display', serif" }}
+              style={{ fontFamily: "var(--font-playfair), serif" }}
             >
               <p className="first-letter:text-5xl first-letter:font-black first-letter:text-primary first-letter:float-left first-letter:mr-3 first-letter:mt-1">
                 {p1}

@@ -5,7 +5,16 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
 import SplashScreen, { SPLASH_COOKIE_NAME } from '@/components/SplashScreen';
+import { Playfair_Display } from 'next/font/google';
 import '@/index.css';
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800', '900'],
+  style: ['normal', 'italic'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
@@ -80,11 +89,9 @@ export default async function RootLayout({
   return (
     <html lang="it" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://api.fontshare.com" />
       </head>
-      <body className="antialiased" suppressHydrationWarning>
+      <body className={`${playfair.variable} antialiased`} suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
           <SplashScreen initialVisible={shouldShowSplash} />
           <div className="flex flex-col min-h-screen">

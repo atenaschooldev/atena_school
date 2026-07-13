@@ -25,7 +25,7 @@ const CoursesHero = () => {
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto pt-16">
         <h1 
           className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 uppercase tracking-tight"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          style={{ fontFamily: "var(--font-playfair), serif" }}
         >
           {t("title")}
         </h1>

@@ -208,7 +208,7 @@ export default async function CoursesPage() {
       <header className="max-w-7xl mx-auto px-4 pt-16 pb-8 text-center relative z-10">
         <h1 
           className="text-5xl md:text-7xl font-black uppercase tracking-tight text-foreground mb-6"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          style={{ fontFamily: "var(--font-playfair), serif" }}
         >
           {t("title")}
         </h1>

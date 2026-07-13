@@ -23,7 +23,6 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const locale = useLocale();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 });
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [activeHeight, setActiveHeight] = useState<number | undefined>(undefined);
 
   // Fallback to translations if no data provided
   const testimonials = data && data.length > 0 ? data : (t.raw("list") as any[]);
@@ -41,28 +40,12 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
     setSelectedIndex(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
-  const updateHeight = useCallback(() => {
-    if (!emblaApi) return;
-    requestAnimationFrame(() => {
-      const slides = emblaApi.slideNodes();
-      const activeSlide = slides[emblaApi.selectedScrollSnap()];
-      if (activeSlide) {
-        setActiveHeight(activeSlide.getBoundingClientRect().height);
-      }
-    });
-  }, [emblaApi]);
-
   useEffect(() => {
     if (!emblaApi) return;
     
     onSelect();
-    updateHeight();
 
     emblaApi.on("select", onSelect);
-    emblaApi.on("select", updateHeight);
-    emblaApi.on("reInit", updateHeight);
-
-    window.addEventListener("resize", updateHeight);
     
     // Auto-play logic
     const intervalId = setInterval(() => {
@@ -72,11 +55,8 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
     return () => {
       clearInterval(intervalId);
       emblaApi.off("select", onSelect);
-      emblaApi.off("select", updateHeight);
-      emblaApi.off("reInit", updateHeight);
-      window.removeEventListener("resize", updateHeight);
     };
-  }, [emblaApi, onSelect, updateHeight]);
+  }, [emblaApi, onSelect]);
 
   return (
     <section className="py-24 px-4 bg-muted relative overflow-hidden">
@@ -102,9 +82,8 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         <div className="relative group max-w-4xl mx-auto">
           {/* Carousel Viewport */}
           <div 
-            className="overflow-hidden transition-[height] duration-300 ease-in-out" 
+            className="overflow-hidden" 
             ref={emblaRef}
-            style={{ height: activeHeight !== undefined ? `${activeHeight}px` : "auto" }}
           >
             <div className="flex items-start">
               {testimonials.map((item, index) => (
@@ -113,7 +92,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                     <Quotes className="w-8 h-8 text-primary/20 mb-6" />
                     <blockquote 
                       className="text-lg md:text-xl lg:text-2xl italic text-foreground/90 leading-snug mb-8 font-medium"
-                      style={{ fontFamily: "'Playfair Display', serif" }}
+                      style={{ fontFamily: "var(--font-playfair), serif" }}
                     >
                       "{item[`quote_${locale}`] || item.quote}"
                     </blockquote>
