@@ -25,24 +25,6 @@
     "paths": {
       "@/*": [
         "./src/*"
-      ],
-      "react": [
-        "./node_modules/react"
-      ],
-      "react-dom": [
-        "./node_modules/react-dom"
-      ],
-      "react-dom/experimental": [
-        "./node_modules/@types/react-dom/experimental"
-      ],
-      "react-dom/canary": [
-        "./node_modules/@types/react-dom/canary"
-      ],
-      "@types/react": [
-        "./node_modules/@types/react"
-      ],
-      "@types/react-dom": [
-        "./node_modules/@types/react-dom"
       ]
     },
     "strictNullChecks": true,
