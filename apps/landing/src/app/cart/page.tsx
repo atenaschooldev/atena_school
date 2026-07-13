@@ -40,58 +40,77 @@ export default function CartPage() {
 
   useEffect(() => {
     async function fetchCart() {
-      const { data: { user } } = await supabase.auth.getUser();
-      const sid = getSessionId();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const sid = getSessionId();
 
-      // 1. Fetch bookings first
-      let query = supabase
-        .from("bookings")
-        .select("*")
-        .eq("status", "in_cart");
+        // 1. Fetch bookings first
+        let query = supabase
+          .from("bookings")
+          .select("*")
+          .eq("status", "in_cart");
 
-      if (user) {
-        query = query.eq("user_id", user.id);
-      } else if (sid) {
-        query = query.eq("session_id", sid);
-      } else {
+        if (user) {
+          query = query.eq("user_id", user.id);
+        } else if (sid) {
+          query = query.eq("session_id", sid);
+        } else {
+          setLoading(false);
+          return;
+        }
+
+        const { data: bookingsData, error: bookingsError } = await query;
+
+        if (bookingsError) {
+          console.error("Fetch bookings error:", bookingsError);
+          setLoading(false);
+          return;
+        }
+
+        if (bookingsData && bookingsData.length > 0) {
+          // 2. Fetch details for each item manually to avoid invalid joins
+          const formatted = await Promise.all(bookingsData.map(async (b) => {
+            try {
+              const table = b.item_type === 'course' ? 'courses' : 'shop_items';
+              const { data: itemData, error: itemError } = await supabase
+                .from(table)
+                .select('*')
+                .eq('id', b.item_id)
+                .single();
+
+              if (itemError) {
+                console.error(`Error fetching item ${b.item_id} from ${table}:`, itemError);
+              }
+
+              const title = itemData?.title_it || "Unknown";
+              // Handle price: use numeric price_eur from either table
+              const price = itemData?.price_eur || itemData?.price || "0";
+              
+              return {
+                ...b,
+                title,
+                price: typeof price === 'number' ? `${price}€` : price,
+                teacher: itemData?.teacher_name || "TBD"
+              };
+            } catch (err) {
+              console.error("Error processing cart item:", err);
+              return {
+                ...b,
+                title: "Unknown",
+                price: "0",
+                teacher: "TBD"
+              };
+            }
+          }));
+          setBookings(formatted);
+        } else {
+          setBookings([]);
+        }
+      } catch (error) {
+        console.error("Cart page fetching error:", error);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const { data: bookingsData, error: bookingsError } = await query;
-
-      if (bookingsError) {
-        console.error("Fetch bookings error:", bookingsError);
-        setLoading(false);
-        return;
-      }
-
-      if (bookingsData && bookingsData.length > 0) {
-        // 2. Fetch details for each item manually to avoid invalid joins
-        const formatted = await Promise.all(bookingsData.map(async (b) => {
-          const table = b.item_type === 'course' ? 'courses' : 'shop_items';
-          const { data: itemData } = await supabase
-            .from(table)
-            .select('*')
-            .eq('id', b.item_id)
-            .single();
-
-          const title = itemData?.title_it || "Unknown";
-          // Handle price: use numeric price_eur from either table
-          const price = itemData?.price_eur || itemData?.price || "0";
-          
-          return {
-            ...b,
-            title,
-            price: typeof price === 'number' ? `${price}€` : price,
-            teacher: itemData?.teacher_name || "TBD"
-          };
-        }));
-        setBookings(formatted);
-      } else {
-        setBookings([]);
-      }
-      setLoading(false);
     }
     fetchCart();
   }, [supabase]);
@@ -168,10 +187,10 @@ export default function CartPage() {
                 Il tuo carrello è attualmente vuoto.
               </p>
               <Link 
-                href="/shop"
+                href="/courses"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background font-bold rounded-2xl hover:bg-primary transition-all duration-300 group"
               >
-                Esplora lo shop
+                Esplora i corsi
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

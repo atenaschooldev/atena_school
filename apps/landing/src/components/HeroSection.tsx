@@ -40,7 +40,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-4 pt-28 pb-16 max-w-5xl mx-auto">
         <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 rounded-full bg-black/40 backdrop-blur-[6px] border-2 border-white/20 hover:border-primary/50 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-500 hover:rotate-3 group cursor-pointer animate-in fade-in slide-in-from-top-6 duration-700">
-          <div className="relative w-full h-full translate-x-[-8px] translate-y-[-8px]">
+          <div className="relative w-full h-full translate-x-[-2px] translate-y-[-4px]">
             <Image
               src={logoImage}
               alt="Atena School Logo"
@@ -49,7 +49,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             />
           </div>
         </div>
-        
+
         <h1
           className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 uppercase drop-shadow-sm"
           style={{ fontFamily: "'Playfair Display', serif" }}
@@ -61,21 +61,21 @@ const HeroSection = ({ data }: HeroSectionProps) => {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
           {/* Cambridge Badge */}
           <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:-rotate-1 transition-all duration-300 flex items-center justify-center h-20">
-            <Image 
-              src={cambridgeLogo} 
-              alt="Cambridge English Qualifications" 
-              width={200} 
-              height={56} 
+            <Image
+              src={cambridgeLogo}
+              alt="Cambridge English Qualifications"
+              width={200}
+              height={56}
               className="object-contain h-14 w-auto"
             />
           </div>
           {/* EIPASS / Certipass Badge */}
           <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex items-center justify-center h-20">
-            <Image 
-              src={eipassLogo} 
-              alt="EIPASS Accredited Center" 
-              width={160} 
-              height={64} 
+            <Image
+              src={eipassLogo}
+              alt="EIPASS Accredited Center"
+              width={160}
+              height={64}
               className="object-contain h-16 w-auto"
             />
           </div>
