@@ -245,47 +245,15 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Backdrop */}
-      <div 
-        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setOpen(false)}
-      />
-
-      {/* Mobile Drawer Panel */}
-      <div 
-        className={`fixed top-0 right-0 bottom-0 z-50 w-full max-w-[300px] bg-background/98 backdrop-blur-xl border-l border-border/40 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Drawer Header */}
-        <div className="p-5 flex items-center justify-between border-b border-border/40">
-          <div className="flex items-center gap-2">
-            <Image 
-              src={logo} 
-              alt="Atena School Logo" 
-              width={32} 
-              height={32} 
-              className="object-contain"
-            />
-            <span className="font-black text-xs tracking-wider uppercase text-foreground">Atena School</span>
-          </div>
-          <button 
-            onClick={() => setOpen(false)}
-            className="p-2 rounded-full hover:bg-accent text-foreground transition-all duration-300 active:scale-90"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Drawer Menu Links */}
-        <div className="flex-1 py-6 px-5 overflow-y-auto space-y-2">
+      {/* Mobile menu dropdown */}
+      {open && (
+        <div className="md:hidden bg-background/95 backdrop-blur-lg border border-border/50 rounded-[24px] mt-3 p-4 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col gap-2">
+          {/* Navigation Links */}
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className="flex items-center justify-between py-3.5 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl border border-transparent hover:border-primary/10 transition-all duration-200 active:scale-[0.98]"
+              className="flex items-center justify-between py-3 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 active:scale-[0.98]"
               onClick={() => setOpen(false)}
             >
               <span>{l.label}</span>
@@ -293,17 +261,17 @@ const Navbar = () => {
             </Link>
           ))}
 
-          {/* User Section inside Drawer */}
-          <div className="pt-6 border-t border-border/40 mt-6 space-y-4">
+          {/* User Section / Login */}
+          <div className="pt-4 border-t border-border/40 mt-2 space-y-3">
             {user ? (
-              <div className="space-y-3">
-                <div className="px-4 py-2.5 bg-muted/65 rounded-xl">
+              <div className="space-y-2">
+                <div className="px-4 py-2 bg-muted/65 rounded-xl">
                   <p className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground">Accesso effettuato come</p>
-                  <p className="text-sm font-semibold text-foreground/90 truncate">{user.email}</p>
+                  <p className="text-xs font-semibold text-foreground/90 truncate">{user.email}</p>
                 </div>
                 <Link
                   href="/dashboard"
-                  className="flex items-center justify-between py-3.5 px-4 text-base font-bold text-foreground/85 hover:bg-muted/80 rounded-xl transition-all duration-200"
+                  className="flex items-center justify-between py-3 px-4 text-sm font-bold text-foreground/85 hover:bg-muted/80 rounded-xl transition-all duration-200"
                   onClick={() => setOpen(false)}
                 >
                   Dashboard
@@ -313,7 +281,7 @@ const Navbar = () => {
                     handleLogout();
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 py-3.5 px-4 text-base font-bold text-destructive hover:bg-destructive/5 rounded-xl transition-all duration-200"
+                  className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-destructive hover:bg-destructive/5 rounded-xl transition-all duration-200"
                 >
                   <LogOut className="w-4 h-4" />
                   Logout
@@ -322,34 +290,31 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="w-full flex items-center justify-center py-3.5 px-4 text-base font-extrabold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-95 text-center"
+                className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-extrabold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-95 text-center"
                 onClick={() => setOpen(false)}
               >
                 Accedi / Login
               </Link>
             )}
           </div>
-        </div>
 
-        {/* Drawer Footer */}
-        <div className="p-5 bg-muted/30 border-t border-border/40 space-y-4">
-          <div className="text-[11px] text-muted-foreground space-y-0.5 leading-relaxed">
-            <p className="font-bold text-foreground/80">Atena School S.r.l.s.</p>
-            <p>Viale G. Matteotti 11, Cittanova (RC)</p>
-            <p className="font-medium text-foreground/75 mt-1">Tel: +39 375 605 2362</p>
-          </div>
-          <div className="flex gap-3">
+          {/* Socials & Contacts */}
+          <div className="pt-4 border-t border-border/40 mt-2 flex items-center justify-between px-2 text-[10px] text-muted-foreground leading-relaxed">
+            <div className="space-y-0.5">
+              <p className="font-bold text-foreground/75">Viale G. Matteotti 11, Cittanova</p>
+              <p>Tel: +39 375 605 2362</p>
+            </div>
             <a 
               href="https://www.instagram.com/atenaschool_srls/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+              className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
             >
-              <Instagram className="w-4.5 h-4.5" />
+              <Instagram className="w-4 h-4" />
             </a>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 };
