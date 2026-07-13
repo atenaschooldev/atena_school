@@ -153,6 +153,7 @@ const Navbar = () => {
     { label: t("about"), href: "/#about" },
     { label: t("courses"), href: "/courses" },
     { label: t("blog"), href: "/blog" },
+    { label: t("contact"), href: "/#contact" },
   ];
 
   // Dynamic styling based on scroll and pathname (transparent only on home page)
@@ -173,7 +174,7 @@ const Navbar = () => {
       <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
         isTransparent 
           ? "bg-black/25 backdrop-blur-[6px] border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_32px_rgba(0,0,0,0.12)] px-6 py-2" 
-          : "bg-background/85 backdrop-blur-lg border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-2"
+          : "bg-primary backdrop-blur-lg border border-primary/20 shadow-[0_8px_30px_rgb(0,0,0,0.15)] px-6 py-2"
       }`}>
         {/* Logo */}
         <div className="flex items-center gap-6">
@@ -198,11 +199,7 @@ const Navbar = () => {
             <Link
               key={l.href}
               href={l.href as any}
-              className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${
-                isTransparent 
-                  ? "text-white/95 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
-                  : "text-foreground/80 hover:text-primary hover:bg-primary/5"
-              }`}
+              className="text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 text-white/90 hover:text-white hover:bg-white/10"
               onClick={() => handleLinkClick(l.href)}
             >
               {l.label}
@@ -213,11 +210,7 @@ const Navbar = () => {
         {/* Icons & Actions */}
         <div className="flex items-center gap-4">
           <Link href="/cart" className="relative group">
-            <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
-              isTransparent 
-                ? "text-white/90 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
-                : "text-foreground/70 hover:text-primary hover:bg-primary/5"
-            }`}>
+            <div className="p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 text-white/90 hover:text-white hover:bg-white/10">
               <ShoppingCart className="w-5 h-5 cursor-pointer" />
             </div>
             {cartCount > 0 && (
@@ -230,8 +223,8 @@ const Navbar = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300">
-                  <UserCircle className={`w-8 h-8 transition-colors ${isTransparent ? "text-white" : "text-primary"}`} />
+                <div className="flex items-center gap-2 cursor-pointer hover:bg-white/10 hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300">
+                  <UserCircle className="w-8 h-8 transition-colors text-white" />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -250,11 +243,7 @@ const Navbar = () => {
           ) : (
             <Link 
               href="/auth/login" 
-              className={`text-sm font-bold border px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${
-                isTransparent 
-                  ? "text-white border-white/30 hover:border-white hover:bg-white/10" 
-                  : "text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/25"
-              }`}
+              className="text-sm font-bold border border-white/30 px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm text-white hover:border-white hover:bg-white hover:text-foreground"
               onClick={() => handleLinkClick("/auth/login")}
             >
               Login
@@ -265,9 +254,7 @@ const Navbar = () => {
           <button
             aria-label={open ? "Chiudi menu" : "Apri menu"}
             aria-expanded={open}
-            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
-              isTransparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-accent"
-            }`}
+            className="md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 text-white hover:bg-white/10"
             onClick={() => setOpen(!open)}
           >
             <svg
@@ -340,13 +327,13 @@ const Navbar = () => {
           pointerEvents: open ? "auto" : "none",
         }}
       >
-        <div className="bg-background/95 backdrop-blur-lg border border-border/50 rounded-[24px] mt-3 p-4 shadow-xl flex flex-col gap-2">
+        <div className="bg-primary backdrop-blur-lg border border-primary/20 rounded-[24px] mt-3 p-4 shadow-xl flex flex-col gap-2">
           {/* Navigation Links — staggered slide-in */}
           {navLinks.map((l, i) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className="flex items-center py-3 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 active:scale-[0.98]"
+              className="flex items-center py-3 px-4 text-base font-bold text-white/90 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 active:scale-[0.98]"
               style={{
                 transform: open ? "translateX(0)" : "translateX(-12px)",
                 opacity: open ? 1 : 0,
@@ -360,7 +347,7 @@ const Navbar = () => {
 
           {/* User Section / Login */}
           <div
-            className="pt-4 border-t border-border/40 mt-2 space-y-3"
+            className="pt-4 border-t border-white/10 mt-2 space-y-3"
             style={{
               transform: open ? "translateX(0)" : "translateX(-12px)",
               opacity: open ? 1 : 0,
@@ -369,13 +356,13 @@ const Navbar = () => {
           >
             {user ? (
               <div className="space-y-2">
-                <div className="px-4 py-2 bg-muted/65 rounded-xl">
-                  <p className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground">Accesso effettuato come</p>
-                  <p className="text-xs font-semibold text-foreground/90 truncate">{user.email}</p>
+                <div className="px-4 py-2 bg-white/10 rounded-xl">
+                  <p className="text-[9px] uppercase font-bold tracking-widest text-white/60">Accesso effettuato come</p>
+                  <p className="text-xs font-semibold text-white truncate">{user.email}</p>
                 </div>
                 <Link
                   href="/dashboard"
-                  className="flex items-center justify-between py-3 px-4 text-sm font-bold text-foreground/85 hover:bg-muted/80 rounded-xl transition-all duration-200"
+                  className="flex items-center justify-between py-3 px-4 text-sm font-bold text-white/90 hover:bg-white/10 rounded-xl transition-all duration-200"
                   onClick={() => setOpen(false)}
                 >
                   Dashboard
@@ -385,7 +372,7 @@ const Navbar = () => {
                     handleLogout();
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-destructive hover:bg-destructive/5 rounded-xl transition-all duration-200"
+                  className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200"
                 >
                   <SignOut className="w-4 h-4" />
                   Logout
@@ -394,7 +381,7 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-extrabold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-95 text-center"
+                className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-extrabold text-primary bg-white hover:bg-white/90 rounded-xl shadow-md transition-all active:scale-95 text-center"
                 onClick={() => setOpen(false)}
               >
                 Accedi / Login
@@ -404,7 +391,7 @@ const Navbar = () => {
 
           {/* Socials & Contacts */}
           <div
-            className="pt-4 border-t border-border/40 mt-2 flex items-center justify-between px-2 text-[10px] text-muted-foreground leading-relaxed"
+            className="pt-4 border-t border-white/10 mt-2 flex items-center justify-between px-2 text-[10px] text-white/60 leading-relaxed"
             style={{
               transform: open ? "translateX(0)" : "translateX(-12px)",
               opacity: open ? 1 : 0,
@@ -412,7 +399,7 @@ const Navbar = () => {
             }}
           >
             <div className="space-y-0.5">
-              <p className="font-bold text-foreground/75">Viale G. Matteotti 11, Cittanova</p>
+              <p className="font-bold text-white/80">Viale G. Matteotti 11, Cittanova</p>
               <p>Tel: +39 375 605 2362</p>
             </div>
             <div className="flex gap-2">
@@ -420,7 +407,7 @@ const Navbar = () => {
                 href="https://www.instagram.com/atenaschool_srls/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition active:scale-90 duration-300"
               >
                 <InstagramLogo className="w-4 h-4" />
               </a>
@@ -428,7 +415,7 @@ const Navbar = () => {
                 href="https://www.facebook.com/CSAtena7"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+                className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition active:scale-90 duration-300"
               >
                 <FacebookLogo className="w-4 h-4" />
               </a>

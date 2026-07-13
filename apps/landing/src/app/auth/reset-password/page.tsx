@@ -37,7 +37,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="relative overflow-hidden min-h-screen md:h-screen flex items-center justify-center px-4 pt-20 pb-16">
+    <div className="relative overflow-hidden min-h-[calc(100vh-120px)] flex items-center justify-center px-4 pt-20 pb-16">
       <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary z-10 relative">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-serif text-primary">{t("title")}</CardTitle>

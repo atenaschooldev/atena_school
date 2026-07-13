@@ -37,7 +37,8 @@ const ContactSection = ({ data }: ContactSectionProps) => {
       <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 relative z-20">
         {/* Info */}
         <div>
-          <h2 className="text-3xl font-bold text-primary mb-8">{t("title")}</h2>
+          <h2 className="text-3xl font-bold text-primary mb-3 leading-tight">{t("title")}</h2>
+          <p className="text-foreground/75 mb-8 text-base leading-relaxed">{t("subtitle")}</p>
           <div className="space-y-5">
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
@@ -86,6 +87,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
 
         {/* Form */}
         <div className="bg-card rounded-2xl shadow-lg p-8">
+          <h3 className="text-xl font-bold text-foreground mb-4">{t("form.title")}</h3>
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-2 gap-4">
               <Input placeholder={t("form.firstName")} />

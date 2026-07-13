@@ -40,12 +40,14 @@
   },
   "contact": {
     "title": "Contattaci",
+    "subtitle": "Prenota un test di livello gratuito o contattaci per ricevere maggiori informazioni sui nostri corsi.",
     "form": {
+      "title": "Richiedi una consulenza gratuita",
       "firstName": "Nome",
       "lastName": "Cognome",
       "email": "Email",
       "message": "Messaggio",
-      "submit": "Invia"
+      "submit": "Invia richiesta"
     }
   },
   "coursesPage": {
