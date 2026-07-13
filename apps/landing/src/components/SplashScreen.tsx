@@ -13,24 +13,31 @@ interface SplashScreenProps {
 }
 
 const SplashScreen = ({ initialVisible }: SplashScreenProps) => {
-  const [isVisible, setIsVisible] = useState(initialVisible);
+  // Check sessionStorage synchronously before first render to avoid flicker
+  const alreadySeen = (() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return !!window.sessionStorage.getItem(SPLASH_STORAGE_KEY);
+    } catch {
+      return false;
+    }
+  })();
+
+  const [isVisible, setIsVisible] = useState(initialVisible && !alreadySeen);
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
-    if (!initialVisible) {
+    if (!initialVisible || alreadySeen) {
       return;
     }
 
     try {
-      if (window.sessionStorage.getItem(SPLASH_STORAGE_KEY)) {
-        setIsVisible(false);
-        return;
-      }
-
+      // Mark as seen in sessionStorage so navigation/reloads within the tab skip splash
       window.sessionStorage.setItem(SPLASH_STORAGE_KEY, "true");
-      document.cookie = `${SPLASH_COOKIE_NAME}=true; path=/; samesite=lax`;
+      // Set a persistent cookie (24h) so the server skips splash on first SSR after reload
+      document.cookie = `${SPLASH_COOKIE_NAME}=true; path=/; max-age=86400; samesite=lax`;
     } catch {
-      // If sessionStorage is blocked, keep the splash non-critical.
+      // Non-critical if storage is blocked
     }
 
     const leaveTimer = window.setTimeout(() => {
@@ -45,7 +52,8 @@ const SplashScreen = ({ initialVisible }: SplashScreenProps) => {
       window.clearTimeout(leaveTimer);
       window.clearTimeout(removeTimer);
     };
-  }, [initialVisible]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!isVisible) {
     return null;
