@@ -58,23 +58,23 @@ const HeroSection = ({ data }: HeroSectionProps) => {
         {/* Dual Accreditation Badges */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
           {/* Cambridge Badge */}
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl px-6 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:-rotate-1 transition-all duration-300 flex items-center justify-center h-24 w-56">
+          <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:-rotate-1 transition-all duration-300 flex items-center justify-center h-16">
             <Image 
               src={cambridgeLogo} 
               alt="Cambridge English Qualifications" 
-              width={180} 
-              height={50} 
-              className="object-contain max-h-full"
+              width={150} 
+              height={40} 
+              className="object-contain h-10 w-auto"
             />
           </div>
           {/* EIPASS / Certipass Badge */}
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl px-6 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex items-center justify-center h-24 w-56">
+          <div className="bg-white rounded-2xl px-6 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex items-center justify-center h-16">
             <Image 
               src={eipassLogo} 
               alt="EIPASS Accredited Center" 
-              width={180} 
-              height={60} 
-              className="object-contain max-h-full"
+              width={120} 
+              height={48} 
+              className="object-contain h-12 w-auto"
             />
           </div>
         </div>
