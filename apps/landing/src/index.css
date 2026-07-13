@@ -165,4 +165,15 @@
   .dark .glow-orb {
     opacity: 0.22;
   }
+
+  /* Prevent splash screen flicker by hiding it by default unless .show-splash class is present */
+  #splash-screen:not(.leaving) {
+    display: none;
+  }
+  .show-splash #splash-screen {
+    display: flex !important;
+  }
+  #splash-screen.leaving {
+    display: flex !important;
+  }
 }

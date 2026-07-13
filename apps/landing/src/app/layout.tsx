@@ -1,5 +1,4 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { cookies } from 'next/headers';
 import messages from '../../messages/it.json';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -78,22 +77,34 @@ export async function generateMetadata() {
 import { Toaster } from 'sonner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-  const shouldShowSplash = !cookieStore.has(SPLASH_COOKIE_NAME);
-
   return (
     <html lang="it" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var seenSession = sessionStorage.getItem('atena-school:splash-seen');
+                  var seenCookie = document.cookie.indexOf('atena_school_splash_seen=true') > -1;
+                  if (!seenSession && !seenCookie) {
+                    document.documentElement.classList.add('show-splash');
+                  }
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
       </head>
       <body className={`${playfair.variable} antialiased`} suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
-          <SplashScreen initialVisible={shouldShowSplash} />
+          <SplashScreen />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow flex flex-col">{children}</main>

@@ -8,26 +8,24 @@ const SPLASH_STORAGE_KEY = "atena-school:splash-seen";
 export const SPLASH_COOKIE_NAME = "atena_school_splash_seen";
 const SPLASH_DURATION_MS = 2200;
 
-interface SplashScreenProps {
-  initialVisible: boolean;
-}
-
-const SplashScreen = ({ initialVisible }: SplashScreenProps) => {
-  // Check sessionStorage synchronously before first render to avoid flicker
+const SplashScreen = () => {
+  // Check sessionStorage and cookies synchronously before first render on client
   const alreadySeen = (() => {
     if (typeof window === "undefined") return false;
     try {
-      return !!window.sessionStorage.getItem(SPLASH_STORAGE_KEY);
+      const seenSession = window.sessionStorage.getItem(SPLASH_STORAGE_KEY);
+      const seenCookie = document.cookie.indexOf(`${SPLASH_COOKIE_NAME}=true`) > -1;
+      return !!(seenSession || seenCookie);
     } catch {
       return false;
     }
   })();
 
-  const [isVisible, setIsVisible] = useState(initialVisible && !alreadySeen);
+  const [isVisible, setIsVisible] = useState(!alreadySeen);
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
-    if (!initialVisible || alreadySeen) {
+    if (alreadySeen) {
       return;
     }
 
@@ -42,6 +40,9 @@ const SplashScreen = ({ initialVisible }: SplashScreenProps) => {
 
     const leaveTimer = window.setTimeout(() => {
       setIsLeaving(true);
+      try {
+        document.documentElement.classList.remove('show-splash');
+      } catch (e) {}
     }, SPLASH_DURATION_MS);
 
     const removeTimer = window.setTimeout(() => {
@@ -61,8 +62,9 @@ const SplashScreen = ({ initialVisible }: SplashScreenProps) => {
 
   return (
     <div
+      id="splash-screen"
       className={`fixed inset-0 z-[80] flex items-center justify-center overflow-hidden bg-[#f7faf8] px-6 text-[#123238] transition-[opacity,transform,filter] duration-700 ease-out ${
-        isLeaving ? "pointer-events-none opacity-0 scale-[1.015]" : "opacity-100 scale-100"
+        isLeaving ? "pointer-events-none opacity-0 scale-[1.015] leaving" : "opacity-100 scale-100"
       }`}
       role="status"
       aria-live="polite"
