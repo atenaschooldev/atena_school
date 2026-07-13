@@ -15,6 +15,7 @@ import { getSessionId, mergeGuestBookings } from "@/lib/utils";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const t = useTranslations("nav");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -44,6 +45,11 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", handleScroll);
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -71,6 +77,7 @@ const Navbar = () => {
     window.addEventListener("cartUpdated", fetchCartCount);
 
     return () => {
+      window.removeEventListener("scroll", handleScroll);
       subscription.unsubscribe();
       window.removeEventListener("cartUpdated", fetchCartCount);
     };
@@ -93,9 +100,21 @@ const Navbar = () => {
     { label: t("blog"), href: "/blog" },
   ];
 
+  // Dynamic styling based on scroll and pathname
+  const isDarkHeroPage = pathname === "/" || pathname === "/courses" || pathname.startsWith("/blog");
+  const isTransparent = isDarkHeroPage && !isScrolled;
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      isScrolled 
+        ? "py-3 px-4 md:px-8" 
+        : "py-5 px-4 md:px-8"
+    }`}>
+      <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
+        isTransparent 
+          ? "bg-transparent border-transparent py-2 px-2" 
+          : "bg-background/80 backdrop-blur-lg border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-2"
+      }`}>
         {/* Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
@@ -115,17 +134,25 @@ const Navbar = () => {
             <Link
               key={l.href}
               href={l.href as any}
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              className={`text-sm font-medium transition-colors ${
+                isTransparent 
+                  ? "text-white/80 hover:text-white" 
+                  : "text-foreground/80 hover:text-primary"
+              }`}
             >
               {l.label}
             </Link>
           ))}
         </div>
 
-        {/* Icons */}
+        {/* Icons & Actions */}
         <div className="flex items-center gap-4">
           <Link href="/cart" className="relative group">
-            <ShoppingCart className="w-5 h-5 text-foreground/60 cursor-pointer group-hover:text-primary transition-colors" />
+            <ShoppingCart className={`w-5 h-5 transition-colors cursor-pointer ${
+              isTransparent 
+                ? "text-white/80 hover:text-white" 
+                : "text-foreground/60 hover:text-primary"
+            }`} />
             {cartCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in">
                 {cartCount}
@@ -137,7 +164,7 @@ const Navbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer hover:bg-accent p-1 rounded-full transition-colors">
-                  <UserCircle className="w-8 h-8 text-primary" />
+                  <UserCircle className={`w-8 h-8 transition-colors ${isTransparent ? "text-white" : "text-primary"}`} />
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -154,12 +181,24 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/login" className="text-sm font-semibold text-primary border border-primary px-4 py-1.5 rounded-full hover:bg-primary hover:text-white transition-all">
+            <Link 
+              href="/auth/login" 
+              className={`text-sm font-semibold border px-5 py-1.5 rounded-full transition-all duration-300 ${
+                isTransparent 
+                  ? "text-white border-white hover:bg-white hover:text-black" 
+                  : "text-primary border-primary hover:bg-primary hover:text-white shadow-sm"
+              }`}
+            >
               Login
             </Link>
           )}
 
-          <button className="md:hidden" onClick={() => setOpen(!open)}>
+          <button 
+            className={`md:hidden p-1 rounded-lg transition-colors ${
+              isTransparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-accent"
+            }`} 
+            onClick={() => setOpen(!open)}
+          >
             {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -167,12 +206,12 @@ const Navbar = () => {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-background border-t px-4 pb-4">
+        <div className="md:hidden bg-background/95 backdrop-blur-lg border border-border/50 rounded-2xl mt-2 px-4 pb-4 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className="block py-3 text-sm font-medium text-foreground/80 hover:text-primary border-b border-border/50"
+              className="block py-3.5 text-sm font-medium text-foreground/80 hover:text-primary border-b border-border/50"
               onClick={() => setOpen(false)}
             >
               {l.label}
@@ -180,7 +219,7 @@ const Navbar = () => {
           ))}
         </div>
       )}
-    </nav>
+    </header>
   );
 };
 
