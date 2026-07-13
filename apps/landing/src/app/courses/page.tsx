@@ -17,6 +17,7 @@ import imgDoposcuola from "@/assets/course-doposcuola.jpg";
 import imgRecovery from "@/assets/course-recovery.jpeg";
 import imgUniversity from "@/assets/course-university.jpg";
 import imgIt from "@/assets/course-it_courses.jpg";
+import imgEipass from "@/assets/eipass.webp";
 
 const localImageMap: Record<string, any> = {
   kids: imgKids,
@@ -31,8 +32,8 @@ const localImageMap: Record<string, any> = {
   recovery: imgRecovery,
   university: imgUniversity,
   it_courses: imgIt,
-  eipass_user: imgIt,
-  eipass_basic: imgIt,
+  eipass_user: imgEipass,
+  eipass_basic: imgEipass,
 };
 
 export async function generateMetadata() {

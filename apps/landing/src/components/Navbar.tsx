@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import logo from "@/assets/athena-logo.png";
+import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition } from "react";
 import { Menu, X, ShoppingCart, User, LogOut, UserCircle } from "lucide-react";

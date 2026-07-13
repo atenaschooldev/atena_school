@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
-import heroDefault from "@/../public/hero-london.jpg";
-import logoDefault from "@/../public/athena-logo.png";
-import cambridgeLogo from "@/assets/cambridge.png";
+import heroDefault from "@/../public/hero-london.webp";
+import logoDefault from "@/../public/athena-logo.webp";
+import cambridgeLogo from "@/assets/cambridge.webp";
 
 interface HeroSectionProps {
   data?: any;

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import heroDefault from "@/../public/hero-london.jpg";
+import heroDefault from "@/../public/hero-london.webp";
 
 const CoursesHero = () => {
   const t = useTranslations("coursesPage");
