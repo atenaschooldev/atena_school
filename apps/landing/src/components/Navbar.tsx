@@ -4,7 +4,7 @@ import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition } from "react";
-import { Menu, X, ShoppingCart, User, LogOut, UserCircle } from "lucide-react";
+import { Menu, X, ShoppingCart, User, LogOut, UserCircle, Instagram } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -44,6 +44,18 @@ const Navbar = () => {
     const { count } = await query;
     setCartCount(count || 0);
   };
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -233,21 +245,111 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {open && (
-        <div className="md:hidden bg-background/95 backdrop-blur-lg border border-border/50 rounded-2xl mt-2 px-4 pb-4 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300">
+      {/* Mobile Drawer Backdrop */}
+      <div 
+        className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setOpen(false)}
+      />
+
+      {/* Mobile Drawer Panel */}
+      <div 
+        className={`fixed top-0 right-0 bottom-0 z-50 w-full max-w-[300px] bg-background/98 backdrop-blur-xl border-l border-border/40 shadow-2xl flex flex-col justify-between md:hidden transition-transform duration-300 ease-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Drawer Header */}
+        <div className="p-5 flex items-center justify-between border-b border-border/40">
+          <div className="flex items-center gap-2">
+            <Image 
+              src={logo} 
+              alt="Atena School Logo" 
+              width={32} 
+              height={32} 
+              className="object-contain"
+            />
+            <span className="font-black text-xs tracking-wider uppercase text-foreground">Atena School</span>
+          </div>
+          <button 
+            onClick={() => setOpen(false)}
+            className="p-2 rounded-full hover:bg-accent text-foreground transition-all duration-300 active:scale-90"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Drawer Menu Links */}
+        <div className="flex-1 py-6 px-5 overflow-y-auto space-y-2">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className="block py-3.5 text-sm font-medium text-foreground/80 hover:text-primary border-b border-border/50"
+              className="flex items-center justify-between py-3.5 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl border border-transparent hover:border-primary/10 transition-all duration-200 active:scale-[0.98]"
               onClick={() => setOpen(false)}
             >
-              {l.label}
+              <span>{l.label}</span>
+              <span className="text-muted-foreground/30 font-light">➔</span>
             </Link>
           ))}
+
+          {/* User Section inside Drawer */}
+          <div className="pt-6 border-t border-border/40 mt-6 space-y-4">
+            {user ? (
+              <div className="space-y-3">
+                <div className="px-4 py-2.5 bg-muted/65 rounded-xl">
+                  <p className="text-[9px] uppercase font-bold tracking-widest text-muted-foreground">Accesso effettuato come</p>
+                  <p className="text-sm font-semibold text-foreground/90 truncate">{user.email}</p>
+                </div>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center justify-between py-3.5 px-4 text-base font-bold text-foreground/85 hover:bg-muted/80 rounded-xl transition-all duration-200"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 py-3.5 px-4 text-base font-bold text-destructive hover:bg-destructive/5 rounded-xl transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="w-full flex items-center justify-center py-3.5 px-4 text-base font-extrabold text-white bg-primary hover:bg-primary/95 rounded-xl shadow-md shadow-primary/20 transition-all active:scale-95 text-center"
+                onClick={() => setOpen(false)}
+              >
+                Accedi / Login
+              </Link>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Drawer Footer */}
+        <div className="p-5 bg-muted/30 border-t border-border/40 space-y-4">
+          <div className="text-[11px] text-muted-foreground space-y-0.5 leading-relaxed">
+            <p className="font-bold text-foreground/80">Atena School S.r.l.s.</p>
+            <p>Viale G. Matteotti 11, Cittanova (RC)</p>
+            <p className="font-medium text-foreground/75 mt-1">Tel: +39 375 605 2362</p>
+          </div>
+          <div className="flex gap-3">
+            <a 
+              href="https://www.instagram.com/atenaschool_srls/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+            >
+              <Instagram className="w-4.5 h-4.5" />
+            </a>
+          </div>
+        </div>
+      </div>
     </header>
   );
 };
