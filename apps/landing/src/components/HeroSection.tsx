@@ -3,6 +3,7 @@ import { useTranslations, useLocale } from "next-intl";
 import heroDefault from "@/../public/hero-london.webp";
 import logoDefault from "@/../public/athena-logo.webp";
 import cambridgeLogo from "@/assets/cambridge.webp";
+import eipassLogo from "@/assets/eipass.webp";
 
 interface HeroSectionProps {
   data?: any;
@@ -67,9 +68,14 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             />
           </div>
           {/* EIPASS / Certipass Badge */}
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl px-5 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex flex-col items-center justify-center h-16 w-52">
-            <span className="text-[10px] font-black tracking-widest text-[#0c70b8] uppercase leading-none mb-1">Certipass | EIPASS</span>
-            <span className="text-[11px] font-extrabold text-[#e67e22] uppercase tracking-wider leading-none">Accredited Center</span>
+          <div className="bg-white/95 backdrop-blur-md rounded-2xl px-5 py-3 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 transform hover:scale-105 hover:rotate-1 transition-all duration-300 flex items-center justify-center h-16 w-52">
+            <Image 
+              src={eipassLogo} 
+              alt="EIPASS Accredited Center" 
+              width={160} 
+              height={40} 
+              className="object-contain"
+            />
           </div>
         </div>
 
