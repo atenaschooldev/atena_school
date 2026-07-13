@@ -112,12 +112,12 @@ const Navbar = () => {
     }`}>
       <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
         isTransparent 
-          ? "bg-transparent border-transparent py-2 px-2" 
-          : "bg-background/80 backdrop-blur-lg border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-2"
+          ? "bg-black/25 backdrop-blur-[6px] border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_32px_rgba(0,0,0,0.12)] px-6 py-2" 
+          : "bg-background/85 backdrop-blur-lg border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-2"
       }`}>
         {/* Logo */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 transform hover:scale-[1.03] transition-transform duration-200">
             <Image 
               src={logo} 
               alt="Atena School" 
@@ -129,15 +129,15 @@ const Navbar = () => {
         </div>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-2">
           {navLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-all duration-300 ${
                 isTransparent 
-                  ? "text-white/80 hover:text-white" 
-                  : "text-foreground/80 hover:text-primary"
+                  ? "text-white/95 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
+                  : "text-foreground/80 hover:text-primary hover:bg-primary/5"
               }`}
             >
               {l.label}
@@ -148,13 +148,15 @@ const Navbar = () => {
         {/* Icons & Actions */}
         <div className="flex items-center gap-4">
           <Link href="/cart" className="relative group">
-            <ShoppingCart className={`w-5 h-5 transition-colors cursor-pointer ${
+            <div className={`p-2 rounded-full transition-all duration-300 ${
               isTransparent 
-                ? "text-white/80 hover:text-white" 
-                : "text-foreground/60 hover:text-primary"
-            }`} />
+                ? "text-white/90 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
+                : "text-foreground/70 hover:text-primary hover:bg-primary/5"
+            }`}>
+              <ShoppingCart className="w-5 h-5 cursor-pointer" />
+            </div>
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in">
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in">
                 {cartCount}
               </span>
             )}
@@ -163,7 +165,7 @@ const Navbar = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:bg-accent p-1 rounded-full transition-colors">
+                <div className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 p-0.5 rounded-full transition-colors">
                   <UserCircle className={`w-8 h-8 transition-colors ${isTransparent ? "text-white" : "text-primary"}`} />
                 </div>
               </DropdownMenuTrigger>
@@ -183,10 +185,10 @@ const Navbar = () => {
           ) : (
             <Link 
               href="/auth/login" 
-              className={`text-sm font-semibold border px-5 py-1.5 rounded-full transition-all duration-300 ${
+              className={`text-sm font-bold border px-5 py-2 rounded-full transition-all duration-300 shadow-sm ${
                 isTransparent 
-                  ? "text-white border-white hover:bg-white hover:text-black" 
-                  : "text-primary border-primary hover:bg-primary hover:text-white shadow-sm"
+                  ? "text-white border-white/30 hover:border-white hover:bg-white/10" 
+                  : "text-primary border-primary hover:bg-primary hover:text-white"
               }`}
             >
               Login
@@ -194,7 +196,7 @@ const Navbar = () => {
           )}
 
           <button 
-            className={`md:hidden p-1 rounded-lg transition-colors ${
+            className={`md:hidden p-2 rounded-full transition-colors ${
               isTransparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-accent"
             }`} 
             onClick={() => setOpen(!open)}
