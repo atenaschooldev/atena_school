@@ -15,7 +15,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
   const cta = data?.[`cta_text_${locale}`] || t("cta");
 
   return (
-    <section id="about" className="relative py-32 px-4 bg-background overflow-hidden border-t border-border/40">
+    <section id="about" className="relative py-32 px-4 bg-background overflow-hidden">
       {/* Decorative background accents */}
       <div className="absolute top-1/4 left-[10%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-[10%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none" />

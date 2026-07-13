@@ -32,8 +32,8 @@ export default async function BlogPage() {
   const blogPosts = await getBlogPosts();
 
   return (
-    <main className="min-h-screen flex flex-col bg-background pt-24">
-      <div className="flex-grow max-w-7xl mx-auto px-4 w-full pb-20">
+    <main className="min-h-screen flex flex-col bg-background pt-24 relative overflow-hidden">
+      <div className="flex-grow max-w-7xl mx-auto px-4 w-full pb-28">
         <header className="mb-16">
           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground mb-4">
             {t("blog")}

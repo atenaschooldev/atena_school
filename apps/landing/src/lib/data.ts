@@ -65,7 +65,9 @@ export const getContactData = unstable_cache(
     return {
       address: data?.address || '',
       phone: data?.phone || '',
+      landline: data?.landline || '',
       email: data?.email || '',
+      vat: data?.vat || '',
       whatsapp: data?.whatsapp || '',
       id: data?.id || 1,
     };

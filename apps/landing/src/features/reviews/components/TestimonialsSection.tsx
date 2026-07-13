@@ -23,6 +23,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const locale = useLocale();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [activeHeight, setActiveHeight] = useState<number | undefined>(undefined);
 
   // Fallback to translations if no data provided
   const testimonials = data && data.length > 0 ? data : (t.raw("list") as any[]);
@@ -40,24 +41,48 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
     setSelectedIndex(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
+  const updateHeight = useCallback(() => {
+    if (!emblaApi) return;
+    requestAnimationFrame(() => {
+      const slides = emblaApi.slideNodes();
+      const activeSlide = slides[emblaApi.selectedScrollSnap()];
+      if (activeSlide) {
+        setActiveHeight(activeSlide.getBoundingClientRect().height);
+      }
+    });
+  }, [emblaApi]);
+
   useEffect(() => {
     if (!emblaApi) return;
+    
     onSelect();
+    updateHeight();
+
     emblaApi.on("select", onSelect);
+    emblaApi.on("select", updateHeight);
+    emblaApi.on("reInit", updateHeight);
+
+    window.addEventListener("resize", updateHeight);
     
     // Auto-play logic
     const intervalId = setInterval(() => {
       emblaApi.scrollNext();
     }, 8000);
 
-    return () => clearInterval(intervalId);
-  }, [emblaApi, onSelect]);
+    return () => {
+      clearInterval(intervalId);
+      emblaApi.off("select", onSelect);
+      emblaApi.off("select", updateHeight);
+      emblaApi.off("reInit", updateHeight);
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, [emblaApi, onSelect, updateHeight]);
 
   return (
-    <section className="py-24 px-4 bg-background relative overflow-hidden">
-      {/* Top wave transition from Teachers (muted/35) to Testimonials (background/white) */}
-      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-muted/35">
+    <section className="py-24 px-4 bg-muted relative overflow-hidden">
+      {/* Top wave transition from Teachers (background/white) to Testimonials (bg-muted) */}
+      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-background">
           <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,1,321.39,56.44Z"></path>
         </svg>
       </div>
@@ -76,8 +101,12 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
 
         <div className="relative group max-w-4xl mx-auto">
           {/* Carousel Viewport */}
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex">
+          <div 
+            className="overflow-hidden transition-[height] duration-300 ease-in-out" 
+            ref={emblaRef}
+            style={{ height: activeHeight !== undefined ? `${activeHeight}px` : "auto" }}
+          >
+            <div className="flex items-start">
               {testimonials.map((item, index) => (
                 <div key={index} className="flex-[0_0_100%] min-w-0 px-4 md:px-10">
                   <div className="flex flex-col items-center text-center">

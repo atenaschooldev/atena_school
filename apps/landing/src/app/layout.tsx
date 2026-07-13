@@ -25,6 +25,17 @@ export async function generateMetadata() {
         'x-default': siteUrl,
       },
     },
+    icons: {
+      icon: [
+        { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+        { url: '/logo-192.png',   sizes: '192x192', type: 'image/png' },
+      ],
+      apple: [
+        { url: '/apple-icon.png', sizes: '512x512', type: 'image/png' },
+      ],
+      shortcut: '/favicon-32.png',
+    },
+    manifest: '/site.webmanifest',
     robots: {
       index: true,
       follow: true,

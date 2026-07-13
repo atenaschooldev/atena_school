@@ -66,8 +66,8 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[80vh] px-4 pt-20">
-      <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary">
+    <div className="relative overflow-hidden min-h-screen md:h-screen flex items-center justify-center px-4 pt-20 pb-16">
+      <Card className="w-full max-w-md shadow-xl border-t-4 border-t-primary z-10 relative">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-3xl font-serif text-primary">{t("title")}</CardTitle>
           <CardDescription>{t("subtitle")}</CardDescription>

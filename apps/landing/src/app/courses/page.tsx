@@ -199,7 +199,7 @@ export default async function CoursesPage() {
   });
 
   return (
-    <main className="min-h-screen bg-background pt-24 pb-20 relative overflow-hidden">
+    <main className="min-h-screen bg-background pt-24 pb-28 relative overflow-hidden">
       {/* Background decorative ornaments */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[120px] -z-10" />

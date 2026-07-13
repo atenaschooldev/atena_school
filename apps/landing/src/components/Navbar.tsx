@@ -4,7 +4,7 @@ import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition, useRef } from "react";
-import { List, X, ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo } from "@phosphor-icons/react";
+import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -261,35 +261,112 @@ const Navbar = () => {
             </Link>
           )}
 
-          <button 
-            className={`md:hidden p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
+          {/* Animated hamburger button */}
+          <button
+            aria-label={open ? "Chiudi menu" : "Apri menu"}
+            aria-expanded={open}
+            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
               isTransparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-accent"
-            }`} 
+            }`}
             onClick={() => setOpen(!open)}
           >
-            {open ? <X className="w-6 h-6 transform rotate-90 transition-transform duration-300" /> : <List className="w-6 h-6 transition-transform duration-300" />}
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="overflow-visible"
+            >
+              {/* Top bar */}
+              <line
+                x1="3" y1="6" x2="21" y2="6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{
+                  transformOrigin: "12px 6px",
+                  transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
+                  transform: open ? "rotate(45deg) translateY(6px)" : "rotate(0deg) translateY(0)",
+                }}
+              />
+              {/* Middle bar */}
+              <line
+                x1="3" y1="12" x2="21" y2="12"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{
+                  transformOrigin: "12px 12px",
+                  transition: "opacity 0.2s 0.05s, transform 0.2s",
+                  opacity: open ? 0 : 1,
+                  transform: open ? "scaleX(0)" : "scaleX(1)",
+                }}
+              />
+              {/* Bottom bar */}
+              <line
+                x1="3" y1="18" x2="21" y2="18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                style={{
+                  transformOrigin: "12px 18px",
+                  transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
+                  transform: open ? "rotate(-45deg) translateY(-6px)" : "rotate(0deg) translateY(0)",
+                }}
+              />
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Mobile menu dropdown */}
+      {/* Click-outside backdrop */}
       {open && (
-        <div className="md:hidden bg-background/95 backdrop-blur-lg border border-border/50 rounded-[24px] mt-3 p-4 shadow-xl animate-in fade-in slide-in-from-top-4 duration-300 flex flex-col gap-2">
-          {/* Navigation Links */}
-          {navLinks.map((l) => (
+        <div
+          className="md:hidden fixed inset-0 z-[-1]"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Mobile menu — always rendered, animated with max-height + opacity */}
+      <div
+        className="md:hidden overflow-hidden"
+        style={{
+          maxHeight: open ? "600px" : "0px",
+          opacity: open ? 1 : 0,
+          transition: open
+            ? "max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease"
+            : "max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease",
+          pointerEvents: open ? "auto" : "none",
+        }}
+      >
+        <div className="bg-background/95 backdrop-blur-lg border border-border/50 rounded-[24px] mt-3 p-4 shadow-xl flex flex-col gap-2">
+          {/* Navigation Links — staggered slide-in */}
+          {navLinks.map((l, i) => (
             <Link
               key={l.href}
               href={l.href as any}
-              className="flex items-center justify-between py-3 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 active:scale-[0.98]"
+              className="flex items-center py-3 px-4 text-base font-bold text-foreground/80 hover:text-primary hover:bg-primary/5 rounded-xl transition-all duration-200 active:scale-[0.98]"
+              style={{
+                transform: open ? "translateX(0)" : "translateX(-12px)",
+                opacity: open ? 1 : 0,
+                transition: `transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) ${i * 0.05 + 0.1}s, opacity 0.3s ease ${i * 0.05 + 0.1}s`,
+              }}
               onClick={() => handleLinkClick(l.href)}
             >
               <span>{l.label}</span>
-              <span className="text-muted-foreground/30 font-light">➔</span>
             </Link>
           ))}
 
           {/* User Section / Login */}
-          <div className="pt-4 border-t border-border/40 mt-2 space-y-3">
+          <div
+            className="pt-4 border-t border-border/40 mt-2 space-y-3"
+            style={{
+              transform: open ? "translateX(0)" : "translateX(-12px)",
+              opacity: open ? 1 : 0,
+              transition: `transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) ${navLinks.length * 0.05 + 0.1}s, opacity 0.3s ease ${navLinks.length * 0.05 + 0.1}s`,
+            }}
+          >
             {user ? (
               <div className="space-y-2">
                 <div className="px-4 py-2 bg-muted/65 rounded-xl">
@@ -326,23 +403,30 @@ const Navbar = () => {
           </div>
 
           {/* Socials & Contacts */}
-          <div className="pt-4 border-t border-border/40 mt-2 flex items-center justify-between px-2 text-[10px] text-muted-foreground leading-relaxed">
+          <div
+            className="pt-4 border-t border-border/40 mt-2 flex items-center justify-between px-2 text-[10px] text-muted-foreground leading-relaxed"
+            style={{
+              transform: open ? "translateX(0)" : "translateX(-12px)",
+              opacity: open ? 1 : 0,
+              transition: `transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) ${(navLinks.length + 1) * 0.05 + 0.1}s, opacity 0.3s ease ${(navLinks.length + 1) * 0.05 + 0.1}s`,
+            }}
+          >
             <div className="space-y-0.5">
               <p className="font-bold text-foreground/75">Viale G. Matteotti 11, Cittanova</p>
               <p>Tel: +39 375 605 2362</p>
             </div>
             <div className="flex gap-2">
-              <a 
-                href="https://www.instagram.com/atenaschool_srls/" 
-                target="_blank" 
+              <a
+                href="https://www.instagram.com/atenaschool_srls/"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
               >
                 <InstagramLogo className="w-4 h-4" />
               </a>
-              <a 
-                href="https://www.facebook.com/CSAtena7" 
-                target="_blank" 
+              <a
+                href="https://www.facebook.com/CSAtena7"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
               >
@@ -351,7 +435,7 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </header>
   );
 };
