@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -15,18 +15,13 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/routing";
-import { format, addMonths, isSameDay, isSunday } from "date-fns";
-import { it, enUS } from "date-fns/locale";
-import { getSessionId } from "@/lib/utils";
+import { format, isSunday } from "date-fns";
+import { it } from "date-fns/locale";
 
 interface BookingItem {
   id: string;
   title_it: string;
   title_en: string;
-  price: string | number;
-  teacher_name: string;
-  teacher_id?: string;
-  is_personal: boolean;
   duration_it?: string;
   duration_en?: string;
 }
@@ -44,7 +39,6 @@ export default function BookingPage({
   params: Promise<{ type: string; id: string }> 
 }) {
   const { type, id } = use(params);
-  const locale = 'it';
   const t = useTranslations("booking");
   const router = useRouter();
   const supabase = createClient();
@@ -56,7 +50,6 @@ export default function BookingPage({
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [availableSlots, setAvailableSlots] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   // Fetch item details
   useEffect(() => {
@@ -74,26 +67,23 @@ export default function BookingPage({
     fetchItem();
   }, [id, type, supabase]);
 
-  // Fetch available schedule slots for teacher
+  // Fetch available slots for the selected date
   useEffect(() => {
-    if (!selectedDate || !item || !item.teacher_id) {
+    if (!selectedDate) {
       setAvailableSlots([]);
       return;
     }
 
-    const currentTeacherId = item.teacher_id;
-
-    async function fetchSchedule() {
+    async function fetchSlots() {
       const startOfDay = new Date(selectedDate!);
       startOfDay.setHours(0, 0, 0, 0);
-      
+
       const endOfDay = new Date(selectedDate!);
       endOfDay.setHours(23, 59, 59, 999);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("schedule_slots")
         .select("*")
-        .eq("teacher_id", currentTeacherId)
         .eq("is_booked", false)
         .gte("starts_at", startOfDay.toISOString())
         .lte("starts_at", endOfDay.toISOString())
@@ -105,20 +95,19 @@ export default function BookingPage({
         setAvailableSlots([]);
       }
     }
-    fetchSchedule();
-  }, [selectedDate, item, supabase]);
 
+    fetchSlots();
+  }, [selectedDate, supabase]);
 
+  if (loading || !item) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
-  );
-
-  if (!item) return <div>Item not found</div>;
-
-  const title = item[`title_${locale}` as keyof BookingItem] as string;
+  const title = item.title_it;
 
   return (
     <main className="min-h-screen pt-20 pb-20 px-4 bg-[#f8f9fa]">
@@ -129,7 +118,7 @@ export default function BookingPage({
           className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-6 group"
         >
           <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          {locale === "it" ? "Torna alla lista" : "Back to list"}
+          Torna alla lista
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -137,12 +126,10 @@ export default function BookingPage({
           <div className="lg:col-span-8 space-y-12">
             <header>
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-                {locale === "it" ? "Prenota la tua lezione" : "Book your lesson"}
+                Prenota la tua lezione
               </h1>
               <p className="text-lg text-muted-foreground">
-                {locale === "it" 
-                  ? "Scegli la data e l'orario più comodi per te."
-                  : "Choose the most convenient date and time for you."}
+                Scegli la data e l'orario più comodi per te.
               </p>
             </header>
 
@@ -151,7 +138,7 @@ export default function BookingPage({
               <div className="space-y-6">
                 <div className="flex items-center gap-2 font-bold text-lg">
                   <CalendarIcon className="w-5 h-5 text-primary" />
-                  {locale === "it" ? "1. Seleziona Data" : "1. Select Date"}
+                  1. Seleziona Data
                 </div>
                 <Calendar
                   mode="single"
@@ -174,13 +161,13 @@ export default function BookingPage({
               <div className="space-y-6">
                 <div className="flex items-center gap-2 font-bold text-lg">
                   <Clock className="w-5 h-5 text-primary" />
-                  {locale === "it" ? "2. Seleziona Orario" : "2. Select Time"}
+                  2. Seleziona Orario
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
                   {availableSlots.length === 0 ? (
                     <div className="col-span-2 text-center text-sm text-muted-foreground p-4 border-2 border-dashed border-border rounded-xl">
-                      {locale === "it" ? "Nessun orario disponibile in questa data." : "No slots available on this date."}
+                      Nessun orario disponibile in questa data.
                     </div>
                   ) : (
                     availableSlots.map((slot) => {
@@ -209,7 +196,7 @@ export default function BookingPage({
                 {!selectedDate && (
                   <div className="p-4 rounded-2xl bg-primary/5 text-primary text-sm flex gap-2 items-center">
                     <AlertCircle className="w-4 h-4" />
-                    {locale === "it" ? "Scegli una data prima" : "Pick a date first"}
+                    Scegli una data prima
                   </div>
                 )}
               </div>
@@ -223,7 +210,7 @@ export default function BookingPage({
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 
                 <h2 className="text-2xl font-black uppercase mb-8 relative z-10 border-b border-background/10 pb-4">
-                  {locale === "it" ? "Riepilogo" : "Summary"}
+                  Riepilogo
                 </h2>
 
                 <div className="space-y-6 relative z-10">
@@ -243,7 +230,7 @@ export default function BookingPage({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Teacher</p>
-                      <p className="font-bold">{item.teacher_name}</p>
+                      <p className="font-bold">{(item as any).teacher_name}</p>
                     </div>
                   </div>
 
@@ -272,14 +259,14 @@ export default function BookingPage({
                       <span className="font-black uppercase tracking-tight">Total</span>
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 opacity-50" />
-                        <span className="font-black text-primary">{item.price}</span>
+                        <span className="font-black text-primary">{(item as any).price}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-4">
                     <button
-                      disabled={saving || !selectedDate || !selectedSlotId}
+                      disabled={!selectedDate || !selectedSlotId}
                       onClick={() => {
                         const dateStr = format(selectedDate!, "yyyy-MM-dd");
                         const timeStr = selectedTime!;
@@ -287,7 +274,7 @@ export default function BookingPage({
                       }}
                       className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
                     >
-                      {locale === "it" ? "Continua" : "Continue"}
+                      Continua
                     </button>
                   </div>
                 </div>

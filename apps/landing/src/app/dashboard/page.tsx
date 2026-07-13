@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { BookOpen, Calendar, Clock, CheckCircle2 } from "lucide-react";
 import { format, isFuture, parseISO } from "date-fns";
-import { it, enUS } from "date-fns/locale";
+import { it } from "date-fns/locale";
 
 interface EnrichedBooking {
   id: string;
@@ -22,7 +22,6 @@ interface EnrichedBooking {
 }
 
 export default function DashboardPage() {
-  const locale = 'it';
   const dateLocale = it;
   
   const [user, setUser] = useState<any>(null);
@@ -46,7 +45,6 @@ export default function DashboardPage() {
         .select("*")
         .eq("user_id", user.id)
         .in("status", ["paid", "completed"])
-        // Сортировка по дефолту по id, мы отсортируем потом по дате
         .order("created_at", { ascending: false });
 
       const userBookings: any[] = data || [];
@@ -92,7 +90,6 @@ export default function DashboardPage() {
         const itemObj = b.item_type === "course" ? coursesMap[b.item_id] : shopItemsMap[b.item_id];
         const slotObj = b.slot_id ? slotsMap[b.slot_id] : null;
 
-        const titleField = `title_${locale}` as keyof typeof itemObj;
         let isSlotFuture = false;
 
         // Check if date is in the future
@@ -106,7 +103,7 @@ export default function DashboardPage() {
           id: b.id,
           item_id: b.item_id,
           item_type: b.item_type,
-          item_title: itemObj ? ((itemObj as any)[titleField] || (itemObj as any).title_it || (itemObj as any).name || "Item Unavailable") : "Item Unavailable",
+          item_title: itemObj ? (itemObj.title_it || itemObj.name || "Item Unavailable") : "Item Unavailable",
           price: itemObj ? (itemObj as any).price : 0,
           teacher_name: itemObj ? (itemObj as any).teacher_name : "TBD",
           booking_date: b.booking_date,
@@ -132,7 +129,7 @@ export default function DashboardPage() {
     }
 
     fetchData();
-  }, [supabase, locale]);
+  }, [supabase]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
@@ -150,12 +147,10 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto">
         <header className="mb-12">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-            {locale === "it" ? "Il tuo Pannello" : "Your Dashboard"}
+            Il tuo Pannello
           </h1>
           <p className="text-muted-foreground">
-            {locale === "it" 
-              ? `Bentornato, ${user?.user_metadata?.full_name?.split(" ")[0] || 'Studente'}!` 
-              : `Welcome back, ${user?.user_metadata?.full_name?.split(" ")[0] || 'Student'}!`}
+            Bentornato, {user?.user_metadata?.full_name?.split(" ")[0] || 'Studente'}!
           </p>
         </header>
 
@@ -167,7 +162,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                {locale === "it" ? "Corsi Attivi" : "Active Courses"}
+                Corsi Attivi
               </p>
               <p className="text-4xl font-black">{uniqueCourses}</p>
             </div>
@@ -179,7 +174,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                {locale === "it" ? "Prossime Lezioni" : "Upcoming Lessons"}
+                Prossime Lezioni
               </p>
               <p className="text-4xl font-black text-primary">{upcomingLessons}</p>
             </div>
@@ -191,7 +186,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                {locale === "it" ? "Ore Totali" : "Total Hours"}
+                Ore Totali
               </p>
               <p className="text-4xl font-black">{totalHours}</p>
             </div>
@@ -202,7 +197,7 @@ export default function DashboardPage() {
         <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
           <div className="p-8 border-b border-border flex justify-between items-end">
             <h2 className="text-2xl font-black uppercase">
-              {locale === "it" ? "I tuoi appuntamenti" : "Your Appointments"}
+              I tuoi appuntamenti
             </h2>
           </div>
 
@@ -212,12 +207,10 @@ export default function DashboardPage() {
                 <Calendar className="w-8 h-8 opacity-50" />
               </div>
               <p className="font-bold mb-2">
-                {locale === "it" ? "Nessun appuntamento attivo" : "No active appointments"}
+                Nessun appuntamento attivo
               </p>
               <p className="text-sm opacity-70">
-                {locale === "it" 
-                  ? "Non hai ancora completato nessun acquisto." 
-                  : "You haven't completed any purchases yet."}
+                Non hai ancora completato nessun acquisto.
               </p>
             </div>
           ) : (
@@ -236,23 +229,23 @@ export default function DashboardPage() {
                     <div className="flex-1 space-y-1 mb-4 md:mb-0">
                       <div className="flex items-center gap-3 mb-2">
                         <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full ${booking.is_future ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                          {booking.is_future ? (locale === "it" ? "In Arrivo" : "Upcoming") : (locale === "it" ? "Completato" : "Completed")}
+                          {booking.is_future ? "In Arrivo" : "Completato"}
                         </span>
                       </div>
                       <h3 className="text-xl font-bold">{booking.item_title}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {locale === "it" ? "con" : "with"} <span className="font-bold">{booking.teacher_name}</span>
+                        con <span className="font-bold">{booking.teacher_name}</span>
                       </p>
                     </div>
 
                     <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4 md:gap-1">
                       <div className="text-left md:text-right">
                         <p className="font-black text-lg">{dateDisplay}</p>
-                        <p className="text-muted-foreground">{locale === "it" ? "ore" : "at"} {timeDisplay}</p>
+                        <p className="text-muted-foreground">ore {timeDisplay}</p>
                       </div>
                       <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
                         <CheckCircle2 className="w-3 h-3 text-green-600" />
-                        {locale === "it" ? "Pagato" : "Paid"}
+                        Pagato
                       </div>
                     </div>
                   </div>

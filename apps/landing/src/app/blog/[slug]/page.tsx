@@ -39,16 +39,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const locale = 'it';
   const post = await getSingleBlogPost(slug);
 
   if (!post) {
     notFound();
   }
 
-  const title = post[`title_${locale}`] || post.title;
-  const content = post[`content_${locale}`] || post.content;
-  const publishedAt = post.published_at ? new Date(post.published_at).toLocaleDateString(locale, {
+  const title = post.title_it || post.title;
+  const content = post.content_it || post.content;
+  const publishedAt = post.published_at ? new Date(post.published_at).toLocaleDateString('it', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -64,7 +63,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors group"
           >
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            {locale === "it" ? "Torna al Blog" : "Back to Blog"}
+            Torna al Blog
           </Link>
         </div>
 
@@ -100,7 +99,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         {/* Content Area */}
         <div className="prose prose-lg dark:prose-invert max-w-none">
           <div className="text-xl md:text-2xl leading-relaxed text-muted-foreground font-light mb-12 whitespace-pre-wrap">
-            {post[`excerpt_${locale}`] || post.excerpt}
+            {post.excerpt_it || post.excerpt}
           </div>
           
           <div className="h-px w-full bg-border mb-12" />
@@ -113,12 +112,12 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         {/* Footer actions */}
         <footer className="border-t border-border pt-12 flex flex-col items-center gap-8">
           <p className="text-muted-foreground font-medium">
-            {locale === "it" ? "Ti è piaciuto l'articolo?" : "Did you like the article?"}
+            Ti è piaciuto l'articolo?
           </p>
           <div className="flex gap-4">
             <button className="flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-bold hover:bg-primary transition-colors">
               <Share2 className="w-4 h-4" />
-              {locale === "it" ? "Condividi" : "Share"}
+              Condividi
             </button>
           </div>
         </footer>

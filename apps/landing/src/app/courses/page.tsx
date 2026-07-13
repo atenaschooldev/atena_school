@@ -62,7 +62,6 @@ export async function generateMetadata() {
 }
 
 export default async function CoursesPage() {
-  const locale = 'it';
   const t = await getTranslations("coursesPage");
 
   const supabaseCourses = await getCourses();
@@ -120,13 +119,41 @@ export default async function CoursesPage() {
     ];
   }
 
-  return (
-    <main className="min-h-screen bg-background relative overflow-hidden">
-      {/* Visual glowing decorative backdrops */}
-      <div className="glow-orb w-[500px] h-[500px] bg-primary/10 top-1/4 -right-20" />
-      <div className="glow-orb w-[600px] h-[600px] bg-secondary/15 bottom-1/3 -left-30" />
+  const localImageMap: Record<string, any> = {
+    kids: imgKids,
+    starters: imgStarters,
+    movers: imgMovers,
+    flyers: imgFlyers,
+    a2key: imgA2Key,
+    b1: imgB1,
+    b2: imgB2,
+    c1: imgC1,
+    doposcuola: imgDoposcuola,
+    recovery: imgRecovery,
+    university: imgUniversity,
+    eipass_user: imgIt,
+    eipass_basic: imgIt,
+  };
 
-      <CoursesHero />
+  return (
+    <main className="min-h-screen bg-background pt-24 pb-20 relative overflow-hidden">
+      {/* Background decorative ornaments */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
+
+      {/* Hero Header */}
+      <header className="max-w-7xl mx-auto px-4 pt-16 pb-8 text-center relative z-10">
+        <h1 
+          className="text-5xl md:text-7xl font-black uppercase tracking-tight text-foreground mb-6"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
+          {t("title")}
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
+          {t("subtitle")}
+        </p>
+        <div className="h-1.5 w-32 bg-primary mx-auto mt-8 rounded-full" />
+      </header>
 
       <section className="max-w-7xl mx-auto px-4 py-24 relative z-10">
         {courseSections.map((section) => (
@@ -144,8 +171,8 @@ export default async function CoursesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {hasDbCourses && section.courses ? (
                 section.courses.map((course: any) => {
-                  const itemTitle = locale === "it" ? (course.title_it || course.name) : (course.title_en || course.name);
-                  const itemDesc = locale === "it" ? (course.description_it || course.description || "") : (course.description_en || course.description || "");
+                  const itemTitle = course.title_it || course.name;
+                  const itemDesc = course.description_it || course.description || "";
                   const itemPrice = course.price ? `${course.price}€` : undefined;
 
                   const lowerName = (course.name || "").toLowerCase();
@@ -187,8 +214,8 @@ export default async function CoursesPage() {
                 section.items?.map((itemKey) => {
                   // Try to find matching supabase course by slug
                   const match = supabaseCourses?.find(sc => sc.slug === itemKey);
-                  const itemTitle = match?.[`title_${locale}`] || t(`items.${itemKey}.title`);
-                  const itemDesc = match?.[`description_${locale}`] || t(`items.${itemKey}.description`);
+                  const itemTitle = match?.title_it || t(`items.${itemKey}.title`);
+                  const itemDesc = match?.description_it || t(`items.${itemKey}.description`);
                   const itemPrice = match?.price_eur ? `${match.price_eur}€` : undefined;
 
                   return (

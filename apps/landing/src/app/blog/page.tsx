@@ -28,9 +28,7 @@ export async function generateMetadata() {
 }
 
 export default async function BlogPage() {
-  const locale = 'it';
   const t = await getTranslations("nav");
-
   const blogPosts = await getBlogPosts();
 
   return (
@@ -56,20 +54,20 @@ export default async function BlogPage() {
                     {post.main_image && (
                       <img
                         src={post.main_image}
-                        alt={post[`title_${locale}`] || post.title}
+                        alt={post.title_it || post.title}
                         className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
                     )}
                   </div>
                   <div className="space-y-4">
                     <div className="text-xs font-bold uppercase tracking-widest text-primary">
-                      {post.published_at ? new Date(post.published_at).toLocaleDateString(locale) : ""}
+                      {post.published_at ? new Date(post.published_at).toLocaleDateString('it') : ""}
                     </div>
                     <h2 className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
-                      {post[`title_${locale}`] || post.title}
+                      {post.title_it || post.title}
                     </h2>
                     <p className="text-muted-foreground line-clamp-3">
-                      {post[`excerpt_${locale}`] || post.excerpt}
+                      {post.excerpt_it || post.excerpt}
                     </p>
                   </div>
                 </article>
@@ -79,7 +77,7 @@ export default async function BlogPage() {
         ) : (
           <div className="py-24">
             <p className="text-muted-foreground text-xl font-light italic opacity-50">
-              {locale === "it" ? "In arrivo presto..." : "Coming soon..."}
+              In arrivo presto...
             </p>
           </div>
         )}

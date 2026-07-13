@@ -1,25 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTranslations, useLocale } from "next-intl";
-import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { 
   ShoppingBag, 
   Trash2, 
-  CreditCard, 
+  Calendar, 
+  Clock, 
+  User, 
+  CreditCard,
   ArrowRight,
-  ShieldCheck,
-  Calendar,
-  Clock,
-  User
+  ShieldCheck
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { Link, useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
-import { it, enUS } from "date-fns/locale";
-import { toast } from "sonner";
+import { it } from "date-fns/locale";
 import { getSessionId } from "@/lib/utils";
+import { toast } from "sonner";
 
-interface Booking {
+interface CartBooking {
   id: string;
   item_id: string;
   item_type: string;
@@ -30,10 +30,9 @@ interface Booking {
 
 export default function CartPage() {
   const t = useTranslations("cart");
-  const locale = useLocale();
   const router = useRouter();
   const supabase = createClient();
-  const dateLocale = locale === "it" ? it : enUS;
+  const dateLocale = it;
 
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,7 +76,7 @@ export default function CartPage() {
             .eq('id', b.item_id)
             .single();
 
-          const title = itemData?.[`title_${locale}`] || itemData?.title_en || "Unknown";
+          const title = itemData?.title_it || "Unknown";
           // Handle price: use numeric price_eur from either table
           const price = itemData?.price_eur || itemData?.price || "0";
           
@@ -95,14 +94,14 @@ export default function CartPage() {
       setLoading(false);
     }
     fetchCart();
-  }, [supabase, locale]);
+  }, [supabase]);
 
   const removeItem = async (id: string) => {
     const { error } = await supabase.from("bookings").delete().eq("id", id);
     if (!error) {
       setBookings(prev => prev.filter(b => b.id !== id));
       window.dispatchEvent(new Event("cartUpdated"));
-      toast.success(locale === "it" ? "Rimosso dal carrello" : "Removed from cart");
+      toast.success("Rimosso dal carrello");
     }
   };
 
@@ -129,7 +128,7 @@ export default function CartPage() {
 
     if (!error) {
       window.dispatchEvent(new Event("cartUpdated"));
-      toast.success(locale === "it" ? "Pagamento completato!" : "Payment successful!");
+      toast.success("Pagamento completato!");
       router.push("/dashboard"); 
     } else {
       setProcessing(false);
@@ -151,11 +150,11 @@ export default function CartPage() {
               <ShoppingBag className="w-6 h-6 text-primary" />
             </div>
             <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground">
-              {locale === "it" ? "Il tuo Carrello" : "Your Cart"}
+              Il tuo Carrello
             </h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            {bookings.length} {locale === "it" ? "articoli pronti per il checkout" : "items ready for checkout"}
+            {bookings.length} articoli pronti per il checkout
           </p>
         </header>
 
@@ -166,13 +165,13 @@ export default function CartPage() {
                 <ShoppingBag className="w-10 h-10 opacity-50 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground font-medium text-lg mb-8">
-                {locale === "it" ? "Il tuo carrello è attualmente vuoto." : "Your cart is currently empty."}
+                Il tuo carrello è attualmente vuoto.
               </p>
               <Link 
                 href="/shop"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background font-bold rounded-2xl hover:bg-primary transition-all duration-300 group"
               >
-                {locale === "it" ? "Esplora lo shop" : "Explore shop"}
+                Esplora lo shop
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -225,7 +224,7 @@ export default function CartPage() {
             <div className="lg:col-span-5">
               <div className="sticky top-32 bg-foreground text-background rounded-3xl p-8 shadow-2xl">
                 <h2 className="text-2xl font-black uppercase mb-8 border-b border-background/10 pb-4">
-                  {locale === "it" ? "Riepilogo Ordine" : "Order Summary"}
+                  Riepilogo Ordine
                 </h2>
 
                 <div className="space-y-4 mb-8">
@@ -252,7 +251,7 @@ export default function CartPage() {
                     ) : (
                       <>
                         <CreditCard className="w-5 h-5" />
-                        {locale === "it" ? "Paga Ora (Stripe)" : "Pay Now (Stripe)"}
+                        Paga Ora (Stripe)
                       </>
                     )}
                   </button>
@@ -265,9 +264,7 @@ export default function CartPage() {
 
                 <div className="mt-8 p-4 bg-background/5 rounded-2xl border border-background/10">
                   <p className="text-[11px] leading-relaxed opacity-50 italic">
-                    {locale === "it" 
-                      ? "Nota: Questa è una simulazione. Cliccando su 'Paga Ora', il sistema confermerà le tue lezioni senza prelevare denaro reale."
-                      : "Note: This is a simulation. By clicking 'Pay Now', the system will confirm your lessons without charging real money."}
+                    Nota: Questa è una simulazione. Cliccando su 'Paga Ora', il sistema confermerà le tue lezioni senza prelevare denaro reale.
                   </p>
                 </div>
               </div>
