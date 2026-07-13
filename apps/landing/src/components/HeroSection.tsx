@@ -27,7 +27,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           src={backgroundImage}
           alt="Atena School"
           fill
-          className="object-cover animate-zoom-breathing"
+          className="object-cover animate-zoom-breathing [will-change:transform]"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/65 to-primary/45" />

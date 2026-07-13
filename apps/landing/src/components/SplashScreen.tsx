@@ -66,6 +66,7 @@ const SplashScreen = () => {
       className={`fixed inset-0 z-[80] flex items-center justify-center overflow-hidden bg-[#f7faf8] px-6 text-[#123238] transition-[opacity,transform,filter] duration-700 ease-out ${
         isLeaving ? "pointer-events-none opacity-0 scale-[1.015] leaving" : "opacity-100 scale-100"
       }`}
+      style={{ contain: 'strict' }}
       role="status"
       aria-live="polite"
       aria-label="Atena School"
@@ -79,10 +80,10 @@ const SplashScreen = () => {
 
       <div className="relative z-10 flex max-w-5xl flex-col items-center px-4 pb-16 pt-28 text-center">
         <div className="relative mb-8 flex h-32 w-32 cursor-pointer items-center justify-center rounded-full border-2 border-white/70 bg-white/58 p-5 shadow-[0_18px_55px_rgba(31,104,114,0.18),0_8px_28px_rgba(214,179,95,0.18),inset_0_1px_1px_rgba(255,255,255,0.75)] backdrop-blur-[10px] md:h-40 md:w-40 animate-[splash-mark_1.35s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-          <div className="absolute inset-3 rounded-full border border-[#d6b35f]/34 animate-[splash-halo_2.2s_ease-in-out_infinite]" />
-          <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_180deg,transparent,rgba(31,104,114,0.24),rgba(214,179,95,0.34),transparent_38%)] opacity-80 blur-[1px] animate-[splash-spin_3.2s_linear_infinite]" />
+          <div className="absolute inset-3 rounded-full border border-[#d6b35f]/34 animate-[splash-halo_2.2s_ease-in-out_infinite] [will-change:transform]" />
+          <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_180deg,transparent,rgba(31,104,114,0.24),rgba(214,179,95,0.34),transparent_38%)] opacity-80 blur-[1px] animate-[splash-spin_3.2s_linear_infinite] [will-change:transform]" />
           <div className="absolute inset-[3px] rounded-full bg-white/72" />
-          <div className="relative h-full w-full translate-x-[-2px] translate-y-[-4px] animate-[splash-float_2.4s_ease-in-out_infinite]">
+          <div className="relative h-full w-full translate-x-[-2px] translate-y-[-4px] animate-[splash-float_2.4s_ease-in-out_infinite] [will-change:transform]">
             <Image
               src={logo}
               alt="Atena School"
