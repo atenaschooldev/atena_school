@@ -34,46 +34,46 @@ atena_school/
 
 For detailed information, installation, and deployment steps of each individual application, please refer to their respective guides:
 
-*   **[CRM Dashboard README](file:///Users/krimson/PROJECTS/atena_school/apps/crm/README.md)** — Frontend CRM dashboard for administrators and teachers.
-*   **[Next.js Landing README](file:///Users/krimson/PROJECTS/atena_school/apps/landing/README.md)** — Public marketing page and customer registration portal.
-*   **[NestJS Backend README](file:///Users/krimson/PROJECTS/atena_school/apps/backend/README.md)** — Core business logic, database migrations, and REST endpoints.
-*   **[Expo Mobile README](file:///Users/krimson/PROJECTS/atena_school/apps/mobile/README.md)** — Native application for students and staff.
+*   **[CRM Dashboard README](apps/crm/README.md)** — Frontend CRM dashboard for administrators and teachers.
+*   **[Next.js Landing README](apps/landing/README.md)** — Public marketing page and customer registration portal.
+*   **[NestJS Backend README](apps/backend/README.md)** — Core business logic, database migrations, and REST endpoints.
+*   **[Expo Mobile README](apps/mobile/README.md)** — Native application for students and staff.
 
 ---
 
 ## 📘 Developer Handbook (docs/)
 
-This repository includes a comprehensive developer handbook inside the [docs/](file:///Users/krimson/PROJECTS/atena_school/docs) folder. Refer to these files to understand the project's engineering standards, policies, and architecture:
+This repository includes a comprehensive developer handbook inside the [docs/](docs) folder. Refer to these files to understand the project's engineering standards, policies, and architecture:
 
 ### ⚙️ Core Architecture & Spec
-*   **[Engineering Specification](file:///Users/krimson/PROJECTS/atena_school/docs/Engineering-Specification.md)** — The complete product and technical spec.
-*   **[System Architecture](file:///Users/krimson/PROJECTS/atena_school/docs/ARCHITECTURE.md)** — The overall technical architecture and design system.
-*   **[Monorepo Architecture Guide](file:///Users/krimson/PROJECTS/atena_school/docs/Monorepo.md)** — Guidelines, workspace layouts, and packaging rules.
-*   **[Project Directory Structure](file:///Users/krimson/PROJECTS/atena_school/docs/Project-Structure.md)** — Visual mapping of the files and directories.
+*   **[Engineering Specification](docs/Engineering-Specification.md)** — The complete product and technical spec.
+*   **[System Architecture](docs/ARCHITECTURE.md)** — The overall technical architecture and design system.
+*   **[Monorepo Architecture Guide](docs/Monorepo.md)** — Guidelines, workspace layouts, and packaging rules.
+*   **[Project Directory Structure](docs/Project-Structure.md)** — Visual mapping of the files and directories.
 
 ### 🔐 Security & Database
-*   **[Authentication & Authorization Guide](file:///Users/krimson/PROJECTS/atena_school/docs/Auth.md)** — Supabase auth integration details.
-*   **[Database Schema & Migrations](file:///Users/krimson/PROJECTS/atena_school/docs/Database-Migrations.md)** — Prisma schemas, database structure, and migration steps.
-*   **[Environments Configuration](file:///Users/krimson/PROJECTS/atena_school/docs/Environments.md)** — Handling local env files and secrets securely.
+*   **[Authentication & Authorization Guide](docs/Auth.md)** — Supabase auth integration details.
+*   **[Database Schema & Migrations](docs/Database-Migrations.md)** — Prisma schemas, database structure, and migration steps.
+*   **[Environments Configuration](docs/Environments.md)** — Handling local env files and secrets securely.
 
 ### 🛠️ Developer Workflow
-*   **[Workspace Onboarding & Bootstrapping](file:///Users/krimson/PROJECTS/atena_school/docs/Bootstrap-Guide.md)** — Quick start guide for new developers.
-*   **[API Contracts](file:///Users/krimson/PROJECTS/atena_school/docs/API-Contracts.md)** — Schema structures for client-server communication.
-*   **[Client & Server Routing](file:///Users/krimson/PROJECTS/atena_school/docs/Routing.md)** — Navigation schemas for Next.js and TanStack Start.
-*   **[Feature Template](file:///Users/krimson/PROJECTS/atena_school/docs/Feature-Template.md)** — Scaffold structure for implementing new features.
-*   **[Error Handling Policies](file:///Users/krimson/PROJECTS/atena_school/docs/Error-Handling.md)** — Rules for wrapping and throwing errors safely.
-*   **[Testing Strategy](file:///Users/krimson/PROJECTS/atena_school/docs/Testing.md)** — Writing unit, integration, and E2E tests.
+*   **[Workspace Onboarding & Bootstrapping](docs/Bootstrap-Guide.md)** — Quick start guide for new developers.
+*   **[API Contracts](docs/API-Contracts.md)** — Schema structures for client-server communication.
+*   **[Client & Server Routing](docs/Routing.md)** — Navigation schemas for Next.js and TanStack Start.
+*   **[Feature Template](docs/Feature-Template.md)** — Scaffold structure for implementing new features.
+*   **[Error Handling Policies](docs/Error-Handling.md)** — Rules for wrapping and throwing errors safely.
+*   **[Testing Strategy](docs/Testing.md)** — Writing unit, integration, and E2E tests.
 
 ### 📋 Quality, Standards & Operations
-*   **[Contribution Guide](file:///Users/krimson/PROJECTS/atena_school/docs/CONTRIBUTING.md)** — Process for proposing changes.
-*   **[Code Review Standard](file:///Users/krimson/PROJECTS/atena_school/docs/Code-Review.md)** — Pull request review checklist.
-*   **[Anti-Patterns Checklist](file:///Users/krimson/PROJECTS/atena_school/docs/Anti-Patterns.md)** — Coding traps and patterns to avoid.
-*   **[Decision Trees](file:///Users/krimson/PROJECTS/atena_school/docs/Decision-Trees.md)** — Reference trees for architectural tradeoffs.
-*   **[Naming Conventions](file:///Users/krimson/PROJECTS/atena_school/docs/Naming.md)** — Strict naming rules for classes, methods, and files.
-*   **[Performance Guidelines](file:///Users/krimson/PROJECTS/atena_school/docs/Performance.md)** — Render optimizations and database query constraints.
-*   **[CI/CD Pipelines](file:///Users/krimson/PROJECTS/atena_school/docs/CI-CD.md)** — Workflow setups for deployment.
-*   **[Architecture Decisions Record (ADR)](file:///Users/krimson/PROJECTS/atena_school/docs/Architecture-Decisions.md)** — Log of historical architectural choices.
-*   **[AI Agent Rules (AGENTS.md)](file:///Users/krimson/PROJECTS/atena_school/docs/AGENTS.md)** — Constraints and protocols for AI coding assistants.
+*   **[Contribution Guide](docs/CONTRIBUTING.md)** — Process for proposing changes.
+*   **[Code Review Standard](docs/Code-Review.md)** — Pull request review checklist.
+*   **[Anti-Patterns Checklist](docs/Anti-Patterns.md)** — Coding traps and patterns to avoid.
+*   **[Decision Trees](docs/Decision-Trees.md)** — Reference trees for architectural tradeoffs.
+*   **[Naming Conventions](docs/Naming.md)** — Strict naming rules for classes, methods, and files.
+*   **[Performance Guidelines](docs/Performance.md)** — Render optimizations and database query constraints.
+*   **[CI/CD Pipelines](docs/CI-CD.md)** — Workflow setups for deployment.
+*   **[Architecture Decisions Record (ADR)](docs/Architecture-Decisions.md)** — Log of historical architectural choices.
+*   **[AI Agent Rules (AGENTS.md)](docs/AGENTS.md)** — Constraints and protocols for AI coding assistants.
 
 ---
 
