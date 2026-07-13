@@ -16,6 +16,7 @@ import { getSessionId, mergeGuestBookings } from "@/lib/utils";
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const t = useTranslations("nav");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -45,10 +46,31 @@ const Navbar = () => {
   };
 
   useEffect(() => {
+    let lastScrollY = window.scrollY;
+
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 40);
+      const currentScrollY = window.scrollY;
+
+      // Always show header at the top
+      if (currentScrollY < 50) {
+        setIsVisible(true);
+        setIsScrolled(false);
+        lastScrollY = currentScrollY;
+        return;
+      }
+
+      setIsScrolled(true);
+
+      // Hide on scroll down, show on scroll up
+      if (currentScrollY > lastScrollY && currentScrollY > 120) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY = currentScrollY;
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -103,9 +125,14 @@ const Navbar = () => {
   // Dynamic styling based on scroll and pathname
   const isDarkHeroPage = pathname === "/" || pathname === "/courses" || pathname.startsWith("/blog");
   const isTransparent = isDarkHeroPage && !isScrolled;
+  const showHeader = isVisible || open;
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      showHeader 
+        ? "translate-y-0 opacity-100" 
+        : "-translate-y-full opacity-0 pointer-events-none"
+    } ${
       isScrolled 
         ? "py-3 px-4 md:px-8" 
         : "py-5 px-4 md:px-8"
