@@ -21,6 +21,14 @@ export async function generateMetadata() {
     description,
     alternates: {
       canonical: siteUrl,
+      languages: {
+        'it': siteUrl,
+        'x-default': siteUrl,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
     },
     openGraph: {
       type: 'website',
