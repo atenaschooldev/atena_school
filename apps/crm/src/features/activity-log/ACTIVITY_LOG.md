@@ -20,15 +20,15 @@ activity-log/
 
 ## 1. Логика и Состояние (`hooks/use-activity-log.ts`)
 
-- **`useActivityLog`** ([use-activity-log.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/activity-log/hooks/use-activity-log.ts))
+- **`useActivityLog`** ([use-activity-log.ts](../../features/activity-log/hooks/use-activity-log.ts))
   Кастомный хук для управления состоянием журнала активности. На данный момент возвращает базовые параметры.
 
 ---
 
 ## 2. Компоненты Отображения (UI)
 
-- **`RegistroView`** ([registro-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/activity-log/components/registro-view.tsx))
+- **`RegistroView`** ([registro-view.tsx](../../features/activity-log/components/registro-view.tsx))
   Главный контейнер страницы журнала системной активности.
-- **`ActivityLogPlaceholder`** ([activity-log-placeholder.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/activity-log/components/activity-log-placeholder.tsx))
+- **`ActivityLogPlaceholder`** ([activity-log-placeholder.tsx](../../features/activity-log/components/activity-log-placeholder.tsx))
   Чистый презентационный компонент-заглушка для будущего расширения истории изменений в Atena SIS.
 

@@ -22,7 +22,7 @@ documents/
 
 ## 1. Типы данных (`types.ts`)
 
-- **`DocumentRecord`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/documents/types.ts))
+- **`DocumentRecord`** ([types.ts](../../features/documents/types.ts))
   - `id`: Уникальный номер контракта (например, `DOC-2026-001`).
   - `studentName`, `studentLastName`: Имя и фамилия студента.
   - `email`, `telefono`: Контакты.
@@ -34,7 +34,7 @@ documents/
 
 ## 2. Логика и Состояние (`hooks/use-documents.ts`)
 
-- **`useDocuments`** ([use-documents.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/documents/hooks/use-documents.ts))
+- **`useDocuments`** ([use-documents.ts](../../features/documents/hooks/use-documents.ts))
   Кастомный хук для управления логикой электронного документооборота:
   - Рисование цифровой подписи (события мыши и touch-скрина на HTML5 `<canvas>`).
   - Масштабирование (Zoom) и скачивание/печать документов.
@@ -44,9 +44,9 @@ documents/
 
 ## 3. Компоненты Отображения (UI)
 
-- **`DocumentiView`** ([documenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/documents/components/documenti-view.tsx))
+- **`DocumentiView`** ([documenti-view.tsx](../../features/documents/components/documenti-view.tsx))
   Легковесный оркестратор страницы документов. Отображает архив договоров в виде `DataTable` или форму создания/просмотра сплит-панели.
-- **`DocumentPdfPreview`** ([document-pdf-preview.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/documents/components/document-pdf-preview.tsx))
+- **`DocumentPdfPreview`** ([document-pdf-preview.tsx](../../features/documents/components/document-pdf-preview.tsx))
   Презентационный UI-компонент печатного листа формата A4 с масштабированием, печатью, экспортом и штампом школы.
-- **`DocumentPreviewDialog`** ([document-preview-dialog.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/documents/components/document-preview-dialog.tsx))
+- **`DocumentPreviewDialog`** ([document-preview-dialog.tsx](../../features/documents/components/document-preview-dialog.tsx))
   Модальное окно просмотра контракта. Генерирует готовый к печати бланк (договор) в фирменном стиле школы, заполняя переменные шаблона данными из анкеты, включая отрисовку цифровой подписи внизу листа.

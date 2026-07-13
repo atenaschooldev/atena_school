@@ -23,7 +23,7 @@ students/
 
 ## 1. Типы данных (`types.ts`)
 
-- **`Student`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/types.ts))
+- **`Student`** ([types.ts](../../features/students/types.ts))
   Интерфейс, описывающий полную структуру записи студента:
   - `id`: Строковый уникальный идентификатор.
   - `nome`, `cognome`: Имя и фамилия.
@@ -41,18 +41,18 @@ students/
 
 ## 2. Логика и Состояние (`hooks/use-students.ts`)
 
-- **`useStudents`** ([use-students.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/hooks/use-students.ts))
+- **`useStudents`** ([use-students.ts](../../features/students/hooks/use-students.ts))
   Кастомный хук, инкапсулирующий всю бизнес-логику страницы. Извлекает состояние и действия из глобального стора (Zustand), управляет локальным состоянием диалогов создания/редактирования/просмотра контрактов и экспортирует типизированные обработчики событий (`handleNewClick`, `handleLevelChange`, `handleStatusChange`, `handleFormSubmit` и т.д.).
 
 ---
 
 ## 3. Компоненты Отображения (UI)
 
-- **`StudentiView`** ([studenti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/studenti-view.tsx))
+- **`StudentiView`** ([studenti-view.tsx](../../features/students/components/studenti-view.tsx))
   Легковесный оркестратор экрана. Загружает состояние из `useStudents`, объявляет колонки таблицы и рендерит интерфейс на базе `DataTable`. Не содержит в себе бизнес-логики.
-- **`StudentCard`** ([student-card.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-card.tsx))
+- **`StudentCard`** ([student-card.tsx](../../features/students/components/student-card.tsx))
   Чистый UI-компонент карточки студента для плиточного вида. Получает все обработчики изменений напрямую через Props.
-- **`LevelBadgeSelector`** и **`StatusBadgeSelector`** ([student-badges.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-badges.tsx))
+- **`LevelBadgeSelector`** и **`StatusBadgeSelector`** ([student-badges.tsx](../../features/students/components/student-badges.tsx))
   Вспомогательные бейджи-кнопки для быстрой смены параметров через выпадающие меню `PillSelect`. Работают независимо от стора.
-- **`StudentForm`** ([student-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/students/components/student-form.tsx))
+- **`StudentForm`** ([student-form.tsx](../../features/students/components/student-form.tsx))
   Форма добавления и редактирования профиля, управляющая связями студента с доступными курсами.

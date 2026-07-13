@@ -22,7 +22,7 @@ teachers/
 
 ## 1. Типы данных (`types.ts`)
 
-- **`Teacher`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/types.ts))
+- **`Teacher`** ([types.ts](../../features/teachers/types.ts))
   Интерфейс, содержащий поля:
   - `id`: Уникальный строковый идентификатор.
   - `nome`, `cognome`: Имя и фамилия учителя.
@@ -40,16 +40,16 @@ teachers/
 
 ## 2. Логика и Состояние (`hooks/use-teachers.ts`)
 
-- **`useTeachers`** ([use-teachers.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/hooks/use-teachers.ts))
+- **`useTeachers`** ([use-teachers.ts](../../features/teachers/hooks/use-teachers.ts))
   Кастомный хук для управления бизнес-логикой страницы преподавателей. Управляет Zustand-экшенами, состояниями модального окна добавления/редактирования преподавателей и предпросмотром контрактов.
 
 ---
 
 ## 3. Компоненты Отображения (UI)
 
-- **`InsegnantiView`** ([insegnanti-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/insegnanti-view.tsx))
+- **`InsegnantiView`** ([insegnanti-view.tsx](../../features/teachers/components/insegnanti-view.tsx))
   Легковесный оркестратор страницы преподавателей. Использует хук `useTeachers` для получения состояния и отрендеривает таблицу `DataTable` или сетку карточек.
-- **`TeacherCard`** ([teacher-card.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/teacher-card.tsx))
+- **`TeacherCard`** ([teacher-card.tsx](../../features/teachers/components/teacher-card.tsx))
   Чистый презентационный UI-компонент карточки преподавателя. Принимает данные преподавателя и callback-обработчики изменений как Props.
-- **`TeacherForm`** ([teacher-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/teachers/components/teacher-form.tsx))
+- **`TeacherForm`** ([teacher-form.tsx](../../features/teachers/components/teacher-form.tsx))
   Диалоговое окно добавления нового учителя или изменения параметров существующего сотрудника. Позволяет задать расписание рабочих часов и связать преподавателя с курсами.

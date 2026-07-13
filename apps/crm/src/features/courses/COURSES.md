@@ -23,7 +23,7 @@ courses/
 
 ## 1. Типы данных (`types.ts`)
 
-- **`Course`** ([types.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/types.ts))
+- **`Course`** ([types.ts](../../features/courses/types.ts))
   Интерфейс сущности курса:
   - `id`: Идентификатор курса.
   - `nome`: Название учебного курса.
@@ -42,23 +42,23 @@ courses/
 
 Модуль предоставляет типизированные абстракции для стилизации языковых уровней CEFR:
 
-- **`levelColor`** ([utils.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/utils.ts)): Возвращает полупрозрачный фон с цветной обводкой (идеально для тегов в таблицах).
-- **`levelColorSolid`** ([utils.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/utils.ts)): Возвращает залитый сплошной цвет с тенью (используется для активных кнопок выбора и акцентных элементов интерфейса).
+- **`levelColor`** ([utils.ts](../../features/courses/utils.ts)): Возвращает полупрозрачный фон с цветной обводкой (идеально для тегов в таблицах).
+- **`levelColorSolid`** ([utils.ts](../../features/courses/utils.ts)): Возвращает залитый сплошной цвет с тенью (используется для активных кнопок выбора и акцентных элементов интерфейса).
 
 ---
 
 ## 3. Логика и Состояние (`hooks/use-courses.ts`)
 
-- **`useCourses`** ([use-courses.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/hooks/use-courses.ts))
+- **`useCourses`** ([use-courses.ts](../../features/courses/hooks/use-courses.ts))
   Кастомный хук для управления бизнес-логикой страницы курсов. Управляет Zustand-экшенами и состояниями модального окна добавления/редактирования курсов.
 
 ---
 
 ## 4. Компоненты Отображения (UI)
 
-- **`CorsiView`** ([corsi-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/components/corsi-view.tsx))
+- **`CorsiView`** ([corsi-view.tsx](../../features/courses/components/corsi-view.tsx))
   Легковесный оркестратор страницы курсов. Использует хук `useCourses` для получения состояния и отрендеривает таблицу `DataTable` или сетку карточек.
-- **`CourseCard`** ([course-card.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/components/course-card.tsx))
+- **`CourseCard`** ([course-card.tsx](../../features/courses/components/course-card.tsx))
   Чистый презентационный UI-компонент карточки курса. Принимает данные курса, списки студентов и преподавателей, а также callback-обработчики изменений как Props.
-- **`CourseForm`** ([course-form.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/courses/components/course-form.tsx))
+- **`CourseForm`** ([course-form.tsx](../../features/courses/components/course-form.tsx))
   Модальное окно для создания/редактирования курса. Позволяет выбрать уровень, категорию курса, лимит мест, цену и привязать преподавателей через всплывающий список.

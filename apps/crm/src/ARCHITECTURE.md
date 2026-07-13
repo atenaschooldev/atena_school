@@ -9,7 +9,7 @@
 - **Базовый фреймворк**: [React 19](https://react.dev)
 - **Роутинг**: [TanStack Router & Start](https://tanstack.com/router) — обеспечивает типобезопасный (type-safe) роутинг, вложенные макеты (nested layouts) и серверную загрузку данных.
 - **Управление состоянием**: [Zustand](https://zustand.docs.pmnd.rs) — ультралегкий стейт-менеджер. Данные автоматически кэшируются и синхронизируются с локальным хранилищем браузера (`localStorage`) через middleware `persist`.
-- **Стилизация**: [Tailwind CSS v4](https://tailwindcss.com) с интеграцией кастомных дизайн-токенов из JSON-структуры [tokens.json](file:///Users/krimson/PROJECTS/class-bloom-81/src/theme/tokens.json).
+- **Стилизация**: [Tailwind CSS v4](https://tailwindcss.com) с интеграцией кастомных дизайн-токенов из JSON-структуры [tokens.json](./theme/tokens.json).
 - **Сборщик**: [Vite 8](https://vite.dev) для мгновенной сборки и горячей замены модулей (HMR).
 
 ---
@@ -56,10 +56,10 @@ src/
 
 ## 💾 Управление состоянием (Zustand & LocalStorage)
 
-Глобальное состояние приложения управляется через стейт [app-store.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/stores/app-store.ts):
+Глобальное состояние приложения управляется через стейт [app-store.ts](./stores/app-store.ts):
 
 - Хранит списки студентов, преподавателей, курсов и документов.
-- Инициализируется из предопределенных данных [mock-data.ts](file:///Users/krimson/PROJECTS/class-bloom-81/src/lib/mock-data.ts) при первом запуске.
+- Инициализируется из предопределенных данных [mock-data.ts](./lib/mock-data.ts) при первом запуске.
 - Состояние сохраняется локально в браузере под ключом `atena-scuola`, что позволяет сохранять внесённые изменения между перезагрузками страниц.
 - Имеет встроенные мутации: `addStudent`, `updateStudent`, `addTeacher`, `addDocument`, `addCourse` и т.д.
 
@@ -67,7 +67,7 @@ src/
 
 ## 🎨 Дизайн-система и токенизация
 
-Цветовые палитры и стили компонентов привязаны к конфигурационному файлу темы [tokens.json](file:///Users/krimson/PROJECTS/class-bloom-81/src/theme/tokens.json).
+Цветовые палитры и стили компонентов привязаны к конфигурационному файлу темы [tokens.json](./theme/tokens.json).
 
-- CSS-переменные генерируются в `:root` блока файла [styles.css](file:///Users/krimson/PROJECTS/class-bloom-81/src/styles.css).
+- CSS-переменные генерируются в `:root` блока файла [styles.css](./styles.css).
 - При рендеринге интерфейса используются семантические стили Tailwind (`bg-card`, `text-primary`, `border-border/40`), гарантирующие идеальную совместимость со светлой и тёмной темами.

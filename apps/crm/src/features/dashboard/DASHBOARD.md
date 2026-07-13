@@ -17,7 +17,7 @@ dashboard/
 
 ## 1. Функционал и Компоненты
 
-- **`DashboardView`** ([dashboard-view.tsx](file:///Users/krimson/PROJECTS/class-bloom-81/src/features/dashboard/components/dashboard-view.tsx))
+- **`DashboardView`** ([dashboard-view.tsx](../../features/dashboard/components/dashboard-view.tsx))
   Интегрирует в себя следующие информационные слои:
   - **Виджеты KPI**:
     - Общее количество активных студентов (извлекается из стейта `app-store`).
