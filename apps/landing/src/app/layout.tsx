@@ -7,6 +7,8 @@ import SplashScreen, { SPLASH_COOKIE_NAME } from '@/components/SplashScreen';
 import { Playfair_Display } from 'next/font/google';
 import '@/index.css';
 
+import { Viewport } from 'next';
+
 const playfair = Playfair_Display({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800', '900'],
@@ -14,6 +16,16 @@ const playfair = Playfair_Display({
   variable: '--font-playfair',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f7faf8' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f1a1c' },
+  ],
+};
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 

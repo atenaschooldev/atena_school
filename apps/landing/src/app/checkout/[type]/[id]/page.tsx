@@ -161,7 +161,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
   );
 
   if (!item || !dateParam || !timeParam) return (
-    <div className="min-h-screen pt-32 text-center">
+    <div className="min-h-screen pt-[calc(8rem+env(safe-area-inset-top))] text-center">
       <p className="text-muted-foreground mb-4">Informazioni di prenotazione mancanti</p>
       <Link href="/shop" className="text-primary font-bold">Torna alla lista</Link>
     </div>
@@ -171,7 +171,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
   const formattedDate = format(new Date(dateParam), "dd MMMM yyyy", { locale: dateLocale });
 
   return (
-    <main className="min-h-screen pt-32 pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-[calc(8rem+env(safe-area-inset-top))] pb-20 px-4 bg-[#f8f9fa]">
       <div className="max-w-7xl mx-auto">
         <button 
           onClick={() => router.back()}

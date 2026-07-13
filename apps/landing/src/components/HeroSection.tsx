@@ -38,7 +38,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="glow-orb w-[500px] h-[500px] bg-secondary bottom-10 left-10" />
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center px-4 pt-28 pb-16 max-w-5xl mx-auto">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 pt-[calc(7rem+env(safe-area-inset-top))] pb-16 max-w-5xl mx-auto">
         <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 -translate-y-4 md:-translate-y-5 rounded-full bg-black/40 backdrop-blur-[6px] border-2 border-white/20 hover:border-primary/50 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-500 hover:rotate-3 group cursor-pointer animate-in fade-in slide-in-from-top-6 duration-700">
           <div className="relative w-full h-full translate-x-[-2px] translate-y-[-4px]">
             <Image

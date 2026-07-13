@@ -68,7 +68,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center px-4 pt-20 py-4 bg-background">
+    <div className="flex-1 flex items-center justify-center px-4 pt-[calc(5rem+env(safe-area-inset-top))] py-4 bg-background">
       {/* Container holding both visual and form */}
       <div className="w-full max-w-4xl grid lg:grid-cols-12 bg-card rounded-2xl lg:rounded-3xl overflow-hidden shadow-2xl border border-border/50 relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
         

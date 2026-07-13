@@ -4,6 +4,7 @@ import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -162,16 +163,17 @@ const Navbar = () => {
   const showHeader = isVisible || open;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <>
+    <header className={`fixed top-0 left-0 right-0 z-50 pointer-events-none transition-all duration-500 ${
       showHeader 
         ? "translate-y-0 opacity-100" 
-        : "-translate-y-full opacity-0 pointer-events-none"
+        : "-translate-y-full opacity-0"
     } ${
       isTransparent 
-        ? "py-5 px-4 md:px-8" 
-        : "py-3 px-4 md:px-8"
+        ? "pt-[calc(1.25rem+env(safe-area-inset-top))] pb-5 px-4 md:px-8" 
+        : "pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 px-4 md:px-8"
     }`}>
-      <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
+      <div className={`mx-auto max-w-7xl pointer-events-auto transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
         isTransparent 
           ? "bg-black/25 backdrop-blur-[6px] border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_8px_32px_rgba(0,0,0,0.12)] px-6 py-2" 
           : "bg-primary backdrop-blur-lg border border-primary/20 shadow-[0_8px_30px_rgb(0,0,0,0.15)] px-6 py-2"
@@ -306,14 +308,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Click-outside backdrop */}
-      {open && (
-        <div
-          className="md:hidden fixed inset-0 z-[-1]"
-          onClick={() => setOpen(false)}
-          aria-hidden="true"
-        />
-      )}
 
       {/* Mobile menu — always rendered, animated with max-height + opacity */}
       <div
@@ -424,6 +418,19 @@ const Navbar = () => {
         </div>
       </div>
     </header>
+
+      {/* Backdrop rendered via portal to document.body so it sits outside the header stacking context.
+          z-49 = below z-50 header/menu but above page content — clicking anywhere (sides OR below menu) closes it. */}
+      {open && typeof document !== "undefined" && createPortal(
+        <div
+          className="md:hidden fixed inset-0"
+          style={{ zIndex: 49 }}
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />,
+        document.body
+      )}
+    </>
   );
 };
 
