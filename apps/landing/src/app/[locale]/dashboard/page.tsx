@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { BookOpen, Calendar, Clock, CheckCircle2 } from "lucide-react";
@@ -21,7 +21,8 @@ interface EnrichedBooking {
   is_future: boolean;
 }
 
-export default function DashboardPage({ params: { locale } }: { params: { locale: string } }) {
+export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
   const dateLocale = locale === "it" ? it : enUS;
   
   const [user, setUser] = useState<any>(null);

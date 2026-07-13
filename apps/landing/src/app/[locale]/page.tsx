@@ -11,7 +11,8 @@ import {
   getTeachers 
 } from "@/lib/data";
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
   const isIt = locale === 'it';
   const title = isIt
@@ -47,10 +48,11 @@ export async function generateMetadata({ params: { locale } }: { params: { local
 }
 
 export default async function IndexPage({
-  params: { locale }
+  params
 }: {
-  params: { locale: string }
+  params: Promise<{ locale: string }>
 }) {
+  const { locale } = await params;
   // Fetch site content using cached functions
   const [hero, about, testimonials, contact, teachers] = await Promise.all([
     getHeroData(),

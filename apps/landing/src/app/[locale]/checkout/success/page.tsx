@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, use } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
 
-export default function CheckoutSuccessPage({ params: { locale } }: { params: { locale: string } }) {
+export default function CheckoutSuccessPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params);
   const t = useTranslations("booking");
   const router = useRouter();
 

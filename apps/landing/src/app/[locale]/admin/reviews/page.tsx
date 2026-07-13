@@ -6,10 +6,11 @@ import { AdminPagination } from "@/features/admin/components/AdminPagination";
 import { AdminSearch } from "@/features/admin/components/AdminSearch";
 import { ReviewsTableClient } from "@/features/reviews/components/ReviewsTableClient";
 
-export default async function AdminReviewsPage({ searchParams }: { searchParams: { page?: string, search?: string } }) {
+export default async function AdminReviewsPage({ searchParams }: { searchParams: Promise<{ page?: string, search?: string }> }) {
+  const resolvedSearchParams = await searchParams;
   const supabase = createClient();
-  const page = Number(searchParams.page) || 1;
-  const search = searchParams.search || "";
+  const page = Number(resolvedSearchParams.page) || 1;
+  const search = resolvedSearchParams.search || "";
   const pageSize = 10;
 
   let query = supabase.from("course_reviews").select("*, courses(title_it)", { count: "exact" });

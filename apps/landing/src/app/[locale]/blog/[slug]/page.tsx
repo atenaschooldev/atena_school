@@ -19,7 +19,8 @@ export async function generateStaticParams() {
   return params;
 }
 
-export async function generateMetadata({ params: { locale, slug } }: { params: { locale: string; slug: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
   const post = await getSingleBlogPost(slug);
 
@@ -53,7 +54,8 @@ export async function generateMetadata({ params: { locale, slug } }: { params: {
   };
 }
 
-export default async function PostPage({ params: { locale, slug } }: { params: { locale: string; slug: string } }) {
+export default async function PostPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
+  const { locale, slug } = await params;
   unstable_setRequestLocale(locale);
   const post = await getSingleBlogPost(slug);
 

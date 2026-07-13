@@ -4,7 +4,8 @@ export async function generateStaticParams() {
   return [{ locale: "it" }, { locale: "en" }];
 }
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
   const isIt = locale === 'it';
   const title = isIt ? 'Shop & Prezzi' : 'Shop & Pricing';

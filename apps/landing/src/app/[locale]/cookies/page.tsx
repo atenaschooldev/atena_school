@@ -6,7 +6,8 @@ export async function generateStaticParams() {
   return [{ locale: 'it' }, { locale: 'en' }];
 }
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const isIt = locale === 'it';
   const title = isIt ? 'Cookie Policy' : 'Cookie Policy';
   const description = isIt
@@ -37,7 +38,8 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   };
 }
 
-export default async function CookiePolicy({ params: { locale } }: { params: { locale: string } }) {
+export default async function CookiePolicy({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   unstable_setRequestLocale(locale);
   const t = await getTranslations("cookies");
   

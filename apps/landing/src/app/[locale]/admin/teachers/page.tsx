@@ -8,10 +8,11 @@ import { AdminPagination } from "@/features/admin/components/AdminPagination";
 import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import Link from "next/link";
 
-export default async function AdminTeachersPage({ searchParams }: { searchParams: { page?: string, search?: string } }) {
+export default async function AdminTeachersPage({ searchParams }: { searchParams: Promise<{ page?: string, search?: string }> }) {
+  const resolvedSearchParams = await searchParams;
   const supabase = createClient();
-  const page = Number(searchParams.page) || 1;
-  const search = searchParams.search || "";
+  const page = Number(resolvedSearchParams.page) || 1;
+  const search = resolvedSearchParams.search || "";
   const pageSize = 10;
 
   let query = (supabase.from("profiles") as any).select("*", { count: "exact" }).eq("role", "teacher");

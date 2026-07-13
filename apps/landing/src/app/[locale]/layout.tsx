@@ -10,7 +10,8 @@ import { Suspense } from 'react';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
-export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const isIt = locale === 'it';
   const title = isIt ? 'Atena School — Scuola di Lingua a Cittanova' : 'Atena School — Language School in Cittanova';
   const description = isIt
@@ -54,11 +55,12 @@ import { GlobalEditManager } from '@/features/admin/components/GlobalEditManager
 
 export default async function LocaleLayout({
   children,
-  params: {locale}
+  params
 }: {
   children: React.ReactNode;
-  params: {locale: string};
+  params: Promise<{locale: string}>;
 }) {
+  const { locale } = await params;
   // Ensure that the incoming `locale` is valid
   if (!routing.locales.includes(locale as any)) {
     notFound();

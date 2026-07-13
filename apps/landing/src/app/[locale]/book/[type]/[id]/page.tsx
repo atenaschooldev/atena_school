@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
 import { createClient } from "@/lib/supabase/client";
@@ -39,10 +39,11 @@ interface ScheduleSlot {
 }
 
 export default function BookingPage({ 
-  params: { locale, type, id } 
+  params 
 }: { 
-  params: { locale: string; type: string; id: string } 
+  params: Promise<{ locale: string; type: string; id: string }> 
 }) {
+  const { locale, type, id } = use(params);
   const t = useTranslations("booking");
   const router = useRouter();
   const supabase = createClient();

@@ -4,7 +4,7 @@ import { env } from '@/config/env'
 import { Database } from '@/types/database.types'
 
 export function createClient() {
-  let cookieStore;
+  let cookieStore: any;
   
   try {
     cookieStore = cookies();
@@ -17,14 +17,22 @@ export function createClient() {
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
-        getAll() {
-          return cookieStore?.getAll() ?? []
-        },
-        setAll(cookiesToSet) {
+        async getAll() {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore?.set(name, value, options)
-            )
+            const store = await cookieStore;
+            return store?.getAll() ?? []
+          } catch {
+            return []
+          }
+        },
+        async setAll(cookiesToSet) {
+          try {
+            const store = await cookieStore;
+            if (store) {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                store.set(name, value, options)
+              )
+            }
           } catch {
             // This can be ignored if you have middleware refreshing
             // user sessions.

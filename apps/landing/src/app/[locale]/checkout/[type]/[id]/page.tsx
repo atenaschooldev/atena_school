@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, use } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -31,7 +31,8 @@ interface BookingItem {
   teacher_name: string;
 }
 
-function CheckoutContent({ params: { locale, type, id } }: { params: { locale: string; type: string; id: string } }) {
+function CheckoutContent({ params }: { params: Promise<{ locale: string; type: string; id: string }> }) {
+  const { locale, type, id } = use(params);
   const t = useTranslations("booking");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -340,14 +341,14 @@ function CheckoutContent({ params: { locale, type, id } }: { params: { locale: s
   );
 }
 
-export default function CheckoutPage(props: { params: { locale: string; type: string; id: string } }) {
+export default function CheckoutPage(props: { params: Promise<{ locale: string; type: string; id: string }> }) {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     }>
-      <CheckoutContent {...props} />
+      <CheckoutContent params={props.params} />
     </Suspense>
   );
 }
