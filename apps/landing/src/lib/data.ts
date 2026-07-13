@@ -158,3 +158,21 @@ export const getSingleBlogPost = (slug: string) => unstable_cache(
   [`blog-post-${slug}`],
   { tags: [CACHE_TAGS.BLOG, `blog-${slug}`], revalidate: CACHE_TTL }
 )();
+
+export const getShopItems = unstable_cache(
+  async () => {
+    const supabase = createClient();
+    const { data } = await (supabase.from('shop_items').select('*').eq('is_active', true) as any);
+    return (data || []).map((item: any) => ({
+      ...item,
+      title_it: item.title_it || '',
+      title_en: item.title_en || '',
+      duration_it: item.duration_it || '',
+      duration_en: item.duration_en || '',
+      price: Number(item.price) || 0,
+      price_eur: Number(item.price) || 0,
+    }));
+  },
+  ['shop-items-data'],
+  { tags: [CACHE_TAGS.SHOP_ITEMS], revalidate: CACHE_TTL }
+);

@@ -6,7 +6,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient();
 
   // Static routes
-  const staticRoutes = ['', '/courses', '/shop', '/blog'];
+  const staticRoutes = ['', '/courses', '/blog'];
   
   const entries: MetadataRoute.Sitemap = [];
 

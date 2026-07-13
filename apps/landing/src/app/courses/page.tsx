@@ -1,8 +1,7 @@
 import React from "react";
 import { getTranslations } from "next-intl/server";
-import CoursesHero from "@/features/courses/components/CoursesHero";
 import CourseCard from "@/features/courses/components/CourseCard";
-import { getCourses } from "@/lib/data";
+import { getCourses, getShopItems } from "@/lib/data";
 import CourseSchema from "@/features/courses/components/CourseSchema";
 
 // Local asset imports
@@ -47,6 +46,18 @@ export async function generateMetadata() {
     description,
     alternates: {
       canonical: url,
+      languages: {
+        'it': url,
+        'x-default': url,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+      },
     },
     openGraph: {
       type: 'website',
@@ -57,22 +68,28 @@ export async function generateMetadata() {
       description,
       images: [{ url: `${siteUrl}/og-default.jpg`, width: 1200, height: 630, alt: title }],
     },
-    twitter: { card: 'summary_large_image', title, description },
+    twitter: { 
+      card: 'summary_large_image', 
+      title, 
+      description,
+      site: '@atenaschool',
+      creator: '@atenaschool',
+    },
   };
 }
 
 export default async function CoursesPage() {
   const t = await getTranslations("coursesPage");
 
-  const supabaseCourses = await getCourses();
+  const [supabaseCourses, shopItems] = await Promise.all([
+    getCourses(),
+    getShopItems()
+  ]);
 
-  // If we have courses in the database, group and show them dynamically.
-  // Otherwise, fallback to the pre-existing translation-based static showcase.
   const hasDbCourses = supabaseCourses && supabaseCourses.length > 0;
-
   let courseSections: Array<{ id: string; title: string; courses?: any[]; items?: string[] }> = [];
 
-  if (hasDbCourses) {
+  if (hasDbCourses && supabaseCourses) {
     const categoriesMap: Record<string, any[]> = {};
     supabaseCourses.forEach((course) => {
       const cat = course.category || "Other";
@@ -99,41 +116,39 @@ export default async function CoursesPage() {
       };
     });
   } else {
-    // Fallback to static translated items
+    // Static fallback
     courseSections = [
       {
-        id: "language",
+        id: 'language',
         title: t("sections.language"),
-        items: ["kids", "starters", "movers", "flyers", "a2key", "b1", "b2", "c1"]
+        items: ['kids', 'starters', 'movers', 'flyers', 'a2key', 'b1', 'b2', 'c1']
       },
       {
-        id: "certipass",
-        title: t("sections.certipass"),
-        items: ["eipass_user", "eipass_basic"]
-      },
-      {
-        id: "academic",
+        id: 'academic',
         title: t("sections.academic"),
-        items: ["doposcuola", "recovery", "university", "it_courses"]
+        items: ['doposcuola', 'recovery', 'university']
+      },
+      {
+        id: 'certipass',
+        title: t("sections.certipass"),
+        items: ['eipass_user', 'eipass_basic']
       }
     ];
   }
 
-  const localImageMap: Record<string, any> = {
-    kids: imgKids,
-    starters: imgStarters,
-    movers: imgMovers,
-    flyers: imgFlyers,
-    a2key: imgA2Key,
-    b1: imgB1,
-    b2: imgB2,
-    c1: imgC1,
-    doposcuola: imgDoposcuola,
-    recovery: imgRecovery,
-    university: imgUniversity,
-    eipass_user: imgIt,
-    eipass_basic: imgIt,
-  };
+  // Append hourly private lesson packages from shop_items
+  if (shopItems && shopItems.length > 0) {
+    courseSections.push({
+      id: 'packages',
+      title: 'Lezioni Private e Pacchetti',
+      courses: shopItems.map((item: any) => ({
+        ...item,
+        name: item.title_it,
+        description: `Durata: ${item.duration_it || 'Flessibile'}. Scegli il pacchetto di lezioni individuali o di gruppo con orari flessibili.`,
+        type: 'shop'
+      }))
+    });
+  }
 
   return (
     <main className="min-h-screen bg-background pt-24 pb-20 relative overflow-hidden">
@@ -169,7 +184,7 @@ export default async function CoursesPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {hasDbCourses && section.courses ? (
+              {section.courses ? (
                 section.courses.map((course: any) => {
                   const itemTitle = course.title_it || course.name;
                   const itemDesc = course.description_it || course.description || "";
@@ -206,6 +221,7 @@ export default async function CoursesPage() {
                         image={itemImage}
                         category={section.title}
                         price={itemPrice}
+                        type={course.type || 'course'}
                       />
                     </React.Fragment>
                   );
@@ -233,6 +249,7 @@ export default async function CoursesPage() {
                         image={match?.image_url || localImageMap[itemKey]}
                         category={section.title}
                         price={itemPrice}
+                        type="course"
                       />
                     </React.Fragment>
                   );

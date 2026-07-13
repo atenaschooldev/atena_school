@@ -10,10 +10,11 @@ interface CourseCardProps {
   image?: any;
   category?: string;
   price?: string;
+  type?: "course" | "shop";
   onCtaClick?: () => void;
 }
 
-const CourseCard = ({ id, title, description, image, category, price, onCtaClick }: CourseCardProps) => {
+const CourseCard = ({ id, title, description, image, category, price, type = "course", onCtaClick }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
 
   const content = (
@@ -58,7 +59,7 @@ const CourseCard = ({ id, title, description, image, category, price, onCtaClick
           )}
           {id ? (
             <Link 
-              href={`/book/course/${id}`}
+              href={`/book/${type}/${id}`}
               className="flex items-center gap-1 text-xs font-bold uppercase tracking-tighter text-foreground hover:text-primary transition-colors"
             >
               {t("cta")}

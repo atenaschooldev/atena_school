@@ -6,6 +6,7 @@ export const CACHE_TAGS = {
   TEACHERS: 'teachers',
   COURSES: 'courses',
   BLOG: 'blog',
+  SHOP_ITEMS: 'shop_items',
 } as const;
 
 export type CacheTag = typeof CACHE_TAGS[keyof typeof CACHE_TAGS];
@@ -21,4 +22,5 @@ export const TABLE_MAP = {
   courses: 'courses',
   blog_posts: 'blog_posts',
   reviews: 'testimonials', // Compatibility for existing code
+  shop_items: 'shop_items',
 } as const;

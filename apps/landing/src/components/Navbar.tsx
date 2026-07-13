@@ -90,7 +90,6 @@ const Navbar = () => {
     { label: t("home"), href: "/" },
     { label: t("about"), href: "/#about" },
     { label: t("courses"), href: "/courses" },
-    { label: t("book"), href: "/shop" },
     { label: t("blog"), href: "/blog" },
   ];
 
