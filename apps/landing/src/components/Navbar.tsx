@@ -96,18 +96,10 @@ const Navbar = () => {
     { label: t("blog"), href: "/blog" },
   ];
 
-  const handleLanguageChange = (newLocale: string) => {
-    startTransition(() => {
-      router.replace(pathname, { locale: newLocale });
-      // In prefix-less mode, we need to refresh to force server components to re-render
-      router.refresh();
-    });
-  };
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur shadow-sm">
       <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-        {/* Logo and Language switcher */}
+        {/* Logo */}
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Image 
@@ -118,29 +110,6 @@ const Navbar = () => {
               className="object-contain"
             />
           </Link>
-
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <button
-              onClick={() => handleLanguageChange("it")}
-              className={`px-2 py-1 rounded text-xs transition-colors ${
-                currentLocale === "it"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              IT
-            </button>
-            <button
-              onClick={() => handleLanguageChange("en")}
-              className={`px-2 py-1 rounded text-xs transition-colors ${
-                currentLocale === "en"
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              EN
-            </button>
-          </div>
         </div>
 
         {/* Desktop links */}

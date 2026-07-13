@@ -1,11 +1,9 @@
-import {defineRouting} from 'next-intl/routing';
-import {createNavigation} from 'next-intl/navigation';
+"use client";
 
-export const routing = defineRouting({
-  locales: ['it', 'en'],
-  defaultLocale: 'it',
-  localePrefix: 'never'
-});
+import NextLink from 'next/link';
+import { usePathname as useNextPathname, useRouter as useNextRouter, redirect as useNextRedirect } from 'next/navigation';
 
-export const {Link, redirect, usePathname, useRouter} =
-  createNavigation(routing);
+export const Link = NextLink;
+export const usePathname = useNextPathname;
+export const useRouter = useNextRouter;
+export const redirect = useNextRedirect;
