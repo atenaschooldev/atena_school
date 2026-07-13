@@ -45,7 +45,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
               src={logoImage}
               alt="Atena School Logo"
               fill
-              className="object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] group-hover:scale-105 transition-transform duration-300"
+              className="object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] translate-x-[3px] translate-y-[3px] group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         </div>
