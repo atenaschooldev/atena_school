@@ -5,15 +5,15 @@ import { useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  ChevronLeft, 
+  CaretLeft, 
   Clock, 
   User, 
   MapPin, 
   CreditCard, 
   Calendar as CalendarIcon,
-  CheckCircle2,
-  AlertCircle
-} from "lucide-react";
+  CheckCircle,
+  WarningCircle
+} from "@phosphor-icons/react";
 import { Link, useRouter } from "@/i18n/routing";
 import { format, isSunday } from "date-fns";
 import { it } from "date-fns/locale";
@@ -114,10 +114,10 @@ export default function BookingPage({
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <Link 
-          href={type === "course" ? "/courses" : "/shop"}
+          href="/courses"
           className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-6 group"
         >
-          <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           Torna alla lista
         </Link>
 
@@ -195,7 +195,7 @@ export default function BookingPage({
 
                 {!selectedDate && (
                   <div className="p-4 rounded-2xl bg-primary/5 text-primary text-sm flex gap-2 items-center">
-                    <AlertCircle className="w-4 h-4" />
+                    <WarningCircle className="w-4 h-4" />
                     Scegli una data prima
                   </div>
                 )}
@@ -216,7 +216,7 @@ export default function BookingPage({
                 <div className="space-y-6 relative z-10">
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-6 h-6 text-primary" />
+                      <CheckCircle className="w-6 h-6 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Service</p>
@@ -282,7 +282,7 @@ export default function BookingPage({
 
               {/* Security Badge */}
               <div className="flex items-center justify-center gap-2 text-muted-foreground opacity-50 text-xs font-bold uppercase tracking-widest">
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4" />
                 Secure Checkout Simulation
               </div>
             </div>

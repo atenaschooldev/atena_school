@@ -3,7 +3,7 @@
 import { useEffect, use } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle, ArrowRight } from "@phosphor-icons/react";
 import confetti from "canvas-confetti";
 
 export default function CheckoutSuccessPage() {
@@ -32,7 +32,7 @@ export default function CheckoutSuccessPage() {
       <div className="max-w-md w-full text-center space-y-8 p-12 bg-white rounded-3xl border border-border shadow-2xl">
         <div className="flex justify-center">
           <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center animate-bounce">
-            <CheckCircle2 className="w-12 h-12 text-green-500" />
+            <CheckCircle className="w-12 h-12 text-green-500" />
           </div>
         </div>
 

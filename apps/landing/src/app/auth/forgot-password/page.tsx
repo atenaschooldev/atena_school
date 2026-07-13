@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Mail, ChevronLeft } from "lucide-react";
+import { Envelope, CaretLeft } from "@phosphor-icons/react";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth.forgotPassword");
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-2">
                 <Label htmlFor="email">{t("email")}</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
@@ -69,14 +69,14 @@ export default function ForgotPasswordPage() {
             </form>
           ) : (
             <div className="text-center py-4 text-muted-foreground">
-              <Mail className="w-12 h-12 text-primary mx-auto mb-4 opacity-20" />
+              <Envelope className="w-12 h-12 text-primary mx-auto mb-4 opacity-20" />
               <p>{t("success")}</p>
             </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-center">
           <Link href="/auth/login" className="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1">
-            <ChevronLeft className="w-4 h-4" />
+            <CaretLeft className="w-4 h-4" />
             {t("backToLogin")}
           </Link>
         </CardFooter>

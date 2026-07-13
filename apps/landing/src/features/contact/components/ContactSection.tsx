@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { MapPin, Phone, Mail, Instagram } from "lucide-react";
+import { MapPin, Phone, Envelope, InstagramLogo } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,7 +44,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               <p className="text-foreground/80">{phone}</p>
             </div>
             <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+              <Envelope className="w-5 h-5 text-primary mt-0.5 shrink-0" />
               <p className="text-foreground/80">{email}</p>
             </div>
           </div>
@@ -58,7 +58,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-80 transition"
             >
               <span className="sr-only">Instagram</span>
-              <Instagram className="w-5 h-5" />
+              <InstagramLogo className="w-5 h-5" />
             </a>
             <a href="#" className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-80 transition">
               <span className="sr-only">Facebook</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
-import { Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Quotes, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -81,7 +81,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
               {testimonials.map((item, index) => (
                 <div key={index} className="flex-[0_0_100%] min-w-0 px-4 md:px-10">
                   <div className="flex flex-col items-center text-center">
-                    <Quote className="w-8 h-8 text-primary/20 mb-6" />
+                    <Quotes className="w-8 h-8 text-primary/20 mb-6" />
                     <blockquote 
                       className="text-lg md:text-xl lg:text-2xl italic text-foreground/90 leading-snug mb-8 font-medium"
                       style={{ fontFamily: "'Playfair Display', serif" }}
@@ -111,14 +111,14 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
             className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-8 p-2.5 rounded-full bg-background border border-border shadow-sm text-foreground/40 hover:text-primary hover:border-primary transition-all duration-300 opacity-0 group-hover:opacity-100 hidden sm:flex"
             aria-label="Previous testimonial"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <CaretLeft className="w-5 h-5" />
           </button>
           <button
             onClick={scrollNext}
             className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-8 p-2.5 rounded-full bg-background border border-border shadow-sm text-foreground/40 hover:text-primary hover:border-primary transition-all duration-300 opacity-0 group-hover:opacity-100 hidden sm:flex"
             aria-label="Next testimonial"
           >
-            <ChevronRight className="w-5 h-5" />
+            <CaretRight className="w-5 h-5" />
           </button>
 
           {/* Indicators */}

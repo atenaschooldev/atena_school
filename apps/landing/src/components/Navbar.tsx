@@ -4,7 +4,7 @@ import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition } from "react";
-import { Menu, X, ShoppingCart, User, LogOut, UserCircle, Instagram } from "lucide-react";
+import { List, X, ShoppingCart, User, SignOut, UserCircle, InstagramLogo } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -216,7 +216,7 @@ const Navbar = () => {
                   Dashboard
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                  <LogOut className="w-4 h-4 mr-2" />
+                  <SignOut className="w-4 h-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -240,7 +240,7 @@ const Navbar = () => {
             }`} 
             onClick={() => setOpen(!open)}
           >
-            {open ? <X className="w-6 h-6 transform rotate-90 transition-transform duration-300" /> : <Menu className="w-6 h-6 transition-transform duration-300" />}
+            {open ? <X className="w-6 h-6 transform rotate-90 transition-transform duration-300" /> : <List className="w-6 h-6 transition-transform duration-300" />}
           </button>
         </div>
       </div>
@@ -283,7 +283,7 @@ const Navbar = () => {
                   }}
                   className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-destructive hover:bg-destructive/5 rounded-xl transition-all duration-200"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <SignOut className="w-4 h-4" />
                   Logout
                 </button>
               </div>
@@ -310,7 +310,7 @@ const Navbar = () => {
               rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
             >
-              <Instagram className="w-4 h-4" />
+              <InstagramLogo className="w-4 h-4" />
             </a>
           </div>
         </div>

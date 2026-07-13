@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { 
   ShoppingBag, 
-  Trash2, 
+  Trash, 
   Calendar, 
   Clock, 
   User, 
   CreditCard,
   ArrowRight,
   ShieldCheck
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { Link, useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
@@ -192,7 +192,7 @@ export default function CartPage() {
                         onClick={() => removeItem(booking.id)}
                         className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-xl hover:bg-destructive/5"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash className="w-5 h-5" />
                       </button>
                     </div>
 

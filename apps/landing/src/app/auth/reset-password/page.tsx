@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useRouter } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Lock } from "lucide-react";
+import { Lock } from "@phosphor-icons/react";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth.resetPassword");

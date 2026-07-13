@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link, useRouter } from "@/i18n/routing";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Mail, Lock } from "lucide-react";
+import { Envelope, Lock } from "@phosphor-icons/react";
 import { mergeGuestBookings } from "@/lib/utils";
 
 function LoginForm() {
@@ -71,7 +71,7 @@ function LoginForm() {
             <div className="space-y-2">
               <Label htmlFor="email">{t("email")}</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"

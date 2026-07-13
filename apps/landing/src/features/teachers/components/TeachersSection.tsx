@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { UserCircle } from "lucide-react";
+import { UserCircle } from "@phosphor-icons/react";
 
 interface Profile {
   id: string;

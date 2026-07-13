@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CalendarCheck, ChevronRight } from "lucide-react";
+import { CalendarCheck, CaretRight } from "@phosphor-icons/react";
 
 const BookingSection = () => {
   const t = useTranslations("booking");
@@ -30,7 +30,7 @@ const BookingSection = () => {
           className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-bold hover:bg-primary/90 transition-all duration-300 shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 group"
         >
           {t("cta")}
-          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <CaretRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
         </a>
       </div>
     </section>

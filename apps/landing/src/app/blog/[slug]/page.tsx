@@ -1,6 +1,6 @@
 import { getBlogPosts, getSingleBlogPost } from "@/lib/data";
 import Link from "next/link";
-import { ChevronLeft, Calendar, Share2 } from "lucide-react";
+import { CaretLeft, Calendar, ShareNetwork } from "@phosphor-icons/react";
 import { notFound } from "next/navigation";
 
 export async function generateStaticParams() {
@@ -62,7 +62,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
             href="/blog" 
             className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors group"
           >
-            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             Torna al Blog
           </Link>
         </div>
@@ -116,7 +116,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </p>
           <div className="flex gap-4">
             <button className="flex items-center gap-2 px-6 py-3 bg-foreground text-background rounded-full font-bold hover:bg-primary transition-colors">
-              <Share2 className="w-4 h-4" />
+              <ShareNetwork className="w-4 h-4" />
               Condividi
             </button>
           </div>

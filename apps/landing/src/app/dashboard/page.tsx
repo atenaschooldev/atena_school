@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { BookOpen, Calendar, Clock, CheckCircle2 } from "lucide-react";
+import { BookOpen, Calendar, Clock, CheckCircle } from "@phosphor-icons/react";
 import { format, isFuture, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                         <p className="text-muted-foreground">ore {timeDisplay}</p>
                       </div>
                       <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
-                        <CheckCircle2 className="w-3 h-3 text-green-600" />
+                        <CheckCircle className="w-3 h-3 text-green-600" />
                         Pagato
                       </div>
                     </div>

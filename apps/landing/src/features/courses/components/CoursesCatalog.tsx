@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "./CourseCard";
 
 interface CleanCourse {
@@ -72,7 +72,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
       {/* Search Input */}
       <div className="max-w-md mx-auto mb-10">
         <div className="relative flex items-center bg-card border border-border/60 rounded-full px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] focus-within:border-primary/50 focus-within:shadow-[0_4px_24px_rgba(var(--primary-rgb),0.06)] transition-all duration-300">
-          <Search className="w-5 h-5 text-muted-foreground mr-3" />
+          <MagnifyingGlass className="w-5 h-5 text-muted-foreground mr-3" />
           <input
             type="text"
             placeholder="Cerca un corso o lezione..."

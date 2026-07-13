@@ -8,16 +8,16 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { 
-  ChevronLeft, 
+  CaretLeft, 
   User, 
-  Mail, 
+  Envelope, 
   Phone, 
   Calendar as CalendarIcon, 
   Clock, 
   CreditCard,
   Lock,
   UserCircle
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -177,7 +177,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
           onClick={() => router.back()}
           className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-8 group"
         >
-          <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           Modifica data
         </button>
 
@@ -242,7 +242,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     Email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Envelope className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input 
                       {...register("email")}
                       type="email"

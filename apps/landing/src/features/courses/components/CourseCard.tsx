@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { ChevronRight } from "lucide-react";
+import { CaretRight } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 
 interface CourseCardProps {
@@ -59,7 +59,7 @@ const CourseCard = ({ id, title, description, image, category, price, type = "co
           )}
           <span className="flex items-center gap-1 text-xs font-black uppercase tracking-wider text-primary group-hover:translate-x-1 transition-transform duration-300">
             {t("cta")}
-            <ChevronRight className="w-4 h-4" />
+            <CaretRight className="w-4 h-4" />
           </span>
         </div>
       </div>
