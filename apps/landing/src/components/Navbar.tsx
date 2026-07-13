@@ -144,7 +144,7 @@ const Navbar = () => {
       }`}>
         {/* Logo */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 transform hover:scale-[1.03] transition-transform duration-200">
+          <Link href="/" className="flex items-center gap-2 transform hover:scale-105 hover:rotate-3 active:scale-95 transition-all duration-300">
             <Image 
               src={logo} 
               alt="Atena School" 
@@ -161,7 +161,7 @@ const Navbar = () => {
             <Link
               key={l.href}
               href={l.href as any}
-              className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-all duration-300 ${
+              className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${
                 isTransparent 
                   ? "text-white/95 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
                   : "text-foreground/80 hover:text-primary hover:bg-primary/5"
@@ -175,7 +175,7 @@ const Navbar = () => {
         {/* Icons & Actions */}
         <div className="flex items-center gap-4">
           <Link href="/cart" className="relative group">
-            <div className={`p-2 rounded-full transition-all duration-300 ${
+            <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
               isTransparent 
                 ? "text-white/90 hover:text-white hover:bg-white/10 drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
                 : "text-foreground/70 hover:text-primary hover:bg-primary/5"
@@ -183,7 +183,7 @@ const Navbar = () => {
               <ShoppingCart className="w-5 h-5 cursor-pointer" />
             </div>
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in">
+              <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
                 {cartCount}
               </span>
             )}
@@ -192,7 +192,7 @@ const Navbar = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 p-0.5 rounded-full transition-colors">
+                <div className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300">
                   <UserCircle className={`w-8 h-8 transition-colors ${isTransparent ? "text-white" : "text-primary"}`} />
                 </div>
               </DropdownMenuTrigger>
@@ -212,10 +212,10 @@ const Navbar = () => {
           ) : (
             <Link 
               href="/auth/login" 
-              className={`text-sm font-bold border px-5 py-2 rounded-full transition-all duration-300 shadow-sm ${
+              className={`text-sm font-bold border px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${
                 isTransparent 
                   ? "text-white border-white/30 hover:border-white hover:bg-white/10" 
-                  : "text-primary border-primary hover:bg-primary hover:text-white"
+                  : "text-primary border-primary hover:bg-primary hover:text-white hover:shadow-primary/25"
               }`}
             >
               Login
@@ -223,12 +223,12 @@ const Navbar = () => {
           )}
 
           <button 
-            className={`md:hidden p-2 rounded-full transition-colors ${
+            className={`md:hidden p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
               isTransparent ? "text-white hover:bg-white/10" : "text-foreground hover:bg-accent"
             }`} 
             onClick={() => setOpen(!open)}
           >
-            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {open ? <X className="w-6 h-6 transform rotate-90 transition-transform duration-300" /> : <Menu className="w-6 h-6 transition-transform duration-300" />}
           </button>
         </div>
       </div>
