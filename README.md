@@ -119,3 +119,18 @@ Build all applications and packages according to the Turborepo pipeline dependen
 ```bash
 npx pnpm build
 ```
+
+### 5. Production Builds & SSR Optimization (Next.js Landing)
+
+To build the public landing application for production:
+
+```bash
+npx pnpm --filter landing build
+```
+
+This compiles the Next.js application, executing static page generation, asset compression, and code splitting.
+
+#### Rendering Strategies
+*   **Static & ISR (Incremental Static Regeneration)** (`○`): Main marketing routes (e.g. `/`, `/courses`, `/blog`) are compiled to flat static files. With `Revalidate: 1h`, Next.js checks database updates periodically and regenerates the static page cache in the background without full server rebuilds.
+*   **SSG (Static Site Generation)** (`●`): Dynamic content pages like `/blog/[slug]` are pre-rendered at build time using `generateStaticParams()` to ensure zero-latency SEO.
+*   **Dynamic / SSR (Server-Side Rendering)** (`ƒ`): Routes requiring user session context or live booking validation (e.g. `/book/[type]/[id]`, `/checkout/[type]/[id]`, `/auth/callback`) are compiled to run dynamically on demand.

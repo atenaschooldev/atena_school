@@ -54,6 +54,33 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 
 ---
 
+## ⚙️ Build & Performance Optimizations
+
+### 1. Build and Run Commands
+*   **Compile Production Build**:
+    ```bash
+    npx pnpm build
+    # or to target only this project:
+    npx pnpm --filter landing build
+    ```
+*   **Start Production Server**:
+    ```bash
+    npx pnpm --filter landing start
+    ```
+
+### 2. Next.js Rendering Strategies
+*   **Static & ISR (Incremental Static Regeneration)** (`○`): Core marketing routes (e.g. `/`, `/courses`, `/blog`) are compiled to flat static HTML. Under `Revalidate: 1h`, Next.js checks database updates periodically and regenerates the static page cache in the background without needing a full rebuild.
+*   **SSG (Static Site Generation)** (`●`): Dynamic pages like `/blog/[slug]` are pre-rendered at build time using `generateStaticParams()` to guarantee instant SEO load times.
+*   **Dynamic / SSR (Server-Side Rendering)** (`ƒ`): Routes requiring user session context or live booking details (e.g. `/book/[type]/[id]`, `/checkout/[type]/[id]`, `/auth/callback`) are compiled to run dynamically on demand.
+
+### 3. Media & Assets Compression
+*   **WebP Standard**: Raw PNG files (logo resources and backgrounds) have been converted to WebP to reduce first-load sizes (logo decreased from 110KB to 36KB).
+*   **Favicon & Apple Icons**: Compressed using macOS `sips` commands (e.g. `icon.png` is reduced from 110KB to 2.5KB) to prevent network resource bloat warnings.
+*   **Font Loading**: Satoshi and Clash Display fonts are bound using `display=swap` to avoid visual layout shifts (CLS) on slow connections.
+*   **Server Component Support**: Phosphor Icons use React Context, which can conflict with SSR. They are wrapped in a client-side exporter (`src/components/Icons.tsx`) to allow server-rendered page compilations to build cleanly.
+
+---
+
 ## 📂 Project Structure
 
 - `src/app/[locale]`: Multilingual routing and page layouts.
