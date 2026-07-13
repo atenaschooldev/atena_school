@@ -4,7 +4,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
 import '@/index.css';
-import { Suspense } from 'react';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
@@ -42,24 +41,12 @@ export async function generateMetadata() {
 
 import { Toaster } from 'sonner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
-import { createClient } from '@/lib/supabase/server';
-import { AdminProvider } from '@/features/admin/components/AdminProvider';
-import { GlobalEditManager } from '@/features/admin/components/GlobalEditManager';
 
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Fetch admin role
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  let isAdmin = false;
-  if (user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    isAdmin = (profile as any)?.role === 'admin';
-  }
-
   return (
     <html lang="it">
       <head>
@@ -69,19 +56,14 @@ export default async function RootLayout({
       </head>
       <body className="antialiased">
         <NextIntlClientProvider locale="it" messages={messages}>
-          <AdminProvider isAdmin={isAdmin}>
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <main className="flex-grow">{children}</main>
-              <Footer />
-              <CookieBanner />
-            </div>
-            <Suspense fallback={null}>
-              <GlobalEditManager />
-            </Suspense>
-            <Toaster position="top-right" richColors />
-            <GoogleAnalytics />
-          </AdminProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <main className="flex-grow">{children}</main>
+            <Footer />
+            <CookieBanner />
+          </div>
+          <Toaster position="top-right" richColors />
+          <GoogleAnalytics />
         </NextIntlClientProvider>
       </body>
     </html>

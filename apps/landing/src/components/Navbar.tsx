@@ -12,7 +12,6 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { getSessionId, mergeGuestBookings } from "@/lib/utils";
-import { useAdmin } from "@/features/admin/components/AdminProvider";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -23,7 +22,6 @@ const Navbar = () => {
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [cartCount, setCartCount] = useState(0);
-  const { isAdmin } = useAdmin();
   const supabase = createClient();
 
   const fetchCartCount = async () => {
@@ -150,11 +148,6 @@ const Navbar = () => {
                 <DropdownMenuItem onClick={() => router.push('/dashboard' as any)}>
                   Dashboard
                 </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem onClick={() => router.push('/admin/courses' as any)}>
-                    Admin Panel
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
