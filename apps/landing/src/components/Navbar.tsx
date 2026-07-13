@@ -166,9 +166,9 @@ const Navbar = () => {
         ? "translate-y-0 opacity-100" 
         : "-translate-y-full opacity-0 pointer-events-none"
     } ${
-      isScrolled 
-        ? "py-3 px-4 md:px-8" 
-        : "py-5 px-4 md:px-8"
+      isTransparent 
+        ? "py-5 px-4 md:px-8" 
+        : "py-3 px-4 md:px-8"
     }`}>
       <div className={`mx-auto max-w-7xl transition-all duration-500 rounded-full flex items-center justify-between h-16 ${
         isTransparent 
