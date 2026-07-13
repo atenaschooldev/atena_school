@@ -22,12 +22,12 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       {/* Background with advanced overlay */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
           src={backgroundImage}
           alt="Atena School"
           fill
-          className="object-cover transition-transform duration-10000 scale-105"
+          className="object-cover animate-zoom-breathing"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-black/85 via-black/65 to-primary/45" />
@@ -39,13 +39,15 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-4 pt-28 pb-16 max-w-5xl mx-auto">
-        <div className="relative w-28 h-28 md:w-36 md:h-36 mb-8 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-in fade-in slide-in-from-top-6 duration-700">
-          <Image
-            src={logoImage}
-            alt="Atena School Logo"
-            fill
-            className="object-contain"
-          />
+        <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 rounded-full bg-black/40 backdrop-blur-[6px] border-2 border-white/20 hover:border-primary/50 p-5 shadow-[0_12px_40px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center transform hover:scale-105 active:scale-95 transition-all duration-500 hover:rotate-3 group cursor-pointer animate-in fade-in slide-in-from-top-6 duration-700">
+          <div className="relative w-full h-full">
+            <Image
+              src={logoImage}
+              alt="Atena School Logo"
+              fill
+              className="object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.3)] group-hover:scale-105 transition-transform duration-300"
+            />
+          </div>
         </div>
         
         <h1

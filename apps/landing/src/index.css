@@ -8,6 +8,17 @@
 @theme {
   --font-sans: "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Clash Display", Georgia, serif;
+  
+  --animate-zoom-breathing: zoom-breathing 24s ease-in-out infinite alternate;
+
+  @keyframes zoom-breathing {
+    0% {
+      transform: scale(1.02);
+    }
+    100% {
+      transform: scale(1.1);
+    }
+  }
 }
 
 @layer base {

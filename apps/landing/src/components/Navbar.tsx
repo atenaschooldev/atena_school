@@ -4,7 +4,7 @@ import Image from "next/image";
 import logo from "@/assets/athena-logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition } from "react";
-import { List, X, ShoppingCart, User, SignOut, UserCircle, InstagramLogo } from "@phosphor-icons/react";
+import { List, X, ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -304,14 +304,24 @@ const Navbar = () => {
               <p className="font-bold text-foreground/75">Viale G. Matteotti 11, Cittanova</p>
               <p>Tel: +39 375 605 2362</p>
             </div>
-            <a 
-              href="https://www.instagram.com/atenaschool_srls/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
-            >
-              <InstagramLogo className="w-4 h-4" />
-            </a>
+            <div className="flex gap-2">
+              <a 
+                href="https://www.instagram.com/atenaschool_srls/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+              >
+                <InstagramLogo className="w-4 h-4" />
+              </a>
+              <a 
+                href="https://www.facebook.com/CSAtena7" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition active:scale-90 duration-300"
+              >
+                <FacebookLogo className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
       )}
