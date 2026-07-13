@@ -134,8 +134,8 @@ const Navbar = () => {
     { label: t("blog"), href: "/blog" },
   ];
 
-  // Dynamic styling based on scroll and pathname
-  const isDarkHeroPage = pathname === "/" || pathname === "/courses" || pathname.startsWith("/blog");
+  // Dynamic styling based on scroll and pathname (transparent only on home page)
+  const isDarkHeroPage = pathname === "/";
   const isTransparent = isDarkHeroPage && !isScrolled;
   const showHeader = isVisible || open;
 
