@@ -1,8 +1,10 @@
 import { NextIntlClientProvider } from 'next-intl';
+import { cookies } from 'next/headers';
 import messages from '../../messages/it.json';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
+import SplashScreen, { SPLASH_COOKIE_NAME } from '@/components/SplashScreen';
 import '@/index.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
@@ -72,15 +74,19 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const shouldShowSplash = !cookieStore.has(SPLASH_COOKIE_NAME);
+
   return (
-    <html lang="it">
+    <html lang="it" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
+          <SplashScreen initialVisible={shouldShowSplash} />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow">{children}</main>
