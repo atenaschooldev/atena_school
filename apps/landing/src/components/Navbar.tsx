@@ -57,6 +57,13 @@ const Navbar = () => {
     };
   }, [open]);
 
+  // Reset visibility and mobile menu on page transition
+  useEffect(() => {
+    setOpen(false);
+    setIsVisible(true);
+    setIsScrolled(false);
+  }, [pathname]);
+
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
