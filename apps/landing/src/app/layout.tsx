@@ -8,7 +8,7 @@ import '@/index.css';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
 export async function generateMetadata() {
-  const title = 'Atena School — Corsi di Lingua e Recupero Scolastico a Cittanova';
+  const title = 'Atena School — Scuola di Lingua a Cittanova';
   const description = 'Corsi di inglese, recupero scolastico e preparazione universitaria a Cittanova, Calabria. Lezioni individuali e di gruppo, online e in presenza.';
 
   return {

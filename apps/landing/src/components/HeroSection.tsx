@@ -51,7 +51,6 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-white mb-6 uppercase drop-shadow-sm"
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
-          <span className="sr-only">Corsi di Lingua e Recupero Scolastico a Cittanova — </span>
           {title}
         </h1>
 
