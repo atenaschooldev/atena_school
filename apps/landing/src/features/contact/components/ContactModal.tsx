@@ -22,6 +22,7 @@ import {
   Lock,
 } from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
+import { submitContactForm } from "@/app/actions/contact";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -53,6 +54,8 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Disable body scroll when modal is open
@@ -88,26 +91,40 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
     setFormData((prev) => ({ ...prev, privacy: e.target.checked }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.privacy) {
       alert("Devi accettare l'informativa sulla privacy per procedere.");
       return;
     }
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({
-        nome: "",
-        cognome: "",
-        email: "",
-        telefono: "",
-        interesse: "",
-        messaggio: "",
-        privacy: false,
-      });
-      onClose();
-    }, 2500);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await submitContactForm(formData);
+      if (res.success) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({
+            nome: "",
+            cognome: "",
+            email: "",
+            telefono: "",
+            interesse: "",
+            messaggio: "",
+            privacy: false,
+          });
+          onClose();
+        }, 2000);
+      } else {
+        setError(res.error || "Qualcosa è andato storto. Riprova più tardi.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Errore di rete. Riprova più tardi.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const address = contactData?.address || "Via Matteotti 11, Cittanova (RC) 89022";
@@ -393,14 +410,20 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                 </label>
               </div>
 
+              {/* Error Display */}
+              {error && (
+                <p className="text-red-500 text-xs text-left font-bold pt-1">{error}</p>
+              )}
+
               {/* Submit & Secure Text */}
               <div className="space-y-4 pt-3">
                 <button
                   type="submit"
-                  className="w-full bg-[#F8861D] hover:bg-[#e0730d] text-white font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none"
+                  disabled={loading}
+                  className={`w-full bg-[#F8861D] hover:bg-[#e0730d] text-white font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <PaperPlaneRight className="w-4 h-4" weight="fill" />
-                  Invia richiesta
+                  {loading ? 'Invio in corso...' : 'Invia richiesta'}
                 </button>
 
                 <div className="flex items-center justify-center gap-1.5 text-[10px] text-white/40">

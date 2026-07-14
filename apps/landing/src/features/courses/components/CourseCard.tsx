@@ -34,13 +34,6 @@ const CourseCard = ({ id, title, description, image, category, price, type = "co
             </span>
           </div>
         )}
-        {category && (
-          <div className="absolute top-4 left-4">
-            <span className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-              {category}
-            </span>
-          </div>
-        )}
       </div>
       
       <div className="p-6 flex flex-col flex-grow">
@@ -53,7 +46,9 @@ const CourseCard = ({ id, title, description, image, category, price, type = "co
         
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">
           {price ? (
-            <span className="text-sm font-semibold text-primary">{price}</span>
+            <span className="bg-[#F8861D]/10 text-[#F8861D] px-3 py-1 rounded-lg text-sm font-black tracking-wide">
+              {price}
+            </span>
           ) : (
             <div />
           )}

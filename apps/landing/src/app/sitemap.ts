@@ -2,12 +2,12 @@ import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.com';
   const supabase = createClient();
 
   // Static routes
   const staticRoutes = ['', '/courses', '/blog'];
-  
+
   const entries: MetadataRoute.Sitemap = [];
 
   // Add static routes

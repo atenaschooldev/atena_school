@@ -25,15 +25,19 @@ const localImageMap: Record<string, any> = {
   movers: imgMovers,
   flyers: imgFlyers,
   a2key: imgA2Key,
+  a2: imgA2Key,
   b1: imgB1,
   b2: imgB2,
   c1: imgC1,
   doposcuola: imgDoposcuola,
   recovery: imgRecovery,
   university: imgUniversity,
+  universi: imgUniversity,
   it_courses: imgIt,
   eipass_user: imgEipass,
   eipass_basic: imgEipass,
+  tutor: imgRecovery,
+  young: imgMovers,
 };
 
 export async function generateMetadata() {
@@ -159,9 +163,15 @@ export default async function CoursesPage() {
           const matchedKey = Object.keys(localImageMap).find(key => {
             const cleanKey = key.replace('_', '');
             const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
-            return cleanName.includes(cleanKey) || cleanName.includes('eipass') || cleanName.includes('certipass');
+            return cleanName.includes(cleanKey);
           });
-          itemImage = matchedKey ? localImageMap[matchedKey] : imgIt;
+          if (matchedKey) {
+            itemImage = localImageMap[matchedKey];
+          } else if (lowerName.includes('eipass') || lowerName.includes('certipass')) {
+            itemImage = imgEipass;
+          } else {
+            itemImage = imgIt;
+          }
         }
 
         return {
