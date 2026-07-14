@@ -3,7 +3,7 @@ import messages from '../../messages/it.json';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
-import SplashScreen, { SPLASH_COOKIE_NAME } from '@/components/SplashScreen';
+import ScrollToTop from '@/components/ScrollToTop';
 import '@/index.css';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
@@ -77,31 +77,16 @@ export default function RootLayout({
     <html lang="it" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://api.fontshare.com" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var seenSession = sessionStorage.getItem('atena-school:splash-seen');
-                  var seenCookie = document.cookie.indexOf('atena_school_splash_seen=true') > -1;
-                  if (!seenSession && !seenCookie) {
-                    document.documentElement.classList.add('show-splash');
-                  }
-                } catch (e) {}
-              })();
-            `
-          }}
-        />
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
-          <SplashScreen />
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow flex flex-col">{children}</main>
             <Footer />
             <CookieBanner />
           </div>
+          <ScrollToTop />
           <Toaster position="top-right" richColors />
           <GoogleAnalytics />
         </NextIntlClientProvider>

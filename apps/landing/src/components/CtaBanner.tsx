@@ -52,7 +52,7 @@ const CtaBanner = () => {
 
             {/* Content */}
             <div className="relative z-10 space-y-5 w-full">
-              <h2 className="font-serif text-lg sm:text-xl lg:text-2xl font-black text-white tracking-tight leading-tight text-left">
+              <h2 className="font-serif text-lg sm:text-xl lg:text-2xl font-black text-white leading-tight text-left">
                 {t("title")}
               </h2>
 

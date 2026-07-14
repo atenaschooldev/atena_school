@@ -30,6 +30,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const locale = useLocale();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 });
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   // Fallback to translations if no data provided
   const testimonials = data && data.length > 0 ? data : (t.raw("list") as any[]);
@@ -66,23 +67,23 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-8 sm:py-10 px-4 bg-background relative overflow-hidden">
+    <section className="py-6 sm:py-8 px-4 bg-background relative overflow-hidden">
       {/* Decorative Background Elements */}
       <div className="absolute top-12 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl" />
 
       <div className="max-w-2xl mx-auto relative z-20">
         {/* Section Header */}
-        <div className="text-center mb-6 px-4 space-y-1.5">
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F8861D]">
+        <div className="text-center mb-4 px-4 space-y-1">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F8861D]">
             COSA DICONO DI NOI
           </span>
-          <h2 className="text-xl sm:text-2xl font-serif font-black text-[#043569]">
+          <h2 className="text-lg sm:text-xl font-serif font-black text-[#043569]">
             {t("title")}
           </h2>
         </div>
 
-        <div className="relative group px-4 sm:px-12">
+        <div className="relative group w-full">
           {/* Carousel Viewport */}
           <div 
             className="overflow-hidden" 
@@ -92,75 +93,137 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
               {testimonials.map((item, index) => {
                 const avatar = item.avatar_url || FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
                 const quoteText = item[`quote_${locale}`] || item.quote || item.content_it || "";
+                const isLong = quoteText.length > 100;
                 
                 return (
-                  <div key={index} className="flex-[0_0_100%] min-w-0 px-2">
-                    {/* Horizontal Card Layout */}
-                    <div className="bg-white border border-gray-100 rounded-3xl p-4 sm:p-5 shadow-md flex flex-col sm:flex-row items-center gap-4 sm:gap-5 max-w-[560px] mx-auto">
-                      {/* Avatar */}
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border border-gray-100 shrink-0 shadow-sm">
-                        <img
-                          src={avatar}
-                          alt={item.author || "Student"}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex flex-col items-start text-left space-y-2 w-full">
-                        {/* Stars */}
-                        <div className="flex gap-1 text-amber-500">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} weight="fill" />
-                          ))}
+                  <div key={index} className="flex-[0_0_100%] min-w-0 px-2 relative">
+                    <div
+                      className="relative max-w-[560px] mx-auto"
+                      onClick={() => isLong && setExpandedIndex(expandedIndex === index ? null : index)}
+                    >
+                      {/* Non-expanded Card */}
+                      <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm flex flex-row items-start gap-4 h-[148px] w-full relative transition-all duration-300 hover:shadow-md cursor-pointer select-none">
+                        {/* Avatar */}
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                          <img
+                            src={avatar}
+                            alt={item.author || "Student"}
+                            className="object-cover w-full h-full"
+                          />
                         </div>
 
-                        {/* Quote */}
-                        <blockquote className="text-[11px] sm:text-xs text-gray-700 leading-relaxed font-medium">
-                          "{quoteText}"
-                        </blockquote>
+                        {/* Content */}
+                        <div className="flex flex-col items-start text-left w-full min-w-0 h-full justify-between py-0.5">
+                          <div className="space-y-1 w-full">
+                            {/* Stars */}
+                            <div className="flex gap-0.5 text-amber-500">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={10} weight="fill" />
+                              ))}
+                            </div>
 
-                        {/* Author */}
-                        <p className="text-[10px] sm:text-[11px] font-black text-gray-800 tracking-wide uppercase">
-                          {item.author || item.author_name}
-                        </p>
+                            {/* Quote */}
+                            <blockquote className="text-[11px] sm:text-xs text-gray-700 leading-relaxed font-medium line-clamp-3 pr-2 w-full">
+                              "{quoteText}"
+                            </blockquote>
+                          </div>
+
+                          {/* Author & Read More Indicator */}
+                          <div className="flex items-center justify-between w-full pt-1.5 border-t border-gray-100">
+                            <p className="text-[9px] font-black text-gray-800 tracking-wide uppercase truncate max-w-[60%]">
+                              {item.author || item.author_name}
+                            </p>
+                            {isLong && (
+                              <span className="text-[9px] font-black text-[#F8861D] tracking-wide uppercase shrink-0 hover:underline">
+                                Leggi tutto →
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Expanded Overlay */}
+                      {isLong && expandedIndex === index && (
+                        <div 
+                          className="absolute top-0 left-0 right-0 z-50 bg-white border border-[#F8861D]/20 rounded-3xl p-4 shadow-xl flex flex-row items-start gap-4 h-auto w-full transition-all duration-300 cursor-pointer select-none"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedIndex(null);
+                          }}
+                        >
+                          {/* Avatar */}
+                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                            <img
+                              src={avatar}
+                              alt={item.author || "Student"}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex flex-col items-start text-left w-full min-w-0">
+                            {/* Stars */}
+                            <div className="flex gap-0.5 text-amber-500 mb-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={10} weight="fill" />
+                              ))}
+                            </div>
+
+                            {/* Quote */}
+                            <blockquote className="text-[11px] sm:text-xs text-gray-700 leading-relaxed font-medium max-h-[180px] overflow-y-auto pr-2 w-full mb-2">
+                              "{quoteText}"
+                            </blockquote>
+
+                            {/* Author & Close Hint */}
+                            <div className="flex items-center justify-between w-full pt-1.5 border-t border-gray-100">
+                              <p className="text-[9px] font-black text-gray-800 tracking-wide uppercase truncate max-w-[60%]">
+                                {item.author || item.author_name}
+                              </p>
+                              <span className="text-[9px] font-black text-gray-400 tracking-wide uppercase shrink-0">
+                                Clicca per chiudere ×
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
           </div>
-
-          {/* Navigation Buttons */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer z-30"
-            aria-label="Previous testimonial"
-          >
-            <CaretLeft className="w-4 h-4" weight="bold" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white border border-gray-200 shadow-md text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer z-30"
-            aria-label="Next testimonial"
-          >
-            <CaretRight className="w-4 h-4" weight="bold" />
-          </button>
         </div>
 
-        {/* Indicators */}
-        <div className="flex justify-center gap-1.5 mt-5">
-          {testimonials.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => emblaApi?.scrollTo(index)}
-              className={`h-1.5 transition-all duration-500 rounded-full cursor-pointer ${
-                index === selectedIndex ? "w-6 bg-[#F8861D]" : "w-1.5 bg-gray-200"
-              }`}
-              aria-label={`Go to testimonial ${index + 1}`}
-            />
-          ))}
+        {/* Controls: Navigation Arrows + Indicators */}
+        <div className="flex items-center justify-center gap-5 mt-4">
+          <button
+            onClick={scrollPrev}
+            className="p-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer"
+            aria-label="Previous testimonial"
+          >
+            <CaretLeft className="w-3.5 h-3.5" weight="bold" />
+          </button>
+          
+          <div className="flex gap-1">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => emblaApi?.scrollTo(index)}
+                className={`h-1 transition-all duration-500 rounded-full cursor-pointer ${
+                  index === selectedIndex ? "w-4 bg-[#F8861D]" : "w-1 bg-gray-200"
+                }`}
+                aria-label={`Go to testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            onClick={scrollNext}
+            className="p-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer"
+            aria-label="Next testimonial"
+          >
+            <CaretRight className="w-3.5 h-3.5" weight="bold" />
+          </button>
         </div>
       </div>
     </section>

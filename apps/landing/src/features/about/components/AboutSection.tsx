@@ -50,7 +50,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
                 CHI SIAMO
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-black text-[#043569] leading-tight tracking-tight">
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-black text-[#043569] leading-tight">
                 Unire la ricchezza della cultura classica con il mondo moderno e le sue sfide.
               </h2>
               <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest leading-none pt-1">

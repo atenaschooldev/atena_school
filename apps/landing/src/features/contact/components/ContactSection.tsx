@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, Phone, Envelope, InstagramLogo, FacebookLogo, FileText } from "@phosphor-icons/react";
+import { MapPin, Phone, Envelope, InstagramLogo, FacebookLogo, FileText, WhatsappLogo, Clock } from "@phosphor-icons/react";
 import ContactModal from "./ContactModal";
 
 interface ContactSectionProps {
@@ -19,10 +19,10 @@ const ContactSection = ({ data }: ContactSectionProps) => {
   const t = useTranslations("contact");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const address = data?.address || "Viale Giacomo Matteotti, 11 89022 Cittanova (RC)";
+  const address = data?.address || "Via Matteotti 11, Cittanova (RC) 89022";
   const phone = data?.phone || "+39 375 605 2362";
   const landline = data?.landline || "0966 447052";
-  const email = data?.email || "atenaschool200@gmail.com";
+  const email = data?.email || "atenaschool20@gmail.com";
   const vat = data?.vat || "P.IVA/C.F. 03321620803";
 
   return (
@@ -79,6 +79,14 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               </div>
               <p className="text-sm sm:text-base font-bold text-gray-700">{vat}</p>
             </div>
+
+            {/* Opening Hours */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <Clock className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">Lunedì – Venerdì: 09:00 - 18:00</p>
+            </div>
           </div>
 
           {/* Social & Contact Button */}
@@ -107,6 +115,15 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               >
                 <span className="sr-only">Facebook</span>
                 <FacebookLogo className="w-4 h-4" weight="bold" />
+              </a>
+              <a
+                href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
+              >
+                <span className="sr-only">WhatsApp</span>
+                <WhatsappLogo className="w-4 h-4" weight="bold" />
               </a>
             </div>
           </div>

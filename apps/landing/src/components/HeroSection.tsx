@@ -60,7 +60,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
             {/* Main Heading */}
             <h1
-              className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tight text-white mb-6 uppercase leading-[1.1] drop-shadow-sm"
+              className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-6 uppercase leading-[1.1] drop-shadow-sm"
             >
               {title}
             </h1>

@@ -48,94 +48,6 @@
       transform: translateY(-10px);
     }
   }
-
-  @keyframes splash-sweep {
-    0% {
-      transform: translateX(-80%);
-      opacity: 0;
-    }
-    22% {
-      opacity: 1;
-    }
-    100% {
-      transform: translateX(80%);
-      opacity: 0;
-    }
-  }
-
-  @keyframes splash-line {
-    0% {
-      transform: scaleX(0);
-      opacity: 0;
-    }
-    100% {
-      transform: scaleX(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes splash-ring {
-    0% {
-      transform: translate(-50%, -50%) scale(0.82);
-      opacity: 0;
-    }
-    100% {
-      transform: translate(-50%, -50%) scale(1);
-      opacity: 1;
-    }
-  }
-
-  @keyframes splash-mark {
-    0% {
-      transform: translateY(18px) scale(0.86);
-      opacity: 0;
-      filter: blur(10px);
-    }
-    100% {
-      transform: translateY(0) scale(1);
-      opacity: 1;
-      filter: blur(0);
-    }
-  }
-
-  @keyframes splash-halo {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.38;
-    }
-    50% {
-      transform: scale(1.08);
-      opacity: 0.78;
-    }
-  }
-
-  @keyframes splash-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  @keyframes splash-float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-6px);
-    }
-  }
-
-  @keyframes splash-reveal {
-    0% {
-      transform: translateY(16px);
-      opacity: 0;
-      filter: blur(8px);
-    }
-    100% {
-      transform: translateY(0);
-      opacity: 1;
-      filter: blur(0);
-    }
-  }
 }
 
 @layer base {
@@ -156,6 +68,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Clash Display', sans-serif;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -208,14 +121,4 @@
     }
   }
 
-  /* Prevent splash screen flicker by hiding it by default unless .show-splash class is present */
-  #splash-screen:not(.leaving) {
-    display: none;
-  }
-  .show-splash #splash-screen {
-    display: flex !important;
-  }
-  #splash-screen.leaving {
-    display: flex !important;
-  }
 }

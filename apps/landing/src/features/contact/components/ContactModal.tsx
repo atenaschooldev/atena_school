@@ -110,10 +110,10 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
     }, 2500);
   };
 
-  const address = contactData?.address || "Viale Giacomo Matteotti, 11 89022 Cittanova (RC)";
+  const address = contactData?.address || "Via Matteotti 11, Cittanova (RC) 89022";
   const phone = contactData?.phone || "+39 375 605 2362";
   const landline = contactData?.landline || "0966 447052";
-  const email = contactData?.email || "atenaschool200@gmail.com";
+  const email = contactData?.email || "atenaschool20@gmail.com";
 
   return (
     <div
