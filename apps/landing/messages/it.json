@@ -24,8 +24,20 @@
     "seo_exams_lbl": "Informatica",
     "seo_voucher_val": "STUDIO",
     "seo_voucher_lbl": "Doposcuola",
-    "feature_cert": "Percorsi personalizzati individuali o in piccoli gruppi per seguire al meglio ogni studente.",
-    "feature_audience": "Supporto allo studio mirato per superare le difficoltà scolastiche ed esami universitari."
+    "feature_1": "Percorsi personalizzati individuali o in piccoli gruppi",
+    "feature_2": "Docenti qualificati e madrelingua",
+    "feature_3": "Supporto costante e materiali aggiornati",
+    "feature_4": "Risultati concreti e certificazioni riconosciute"
+  },
+  "stats": {
+    "students_val": "500+",
+    "students_lbl": "Studenti formati ogni anno",
+    "pass_rate_val": "98%",
+    "pass_rate_lbl": "Tasso di superamento esami",
+    "experience_val": "15+",
+    "experience_lbl": "Anni di esperienza",
+    "certifications_val": "2",
+    "certifications_lbl": "Certificazioni ufficiali Cambridge & EIPASS"
   },
   "about": {
     "title": "Chi siamo",
@@ -35,7 +47,7 @@
     "cta": "Contattaci"
   },
   "testimonials": {
-    "title": "Cosa dicono di noi",
+    "title": "Le esperienze dei nostri studenti",
     "list": [
       {
         "quote": "Ad ottobre dell’anno scorso mi sono iscritta all’Atena School per frequentare il corso B2 nonostante nella scuola che frequentavo precedentemente mi avevano detto che non ero ancora pronta e che per sicurezza avrei dovuto prima fare il B1+. Sin dall’inizio le mie insegnanti, Elisabetta e Rita, mi hanno detto che ero nelle condizioni di raggiungere l’obbiettivo che mi ero prefissata, studiando e seguendo i consigli che entrambe mi davano. Ricordo con grandissima emozione il giorno in cui Elisabetta mi ha chiamata per dirmi che avevo superato l’esame, ce l’avevo fatta! La cosa che più ho apprezzato durante l’anno è stato il modo in cui le insegnanti mi hanno seguita, quasi come se fossero lezioni singole private. Ciò mi è servito per non arrendermi e per imparare la lingua con costanza e assiduità. È stato davvero un bel percorso.",
@@ -340,6 +352,20 @@
     "summary": "Riepilogo Ordine",
     "pay": "Paga Ora (Stripe)",
     "notAvailable": "Nessun pacchetto trovato nel database."
+  },
+  "ctaBanner": {
+    "title": "Perché scegliere Atena School?",
+    "feature_1_title": "Percorsi",
+    "feature_1_desc": "su misura",
+    "feature_2_title": "Risultati",
+    "feature_2_desc": "concreti",
+    "feature_3_title": "Certificazioni",
+    "feature_3_desc": "riconosciute",
+    "feature_4_title": "Supporto",
+    "feature_4_desc": "continuo",
+    "cta_title": "Pronto a iniziare il tuo percorso?",
+    "cta_desc": "Prenota una consulenza gratuita con i nostri tutor.",
+    "cta_btn": "Prenota ora"
   },
   "teachers": {
     "title": "I Nostri Insegnanti",

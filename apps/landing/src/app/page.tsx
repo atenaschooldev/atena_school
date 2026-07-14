@@ -1,14 +1,14 @@
 import HeroSection from "@/components/HeroSection";
+import StatsSection from "@/components/StatsSection";
 import AboutSection from "@/features/about/components/AboutSection";
 import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
+import CtaBanner from "@/components/CtaBanner";
 import ContactSection from "@/features/contact/components/ContactSection";
-import TeachersSection from "@/features/teachers/components/TeachersSection";
 import { 
-  getHeroData, 
-  getAboutData, 
-  getTestimonials, 
-  getContactData, 
-  getTeachers 
+   getHeroData, 
+   getAboutData, 
+   getTestimonials, 
+   getContactData
 } from "@/lib/data";
 
 export async function generateMetadata() {
@@ -51,22 +51,22 @@ export async function generateMetadata() {
 
 export default async function IndexPage() {
   // Fetch site content using cached functions
-  const [hero, about, testimonials, contact, teachers] = await Promise.all([
+  const [hero, about, testimonials, contact] = await Promise.all([
     getHeroData(),
     getAboutData(),
     getTestimonials(),
-    getContactData(),
-    getTeachers()
+    getContactData()
   ]);
 
-  const siteData = { hero, about, testimonials, contact, teachers };
+  const siteData = { hero, about, testimonials, contact };
 
   return (
     <div className="min-h-screen">
       <HeroSection data={siteData.hero ?? undefined} />
+      <StatsSection />
       <AboutSection data={siteData.about ?? undefined} />
-      <TeachersSection data={siteData.teachers ?? undefined} />
       <TestimonialsSection data={siteData.testimonials ?? undefined} />
+      <CtaBanner />
       <ContactSection data={siteData.contact ?? undefined} />
     </div>
   );

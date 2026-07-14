@@ -1,10 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, Phone, Envelope, InstagramLogo, FacebookLogo, FileText } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import ContactModal from "./ContactModal";
 
 interface ContactSectionProps {
   data?: {
@@ -18,87 +17,123 @@ interface ContactSectionProps {
 
 const ContactSection = ({ data }: ContactSectionProps) => {
   const t = useTranslations("contact");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const address = data?.address || "Via Matteotti 11, Cittanova (RC) 89022";
+  const address = data?.address || "Viale Giacomo Matteotti, 11 89022 Cittanova (RC)";
   const phone = data?.phone || "+39 375 605 2362";
   const landline = data?.landline || "0966 447052";
-  const email = data?.email || "atenaschool20@gmail.com";
+  const email = data?.email || "atenaschool200@gmail.com";
   const vat = data?.vat || "P.IVA/C.F. 03321620803";
 
   return (
     <section id="contact" className="relative py-16 px-4 bg-background overflow-hidden">
-      {/* Top wave transition from Testimonials (bg-muted) to Contact (background/white) */}
-      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-10 transform rotate-180">
-        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[40px] fill-muted">
-          <path d="M1200 120L0 120 309.19 8C462.66-8 637.34-8 790.81 8L1200 120Z"></path>
-        </svg>
-      </div>
-
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12 relative z-20">
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 lg:gap-14 relative z-20 items-center">
         {/* Info */}
-        <div>
-          <h2 className="text-3xl font-bold text-primary mb-3 leading-tight">{t("title")}</h2>
-          <p className="text-foreground/75 mb-8 text-base leading-relaxed">{t("subtitle")}</p>
-          <div className="space-y-5">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-foreground/80">{address}</p>
+        <div className="space-y-6 flex flex-col items-start text-left">
+          <div className="space-y-3">
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
+              CONTATTACI
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#043569]">
+              Siamo qui per te
+            </h2>
+          </div>
+
+          <div className="space-y-4 w-full">
+            {/* Address */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <MapPin className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">{address}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <Phone className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-foreground/80">{phone}</p>
+
+            {/* Phone */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <Phone className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">{phone}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <Phone className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-foreground/80">{landline}</p>
+
+            {/* Landline */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <Phone className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">{landline}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <Envelope className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-foreground/80">{email}</p>
+
+            {/* Email */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <Envelope className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">{email}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <FileText className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-              <p className="text-foreground/80">{vat}</p>
+
+            {/* VAT */}
+            <div className="flex items-center gap-3">
+              <div className="text-[#F8861D] shrink-0">
+                <FileText className="w-5 h-5" weight="bold" />
+              </div>
+              <p className="text-sm sm:text-base font-bold text-gray-700">{vat}</p>
             </div>
           </div>
 
-          {/* Social */}
-          <div className="flex gap-4 mt-8">
-            <a
-              href="https://www.instagram.com/atenaschool_srls/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-secondary hover:text-secondary-foreground hover:scale-110 transition-all duration-300"
+          {/* Social & Contact Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-3 w-full">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-6 py-3 rounded-full font-black text-sm transition-all duration-300 shadow-lg shadow-orange-500/10 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
             >
-              <span className="sr-only">Instagram</span>
-              <InstagramLogo className="w-5 h-5" />
-            </a>
-            <a
-              href="https://www.facebook.com/CSAtena7"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-secondary hover:text-secondary-foreground hover:scale-110 transition-all duration-300 active:scale-90"
-            >
-              <span className="sr-only">Facebook</span>
-              <FacebookLogo className="w-5 h-5" />
-            </a>
+              Richiedi informazioni →
+            </button>
+            <div className="flex gap-3">
+              <a
+                href="https://www.instagram.com/atenaschool_srls/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
+              >
+                <span className="sr-only">Instagram</span>
+                <InstagramLogo className="w-4 h-4" weight="bold" />
+              </a>
+              <a
+                href="https://www.facebook.com/CSAtena7"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
+              >
+                <span className="sr-only">Facebook</span>
+                <FacebookLogo className="w-4 h-4" weight="bold" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Form */}
-        <div className="bg-card rounded-2xl shadow-lg p-8">
-          <h3 className="text-xl font-bold text-foreground mb-4">{t("form.title")}</h3>
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid grid-cols-2 gap-4">
-              <Input placeholder={t("form.firstName")} />
-              <Input placeholder={t("form.lastName")} />
-            </div>
-            <Input type="email" placeholder={t("form.email")} />
-            <Textarea placeholder={t("form.message")} rows={5} />
-            <Button className="w-full rounded-full">{t("form.submit")}</Button>
-          </form>
+        {/* Google Map on the Right */}
+        <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white h-[280px] relative z-10">
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3121.5!2d16.0781!3d38.3561!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x131153d3a3e6b8b7%3A0x0!2sViale+Giacomo+Matteotti+11%2C+89022+Cittanova+RC!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit&q=Viale+Giacomo+Matteotti+11,+89022+Cittanova+RC"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title="Atena School - Viale Giacomo Matteotti 11, Cittanova"
+            className="grayscale hover:grayscale-0 transition-all duration-700"
+          />
         </div>
       </div>
+
+      {/* Modal Popup Dialog */}
+      <ContactModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        contactData={data}
+      />
     </section>
   );
 };
