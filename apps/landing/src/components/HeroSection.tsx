@@ -28,7 +28,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   ];
 
   return (
-    <section id="home" className="relative min-h-[85vh] lg:min-h-[78vh] flex items-center justify-center overflow-hidden bg-background pt-24 pb-20 lg:pt-28 lg:pb-24">
+    <section id="home" className="relative min-h-[calc(100dvh+3rem)] lg:min-h-[78vh] flex items-center justify-center overflow-hidden bg-background pt-28 pb-20 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
       {/* Background with advanced overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
@@ -46,29 +46,29 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="glow-orb w-[500px] h-[500px] bg-secondary/5 bottom-10 left-10 blur-3xl rounded-full absolute pointer-events-none" />
 
       {/* Content Grid */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 sm:mt-12 lg:mt-0">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-2 sm:mt-12 lg:mt-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Column - Content Area */}
           <div className="lg:col-span-7 flex flex-col items-start text-left">
 
             {/* Location Pin */}
-            <div className="flex items-center gap-1.5 text-[#F8861D] font-bold text-xs uppercase tracking-widest mb-4">
+            <div className="flex items-center gap-1.5 text-[#F8861D] font-bold text-xs uppercase tracking-widest mb-2 sm:mb-4">
               <MapPin size={14} className="text-[#F8861D]" weight="bold" />
               <span>{t("location")}</span>
             </div>
 
             {/* Main Heading */}
             <h1
-              className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-6 uppercase leading-[1.1] drop-shadow-sm"
+              className="font-serif text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white mb-4 sm:mb-6 uppercase leading-[1.1] drop-shadow-sm"
             >
               {title}
             </h1>
 
             {/* Subtitle / Tagline */}
-            <div className="space-y-1 mb-4">
+            <div className="space-y-1 mb-3 sm:mb-4">
               <p
-                className="font-serif text-lg sm:text-xl lg:text-2xl italic text-white/95 max-w-xl leading-relaxed font-bold drop-shadow"
+                className="font-serif text-base sm:text-xl lg:text-2xl italic text-white/95 max-w-xl leading-relaxed font-bold drop-shadow"
               >
                 {tagline}
               </p>
@@ -78,7 +78,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             </div>
             
             {/* Description */}
-            <p className="text-white/80 text-sm md:text-base max-w-xl leading-relaxed mb-8">
+            <p className="text-white/80 text-xs sm:text-sm md:text-base max-w-xl leading-relaxed mb-4 sm:mb-8">
               Centro autorizzato per la preparazione agli esami Cambridge English e alle certificazioni informatiche EIPASS.
             </p>
 
@@ -101,8 +101,8 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           </div>
 
           {/* Right Column - Glassmorphic Accent Panel */}
-          <div className="lg:col-span-5 w-full flex flex-col items-center justify-center lg:items-end mt-4 lg:mt-0">
-            <div className="w-full max-w-[400px] bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-6">
+          <div className="lg:col-span-5 w-full flex flex-col items-center justify-center lg:items-end mt-3 lg:mt-0">
+            <div className="w-full max-w-[400px] bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-5 sm:gap-6">
               
               {/* Badges Container */}
               <div className="flex flex-col gap-4 w-full">
@@ -163,7 +163,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       </div>
 
       {/* Curved bottom transition to About */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none z-20">
+      <div className="hidden sm:block absolute bottom-0 left-0 w-full overflow-hidden leading-none z-20">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="relative block w-full h-[60px] fill-background">
           <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"></path>
         </svg>
