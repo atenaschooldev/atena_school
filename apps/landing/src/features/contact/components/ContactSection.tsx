@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { MapPin, Phone, Envelope, InstagramLogo, FacebookLogo, FileText, WhatsappLogo, Clock } from "@phosphor-icons/react";
-import ContactModal from "./ContactModal";
+import dynamic from "next/dynamic";
+const ContactModal = dynamic(() => import("./ContactModal"), { ssr: false });
 
 interface ContactSectionProps {
   data?: {

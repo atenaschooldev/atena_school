@@ -35,6 +35,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           src={backgroundImage}
           alt="Atena School"
           fill
+          sizes="(max-width: 1024px) 100vw, 1200px"
           className="object-cover animate-zoom-breathing [will-change:transform]"
           priority
         />
