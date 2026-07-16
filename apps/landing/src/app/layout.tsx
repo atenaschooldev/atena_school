@@ -5,6 +5,13 @@ import Footer from '@/components/Footer';
 import CookieBanner from '@/components/CookieBanner';
 import ScrollToTop from '@/components/ScrollToTop';
 import '@/index.css';
+import { Nunito } from 'next/font/google';
+
+const nunito = Nunito({
+  subsets: ['latin', 'latin-ext', 'cyrillic'],
+  display: 'swap',
+  variable: '--font-nunito',
+});
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
 
@@ -74,10 +81,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://api.fontshare.com" />
-      </head>
+    <html lang="it" suppressHydrationWarning className={nunito.variable}>
+      <head />
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
           <div className="flex flex-col min-h-screen">
