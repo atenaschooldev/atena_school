@@ -60,17 +60,38 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   useEffect(() => {
     if (isOpen) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      
+      document.body.setAttribute("data-scroll-y", scrollTop.toString());
+      
       if (scrollbarWidth > 0) {
         document.body.style.paddingRight = `${scrollbarWidth}px`;
       }
+      
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollTop}px`;
+      document.body.style.width = "100%";
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.paddingRight = "";
+      const scrollY = document.body.getAttribute("data-scroll-y");
+      
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
+      
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY, 10));
+        document.body.removeAttribute("data-scroll-y");
+      }
     }
     return () => {
-      document.body.style.paddingRight = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
       document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
     };
   }, [isOpen]);
 
@@ -144,7 +165,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 p-2 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-300 cursor-pointer z-30 flex items-center justify-center"
+          className="fixed md:absolute right-4 top-4 p-2 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-300 cursor-pointer z-30 flex items-center justify-center"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" weight="bold" />

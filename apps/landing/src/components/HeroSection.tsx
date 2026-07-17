@@ -53,7 +53,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
 
           {/* Left Column - Content Area */}
-          <div className="lg:col-span-10 flex flex-col items-start text-left -translate-y-50 sm:translate-y-0">
+          <div className="lg:col-span-10 flex flex-col items-start text-left -translate-y-6 sm:translate-y-0">
 
             {/* Location Pin */}
             <div className="flex items-center gap-1.5 text-[#F8861D] font-bold text-xs uppercase tracking-widest mb-2 sm:mb-4">
