@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 /**
- * High-Performance, SEO-friendly, and Cookie Consent Gated GTM & GA4 Script Loader.
+ * High-Performance, SEO-friendly Google Tag Manager & Google Analytics 4 Loader.
+ * Implements Google Consent Mode v2.
  *
  * Performance Features:
  * 1. Interaction-Deferred: Scripts are only fetched and executed when the user interacts
@@ -11,44 +12,39 @@ import { useEffect, useState } from "react";
  * 2. SEO-Friendly: Search engine bots and performance audit tools (like Googlebot, PageSpeed)
  *    never emit interaction events, so the heavy third-party scripts are not loaded for them,
  *    maximizing crawling speed and Lighthouse performance scores (100/100).
- * 3. GDPR Gated: Scripts only load if the user consents to analytics cookies.
- * 4. Zero SSR Impact: Runs entirely on the client-side, leaving the server HTML clean.
- * 5. Data Layer Initialization: Initialized early to prevent event loss.
+ * 3. Zero SSR Impact: Runs entirely on the client-side, leaving the server HTML clean.
+ * 4. Data Layer Initialization: Initialized early to prevent event loss.
  *
- * Disclaimer on Analytics Bias:
- * Because tracking is deferred until user interaction or the idle timeout, sessions where a user
- * instantly bounces without interacting within the timeout will not be counted in analytics.
- * This is an intentional trade-off for Core Web Vitals optimization.
+ * Compliance Features (Google Consent Mode v2):
+ * 1. Scripts are loaded always (after interaction/timeout) to allow GTM to connect and
+ *    GA4 to receive cookieless pings when consent is denied (GDPR compliant).
+ * 2. Default state is configured based on user's saved preferences (denied by default).
+ * 3. Dynamic updates: Updates consent dynamically when user accepts/declines cookies in the banner.
  */
 export default function GoogleAnalytics() {
   const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
   const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
-  const [hasConsent, setHasConsent] = useState(false);
-
   useEffect(() => {
     const isMockGA = !GA_ID || GA_ID === "G-XXXXXXXXXX";
     const isMockGTM = !GTM_ID || GTM_ID === "GTM-XXXXXXX";
 
-    // If both IDs are missing or configured as mock placeholders, do nothing
     if (isMockGA && isMockGTM) {
       return;
     }
 
-    // 1. Consent management
+    // Dynamic consent updater
     const checkConsent = () => {
       const consentStr = localStorage.getItem("cookie-consent");
       if (consentStr) {
         try {
           const data = JSON.parse(consentStr);
-          const analyticsConsent = !!data.analytics;
-          setHasConsent(analyticsConsent);
-
-          // Update gtag consent mode if gtag exists
           if (typeof window !== "undefined" && (window as any).gtag) {
             (window as any).gtag("consent", "update", {
-              analytics_storage: analyticsConsent ? "granted" : "denied",
+              analytics_storage: data.analytics ? "granted" : "denied",
               ad_storage: data.marketing ? "granted" : "denied",
+              ad_user_data: data.marketing ? "granted" : "denied",
+              ad_personalization: data.marketing ? "granted" : "denied",
             });
           }
         } catch (e) {
@@ -57,7 +53,6 @@ export default function GoogleAnalytics() {
       }
     };
 
-    checkConsent();
     window.addEventListener("cookie-consent-updated", checkConsent);
 
     return () => {
@@ -66,15 +61,6 @@ export default function GoogleAnalytics() {
   }, [GA_ID, GTM_ID]);
 
   useEffect(() => {
-    const isDebugMode = typeof window !== "undefined" && (
-      window.location.search.includes("gtm_debug") || 
-      window.location.search.includes("gtm_preview") ||
-      window.location.hash.includes("gtm_debug") ||
-      window.location.hash.includes("gtm_preview")
-    );
-
-    if (!hasConsent && !isDebugMode) return;
-
     const isMockGA = !GA_ID || GA_ID === "G-XXXXXXXXXX";
     const isMockGTM = !GTM_ID || GTM_ID === "GTM-XXXXXXX";
 
@@ -94,6 +80,35 @@ export default function GoogleAnalytics() {
       // Initialize dataLayer
       const dataLayer = ((window as any).dataLayer = (window as any).dataLayer || []);
       
+      // Initialize gtag function for Consent Mode
+      if (!(window as any).gtag) {
+        (window as any).gtag = function () {
+          dataLayer.push(arguments);
+        };
+      }
+      const gtag = (window as any).gtag;
+
+      // Read current saved consent
+      const consentStr = localStorage.getItem("cookie-consent");
+      let analyticsConsent = false;
+      let marketingConsent = false;
+      if (consentStr) {
+        try {
+          const data = JSON.parse(consentStr);
+          analyticsConsent = !!data.analytics;
+          marketingConsent = !!data.marketing;
+        } catch {}
+      }
+
+      // Configure Google Consent Mode v2 Default States
+      gtag("consent", "default", {
+        analytics_storage: analyticsConsent ? "granted" : "denied",
+        ad_storage: marketingConsent ? "granted" : "denied",
+        ad_user_data: marketingConsent ? "granted" : "denied",
+        ad_personalization: marketingConsent ? "granted" : "denied",
+        wait_for_update: 500,
+      });
+
       // Inject GTM if configured
       if (!isMockGTM && GTM_ID && !(window as any).__gtm_loaded__) {
         (window as any).__gtm_loaded__ = true;
@@ -113,30 +128,7 @@ export default function GoogleAnalytics() {
       if (!isMockGA && GA_ID && !(window as any).__ga_loaded__) {
         (window as any).__ga_loaded__ = true;
 
-        if (!(window as any).gtag) {
-          (window as any).gtag = function () {
-            dataLayer.push(arguments);
-          };
-        }
-
-        const gtag = (window as any).gtag;
         gtag("js", new Date());
-
-        // Respect consent for default configuration
-        const consentStr = localStorage.getItem("cookie-consent");
-        let marketingConsent = false;
-        if (consentStr) {
-          try {
-            marketingConsent = !!JSON.parse(consentStr).marketing;
-          } catch {}
-        }
-
-        gtag("consent", "default", {
-          analytics_storage: "granted",
-          ad_storage: marketingConsent ? "granted" : "denied",
-          wait_for_update: 500,
-        });
-
         gtag("config", GA_ID, {
           page_path: window.location.pathname,
         });
@@ -173,6 +165,13 @@ export default function GoogleAnalytics() {
       }
     };
 
+    const isDebugMode = typeof window !== "undefined" && (
+      window.location.search.includes("gtm_debug") || 
+      window.location.search.includes("gtm_preview") ||
+      window.location.hash.includes("gtm_debug") ||
+      window.location.hash.includes("gtm_preview")
+    );
+
     // Setup interaction listeners / immediate load for debug
     if (isDebugMode) {
       loadScripts();
@@ -197,7 +196,7 @@ export default function GoogleAnalytics() {
     return () => {
       removeListeners();
     };
-  }, [hasConsent, GA_ID, GTM_ID]);
+  }, [GA_ID, GTM_ID]);
 
   return null;
 }
