@@ -33,7 +33,7 @@ export default function GoogleAnalytics() {
       return;
     }
 
-    // Dynamic consent updater
+    // Dynamic consent updater (listens to cookie banner changes)
     const checkConsent = () => {
       const consentStr = localStorage.getItem("cookie-consent");
       if (consentStr) {
