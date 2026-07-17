@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { env } from "@/config/env";
 
 /**
- * High-Performance, SEO-friendly Google Tag Manager & Google Analytics 4 Loader.
+ * High-Performance, SEO-friendly Google Tag Manager, Google Analytics 4 & Microsoft Clarity Loader.
  * Implements Google Consent Mode v2.
  *
  * Performance Features:
@@ -16,18 +16,19 @@ import { env } from "@/config/env";
  * 3. Zero SSR Impact: Runs entirely on the client-side, leaving the server HTML clean.
  * 4. Data Layer Initialization: Initialized early to prevent event loss.
  *
- * Compliance Features (Google Consent Mode v2):
- * 1. Scripts are loaded always (after interaction/timeout) to allow GTM to connect and
- *    GA4 to receive cookieless pings when consent is denied (GDPR compliant).
+ * Compliance Features (Google Consent Mode v2 & GDPR):
+ * 1. Scripts are loaded always (after interaction/timeout) to allow GTM/GA4/Clarity to connect and
+ *    GA4/Clarity to receive cookieless pings when consent is denied (GDPR compliant).
  * 2. Default state is configured based on user's saved preferences (denied by default).
  * 3. Dynamic updates: Updates consent dynamically when user accepts/declines cookies in the banner.
  */
 export default function GoogleAnalytics() {
   const GA_ID = env.NEXT_PUBLIC_GA_ID;
   const GTM_ID = env.NEXT_PUBLIC_GTM_ID;
+  const CLARITY_ID = env.NEXT_PUBLIC_CLARITY_ID;
 
   useEffect(() => {
-    if (!GA_ID && !GTM_ID) {
+    if (!GA_ID && !GTM_ID && !CLARITY_ID) {
       return;
     }
 
@@ -56,10 +57,10 @@ export default function GoogleAnalytics() {
     return () => {
       window.removeEventListener("cookie-consent-updated", checkConsent);
     };
-  }, [GA_ID, GTM_ID]);
+  }, [GA_ID, GTM_ID, CLARITY_ID]);
 
   useEffect(() => {
-    if (!GA_ID && !GTM_ID) return;
+    if (!GA_ID && !GTM_ID && !CLARITY_ID) return;
 
     let loaded = false;
     let idleId: number | null = null;
@@ -133,6 +134,21 @@ export default function GoogleAnalytics() {
         script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
         document.head.appendChild(script);
       }
+
+      // Inject Microsoft Clarity if configured
+      if (CLARITY_ID && !(window as any).__clarity_loaded__) {
+        (window as any).__clarity_loaded__ = true;
+        (function(c: any, l: Document, a: string, r: string, i: string) {
+          c[a] = c[a] || function() {
+            (c[a].q = c[a].q || []).push(arguments);
+          };
+          const t = l.createElement(r) as HTMLScriptElement;
+          t.async = true;
+          t.src = "https://www.clarity.ms/tag/" + i;
+          const y = l.getElementsByTagName(r)[0];
+          y.parentNode?.insertBefore(t, y);
+        })(window, document, "clarity", "script", CLARITY_ID);
+      }
     };
 
     // Interaction triggers
@@ -191,7 +207,7 @@ export default function GoogleAnalytics() {
     return () => {
       removeListeners();
     };
-  }, [GA_ID, GTM_ID]);
+  }, [GA_ID, GTM_ID, CLARITY_ID]);
 
   return null;
 }

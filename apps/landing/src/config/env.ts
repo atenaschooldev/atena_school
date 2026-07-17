@@ -24,6 +24,10 @@ const envSchema = z.object({
     if (!val || val === "GTM-XXXXXXX") return undefined;
     return val;
   }),
+  NEXT_PUBLIC_CLARITY_ID: z.string().optional().transform((val) => {
+    if (!val || val === "clarity-id-here" || val === "clXXXXXX") return undefined;
+    return val;
+  }),
 });
 
 // Since this is Next.js, we check if we are in server or client to pick the right variables
@@ -35,6 +39,7 @@ const processEnv = {
   ADMIN_EMAILS: process.env.ADMIN_EMAILS || '',
   NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,
+  NEXT_PUBLIC_CLARITY_ID: process.env.NEXT_PUBLIC_CLARITY_ID,
 };
 
 const parsed = envSchema.safeParse(processEnv);
