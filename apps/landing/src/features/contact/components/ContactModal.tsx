@@ -82,7 +82,10 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
       document.body.style.paddingRight = "";
       
       if (scrollY) {
+        const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = "auto";
         window.scrollTo(0, parseInt(scrollY, 10));
+        document.documentElement.style.scrollBehavior = originalScrollBehavior;
         document.body.removeAttribute("data-scroll-y");
       }
     }
