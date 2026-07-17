@@ -95,7 +95,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
               {/* Left Column of Collage */}
               <div className="flex flex-col gap-4">
                 {/* Image 1 - Student holding book */}
-                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/3] w-full">
+                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/3] w-full transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg [will-change:transform,box-shadow] cursor-pointer">
                   <Image
                     src={aboutStudent}
                     alt="Student holding notebook"
@@ -104,7 +104,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                   />
                 </div>
                 {/* Image 2 - Girls studying */}
-                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/3] w-full">
+                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/3] w-full transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg [will-change:transform,box-shadow] cursor-pointer">
                   <Image
                     src={aboutStudying}
                     alt="Students studying together"
@@ -127,7 +127,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                 </div>
 
                 {/* Image 3 - Teacher in classroom */}
-                <div className="relative rounded-3xl overflow-hidden shadow-md w-full h-full min-h-[320px] z-10">
+                <div className="relative rounded-3xl overflow-hidden shadow-md w-full h-full min-h-[320px] z-10 transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg [will-change:transform,box-shadow] cursor-pointer">
                   <Image
                     src={aboutClassroom}
                     alt="Teacher in classroom"

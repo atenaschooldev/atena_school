@@ -52,59 +52,78 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
     if (!emblaApi) return;
     
     onSelect();
-
     emblaApi.on("select", onSelect);
     
-    // Auto-play logic
-    const intervalId = setInterval(() => {
-      emblaApi.scrollNext();
-    }, 8000);
+    let intervalId: NodeJS.Timeout;
+
+    const startAutoplay = () => {
+      intervalId = setInterval(() => {
+        if (emblaApi.canScrollNext()) {
+          emblaApi.scrollNext();
+        } else {
+          emblaApi.scrollTo(0);
+        }
+      }, 4000); // 4 seconds for a dynamic feel
+    };
+
+    const stopAutoplay = () => {
+      clearInterval(intervalId);
+    };
+
+    startAutoplay();
+
+    // Pause autoplay during drag interactions
+    emblaApi.on("pointerDown", stopAutoplay);
+    emblaApi.on("pointerUp", startAutoplay);
 
     return () => {
       clearInterval(intervalId);
       emblaApi.off("select", onSelect);
+      emblaApi.off("pointerDown", stopAutoplay);
+      emblaApi.off("pointerUp", startAutoplay);
     };
   }, [emblaApi, onSelect]);
 
   return (
-    <section className="py-6 sm:py-8 px-4 bg-background relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-12 left-0 w-64 h-64 bg-primary/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary/5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl" />
+    <section className="py-6 sm:py-8 px-4 bg-white relative overflow-hidden">
 
-      <div className="max-w-2xl mx-auto relative z-20">
-        {/* Section Header */}
-        <div className="text-center mb-4 px-4 space-y-1">
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F8861D]">
-            COSA DICONO DI NOI
-          </span>
-          <h2 className="text-lg sm:text-xl font-serif font-black text-[#043569]">
-            {t("title")}
-          </h2>
-        </div>
+      {/* Centered Header */}
+      <div className="max-w-2xl mx-auto relative z-20 text-center mb-8 px-4 space-y-1">
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F8861D]">
+          COSA DICONO DI NOI
+        </span>
+        <h2 className="text-lg sm:text-xl font-serif font-black text-[#043569]">
+          {t("title")}
+        </h2>
+      </div>
 
-        <div className="relative group w-full">
-          {/* Carousel Viewport */}
-          <div 
-            className="overflow-hidden" 
-            ref={emblaRef}
-          >
-            <div className="flex items-stretch">
+      {/* Full-width Carousel container */}
+      <div className="relative z-20 w-full max-w-[100vw] overflow-hidden px-0">
+        {/* Soft edge fade overlays */}
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-r from-white via-white/35 to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-l from-white via-white/35 to-transparent" />
+
+        {/* Carousel Viewport */}
+        <div 
+          className="overflow-hidden py-4 -my-4 px-4 md:px-12 w-full" 
+          ref={emblaRef}
+        >
+            <div className="flex -ml-4 items-stretch">
               {testimonials.map((item, index) => {
                 const avatar = item.avatar_url || FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
                 const quoteText = item[`quote_${locale}`] || item.quote || item.content_it || "";
                 const isLong = quoteText.length > 100;
                 
                 return (
-                  <div key={index} className="flex-[0_0_100%] min-w-0 px-2 relative">
+                  <div key={index} className="flex-[0_0_88%] md:flex-[0_0_46%] lg:flex-[0_0_31%] xl:flex-[0_0_24%] min-w-0 pl-4 relative">
                     <div
-                      className="relative max-w-[560px] mx-auto"
+                      className="relative w-full"
                       onClick={() => isLong && setExpandedIndex(expandedIndex === index ? null : index)}
                     >
                       {/* Non-expanded Card */}
-                      <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-sm flex flex-row items-start gap-4 h-[148px] w-full relative transition-all duration-300 hover:shadow-md cursor-pointer select-none">
+                      <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-row items-start gap-4 h-[148px] w-full relative transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] cursor-pointer select-none">
                         {/* Avatar */}
-                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-200 shrink-0 mt-0.5">
                           <img
                             src={avatar}
                             alt={item.author || "Student"}
@@ -152,7 +171,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                           }}
                         >
                           {/* Avatar */}
-                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-100 shrink-0 shadow-sm mt-0.5">
+                          <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border border-gray-200 shrink-0 mt-0.5">
                             <img
                               src={avatar}
                               alt={item.author || "Student"}
@@ -192,38 +211,19 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
               })}
             </div>
           </div>
-        </div>
 
-        {/* Controls: Navigation Arrows + Indicators */}
-        <div className="flex items-center justify-center gap-5 mt-4">
-          <button
-            onClick={scrollPrev}
-            className="p-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer"
-            aria-label="Previous testimonial"
-          >
-            <CaretLeft className="w-3.5 h-3.5" weight="bold" />
-          </button>
-          
-          <div className="flex gap-1">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => emblaApi?.scrollTo(index)}
-                className={`h-1 transition-all duration-500 rounded-full cursor-pointer ${
-                  index === selectedIndex ? "w-4 bg-[#F8861D]" : "w-1 bg-gray-200"
-                }`}
-                aria-label={`Go to testimonial ${index + 1}`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={scrollNext}
-            className="p-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-400 hover:text-[#F8861D] hover:border-[#F8861D] transition-all duration-300 flex items-center justify-center cursor-pointer"
-            aria-label="Next testimonial"
-          >
-            <CaretRight className="w-3.5 h-3.5" weight="bold" />
-          </button>
+        {/* Controls: Indicators Only */}
+        <div className="flex items-center justify-center gap-1.5 mt-6">
+          {testimonials.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={`h-1.5 transition-all duration-500 rounded-full cursor-pointer ${
+                index === selectedIndex ? "w-6 bg-[#F8861D]" : "w-1.5 bg-gray-200"
+              }`}
+              aria-label={`Go to testimonial ${index + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>

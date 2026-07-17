@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Envelope, Lock, User, Eye, EyeSlash } from "@phosphor-icons/react";
 import { mergeGuestBookings } from "@/lib/utils";
 import Image from "next/image";
-import logo from "@/assets/athena-logo.webp";
+import logo from "@/assets/logo.webp";
 import heroLondon from "@/assets/hero-london.webp";
 
 function LoginForm() {
@@ -100,32 +100,32 @@ function LoginForm() {
           </div>
         </div>
  
-        {/* Right Side - Form Card (Semi-transparent with glass effect, aligned to the right, adaptive sizing) */}
-        <div className="lg:col-span-5 lg:col-start-8 bg-[#0B1B2B]/90 backdrop-blur-md border border-white/5 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-2xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-4 max-h-[780px]:px-6 responsive-card">
+        {/* Right Side - Form Card */}
+        <div className="lg:col-span-5 lg:col-start-8 bg-white border border-gray-150 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-4 max-h-[780px]:px-6 responsive-card">
           {/* Header */}
           <div className="flex items-center gap-4 mb-4 xl:mb-6 max-h-[780px]:mb-3 responsive-header">
-            <div className="w-10 h-10 xl:w-12 xl:h-12 max-h-[780px]:w-9 max-h-[780px]:h-9 rounded-full border border-white/10 flex items-center justify-center text-[#F8861D] bg-[#112235]/50 shrink-0 responsive-avatar-circle">
-              <User className="w-5 h-5 xl:w-6 xl:h-6 max-h-[780px]:w-4.5 max-h-[780px]:h-4.5 responsive-avatar-icon" />
+            <div className="w-10 h-10 xl:w-12 xl:h-12 max-h-[780px]:w-9 max-h-[780px]:h-9 rounded-full border border-gray-200 flex items-center justify-center text-[#F8861D] bg-gray-50 shrink-0 responsive-avatar-circle">
+              <User className="w-5 h-5 xl:w-6 xl:h-6 max-h-[780px]:w-4.5 max-h-[780px]:h-4.5 responsive-avatar-icon text-gray-700" />
             </div>
             <div className="text-left">
-              <h2 className="text-lg xl:text-xl font-serif font-black text-white leading-none max-h-[780px]:text-base">Accedi</h2>
-              <p className="text-[10px] xl:text-xs text-white/50 mt-1 max-h-[780px]:mt-0.5">Inserisci le tue credenziali</p>
+              <h2 className="text-lg xl:text-xl font-serif font-black text-gray-900 leading-none max-h-[780px]:text-base">Accedi</h2>
+              <p className="text-[10px] xl:text-xs text-gray-500 mt-1 max-h-[780px]:mt-0.5">Inserisci le tue credenziali</p>
             </div>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-3.5 xl:space-y-4.5 max-h-[780px]:space-y-2.5 responsive-form">
             {/* Email Field */}
             <div className="space-y-1 max-h-[780px]:space-y-0.5 text-left responsive-field-container">
-              <label htmlFor="email" className="text-[10px] xl:text-xs font-bold text-white/80 tracking-wider max-h-[780px]:text-[9px] responsive-label">Email</label>
+              <label htmlFor="email" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider max-h-[780px]:text-[9px] responsive-label">Email</label>
               <div className="relative group">
-                <Envelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-white/40 group-focus-within:text-[#F8861D] transition-colors duration-300" />
+                <Envelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-gray-400 group-focus-within:text-[#F8861D] transition-colors duration-300" />
                 <input
                   id="email"
                   type="email"
                   placeholder="esempio@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#112235] border border-white/10 focus:border-[#F8861D]/50 focus:ring-1 focus:ring-[#F8861D]/50 rounded-xl py-2 px-10 text-xs xl:text-sm text-white placeholder-white/30 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2 px-10 text-xs xl:text-sm text-gray-900 placeholder-gray-400 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
                   required
                 />
               </div>
@@ -134,26 +134,26 @@ function LoginForm() {
             {/* Password Field */}
             <div className="space-y-1 max-h-[780px]:space-y-0.5 text-left responsive-field-container">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-white/80 tracking-wider max-h-[780px]:text-[9px] responsive-label">Password</label>
+                <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider max-h-[780px]:text-[9px] responsive-label">Password</label>
                 <Link href="/auth/forgot-password" className="text-[10px] xl:text-xs text-[#F8861D] hover:underline font-bold transition-all duration-200 max-h-[780px]:text-[9px] responsive-label">
                   Password dimenticata?
                 </Link>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-white/40 group-focus-within:text-[#F8861D] transition-colors duration-300" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-gray-400 group-focus-within:text-[#F8861D] transition-colors duration-300" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#112235] border border-white/10 focus:border-[#F8861D]/50 focus:ring-1 focus:ring-[#F8861D]/50 rounded-xl py-2 px-10 pr-10 text-xs xl:text-sm text-white placeholder-white/30 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2 px-10 pr-10 text-xs xl:text-sm text-gray-900 placeholder-gray-400 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors duration-200 cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors duration-200 cursor-pointer"
                 >
                   {showPassword ? <EyeSlash className="w-4 h-4 xl:w-4.5 xl:h-4.5" /> : <Eye className="w-4 h-4 xl:w-4.5 xl:h-4.5" />}
                 </button>
@@ -166,13 +166,13 @@ function LoginForm() {
                 <input
                   type="checkbox"
                   id="rememberMe"
-                  className="rounded border-white/20 bg-[#112235] text-[#F8861D] focus:ring-offset-0 focus:ring-0 w-3.5 h-3.5 xl:w-4 xl:h-4 max-h-[780px]:w-3 max-h-[780px]:h-3 cursor-pointer"
+                  className="rounded border-gray-300 bg-gray-50 text-[#F8861D] focus:ring-offset-0 focus:ring-0 w-3.5 h-3.5 xl:w-4 xl:h-4 max-h-[780px]:w-3 max-h-[780px]:h-3 cursor-pointer"
                 />
-                <span className="text-[11px] xl:text-xs text-white/60 group-hover:text-white transition-colors duration-200 max-h-[780px]:text-[10px] responsive-checkbox-text">
+                <span className="text-[11px] xl:text-xs text-gray-600 group-hover:text-gray-800 transition-colors duration-200 max-h-[780px]:text-[10px] responsive-checkbox-text">
                   Ricordami
                 </span>
               </label>
-              <Link href="#" className="text-[10px] xl:text-xs text-white/50 hover:text-white hover:underline transition-colors duration-200 max-h-[780px]:text-[9px] responsive-label">
+              <Link href="#" className="text-[10px] xl:text-xs text-gray-500 hover:text-gray-700 hover:underline transition-colors duration-200 max-h-[780px]:text-[9px] responsive-label">
                 Hai problemi ad accedere?
               </Link>
             </div>
@@ -201,10 +201,10 @@ function LoginForm() {
           {/* Divider */}
           <div className="relative py-2.5 xl:py-3.5 max-h-[780px]:py-1.5 responsive-divider">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10" />
+              <span className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-[9px] xl:text-[10px] uppercase max-h-[780px]:text-[8px]">
-              <span className="bg-[#0B1B2B] px-3 text-white/40 font-black tracking-widest">
+              <span className="bg-white px-3 text-gray-400 font-black tracking-widest">
                 OPPURE CONTINUA CON
               </span>
             </div>
@@ -214,7 +214,7 @@ function LoginForm() {
           <div>
             <button
               type="button"
-              className="w-full bg-black/20 hover:bg-black/40 border border-white/10 text-white font-bold py-2 px-6 rounded-xl flex items-center justify-center gap-2.5 h-9.5 xl:h-11 max-h-[780px]:h-9 transition-all duration-300 cursor-pointer text-xs xl:text-sm responsive-button"
+              className="w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-bold py-2 px-6 rounded-xl flex items-center justify-center gap-2.5 h-9.5 xl:h-11 max-h-[780px]:h-9 transition-all duration-300 cursor-pointer text-xs xl:text-sm responsive-button shadow-sm"
               onClick={() => handleOAuthLogin('google')}
             >
               <svg className="w-3.5 h-3.5 xl:w-4 xl:h-4" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ function LoginForm() {
 
           {/* Register Link */}
           <div className="text-center pt-3 xl:pt-4 max-h-[780px]:pt-2 responsive-register">
-            <span className="text-[11px] xl:text-xs text-white/50 font-bold max-h-[780px]:text-[10px]">
+            <span className="text-[11px] xl:text-xs text-gray-500 font-bold max-h-[780px]:text-[10px]">
               Non hai un account?{" "}
               <Link
                 href={`/auth/register${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}

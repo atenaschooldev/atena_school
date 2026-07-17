@@ -78,32 +78,32 @@ export default function ResetPasswordPage() {
           </div>
         </div>
  
-        {/* Right Side - Form Card (Semi-transparent with glass effect, aligned to the right, adaptive sizing) */}
-        <div className="lg:col-span-5 lg:col-start-8 bg-[#0B1B2B]/90 backdrop-blur-md border border-white/5 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-2xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-6 max-h-[780px]:px-6 responsive-card">
+        {/* Right Side - Form Card */}
+        <div className="lg:col-span-5 lg:col-start-8 bg-white border border-gray-150 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-6 max-h-[780px]:px-6 responsive-card animate-in fade-in duration-300">
           {/* Header */}
           <div className="flex items-center gap-4 mb-5 xl:mb-6 max-h-[780px]:mb-4 responsive-header">
-            <div className="w-10 h-10 xl:w-12 xl:h-12 rounded-full border border-white/10 flex items-center justify-center text-[#F8861D] bg-[#112235]/50 shrink-0 responsive-avatar-circle">
-              <Lock className="w-5 h-5 xl:w-6 xl:h-6 responsive-avatar-icon" />
+            <div className="w-10 h-10 xl:w-12 xl:h-12 rounded-full border border-gray-200 flex items-center justify-center text-[#F8861D] bg-gray-50 shrink-0 responsive-avatar-circle">
+              <Lock className="w-5 h-5 xl:w-6 xl:h-6 responsive-avatar-icon text-gray-700" />
             </div>
             <div className="text-left">
-              <h2 className="text-lg xl:text-xl font-serif font-black text-white leading-none max-h-[780px]:text-base">{t("title")}</h2>
-              <p className="text-[10px] xl:text-xs text-white/50 mt-1 max-h-[780px]:mt-0.5">{t("subtitle")}</p>
+              <h2 className="text-lg xl:text-xl font-serif font-black text-gray-900 leading-none max-h-[780px]:text-base">{t("title")}</h2>
+              <p className="text-[10px] xl:text-xs text-gray-500 mt-1 max-h-[780px]:mt-0.5">{t("subtitle")}</p>
             </div>
           </div>
 
           <form onSubmit={handleReset} className="space-y-4 xl:space-y-5 max-h-[780px]:space-y-3.5 responsive-form">
             {/* Password Field */}
             <div className="space-y-1.5 text-left responsive-field-container">
-              <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-white/80 tracking-wider responsive-label">{t("newPassword")}</label>
+              <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider responsive-label">{t("newPassword")}</label>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-white/40 group-focus-within:text-[#F8861D] transition-colors duration-300" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-gray-400 group-focus-within:text-[#F8861D] transition-colors duration-300" />
                 <input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#112235] border border-white/10 focus:border-[#F8861D]/50 focus:ring-1 focus:ring-[#F8861D]/50 rounded-xl py-2 px-10 text-xs xl:text-sm text-white placeholder-white/30 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2 px-10 text-xs xl:text-sm text-gray-900 placeholder-gray-400 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
                   required
                 />
               </div>
