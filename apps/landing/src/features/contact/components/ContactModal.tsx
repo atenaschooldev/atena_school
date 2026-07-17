@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Phone,
@@ -56,8 +56,6 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   // Disable body scroll when modal is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (isOpen) {
@@ -75,14 +73,6 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
-
-  // Auto-resize textarea message field
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [formData.messaggio]);
 
   if (!isOpen) return null;
 
@@ -146,7 +136,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
       }}
     >
       {/* Modal Container */}
-      <div className="relative bg-white w-full h-[100dvh] md:h-auto md:max-h-[92vh] rounded-none md:rounded-[32px] md:max-w-5xl border-none md:border md:border-gray-150 shadow-2xl text-gray-900 font-sans overflow-y-auto">
+      <div className="relative bg-white w-full h-full md:h-auto md:max-h-[92vh] rounded-none md:rounded-[32px] md:max-w-5xl border-none md:border md:border-gray-150 shadow-2xl text-gray-900 font-sans overflow-y-auto">
 
         {/* Close Button */}
         <button
@@ -381,7 +371,6 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                 <div className="relative">
                   <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
                   <textarea
-                    ref={textareaRef}
                     name="messaggio"
                     value={formData.messaggio}
                     onChange={handleChange}

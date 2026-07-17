@@ -20,7 +20,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const tagline = data?.[`tagline_${locale}`] || t("tagline");
 
   return (
-    <section id="home" className="relative min-h-dvh lg:min-h-[90vh] flex items-center justify-center overflow-hidden bg-background pt-28 pb-20 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
+    <section id="home" className="relative min-h-svh lg:min-h-[90vh] flex items-center justify-center overflow-hidden bg-background pt-28 pb-20 sm:pt-24 sm:pb-20 lg:pt-28 lg:pb-24">
       {/* Background with advanced overlay */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {/* Mobile Background */}
