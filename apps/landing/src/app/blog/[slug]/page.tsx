@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = post?.title_it || 'Articolo';
   const description = post?.excerpt_it || 'Leggi questo articolo sul blog di Atena School.';
-  const image = post?.main_image || `${siteUrl}/og-default.jpg`;
+  const image = post?.main_image || `${siteUrl}/og-default.webp`;
   const url = `${siteUrl}/blog/${slug}`;
 
   return {
@@ -59,8 +59,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       <article className="max-w-4xl mx-auto px-4">
         {/* Navigation */}
         <div className="mb-12">
-          <Link 
-            href="/blog" 
+          <Link
+            href="/blog"
             className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors group"
           >
             <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -80,7 +80,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
               #AtenaBlog
             </div>
           </div>
-          
+
           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground leading-[1.1] mb-8">
             {title}
           </h1>
@@ -102,9 +102,9 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="text-xl md:text-2xl leading-relaxed text-muted-foreground font-light mb-12 whitespace-pre-wrap">
             {post.excerpt_it || post.excerpt}
           </div>
-          
+
           <div className="h-px w-full bg-border mb-12" />
-          
+
           <div className="text-lg md:text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap mb-16">
             {content}
           </div>

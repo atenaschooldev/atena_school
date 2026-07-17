@@ -3,10 +3,10 @@ import StatsSection from "@/components/StatsSection";
 import AboutSection from "@/features/about/components/AboutSection";
 import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
 import CtaBanner from "@/components/CtaBanner";
-import { 
-   getHeroData, 
-   getAboutData, 
-   getTestimonials
+import {
+  getHeroData,
+  getAboutData,
+  getTestimonials
 } from "@/lib/data";
 
 import { env } from "@/config/env";
@@ -37,11 +37,11 @@ export async function generateMetadata() {
       siteName: 'Atena School',
       title,
       description,
-      images: [{ url: `${siteUrl}/og-default.jpg`, width: 1200, height: 630, alt: 'Atena School' }],
+      images: [{ url: `${siteUrl}/og-default.webp`, width: 1200, height: 630, alt: 'Atena School' }],
     },
-    twitter: { 
-      card: 'summary_large_image', 
-      title, 
+    twitter: {
+      card: 'summary_large_image',
+      title,
       description,
       site: '@atenaschool',
       creator: '@atenaschool',

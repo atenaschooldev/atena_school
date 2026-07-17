@@ -38,7 +38,7 @@ export async function generateMetadata() {
     icons: {
       icon: [
         { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
-        { url: '/logo-192.png',   sizes: '192x192', type: 'image/png' },
+        { url: '/logo-192.png', sizes: '192x192', type: 'image/png' },
       ],
       apple: [
         { url: '/apple-icon.png', sizes: '512x512', type: 'image/png' },
@@ -61,13 +61,13 @@ export async function generateMetadata() {
       siteName: 'Atena School',
       title,
       description,
-      images: [{ url: `${siteUrl}/og-default.jpg`, width: 1200, height: 630, alt: 'Atena School' }],
+      images: [{ url: `${siteUrl}/og-default.webp`, width: 1200, height: 630, alt: 'Atena School' }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
-      images: [`${siteUrl}/og-default.jpg`],
+      images: [`${siteUrl}/og-default.webp`],
       site: '@atenaschool',
       creator: '@atenaschool',
     },
