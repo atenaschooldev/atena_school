@@ -66,7 +66,14 @@ export default function GoogleAnalytics() {
   }, [GA_ID, GTM_ID]);
 
   useEffect(() => {
-    if (!hasConsent) return;
+    const isDebugMode = typeof window !== "undefined" && (
+      window.location.search.includes("gtm_debug") || 
+      window.location.search.includes("gtm_preview") ||
+      window.location.hash.includes("gtm_debug") ||
+      window.location.hash.includes("gtm_preview")
+    );
+
+    if (!hasConsent && !isDebugMode) return;
 
     const isMockGA = !GA_ID || GA_ID === "G-XXXXXXXXXX";
     const isMockGTM = !GTM_ID || GTM_ID === "GTM-XXXXXXX";
@@ -166,12 +173,7 @@ export default function GoogleAnalytics() {
       }
     };
 
-    const isDebugMode = typeof window !== "undefined" && (
-      window.location.search.includes("gtm_debug") || 
-      window.location.search.includes("gtm_preview")
-    );
-
-    // Setup interaction listeners
+    // Setup interaction listeners / immediate load for debug
     if (isDebugMode) {
       loadScripts();
     } else {
