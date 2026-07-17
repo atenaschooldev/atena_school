@@ -13,7 +13,9 @@ const nunito = Nunito({
   variable: '--font-nunito',
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+import { env } from '@/config/env';
+
+const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
   const title = 'Atena School — Scuola di Lingua a Cittanova';

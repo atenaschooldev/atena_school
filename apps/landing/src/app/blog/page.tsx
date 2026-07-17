@@ -1,9 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { getBlogPosts } from "@/lib/data";
+import { env } from "@/config/env";
 
 export async function generateMetadata() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const title = 'Blog';
   const description = 'Articoli, consigli e aggiornamenti dal team di Atena School.';
   const url = `${siteUrl}/blog`;

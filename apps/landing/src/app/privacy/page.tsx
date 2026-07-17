@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
+import { env } from "@/config/env";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
   const title = 'Informativa sulla Privacy';

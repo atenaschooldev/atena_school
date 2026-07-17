@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getCourses, getShopItems } from "@/lib/data";
 import CourseSchema from "@/features/courses/components/CourseSchema";
 import CoursesCatalog from "@/features/courses/components/CoursesCatalog";
+import { env } from "@/config/env";
 
 // Local asset imports
 import imgKids from "@/assets/course-kids.jpg";
@@ -41,7 +42,7 @@ const localImageMap: Record<string, any> = {
 };
 
 export async function generateMetadata() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const title = 'Corsi di lingua';
   const description = 'Scopri tutti i corsi di inglese, recupero scolastico, preparazione universitaria e certificazioni EIPASS di Atena School a Cittanova.';
 

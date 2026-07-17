@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server";
+import { env } from "@/config/env";
 
 export async function submitContactForm(formData: {
   nome: string;
@@ -36,7 +37,7 @@ export async function submitContactForm(formData: {
     const schoolEmail = process.env.SCHOOL_EMAIL || "info@atena.school";
 
     if (resendApiKey) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://atenaschool.com";
+      const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
       const response = await fetch("https://api.resend.com/emails", {
         method: "POST",

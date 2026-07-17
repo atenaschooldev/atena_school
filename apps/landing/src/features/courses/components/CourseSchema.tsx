@@ -1,4 +1,5 @@
 import React from 'react';
+import { env } from '@/config/env';
 
 interface CourseSchemaProps {
   name: string;
@@ -25,7 +26,7 @@ export default function CourseSchema({
     "provider": {
       "@type": "Organization",
       "name": provider,
-      "sameAs": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      "sameAs": env.NEXT_PUBLIC_SITE_URL
     },
     ...(image && { "image": image }),
     ...(price && {

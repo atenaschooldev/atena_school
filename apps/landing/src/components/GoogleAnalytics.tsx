@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { env } from "@/config/env";
 
 /**
  * High-Performance, SEO-friendly Google Tag Manager & Google Analytics 4 Loader.
@@ -22,14 +23,11 @@ import { useEffect } from "react";
  * 3. Dynamic updates: Updates consent dynamically when user accepts/declines cookies in the banner.
  */
 export default function GoogleAnalytics() {
-  const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
-  const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+  const GA_ID = env.NEXT_PUBLIC_GA_ID;
+  const GTM_ID = env.NEXT_PUBLIC_GTM_ID;
 
   useEffect(() => {
-    const isMockGA = !GA_ID || GA_ID === "G-XXXXXXXXXX";
-    const isMockGTM = !GTM_ID || GTM_ID === "GTM-XXXXXXX";
-
-    if (isMockGA && isMockGTM) {
+    if (!GA_ID && !GTM_ID) {
       return;
     }
 
@@ -61,10 +59,7 @@ export default function GoogleAnalytics() {
   }, [GA_ID, GTM_ID]);
 
   useEffect(() => {
-    const isMockGA = !GA_ID || GA_ID === "G-XXXXXXXXXX";
-    const isMockGTM = !GTM_ID || GTM_ID === "GTM-XXXXXXX";
-
-    if (isMockGA && isMockGTM) return;
+    if (!GA_ID && !GTM_ID) return;
 
     let loaded = false;
     let idleId: number | null = null;
@@ -110,7 +105,7 @@ export default function GoogleAnalytics() {
       });
 
       // Inject GTM if configured
-      if (!isMockGTM && GTM_ID && !(window as any).__gtm_loaded__) {
+      if (GTM_ID && !(window as any).__gtm_loaded__) {
         (window as any).__gtm_loaded__ = true;
         
         dataLayer.push({
@@ -125,7 +120,7 @@ export default function GoogleAnalytics() {
       }
 
       // Inject GA4 if configured
-      if (!isMockGA && GA_ID && !(window as any).__ga_loaded__) {
+      if (GA_ID && !(window as any).__ga_loaded__) {
         (window as any).__ga_loaded__ = true;
 
         gtag("js", new Date());

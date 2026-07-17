@@ -2,6 +2,7 @@ import { getBlogPosts, getSingleBlogPost } from "@/lib/data";
 import Link from "next/link";
 import { CaretLeft, Calendar, ShareNetwork } from "@/components/Icons";
 import { notFound } from "next/navigation";
+import { env } from "@/config/env";
 
 export async function generateStaticParams() {
   const posts = await getBlogPosts();
@@ -10,7 +11,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://atenaschool.it';
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const post = await getSingleBlogPost(slug);
 
   const title = post?.title_it || 'Articolo';
