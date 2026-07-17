@@ -84,7 +84,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" suppressHydrationWarning className={nunito.variable}>
-      <head />
+      <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
+        <link rel="preconnect" href="https://www.clarity.ms" />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
           <div className="flex flex-col min-h-screen">
