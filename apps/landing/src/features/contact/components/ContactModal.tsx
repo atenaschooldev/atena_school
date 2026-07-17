@@ -316,7 +316,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                       onChange={handleChange}
                       placeholder="Nome *"
                       required
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
                     />
                   </div>
                   <div className="relative">
@@ -328,7 +328,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                       onChange={handleChange}
                       placeholder="Cognome *"
                       required
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
                     />
                   </div>
                 </div>
@@ -342,7 +342,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     onChange={handleChange}
                     placeholder="Email *"
                     required
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
                   />
                 </div>
 
@@ -354,7 +354,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     value={formData.telefono}
                     onChange={handleChange}
                     placeholder="Telefono"
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
                   />
                 </div>
 
@@ -365,7 +365,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     value={formData.interesse}
                     onChange={handleChange}
                     required
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-10 text-xs text-gray-700 placeholder-gray-400 outline-none appearance-none transition-all duration-300"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-10 text-base md:text-xs text-gray-700 placeholder-gray-400 outline-none appearance-none transition-all duration-300"
                   >
                     <option value="" disabled hidden>
                       Sono interessato a...
@@ -388,7 +388,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     placeholder="Messaggio"
                     maxLength={500}
                     rows={8}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[200px]"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[200px]"
                   />
                   <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400">
                     {formData.messaggio.length} / 500

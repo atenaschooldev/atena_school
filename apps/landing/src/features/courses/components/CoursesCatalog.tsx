@@ -78,7 +78,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
             placeholder="Cerca un corso o lezione..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none font-medium"
+            className="w-full bg-transparent text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none font-medium"
           />
           {searchQuery && (
             <button
