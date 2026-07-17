@@ -280,7 +280,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     <p className="text-xs font-black text-gray-800 truncate">Atena School</p>
                     <p className="text-[10px] text-gray-500 truncate mt-0.5">{address}</p>
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
+                      href={`https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block text-[10px] font-bold text-[#F8861D] hover:underline mt-1.5"

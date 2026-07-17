@@ -3,9 +3,9 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Cube, Users, ShieldCheck } from "@phosphor-icons/react";
-import aboutStudent from "@/assets/about-student.png";
-import aboutStudying from "@/assets/about-studying.png";
-import aboutClassroom from "@/assets/about-classroom.png";
+import aboutStudent from "@/assets/about-student.webp";
+import aboutStudying from "@/assets/about-studying.webp";
+import aboutClassroom from "@/assets/about-classroom.webp";
 
 interface AboutSectionProps {
   data?: any;
@@ -43,7 +43,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
 
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          
+
           {/* Left Column: Text & Features */}
           <div className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center">
             <div className="space-y-3.5">
@@ -91,11 +91,11 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           <div className="lg:col-span-6 mt-8 lg:mt-0">
             {/* Image Grid with bottom alignment and offset */}
             <div className="grid grid-cols-2 gap-4 items-stretch">
-              
+
               {/* Left Column of Collage */}
               <div className="flex flex-col gap-4">
                 {/* Image 1 - Student holding book */}
-                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/3] w-full transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg [will-change:transform,box-shadow] cursor-pointer">
+                <div className="relative rounded-3xl overflow-hidden shadow-md aspect-[4/5] w-full transition-all duration-500 ease-in-out hover:scale-105 hover:shadow-lg [will-change:transform,box-shadow] cursor-pointer">
                   <Image
                     src={aboutStudent}
                     alt="Student holding notebook"

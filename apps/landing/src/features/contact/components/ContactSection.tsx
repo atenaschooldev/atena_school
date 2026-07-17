@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { MapPin, Phone, Envelope, InstagramLogo, FacebookLogo, FileText, WhatsappLogo, Clock } from "@phosphor-icons/react";
-import dynamic from "next/dynamic";
-const ContactModal = dynamic(() => import("./ContactModal"), { ssr: false });
+import { MapPin, Phone, Envelope, FileText, Clock } from "@phosphor-icons/react";
 
 interface ContactSectionProps {
   data?: {
@@ -17,8 +13,7 @@ interface ContactSectionProps {
 }
 
 const ContactSection = ({ data }: ContactSectionProps) => {
-  const t = useTranslations("contact");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   const address = data?.address || "Via Matteotti 11, Cittanova (RC) 89022";
   const phone = data?.phone || "+39 375 605 2362";
@@ -90,50 +85,12 @@ const ContactSection = ({ data }: ContactSectionProps) => {
             </div>
           </div>
 
-          {/* Social & Contact Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-3 w-full">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-6 py-3 rounded-full font-black text-sm transition-all duration-300 shadow-lg shadow-orange-500/10 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
-            >
-              Richiedi informazioni →
-            </button>
-            <div className="flex gap-3">
-              <a
-                href="https://www.instagram.com/atenaschool_srls/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
-              >
-                <span className="sr-only">Instagram</span>
-                <InstagramLogo className="w-4 h-4" weight="bold" />
-              </a>
-              <a
-                href="https://www.facebook.com/CSAtena7"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
-              >
-                <span className="sr-only">Facebook</span>
-                <FacebookLogo className="w-4 h-4" weight="bold" />
-              </a>
-              <a
-                href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-[#0B1B2B] text-white flex items-center justify-center hover:bg-[#F8861D] hover:scale-105 transition-all duration-300"
-              >
-                <span className="sr-only">WhatsApp</span>
-                <WhatsappLogo className="w-4 h-4" weight="bold" />
-              </a>
-            </div>
-          </div>
         </div>
 
         {/* Google Map on the Right */}
         <div className="rounded-3xl overflow-hidden shadow-xl border border-gray-100 bg-white h-[280px] relative z-10">
           <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3121.5!2d16.0781!3d38.3561!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x131153d3a3e6b8b7%3A0x0!2sViale+Giacomo+Matteotti+11%2C+89022+Cittanova+RC!5e0!3m2!1sit!2sit!4v1700000000000!5m2!1sit!2sit&q=Viale+Giacomo+Matteotti+11,+89022+Cittanova+RC"
+            src="https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7"
             width="100%"
             height="100%"
             style={{ border: 0 }}
@@ -146,12 +103,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
         </div>
       </div>
 
-      {/* Modal Popup Dialog */}
-      <ContactModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        contactData={data}
-      />
+
     </section>
   );
 };

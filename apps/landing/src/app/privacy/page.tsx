@@ -28,7 +28,7 @@ export async function generateMetadata() {
 export default async function PrivacyPolicy() {
   const t = await getTranslations("privacy");
   const locale = 'it';
-  
+
   // Get sections manually as next-intl handles arrays differently in v3+
   // Assuming 4 sections based on it.json/en.json
   const sections = [0, 1, 2, 3];
@@ -42,7 +42,7 @@ export default async function PrivacyPolicy() {
           </h1>
           <p className="text-muted-foreground">{t("lastUpdated")}</p>
         </div>
-        
+
         <div className="space-y-12">
           <section>
             <p className="text-lg leading-relaxed text-foreground/80">
@@ -66,8 +66,8 @@ export default async function PrivacyPolicy() {
           <section className="mt-16 p-8 rounded-2xl bg-muted/50 border border-primary/10">
             <h2 className="text-xl font-bold mb-4">Contatti</h2>
             <p className="text-sm text-muted-foreground">
-              Per qualsiasi domanda relativa alla presente informativa sulla privacy o al trattamento dei vostri dati, 
-              potete contattarci all'indirizzo <a href="mailto:info@atenaschool.it" className="text-primary hover:underline">info@atenaschool.it</a>.
+              Per qualsiasi domanda relativa alla presente informativa sulla privacy o al trattamento dei vostri dati,
+              potete contattarci all'indirizzo <a href="mailto:atenaschool20@gmail.com" className="text-primary hover:underline">atenaschool20@gmail.com</a>.
             </p>
           </section>
         </div>
