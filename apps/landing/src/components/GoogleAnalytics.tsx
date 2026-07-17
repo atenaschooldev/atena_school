@@ -166,20 +166,29 @@ export default function GoogleAnalytics() {
       }
     };
 
-    // Setup interaction listeners
-    addListeners();
+    const isDebugMode = typeof window !== "undefined" && (
+      window.location.search.includes("gtm_debug") || 
+      window.location.search.includes("gtm_preview")
+    );
 
-    // Idle-timeout fallback: 4 seconds
-    if (typeof window !== "undefined") {
-      if ("requestIdleCallback" in window) {
-        idleId = window.requestIdleCallback(
-          () => {
-            loadScripts();
-          },
-          { timeout: 4000 }
-        );
-      } else {
-        timeoutId = setTimeout(loadScripts, 4000);
+    // Setup interaction listeners
+    if (isDebugMode) {
+      loadScripts();
+    } else {
+      addListeners();
+
+      // Idle-timeout fallback: 4 seconds
+      if (typeof window !== "undefined") {
+        if ("requestIdleCallback" in window) {
+          idleId = window.requestIdleCallback(
+            () => {
+              loadScripts();
+            },
+            { timeout: 4000 }
+          );
+        } else {
+          timeoutId = setTimeout(loadScripts, 4000);
+        }
       }
     }
 
