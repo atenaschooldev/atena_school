@@ -130,16 +130,16 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 md:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 md:p-4 overflow-visible md:overflow-y-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       {/* Solid background cover to prevent landing page from showing during keyboard panning on mobile */}
-      <div className="absolute -inset-y-[50vh] inset-x-0 bg-white md:hidden -z-10 pointer-events-none" />
+      <div className="absolute -inset-y-[100vh] inset-x-0 bg-white md:hidden -z-10 pointer-events-none" />
 
       {/* Modal Container */}
-      <div className="relative bg-white w-full h-full md:h-auto md:max-h-[92vh] rounded-none md:rounded-[32px] md:max-w-5xl border-none md:border md:border-gray-150 shadow-2xl text-gray-900 font-sans overflow-y-auto">
+      <div className="relative bg-white w-full h-screen md:h-auto md:max-h-[92vh] rounded-none md:rounded-[32px] md:max-w-5xl border-none md:border md:border-gray-150 shadow-2xl text-gray-900 font-sans overflow-y-auto">
 
         {/* Close Button */}
         <button
