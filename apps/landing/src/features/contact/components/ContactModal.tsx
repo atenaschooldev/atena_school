@@ -58,15 +58,21 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Disable body scroll when modal is open
+  // Disable body scroll when modal is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (isOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "";
+      document.body.style.overflow = "";
     }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.paddingRight = "";
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
