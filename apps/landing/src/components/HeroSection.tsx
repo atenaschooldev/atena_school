@@ -47,7 +47,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
       {/* Content — vertically centered, left-aligned */}
       <div className="relative z-10 flex-1 flex items-center w-full">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-24 pt-4 pb-20 sm:pt-0 sm:pb-0 lg:pb-0 min-[1700px]:max-w-[1450px]">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-24 pt-4 pb-[22svh] sm:pt-0 sm:pb-0 lg:pb-0 min-[1700px]:max-w-[1450px]">
           {/* Content lives in the LEFT ~55% — right side shows the photo */}
           <div className="max-w-[580px] lg:max-w-[620px] xl:max-w-[700px] 2xl:max-w-[950px]">
 
