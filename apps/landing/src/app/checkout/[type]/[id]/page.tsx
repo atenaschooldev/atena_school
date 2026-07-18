@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, use, Suspense } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useEffect, use, Suspense, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +15,8 @@ import {
   Clock, 
   CreditCard,
   Lock,
-  UserCircle
+  UserCircle,
+  BookmarkSimple,
 } from "@phosphor-icons/react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -42,9 +42,11 @@ interface BookingItem {
   teacher_name: string;
 }
 
+// Track which action (book / pay) triggered the form submit
+type SubmitAction = "book" | "pay";
+
 function CheckoutContent({ params }: { params: Promise<{ type: string; id: string }> }) {
   const { type, id } = use(params);
-  const t = useTranslations("booking");
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -56,8 +58,9 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
 
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
   const [user, setUser] = useState<any>(null);
+  const actionRef = useRef<SubmitAction>("book");
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -65,7 +68,6 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
 
   useEffect(() => {
     async function fetchData() {
-      // 1. Fetch item
       const table = type === "course" ? "courses" : "shop_items";
       const { data: itemData } = await supabase
         .from(table)
@@ -73,17 +75,12 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
         .eq("id", id)
         .single();
 
-      if (itemData) {
-        setItem(itemData);
-      }
+      if (itemData) setItem(itemData);
 
-      // 2. Fetch logged-in user to autofill details
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
         setValue("email", user.email || "");
-        
-        // Split full name if available
         const fullName = user.user_metadata?.full_name || "";
         if (fullName) {
           const parts = fullName.split(" ");
@@ -98,59 +95,99 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
     fetchData();
   }, [id, type, setValue, supabase]);
 
-  const onSubmit = async (values: CheckoutFormValues) => {
+  // ── BOOK: save with status "reserved", go to success?type=booking ──────────
+  const handleBook = async (values: CheckoutFormValues) => {
     if (!dateParam || !timeParam || !item) {
-      toast.error("Missing booking date or time selection");
+      toast.error("Informazioni di prenotazione mancanti");
       return;
     }
 
-    setSubmitting(true);
-
+    setSubmitting("book");
     try {
       const sid = getSessionId();
 
-      const bookingPayload: any = {
-        item_id: id,
-        item_type: type,
-        user_id: user?.id || null,
-        session_id: user ? null : sid,
-        booking_date: dateParam,
-        booking_time: timeParam,
-        slot_id: slotIdParam || null,
-        status: "paid", // Auto-paying in simulation
-        student_name: `${values.firstName} ${values.lastName}`,
-        student_email: values.email,
-        student_phone: values.phone,
-        notes: values.notes || "",
-        locale: 'it',
-      };
-
-      const { data: booking, error: bookingError } = await supabase
+      const { error: bookingError } = await supabase
         .from("bookings")
-        .insert([bookingPayload])
-        .select()
-        .single();
+        .insert([{
+          item_id: id,
+          item_type: type,
+          user_id: user?.id || null,
+          session_id: user ? null : sid,
+          booking_date: dateParam,
+          booking_time: timeParam,
+          slot_id: slotIdParam || null,
+          status: "reserved",
+          student_name: `${values.firstName} ${values.lastName}`,
+          student_email: values.email,
+          student_phone: values.phone,
+          notes: values.notes || "",
+          locale: "it",
+        }]);
 
       if (bookingError) throw bookingError;
 
-      // If slot was selected, mark it as booked
-      if (slotIdParam) {
-        const { error: slotError } = await supabase
-          .from("schedule_slots")
-          .update({ is_booked: true })
-          .eq("id", slotIdParam);
-
-        if (slotError) {
-          console.error("Failed to mark slot as booked:", slotError);
-        }
-      }
-
-      toast.success("Pagamento completato!");
-      router.push("/checkout/success");
+      router.push("/checkout/success?type=booking");
     } catch (err: any) {
       toast.error(err.message || "Qualcosa è andato storto");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // ── PAY: call Stripe Edge Function → redirect to Stripe Checkout ────────────
+  const handlePay = async (values: CheckoutFormValues) => {
+    if (!dateParam || !timeParam || !item) {
+      toast.error("Informazioni di prenotazione mancanti");
+      return;
+    }
+
+    setSubmitting("pay");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeader = session?.access_token
+        ? `Bearer ${session.access_token}`
+        : `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`;
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+          },
+          body: JSON.stringify({
+            itemId: id,
+            itemType: type,
+            customerEmail: values.email,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            phone: values.phone,
+            date: dateParam,
+            time: timeParam,
+            slotId: slotIdParam || null,
+            locale: "it",
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Errore durante il pagamento");
+
+      // Redirect to Stripe-hosted checkout
+      window.location.href = data.url;
+    } catch (err: any) {
+      toast.error(err.message || "Qualcosa è andato storto");
+      setSubmitting(false);
+    }
+  };
+
+  // Single form onSubmit dispatcher
+  const onSubmit = (values: CheckoutFormValues) => {
+    if (actionRef.current === "pay") {
+      handlePay(values);
+    } else {
+      handleBook(values);
     }
   };
 
@@ -163,11 +200,11 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
   if (!item || !dateParam || !timeParam) return (
     <div className="min-h-screen pt-32 text-center">
       <p className="text-muted-foreground mb-4">Informazioni di prenotazione mancanti</p>
-      <Link href="/shop" className="text-primary font-bold">Torna alla lista</Link>
+      <Link href="/courses" className="text-primary font-bold">Torna ai corsi</Link>
     </div>
   );
 
-  const title = item.title_it;
+  const title = item.title_it || (item as any).name || "";
   const formattedDate = format(new Date(dateParam), "dd MMMM yyyy", { locale: dateLocale });
 
   return (
@@ -182,6 +219,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          {/* ── Form ── */}
           <div className="lg:col-span-8 space-y-8">
             <header>
               <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
@@ -193,7 +231,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   <p className="text-sm">
                     Hai già un account?{" "}
                     <Link 
-                      href={`/auth/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`} 
+                      href={`/auth/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "")}`} 
                       className="font-bold text-primary hover:underline"
                     >
                       Accedi
@@ -281,10 +319,12 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 />
               </div>
 
+              {/* Hidden submit button — triggered programmatically by the sidebar buttons */}
               <button type="submit" className="hidden" id="submit-checkout-btn" />
             </form>
           </div>
 
+          {/* ── Sidebar ── */}
           <div className="lg:col-span-4">
             <div className="sticky top-32 space-y-6">
               <div className="bg-foreground text-background rounded-3xl p-8 shadow-2xl relative overflow-hidden">
@@ -295,6 +335,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 </h2>
 
                 <div className="space-y-6 relative z-10">
+                  {/* Service */}
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
                       <CalendarIcon className="w-6 h-6 text-primary" />
@@ -305,34 +346,69 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     </div>
                   </div>
 
+                  {/* Date & Time */}
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
                       <Clock className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Date & Time</p>
+                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Date &amp; Time</p>
                       <p className="font-bold">{formattedDate}</p>
                       <p className="text-sm opacity-70">ore {timeParam}</p>
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-background/10 space-y-4">
-                    <div className="flex justify-between items-center text-2xl pt-4">
+                  {/* Total */}
+                  <div className="pt-6 border-t border-background/10">
+                    <div className="flex justify-between items-center text-2xl">
                       <span className="font-black uppercase tracking-tight">Total</span>
                       <div className="flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 opacity-50" />
-                        <span className="font-black text-primary">{Number(item.price).toFixed(0)}€</span>
+                        <CreditCard className="w-5 h-5 opacity-70 text-secondary" />
+                        <span className="font-black text-secondary">{Number(item.price).toFixed(0)} €</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-4">
+                  {/* ── Action buttons ── */}
+                  <div className="flex flex-col gap-3 pt-2">
+                    {/* PRENOTA (reserve, no payment) */}
                     <button
-                      onClick={() => document.getElementById("submit-checkout-btn")?.click()}
-                      disabled={submitting}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 shadow-xl shadow-primary/20"
+                      type="button"
+                      disabled={submitting !== false}
+                      onClick={() => {
+                        actionRef.current = "book";
+                        document.getElementById("submit-checkout-btn")?.click();
+                      }}
+                      className="w-full py-5 bg-background/10 border-2 border-background/20 text-background rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:border-secondary hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
-                      {submitting ? "..." : "Paga e Finalizza"}
+                      {submitting === "book" ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current" />
+                      ) : (
+                        <>
+                          <BookmarkSimple className="w-5 h-5" weight="bold" />
+                          Prenota
+                        </>
+                      )}
+                    </button>
+
+                    {/* PAGA CON STRIPE */}
+                    <button
+                      type="button"
+                      disabled={submitting !== false}
+                      onClick={() => {
+                        actionRef.current = "pay";
+                        document.getElementById("submit-checkout-btn")?.click();
+                      }}
+                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {submitting === "pay" ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current" />
+                      ) : (
+                        <>
+                          <CreditCard className="w-5 h-5" weight="bold" />
+                          Paga con Stripe
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

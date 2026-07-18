@@ -58,11 +58,11 @@ serve(async (req) => {
       slot_id: slotId || null,
       booking_date: date,
       booking_time: time,
-      first_name: firstName,
-      last_name: lastName,
-      email: customerEmail,
-      phone: phone,
-      status: "pending_payment"
+      student_name: `${firstName} ${lastName}`.trim(),
+      student_email: customerEmail,
+      student_phone: phone,
+      status: "pending_payment",
+      locale: locale || "it",
     }).select().single();
 
     if (bookingError) throw bookingError;
@@ -87,8 +87,8 @@ serve(async (req) => {
         },
       ],
       mode: 'payment',
-      success_url: `${SITE_URL}/${locale || 'it'}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/${locale || 'it'}/checkout/${itemType}/${itemId}?date=${date}&time=${time}`,
+      success_url: `${SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}`,
+      cancel_url: `${SITE_URL}/checkout/${itemType}/${itemId}?date=${date}&time=${time}`,
       metadata: {
         booking_id: booking.id,
         slot_id: slotId || ""

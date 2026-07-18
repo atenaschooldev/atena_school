@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { BookOpen, Calendar, Clock, CheckCircle } from "@phosphor-icons/react";
+import { BookOpen, Calendar, Clock, CheckCircle, BookmarkSimple } from "@phosphor-icons/react";
 import { format, isFuture, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -44,7 +44,7 @@ export default function DashboardPage() {
         .from("bookings")
         .select("*")
         .eq("user_id", user.id)
-        .in("status", ["paid", "completed"])
+        .in("status", ["paid", "completed", "reserved", "pending_payment"])
         .order("created_at", { ascending: false });
 
       const userBookings: any[] = data || [];
@@ -243,10 +243,22 @@ export default function DashboardPage() {
                         <p className="font-black text-lg">{dateDisplay}</p>
                         <p className="text-muted-foreground">ore {timeDisplay}</p>
                       </div>
-                      <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
-                        <CheckCircle className="w-3 h-3 text-green-600" />
-                        Pagato
-                      </div>
+                      {booking.status === "reserved" ? (
+                        <div className="flex items-center gap-1 text-secondary bg-secondary/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
+                          <BookmarkSimple className="w-3 h-3" weight="fill" />
+                          Prenotato
+                        </div>
+                      ) : booking.status === "pending_payment" ? (
+                        <div className="flex items-center gap-1 text-amber-600 bg-amber-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
+                          <Clock className="w-3 h-3" />
+                          In attesa
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
+                          <CheckCircle className="w-3 h-3 text-green-600" />
+                          Pagato
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

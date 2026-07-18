@@ -125,3 +125,60 @@
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
+
+/* Custom styles for React Day Picker v9 */
+.rdp-root {
+  --rdp-accent-color: #043569 !important;
+  --rdp-accent-text-color: #ffffff !important;
+  --rdp-day-radius: 12px !important;
+  width: 100% !important;
+}
+
+.rdp-month {
+  width: 100% !important;
+}
+
+.rdp-month_grid {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.rdp-weekdays,
+.rdp-week {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+}
+
+.rdp-day {
+  width: 100% !important;
+  aspect-ratio: 1 !important;
+  max-width: none !important;
+}
+
+.rdp-day_button {
+  width: 100% !important;
+  height: 100% !important;
+  font-weight: 700 !important;
+  font-size: clamp(11px, 2.5vw, 14px) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.rdp-weekday {
+  font-size: clamp(10px, 2vw, 12px) !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+.rdp-selected .rdp-day_button {
+  background-color: #043569 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 15px -3px rgba(4, 53, 105, 0.3) !important;
+}
+
+.rdp-today .rdp-day_button {
+  border: 2px solid rgba(4, 53, 105, 0.2) !important;
+  color: #043569 !important;
+  font-weight: 900 !important;
+}
+

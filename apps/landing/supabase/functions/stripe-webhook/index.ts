@@ -200,16 +200,8 @@ serve(async (req) => {
           }
         }
       }
-
-      if (slotId) {
-        // Помечаем слот расписания как занятый (is_booked = true)
-        await supabaseAdmin
-          .from('schedule_slots')
-          .update({ is_booked: true })
-          .eq('id', slotId);
-      }
       
-      console.log(`Successfully processed booking: ${bookingId}, slot: ${slotId}`);
+      console.log(`Successfully processed booking: ${bookingId}`);
     }
 
     return new Response(JSON.stringify({ received: true }), { status: 200 });

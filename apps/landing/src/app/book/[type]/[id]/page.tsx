@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
 import { createClient } from "@/lib/supabase/client";
@@ -15,8 +16,15 @@ import {
   WarningCircle
 } from "@phosphor-icons/react";
 import { Link, useRouter } from "@/i18n/routing";
-import { format, isSunday } from "date-fns";
+import { format, isSunday, isSaturday } from "date-fns";
 import { it } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
 
 interface BookingItem {
   id: string;
@@ -33,7 +41,7 @@ interface ScheduleSlot {
   is_booked: boolean;
 }
 
-export default function BookingPage({ 
+function BookingPageContent({ 
   params 
 }: { 
   params: Promise<{ type: string; id: string }> 
@@ -43,13 +51,26 @@ export default function BookingPage({
   const router = useRouter();
   const supabase = createClient();
   const dateLocale = it;
+  const searchParams = useSearchParams();
+
+  const dateParam = searchParams.get("date");
+  const timeParam = searchParams.get("time");
+  const slotIdParam = searchParams.get("slot_id");
 
   const [item, setItem] = useState<BookingItem | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    if (dateParam) {
+      const parsed = new Date(dateParam);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date();
+  });
+  const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || null);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(slotIdParam || null);
   const [availableSlots, setAvailableSlots] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Fetch item details
   useEffect(() => {
@@ -66,6 +87,20 @@ export default function BookingPage({
     }
     fetchItem();
   }, [id, type, supabase]);
+
+  // Fetch user and check auto-redirect
+  useEffect(() => {
+    async function checkUser() {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
+      
+      // If user is already logged in, and we returned with all parameters, redirect immediately to checkout!
+      if (currentUser && dateParam && timeParam && slotIdParam) {
+        router.push(`/checkout/${type}/${id}?date=${dateParam}&time=${timeParam}&slot_id=${slotIdParam}`);
+      }
+    }
+    checkUser();
+  }, [supabase, type, id, dateParam, timeParam, slotIdParam, router]);
 
   // Fetch available slots for the selected date
   useEffect(() => {
@@ -84,7 +119,6 @@ export default function BookingPage({
       const { data, error } = await supabase
         .from("schedule_slots")
         .select("*")
-        .eq("is_booked", false)
         .gte("starts_at", startOfDay.toISOString())
         .lte("starts_at", endOfDay.toISOString())
         .order("starts_at", { ascending: true });
@@ -107,7 +141,42 @@ export default function BookingPage({
     );
   }
 
-  const title = item.title_it;
+  const title = item.title_it || (item as any).name || "";
+
+  const handleContinue = () => {
+    if (!selectedDate || !selectedTime || !selectedSlotId) return;
+
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+    if (!user) {
+      // Save state to localStorage as backup
+      localStorage.setItem("pending_booking", JSON.stringify({
+        type,
+        id,
+        date: dateStr,
+        time: selectedTime,
+        slot_id: selectedSlotId
+      }));
+
+      // Open deferred auth modal
+      setIsAuthModalOpen(true);
+    } else {
+      router.push(`/checkout/${type}/${id}?date=${dateStr}&time=${selectedTime}&slot_id=${selectedSlotId}`);
+    }
+  };
+
+  const handleAuthRedirect = () => {
+    if (!selectedDate || !selectedTime || !selectedSlotId) return;
+
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const returnUrl = `/book/${type}/${id}?date=${dateStr}&time=${selectedTime}&slot_id=${selectedSlotId}`;
+
+    router.push(`/auth/login?redirect=${encodeURIComponent(returnUrl)}`);
+  };
+
+  const formattedDateString = selectedDate 
+    ? format(selectedDate, "d MMMM yyyy", { locale: dateLocale }) 
+    : "";
 
   return (
     <main className="min-h-screen pt-20 pb-20 px-4 bg-[#f8f9fa]">
@@ -133,7 +202,7 @@ export default function BookingPage({
               </p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background p-8 rounded-3xl border border-border/50 shadow-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background p-4 md:p-8 rounded-3xl border border-border/50 shadow-sm">
               {/* Calendar Section */}
               <div className="space-y-6">
                 <div className="flex items-center gap-2 font-bold text-lg">
@@ -149,11 +218,19 @@ export default function BookingPage({
                     setSelectedSlotId(null);
                   }}
                   locale={dateLocale}
-                  disabled={(date) => isSunday(date) || date < new Date()}
-                  modifiers={{
-                    free: (date) => !isSunday(date) && date >= new Date()
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return isSunday(date) || isSaturday(date) || date < today;
                   }}
-                  className="rounded-3xl border border-border shadow-xl bg-white p-6"
+                  modifiers={{
+                    free: (date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return !isSunday(date) && !isSaturday(date) && date >= today;
+                    }
+                  }}
+                  className="w-full rounded-3xl border border-border shadow-xl bg-white"
                 />
               </div>
 
@@ -230,7 +307,7 @@ export default function BookingPage({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Teacher</p>
-                      <p className="font-bold">{(item as any).teacher_name}</p>
+                      <p className="font-bold">{(item as any).teacher_name || "TBD"}</p>
                     </div>
                   </div>
 
@@ -240,7 +317,7 @@ export default function BookingPage({
                     </div>
                     <div>
                       <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Location</p>
-                      <p className="font-bold">Atena School, Cittanova</p>
+                      <p className="font-bold">Atena School, Via Matteotti 11, Cittanova (RC)</p>
                     </div>
                   </div>
 
@@ -258,8 +335,8 @@ export default function BookingPage({
                     <div className="flex justify-between items-center text-2xl pt-4">
                       <span className="font-black uppercase tracking-tight">Total</span>
                       <div className="flex items-center gap-2">
-                        <CreditCard className="w-5 h-5 opacity-50" />
-                        <span className="font-black text-primary">{(item as any).price}</span>
+                        <CreditCard className="w-5 h-5 opacity-70 text-secondary" />
+                        <span className="font-black text-secondary">{(item as any).price} €</span>
                       </div>
                     </div>
                   </div>
@@ -267,12 +344,8 @@ export default function BookingPage({
                   <div className="flex flex-col gap-4">
                     <button
                       disabled={!selectedDate || !selectedSlotId}
-                      onClick={() => {
-                        const dateStr = format(selectedDate!, "yyyy-MM-dd");
-                        const timeStr = selectedTime!;
-                        router.push(`/checkout/${type}/${id}?date=${dateStr}&time=${timeStr}&slot_id=${selectedSlotId}`);
-                      }}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20"
+                      onClick={handleContinue}
+                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 cursor-pointer"
                     >
                       Continua
                     </button>
@@ -289,6 +362,51 @@ export default function BookingPage({
           </div>
         </div>
       </div>
+
+      {/* Deferred Auth Modal */}
+      <Dialog open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-8 border border-border shadow-2xl bg-white">
+          <DialogHeader className="space-y-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="w-6 h-6 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-black uppercase text-center tracking-tight text-foreground">
+              Ultimo passaggio
+            </DialogTitle>
+            <div className="text-center text-base text-muted-foreground">
+              <p className="font-medium text-foreground">
+                Ottimo! Per prenotare il {formattedDateString} alle {selectedTime}, non ti resta che accedere al tuo account.
+              </p>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              onClick={handleAuthRedirect}
+              className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold uppercase tracking-wider text-sm hover:bg-secondary hover:text-secondary-foreground transition-all shadow-lg shadow-primary/20 cursor-pointer"
+            >
+              Accedi / Registrati
+            </button>
+            <button
+              onClick={() => setIsAuthModalOpen(false)}
+              className="w-full sm:w-auto px-8 py-4 bg-background border-2 border-border text-foreground rounded-2xl font-bold uppercase tracking-wider text-sm hover:bg-muted transition-all cursor-pointer"
+            >
+              Annulla
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
+  );
+}
+
+export default function BookingPage(props: any) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <BookingPageContent {...props} />
+    </Suspense>
   );
 }
