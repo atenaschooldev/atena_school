@@ -5,7 +5,7 @@ import logo from "@/assets/logo.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo, House, Users, GraduationCap, Newspaper, EnvelopeSimple } from "@phosphor-icons/react";
+import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo, House, Users, GraduationCap, Newspaper, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -123,6 +123,7 @@ const Navbar = () => {
     { label: t("home"), href: "/", icon: House },
     { label: t("about"), href: "/#about", icon: Users },
     { label: t("courses"), href: "/courses", icon: GraduationCap },
+    { label: t("test"), href: "/test-inglese", icon: Sparkle },
     { label: t("blog"), href: "/blog", icon: Newspaper },
     { label: t("contact"), href: "/#contact", icon: EnvelopeSimple },
   ];
@@ -162,10 +163,15 @@ const Navbar = () => {
               <Link
                 key={l.href}
                 href={l.href as any}
-                className="text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 text-gray-700 hover:text-primary hover:bg-primary/10"
+                className="text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 text-gray-700 hover:text-primary hover:bg-primary/10 relative"
                 onClick={() => handleLinkClick(l.href)}
               >
                 {l.label}
+                {l.href === "/test-inglese" && (
+                  <span className="absolute -top-1 -right-1 bg-[#F8861D] text-white text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full scale-90">
+                    {t("navBadge")}
+                  </span>
+                )}
               </Link>
             ))}
           </div>
@@ -333,11 +339,18 @@ const Navbar = () => {
                       <Link
                         key={l.href}
                         href={l.href as any}
-                        className="flex items-center gap-4 py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
+                        className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
                         onClick={() => setOpen(false)}
                       >
-                        {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
-                        <span>{l.label}</span>
+                        <div className="flex items-center gap-4">
+                          {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
+                          <span>{l.label}</span>
+                        </div>
+                        {l.href === "/test-inglese" && (
+                          <span className="bg-[#F8861D] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+                            {t("navBadge")}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}

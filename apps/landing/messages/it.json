@@ -4,7 +4,9 @@
     "about": "Chi siamo",
     "courses": "Corsi",
     "blog": "Blog",
-    "contact": "Contattaci"
+    "contact": "Contattaci",
+    "test": "Test di inglese",
+    "navBadge": "Nuovo"
   },
   "hero": {
     "title": "ATENA SCHOOL",
@@ -385,5 +387,25 @@
   "teachers": {
     "title": "I Nostri Insegnanti",
     "empty": "Presto in arrivo..."
+  },
+  "englishTest": {
+    "title": "Test di Inglese Online Gratis",
+    "subtitle": "Metti alla prova le tue competenze in soli 2 minuti. Rispondi a 6 domande rapide e scopri subito il tuo livello CEFR stimato (da A1 a C2).",
+    "btnStart": "Inizia il Test di 2 Minuti ⚡",
+    "btnRestart": "Riprova il test ↻",
+    "btnContact": "Prenota una lezione gratuita",
+    "questionOf": "Domanda {current} di {total}",
+    "correct": "Esatto!",
+    "incorrect": "Sbagliato!",
+    "feedbackCorrect": "Risposta corretta!",
+    "feedbackIncorrect": "Risposta errata. La risposta corretta era: {correctOption}",
+    "resultTitle": "Il tuo livello stimato è:",
+    "levelDescription": "Hai risposto correttamente a {correctCount} domande su {total}.",
+    "level_A1": "Principiante (A1)",
+    "level_A2": "Elementare (A2)",
+    "level_B1": "Intermedio (B1)",
+    "level_B2": "Intermedio Superiore (B2)",
+    "level_C1": "Avanzato (C1)",
+    "level_C2": "Padronanza (C2)"
   }
 }

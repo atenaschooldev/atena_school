@@ -1,0 +1,56 @@
+import EnglishTest from "@/components/EnglishTest";
+import { env } from "@/config/env";
+
+export async function generateMetadata() {
+  const siteUrl = env.NEXT_PUBLIC_SITE_URL;
+  const title = "Test di Inglese Online Gratis — Atena School";
+  const description =
+    "Metti alla prova le tue competenze in soli 2 minuti. Rispondi a 6 domande rapide e scopri subito il tuo livello CEFR stimato (da A1 a C2).";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${siteUrl}/test-inglese`,
+      languages: {
+        it: `${siteUrl}/test-inglese`,
+        "x-default": `${siteUrl}/test-inglese`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      type: "website",
+      locale: "it_IT",
+      url: `${siteUrl}/test-inglese`,
+      siteName: "Atena School",
+      title,
+      description,
+      images: [
+        {
+          url: `${siteUrl}/og-default.webp`,
+          width: 1200,
+          height: 630,
+          alt: "Atena School English Test",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@atenaschool",
+      creator: "@atenaschool",
+    },
+  };
+}
+
+export default function TestPage() {
+  return (
+    <main className="min-h-screen bg-gray-50 pt-24 pb-28 px-4 flex flex-col justify-center items-center">
+      <EnglishTest />
+    </main>
+  );
+}

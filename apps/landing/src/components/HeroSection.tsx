@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
-import { MapPin, ArrowRight, ArrowDown } from "@phosphor-icons/react";
+import { MapPin, ArrowRight, ArrowDown, Sparkle } from "@phosphor-icons/react";
 import heroDefault from "@/assets/hero-london.webp";
 import heroMobile from "@/assets/hero-london-mobile.webp";
+import { Link } from "@/i18n/routing";
 
 
 interface HeroSectionProps {
@@ -82,29 +83,43 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
             {/* CTA Buttons */}
             {/* Desktop: both buttons */}
-            <div className="hidden sm:flex sm:flex-row gap-4">
+            <div className="hidden sm:flex sm:flex-row items-center gap-3 lg:gap-4">
               <a
                 href="#contact"
-                className="group inline-flex w-auto items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-7 py-4 rounded-full font-black text-sm lg:text-base transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+                className="group inline-flex w-auto items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
               >
                 Prenota una consulenza gratuita
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" weight="bold" />
               </a>
+              <Link
+                href="/test-inglese"
+                className="inline-flex w-auto items-center justify-center gap-2 border-2 border-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+              >
+                Testa il tuo inglese ⚡
+              </Link>
               <a
                 href="#about"
-                className="inline-flex w-auto items-center justify-center border border-white/30 hover:border-white/60 bg-white/5 hover:bg-white/10 text-white px-7 py-4 rounded-full font-black text-sm lg:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+                className="inline-flex w-auto items-center justify-center border border-white/30 hover:border-white/60 bg-white/5 hover:bg-white/10 text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
               >
                 Scopri di più
               </a>
             </div>
-            {/* Mobile: compact inline button */}
-            <a
-              href="#contact"
-              className="sm:hidden inline-flex items-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-5 py-2.5 rounded-full font-black text-sm shadow-lg shadow-orange-500/30 transition-all active:scale-95 select-none cursor-pointer"
-            >
-              Prenota ora
-              <ArrowRight size={14} weight="bold" />
-            </a>
+            {/* Mobile: compact inline buttons aligned to start so they don't stretch */}
+            <div className="sm:hidden flex flex-col items-start gap-2.5 w-full">
+              <a
+                href="#contact"
+                className="inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-10 py-2.5 rounded-full font-black text-xs shadow-lg shadow-orange-500/30 transition-all active:scale-95 select-none cursor-pointer self-start min-w-[210px]"
+              >
+                Prenota ora
+                <ArrowRight size={12} weight="bold" />
+              </a>
+              <Link
+                href="/test-inglese"
+                className="inline-flex items-center justify-center gap-2 border border-white/40 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-full font-black text-xs transition-all active:scale-95 select-none cursor-pointer self-start"
+              >
+                Testa il tuo inglese ⚡
+              </Link>
+            </div>
 
           </div>
         </div>
