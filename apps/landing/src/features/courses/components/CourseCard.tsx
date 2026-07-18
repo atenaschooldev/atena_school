@@ -36,12 +36,10 @@ const CourseCard = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    // If we have custom onCtaClick, trigger it
     if (onCtaClick) {
       onCtaClick();
       return;
     }
-    // Otherwise open the details modal
     setIsOpen(true);
   };
 
@@ -56,19 +54,19 @@ const CourseCard = ({
           setIsOpen(true);
         }
       }}
-      className="group bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(4,53,105,0.08)] hover:-translate-y-2 transition-all duration-500 border border-border/40 flex flex-col h-full active:scale-[0.99] relative text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+      className="group bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(4,53,105,0.06)] hover:-translate-y-1.5 transition-all duration-500 border border-border/40 flex flex-col h-full active:scale-[0.99] relative text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
     >
       {/* Image container */}
       <div className="relative h-52 w-full overflow-hidden bg-muted">
         {/* Category Badge */}
         {category && (
-          <div className="absolute top-4 left-4 z-20 bg-white/85 backdrop-blur-md text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/20 shadow-sm select-none">
+          <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 shadow-sm select-none">
             {category}
           </div>
         )}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/15 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
 
         {image ? (
           <Image
@@ -91,42 +89,58 @@ const CourseCard = ({
         <h3 className="text-xl sm:text-2xl font-black text-foreground mb-3 leading-tight tracking-tight group-hover:text-[#043569] transition-colors duration-300">
           {title}
         </h3>
+
+        {/* Metadata badges (duration, teacher) */}
+        {(duration || teacher_name) && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mb-4 font-bold select-none">
+            {duration && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#F8861D]" />
+                <span>{duration}</span>
+              </div>
+            )}
+            {teacher_name && (
+              <div className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#F8861D]" />
+                <span>{teacher_name}</span>
+              </div>
+            )}
+          </div>
+        )}
         
         <p className="text-sm text-muted-foreground leading-relaxed mb-6 flex-grow font-medium opacity-90 line-clamp-3 group-hover:text-foreground/80 transition-colors duration-300">
           {description}
         </p>
         
-        {/* Footer info */}
-        <div className="flex items-center justify-between mt-auto pt-5 border-t border-border/40 gap-2">
-          {price ? (
-            <span className="bg-[#F8861D]/10 text-[#F8861D] px-3 py-1.5 rounded-xl text-xs font-black tracking-wider uppercase select-none shrink-0">
-              {price}
+        {/* Footer info & Buttons */}
+        <div className="pt-5 border-t border-border/40 mt-auto flex flex-col gap-4">
+          {/* Price Row */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 select-none">Prezzo</span>
+            <span className="text-lg font-black text-[#F8861D]">
+              {price || "---"}
             </span>
-          ) : (
-            <div />
-          )}
+          </div>
 
-          <div className="flex items-center gap-1.5">
-            {/* Maggiori info (triggers modal) */}
+          {/* Buttons Row */}
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setIsOpen(true);
               }}
-              className="inline-flex items-center gap-1 px-3 py-2 text-primary hover:text-[#F8861D] text-xs font-black uppercase tracking-wider transition-colors duration-300 cursor-pointer"
+              className="w-full py-3 bg-[#043569]/5 hover:bg-[#043569]/10 text-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all cursor-pointer border border-[#043569]/10 active:scale-95"
             >
               {t("cta")}
             </button>
-
-            {/* Prenota Ora (direct booking link) */}
             {id && (
               <Link
                 href={`/book/${type}/${id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F8861D] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#043569] hover:shadow-lg hover:shadow-[#043569]/20 transition-all duration-300 shrink-0"
+                className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
               >
                 {type === "shop" ? "Acquista" : "Prenota"}
-                <CaretRight className="w-3.5 h-3.5" />
+                <CaretRight className="w-3.5 h-3.5" weight="bold" />
               </Link>
             )}
           </div>
