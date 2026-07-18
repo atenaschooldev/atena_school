@@ -17,6 +17,7 @@ import {
   Lock,
   UserCircle,
   BookmarkSimple,
+  CheckCircle,
 } from "@phosphor-icons/react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
@@ -208,40 +209,46 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
   const formattedDate = format(new Date(dateParam), "dd MMMM yyyy", { locale: dateLocale });
 
   return (
-    <main className="min-h-screen pt-32 pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-8 md:pt-16 pb-16 px-4 bg-[#f8f9fa]">
       <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
         <button 
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-8 group"
+          className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors mb-6 group"
         >
           <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
           Modifica data
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* ── Form ── */}
-          <div className="lg:col-span-8 space-y-8">
-            <header>
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-                I tuoi dati
-              </h1>
-              {!user && (
-                <div className="flex items-center gap-2 p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                  <UserCircle className="w-5 h-5 text-primary" />
-                  <p className="text-sm">
-                    Hai già un account?{" "}
-                    <Link 
-                      href={`/auth/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "")}`} 
-                      className="font-bold text-primary hover:underline"
-                    >
-                      Accedi
-                    </Link>
-                  </p>
-                </div>
-              )}
-            </header>
+        {/* Page Header */}
+        <header className="mb-10 text-left">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight text-foreground mb-3">
+            I tuoi dati
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground">
+            Completa la prenotazione inserendo i tuoi dettagli qui sotto.
+          </p>
+        </header>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 rounded-3xl border border-border shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* ── Form ── */}
+          <div className="lg:col-span-8 space-y-6">
+            {!user && (
+              <div className="flex items-center gap-3 p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                <UserCircle className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-sm text-foreground/80">
+                  Hai già un account?{" "}
+                  <Link 
+                    href={`/auth/login?redirect=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname + window.location.search : "")}`} 
+                    className="font-bold text-primary hover:underline"
+                  >
+                    Accedi
+                  </Link>
+                </p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-foreground uppercase tracking-widest">
@@ -325,23 +332,23 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
           </div>
 
           {/* ── Sidebar ── */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-32 space-y-6">
-              <div className="bg-foreground text-background rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="lg:col-span-4 w-full">
+            <div className="sticky top-28 space-y-6 w-full">
+              <div className="bg-foreground text-background rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden max-w-md mx-auto lg:max-w-none w-full">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 
-                <h2 className="text-2xl font-black uppercase mb-8 relative z-10 border-b border-background/10 pb-4">
+                <h2 className="text-xl sm:text-2xl font-black uppercase mb-6 relative z-10 border-b border-background/10 pb-3">
                   Riepilogo
                 </h2>
 
-                <div className="space-y-6 relative z-10">
+                <div className="space-y-5 relative z-10">
                   {/* Service */}
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <CalendarIcon className="w-6 h-6 text-primary" />
+                      <CheckCircle className="w-6 h-6 text-[#F8861D]" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Service</p>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Servizio</p>
                       <p className="font-bold text-lg leading-tight">{title}</p>
                     </div>
                   </div>
@@ -349,19 +356,19 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   {/* Date & Time */}
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <Clock className="w-6 h-6 text-primary" />
+                      <Clock className="w-6 h-6 text-[#F8861D]" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Date &amp; Time</p>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Data e Orario</p>
                       <p className="font-bold">{formattedDate}</p>
                       <p className="text-sm opacity-70">ore {timeParam}</p>
                     </div>
                   </div>
 
                   {/* Total */}
-                  <div className="pt-6 border-t border-background/10">
+                  <div className="pt-5 border-t border-background/10">
                     <div className="flex justify-between items-center text-2xl">
-                      <span className="font-black uppercase tracking-tight">Total</span>
+                      <span className="font-black uppercase tracking-tight">Totale</span>
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 opacity-70 text-secondary" />
                         <span className="font-black text-secondary">{Number(item.price).toFixed(0)} €</span>
@@ -379,7 +386,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                         actionRef.current = "book";
                         document.getElementById("submit-checkout-btn")?.click();
                       }}
-                      className="w-full py-5 bg-background/10 border-2 border-background/20 text-background rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:border-secondary hover:text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-5 bg-transparent border-2 border-white/20 text-white rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-white hover:text-[#043569] hover:border-white transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {submitting === "book" ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current" />
@@ -399,7 +406,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                         actionRef.current = "pay";
                         document.getElementById("submit-checkout-btn")?.click();
                       }}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-5 bg-[#F8861D] text-white border-2 border-transparent hover:bg-white hover:text-[#F8861D] hover:border-[#F8861D] rounded-2xl font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 shadow-xl shadow-[#F8861D]/20 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer"
                     >
                       {submitting === "pay" ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current" />
@@ -414,13 +421,14 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 </div>
               </div>
 
-              <div className="space-y-4 px-4">
-                <div className="flex items-center gap-3 text-muted-foreground opacity-60 text-xs font-bold uppercase tracking-widest">
-                  <Lock className="w-4 h-4" />
+              {/* Security badges at bottom */}
+              <div className="space-y-4 px-4 max-w-md mx-auto lg:max-w-none w-full">
+                <div className="flex items-center gap-3 text-muted-foreground opacity-60 text-xs font-bold uppercase tracking-widest w-full">
+                  <Lock className="w-4 h-4 text-[#F8861D]" />
                   Pagamento sicuro con Stripe
                 </div>
-                <div className="flex items-center gap-3 text-muted-foreground opacity-60 text-xs font-bold uppercase tracking-widest">
-                  <CalendarIcon className="w-4 h-4" />
+                <div className="flex items-center gap-3 text-muted-foreground opacity-60 text-xs font-bold uppercase tracking-widest w-full">
+                  <CalendarIcon className="w-4 h-4 text-[#F8861D]" />
                   Cancellazione gratuita fino a 24h prima
                 </div>
               </div>

@@ -45,7 +45,7 @@ function SuccessContent() {
   }, [sessionId, bookingId]);
 
   useEffect(() => {
-    if (verifying) return; // wait until verification done before confetti + redirect
+    if (verifying) return; // wait until verification done before confetti
 
     confetti({
       particleCount: 150,
@@ -53,13 +53,7 @@ function SuccessContent() {
       origin: { y: 0.6 },
       colors: ["#F8861D", "#043569", "#FFFFFF"],
     });
-
-    const timer = setTimeout(() => {
-      router.push("/dashboard");
-    }, 6000);
-
-    return () => clearTimeout(timer);
-  }, [verifying, router]);
+  }, [verifying]);
 
   if (verifying) {
     return (
@@ -119,10 +113,6 @@ function SuccessContent() {
             Vai al pannello
             <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
           </button>
-
-          <p className="text-xs text-muted-foreground animate-pulse">
-            Verrai reindirizzato automaticamente tra pochi secondi...
-          </p>
         </div>
       </div>
     </main>

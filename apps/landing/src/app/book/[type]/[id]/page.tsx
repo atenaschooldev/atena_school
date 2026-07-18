@@ -179,7 +179,7 @@ function BookingPageContent({
     : "";
 
   return (
-    <main className="min-h-screen pt-20 pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-8 md:pt-16 pb-16 px-4 bg-[#f8f9fa]">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <Link 
@@ -190,150 +190,151 @@ function BookingPageContent({
           Torna alla lista
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          {/* Main Content - Left */}
-          <div className="lg:col-span-8 space-y-12">
-            <header>
-              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-                Prenota la tua lezione
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Scegli la data e l'orario più comodi per te.
-              </p>
-            </header>
+        {/* Page Header */}
+        <header className="mb-10 text-left">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight text-foreground mb-3">
+            Prenota la tua lezione
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground">
+            Scegli la data e l'orario più comodi per te.
+          </p>
+        </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-background p-4 md:p-8 rounded-3xl border border-border/50 shadow-sm">
-              {/* Calendar Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 font-bold text-lg">
-                  <CalendarIcon className="w-5 h-5 text-primary" />
-                  1. Seleziona Data
-                </div>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => {
-                    setSelectedDate(date);
-                    setSelectedTime(null);
-                    setSelectedSlotId(null);
-                  }}
-                  locale={dateLocale}
-                  disabled={(date) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+          {/* Step 1: Calendar */}
+          <div className="bg-white rounded-3xl border border-border/50 p-6 md:p-8 shadow-sm flex flex-col space-y-6 w-full">
+            <div className="flex items-center gap-2.5 font-black text-lg uppercase tracking-wider text-foreground border-b border-border/40 pb-4">
+              <CalendarIcon className="w-5 h-5 text-[#F8861D]" />
+              1. Seleziona Data
+            </div>
+            <div className="flex-grow flex items-center justify-center w-full">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => {
+                  setSelectedDate(date);
+                  setSelectedTime(null);
+                  setSelectedSlotId(null);
+                }}
+                locale={dateLocale}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return isSunday(date) || isSaturday(date) || date < today;
+                }}
+                modifiers={{
+                  free: (date) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
-                    return isSunday(date) || isSaturday(date) || date < today;
-                  }}
-                  modifiers={{
-                    free: (date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return !isSunday(date) && !isSaturday(date) && date >= today;
-                    }
-                  }}
-                  className="w-full rounded-3xl border border-border shadow-xl bg-white"
-                />
-              </div>
-
-              {/* Time Slots Section */}
-              <div className="space-y-6">
-                <div className="flex items-center gap-2 font-bold text-lg">
-                  <Clock className="w-5 h-5 text-primary" />
-                  2. Seleziona Orario
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  {availableSlots.length === 0 ? (
-                    <div className="col-span-2 text-center text-sm text-muted-foreground p-4 border-2 border-dashed border-border rounded-xl">
-                      Nessun orario disponibile in questa data.
-                    </div>
-                  ) : (
-                    availableSlots.map((slot) => {
-                      const time = format(new Date(slot.starts_at), "HH:mm");
-                      return (
-                        <button
-                          key={slot.id}
-                          onClick={() => {
-                            setSelectedTime(time);
-                            setSelectedSlotId(slot.id);
-                          }}
-                          className={`
-                            py-4 px-2 rounded-2xl font-bold transition-all border-2
-                            ${selectedSlotId === slot.id 
-                              ? "bg-primary text-primary-foreground border-primary" 
-                              : "bg-background border-border hover:border-primary/50 text-foreground"}
-                          `}
-                        >
-                          {time}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                {!selectedDate && (
-                  <div className="p-4 rounded-2xl bg-primary/5 text-primary text-sm flex gap-2 items-center">
-                    <WarningCircle className="w-4 h-4" />
-                    Scegli una data prima
-                  </div>
-                )}
-              </div>
+                    return !isSunday(date) && !isSaturday(date) && date >= today;
+                  }
+                }}
+                className="w-full border-none shadow-none p-0 bg-transparent"
+              />
             </div>
           </div>
 
-          {/* Sidebar - Right (Service Card) */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-32 space-y-6">
-              <div className="bg-foreground text-background rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          {/* Step 2: Time Slots */}
+          <div className="bg-white rounded-3xl border border-border/50 p-6 md:p-8 shadow-sm flex flex-col space-y-6 w-full">
+            <div className="flex items-center gap-2.5 font-black text-lg uppercase tracking-wider text-foreground border-b border-border/40 pb-4">
+              <Clock className="w-5 h-5 text-[#F8861D]" />
+              2. Seleziona Orario
+            </div>
+            
+            <div className="flex-grow w-full">
+              <div className="grid grid-cols-2 gap-3 w-full">
+                {availableSlots.length === 0 ? (
+                  <div className="col-span-2 text-center text-sm text-muted-foreground p-6 border-2 border-dashed border-border rounded-2xl flex flex-col items-center justify-center min-h-[220px] bg-muted/5 w-full">
+                    <WarningCircle className="w-8 h-8 text-muted-foreground/60 mb-2" />
+                    Nessun orario disponibile in questa data.
+                  </div>
+                ) : (
+                  availableSlots.map((slot) => {
+                    const time = format(new Date(slot.starts_at), "HH:mm");
+                    return (
+                      <button
+                        key={slot.id}
+                        onClick={() => {
+                          setSelectedTime(time);
+                          setSelectedSlotId(slot.id);
+                        }}
+                        className={`
+                          py-4 px-2 rounded-2xl font-bold transition-all border-2 cursor-pointer text-center text-sm sm:text-base w-full
+                          ${selectedSlotId === slot.id 
+                            ? "bg-[#F8861D] text-white border-[#F8861D] shadow-lg shadow-[#F8861D]/15" 
+                            : "bg-background border-border hover:border-[#F8861D]/50 text-foreground"}
+                        `}
+                      >
+                        {time}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+
+              {!selectedDate && (
+                <div className="p-4 rounded-2xl bg-[#F8861D]/5 text-[#F8861D] text-sm flex gap-2 items-center mt-4 w-full">
+                  <WarningCircle className="w-4 h-4 shrink-0" />
+                  Scegli una data prima
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Step 3: Summary Card */}
+          <div className="md:col-span-2 lg:col-span-1 w-full">
+            <div className="sticky top-28 space-y-6 w-full">
+              <div className="bg-foreground text-background rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden max-w-md mx-auto lg:max-w-none w-full">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 
-                <h2 className="text-2xl font-black uppercase mb-8 relative z-10 border-b border-background/10 pb-4">
+                <h2 className="text-xl sm:text-2xl font-black uppercase mb-6 relative z-10 border-b border-background/10 pb-3">
                   Riepilogo
                 </h2>
 
-                <div className="space-y-6 relative z-10">
+                <div className="space-y-5 relative z-10">
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <CheckCircle className="w-6 h-6 text-primary" />
+                      <CheckCircle className="w-6 h-6 text-[#F8861D]" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Service</p>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Servizio</p>
                       <p className="font-bold text-lg leading-tight">{title}</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <User className="w-6 h-6 text-primary" />
+                      <User className="w-6 h-6 text-[#F8861D]" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Teacher</p>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Insegnante</p>
                       <p className="font-bold">{(item as any).teacher_name || "TBD"}</p>
                     </div>
                   </div>
 
                   <div className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-background/10 flex items-center justify-center shrink-0">
-                      <MapPin className="w-6 h-6 text-primary" />
+                      <MapPin className="w-6 h-6 text-[#F8861D]" />
                     </div>
                     <div>
-                      <p className="text-xs uppercase tracking-widest opacity-50 mb-1">Location</p>
-                      <p className="font-bold">Atena School, Via Matteotti 11, Cittanova (RC)</p>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-1">Sede</p>
+                      <p className="font-bold text-sm sm:text-base">Atena School, Via Matteotti 11, Cittanova (RC)</p>
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-background/10 space-y-4">
+                  <div className="pt-5 border-t border-background/10 space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-50">Date</span>
+                      <span className="opacity-60">Data</span>
                       <span className="font-bold">
                         {selectedDate ? format(selectedDate, "dd MMMM yyyy", { locale: dateLocale }) : "---"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="opacity-50">Time</span>
+                      <span className="opacity-60">Orario</span>
                       <span className="font-bold">{selectedTime || "---"}</span>
                     </div>
-                    <div className="flex justify-between items-center text-2xl pt-4">
-                      <span className="font-black uppercase tracking-tight">Total</span>
+                    <div className="flex justify-between items-center text-2xl pt-3">
+                      <span className="font-black uppercase tracking-tight">Totale</span>
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-5 h-5 opacity-70 text-secondary" />
                         <span className="font-black text-secondary">{(item as any).price} €</span>
@@ -345,7 +346,7 @@ function BookingPageContent({
                     <button
                       disabled={!selectedDate || !selectedSlotId}
                       onClick={handleContinue}
-                      className="w-full py-5 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-secondary hover:text-secondary-foreground transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-primary/20 cursor-pointer"
+                      className="w-full py-5 bg-[#F8861D] text-white border-2 border-transparent hover:bg-white hover:text-[#F8861D] hover:border-[#F8861D] rounded-2xl font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#F8861D] disabled:hover:text-white disabled:hover:border-transparent shadow-xl shadow-[#F8861D]/20 hover:shadow-none cursor-pointer"
                     >
                       Continua
                     </button>
@@ -354,7 +355,7 @@ function BookingPageContent({
               </div>
 
               {/* Security Badge */}
-              <div className="flex items-center justify-center gap-2 text-muted-foreground opacity-50 text-xs font-bold uppercase tracking-widest">
+              <div className="flex items-center justify-center gap-2 text-muted-foreground opacity-50 text-xs font-bold uppercase tracking-widest w-full">
                 <CheckCircle className="w-4 h-4" />
                 Secure Checkout Simulation
               </div>
