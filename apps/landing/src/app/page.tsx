@@ -62,7 +62,7 @@ export default async function IndexPage() {
   return (
     <div className="min-h-screen">
       <div data-aos="fade-in"><HeroSection data={siteData.hero ?? undefined} /></div>
-      <div data-aos="fade-up"><StatsSection /></div>
+      <StatsSection />
       <AboutSection data={siteData.about ?? undefined} />
       <TestimonialsSection data={siteData.testimonials ?? undefined} />
       <div data-aos="fade-up"><CtaBanner /></div>

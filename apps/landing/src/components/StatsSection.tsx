@@ -54,16 +54,18 @@ const StatsSection = () => {
       <div className="pointer-events-none absolute left-0 top-0 h-full w-24 z-10 bg-gradient-to-r from-[#00328F] to-transparent" />
       <div className="pointer-events-none absolute right-0 top-0 h-full w-24 z-10 bg-gradient-to-l from-[#00328F] to-transparent" />
 
-      <div
-        style={{
-          display: "inline-flex",
-          whiteSpace: "nowrap",
-          animation: "stats-ticker 14s linear infinite",
-          willChange: "transform",
-        }}
-      >
-        {stats.map((stat, i) => renderItem(stat, `a-${i}`))}
-        {stats.map((stat, i) => renderItem(stat, `b-${i}`))}
+      <div className="w-full overflow-hidden">
+        <div
+          style={{
+            display: "inline-flex",
+            whiteSpace: "nowrap",
+            animation: "stats-ticker 14s linear infinite",
+            willChange: "transform",
+          }}
+        >
+          {stats.map((stat, i) => renderItem(stat, `a-${i}`))}
+          {stats.map((stat, i) => renderItem(stat, `b-${i}`))}
+        </div>
       </div>
     </div>
   );

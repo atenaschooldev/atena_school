@@ -129,7 +129,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         <div className="pointer-events-none absolute left-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-r from-white via-white/35 to-transparent" />
         <div className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-l from-white via-white/35 to-transparent" />
 
-        <div className="relative group w-full max-w-7xl mx-auto px-4 md:px-6">
+        <div className="relative group w-full max-w-none px-0">
           {/* Carousel Viewport */}
           <div
             className="overflow-hidden py-4 -my-4 px-4 md:px-12 w-full"
