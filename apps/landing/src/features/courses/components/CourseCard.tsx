@@ -97,20 +97,39 @@ const CourseCard = ({
         </p>
         
         {/* Footer info */}
-        <div className="flex items-center justify-between mt-auto pt-5 border-t border-border/40">
+        <div className="flex items-center justify-between mt-auto pt-5 border-t border-border/40 gap-2">
           {price ? (
-            <span className="bg-[#F8861D] text-white px-3.5 py-1.5 rounded-xl text-xs font-black tracking-wider uppercase shadow-md shadow-[#F8861D]/20 transition-all duration-300 group-hover:scale-105">
+            <span className="bg-[#F8861D]/10 text-[#F8861D] px-3 py-1.5 rounded-xl text-xs font-black tracking-wider uppercase select-none shrink-0">
               {price}
             </span>
           ) : (
             <div />
           )}
 
-          {/* Premium button-like CTA */}
-          <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary/5 text-primary rounded-xl text-xs font-black uppercase tracking-wider group-hover:bg-[#F8861D] group-hover:text-white group-hover:shadow-lg group-hover:shadow-[#F8861D]/20 transition-all duration-300">
-            {t("cta")}
-            <CaretRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-          </span>
+          <div className="flex items-center gap-1.5">
+            {/* Maggiori info (triggers modal) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(true);
+              }}
+              className="inline-flex items-center gap-1 px-3 py-2 text-primary hover:text-[#F8861D] text-xs font-black uppercase tracking-wider transition-colors duration-300 cursor-pointer"
+            >
+              {t("cta")}
+            </button>
+
+            {/* Prenota Ora (direct booking link) */}
+            {id && (
+              <Link
+                href={`/book/${type}/${id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#F8861D] text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-[#043569] hover:shadow-lg hover:shadow-[#043569]/20 transition-all duration-300 shrink-0"
+              >
+                {type === "shop" ? "Acquista" : "Prenota"}
+                <CaretRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </div>
