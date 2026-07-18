@@ -1,7 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { CaretRight } from "@phosphor-icons/react";
+import { CaretRight, Clock, User, CreditCard } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface CourseCardProps {
   id?: string;
@@ -11,15 +15,49 @@ interface CourseCardProps {
   category?: string;
   price?: string;
   type?: "course" | "shop";
+  duration?: string;
+  teacher_name?: string;
   onCtaClick?: () => void;
 }
 
-const CourseCard = ({ id, title, description, image, category, price, type = "course", onCtaClick }: CourseCardProps) => {
+const CourseCard = ({ 
+  id, 
+  title, 
+  description, 
+  image, 
+  category, 
+  price, 
+  type = "course", 
+  duration,
+  teacher_name,
+  onCtaClick 
+}: CourseCardProps) => {
   const t = useTranslations("coursesPage");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleClick = (e: React.MouseEvent) => {
+    // If we have custom onCtaClick, trigger it
+    if (onCtaClick) {
+      onCtaClick();
+      return;
+    }
+    // Otherwise open the details modal
+    setIsOpen(true);
+  };
 
   const cardContent = (
-    <div className="group bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(4,53,105,0.08)] hover:-translate-y-2 transition-all duration-500 border border-border/40 flex flex-col h-full active:scale-[0.99] relative">
-      
+    <div 
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setIsOpen(true);
+        }
+      }}
+      className="group bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(4,53,105,0.08)] hover:-translate-y-2 transition-all duration-500 border border-border/40 flex flex-col h-full active:scale-[0.99] relative text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+    >
       {/* Image container */}
       <div className="relative h-52 w-full overflow-hidden bg-muted">
         {/* Category Badge */}
@@ -78,18 +116,102 @@ const CourseCard = ({ id, title, description, image, category, price, type = "co
     </div>
   );
 
-  if (id) {
-    return (
-      <Link href={`/book/${type}/${id}`} className="block h-full no-underline">
-        {cardContent}
-      </Link>
-    );
-  }
-
   return (
-    <div onClick={onCtaClick} className="block h-full cursor-pointer">
+    <>
       {cardContent}
-    </div>
+
+      {/* Details Modal */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-2xl bg-white rounded-3xl p-6 sm:p-8 border border-border/50 shadow-2xl overflow-y-auto max-h-[90vh] focus-visible:outline-none">
+          {/* Large image inside dialog */}
+          <div className="relative h-64 sm:h-80 w-full overflow-hidden rounded-2xl bg-muted mb-6">
+            {image ? (
+              <Image 
+                src={image} 
+                alt={title} 
+                fill 
+                className="object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#043569]/5 to-[#F8861D]/10 flex items-center justify-center p-8 text-center">
+                <span className="text-[#043569]/30 font-black uppercase tracking-widest text-sm leading-tight select-none">
+                  {title}
+                </span>
+              </div>
+            )}
+            {category && (
+              <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/20 shadow-sm">
+                {category}
+              </div>
+            )}
+          </div>
+
+          <DialogHeader className="text-left space-y-2">
+            <DialogTitle className="text-2xl sm:text-3xl font-black text-[#043569] tracking-tight leading-tight">
+              {title}
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Details Grid (Duration, Teacher, Price) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6 py-4 border-y border-border/40 text-sm">
+            {duration && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <Clock className="w-5 h-5" weight="bold" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Durata</p>
+                  <p className="font-bold text-foreground">{duration}</p>
+                </div>
+              </div>
+            )}
+            {teacher_name && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <User className="w-5 h-5" weight="bold" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Insegnante</p>
+                  <p className="font-bold text-foreground">{teacher_name}</p>
+                </div>
+              </div>
+            )}
+            {price && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <CreditCard className="w-5 h-5" weight="bold" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prezzo</p>
+                  <p className="font-bold text-foreground">{price}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Detailed description */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Informazioni sul corso</h4>
+            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-line">
+              {description}
+            </p>
+          </div>
+
+          {/* Action button: Redirects to booking/checkout process */}
+          <div className="mt-8 flex flex-col gap-3">
+            {id && (
+              <Link 
+                href={`/book/${type}/${id}`}
+                className="w-full py-4 bg-[#F8861D] text-white border-2 border-transparent hover:bg-white hover:text-[#F8861D] hover:border-[#F8861D] rounded-2xl font-black uppercase tracking-widest text-sm text-center transition-all shadow-xl shadow-[#F8861D]/20 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {type === "shop" ? "Acquista Ora" : "Prenota Ora"}
+                <CaretRight className="w-4 h-4" weight="bold" />
+              </Link>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

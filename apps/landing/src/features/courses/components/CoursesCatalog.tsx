@@ -11,6 +11,8 @@ interface CleanCourse {
   image: any;
   price?: string;
   type: "course" | "shop";
+  duration?: string;
+  teacher_name?: string;
 }
 
 interface CleanSection {
@@ -138,6 +140,8 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                       category={section.title}
                       price={course.price}
                       type={course.type}
+                      duration={course.duration}
+                      teacher_name={course.teacher_name}
                     />
                   </div>
                 ))}

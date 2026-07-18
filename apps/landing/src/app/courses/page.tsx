@@ -181,7 +181,9 @@ export default async function CoursesPage() {
           description: itemDesc,
           image: itemImage,
           price: itemPrice,
-          type: course.type || 'course'
+          type: course.type || 'course',
+          duration: course.duration || course.duration_it || undefined,
+          teacher_name: course.teacher_name || undefined
         };
       });
     } else if (section.items) {
@@ -197,7 +199,9 @@ export default async function CoursesPage() {
           description: itemDesc,
           image: match?.image_url || localImageMap[itemKey],
           price: itemPrice,
-          type: 'course'
+          type: 'course',
+          duration: match?.duration || undefined,
+          teacher_name: match?.teacher_name || undefined
         };
       });
     }
