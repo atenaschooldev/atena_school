@@ -1,14 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CaretUp, EnvelopeSimple } from "@phosphor-icons/react";
-import dynamic from "next/dynamic";
-
-const ContactModal = dynamic(() => import("@/features/contact/components/ContactModal"), { ssr: false });
+import { CaretUp } from "@phosphor-icons/react";
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [isContactOpen, setIsContactOpen] = useState(false);
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -35,26 +31,13 @@ const ScrollToTop = () => {
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed bottom-20 md:bottom-6 right-6 z-50 p-3 rounded-full bg-[#00328F] text-white shadow-lg border border-white/10 hover:bg-[#FAA904] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center ${
+        className={`fixed bottom-6 right-6 z-50 p-3 rounded-full bg-[#00328F] text-white shadow-lg border border-white/10 hover:bg-[#FAA904] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer flex items-center justify-center ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
         }`}
         aria-label="Scroll to top"
       >
         <CaretUp className="w-5 h-5" weight="bold" />
       </button>
-
-      {/* Mobile "Richiedi info" Button (Circular FAB) */}
-      <button
-        onClick={() => setIsContactOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 z-50 p-3 rounded-full bg-[#FAA904] text-white shadow-lg border border-white/10 hover:bg-[#e09803] hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center cursor-pointer"
-        aria-label="Richiedi informazioni"
-      >
-        <EnvelopeSimple className="w-5 h-5" weight="bold" />
-      </button>
-
-      {isContactOpen && (
-        <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
-      )}
     </>
   );
 };

@@ -36,7 +36,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
   ];
 
   return (
-    <section id="about" className="relative pt-16 pb-20 bg-background overflow-hidden px-0 min-h-screen flex flex-col justify-center">
+    <section id="about" className="relative pt-16 pb-20 bg-gray-50 overflow-hidden px-0 min-h-screen flex flex-col justify-center">
       {/* Decorative background accents */}
       <div className="absolute top-1/4 left-[5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-[5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />

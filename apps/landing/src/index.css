@@ -10,6 +10,7 @@
   --accent: #fff5eb;
   --accent-foreground: #043569;
   --ring: #F8861D;
+  --background: oklch(1 0 0);
 }
 
 .dark {

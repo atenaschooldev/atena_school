@@ -32,8 +32,8 @@ const CtaBanner = () => {
   ];
 
   return (
-    <section className="py-6 lg:py-10 px-4 bg-background">
-      <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-2xl bg-[#091420] border border-white/5 relative">
+    <section className="py-6 lg:py-10 min-[1700px]:!pt-16 min-[1700px]:!pb-0 px-4 bg-gray-50">
+      <div className="max-w-6xl 2xl:max-w-[1400px] min-[1700px]:max-w-[1550px] mx-auto rounded-3xl overflow-hidden shadow-lg bg-[#091420] border border-white/5 relative">
 
         {/* Background image at container level so it covers the whole card and shows behind the orange card's rounded top corners on mobile */}
         <div className="absolute inset-0 z-0 pointer-events-none">
@@ -48,13 +48,13 @@ const CtaBanner = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-[#091420]/60 via-[#091420]/75 to-[#091420]/85 lg:bg-gradient-to-r lg:from-[#091420]/75 lg:via-[#091420]/35 lg:to-transparent" />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 2xl:grid-cols-1 relative z-10 h-full">
 
           {/* Left Column - Features */}
-          <div className="relative lg:col-span-8 p-6 lg:p-8 flex flex-col justify-center min-h-[320px] lg:min-h-[240px]">
+          <div className="relative lg:col-span-8 2xl:col-span-1 p-6 lg:p-8 2xl:p-10 flex flex-col justify-center min-h-[320px] lg:min-h-[240px] 2xl:min-h-0">
             {/* Content */}
             <div className="space-y-5 lg:space-y-4 w-full text-left">
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-2xl xl:text-3xl font-black text-white leading-tight">
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-2xl xl:text-3xl 2xl:text-4xl font-black text-white leading-tight">
                 {t("title")}
               </h2>
 
@@ -66,14 +66,14 @@ const CtaBanner = () => {
                     <div key={index} className="flex sm:flex-col lg:flex-row items-center sm:items-start lg:items-center gap-3 sm:gap-2 text-left">
                       {/* Mobile: rounded-full container, Desktop: standard icon color without container */}
                       <div className="text-[#F8861D] shrink-0 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-full border border-white/10 sm:border-none shadow-sm sm:shadow-none flex items-center justify-center">
-                        <Icon className="w-5 h-5 sm:w-[22px] sm:h-[22px]" weight="light" />
+                        <Icon className="w-5 h-5 sm:w-[22px] sm:h-[22px] 2xl:w-6 2xl:h-6" weight="light" />
                       </div>
                       <div className="flex flex-col">
                         {/* Mobile: simple text, Desktop: uppercase uppercase tracking-wider leading-none */}
-                        <span className="text-sm sm:text-xs font-bold sm:font-black text-white sm:uppercase sm:tracking-wider sm:leading-none">
+                        <span className="text-sm sm:text-xs 2xl:text-sm font-bold sm:font-black text-white sm:uppercase sm:tracking-wider sm:leading-none">
                           {f.title}
                         </span>
-                        <span className="hidden sm:inline-block text-[9px] font-bold text-white/50 uppercase tracking-widest mt-1 leading-none">
+                        <span className="hidden sm:inline-block text-[9px] 2xl:text-[10px] font-bold text-white/50 uppercase tracking-widest mt-1 leading-none">
                           {t(f.descKey)}
                         </span>
                       </div>
@@ -86,25 +86,17 @@ const CtaBanner = () => {
 
           {/* Right Column - Orange CTA with diagonal slash on desktop and rounded top corners on mobile */}
           <div
-            className="lg:col-span-5 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[38%] bg-[#F8861D] p-6 sm:p-8 lg:p-10 flex flex-col justify-center text-left text-white z-20 min-h-[220px] lg:min-h-0 cta-orange-side"
+            className="lg:col-span-5 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[38%] 2xl:relative 2xl:w-full 2xl:h-auto bg-[#F8861D] p-6 sm:p-8 lg:p-10 2xl:p-10 flex flex-col justify-center text-left text-white z-20 min-h-[220px] lg:min-h-0 cta-orange-side"
           >
             {/* Inner wrapper to shift text right and avoid getting clipped */}
-            <div className="lg:pl-10 space-y-4">
-              <h3 className="font-sans text-base sm:text-lg lg:text-base xl:text-lg font-black leading-tight max-w-[260px] lg:max-w-[220px]">
+            <div className="lg:pl-10 2xl:pl-0 space-y-4">
+              <h3 className="font-sans text-base sm:text-lg lg:text-base xl:text-lg 2xl:text-xl font-black leading-tight max-w-[260px] lg:max-w-[220px] 2xl:max-w-[280px]">
                 {t("cta_title")}
               </h3>
-              <p className="text-white/95 text-xs lg:text-[10px] xl:text-xs leading-relaxed max-w-[260px] lg:max-w-[220px] font-medium">
+              <p className="text-white/95 text-xs lg:text-[10px] xl:text-xs 2xl:text-sm leading-relaxed max-w-[260px] lg:max-w-[220px] 2xl:max-w-[280px] font-medium">
                 {t("cta_desc")}
               </p>
-              <div className="pt-2 lg:pt-1">
-                <a
-                  href="#contact"
-                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-[#F8861D] px-6 lg:px-4 py-2.5 lg:py-2 rounded-full font-black text-xs lg:text-[10px] xl:text-xs transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
-                >
-                  {t("cta_btn")}
-                  <ArrowRight size={14} weight="bold" />
-                </a>
-              </div>
+
             </div>
           </div>
 
@@ -115,11 +107,20 @@ const CtaBanner = () => {
               border-top-left-radius: 32px;
               border-top-right-radius: 32px;
             }
-            @media (min-width: 1024px) {
+            @media (min-width: 1024px) and (max-width: 1535px) {
               .cta-orange-side {
                 clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%) !important;
                 border-top-left-radius: 0 !important;
                 border-top-right-radius: 0 !important;
+              }
+            }
+            @media (min-width: 1536px) {
+              .cta-orange-side {
+                clip-path: none !important;
+                border-top-left-radius: 0 !important;
+                border-top-right-radius: 0 !important;
+                border-bottom-left-radius: 24px !important;
+                border-bottom-right-radius: 24px !important;
               }
             }
           `}</style>

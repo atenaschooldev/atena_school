@@ -8,22 +8,19 @@ import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
 import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, MapPin, Phone, EnvelopeSimple } from "@phosphor-icons/react";
 
-const ContactModal = dynamic(() => import("../features/contact/components/ContactModal"), { ssr: false });
-
 const Footer = () => {
   const t = useTranslations("footer");
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <footer id="contact" className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-white/5 relative overflow-hidden">
+    <footer className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 2xl:px-16 min-[1700px]:px-24 border-t border-white/5 relative overflow-hidden">
       {/* Subtle ambient light in the footer */}
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
+      <div className="max-w-6xl 2xl:max-w-none min-[1700px]:max-w-none mx-auto relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 2xl:gap-16">
 
           {/* Column 1: Brand & Contact Info */}
-          <div className="md:col-span-4 space-y-6">
+          <div className="md:col-span-4 2xl:col-span-5 space-y-6">
             <div className="flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0">
                 <Image
@@ -120,7 +117,7 @@ const Footer = () => {
           </div>
 
           {/* Column 3: Contact & Address details */}
-          <div className="md:col-span-3 space-y-4">
+          <div className="md:col-span-3 2xl:col-span-2 space-y-4">
             <h4 className="text-xs font-black uppercase tracking-wider text-[#F8861D]">
               Contatti
             </h4>
@@ -148,12 +145,12 @@ const Footer = () => {
               </li>
             </ul>
 
-            <button
-              onClick={() => setIsModalOpen(true)}
+            <Link
+              href="/#contact"
               className="mt-4 inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-5 py-2.5 rounded-full font-black text-xs transition-all duration-300 shadow-lg shadow-orange-500/10 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
             >
               Richiedi informazioni →
-            </button>
+            </Link>
           </div>
 
           {/* Column 4: Mini Map Card */}
@@ -209,8 +206,6 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Modal Dialog */}
-      <ContactModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </footer>
   );
 };

@@ -70,7 +70,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
   }, [sections, activeTab, searchQuery]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+    <div className="max-w-7xl 2xl:max-w-[1400px] min-[1700px]:max-w-[1550px] mx-auto px-4 py-8 relative z-10">
       {/* Search Input */}
       <div className="max-w-md mx-auto mb-10">
         <div className="relative flex items-center bg-card border border-border/60 rounded-full px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] focus-within:border-primary/50 focus-within:shadow-[0_4px_24px_rgba(var(--primary-rgb),0.06)] transition-all duration-300">
@@ -93,16 +93,16 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
         </div>
       </div>
 
-      {/* Tabs list with horizontal scroll on mobile */}
-      <div className="flex justify-start md:justify-center mb-16 overflow-x-auto pb-4 scrollbar-none snap-x -mx-4 px-4 mask-gradient">
-        <div className="flex gap-2.5">
+      {/* Tabs list */}
+      <div className="flex justify-center mb-16 px-4">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-2.5">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300 active:scale-95 snap-center border ${
+                className={`px-4 sm:px-6 py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300 active:scale-95 border ${
                   isActive
                     ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/10"
                     : "bg-card border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -122,14 +122,14 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
             <div key={section.id} className="animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div className="flex items-center gap-6 mb-10">
                 <h2
-                  className="text-2xl md:text-4xl font-black uppercase tracking-tight text-foreground whitespace-nowrap"
+                  className="text-2xl md:text-4xl 2xl:text-5xl font-black uppercase tracking-tight text-foreground whitespace-nowrap"
                 >
                   {section.title}
                 </h2>
                 <div className="h-[1px] flex-grow bg-gradient-to-r from-primary/45 via-secondary/25 to-transparent" />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 xl:gap-8 2xl:gap-10">
                 {section.courses.map((course, idx) => (
                   <div 
                     key={course.id} 

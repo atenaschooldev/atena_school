@@ -3,10 +3,13 @@ import StatsSection from "@/components/StatsSection";
 import AboutSection from "@/features/about/components/AboutSection";
 import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
 import CtaBanner from "@/components/CtaBanner";
+import ContactSection from "@/features/contact/components/ContactSection";
+import FaqSidebar from "@/components/FaqSidebar";
 import {
   getHeroData,
   getAboutData,
-  getTestimonials
+  getTestimonials,
+  getContactData
 } from "@/lib/data";
 
 import { env } from "@/config/env";
@@ -51,13 +54,14 @@ export async function generateMetadata() {
 
 export default async function IndexPage() {
   // Fetch site content using cached functions
-  const [hero, about, testimonials] = await Promise.all([
+  const [hero, about, testimonials, contact] = await Promise.all([
     getHeroData(),
     getAboutData(),
-    getTestimonials()
+    getTestimonials(),
+    getContactData()
   ]);
 
-  const siteData = { hero, about, testimonials };
+  const siteData = { hero, about, testimonials, contact };
 
   return (
     <div className="min-h-screen">
@@ -65,7 +69,24 @@ export default async function IndexPage() {
       <StatsSection />
       <AboutSection data={siteData.about ?? undefined} />
       <TestimonialsSection data={siteData.testimonials ?? undefined} />
-      <div data-aos="fade-up"><CtaBanner /></div>
+      {/* min-[1700px]+: contact form left, CTA banner right; below: stacked as before */}
+      <div className="min-[1700px]:flex min-[1700px]:flex-row min-[1700px]:items-stretch min-[1700px]:gap-0">
+        <div className="min-[1700px]:w-[38%] min-[1700px]:flex min-[1700px]:flex-col min-[1700px]:overflow-hidden">
+          <div data-aos="fade-up" data-aos-delay="0">
+            <CtaBanner />
+          </div>
+          <div
+            data-aos="fade-up"
+            data-aos-delay="200"
+            className="hidden min-[1700px]:flex min-[1700px]:flex-col min-[1700px]:flex-1"
+          >
+            <FaqSidebar />
+          </div>
+        </div>
+        <div data-aos="fade-up" data-aos-delay="400" className="min-[1700px]:flex-1">
+          <ContactSection data={siteData.contact ?? undefined} />
+        </div>
+      </div>
     </div>
   );
 }
