@@ -7,9 +7,15 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
 import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, MapPin, Phone, EnvelopeSimple } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 
 const Footer = () => {
   const t = useTranslations("footer");
+  const pathname = usePathname();
+
+  if (pathname && pathname.includes("/test-inglese")) {
+    return null;
+  }
 
   return (
     <footer className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 2xl:px-16 min-[1700px]:px-24 border-t border-white/5 relative overflow-hidden">
