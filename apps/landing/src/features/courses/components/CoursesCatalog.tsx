@@ -133,8 +133,8 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                 {section.courses.map((course, idx) => (
                   <div 
                     key={course.id} 
-                    data-aos="fade-up"
-                    data-aos-delay={(idx % 3) * 100}
+                    data-gsap="fade-up"
+                    data-gsap-delay={(idx % 3) * 100}
                     className="duration-500"
                   >
                     <CourseCard

@@ -76,7 +76,7 @@ export async function generateMetadata() {
 
 import { Toaster } from 'sonner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
-import AosInitializer from '@/components/AosInitializer';
+import ScrollAnimateProvider from '@/components/ScrollAnimateProvider';
 
 export default function RootLayout({
   children,
@@ -92,16 +92,17 @@ export default function RootLayout({
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
-          <div className="flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-grow flex flex-col">{children}</main>
-            <Footer />
-            <CookieBanner />
-          </div>
-          <AosInitializer />
-          <ScrollToTop />
-          <Toaster position="top-right" richColors />
-          <GoogleAnalytics />
+          <ScrollAnimateProvider>
+            <div className="flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-grow flex flex-col">{children}</main>
+              <Footer />
+              <CookieBanner />
+            </div>
+            <ScrollToTop />
+            <Toaster position="top-right" richColors />
+            <GoogleAnalytics />
+          </ScrollAnimateProvider>
         </NextIntlClientProvider>
       </body>
     </html>

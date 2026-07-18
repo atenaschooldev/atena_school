@@ -47,7 +47,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           {/* Left Column: Text & Features */}
           <div 
             className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center px-4 sm:px-6 lg:pl-16 lg:pr-12 xl:pl-28 2xl:pl-40" 
-            data-aos="fade-up"
+            data-gsap="fade-up"
           >
             <div className="space-y-3.5">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
@@ -93,8 +93,8 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           {/* Right Column: 3-Image Collage & Dots */}
           <div 
             className="lg:col-span-6 mt-8 lg:mt-0 w-full pl-4 pr-4 lg:pl-8 lg:pr-12 xl:pr-20 2xl:pr-32" 
-            data-aos="fade-up" 
-            data-aos-delay="100"
+            data-gsap="fade-up" 
+            data-gsap-delay="100"
           >
             {/* Image Grid with bottom alignment and offset */}
             <div className="grid grid-cols-2 gap-4 items-stretch max-w-xl lg:max-w-none ml-auto lg:ml-0">

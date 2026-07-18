@@ -114,7 +114,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
     <section className="py-6 sm:py-8 px-4 bg-white relative overflow-hidden">
 
       {/* Centered Header */}
-      <div className="max-w-2xl mx-auto relative z-20 text-center mb-8 px-4 space-y-1" data-aos="fade-up">
+      <div className="max-w-2xl mx-auto relative z-20 text-center mb-8 px-4 space-y-1" data-gsap="fade-up">
         <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#F8861D]">
           COSA DICONO DI NOI
         </span>
@@ -124,7 +124,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
       </div>
 
       {/* Full-width Carousel container */}
-      <div className="relative z-20 w-full max-w-[100vw] overflow-hidden px-0" data-aos="fade-up" data-aos-delay="100">
+      <div className="relative z-20 w-full max-w-[100vw] overflow-hidden px-0" data-gsap="fade-up" data-gsap-delay="100">
         {/* Soft edge fade overlays */}
         <div className="pointer-events-none absolute left-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-r from-white via-white/35 to-white/0" />
         <div className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-l from-white via-white/35 to-white/0" />
