@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { BookOpen, Calendar, Clock, CheckCircle, BookmarkSimple } from "@phosphor-icons/react";
+import { Calendar, Clock, CheckCircle, BookmarkSimple, ArrowLeft } from "@phosphor-icons/react";
 import { format, isFuture, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
+import { Link } from "@/i18n/routing";
+import { toast } from "sonner";
 
 interface EnrichedBooking {
   id: string;
@@ -27,6 +29,13 @@ export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<EnrichedBooking[]>([]);
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past">("upcoming");
+  
+  // Profile Settings Form states
+  const [profileName, setProfileName] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -49,12 +58,7 @@ export default function DashboardPage() {
 
       const userBookings: any[] = data || [];
 
-      if (userBookings.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // 3. Extract unique relational IDs
+      // 3. Find IDs of courses, shop items, slots
       const courseIds = Array.from(new Set(userBookings.filter((b: any) => b.item_type === "course").map((b: any) => b.item_id))) as string[];
       const shopItemIds = Array.from(new Set(userBookings.filter((b: any) => b.item_type === "shop").map((b: any) => b.item_id))) as string[];
       const slotIds = Array.from(new Set(userBookings.filter((b: any) => b.slot_id).map((b: any) => b.slot_id))) as string[];
@@ -131,141 +135,278 @@ export default function DashboardPage() {
     fetchData();
   }, [supabase]);
 
+  // Sync profile details when user is fetched
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.user_metadata?.full_name || "");
+      setProfilePhone(user.user_metadata?.phone || user.phone || "");
+    }
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profileName,
+          phone: profilePhone
+        }
+      });
+
+      if (error) throw error;
+      
+      setUser(data.user);
+      toast.success("Profilo aggiornato con successo!");
+    } catch (err: any) {
+      toast.error(err.message || "Impossibile aggiornare il profilo");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   );
 
-  // Statistics Calculation
-  const uniqueCourses = new Set(bookings.map(b => b.item_id)).size;
-  const upcomingLessons = bookings.filter(b => b.is_future).length;
-  const totalHours = bookings.length; // Approximate 1 hr per booking
+  const upcomingLessons = bookings.filter(b => b.is_future);
+  const pastLessons = bookings.filter(b => !b.is_future);
+  const activeBookings = activeTab === "upcoming" ? upcomingLessons : pastLessons;
 
   return (
-    <main className="min-h-screen pt-32 pb-20 px-4 bg-[#f8f9fa]">
+    <main className="min-h-screen pt-20 md:pt-32 pb-20 px-4 sm:px-6 bg-[#f8f9fa] text-foreground">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-foreground mb-4">
-            Il tuo Pannello
+        
+        {/* Back Link */}
+        <div className="mb-4 sm:mb-6">
+          <Link
+            href="/courses"
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-muted-foreground hover:text-[#043569] transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+            Torna ai Corsi
+          </Link>
+        </div>
+
+        {/* Header Section */}
+        <header className="mb-6 sm:mb-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-[#043569] mb-2 leading-none">
+            Area Personale
           </h1>
-          <p className="text-muted-foreground">
-            Bentornato, {user?.user_metadata?.full_name?.split(" ")[0] || 'Studente'}!
+          <p className="text-sm sm:text-base text-muted-foreground font-medium">
+            Gestisci le tue lezioni, acquisti e pianificazioni.
           </p>
         </header>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm flex items-center gap-6">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 text-primary">
-              <BookOpen className="w-8 h-8" />
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Sidebar / Left Column (User Profile & CTA) */}
+          <div className="lg:col-span-4 flex flex-col gap-6 w-full">
+            
+            {/* User Profile Card */}
+            <div className="bg-[#043569] text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+              {/* Decorative Blur Bubble */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              
+              <div className="relative z-10 flex flex-col items-center text-center">
+                {/* Initial Avatar */}
+                <div className="w-20 h-20 bg-gradient-to-tr from-[#F8861D] to-[#ffaa55] text-white rounded-full flex items-center justify-center text-3xl font-black shadow-lg mb-4 select-none">
+                  {user?.user_metadata?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'S'}
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight mb-1">
+                  {user?.user_metadata?.full_name || 'Studente'}
+                </h2>
+                <p className="text-white/60 text-xs sm:text-sm mb-6 font-medium break-all max-w-full px-2">
+                  {user?.email}
+                </p>
+
+                {/* Statistics Row */}
+                <div className="grid grid-cols-2 gap-4 w-full border-t border-white/10 pt-6">
+                  <div className="text-center border-r border-white/10 pr-2">
+                    <p className="text-2xl font-black text-[#F8861D]">{upcomingLessons.length}</p>
+                    <p className="text-[10px] uppercase font-black text-white/50 tracking-wider">In Arrivo</p>
+                  </div>
+                  <div className="text-center pl-2">
+                    <p className="text-2xl font-black text-white">{pastLessons.length}</p>
+                    <p className="text-[10px] uppercase font-black text-white/50 tracking-wider">Completati</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                Corsi Attivi
+
+            {/* Profile Settings Card */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-border/50 shadow-sm flex flex-col gap-4">
+              <h3 className="text-base sm:text-lg font-black uppercase text-[#043569]">
+                I tuoi dati
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">
+                    Nome Completo
+                  </label>
+                  <input
+                    type="text"
+                    value={profileName}
+                    onChange={(e) => setProfileName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-[#fdfdfd] text-sm font-medium focus:outline-none focus:border-[#F8861D] transition-colors"
+                    placeholder="Nome e Cognome"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-wider text-muted-foreground block mb-1">
+                    Telefono
+                  </label>
+                  <input
+                    type="tel"
+                    value={profilePhone}
+                    onChange={(e) => setProfilePhone(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-xl border border-border bg-[#fdfdfd] text-sm font-medium focus:outline-none focus:border-[#F8861D] transition-colors"
+                    placeholder="Inserisci il telefono"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingProfile}
+                className="w-full py-3 bg-[#043569] text-white hover:bg-[#F8861D] disabled:opacity-50 rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all cursor-pointer shadow-md shadow-[#043569]/10 active:scale-95"
+              >
+                {savingProfile ? "Salvataggio..." : "Salva Profilo"}
+              </button>
+            </div>
+
+            {/* Quick CTA Card */}
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-border/50 shadow-sm flex flex-col gap-4">
+              <h3 className="text-base sm:text-lg font-black uppercase text-[#043569]">
+                Vuoi imparare altro?
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium opacity-90">
+                Esplora la nostra offerta formativa e prenota nuove lezioni con i migliori tutor e insegnanti qualificati.
               </p>
-              <p className="text-4xl font-black">{uniqueCourses}</p>
+              <Link
+                href="/courses"
+                className="w-full py-3.5 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all shadow-md shadow-[#F8861D]/15 hover:shadow-none active:scale-95 cursor-pointer block"
+              >
+                Esplora Corsi
+              </Link>
             </div>
+
           </div>
 
-          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm flex items-center gap-6">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 text-primary">
-              <Calendar className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                Prossime Lezioni
-              </p>
-              <p className="text-4xl font-black text-primary">{upcomingLessons}</p>
-            </div>
+          {/* Right Column (Appointments with Tabs) */}
+          <div className="lg:col-span-8 w-full">
+            
+            <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden flex flex-col">
+              
+              {/* Tabs Switcher */}
+              <div className="flex border-b border-border bg-[#fdfdfd] px-2 sm:px-4">
+                <button
+                  onClick={() => setActiveTab("upcoming")}
+                  className={`px-4 sm:px-6 py-4 font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all border-b-2 cursor-pointer outline-none ${
+                    activeTab === "upcoming"
+                      ? "border-[#F8861D] text-[#F8861D]"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  In Arrivo ({upcomingLessons.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("past")}
+                  className={`px-4 sm:px-6 py-4 font-black uppercase text-[11px] sm:text-xs tracking-wider transition-all border-b-2 cursor-pointer outline-none ${
+                    activeTab === "past"
+                      ? "border-[#F8861D] text-[#F8861D]"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Storico Lezioni ({pastLessons.length})
+                </button>
+              </div>
+
+              {/* List of activeBookings */}
+              {activeBookings.length === 0 ? (
+                <div className="text-center py-20 px-6 text-muted-foreground">
+                  <div className="w-16 h-16 bg-muted/40 rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/60">
+                    <Calendar className="w-8 h-8" />
+                  </div>
+                  <p className="font-bold text-foreground mb-1 text-sm sm:text-base">
+                    {activeTab === "upcoming" ? "Nessun appuntamento attivo" : "Nessuno storico lezioni"}
+                  </p>
+                  <p className="text-xs sm:text-sm max-w-sm mx-auto opacity-80 leading-relaxed font-medium">
+                    {activeTab === "upcoming" 
+                      ? "Non hai lezioni programmate per il futuro. Esplora i nostri corsi per iniziare!"
+                      : "Non hai ancora partecipato a nessuna lezione passata."}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col divide-y divide-border">
+                  {activeBookings.map((booking) => {
+                    const dateDisplay = booking.slot_starts_at 
+                      ? format(parseISO(booking.slot_starts_at), "dd MMMM yyyy", { locale: dateLocale })
+                      : (booking.booking_date ? format(new Date(booking.booking_date), "dd MMMM yyyy", { locale: dateLocale }) : "---");
+                      
+                    const timeDisplay = booking.slot_starts_at
+                      ? format(parseISO(booking.slot_starts_at), "HH:mm")
+                      : booking.booking_time || "---";
+
+                    return (
+                      <div 
+                        key={booking.id} 
+                        className="group p-6 sm:p-8 hover:bg-muted/10 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        {/* Title & Teacher Info */}
+                        <div className="flex-1 space-y-1">
+                          <h4 className="text-lg sm:text-xl font-black text-[#043569] group-hover:text-[#F8861D] transition-colors leading-tight">
+                            {booking.item_title}
+                          </h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground font-medium">
+                            Docente: <span className="font-bold text-foreground">{booking.teacher_name}</span>
+                          </p>
+                        </div>
+
+                        {/* Date & Time Badge */}
+                        <div className="flex items-center gap-2.5 text-xs sm:text-sm text-foreground/80 font-bold bg-muted/40 px-3.5 py-2 rounded-xl self-start md:self-auto border border-border/20 shadow-sm select-none">
+                          <Calendar className="w-4.5 h-4.5 text-[#F8861D]" />
+                          <span>{dateDisplay}</span>
+                          <span className="text-muted-foreground/40 font-normal">|</span>
+                          <Clock className="w-4.5 h-4.5 text-[#F8861D]" />
+                          <span>{timeDisplay}</span>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="self-start md:self-auto shrink-0 select-none">
+                          {booking.status === "reserved" ? (
+                            <div className="flex items-center gap-1 text-secondary bg-secondary/10 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+                              <BookmarkSimple className="w-3.5 h-3.5" weight="fill" />
+                              Prenotato
+                            </div>
+                          ) : booking.status === "pending_payment" ? (
+                            <div className="flex items-center gap-1 text-amber-600 bg-amber-500/10 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider animate-pulse">
+                              <Clock className="w-3.5 h-3.5" />
+                              In attesa
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider">
+                              <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                              Pagato
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+            
           </div>
 
-          <div className="bg-white p-8 rounded-3xl border border-border shadow-sm flex items-center gap-6">
-            <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0 text-primary">
-              <Clock className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="font-bold text-muted-foreground uppercase text-xs tracking-widest mb-1">
-                Ore Totali
-              </p>
-              <p className="text-4xl font-black">{totalHours}</p>
-            </div>
-          </div>
         </div>
 
-        {/* List of Bookings */}
-        <section className="bg-white rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="p-8 border-b border-border flex justify-between items-end">
-            <h2 className="text-2xl font-black uppercase">
-              I tuoi appuntamenti
-            </h2>
-          </div>
-
-          {bookings.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 opacity-50" />
-              </div>
-              <p className="font-bold mb-2">
-                Nessun appuntamento attivo
-              </p>
-              <p className="text-sm opacity-70">
-                Non hai ancora completato nessun acquisto.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col">
-              {bookings.map((booking) => {
-                const dateDisplay = booking.slot_starts_at 
-                  ? format(parseISO(booking.slot_starts_at), "dd MMMM yyyy", { locale: dateLocale })
-                  : (booking.booking_date ? format(new Date(booking.booking_date), "dd MMMM yyyy", { locale: dateLocale }) : "---");
-                  
-                const timeDisplay = booking.slot_starts_at
-                  ? format(parseISO(booking.slot_starts_at), "HH:mm")
-                  : booking.booking_time || "---";
-
-                return (
-                  <div key={booking.id} className="group flex flex-col md:flex-row items-start md:items-center justify-between p-8 border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors">
-                    <div className="flex-1 space-y-1 mb-4 md:mb-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={`text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full ${booking.is_future ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                          {booking.is_future ? "In Arrivo" : "Completato"}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-bold">{booking.item_title}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        con <span className="font-bold">{booking.teacher_name}</span>
-                      </p>
-                    </div>
-
-                    <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4 md:gap-1">
-                      <div className="text-left md:text-right">
-                        <p className="font-black text-lg">{dateDisplay}</p>
-                        <p className="text-muted-foreground">ore {timeDisplay}</p>
-                      </div>
-                      {booking.status === "reserved" ? (
-                        <div className="flex items-center gap-1 text-secondary bg-secondary/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
-                          <BookmarkSimple className="w-3 h-3" weight="fill" />
-                          Prenotato
-                        </div>
-                      ) : booking.status === "pending_payment" ? (
-                        <div className="flex items-center gap-1 text-amber-600 bg-amber-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
-                          <Clock className="w-3 h-3" />
-                          In attesa
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 text-green-600 bg-green-500/10 px-3 py-1 mt-2 rounded-full text-xs font-bold uppercase tracking-widest self-start md:self-auto">
-                          <CheckCircle className="w-3 h-3 text-green-600" />
-                          Pagato
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
       </div>
     </main>
   );

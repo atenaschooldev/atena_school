@@ -44,8 +44,8 @@ const AboutSection = ({ data }: AboutSectionProps) => {
       <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
 
-          {/* Left Column: Text & Features */}
-          <div className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center">
+           {/* Left Column: Text & Features */}
+          <div className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center" data-aos="fade-up">
             <div className="space-y-3.5">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
                 CHI SIAMO
@@ -88,7 +88,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
           </div>
 
           {/* Right Column: 3-Image Collage & Dots */}
-          <div className="lg:col-span-6 mt-8 lg:mt-0">
+          <div className="lg:col-span-6 mt-8 lg:mt-0" data-aos="fade-up" data-aos-delay="100">
             {/* Image Grid with bottom alignment and offset */}
             <div className="grid grid-cols-2 gap-4 items-stretch">
 

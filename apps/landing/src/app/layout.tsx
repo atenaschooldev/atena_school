@@ -76,6 +76,7 @@ export async function generateMetadata() {
 
 import { Toaster } from 'sonner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import AosInitializer from '@/components/AosInitializer';
 
 export default function RootLayout({
   children,
@@ -97,6 +98,7 @@ export default function RootLayout({
             <Footer />
             <CookieBanner />
           </div>
+          <AosInitializer />
           <ScrollToTop />
           <Toaster position="top-right" richColors />
           <GoogleAnalytics />

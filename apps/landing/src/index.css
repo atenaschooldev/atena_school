@@ -56,12 +56,12 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
 
   html {
     scroll-behavior: smooth;
-    overscroll-behavior-y: none;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -186,21 +186,54 @@
   text-transform: capitalize !important;
 }
 
-.rdp-selected .rdp-day_button {
+.rdp-selected .rdp-day_button,
+.rdp-selected .rdp-day_button:hover,
+.rdp-selected .rdp-day_button:focus {
   background-color: #043569 !important;
   color: #ffffff !important;
   box-shadow: 0 8px 16px -4px rgba(4, 53, 105, 0.4) !important;
   font-weight: 900 !important;
+  opacity: 1 !important;
 }
 
 .rdp-today .rdp-day_button {
-  border: 2px solid rgba(4, 53, 105, 0.3) !important;
-  color: #043569 !important;
+  border: 2px solid #F8861D !important;
+  color: #F8861D !important;
   font-weight: 900 !important;
+  position: relative !important;
 }
 
-.rdp-selected.rdp-today .rdp-day_button {
+/* Tiny orange dot under the date number for today */
+.rdp-today .rdp-day_button::after {
+  content: "" !important;
+  position: absolute !important;
+  bottom: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 50% !important;
+  background-color: #F8861D !important;
+}
+
+/* Ensure today is visible even if disabled (e.g., falls on a weekend) */
+.rdp-disabled.rdp-today .rdp-day_button {
+  opacity: 0.75 !important;
+  border-color: rgba(248, 134, 29, 0.5) !important;
+  color: rgba(248, 134, 29, 0.8) !important;
+}
+
+.rdp-selected.rdp-today .rdp-day_button,
+.rdp-selected.rdp-today .rdp-day_button:hover,
+.rdp-selected.rdp-today .rdp-day_button:focus {
   border-color: transparent !important;
+  background-color: #043569 !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+.rdp-selected.rdp-today .rdp-day_button::after {
+  background-color: #ffffff !important;
 }
 
 /* Mute outside and disabled days */

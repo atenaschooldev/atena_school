@@ -35,7 +35,7 @@ export default async function BlogPage() {
   return (
     <main className="min-h-screen flex flex-col bg-background pt-24 relative overflow-hidden">
       <div className="flex-grow max-w-7xl mx-auto px-4 w-full pb-28">
-        <header className="mb-16">
+        <header className="mb-16" data-aos="fade-in">
           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground mb-4">
             {t("blog")}
           </h1>
@@ -44,11 +44,13 @@ export default async function BlogPage() {
 
         {blogPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {blogPosts.map((post: any) => (
+            {blogPosts.map((post: any, idx: number) => (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
                 className="group cursor-pointer flex flex-col"
+                data-aos="fade-up"
+                data-aos-delay={(idx % 3) * 100}
               >
                 <article>
                   <div className="relative aspect-video overflow-hidden mb-6 bg-muted rounded-2xl">

@@ -82,6 +82,10 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
       if (user) {
         setUser(user);
         setValue("email", user.email || "");
+        const userPhone = user.user_metadata?.phone || user.phone || "";
+        if (userPhone) {
+          setValue("phone", userPhone);
+        }
         const fullName = user.user_metadata?.full_name || "";
         if (fullName) {
           const parts = fullName.split(" ");
@@ -106,6 +110,16 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
     setSubmitting("book");
     try {
       const sid = getSessionId();
+
+      // Save phone to user metadata if logged in and it changed
+      if (user && values.phone) {
+        const existingPhone = user.user_metadata?.phone || user.phone || "";
+        if (existingPhone !== values.phone) {
+          await supabase.auth.updateUser({
+            data: { phone: values.phone }
+          });
+        }
+      }
 
       const { error: bookingError } = await supabase
         .from("bookings")
@@ -144,6 +158,16 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
 
     setSubmitting("pay");
     try {
+      // Save phone to user metadata if logged in and it changed
+      if (user && values.phone) {
+        const existingPhone = user.user_metadata?.phone || user.phone || "";
+        if (existingPhone !== values.phone) {
+          await supabase.auth.updateUser({
+            data: { phone: values.phone }
+          });
+        }
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       const authHeader = session?.access_token
         ? `Bearer ${session.access_token}`

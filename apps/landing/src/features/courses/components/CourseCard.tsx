@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { CaretRight, Clock, User, CreditCard } from "@phosphor-icons/react";
+import { CaretRight, Clock, User, CreditCard, X } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -169,9 +169,16 @@ const CourseCard = ({
 
       {/* Details Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl bg-white rounded-3xl p-6 sm:p-8 border border-border/50 shadow-2xl overflow-y-auto max-h-[90vh] focus-visible:outline-none">
+        <DialogContent className="w-[92vw] sm:w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-8 border border-border/50 shadow-2xl overflow-y-auto max-h-[90vh] focus-visible:outline-none [&>button[class*='absolute']]:hidden">
+          {/* Custom Floating Close Button */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="absolute top-8 right-8 sm:top-12 sm:right-12 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-foreground hover:text-[#043569] transition-all duration-300 flex items-center justify-center border border-black/10 shadow-md backdrop-blur-md cursor-pointer active:scale-90"
+          >
+            <X className="w-4 h-4 sm:w-5 sm:h-5" weight="bold" />
+          </button>
           {/* Large image inside dialog */}
-          <div className="relative h-64 sm:h-80 w-full overflow-hidden rounded-2xl bg-muted mb-6">
+          <div className="relative h-44 sm:h-72 w-full overflow-hidden rounded-2xl bg-muted mb-5">
             {image ? (
               <Image 
                 src={image} 
@@ -200,37 +207,37 @@ const CourseCard = ({
           </DialogHeader>
 
           {/* Details Grid (Duration, Teacher, Price) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-6 py-4 border-y border-border/40 text-sm">
+          <div className="flex flex-wrap gap-x-6 gap-y-4 my-5 py-4 border-y border-border/40 text-sm select-none">
             {duration && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <Clock className="w-5 h-5" weight="bold" />
+              <div className="flex items-center gap-2.5 min-w-[120px]">
+                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <Clock className="w-4.5 h-4.5" weight="bold" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Durata</p>
-                  <p className="font-bold text-foreground">{duration}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Durata</p>
+                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{duration}</p>
                 </div>
               </div>
             )}
             {teacher_name && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <User className="w-5 h-5" weight="bold" />
+              <div className="flex items-center gap-2.5 min-w-[120px]">
+                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <User className="w-4.5 h-4.5" weight="bold" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Insegnante</p>
-                  <p className="font-bold text-foreground">{teacher_name}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Insegnante</p>
+                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{teacher_name}</p>
                 </div>
               </div>
             )}
             {price && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <CreditCard className="w-5 h-5" weight="bold" />
+              <div className="flex items-center gap-2.5 min-w-[120px]">
+                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                  <CreditCard className="w-4.5 h-4.5" weight="bold" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prezzo</p>
-                  <p className="font-bold text-foreground">{price}</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Prezzo</p>
+                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{price}</p>
                 </div>
               </div>
             )}

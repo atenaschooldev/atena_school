@@ -130,8 +130,13 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {section.courses.map((course) => (
-                  <div key={course.id} className="animate-in fade-in zoom-in-95 duration-500">
+                {section.courses.map((course, idx) => (
+                  <div 
+                    key={course.id} 
+                    data-aos="fade-up"
+                    data-aos-delay={(idx % 3) * 100}
+                    className="duration-500"
+                  >
                     <CourseCard
                       id={course.id}
                       title={course.title}
