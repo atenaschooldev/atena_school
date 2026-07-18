@@ -32,8 +32,8 @@ const CtaBanner = () => {
   ];
 
   return (
-    <section className="py-6 lg:py-10 min-[1700px]:!pt-16 min-[1700px]:!pb-0 px-4 bg-gray-50">
-      <div className="max-w-6xl 2xl:max-w-[1400px] min-[1700px]:max-w-[1550px] mx-auto rounded-3xl overflow-hidden shadow-lg bg-[#091420] border border-white/5 relative">
+    <section className="py-6 lg:py-10 px-4 bg-gray-50">
+      <div className="max-w-6xl mx-auto rounded-3xl overflow-hidden shadow-lg bg-[#091420] border border-white/5 relative">
 
         {/* Background image at container level so it covers the whole card and shows behind the orange card's rounded top corners on mobile */}
         <div className="absolute inset-0 z-0 pointer-events-none">

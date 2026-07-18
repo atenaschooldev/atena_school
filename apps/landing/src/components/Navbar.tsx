@@ -3,7 +3,7 @@
 import Image from "next/image";
 import logo from "@/assets/logo.webp";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo, House, Users, GraduationCap, Newspaper, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -21,14 +21,46 @@ const Navbar = () => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
+  const isHome = pathname === "/";
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const supabase = createClient();
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const limit = isHome ? window.innerHeight - 80 : 20;
+      
+      setIsScrolled(currentScrollY > limit);
+
+      if (currentScrollY <= 20) {
+        setVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        // Scrolling down -> hide header
+        setVisible(false);
+      } else {
+        // Scrolling up -> show header
+        setVisible(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [isHome]);
 
   const fetchCartCount = async () => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
@@ -128,29 +160,42 @@ const Navbar = () => {
     { label: t("contact"), href: "/#contact", icon: EnvelopeSimple },
   ];
 
+  const isLightHeader = isHome && !isScrolled;
+
   return (
     <>
-      <header className="sticky top-0 w-full z-50 bg-white border-b border-gray-100 shadow-sm py-2 px-4 md:px-8 2xl:px-16 min-[1700px]:px-24">
-        <div className="mx-auto max-w-7xl 2xl:max-w-none flex items-center justify-between h-16 px-6 2xl:px-0">
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-2 px-4 md:px-8 ${
+        visible ? "translate-y-0" : "-translate-y-full"
+      } ${
+        isScrolled 
+          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100/80" 
+          : "bg-transparent border-transparent"
+      }`}>
+        <div className="mx-auto max-w-7xl flex items-center justify-between h-16 px-6">
           {/* Logo */}
           <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="flex items-center gap-2"
+              className="flex items-center gap-3"
               onClick={() => handleLinkClick("/")}
             >
-              <Image
-                src={logo}
-                alt="Atena School"
-                width={56}
-                height={56}
-                className="object-contain"
-              />
+              <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-12 h-12">
+                <Image
+                  src={logo}
+                  alt="Atena School"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
               <div className="flex flex-col items-center leading-tight">
-                <span className="font-serif font-black text-base xs:text-lg md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: '#00328F' }}>
+                <span className="font-serif font-black text-base xs:text-lg md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
                   Atena <span style={{ color: '#FAA904' }}>School</span>
                 </span>
-                <span className="text-[9px] tracking-widest uppercase select-none whitespace-nowrap" style={{ color: '#9FA2AC' }}>
+                <span 
+                  className="text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5" 
+                  style={{ color: isLightHeader ? 'rgba(255, 255, 255, 0.6)' : '#9FA2AC' }}
+                >
                   civitatis ornamento
                 </span>
               </div>
@@ -163,15 +208,14 @@ const Navbar = () => {
               <Link
                 key={l.href}
                 href={l.href as any}
-                className="text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 text-gray-700 hover:text-primary hover:bg-primary/10 relative"
+                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${
+                  isLightHeader 
+                    ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
+                    : "text-gray-700 hover:text-primary hover:bg-primary/10"
+                }`}
                 onClick={() => handleLinkClick(l.href)}
               >
                 {l.label}
-                {l.href === "/test-inglese" && (
-                  <span className="absolute -top-1 -right-1 bg-[#F8861D] text-white text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full scale-90">
-                    {t("navBadge")}
-                  </span>
-                )}
               </Link>
             ))}
           </div>
@@ -179,7 +223,11 @@ const Navbar = () => {
           {/* Icons & Actions */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/cart" className="relative group">
-              <div className="p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 text-gray-600 hover:text-primary hover:bg-primary/10">
+              <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
+                isLightHeader 
+                  ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
+                  : "text-gray-600 hover:text-primary hover:bg-primary/10"
+              }`}>
                 <ShoppingCart className="w-5 h-5 cursor-pointer" />
               </div>
               {cartCount > 0 && (
@@ -190,18 +238,17 @@ const Navbar = () => {
             </Link>
 
             {user ? (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-2 cursor-pointer hover:bg-primary/10 hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300">
-                    <UserCircle className="w-8 h-8 transition-colors text-gray-600" />
+                  <div className={`flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300 ${
+                    isLightHeader ? "hover:bg-white/10" : "hover:bg-primary/10"
+                  }`}>
+                    <UserCircle className={`w-8 h-8 transition-colors ${isLightHeader ? "text-white" : "text-gray-600"}`} />
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem className="font-medium text-xs text-muted-foreground">
-                    {user.email}
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/dashboard' as any)}>
-                    Dashboard
+                    Area personale
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                     <SignOut className="w-4 h-4 mr-2" />
@@ -212,7 +259,11 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="text-sm font-bold border border-primary/30 px-5 py-2 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm text-primary hover:border-secondary hover:bg-secondary hover:text-secondary-foreground"
+                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${
+                  isLightHeader 
+                    ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
+                    : "text-gray-700 hover:text-primary hover:bg-primary/10"
+                }`}
                 onClick={() => handleLinkClick("/auth/login")}
               >
                 Login
@@ -224,7 +275,11 @@ const Navbar = () => {
           <button
             aria-label={open ? "Chiudi menu" : "Apri menu"}
             aria-expanded={open}
-            className="md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 text-gray-700 hover:bg-primary/10"
+            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
+              isLightHeader 
+                ? "text-white hover:bg-white/10" 
+                : "text-gray-700 hover:bg-primary/10"
+            }`}
             onClick={() => setOpen(!open)}
           >
             <svg
@@ -346,11 +401,6 @@ const Navbar = () => {
                           {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
                           <span>{l.label}</span>
                         </div>
-                        {l.href === "/test-inglese" && (
-                          <span className="bg-[#F8861D] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-                            {t("navBadge")}
-                          </span>
-                        )}
                       </Link>
                     );
                   })}
@@ -379,16 +429,12 @@ const Navbar = () => {
                   <div className="border-t border-gray-100 pt-6 space-y-3">
                     {user ? (
                       <div className="space-y-2">
-                        <div className="px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl">
-                          <p className="text-[9px] uppercase font-bold tracking-widest text-[#9FA2AC]">Accesso effettuato come</p>
-                          <p className="text-xs font-semibold text-gray-800 truncate">{user.email}</p>
-                        </div>
                         <Link
                           href="/dashboard"
                           className="flex items-center justify-between py-3 px-4 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
                           onClick={() => setOpen(false)}
                         >
-                          Dashboard
+                          Area personale
                         </Link>
                         <button
                           onClick={() => {

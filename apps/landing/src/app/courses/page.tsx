@@ -220,13 +220,13 @@ export default async function CoursesPage() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
 
       {/* Hero Header */}
-      <header className="max-w-7xl 2xl:max-w-[1400px] min-[1700px]:max-w-[1550px] mx-auto px-4 pt-6 md:pt-10 pb-8 text-center relative z-10" data-gsap="fade-in">
+      <header className="max-w-7xl mx-auto px-4 pt-6 md:pt-10 pb-8 text-center relative z-10" data-gsap="fade-in">
         <h1 
-          className="text-5xl md:text-7xl 2xl:text-8xl font-black uppercase tracking-tight text-foreground mb-6"
+          className="text-5xl md:text-7xl font-black uppercase tracking-tight text-foreground mb-6"
         >
           {t("title")}
         </h1>
-        <p className="text-xl 2xl:text-2xl text-muted-foreground max-w-2xl 2xl:max-w-4xl mx-auto font-light leading-relaxed">
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
           {t("subtitle")}
         </p>
         <div className="h-1.5 w-32 bg-primary mx-auto mt-8 rounded-full" />

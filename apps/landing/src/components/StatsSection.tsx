@@ -59,7 +59,7 @@ const StatsSection = () => {
           style={{
             display: "inline-flex",
             whiteSpace: "nowrap",
-            animation: "stats-ticker 14s linear infinite",
+            animation: "stats-ticker 35s linear infinite",
             willChange: "transform",
           }}
         >

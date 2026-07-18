@@ -20,7 +20,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const tagline = data?.[`tagline_${locale}`] || t("tagline");
 
   return (
-    <section id="home" className="relative min-h-[calc(100svh-80px)] lg:min-h-[calc(100vh-80px)] flex flex-col overflow-hidden bg-background">
+    <section id="home" className="relative min-h-svh lg:min-h-screen flex flex-col overflow-hidden bg-background">
       {/* Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
@@ -48,7 +48,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
       {/* Content — vertically centered, left-aligned */}
       <div className="relative z-10 flex-1 flex items-center w-full">
-        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-24 pt-4 pb-[22svh] sm:pt-0 sm:pb-0 lg:pb-0 min-[1700px]:max-w-[1450px]">
+        <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 xl:px-24 pt-4 pb-[22svh] sm:pt-0 sm:pb-0 lg:pb-0">
           {/* Content lives in the LEFT ~55% — right side shows the photo */}
           <div className="max-w-[580px] lg:max-w-[620px] xl:max-w-[700px] 2xl:max-w-[950px]">
 
@@ -82,40 +82,33 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             </p>
 
             {/* CTA Buttons */}
-            {/* Desktop: both buttons */}
             <div className="hidden sm:flex sm:flex-row items-center gap-3 lg:gap-4">
               <a
                 href="#contact"
-                className="group inline-flex w-auto items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+                className="group inline-flex w-auto items-center justify-center gap-2 bg-white hover:bg-gray-50 text-black px-5 py-3 lg:px-6 lg:py-3.5 rounded-full font-black text-xs lg:text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
               >
                 Prenota una consulenza gratuita
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" weight="bold" />
               </a>
               <Link
                 href="/test-inglese"
-                className="inline-flex w-auto items-center justify-center gap-2 border-2 border-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
+                className="inline-flex w-auto items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 lg:px-6 lg:py-3.5 rounded-full font-black text-xs lg:text-sm transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
               >
                 Testa il tuo inglese ⚡
               </Link>
-              <a
-                href="#about"
-                className="inline-flex w-auto items-center justify-center border border-white/30 hover:border-white/60 bg-white/5 hover:bg-white/10 text-white px-5 py-3 lg:px-6 lg:py-3.5 min-[1700px]:px-7 min-[1700px]:py-4 rounded-full font-black text-xs lg:text-sm min-[1700px]:text-base transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
-              >
-                Scopri di più
-              </a>
             </div>
             {/* Mobile: compact inline buttons aligned to start so they don't stretch */}
             <div className="sm:hidden flex flex-col items-start gap-2.5 w-full">
               <a
                 href="#contact"
-                className="inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-10 py-2.5 rounded-full font-black text-xs shadow-lg shadow-orange-500/30 transition-all active:scale-95 select-none cursor-pointer self-start min-w-[210px]"
+                className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-black px-10 py-2.5 rounded-full font-black text-xs shadow-md transition-all active:scale-95 select-none cursor-pointer self-start min-w-[210px]"
               >
                 Prenota ora
                 <ArrowRight size={12} weight="bold" />
               </a>
               <Link
                 href="/test-inglese"
-                className="inline-flex items-center justify-center gap-2 border border-white/40 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-full font-black text-xs transition-all active:scale-95 select-none cursor-pointer self-start"
+                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2.5 rounded-full font-black text-xs transition-all active:scale-95 select-none cursor-pointer self-start"
               >
                 Testa il tuo inglese ⚡
               </Link>

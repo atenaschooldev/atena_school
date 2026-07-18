@@ -70,7 +70,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
   }, [sections, activeTab, searchQuery]);
 
   return (
-    <div className="max-w-7xl 2xl:max-w-[1400px] min-[1700px]:max-w-[1550px] mx-auto px-4 py-8 relative z-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
       {/* Search Input */}
       <div className="max-w-md mx-auto mb-10">
         <div className="relative flex items-center bg-card border border-border/60 rounded-full px-4 py-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] focus-within:border-primary/50 focus-within:shadow-[0_4px_24px_rgba(var(--primary-rgb),0.06)] transition-all duration-300">
@@ -135,7 +135,6 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                     key={course.id} 
                     data-gsap="fade-up"
                     data-gsap-delay={(idx % 3) * 100}
-                    className="duration-500"
                   >
                     <CourseCard
                       id={course.id}

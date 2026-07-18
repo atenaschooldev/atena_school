@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Cube, Users, ShieldCheck } from "@phosphor-icons/react";
 import aboutStudent from "@/assets/about-student.webp";
 import aboutStudying from "@/assets/about-studying.webp";
 import aboutClassroom from "@/assets/about-classroom.webp";
@@ -17,36 +16,18 @@ const AboutSection = ({ data }: AboutSectionProps) => {
   const p1 = data?.content_it || t("p1");
   const p2 = data?.content_it || t("p2");
 
-  const highlights = [
-    {
-      icon: Cube,
-      title: "Metodologia",
-      desc: "efficace",
-    },
-    {
-      icon: Users,
-      title: "Docenti",
-      desc: "qualificati",
-    },
-    {
-      icon: ShieldCheck,
-      title: "Ambiente",
-      desc: "stimolante",
-    },
-  ];
-
   return (
-    <section id="about" className="relative pt-16 pb-20 bg-gray-50 overflow-hidden px-0 min-h-screen flex flex-col justify-center">
+    <section id="about" className="relative py-20 lg:py-28 bg-gray-50 overflow-hidden px-0">
       {/* Decorative background accents */}
       <div className="absolute top-1/4 left-[5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-[5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-0 items-center">
+      <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
           {/* Left Column: Text & Features */}
           <div 
-            className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center px-4 sm:px-6 lg:pl-16 lg:pr-12 xl:pl-28 2xl:pl-40" 
+            className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center pr-0 lg:pr-8 lg:-mt-6" 
             data-gsap="fade-up"
           >
             <div className="space-y-3.5">
@@ -66,33 +47,11 @@ const AboutSection = ({ data }: AboutSectionProps) => {
               <p>{p1}</p>
               <p>{p2}</p>
             </div>
-
-            {/* Highlight Badges */}
-            <div className="grid grid-cols-3 gap-6 w-full pt-6 border-t border-gray-100">
-              {highlights.map((hl, index) => {
-                const Icon = hl.icon;
-                return (
-                  <div key={index} className="flex flex-col items-start gap-2.5">
-                    <div className="text-[#043569]">
-                      <Icon size={28} weight="light" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm lg:text-base font-black text-gray-800 leading-none">
-                        {hl.title}
-                      </span>
-                      <span className="text-xs font-bold text-gray-500 mt-1 leading-none">
-                        {hl.desc}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           {/* Right Column: 3-Image Collage & Dots */}
           <div 
-            className="lg:col-span-6 mt-8 lg:mt-0 w-full pl-4 pr-4 lg:pl-8 lg:pr-12 xl:pr-20 2xl:pr-32" 
+            className="lg:col-span-6 mt-8 lg:mt-0 w-full pl-0 lg:pl-8" 
             data-gsap="fade-up" 
             data-gsap-delay="100"
           >

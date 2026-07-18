@@ -18,11 +18,11 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 2xl:px-16 min-[1700px]:px-24 border-t border-white/5 relative overflow-hidden">
+    <footer className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-white/5 relative overflow-hidden">
       {/* Subtle ambient light in the footer */}
       <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="max-w-6xl 2xl:max-w-none min-[1700px]:max-w-none mx-auto relative z-10">
+      <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 2xl:gap-16">
 
           {/* Column 1: Brand & Contact Info */}

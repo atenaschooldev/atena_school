@@ -317,3 +317,9 @@
   fill: currentColor !important;
 }
 
+/* Prevent GSAP animation flickering by hiding animated elements on initial paint */
+[data-gsap] {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+

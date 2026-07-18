@@ -50,54 +50,47 @@ export default function ScrollAnimateProvider({
 
   useEffect(() => {
     // Animate elements on scroll based on data-gsap attribute.
-    // We run this inside a setTimeout to let Next.js finish DOM updates on navigation/render.
-    const timer = setTimeout(() => {
-      // Clean up previous triggers to avoid duplicates and leaks
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    // Clean up previous triggers to avoid duplicates and leaks
+    ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
 
-      const elements = document.querySelectorAll("[data-gsap]");
-      elements.forEach((el) => {
-        const animationType = el.getAttribute("data-gsap") || "fade-up";
-        const delayStr = el.getAttribute("data-gsap-delay") || "0";
-        const delay = parseFloat(delayStr) / 1000;
-        
-        // Default duration is 500ms for snappier entry animations
-        const durationStr = el.getAttribute("data-gsap-duration") || "500";
-        const duration = parseFloat(durationStr) / 1000;
+    const elements = document.querySelectorAll("[data-gsap]");
+    elements.forEach((el) => {
+      const animationType = el.getAttribute("data-gsap") || "fade-up";
+      const delayStr = el.getAttribute("data-gsap-delay") || "0";
+      const delay = parseFloat(delayStr) / 1000;
+      
+      // Default duration is 500ms for snappier entry animations
+      const durationStr = el.getAttribute("data-gsap-duration") || "500";
+      const duration = parseFloat(durationStr) / 1000;
 
-        const initialVars: gsap.TweenVars = {
-          opacity: 0,
-        };
-        const animVars: gsap.TweenVars = {
-          opacity: 1,
-          duration: duration,
-          delay: delay,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 95%", // Trigger earlier when element enters near the bottom of screen (95% from top)
-            toggleActions: "play none none none",
-          },
-        };
+      const initialVars: gsap.TweenVars = {
+        opacity: 0,
+      };
+      const animVars: gsap.TweenVars = {
+        opacity: 1,
+        duration: duration,
+        delay: delay,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 95%", // Trigger earlier when element enters near the bottom of screen (95% from top)
+          toggleActions: "play none none none",
+        },
+      };
 
-        if (animationType === "fade-up") {
-          initialVars.y = 20; // Reduced shift distance for a faster, tighter feel
-          animVars.y = 0;
-        } else if (animationType === "fade-in") {
-          // Just opacity
-        }
+      if (animationType === "fade-up") {
+        initialVars.y = 20; // Reduced shift distance for a faster, tighter feel
+        animVars.y = 0;
+      } else if (animationType === "fade-in") {
+        // Just opacity
+      }
 
-        // Set initial states and create tween
-        gsap.set(el, initialVars);
-        gsap.to(el, animVars);
-      });
+      // Set initial states and create tween
+      gsap.set(el, initialVars);
+      gsap.to(el, animVars);
+    });
 
-      ScrollTrigger.refresh();
-    }, 150);
-
-    return () => {
-      clearTimeout(timer);
-    };
+    ScrollTrigger.refresh();
   }, [pathname, enabled]);
 
   if (enabled) {

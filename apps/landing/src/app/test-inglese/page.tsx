@@ -49,7 +49,7 @@ export async function generateMetadata() {
 
 export default function TestPage() {
   return (
-    <main className="h-[calc(100dvh-80px)] w-full bg-gray-50 px-4 flex flex-col justify-center items-center overflow-y-auto relative">
+    <main className="h-dvh w-full pt-20 bg-gray-50 px-4 flex flex-col justify-center items-center overflow-y-auto relative">
       <EnglishTest />
     </main>
   );

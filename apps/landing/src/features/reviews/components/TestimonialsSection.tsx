@@ -123,11 +123,11 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         </h2>
       </div>
 
-      {/* Full-width Carousel container */}
-      <div className="relative z-20 w-full max-w-[100vw] overflow-hidden px-0" data-gsap="fade-up" data-gsap-delay="100">
+      {/* Constrained Carousel container */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 overflow-hidden" data-gsap="fade-up" data-gsap-delay="100">
         {/* Soft edge fade overlays */}
-        <div className="pointer-events-none absolute left-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-r from-white via-white/35 to-white/0" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-16 sm:w-28 md:w-44 z-30 bg-gradient-to-l from-white via-white/35 to-white/0" />
+        <div className="pointer-events-none absolute left-0 top-0 h-full w-12 sm:w-20 md:w-28 z-30 bg-gradient-to-r from-white via-white/35 to-white/0" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:w-20 md:w-28 z-30 bg-gradient-to-l from-white via-white/35 to-white/0" />
 
         <div className="relative group w-full max-w-none px-0">
           {/* Carousel Viewport */}

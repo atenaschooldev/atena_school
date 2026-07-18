@@ -65,25 +65,15 @@ export default async function IndexPage() {
 
   return (
     <div className="min-h-screen">
-      <div data-gsap="fade-in"><HeroSection data={siteData.hero ?? undefined} /></div>
+      <HeroSection data={siteData.hero ?? undefined} />
       <StatsSection />
       <AboutSection data={siteData.about ?? undefined} />
       <TestimonialsSection data={siteData.testimonials ?? undefined} />
-      {/* min-[1700px]+: contact form left, CTA banner right; below: stacked as before */}
-      <div className="min-[1700px]:flex min-[1700px]:flex-row min-[1700px]:items-stretch min-[1700px]:gap-0">
-        <div className="min-[1700px]:w-[38%] min-[1700px]:flex min-[1700px]:flex-col min-[1700px]:overflow-hidden">
-          <div data-gsap="fade-up" data-gsap-delay="0">
-            <CtaBanner />
-          </div>
-          <div
-            data-gsap="fade-up"
-            data-gsap-delay="200"
-            className="hidden min-[1700px]:flex min-[1700px]:flex-col min-[1700px]:flex-1"
-          >
-            <FaqSidebar />
-          </div>
+      <div className="space-y-0">
+        <div data-gsap="fade-up" data-gsap-delay="0">
+          <CtaBanner />
         </div>
-        <div data-gsap="fade-up" data-gsap-delay="400" className="min-[1700px]:flex-1">
+        <div data-gsap="fade-up" data-gsap-delay="200">
           <ContactSection data={siteData.contact ?? undefined} />
         </div>
       </div>
