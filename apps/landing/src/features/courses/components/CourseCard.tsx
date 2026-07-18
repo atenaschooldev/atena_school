@@ -34,6 +34,7 @@ const CourseCard = ({
 }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
   const [isOpen, setIsOpen] = useState(false);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     if (onCtaClick) {
@@ -54,7 +55,13 @@ const CourseCard = ({
           setIsOpen(true);
         }
       }}
-      className="group bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(4,53,105,0.06)] hover:-translate-y-1.5 transition-all duration-500 border border-border/40 flex flex-col h-full active:scale-[0.99] relative text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+      className={`
+        group bg-white rounded-3xl overflow-hidden border border-border/40 flex flex-col h-full active:scale-[0.99] relative text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-500
+        ${isButtonHovered 
+          ? "shadow-[0_4px_20px_rgba(0,0,0,0.02)] translate-y-0" 
+          : "shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_50px_rgba(4,53,105,0.06)] hover:-translate-y-1.5"
+        }
+      `}
     >
       {/* Image container */}
       <div className="relative h-52 w-full overflow-hidden bg-muted">
@@ -73,7 +80,10 @@ const CourseCard = ({
             src={image}
             alt={title}
             fill
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            className={`
+              object-cover transition-transform duration-700 ease-out
+              ${isButtonHovered ? "scale-100" : "group-hover:scale-105"}
+            `}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#043569]/5 to-[#F8861D]/10 flex items-center justify-center p-8 text-center transition-all duration-500">
@@ -129,7 +139,9 @@ const CourseCard = ({
                 e.stopPropagation();
                 setIsOpen(true);
               }}
-              className="w-full py-3 bg-[#043569]/5 hover:bg-[#043569]/10 text-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all cursor-pointer border border-[#043569]/10 active:scale-95"
+              onMouseEnter={() => setIsButtonHovered(true)}
+              onMouseLeave={() => setIsButtonHovered(false)}
+              className="w-full py-3 bg-[#043569]/5 hover:bg-[#043569] text-[#043569] hover:text-white border border-[#043569]/10 hover:border-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 cursor-pointer active:scale-95 shadow-sm hover:shadow-md hover:shadow-[#043569]/10"
             >
               {t("cta")}
             </button>
@@ -137,7 +149,9 @@ const CourseCard = ({
               <Link
                 href={`/book/${type}/${id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
+                onMouseEnter={() => setIsButtonHovered(true)}
+                onMouseLeave={() => setIsButtonHovered(false)}
+                className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
               >
                 {type === "shop" ? "Acquista" : "Prenota"}
                 <CaretRight className="w-3.5 h-3.5" weight="bold" />
