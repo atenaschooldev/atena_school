@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { MapPin, ArrowRight, ArrowDown, Sparkle } from "@phosphor-icons/react";
-import heroDefault from "@/assets/hero-london.webp";
-import heroMobile from "@/assets/hero-london-mobile.webp";
+import heroDefault from "@/assets/hero-london.avif";
+import heroMobile from "@/assets/test4.png";
 import { Link } from "@/i18n/routing";
 
 
@@ -40,7 +40,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent lg:from-black/40 lg:via-transparent lg:to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent lg:from-black/40 lg:via-transparent lg:to-black/20" />
       </div>
 
       {/* Decorative glowing orbs */}

@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { User, Envelope, Lock } from "@phosphor-icons/react";
 import Image from "next/image";
-import heroLondon from "@/assets/hero-london.webp";
+import heroLondon from "@/assets/hero-london.avif";
 
 function RegisterForm() {
   const t = useTranslations("auth.register");
@@ -67,9 +67,9 @@ function RegisterForm() {
     <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">
       {/* Full Page Background Image of London */}
       <div className="absolute inset-0 z-0">
-        <Image 
-          src={heroLondon} 
-          alt="London" 
+        <Image
+          src={heroLondon}
+          alt="London"
           fill
           className="object-cover object-center filter saturate-[0.85] brightness-[0.65]"
           priority
@@ -79,12 +79,12 @@ function RegisterForm() {
       </div>
 
       <div className="w-full max-w-7xl grid lg:grid-cols-12 gap-8 relative z-10 animate-in fade-in duration-500">
-        
+
         {/* Left Side - Visual Panel (rendered directly on the background) */}
         <div className="hidden lg:flex lg:col-span-5 flex-col justify-between p-2 h-[340px] xl:h-[400px] max-h-[780px]:h-[300px]">
           {/* Empty spacer to align content */}
           <div />
- 
+
           {/* Center Content: Title */}
           <div className="text-white space-y-2 text-left">
             <h1 className="text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none uppercase">
@@ -94,7 +94,7 @@ function RegisterForm() {
               Crea un account per iniziare
             </p>
           </div>
- 
+
           {/* Bottom Content: Quote */}
           <div className="text-white border-l-2 border-[#F8861D] pl-4 space-y-1 text-left">
             <p className="text-sm font-serif italic font-bold leading-relaxed text-white/90">
@@ -106,7 +106,7 @@ function RegisterForm() {
             </p>
           </div>
         </div>
- 
+
         {/* Right Side - Form Card */}
         <div className="lg:col-span-5 lg:col-start-8 bg-white border border-gray-150 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-4 max-h-[780px]:px-6 responsive-card animate-in fade-in duration-300">
           {/* Header */}
