@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { getSessionId } from "@/lib/utils";
 import { toast } from "sonner";
+import { deleteBookingServerAction, checkoutCartServerAction } from "@/app/actions/booking";
 
 interface CartBooking {
   id: string;
@@ -116,42 +117,35 @@ export default function CartPage() {
   }, [supabase]);
 
   const removeItem = async (id: string) => {
-    const { error } = await supabase.from("bookings").delete().eq("id", id);
-    if (!error) {
+    const sid = getSessionId();
+    const res = await deleteBookingServerAction(id, sid);
+    if (res.success) {
       setBookings(prev => prev.filter(b => b.id !== id));
       window.dispatchEvent(new Event("cartUpdated"));
       toast.success("Rimosso dal carrello");
+    } else {
+      toast.error(res.error || "Errore durante la rimozione");
     }
   };
 
   const handleCheckout = async () => {
     setProcessing(true);
-    const { data: { user } } = await supabase.auth.getUser();
     const sid = getSessionId();
     
     // Simulate payment delay
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    let query = supabase
-      .from("bookings")
-      .update({ status: "paid" })
-      .eq("status", "in_cart");
+    const res = await checkoutCartServerAction(sid);
 
-    if (user) {
-      query = query.eq("user_id", user.id);
-    } else {
-      query = query.eq("session_id", sid);
-    }
-
-    const { error } = await query;
-
-    if (!error) {
+    if (res.success) {
       window.dispatchEvent(new Event("cartUpdated"));
       toast.success("Pagamento completato!");
-      router.push("/dashboard"); 
+      setBookings([]);
+      router.push("/dashboard");
     } else {
-      setProcessing(false);
+      toast.error(res.error || "Errore durante il pagamento");
     }
+    setProcessing(false);
   };
 
   if (loading) return (

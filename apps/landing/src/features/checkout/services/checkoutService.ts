@@ -42,6 +42,8 @@ export async function fetchCheckoutItem(
   return itemData || null;
 }
 
+import { createOrUpdateReservationServerAction } from "@/app/actions/booking";
+
 export async function createOrUpdateReservation(
   params: {
     type: string;
@@ -50,89 +52,28 @@ export async function createOrUpdateReservation(
     timeParam: string;
     slotIdParam?: string | null;
     values: CheckoutFormValues;
-    user: any;
+    user?: any;
     sessionId?: string | null;
+    origin?: string;
   },
-  supabase: SupabaseClient
+  supabase?: any
 ): Promise<{ booking: any }> {
-  const { type, id, dateParam, timeParam, slotIdParam, values, user, sessionId } = params;
+  const res = await createOrUpdateReservationServerAction({
+    type: params.type,
+    id: params.id,
+    dateParam: params.dateParam,
+    timeParam: params.timeParam,
+    slotIdParam: params.slotIdParam,
+    values: params.values,
+    sessionId: params.sessionId,
+    origin: params.origin
+  });
 
-  // Check for existing pending/reserved booking to prevent duplicate rows
-  const { data: existingBooking } = await supabase
-    .from("bookings")
-    .select("id")
-    .eq("student_email", values.email)
-    .eq("item_id", id)
-    .in("status", ["pending_payment", "reserved"])
-    .maybeSingle();
-
-  let booking;
-  if (existingBooking) {
-    const { data: updatedBooking, error: bookingError } = await supabase
-      .from("bookings")
-      .update({
-        user_id: user?.id || null,
-        session_id: user ? null : sessionId,
-        booking_date: dateParam,
-        booking_time: timeParam,
-        slot_id: slotIdParam || null,
-        status: "reserved",
-        student_name: `${values.firstName} ${values.lastName}`,
-        student_phone: values.phone,
-        notes: values.notes || "",
-        locale: "it",
-      })
-      .eq("id", existingBooking.id)
-      .select()
-      .single();
-
-    if (bookingError) throw bookingError;
-    booking = updatedBooking;
-  } else {
-    const { data: insertedBooking, error: bookingError } = await supabase
-      .from("bookings")
-      .insert([{
-        item_id: id,
-        item_type: type,
-        user_id: user?.id || null,
-        session_id: user ? null : sessionId,
-        booking_date: dateParam,
-        booking_time: timeParam,
-        slot_id: slotIdParam || null,
-        status: "reserved",
-        student_name: `${values.firstName} ${values.lastName}`,
-        student_email: values.email,
-        student_phone: values.phone,
-        notes: values.notes || "",
-        locale: "it",
-      }])
-      .select()
-      .single();
-
-    if (bookingError) throw bookingError;
-    booking = insertedBooking;
+  if (!res.success || !res.booking) {
+    throw new Error(res.error || "Errore durante la prenotazione");
   }
 
-  // Send Magic Link for guest silent account creation ONLY if non-Gmail email
-  const isGmail = values.email.toLowerCase().endsWith("@gmail.com");
-  if (!user && !isGmail) {
-    try {
-      await supabase.auth.signInWithOtp({
-        email: values.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
-          data: {
-            full_name: `${values.firstName} ${values.lastName}`,
-            phone: values.phone,
-          },
-        },
-      });
-    } catch {
-      // Non-critical — allow booking redirect even if email provider fails
-    }
-  }
-
-  return { booking };
+  return { booking: res.booking };
 }
 
 export async function initiateStripePayment(

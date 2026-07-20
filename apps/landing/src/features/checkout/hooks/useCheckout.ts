@@ -116,6 +116,7 @@ export function useCheckout(type: string, id: string) {
           values,
           user,
           sessionId: sid,
+          origin: window.location.origin,
         },
         supabase
       );
