@@ -443,3 +443,112 @@ export async function updateUserPhoneAction(phone: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function deleteBookingServerAction(bookingId: string, sessionId: string | null) {
+  try {
+    const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const admin = getSupabaseAdmin();
+
+    let query = admin
+      .from("bookings")
+      .delete()
+      .eq("id", bookingId);
+
+    if (user) {
+      query = query.eq("user_id", user.id);
+    } else if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    } else {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Failed to run deleteBookingServerAction:", err);
+    return { success: false, error: err.message || "Failed to delete" };
+  }
+}
+
+export async function checkoutCartServerAction(sessionId: string | null) {
+  try {
+    const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const admin = getSupabaseAdmin();
+
+    let query = admin
+      .from("bookings")
+      .update({ status: "paid" })
+      .in("status", ["in_cart", "pending_payment"]);
+
+    if (user) {
+      query = query.eq("user_id", user.id);
+    } else if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    } else {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { error } = await query;
+    if (error) throw error;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Failed to run checkoutCartServerAction:", err);
+    return { success: false, error: err.message || "Checkout failed" };
+  }
+}
+
+export async function fetchCartItemsAction(sessionId: string | null) {
+  try {
+    const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const admin = getSupabaseAdmin();
+
+    let query = admin
+      .from("bookings")
+      .select("*")
+      .in("status", ["in_cart", "pending_payment"]);
+
+    if (user) {
+      query = query.eq("user_id", user.id);
+    } else if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    } else {
+      return { success: true, bookings: [] };
+    }
+
+    const { data: bookingsData, error: bookingsError } = await query;
+    if (bookingsError) throw bookingsError;
+
+    if (bookingsData && bookingsData.length > 0) {
+      const formatted = await Promise.all(
+        bookingsData.map(async (b) => {
+          const item = await fetchItemData(admin, b.item_type, b.item_id);
+
+          const title = item?.name || item?.title_it || item?.title || "Unknown";
+          const rawPrice = item?.price || b.price || 0;
+          const price = typeof rawPrice === "number" ? `${rawPrice}€` : (rawPrice.endsWith("€") ? rawPrice : `${rawPrice}€`);
+          const teacher = item?.teacher_name || "TBD";
+
+          return {
+            ...b,
+            title,
+            price,
+            teacher,
+          };
+        })
+      );
+      return { success: true, bookings: formatted };
+    }
+
+    return { success: true, bookings: [] };
+  } catch (err: any) {
+    console.error("Failed to run fetchCartItemsAction:", err);
+    return { success: false, bookings: [], error: err.message || "Failed to fetch cart items" };
+  }
+}
+
