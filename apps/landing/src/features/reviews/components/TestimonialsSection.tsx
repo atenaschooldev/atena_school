@@ -1,43 +1,36 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { CaretLeft, CaretRight, Star, X } from "@phosphor-icons/react";
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 
-interface Testimonial {
-  id?: string;
-  quote_it?: string;
-  quote_en?: string;
-  author?: string;
-  role_it?: string;
-  role_en?: string;
-  avatar_url?: string;
-  quote?: string;
-  content_it?: string;
-  author_name?: string;
-  [key: string]: any;
-}
+import { Testimonial } from "@/features/home/services/homeService";
 
 interface TestimonialsSectionProps {
-  data?: any[];
+  data?: Testimonial[];
 }
 
 const FALLBACK_AVATARS = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face", // Female
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", // Male
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face", // Female 2
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
 ];
 
 const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const t = useTranslations("testimonials");
-  const locale = useLocale();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40, slidesToScroll: 1 });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState<Testimonial | null>(null);
 
   // Fallback to translations if no data provided
-  const testimonials = data && data.length > 0 ? data : (t.raw("list") as any[]);
+  const testimonials: Testimonial[] = data && data.length > 0 ? data : (t.raw("list") as any[]).map((item: any, i: number) => ({
+    id: String(i),
+    quote: item.quote_it || item.quote || "",
+    author: item.author || "",
+    role: item.role_it || "",
+    avatarUrl: null,
+  }));
 
   const scrollPrev = useCallback(() => {
     if (emblaApi) emblaApi.scrollPrev();
@@ -137,19 +130,13 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
           >
             <div className="flex -ml-4 items-stretch">
               {testimonials.map((item, index) => {
-                const avatar = item.avatar_url || FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
-                const quoteText = item[`quote_${locale}`] || item.quote || item.content_it || "";
+                const avatar = item.avatarUrl || FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
 
                 return (
-                  <div key={index} className="flex-[0_0_88%] md:flex-[0_0_46%] lg:flex-[0_0_31%] xl:flex-[0_0_24%] min-w-0 pl-4 relative">
+                  <div key={item.id || index} className="flex-[0_0_88%] md:flex-[0_0_46%] lg:flex-[0_0_31%] xl:flex-[0_0_24%] min-w-0 pl-4 relative">
                     <div
                       className="relative w-full"
-                      onClick={() => {
-                        setActiveTestimonial({
-                          ...item,
-                          avatar_url: avatar
-                        });
-                      }}
+                      onClick={() => setActiveTestimonial({ ...item, avatarUrl: avatar })}
                     >
                       {/* Non-expanded Card */}
                       <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-col justify-between h-[148px] w-full relative transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] cursor-pointer select-none">
@@ -160,7 +147,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                           <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border border-gray-200 shrink-0 mt-0.5">
                             <img
                               src={avatar}
-                              alt={item.author || "Student"}
+                              alt={item.author}
                               className="object-cover w-full h-full"
                             />
                           </div>
@@ -176,22 +163,21 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
 
                             {/* Quote */}
                             <blockquote className="text-[11px] sm:text-xs text-gray-700 leading-relaxed font-medium line-clamp-3 pr-2 w-full">
-                              "{quoteText}"
+                              "{item.quote}"
                             </blockquote>
                           </div>
                         </div>
 
-                        {/* Bottom Full-width Footer (shifted to the left!) */}
+                        {/* Bottom Full-width Footer */}
                         <div className="flex items-center justify-between w-full pt-1.5 border-t border-gray-100 gap-2 mt-2">
                           <p className="text-[9px] font-black text-gray-800 tracking-wide uppercase truncate min-w-0 flex-1 text-left">
-                            {item.author || item.author_name}
+                            {item.author}
                           </p>
                           <span className="text-[9px] font-black text-[#F8861D] tracking-wide uppercase shrink-0 hover:underline">
                             Leggi tutto →
                           </span>
                         </div>
                       </div>
-
                     </div>
                   </div>
                 );
@@ -214,54 +200,54 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         </div>
       </div>
 
-      {/* Modal Dialog */}
-      {activeTestimonial && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
-          onClick={() => setActiveTestimonial(null)}
-        >
-          <div
-            className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-gray-100 text-gray-900 flex flex-col gap-5 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
+                {/* Modal Dialog */}
+          {activeTestimonial && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200"
               onClick={() => setActiveTestimonial(null)}
-              className="absolute right-4 top-4 p-2 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center"
-              aria-label="Close modal"
             >
-              <X className="w-4 h-4" weight="bold" />
-            </button>
+              <div
+                className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-gray-100 text-gray-900 flex flex-col gap-5 animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setActiveTestimonial(null)}
+                  className="absolute right-4 top-4 p-2 rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-300 cursor-pointer flex items-center justify-center"
+                  aria-label="Close modal"
+                >
+                  <X className="w-4 h-4" weight="bold" />
+                </button>
 
-            {/* Testimonial Author & Avatar Header */}
-            <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-full overflow-hidden border border-gray-200 shrink-0">
-                <img
-                  src={activeTestimonial.avatar_url}
-                  alt={activeTestimonial.author || "Student"}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-black text-gray-800 tracking-wide uppercase">
-                  {activeTestimonial.author || activeTestimonial.author_name}
-                </p>
-                {/* Stars */}
-                <div className="flex gap-0.5 text-amber-500 mt-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={12} weight="fill" />
-                  ))}
+                {/* Testimonial Author & Avatar Header */}
+                <div className="flex items-center gap-4">
+                  <div className="relative w-16 h-16 rounded-full overflow-hidden border border-gray-200 shrink-0">
+                    <img
+                      src={activeTestimonial.avatarUrl ?? undefined}
+                      alt={activeTestimonial.author}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-black text-gray-800 tracking-wide uppercase">
+                      {activeTestimonial.author}
+                    </p>
+                    {/* Stars */}
+                    <div className="flex gap-0.5 text-amber-500 mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={12} weight="fill" />
+                      ))}
+                    </div>
+                  </div>
                 </div>
+
+                {/* Quote Body */}
+                <blockquote className="text-xs sm:text-sm text-gray-700 leading-relaxed font-semibold text-left max-h-[300px] overflow-y-auto pr-1">
+                  "{activeTestimonial.quote}"
+                </blockquote>
               </div>
             </div>
-
-            {/* Quote Body */}
-            <blockquote className="text-xs sm:text-sm text-gray-700 leading-relaxed font-semibold text-left max-h-[300px] overflow-y-auto pr-1">
-              "{activeTestimonial[`quote_${locale}`] || activeTestimonial.quote || activeTestimonial.content_it || ""}"
-            </blockquote>
-          </div>
-        </div>
-      )}
+          )}
     </section>
   );
 };

@@ -6,15 +6,17 @@ import aboutStudent from "@/assets/about-student.webp";
 import aboutStudying from "@/assets/about-studying.webp";
 import aboutClassroom from "@/assets/about-classroom.webp";
 
+import { AboutData } from "@/features/home/services/homeService";
+
 interface AboutSectionProps {
-  data?: any;
+  data?: AboutData;
 }
 
 const AboutSection = ({ data }: AboutSectionProps) => {
   const t = useTranslations("about");
 
-  const p1 = data?.content_it || t("p1");
-  const p2 = data?.content_it || t("p2");
+  const p1 = data?.content || t("p1");
+  const p2 = data?.content || t("p2");
 
   return (
     <section id="about" className="relative py-20 lg:py-28 bg-gray-50 overflow-hidden px-0">

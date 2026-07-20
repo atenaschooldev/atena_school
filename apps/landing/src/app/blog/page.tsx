@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { getBlogPosts } from "@/lib/data";
+import { getBlogPostList } from "@/features/blog/services/blogService";
 import { env } from "@/config/env";
 
 export async function generateMetadata() {
@@ -30,7 +30,7 @@ export async function generateMetadata() {
 
 export default async function BlogPage() {
   const t = await getTranslations("nav");
-  const blogPosts = await getBlogPosts();
+  const blogPosts = await getBlogPostList();
 
   return (
     <main className="min-h-screen flex flex-col bg-background pt-24 relative overflow-hidden">
@@ -44,7 +44,7 @@ export default async function BlogPage() {
 
         {blogPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {blogPosts.map((post: any, idx: number) => (
+            {blogPosts.map((post, idx) => (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
@@ -54,23 +54,23 @@ export default async function BlogPage() {
               >
                 <article>
                   <div className="relative aspect-video overflow-hidden mb-6 bg-muted rounded-2xl">
-                    {post.main_image && (
+                    {post.mainImage && (
                       <img
-                        src={post.main_image}
-                        alt={post.title_it || post.title}
+                        src={post.mainImage}
+                        alt={post.title}
                         className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
                     )}
                   </div>
                   <div className="space-y-4">
                     <div className="text-xs font-bold uppercase tracking-widest text-primary">
-                      {post.published_at ? new Date(post.published_at).toLocaleDateString('it') : ""}
+                      {post.publishedAt}
                     </div>
                     <h2 className="text-2xl font-bold leading-tight group-hover:text-primary transition-colors">
-                      {post.title_it || post.title}
+                      {post.title}
                     </h2>
                     <p className="text-muted-foreground line-clamp-3">
-                      {post.excerpt_it || post.excerpt}
+                      {post.excerpt}
                     </p>
                   </div>
                 </article>

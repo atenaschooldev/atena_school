@@ -1,58 +1,47 @@
-import { getBlogPosts, getSingleBlogPost } from "@/lib/data";
+import { getBlogPostDetail, getBlogStaticParams } from "@/features/blog/services/blogService";
 import Link from "next/link";
 import { CaretLeft, Calendar, ShareNetwork } from "@/components/Icons";
 import { notFound } from "next/navigation";
 import { env } from "@/config/env";
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts();
-  return (posts || []).map((post: any) => ({ slug: post.slug }));
+  return getBlogStaticParams();
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
-  const post = await getSingleBlogPost(slug);
+  const post = await getBlogPostDetail(slug);
 
-  const title = post?.title_it || 'Articolo';
-  const description = post?.excerpt_it || 'Leggi questo articolo sul blog di Atena School.';
-  const image = post?.main_image || `${siteUrl}/og-default.webp`;
+  const title = post?.metaTitle ?? "Articolo";
+  const description = post?.metaDescription ?? "Leggi questo articolo sul blog di Atena School.";
+  const image = post?.metaImage || `${siteUrl}/og-default.webp`;
   const url = `${siteUrl}/blog/${slug}`;
 
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
-    },
+    alternates: { canonical: url },
     openGraph: {
-      type: 'article',
-      locale: 'it_IT',
+      type: "article",
+      locale: "it_IT",
       url,
-      siteName: 'Atena School',
+      siteName: "Atena School",
       title,
       description,
       images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
-    twitter: { card: 'summary_large_image', title, description, images: [image] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
 export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const post = await getSingleBlogPost(slug);
+  const post = await getBlogPostDetail(slug);
 
   if (!post) {
     notFound();
   }
-
-  const title = post.title_it || post.title;
-  const content = post.content_it || post.content;
-  const publishedAt = post.published_at ? new Date(post.published_at).toLocaleDateString('it', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  }) : "";
 
   return (
     <main className="min-h-screen bg-background pt-24 pb-28 relative overflow-hidden">
@@ -73,7 +62,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-primary mb-6">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" />
-              {publishedAt}
+              {post.publishedAt}
             </div>
             <div className="w-1 h-1 rounded-full bg-primary/30" />
             <div className="flex items-center gap-1.5 opacity-60">
@@ -82,16 +71,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
           </div>
 
           <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-foreground leading-[1.1] mb-8">
-            {title}
+            {post.title}
           </h1>
         </header>
 
         {/* Featured Image */}
-        {post.main_image && (
+        {post.mainImage && (
           <div className="relative aspect-[21/9] rounded-3xl overflow-hidden mb-16 shadow-2xl">
             <img
-              src={post.main_image}
-              alt={title}
+              src={post.mainImage}
+              alt={post.title}
               className="object-cover w-full h-full"
             />
           </div>
@@ -100,13 +89,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         {/* Content Area */}
         <div className="prose prose-lg dark:prose-invert max-w-none">
           <div className="text-xl md:text-2xl leading-relaxed text-muted-foreground font-light mb-12 whitespace-pre-wrap">
-            {post.excerpt_it || post.excerpt}
+            {post.excerpt}
           </div>
 
           <div className="h-px w-full bg-border mb-12" />
 
           <div className="text-lg md:text-xl leading-relaxed text-foreground/90 whitespace-pre-wrap mb-16">
-            {content}
+            {post.content}
           </div>
         </div>
 

@@ -8,23 +8,25 @@ import heroMobile from "@/assets/hero-london-mobile.avif";
 import { Link } from "@/i18n/routing";
 
 
+import { HeroData } from "@/features/home/services/homeService";
+
 interface HeroSectionProps {
-  data?: any;
+  data?: HeroData;
 }
 
 const HeroSection = ({ data }: HeroSectionProps) => {
   const t = useTranslations("hero");
   const locale = useLocale();
 
-  const title = data?.[`title_${locale}`] || t("title");
-  const tagline = data?.[`tagline_${locale}`] || t("tagline");
+  const title = data?.title || t("title");
+  const tagline = data?.tagline || t("tagline");
 
   return (
     <section id="home" className="relative min-h-svh lg:min-h-screen flex flex-col overflow-hidden bg-background">
       {/* Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src={data?.image_url || heroMobile}
+          src={data?.imageUrl || heroMobile}
           alt="Atena School"
           fill
           sizes="100vw"
@@ -32,7 +34,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           priority
         />
         <Image
-          src={data?.image_url || heroDefault}
+          src={data?.imageUrl || heroDefault}
           alt="Atena School"
           fill
           sizes="(max-width: 1024px) 100vw, 1400px"

@@ -434,10 +434,24 @@ export async function fetchScheduleSlotsAction(dateStr: string) {
 
 export async function fetchCheckoutItemAction(type: string, id: string) {
   try {
-    const { fetchCheckoutItem } = await import("@/features/checkout/services/checkoutService");
     const supabase = createServerClient();
-    const item = await fetchCheckoutItem(type, id, supabase);
-    return { success: true, item };
+    const table = type === "course" ? "courses" : "shop_items";
+    let { data: itemData } = await supabase
+      .from(table)
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!itemData && table === "courses") {
+      const { data: itemBySlug } = await supabase
+        .from("courses")
+        .select("*")
+        .ilike("name", `%${id}%`)
+        .maybeSingle();
+      itemData = itemBySlug;
+    }
+
+    return { success: true, item: itemData || null };
   } catch (err: any) {
     console.error("Failed to run fetchCheckoutItemAction:", err);
     return { success: false, item: null, error: err.message || "Failed to fetch item details" };

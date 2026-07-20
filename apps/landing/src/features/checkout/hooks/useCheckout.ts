@@ -6,7 +6,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { getSessionId } from "@/lib/utils";
-import type { BookingItem, CheckoutFormValues } from "../services/checkoutService";
+
+export interface CheckoutFormValues {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  notes?: string;
+}
+
+export interface BookingItem {
+  id: string;
+  name?: string;
+  title_it?: string;
+  price: string | number;
+  duration?: string;
+  description_it?: string;
+  image_url?: string;
+}
 import {
   fetchCheckoutItemAction,
   createOrUpdateReservationServerAction,

@@ -4,14 +4,7 @@ import AboutSection from "@/features/about/components/AboutSection";
 import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
 import CtaBanner from "@/components/CtaBanner";
 import ContactSection from "@/features/contact/components/ContactSection";
-import FaqSidebar from "@/components/FaqSidebar";
-import {
-  getHeroData,
-  getAboutData,
-  getTestimonials,
-  getContactData
-} from "@/lib/data";
-
+import { getHomePageData } from "@/features/home/services/homeService";
 import { env } from "@/config/env";
 
 export async function generateMetadata() {
@@ -53,28 +46,20 @@ export async function generateMetadata() {
 }
 
 export default async function IndexPage() {
-  // Fetch site content using cached functions
-  const [hero, about, testimonials, contact] = await Promise.all([
-    getHeroData(),
-    getAboutData(),
-    getTestimonials(),
-    getContactData()
-  ]);
-
-  const siteData = { hero, about, testimonials, contact };
+  const { hero, about, testimonials, contact } = await getHomePageData();
 
   return (
     <div className="min-h-screen">
-      <HeroSection data={siteData.hero ?? undefined} />
+      <HeroSection data={hero} />
       <StatsSection />
-      <AboutSection data={siteData.about ?? undefined} />
-      <TestimonialsSection data={siteData.testimonials ?? undefined} />
+      <AboutSection data={about} />
+      <TestimonialsSection data={testimonials} />
       <div className="space-y-0">
         <div data-gsap="fade-up" data-gsap-delay="0">
           <CtaBanner />
         </div>
         <div data-gsap="fade-up" data-gsap-delay="200">
-          <ContactSection data={siteData.contact ?? undefined} />
+          <ContactSection data={contact} />
         </div>
       </div>
     </div>
