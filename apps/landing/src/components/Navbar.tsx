@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import logo from "@/assets/logo.webp";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo, House, Users, GraduationCap, Newspaper, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
@@ -12,6 +11,8 @@ import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
+import { getCartCountAction, getCurrentUserAction } from "@/app/actions/booking";
+import { signOutAction } from "@/app/actions/auth";
 import { getSessionId, mergeGuestBookings } from "@/lib/utils";
 
 const Navbar = () => {
@@ -25,7 +26,6 @@ const Navbar = () => {
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [cartCount, setCartCount] = useState(0);
-  const supabase = createClient();
   const [isScrolled, setIsScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -61,22 +61,11 @@ const Navbar = () => {
   }, [isHome]);
 
   const fetchCartCount = async () => {
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
     const sid = getSessionId();
-
-    let query = supabase
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "in_cart");
-
-    if (currentUser) {
-      query = query.eq("user_id", currentUser.id);
-    } else if (sid) {
-      query = query.eq("session_id", sid);
+    const res = await getCartCountAction(sid);
+    if (res.success) {
+      setCartCount(res.count);
     }
-
-    const { count } = await query;
-    setCartCount(count || 0);
   };
 
   // Lock body scroll when mobile menu is open, compensating for scrollbar width to prevent layout shift
@@ -105,42 +94,38 @@ const Navbar = () => {
   useEffect(() => {
     setMounted(true);
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
-        await mergeGuestBookings(supabase, user.id);
+      try {
+        const res = await getCurrentUserAction();
+        if (res.success && res.user) {
+          setUser(res.user);
+          // Link guest bookings upon login detection on mount
+          const sid = getSessionId();
+          if (sid) {
+            await mergeGuestBookings(null, res.user.id);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading user on mount:", err);
       }
       fetchCartCount();
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-
-      if (event === "SIGNED_IN" && currentUser) {
-        mergeGuestBookings(supabase, currentUser.id).then(() => {
-          fetchCartCount();
-        });
-      } else {
-        fetchCartCount();
-      }
-    });
-
     // Listen for cart updates
     window.addEventListener("cartUpdated", fetchCartCount);
 
     return () => {
-      subscription.unsubscribe();
       window.removeEventListener("cartUpdated", fetchCartCount);
     };
-  }, [supabase.auth]);
+  }, []);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
+    const res = await signOutAction();
+    if (!res.success) {
+      toast.error(res.error || "Errore durante il logout");
     } else {
+      setUser(null);
+      setCartCount(0);
       toast.success("Logged out");
       router.refresh();
     }

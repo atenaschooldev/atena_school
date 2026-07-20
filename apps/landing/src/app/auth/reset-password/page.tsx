@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Lock } from "@phosphor-icons/react";
 import Image from "next/image";
 import heroLondon from "@/assets/hero-london.avif";
+import { resetPasswordAction } from "@/app/actions/auth";
 
 export default function ResetPasswordPage() {
   const t = useTranslations("auth.resetPassword");
@@ -15,18 +15,14 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const supabase = createClient();
-
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({
-      password: password,
-    });
+    const res = await resetPasswordAction(password);
 
-    if (error) {
-      toast.error(error.message);
+    if (!res.success) {
+      toast.error(res.error || "Errore");
     } else {
       toast.success(t("success"));
       router.push("/auth/login");

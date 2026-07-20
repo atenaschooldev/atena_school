@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { User, Envelope, Lock } from "@phosphor-icons/react";
 import Image from "next/image";
 import heroLondon from "@/assets/hero-london.avif";
+import { signUpWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
 
 function RegisterForm() {
   const t = useTranslations("auth.register");
@@ -20,25 +20,21 @@ function RegisterForm() {
   const [loading, setLoading] = useState(false);
 
   const redirectUrl = searchParams.get("redirect") || "/";
-  const supabase = createClient();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const res = await signUpWithEmailAction({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`,
+        metadata: {
+          full_name: fullName,
         },
       });
 
-      if (error) {
-        toast.error(error.message);
+      if (!res.success) {
+        toast.error(res.error || "Errore durante la registrazione");
       } else {
         toast.success(t("success"));
         router.push(`/auth/login${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`);
@@ -51,15 +47,13 @@ function RegisterForm() {
   };
 
   const handleOAuthLogin = async (provider: 'google') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`,
-      },
-    });
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
+    const res = await getOAuthUrlAction({ provider, redirectTo });
 
-    if (error) {
-      toast.error(error.message);
+    if (res.success && res.url) {
+      window.location.href = res.url;
+    } else {
+      toast.error(res.error || "Impossibile avviare la registrazione social");
     }
   };
 

@@ -12,13 +12,12 @@ import {
   ArrowRight,
   ShieldCheck
 } from "@phosphor-icons/react";
-import { createClient } from "@/lib/supabase/client";
 import { Link, useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { getSessionId } from "@/lib/utils";
 import { toast } from "sonner";
-import { deleteBookingServerAction, checkoutCartServerAction } from "@/app/actions/booking";
+import { deleteBookingServerAction, checkoutCartServerAction, fetchCartItemsAction } from "@/app/actions/booking";
 
 interface CartBooking {
   id: string;
@@ -32,7 +31,6 @@ interface CartBooking {
 export default function CartPage() {
   const t = useTranslations("cart");
   const router = useRouter();
-  const supabase = createClient();
   const dateLocale = it;
 
   const [bookings, setBookings] = useState<any[]>([]);
@@ -42,70 +40,12 @@ export default function CartPage() {
   useEffect(() => {
     async function fetchCart() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
         const sid = getSessionId();
-
-        // 1. Fetch bookings first
-        let query = supabase
-          .from("bookings")
-          .select("*")
-          .eq("status", "in_cart");
-
-        if (user) {
-          query = query.eq("user_id", user.id);
-        } else if (sid) {
-          query = query.eq("session_id", sid);
+        const res = await fetchCartItemsAction(sid);
+        if (res.success) {
+          setBookings(res.bookings || []);
         } else {
-          setLoading(false);
-          return;
-        }
-
-        const { data: bookingsData, error: bookingsError } = await query;
-
-        if (bookingsError) {
-          console.error("Fetch bookings error:", bookingsError);
-          setLoading(false);
-          return;
-        }
-
-        if (bookingsData && bookingsData.length > 0) {
-          // 2. Fetch details for each item manually to avoid invalid joins
-          const formatted = await Promise.all(bookingsData.map(async (b) => {
-            try {
-              const table = b.item_type === 'course' ? 'courses' : 'shop_items';
-              const { data: itemData, error: itemError } = await supabase
-                .from(table)
-                .select('*')
-                .eq('id', b.item_id)
-                .single();
-
-              if (itemError) {
-                console.error(`Error fetching item ${b.item_id} from ${table}:`, itemError);
-              }
-
-              const title = itemData?.title_it || "Unknown";
-              // Handle price: use numeric price_eur from either table
-              const price = itemData?.price_eur || itemData?.price || "0";
-              
-              return {
-                ...b,
-                title,
-                price: typeof price === 'number' ? `${price}€` : price,
-                teacher: itemData?.teacher_name || "TBD"
-              };
-            } catch (err) {
-              console.error("Error processing cart item:", err);
-              return {
-                ...b,
-                title: "Unknown",
-                price: "0",
-                teacher: "TBD"
-              };
-            }
-          }));
-          setBookings(formatted);
-        } else {
-          setBookings([]);
+          console.error("Fetch cart error:", res.error);
         }
       } catch (error) {
         console.error("Cart page fetching error:", error);
@@ -114,7 +54,7 @@ export default function CartPage() {
       }
     }
     fetchCart();
-  }, [supabase]);
+  }, []);
 
   const removeItem = async (id: string) => {
     const sid = getSessionId();

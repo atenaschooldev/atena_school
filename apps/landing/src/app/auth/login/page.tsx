@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Envelope, Lock, User, Eye, EyeSlash } from "@phosphor-icons/react";
 import { mergeGuestBookings } from "@/lib/utils";
 import Image from "next/image";
 import logo from "@/assets/logo.webp";
 import heroLondon from "@/assets/hero-london.avif";
+import { loginWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
 
 function LoginForm() {
   const router = useRouter();
@@ -21,21 +21,17 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const redirectUrl = searchParams.get("redirect") || "/";
-  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const res = await loginWithEmailAction({ email, password });
 
-    if (error) {
-      toast.error(error.message);
-    } else if (data.user) {
-      await mergeGuestBookings(supabase, data.user.id);
+    if (!res.success) {
+      toast.error(res.error || "Errore durante l'accesso");
+    } else if (res.user) {
+      await mergeGuestBookings(null, res.user.id);
       toast.success("Acceduto con successo!");
       router.push(redirectUrl);
       router.refresh();
@@ -44,15 +40,13 @@ function LoginForm() {
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`,
-      },
-    });
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
+    const res = await getOAuthUrlAction({ provider, redirectTo });
 
-    if (error) {
-      toast.error(error.message);
+    if (res.success && res.url) {
+      window.location.href = res.url;
+    } else {
+      toast.error(res.error || "Impossibile avviare l'accesso social");
     }
   };
 

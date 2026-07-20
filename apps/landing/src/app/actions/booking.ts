@@ -278,3 +278,263 @@ export async function createOrUpdateReservationServerAction(params: {
   }
 }
 
+export async function getCartCountAction(sessionId: string | null) {
+  try {
+    const authClient = createServerClient();
+    const { data: { user: currentUser } } = await authClient.auth.getUser();
+
+    const client = getSupabaseClient(sessionId);
+
+    let query = client
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "in_cart");
+
+    if (currentUser) {
+      query = query.eq("user_id", currentUser.id);
+    } else if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    } else {
+      return { success: true, count: 0 };
+    }
+
+    const { count, error } = await query;
+    if (error) throw error;
+
+    return { success: true, count: count || 0 };
+  } catch (err: any) {
+    console.error("Failed to run getCartCountAction:", err);
+    return { success: false, count: 0, error: err.message || "Failed to fetch cart count" };
+  }
+}
+
+export async function fetchCartItemsAction(sessionId: string | null) {
+  try {
+    const authClient = createServerClient();
+    const { data: { user: currentUser } } = await authClient.auth.getUser();
+
+    const client = getSupabaseClient(sessionId);
+
+    let query = client
+      .from("bookings")
+      .select("*")
+      .eq("status", "in_cart");
+
+    if (currentUser) {
+      query = query.eq("user_id", currentUser.id);
+    } else if (sessionId) {
+      query = query.eq("session_id", sessionId);
+    } else {
+      return { success: true, bookings: [] };
+    }
+
+    const { data: bookingsData, error: bookingsError } = await query;
+    if (bookingsError) throw bookingsError;
+
+    if (bookingsData && bookingsData.length > 0) {
+      const formatted = await Promise.all(
+        bookingsData.map(async (b) => {
+          const table = b.item_type === "course" ? "courses" : "shop_items";
+          const { data: itemData, error: itemError } = await client
+            .from(table)
+            .select("*")
+            .eq("id", b.item_id)
+            .single();
+
+          if (itemError) {
+            console.error(`Error fetching item ${b.item_id} from ${table}:`, itemError);
+          }
+
+          const title = itemData?.title_it || itemData?.name || "Unknown";
+          const price = itemData?.price_eur || itemData?.price || "0";
+
+          return {
+            ...b,
+            title,
+            price: typeof price === "number" ? `${price}€` : price,
+            teacher: itemData?.teacher_name || "TBD",
+          };
+        })
+      );
+      return { success: true, bookings: formatted };
+    }
+
+    return { success: true, bookings: [] };
+  } catch (err: any) {
+    console.error("Failed to run fetchCartItemsAction:", err);
+    return { success: false, bookings: [], error: err.message || "Failed to fetch cart items" };
+  }
+}
+
+export async function mergeGuestBookingsAction(sessionId: string) {
+  try {
+    const authClient = createServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const client = getSupabaseClient(sessionId);
+
+    // Call the database function/update to link guest bookings
+    // 1. By session ID
+    if (sessionId) {
+      const { error: sessionError } = await client
+        .from("bookings")
+        .update({ user_id: user.id, session_id: null })
+        .eq("session_id", sessionId);
+
+      if (sessionError) {
+        console.error("Failed to link guest bookings by session_id:", sessionError);
+      }
+    }
+
+    // 2. By email (if email matches the verified logged-in user email)
+    if (user.email) {
+      const { error: emailError } = await client
+        .from("bookings")
+        .update({ user_id: user.id })
+        .ilike("student_email", user.email)
+        .is("user_id", null);
+
+      if (emailError) {
+        console.error("Failed to link guest bookings by email:", emailError);
+      }
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Failed to run mergeGuestBookingsAction:", err);
+    return { success: false, error: err.message || "Failed to merge guest bookings" };
+  }
+}
+
+export async function fetchScheduleSlotsAction(dateStr: string) {
+  try {
+    const supabase = createServerClient();
+    const date = new Date(dateStr);
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from("schedule_slots")
+      .select("*")
+      .gte("starts_at", startOfDay.toISOString())
+      .lte("starts_at", endOfDay.toISOString())
+      .order("starts_at", { ascending: true });
+
+    if (error) throw error;
+    return { success: true, slots: data || [] };
+  } catch (err: any) {
+    console.error("Failed to run fetchScheduleSlotsAction:", err);
+    return { success: false, slots: [], error: err.message || "Failed to fetch schedule slots" };
+  }
+}
+
+export async function fetchCheckoutItemAction(type: string, id: string) {
+  try {
+    const { fetchCheckoutItem } = await import("@/features/checkout/services/checkoutService");
+    const supabase = createServerClient();
+    const item = await fetchCheckoutItem(type, id, supabase);
+    return { success: true, item };
+  } catch (err: any) {
+    console.error("Failed to run fetchCheckoutItemAction:", err);
+    return { success: false, item: null, error: err.message || "Failed to fetch item details" };
+  }
+}
+
+export async function initiateStripePaymentAction(params: {
+  type: string;
+  id: string;
+  dateParam: string;
+  timeParam: string;
+  slotIdParam?: string | null;
+  values: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    notes?: string;
+  };
+}) {
+  try {
+    const supabase = createServerClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const authHeader = session?.access_token
+      ? `Bearer ${session.access_token}`
+      : `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`;
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout-session`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+        },
+        body: JSON.stringify({
+          itemId: params.id,
+          itemType: params.type,
+          customerEmail: params.values.email,
+          firstName: params.values.firstName,
+          lastName: params.values.lastName,
+          phone: params.values.phone,
+          date: params.dateParam,
+          time: params.timeParam,
+          slotId: params.slotIdParam || null,
+          locale: "it",
+        }),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Errore durante il pagamento");
+
+    return { success: true, url: data.url };
+  } catch (err: any) {
+    console.error("Failed to run initiateStripePaymentAction:", err);
+    return { success: false, error: err.message || "Failed to initiate payment" };
+  }
+}
+
+export async function dispatchMagicLinkAction(email: string) {
+  try {
+    const supabase = createServerClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/dashboard`,
+      },
+    });
+
+    return { success: true };
+  } catch (err: any) {
+    console.error("Failed to run dispatchMagicLinkAction:", err);
+    return { success: false, error: err.message || "Failed to send magic link" };
+  }
+}
+
+export async function getCurrentUserAction() {
+  try {
+    const supabase = createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return { success: true, user };
+  } catch {
+    return { success: false, user: null };
+  }
+}
+
+export async function updateUserPhoneAction(phone: string) {
+  try {
+    const supabase = createServerClient();
+    const { error } = await supabase.auth.updateUser({
+      data: { phone },
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+

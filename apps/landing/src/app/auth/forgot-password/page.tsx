@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Envelope, CaretLeft, Key } from "@phosphor-icons/react";
 import Image from "next/image";
 import heroLondon from "@/assets/hero-london.avif";
+import { forgotPasswordAction } from "@/app/actions/auth";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth.forgotPassword");
@@ -15,18 +15,14 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const supabase = createClient();
-
   const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset-password`,
-    });
+    const res = await forgotPasswordAction(email);
 
-    if (error) {
-      toast.error(error.message);
+    if (!res.success) {
+      toast.error(res.error || "Errore");
     } else {
       setSubmitted(true);
       toast.success(t("success"));

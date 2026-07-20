@@ -5,15 +5,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { createClient } from "@/lib/supabase/client";
 import { getSessionId } from "@/lib/utils";
+import type { BookingItem, CheckoutFormValues } from "../services/checkoutService";
 import {
-  fetchCheckoutItem,
-  createOrUpdateReservation,
-  initiateStripePayment,
-  BookingItem,
-  CheckoutFormValues,
-} from "../services/checkoutService";
+  fetchCheckoutItemAction,
+  createOrUpdateReservationServerAction,
+  initiateStripePaymentAction,
+  getCurrentUserAction,
+  updateUserPhoneAction,
+} from "@/app/actions/booking";
 
 export const checkoutSchema = z.object({
   firstName: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
@@ -28,7 +28,6 @@ export type SubmitAction = "book" | "pay";
 export function useCheckout(type: string, id: string) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
@@ -56,21 +55,22 @@ export function useCheckout(type: string, id: string) {
   useEffect(() => {
     async function initCheckout() {
       try {
-        const itemData = await fetchCheckoutItem(type, id, supabase);
-        if (itemData) {
-          setItem(itemData);
+        const itemRes = await fetchCheckoutItemAction(type, id);
+        if (itemRes.success && itemRes.item) {
+          setItem(itemRes.item);
         }
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUser(user);
-          const fullName = user.user_metadata?.full_name || "";
+        const userRes = await getCurrentUserAction();
+        if (userRes.success && userRes.user) {
+          const currentUser = userRes.user;
+          setUser(currentUser);
+          const fullName = currentUser.user_metadata?.full_name || "";
           const parts = fullName.split(" ");
-          const phone = user.user_metadata?.phone || user.phone || "";
+          const phone = currentUser.user_metadata?.phone || currentUser.phone || "";
 
           // reset() pre-populates all fields atomically, even after first render
           reset({
-            email: user.email || "",
+            email: currentUser.email || "",
             phone: phone,
             firstName: parts[0] || "",
             lastName: parts.slice(1).join(" ") || "",
@@ -85,7 +85,7 @@ export function useCheckout(type: string, id: string) {
     }
 
     initCheckout();
-  }, [id, type, reset, supabase]);
+  }, [id, type, reset]);
 
   const handleBook = async (values: CheckoutFormValues) => {
     if (!dateParam || !timeParam || !item) {
@@ -100,30 +100,28 @@ export function useCheckout(type: string, id: string) {
       if (user && values.phone) {
         const existingPhone = user.user_metadata?.phone || user.phone || "";
         if (existingPhone !== values.phone) {
-          await supabase.auth.updateUser({
-            data: { phone: values.phone },
-          });
+          await updateUserPhoneAction(values.phone);
         }
       }
 
-      const { booking } = await createOrUpdateReservation(
-        {
-          type,
-          id,
-          dateParam,
-          timeParam,
-          slotIdParam,
-          values,
-          user,
-          sessionId: sid,
-          origin: window.location.origin,
-        },
-        supabase
-      );
+      const res = await createOrUpdateReservationServerAction({
+        type,
+        id,
+        dateParam,
+        timeParam,
+        slotIdParam,
+        values,
+        sessionId: sid,
+        origin: window.location.origin,
+      });
 
-      router.push(`/checkout/success?type=booking&booking_id=${booking.id}&email=${encodeURIComponent(values.email)}`);
+      if (!res.success || !res.booking) {
+        throw new Error(res.error || "Errore durante la prenotazione");
+      }
+
+      router.push(`/checkout/success?type=booking&booking_id=${res.booking.id}&email=${encodeURIComponent(values.email)}`);
     } catch (err: any) {
-      toast.error(err.message || "Qualcosa è andato storto");
+      toast.error(err.message || "Qualcosa è Restrictions and Error");
     } finally {
       setSubmitting(false);
     }
@@ -140,25 +138,24 @@ export function useCheckout(type: string, id: string) {
       if (user && values.phone) {
         const existingPhone = user.user_metadata?.phone || user.phone || "";
         if (existingPhone !== values.phone) {
-          await supabase.auth.updateUser({
-            data: { phone: values.phone },
-          });
+          await updateUserPhoneAction(values.phone);
         }
       }
 
-      const { url } = await initiateStripePayment(
-        {
-          type,
-          id,
-          dateParam,
-          timeParam,
-          slotIdParam,
-          values,
-        },
-        supabase
-      );
+      const res = await initiateStripePaymentAction({
+        type,
+        id,
+        dateParam,
+        timeParam,
+        slotIdParam,
+        values,
+      });
 
-      window.location.href = url;
+      if (res.success && res.url) {
+        window.location.href = res.url;
+      } else {
+        throw new Error(res.error || "Qualcosa è andato storto");
+      }
     } catch (err: any) {
       toast.error(err.message || "Qualcosa è andato storto");
     } finally {

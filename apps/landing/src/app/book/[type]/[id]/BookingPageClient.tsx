@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
-import { createClient } from "@/lib/supabase/client";
+import { fetchScheduleSlotsAction } from "@/app/actions/booking";
 import {
   CaretLeft,
   Clock,
@@ -44,7 +44,6 @@ export default function BookingPageClient({
   const t = useTranslations("booking");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
   const dateLocale = it;
 
   const dateParam = searchParams.get("date");
@@ -61,16 +60,10 @@ export default function BookingPageClient({
   const [availableSlots, setAvailableSlots] = useState<ScheduleSlot[]>([]);
 
   useEffect(() => {
-    async function checkUser() {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      setUser(currentUser);
-
-      if (currentUser && dateParam && timeParam && slotIdParam) {
-        router.push(`/checkout/${type}/${id}?date=${dateParam}&time=${timeParam}&slot_id=${slotIdParam}`);
-      }
+    if (user && dateParam && timeParam && slotIdParam) {
+      router.push(`/checkout/${type}/${id}?date=${dateParam}&time=${timeParam}&slot_id=${slotIdParam}`);
     }
-    checkUser();
-  }, [supabase, type, id, dateParam, timeParam, slotIdParam, router]);
+  }, [user, type, id, dateParam, timeParam, slotIdParam, router]);
 
   useEffect(() => {
     if (!selectedDate) {
@@ -79,24 +72,19 @@ export default function BookingPageClient({
     }
 
     async function fetchSlots() {
-      const startOfDay = new Date(selectedDate!);
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const endOfDay = new Date(selectedDate!);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      const { data } = await supabase
-        .from("schedule_slots")
-        .select("*")
-        .gte("starts_at", startOfDay.toISOString())
-        .lte("starts_at", endOfDay.toISOString())
-        .order("starts_at", { ascending: true });
-
-      setAvailableSlots(data || []);
+      try {
+        const dateStr = format(selectedDate!, "yyyy-MM-dd");
+        const res = await fetchScheduleSlotsAction(dateStr);
+        if (res.success) {
+          setAvailableSlots(res.slots || []);
+        }
+      } catch (err) {
+        console.error("Error fetching slots:", err);
+      }
     }
 
     fetchSlots();
-  }, [selectedDate, supabase]);
+  }, [selectedDate]);
 
   const title = item.title_it || item.name || "Lezione / Corso Atena";
 

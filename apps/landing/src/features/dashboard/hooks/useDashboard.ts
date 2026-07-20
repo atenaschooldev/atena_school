@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import {
-  fetchUserBookingsEnriched,
-  updateUserProfile,
-  EnrichedBooking,
-} from "../services/dashboardService";
+import { EnrichedBooking } from "../services/dashboardService";
+import { getDashboardDataAction, updateUserProfileAction } from "@/app/actions/dashboard";
 
 export function useDashboard() {
-  const supabase = createClient();
-
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<EnrichedBooking[]>([]);
@@ -22,17 +16,13 @@ export function useDashboard() {
   useEffect(() => {
     async function initDashboard() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          setLoading(false);
-          return;
+        const res = await getDashboardDataAction();
+        if (res.success && res.user) {
+          setUser(res.user);
+          setProfileName(res.user.user_metadata?.full_name || "");
+          setProfilePhone(res.user.user_metadata?.phone || res.user.phone || "");
+          setBookings(res.bookings || []);
         }
-        setUser(user);
-        setProfileName(user.user_metadata?.full_name || "");
-        setProfilePhone(user.user_metadata?.phone || user.phone || "");
-
-        const enrichedList = await fetchUserBookingsEnriched(user, supabase);
-        setBookings(enrichedList);
       } catch (err) {
         console.error("Error loading dashboard:", err);
       } finally {
@@ -41,22 +31,26 @@ export function useDashboard() {
     }
 
     initDashboard();
-  }, [supabase]);
+  }, []);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSavingProfile(true);
     try {
-      await updateUserProfile(user, { profileName, profilePhone }, supabase);
-      toast.success("Profilo aggiornato con successo");
-      setUser((prev: any) => ({
-        ...prev,
-        user_metadata: {
-          ...prev?.user_metadata,
-          full_name: profileName,
-          phone: profilePhone,
-        },
-      }));
+      const res = await updateUserProfileAction({ profileName, profilePhone });
+      if (res.success) {
+        toast.success("Profilo aggiornato con successo");
+        setUser((prev: any) => ({
+          ...prev,
+          user_metadata: {
+            ...prev?.user_metadata,
+            full_name: profileName,
+            phone: profilePhone,
+          },
+        }));
+      } else {
+        throw new Error(res.error || "Errore durante l'aggiornamento del profilo");
+      }
     } catch (err: any) {
       toast.error(err.message || "Errore durante l'aggiornamento del profilo");
     } finally {

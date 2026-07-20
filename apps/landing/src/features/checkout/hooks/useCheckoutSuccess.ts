@@ -2,9 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
-import { createClient } from "@/lib/supabase/client";
-import { dispatchMagicLink } from "../services/successService";
-import { getBookingDetailsServer } from "@/app/actions/booking";
+import { toast } from "sonner";
+import { getBookingDetailsServer, getCurrentUserAction, dispatchMagicLinkAction } from "@/app/actions/booking";
 
 export function useCheckoutSuccess() {
   const router = useRouter();
@@ -12,7 +11,6 @@ export function useCheckoutSuccess() {
   const sessionId = searchParams.get("session_id");
   const bookingId = searchParams.get("booking_id");
   const emailParam = searchParams.get("email");
-  const supabase = createClient();
 
   const [verifying, setVerifying] = useState(!!sessionId);
   const [user, setUser] = useState<any>(null);
@@ -32,11 +30,13 @@ export function useCheckoutSuccess() {
 
   useEffect(() => {
     async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
+      const res = await getCurrentUserAction();
+      if (res.success) {
+        setUser(res.user);
+      }
     }
     fetchUser();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     async function verifyStripePayment() {
@@ -99,21 +99,31 @@ export function useCheckoutSuccess() {
     sentRef.current = true;
 
     setSendingMagicLink(true);
-    dispatchMagicLink(emailDisplay, supabase).then((success) => {
+    dispatchMagicLinkAction(emailDisplay).then((res) => {
       setSendingMagicLink(false);
-      if (success) {
+      if (res.success) {
+        toast.success(`Magic Link inviato a ${emailDisplay}! Controlla la tua posta.`);
         setMagicLinkSent(true);
+      } else {
+        toast.error(res.error || "Errore durante l'invio del link");
       }
     });
-  }, [verifying, user, emailDisplay, isGmail, isPaid, supabase]);
+  }, [verifying, user, emailDisplay, isGmail, isPaid]);
 
   const handleSendMagicLink = async () => {
     const emailToSend = bookingData?.student_email || emailParam || user?.email;
+    if (!emailToSend) {
+      toast.error("Email non trovata per l'invio del link");
+      return;
+    }
     setSendingMagicLink(true);
-    const success = await dispatchMagicLink(emailToSend, supabase);
+    const res = await dispatchMagicLinkAction(emailToSend);
     setSendingMagicLink(false);
-    if (success) {
+    if (res.success) {
+      toast.success(`Magic Link inviato a ${emailToSend}! Controlla la tua posta.`);
       setMagicLinkSent(true);
+    } else {
+      toast.error(res.error || "Errore durante l'invio del link");
     }
   };
 
