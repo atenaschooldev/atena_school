@@ -2,44 +2,82 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { createServerClient as createSupabaseSsrClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+function isServiceRoleValid() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return serviceRoleKey && 
+         !serviceRoleKey.includes("placeholder") && 
+         !serviceRoleKey.includes("your-service-role-key-here");
+}
+
+function getSupabaseClient(sessionId: string | null) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  if (isServiceRoleValid()) {
+    return createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  }
+  
+  const cookieStore = cookies();
+  return createSupabaseSsrClient(
+    supabaseUrl,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        async getAll() {
+          const store = await cookieStore;
+          return store?.getAll() ?? []
+        },
+        async setAll(cookiesToSet) {
+          const store = await cookieStore;
+          if (store) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              store.set(name, value, options)
+            )
+          }
+        },
+      },
+      global: {
+        headers: {
+          ...(sessionId ? { "x-session-id": sessionId } : {})
+        }
+      }
+    }
+  );
+}
 
 export async function getBookingDetailsServer(bookingId: string) {
   if (!bookingId) return null;
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl) return null;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error("Missing Supabase URL or Service Role Key in environment variables.");
-      return null;
-    }
+    // Use service role if valid, otherwise fallback to session header client
+    const supabase = getSupabaseClient(null);
 
-    // Bypass RLS on server-side safely
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-    const { data: booking, error: bookingError } = await supabaseAdmin
+    const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
       .maybeSingle();
 
     if (bookingError || !booking) {
-      console.error("Error fetching booking details by admin client:", bookingError);
+      console.error("Error fetching booking details:", bookingError);
       return null;
     }
 
     // Fetch the linked course/shop item info
     let itemData: any = null;
     if (booking.item_type === "course") {
-      const { data } = await supabaseAdmin
+      const { data } = await supabase
         .from("courses")
         .select("name, price, photo_url, teacher_name")
         .eq("id", booking.item_id)
         .maybeSingle();
       itemData = data;
     } else if (booking.item_type === "shop") {
-      const { data } = await supabaseAdmin
+      const { data } = await supabase
         .from("shop_items")
         .select("title_it, price, photo_url")
         .eq("id", booking.item_id)
@@ -62,19 +100,13 @@ export async function getBookingDetailsServer(bookingId: string) {
 
 export async function deleteBookingServerAction(bookingId: string, sessionId: string | null) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const authClient = createServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceRoleKey) {
-      return { success: false, error: "Missing configuration" };
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const client = getSupabaseClient(sessionId);
 
     // Verify ownership on server-side before deleting
-    let query = supabaseAdmin
+    let query = client
       .from("bookings")
       .delete()
       .eq("id", bookingId);
@@ -101,16 +133,18 @@ export async function deleteBookingServerAction(bookingId: string, sessionId: st
 
 export async function checkoutCartServerAction(sessionId: string | null) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceRoleKey) {
-      return { success: false, error: "Missing configuration" };
+    if (!isServiceRoleValid()) {
+      return { 
+        success: false, 
+        error: "Для симуляции оплаты (установки статуса paid) в локальной среде разработки, пожалуйста, укажите настоящий SUPABASE_SERVICE_ROLE_KEY в вашем .env файле." 
+      };
     }
 
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    const authClient = createServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
     let query = supabaseAdmin
       .from("bookings")
@@ -152,20 +186,14 @@ export async function createOrUpdateReservationServerAction(params: {
   origin?: string;
 }) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const authClient = createServerClient();
+    const { data: { user } } = await authClient.auth.getUser();
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceRoleKey) {
-      return { success: false, error: "Missing configuration" };
-    }
-
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     const { type, id, dateParam, timeParam, slotIdParam, values, sessionId, origin } = params;
+    const client = getSupabaseClient(sessionId || null);
 
     // Check for existing pending/reserved booking to prevent duplicate rows
-    const { data: existingBooking } = await supabaseAdmin
+    const { data: existingBooking } = await client
       .from("bookings")
       .select("id")
       .eq("student_email", values.email)
@@ -175,7 +203,7 @@ export async function createOrUpdateReservationServerAction(params: {
 
     let booking;
     if (existingBooking) {
-      const { data: updatedBooking, error: bookingError } = await supabaseAdmin
+      const { data: updatedBooking, error: bookingError } = await client
         .from("bookings")
         .update({
           user_id: user?.id || null,
@@ -196,7 +224,7 @@ export async function createOrUpdateReservationServerAction(params: {
       if (bookingError) throw bookingError;
       booking = updatedBooking;
     } else {
-      const { data: insertedBooking, error: bookingError } = await supabaseAdmin
+      const { data: insertedBooking, error: bookingError } = await client
         .from("bookings")
         .insert([{
           item_id: id,
@@ -228,7 +256,7 @@ export async function createOrUpdateReservationServerAction(params: {
           ? `${origin}/auth/callback?next=/dashboard` 
           : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/dashboard`;
 
-        await supabase.auth.signInWithOtp({
+        await authClient.auth.signInWithOtp({
           email: values.email,
           options: {
             emailRedirectTo: redirectUrl,
