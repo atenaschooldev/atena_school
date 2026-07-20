@@ -7,7 +7,6 @@ import { Link, useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 import { User, Envelope, Lock } from "@phosphor-icons/react";
 import Image from "next/image";
-import heroLondon from "@/assets/hero-london.avif";
 import { signUpWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
 
 function RegisterForm() {
@@ -62,7 +61,7 @@ function RegisterForm() {
       {/* Full Page Background Image of London */}
       <div className="absolute inset-0 z-0">
         <Image
-          src={heroLondon}
+          src="/hero-london.avif"
           alt="London"
           fill
           className="object-cover object-center filter saturate-[0.85] brightness-[0.65]"

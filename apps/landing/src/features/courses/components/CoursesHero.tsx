@@ -2,8 +2,6 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import heroDefault from "@/assets/hero-london.avif";
-
 const CoursesHero = () => {
   const t = useTranslations("coursesPage");
 
@@ -12,7 +10,7 @@ const CoursesHero = () => {
       {/* Background with overlay */}
       <div className="absolute inset-0">
         <Image
-          src={heroDefault}
+          src="/hero-london.avif"
           alt="Atena School Courses"
           fill
           className="object-cover"

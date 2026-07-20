@@ -3,8 +3,7 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { MapPin, ArrowRight, ArrowDown, Sparkle } from "@phosphor-icons/react";
-import heroDefault from "@/assets/hero-london.avif";
-import heroMobile from "@/assets/hero-london-mobile.avif";
+
 import { Link } from "@/i18n/routing";
 
 
@@ -25,7 +24,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       {/* Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <Image
-          src={data?.imageUrl || heroMobile}
+          src={data?.imageUrl || "/hero-london-mobile.avif"}
           alt="Atena School"
           fill
           sizes="100vw"
@@ -33,7 +32,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           priority
         />
         <Image
-          src={data?.imageUrl || heroDefault}
+          src={data?.imageUrl || "/hero-london.avif"}
           alt="Atena School"
           fill
           sizes="(max-width: 1024px) 100vw, 1400px"

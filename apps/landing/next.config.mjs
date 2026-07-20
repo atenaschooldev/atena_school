@@ -5,15 +5,12 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const withNextIntl = createNextIntlPlugin();
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   images: {
     remotePatterns: [
@@ -34,6 +31,23 @@ const nextConfig = {
         hostname: 'hcxpfzsmzusolvhtuhhm.supabase.co',
       },
     ],
+  },
+  turbopack: {
+    root: path.resolve(__dirname, '../..'),
+    resolveAlias: {
+      // next-intl: map virtual config module to the request config file
+      // (createNextIntlPlugin sets this via deprecated experimental.turbo which our turbopack: block shadows)
+      'next-intl/config': './src/i18n/request.ts',
+      react: './node_modules/react',
+      'react-dom': './node_modules/react-dom',
+      fs: { browser: './src/lib/mocks/empty.ts' },
+      net: { browser: './src/lib/mocks/empty.ts' },
+      tls: { browser: './src/lib/mocks/empty.ts' },
+      child_process: { browser: './src/lib/mocks/empty.ts' },
+      canvas: { browser: './src/lib/mocks/empty.ts' },
+      jsdom: { browser: './src/lib/mocks/empty.ts' },
+      'css-tree': { browser: './src/lib/mocks/empty.ts' },
+    },
   },
   webpack(config, { isServer }) {
     if (!isServer) {

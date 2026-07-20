@@ -6,7 +6,6 @@ import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 import { Lock } from "@phosphor-icons/react";
 import Image from "next/image";
-import heroLondon from "@/assets/hero-london.avif";
 import { resetPasswordAction } from "@/app/actions/auth";
 
 export default function ResetPasswordPage() {
@@ -35,7 +34,7 @@ export default function ResetPasswordPage() {
       {/* Full Page Background Image of London */}
       <div className="absolute inset-0 z-0">
         <Image
-          src={heroLondon}
+          src="/hero-london.avif"
           alt="London"
           fill
           className="object-cover object-center filter saturate-[0.85] brightness-[0.65]"

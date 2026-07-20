@@ -9,7 +9,6 @@ import { Envelope, Lock, User, Eye, EyeSlash } from "@phosphor-icons/react";
 import { mergeGuestBookings } from "@/lib/utils";
 import Image from "next/image";
 import logo from "@/assets/logo.webp";
-import heroLondon from "@/assets/hero-london.avif";
 import { loginWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
 
 function LoginForm() {
@@ -55,7 +54,7 @@ function LoginForm() {
       {/* Full Page Background Image of London */}
       <div className="absolute inset-0 z-0">
         <Image
-          src={heroLondon}
+          src="/hero-london.avif"
           alt="London"
           fill
           className="object-cover object-center filter saturate-[0.85] brightness-[0.65]"
