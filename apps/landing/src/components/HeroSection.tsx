@@ -15,6 +15,8 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ data }: HeroSectionProps) => {
+  const t = useTranslations("hero");
+
   const title = data?.title || t("title");
   const tagline = data?.tagline || t("tagline");
 
