@@ -3,7 +3,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createServerClient as createSupabaseSsrClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 function isServiceRoleValid() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -488,6 +488,12 @@ export async function initiateStripePaymentAction(params: {
   };
 }) {
   try {
+    const headerList = await cookies();
+    const headersData = await headers();
+    const host = headersData.get("host") || "localhost:3000";
+    const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
+    const origin = `${protocol}://${host}`;
+
     const supabase = createServerClient();
     const { data: { session } } = await supabase.auth.getSession();
     const authHeader = session?.access_token
@@ -513,6 +519,7 @@ export async function initiateStripePaymentAction(params: {
           time: params.timeParam,
           slotId: params.slotIdParam || null,
           locale: "it",
+          origin,
         }),
       }
     );

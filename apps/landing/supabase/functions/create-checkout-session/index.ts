@@ -25,7 +25,7 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { itemId, itemType, customerEmail, firstName, lastName, phone, date, time, slotId, locale } = await req.json();
+    const { itemId, itemType, customerEmail, firstName, lastName, phone, date, time, slotId, locale, origin } = await req.json();
 
     // 1. Получаем данные об услуге
     const table = itemType === "course" ? "courses" : "shop_items";
@@ -67,7 +67,7 @@ serve(async (req) => {
 
     if (bookingError) throw bookingError;
 
-    const SITE_URL = Deno.env.get('SITE_URL') || req.headers.get('origin') || 'http://localhost:3000';
+    const SITE_URL = origin || req.headers.get('origin') || Deno.env.get('SITE_URL') || 'http://localhost:3000';
 
     // 3. Создаем Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
