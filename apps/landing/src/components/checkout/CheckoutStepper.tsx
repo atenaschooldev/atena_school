@@ -10,20 +10,18 @@ export interface CheckoutStepperProps {
 
 export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
   const steps = [
-    { number: 1, label: "Data e Orario", icon: Calendar },
-    { number: 2, label: "Dettagli & Pagamento", icon: CreditCard },
+    { number: 1, label: "Data e orario", icon: Calendar },
+    { number: 2, label: "Dettagli e pagamento", icon: CreditCard },
     { number: 3, label: "Conferma", icon: CheckCircle },
   ];
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 mb-2">
+    <div className="w-full sm:w-auto min-w-[300px]">
       <div className="flex items-center justify-between relative">
         {/* Connecting Line Track with Active Progress inside */}
-        <div className={`absolute top-5 left-10 right-10 h-1 -translate-y-1/2 z-0 rounded-full ${dark ? "bg-white/10" : "bg-slate-200/80"} overflow-hidden`}>
+        <div className={`absolute top-4 left-8 right-8 h-[2px] -translate-y-1/2 z-0 ${dark ? "bg-white/20" : "bg-slate-200"}`}>
           <div
-            className={`h-full transition-all duration-500 ease-out rounded-full ${
-              dark ? "bg-gradient-to-r from-white via-white to-[#F8861D]" : "bg-gradient-to-r from-[#043569] to-[#F8861D]"
-            }`}
+            className="h-full bg-[#043569] transition-all duration-500 ease-out"
             style={{
               width: currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%",
             }}
@@ -40,34 +38,25 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
             <div key={step.number} className="relative z-10 flex flex-col items-center group">
               <div
                 className={`
-                  w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-bold transition-all duration-300 shadow-md
+                  w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-sm
                   ${
-                    dark
-                      ? isCompleted
-                        ? "bg-white text-[#043569] scale-100 ring-4 ring-white/10"
-                        : isCurrent
-                        ? "bg-white text-[#043569] scale-110 ring-4 ring-white/20 shadow-xl shadow-white/10"
-                        : "bg-white/10 text-white/40 border border-white/10"
-                      : isCompleted
-                      ? "bg-gradient-to-br from-[#043569] to-[#0A4B8F] text-white scale-100 ring-4 ring-[#043569]/10"
+                    isCompleted
+                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/10"
                       : isCurrent
-                      ? "bg-gradient-to-br from-[#043569] via-[#064485] to-[#0A4B8F] text-white scale-110 ring-4 ring-[#043569]/20 shadow-xl shadow-[#043569]/25"
-                      : "bg-white text-slate-400 border border-slate-200 shadow-sm"
+                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/15 shadow-md scale-105"
+                      : "bg-white text-slate-300 border border-slate-200"
                   }
                 `}
               >
                 {isCompleted ? (
-                  <Check className={`w-5 h-5 stroke-[3] ${dark ? "text-emerald-600" : "text-emerald-400"}`} />
+                  <Check className="w-4 h-4 text-white stroke-[3]" />
                 ) : (
                   <Icon
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 ${
                       isCurrent
-                        ? "text-[#F8861D]"
-                        : dark
-                        ? "text-white/40"
+                        ? "text-white"
                         : "text-slate-400"
                     }`}
-                    weight={isCurrent ? "duotone" : "regular"}
                   />
                 )}
               </div>
@@ -75,11 +64,9 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
               {/* Step Label */}
               <span
                 className={`
-                  mt-2 text-[9px] sm:text-xs font-black uppercase tracking-wider text-center transition-colors whitespace-normal sm:whitespace-nowrap max-w-[85px] sm:max-w-none leading-tight
+                  mt-1.5 text-[11px] sm:text-xs font-semibold text-center transition-colors whitespace-nowrap leading-tight
                   ${
-                    dark
-                      ? isCurrent ? "text-white" : isCompleted ? "text-white/60" : "text-white/30"
-                      : isCurrent ? "text-[#043569]" : isCompleted ? "text-slate-700" : "text-slate-400"
+                    isCurrent ? "text-[#043569] font-bold" : isCompleted ? "text-slate-600" : "text-slate-400"
                   }
                 `}
               >

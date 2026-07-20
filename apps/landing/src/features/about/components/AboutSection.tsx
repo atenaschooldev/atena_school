@@ -68,6 +68,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                     src={aboutStudent}
                     alt="Student holding notebook"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>
@@ -77,6 +78,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                     src={aboutStudying}
                     alt="Students studying together"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>
@@ -100,6 +102,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                     src={aboutClassroom}
                     alt="Teacher in classroom"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>

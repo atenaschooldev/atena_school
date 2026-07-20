@@ -46,51 +46,66 @@ function getSupabaseClient(sessionId: string | null) {
   );
 }
 
-export async function getBookingDetailsServer(bookingId: string) {
+export async function getBookingDetailsServer(bookingId: string, sessionIdParam?: string | null) {
   if (!bookingId) return null;
 
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) return null;
 
-    // Use service role if valid, otherwise fallback to session header client
-    const supabase = getSupabaseClient(null);
+    const cookieStore = await cookies();
+    const sessionId = sessionIdParam || cookieStore.get("atena_session_id")?.value || cookieStore.get("booking_session_id")?.value || null;
 
-    const { data: booking, error: bookingError } = await supabase
+    const supabase = getSupabaseClient(sessionId);
+
+    let { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
       .maybeSingle();
 
     if (bookingError || !booking) {
-      console.error("Error fetching booking details:", bookingError);
+      const serverClient = createServerClient();
+      const { data: serverBooking } = await serverClient
+        .from("bookings")
+        .select("*")
+        .eq("id", bookingId)
+        .maybeSingle();
+      booking = serverBooking;
+    }
+
+    if (!booking) {
+      console.error("Error fetching booking details: booking not found for id", bookingId);
       return null;
     }
 
     // Fetch the linked course/shop item info
     let itemData: any = null;
-    if (booking.item_type === "course") {
+    if (booking.item_type === "course" || !booking.item_type) {
       const { data } = await supabase
         .from("courses")
-        .select("name, price, photo_url, teacher_name")
+        .select("*")
         .eq("id", booking.item_id)
         .maybeSingle();
       itemData = data;
-    } else if (booking.item_type === "shop") {
+    }
+    if (!itemData) {
       const { data } = await supabase
         .from("shop_items")
-        .select("title_it, price, photo_url")
+        .select("*")
         .eq("id", booking.item_id)
         .maybeSingle();
-      itemData = data ? { name: data.title_it, price: data.price, photo_url: data.photo_url } : null;
+      itemData = data;
     }
 
     return {
       ...booking,
-      item_name: itemData?.name || null,
-      item_price: itemData?.price || null,
+      item_name: itemData?.title_it || itemData?.name || itemData?.title || null,
+      item_price: itemData?.price || booking?.amount || booking?.price || null,
       item_photo: itemData?.photo_url || null,
       item_teacher: itemData?.teacher_name || null,
+      date: booking.booking_date || null,
+      time: booking.booking_time || null,
     };
   } catch (err) {
     console.error("Failed to run getBookingDetailsServer server action:", err);

@@ -1,6 +1,8 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import {
   CheckCircle,
   ArrowRight,
@@ -9,11 +11,17 @@ import {
   SquaresFour,
   Confetti,
   GoogleLogo,
+  Sparkle,
 } from "@phosphor-icons/react";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
 
 function SuccessContent() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const {
     router,
     verifying,
@@ -40,128 +48,152 @@ function SuccessContent() {
     );
   }
 
+  const dateLocale = it;
+  const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Lezione Atena School";
+  const coursePrice = bookingData?.item_price ?? bookingData?.total_price ?? bookingData?.amount ?? bookingData?.price ?? 0;
+
+  const rawDate = bookingData?.starts_at || bookingData?.booking_date || bookingData?.date;
+  const formattedDate = rawDate
+    ? (typeof rawDate === "string" && !rawDate.includes("T") && !isNaN(Date.parse(rawDate))
+        ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
+        : typeof rawDate === "string" && rawDate.includes("T")
+        ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
+        : rawDate)
+    : null;
+
+  const rawTime = bookingData?.starts_at || bookingData?.booking_time || bookingData?.time;
+  const formattedTime = rawTime
+    ? (typeof rawTime === "string" && rawTime.includes("T") ? format(new Date(rawTime), "HH:mm") : rawTime)
+    : null;
+
   return (
-    <main className="min-h-screen lg:h-screen lg:overflow-hidden bg-gradient-to-br from-[#043569] via-[#054080] to-[#021f42] px-4 sm:px-6 flex flex-col relative py-8 pb-20 lg:py-0">
-      {/* Ambient orbs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-[#F8861D]/10 rounded-full blur-3xl pointer-events-none" />
+    <main className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-[#043569]/[0.02] to-[#F8861D]/[0.03] text-foreground flex flex-col items-center justify-center relative">
+      {/* Subtle Ambient Decorative Glow Orbs */}
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#043569]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#F8861D]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-4xl w-full mx-auto flex flex-col h-auto lg:h-full py-6 md:py-8 relative z-10 pb-16 lg:pb-0">
-        {/* Stepper */}
-        <CheckoutStepper currentStep={3} dark />
+      {/* Main Centered Premium SaaS Success Card */}
+      <div className="max-w-lg w-full bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-7 sm:p-9 flex flex-col items-center text-center space-y-6 relative z-10 overflow-hidden select-none">
+        
+        {/* Top Celebration Icon */}
+        <div className="w-16 h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-8 ring-emerald-50 shrink-0">
+          <CheckCircle className="w-9 h-9" weight="fill" />
+        </div>
 
-        {/* Main content — centered success card */}
-        <div className="flex-1 flex items-center justify-center mt-6">
-          <div className="w-full max-w-md bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 flex flex-col items-center text-center gap-6">
-
-            {/* Celebration Icon */}
-            <div className="relative">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl ${
+        {/* Title & Status */}
+        <div className="space-y-1.5">
+          <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-0.5 rounded-full">
+            {isPaid ? "Pagamento confermato" : "Prenotazione confermata"}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#043569] pt-1">
+            {isPaid ? "Grazie per il tuo acquisto!" : "Prenotazione ricevuta!"}
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed pt-0.5">
+            {!user ? (
+              isGmail ? (
                 isPaid
-                  ? "bg-gradient-to-br from-green-400 to-emerald-600 shadow-green-500/30"
-                  : "bg-gradient-to-br from-[#F8861D] to-[#e07010] shadow-[#F8861D]/30"
-              }`}>
-                <CheckCircle className="w-10 h-10 text-white" weight="bold" />
-              </div>
-              {/* Sparkle dot */}
-              <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center animate-bounce">
-                <Confetti className="w-3 h-3 text-yellow-900" weight="fill" />
-              </div>
-            </div>
-
-            {/* Title & Badge */}
-            <div>
-              <p className="text-xs font-black uppercase tracking-widest text-[#F8861D] mb-1">
-                {isPaid ? "Pagamento confermato" : "Prenotazione confermata"}
-              </p>
-              <h1 className="text-3xl font-black text-white leading-tight">
-                {isPaid ? "Tutto pagato!" : "Tutto pronto!"}
-              </h1>
-            </div>
-
-            {/* Instruction Description */}
-            <p className="text-sm text-white/60 leading-relaxed max-w-sm">
-              {!user ? (
-                isGmail ? (
-                  isPaid
-                    ? "Il pagamento è stato elaborato. I dettagli dell'acquisto ti sono stati inviati via email e la lezione è già disponibile nella tua Area Personale (accedi con Google)."
-                    : "La prenotazione è confermata. I dettagli ti sono stati inviati via email e la lezione è già registrata nella tua Area Personale (accedi con Google)."
-                ) : (
-                  isPaid
-                    ? "Il pagamento è stato elaborato. I dettagli dell'acquisto ti sono stati inviati via email e la lezione è disponibile nella tua Area Personale tramite il Magic Link inviato."
-                    : "La prenotazione è confermata. I dettagli ti sono stati inviati via email e la lezione è registrata nella tua Area Personale tramite il Magic Link inviato."
-                )
+                  ? "Il pagamento è stato completato. I dettagli ti sono stati inviati via email e la lezione è già disponibile nel tuo pannello personale."
+                  : "La lezione è stata prenotata. Ti abbiamo inviato una conferma via email con tutte le informazioni."
               ) : (
                 isPaid
-                  ? "Il tuo pagamento è stato elaborato con successo. Trovi la lezione nel tuo pannello personale."
-                  : "La prenotazione è confermata. Ricordati di portare il pagamento il giorno della lezione."
-              )}
-            </p>
+                  ? "Il pagamento è stato completato. Trovi i dettagli nell'email inviata e nel tuo pannello tramite il link d'accesso."
+                  : "La lezione è stata prenotata. Ti abbiamo inviato un'email di conferma con il link per accedere."
+              )
+            ) : (
+              isPaid
+                ? "Il tuo pagamento è stato elaborato con successo. Puoi accedere al tuo pannello in qualsiasi momento."
+                : "La prenotazione è confermata. Ti aspettiamo in sede per la tua lezione!"
+            )}
+          </p>
+        </div>
 
-            {/* Email Sent Badge */}
-            {emailDisplay && (
-              <div className="flex items-center gap-2.5 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl">
-                <Envelope className="w-4 h-4 text-[#F8861D] shrink-0" />
-                <p className="text-xs text-white/70">
-                  Conferma inviata a <span className="text-white font-bold">{emailDisplay}</span>
-                </p>
+        {/* Order Receipt Box */}
+        <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left space-y-2.5">
+          <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 text-xs font-bold text-[#043569]">
+            <span>Riepilogo lezione</span>
+            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/60 px-2 py-0.5 rounded-md">
+              {isPaid ? "Pagato (Stripe)" : "Paga in sede"}
+            </span>
+          </div>
+
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 font-medium">Servizio</span>
+              <span className="font-bold text-slate-800 text-right max-w-[220px] truncate">
+                {courseName}
+              </span>
+            </div>
+
+            {formattedDate && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">Data</span>
+                <span className="font-bold text-slate-800">{formattedDate}</span>
               </div>
             )}
 
-            {/* Divider */}
-            <div className="w-full border-t border-white/10 my-2" />
+            {formattedTime && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">Orario</span>
+                <span className="font-bold text-slate-800">{formattedTime}</span>
+              </div>
+            )}
 
-            {/* CTAs */}
-            <div className="w-full">
-              {user ? (
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="w-full py-4 bg-white text-[#043569] rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#F8861D] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl"
-                >
-                  <SquaresFour className="w-4 h-4" />
-                  Vai al tuo pannello
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </button>
-              ) : isGmail ? (
-                <div className="space-y-3">
-                  <p className="text-xs text-white/60 text-center">
-                    Accedi con Google per accedere alla tua Area Personale
-                  </p>
-                  <button
-                    onClick={() => router.push(`/auth/login?redirect=/dashboard`)}
-                    className="w-full py-4 bg-white text-[#043569] rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#F8861D] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl"
-                  >
-                    <GoogleLogo className="w-4 h-4" weight="bold" />
-                    Accedi con Google
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs text-white/60 text-center">
-                    {magicLinkSent
-                      ? "Ti abbiamo inviato un link magico d'accesso via email. Clicca sul link per entrare."
-                      : "Accedi alla dashboard con il link inviato per email"}
-                  </p>
-                  <button
-                    onClick={handleSendMagicLink}
-                    disabled={sendingMagicLink}
-                    className="w-full py-4 bg-white text-[#043569] rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#F8861D] hover:text-white transition-all duration-300 flex items-center justify-center gap-2 shadow-xl disabled:opacity-60"
-                  >
-                    {sendingMagicLink ? (
-                      <CircleNotch className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <Envelope className="w-4 h-4" />
-                        {magicLinkSent ? "Invia di nuovo il link" : "Invia link di accesso"}
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+            <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
+              <span className="font-bold text-slate-700">Totale</span>
+              <span className="font-extrabold text-[#043569] text-base">€{coursePrice}</span>
             </div>
-
           </div>
+        </div>
+
+        {/* Email Sent Confirmation Badge */}
+        {emailDisplay && (
+          <div className="w-full flex items-center justify-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3">
+            <Envelope className="w-3.5 h-3.5 text-[#F8861D]" />
+            <span>Conferma inviata a <strong className="text-slate-800">{emailDisplay}</strong></span>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="w-full space-y-2.5 pt-1">
+          {user ? (
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="w-full py-3.5 px-6 bg-[#043569] hover:bg-[#032850] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+            >
+              <SquaresFour className="w-4 h-4" />
+              <span>Vai alla tua Dashboard</span>
+            </button>
+          ) : isGmail ? (
+            <button
+              onClick={() => router.push(`/auth/login?redirect=/dashboard`)}
+              className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+            >
+              <GoogleLogo className="w-4 h-4" weight="bold" />
+              <span>Accedi con Google</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleSendMagicLink}
+              disabled={sendingMagicLink}
+              className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
+            >
+              {sendingMagicLink ? (
+                <CircleNotch className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Envelope className="w-4 h-4" />
+                  <span>{magicLinkSent ? "Invia di nuovo il link" : "Invia link di accesso"}</span>
+                </>
+              )}
+            </button>
+          )}
+
+          <button
+            onClick={() => router.push("/courses")}
+            className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-[#043569] transition-colors cursor-pointer"
+          >
+            Torna ai corsi
+          </button>
         </div>
       </div>
     </main>

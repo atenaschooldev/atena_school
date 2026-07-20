@@ -9,6 +9,11 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -63,8 +68,9 @@ const nextConfig = {
         tls: false,
         child_process: false,
         canvas: false,
+        jsdom: false,
+        'css-tree': false,
       };
-      config.externals = [...(config.externals || []), 'jsdom', 'css-tree', 'canvas'];
     }
     // Next.js (webpack) can warn about large strings being serialized into the
     // filesystem cache. It's a performance hint, but it's noisy in CI/dev logs.
@@ -76,4 +82,9 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+const config = withNextIntl(nextConfig);
+if (config.experimental?.turbo) {
+  delete config.experimental.turbo;
+}
+
+export default config;

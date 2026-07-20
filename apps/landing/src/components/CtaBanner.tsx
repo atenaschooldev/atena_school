@@ -41,6 +41,7 @@ const CtaBanner = () => {
             src={bannerBg}
             alt="Students studying"
             fill
+            sizes="100vw"
             className="object-cover object-[center_35%] lg:object-center lg:scale-[1.0] lg:-translate-x-[20%] opacity-75 lg:opacity-95 filter brightness-[0.8] saturate-[0.9] transition-transform duration-500"
             priority
           />

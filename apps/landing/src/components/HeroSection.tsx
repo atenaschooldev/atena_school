@@ -27,7 +27,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           src={data?.imageUrl || "/hero-london-mobile.avif"}
           alt="Atena School"
           fill
-          sizes="100vw"
+          sizes="(max-width: 639px) 100vw, 1px"
           className="block sm:hidden object-cover object-[100%_30%] animate-zoom-breathing [will-change:transform]"
           priority
         />
