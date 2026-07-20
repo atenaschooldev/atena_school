@@ -29,8 +29,8 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect dashboard and checkout routes
-  const isProtectedRoute = request.nextUrl.pathname.includes('/dashboard') || request.nextUrl.pathname.includes('/checkout');
+  // Protect dashboard routes
+  const isProtectedRoute = request.nextUrl.pathname.includes('/dashboard');
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { MapPin, ArrowRight, ArrowDown, Sparkle } from "@phosphor-icons/react";
 import heroDefault from "@/assets/hero-london.avif";
-import heroMobile from "@/assets/test4.png";
+import heroMobile from "@/assets/hero-london-mobile.avif";
 import { Link } from "@/i18n/routing";
 
 
@@ -116,12 +116,6 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
           </div>
         </div>
-      </div>
-
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 text-white/35 animate-bounce pointer-events-none">
-        <span className="text-[9px] font-black uppercase tracking-[0.2em]">Scorri</span>
-        <ArrowDown size={14} weight="bold" />
       </div>
     </section>
   );

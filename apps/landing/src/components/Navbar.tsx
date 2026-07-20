@@ -26,13 +26,11 @@ const Navbar = () => {
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [cartCount, setCartCount] = useState(0);
   const supabase = createClient();
-
   const [isScrolled, setIsScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    setMounted(true);
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -105,6 +103,7 @@ const Navbar = () => {
   }, [pathname]);
 
   useEffect(() => {
+    setMounted(true);
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -161,6 +160,10 @@ const Navbar = () => {
   ];
 
   const isLightHeader = isHome && !isScrolled;
+
+  if (pathname && (pathname.includes("/checkout") || pathname.includes("/book"))) {
+    return null;
+  }
 
   return (
     <>

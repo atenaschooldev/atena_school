@@ -12,7 +12,7 @@ export default async function BookingPage({ params }: PageProps) {
   
   const table = type === "course" ? "courses" : "shop_items";
   
-  // Fetch item details on the server for instant page load
+  // Fetch item details from Supabase database
   const { data: item } = await supabase
     .from(table)
     .select("*")

@@ -13,7 +13,7 @@ const Footer = () => {
   const t = useTranslations("footer");
   const pathname = usePathname();
 
-  if (pathname && pathname.includes("/test-inglese")) {
+  if (pathname && (pathname.includes("/test-inglese") || pathname.includes("/checkout") || pathname.includes("/book"))) {
     return null;
   }
 

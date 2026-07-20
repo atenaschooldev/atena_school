@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { CaretUp } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -18,6 +20,10 @@ const ScrollToTop = () => {
     window.addEventListener("scroll", toggleVisibility, { passive: true });
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
+
+  if (pathname && (pathname.includes("/checkout") || pathname.includes("/book"))) {
+    return null;
+  }
 
   const scrollToTop = () => {
     window.scrollTo({
