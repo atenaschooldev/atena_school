@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { MapPin, ArrowRight, ArrowDown, Sparkle } from "@phosphor-icons/react";
 import heroDefault from "@/assets/hero-london.avif";
 import heroMobile from "@/assets/hero-london-mobile.avif";
@@ -15,9 +15,6 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ data }: HeroSectionProps) => {
-  const t = useTranslations("hero");
-  const locale = useLocale();
-
   const title = data?.title || t("title");
   const tagline = data?.tagline || t("tagline");
 

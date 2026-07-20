@@ -44,8 +44,8 @@ export async function getHomePageData(): Promise<HomePageData> {
   ]);
 
   const hero: HeroData = {
-    title: rawHero?.title_it || rawHero?.title_en || "",
-    tagline: rawHero?.subtitle_it || rawHero?.subtitle_en || "",
+    title: rawHero?.title_it || "",
+    tagline: rawHero?.subtitle_it || "",
     imageUrl: (rawHero as any)?.image_url || null,
   };
 
