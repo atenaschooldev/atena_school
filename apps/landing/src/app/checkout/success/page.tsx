@@ -6,8 +6,6 @@ import {
   ArrowRight,
   Envelope,
   CircleNotch,
-  CalendarBlank,
-  Clock,
   SquaresFour,
   Confetti,
   GoogleLogo,
@@ -52,12 +50,11 @@ function SuccessContent() {
         {/* Stepper */}
         <CheckoutStepper currentStep={3} dark />
 
-        {/* Main content — two columns */}
-        <div className="flex-1 flex flex-col lg:flex-row items-center gap-6 mt-6">
+        {/* Main content — centered success card */}
+        <div className="flex-1 flex items-center justify-center mt-6">
+          <div className="w-full max-w-md bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-8 flex flex-col items-center text-center gap-6">
 
-          {/* LEFT — celebration */}
-          <div className="lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left gap-5">
-            {/* Icon */}
+            {/* Celebration Icon */}
             <div className="relative">
               <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-2xl ${
                 isPaid
@@ -72,16 +69,18 @@ function SuccessContent() {
               </div>
             </div>
 
+            {/* Title & Badge */}
             <div>
               <p className="text-xs font-black uppercase tracking-widest text-[#F8861D] mb-1">
                 {isPaid ? "Pagamento confermato" : "Prenotazione confermata"}
               </p>
-              <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
-                {isPaid ? "Tutto\npagato!" : "Tutto\npronto!"}
+              <h1 className="text-3xl font-black text-white leading-tight">
+                {isPaid ? "Tutto pagato!" : "Tutto pronto!"}
               </h1>
             </div>
 
-            <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+            {/* Instruction Description */}
+            <p className="text-sm text-white/60 leading-relaxed max-w-sm">
               {!user ? (
                 isGmail ? (
                   isPaid
@@ -99,83 +98,21 @@ function SuccessContent() {
               )}
             </p>
 
-            {/* Email sent row */}
+            {/* Email Sent Badge */}
             {emailDisplay && (
-              <div className="flex items-center gap-2.5 px-4 py-2.5 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="flex items-center gap-2.5 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl">
                 <Envelope className="w-4 h-4 text-[#F8861D] shrink-0" />
                 <p className="text-xs text-white/70">
                   Conferma inviata a <span className="text-white font-bold">{emailDisplay}</span>
                 </p>
               </div>
             )}
-          </div>
 
-          {/* RIGHT — details card */}
-          <div className="lg:w-1/2 w-full max-w-sm lg:max-w-none">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-6 space-y-5">
+            {/* Divider */}
+            <div className="w-full border-t border-white/10 my-2" />
 
-              {/* Course info card */}
-              {(bookingData?.item_name || bookingData?.item_price) && (
-                <div className="flex items-center gap-4 p-4 bg-white/8 rounded-2xl border border-white/12">
-                  {bookingData.item_photo ? (
-                    <img
-                      src={bookingData.item_photo}
-                      alt={bookingData.item_name}
-                      className="w-14 h-14 rounded-xl object-cover shrink-0"
-                    />
-                  ) : (
-                    <div className="w-14 h-14 rounded-xl bg-[#F8861D]/20 flex items-center justify-center shrink-0">
-                      <CheckCircle className="w-7 h-7 text-[#F8861D]" weight="duotone" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-0.5">Corso acquistato</p>
-                    <p className="font-bold text-sm text-white leading-tight truncate">{bookingData.item_name}</p>
-                    {bookingData.item_teacher && (
-                      <p className="text-xs text-white/50 mt-0.5">{bookingData.item_teacher}</p>
-                    )}
-                  </div>
-                  {bookingData.item_price && (
-                    <span className="text-xl font-black text-white shrink-0">
-                      €{bookingData.item_price}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Booking details */}
-              {bookingData?.booking_date && (
-                <div className="space-y-2.5">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Dettagli lezione</p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/8">
-                      <div className="w-8 h-8 rounded-xl bg-[#F8861D]/15 flex items-center justify-center shrink-0">
-                        <CalendarBlank className="w-4 h-4 text-[#F8861D]" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Data</p>
-                        <p className="text-sm font-bold text-white">{bookingData.booking_date}</p>
-                      </div>
-                    </div>
-                    {bookingData.booking_time && (
-                      <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/8">
-                        <div className="w-8 h-8 rounded-xl bg-[#F8861D]/15 flex items-center justify-center shrink-0">
-                          <Clock className="w-4 h-4 text-[#F8861D]" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">Orario</p>
-                          <p className="text-sm font-bold text-white">Ore {bookingData.booking_time}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Divider */}
-              <div className="border-t border-white/10" />
-
-              {/* CTA */}
+            {/* CTAs */}
+            <div className="w-full">
               {user ? (
                 <button
                   onClick={() => router.push("/dashboard")}
@@ -223,6 +160,7 @@ function SuccessContent() {
                 </div>
               )}
             </div>
+
           </div>
         </div>
       </div>
