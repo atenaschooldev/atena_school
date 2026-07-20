@@ -71,7 +71,7 @@ export default function DashboardPage() {
               Pannello Studente
             </h1>
             <p className="text-xs sm:text-sm text-foreground/60 mt-1">
-              Benvenuto, {user.user_metadata?.full_name || user.email}
+              Benvenuto, {user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}
             </p>
           </div>
           <Link
@@ -149,10 +149,14 @@ export default function DashboardPage() {
                               ? "bg-green-500/10 text-green-700 border border-green-500/20"
                               : b.status === "reserved"
                               ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                              : "bg-muted text-muted-foreground"
+                              : "bg-muted/60 text-muted-foreground border border-border"
                           }`}
                         >
-                          {b.status === "paid" || b.status === "completed" ? "✓ Pagato" : "Prenotato"}
+                          {b.status === "paid" || b.status === "completed"
+                            ? "✓ Pagato"
+                            : b.status === "reserved"
+                            ? "Prenotato"
+                            : "In attesa"}
                         </span>
                       </div>
                     </div>

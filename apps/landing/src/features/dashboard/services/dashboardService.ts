@@ -22,11 +22,37 @@ export async function autoLinkGuestBookings(
   supabase: SupabaseClient
 ): Promise<void> {
   if (!email || !userId) return;
+
+  // Link any bookings matching this email to the user_id if they aren't linked yet.
+  // The status is never modified here (must only be set to paid via Stripe Webhook/Edge Function).
   await supabase
     .from("bookings")
     .update({ user_id: userId })
     .ilike("student_email", email)
     .is("user_id", null);
+
+  // Sync phone & name from guest booking to user metadata
+  const { data: latestBooking } = await supabase
+    .from("bookings")
+    .select("student_phone, student_name")
+    .ilike("student_email", email)
+    .not("student_phone", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latestBooking?.student_phone) {
+    try {
+      await supabase.auth.updateUser({
+        data: {
+          phone: latestBooking.student_phone,
+          ...(latestBooking.student_name ? { custom_full_name: latestBooking.student_name } : {})
+        }
+      });
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export async function fetchUserBookingsEnriched(

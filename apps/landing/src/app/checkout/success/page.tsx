@@ -55,8 +55,8 @@ function SuccessContent() {
   const rawDate = bookingData?.starts_at || bookingData?.booking_date || bookingData?.date;
   const formattedDate = rawDate
     ? (typeof rawDate === "string" && !rawDate.includes("T") && !isNaN(Date.parse(rawDate))
-        ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
-        : typeof rawDate === "string" && rawDate.includes("T")
+      ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
+      : typeof rawDate === "string" && rawDate.includes("T")
         ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
         : rawDate)
     : null;
@@ -74,7 +74,7 @@ function SuccessContent() {
 
       {/* Main Centered Premium SaaS Success Card */}
       <div className="max-w-lg w-full bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-7 sm:p-9 flex flex-col items-center text-center space-y-6 relative z-10 overflow-hidden select-none">
-        
+
         {/* Top Celebration Icon */}
         <div className="w-16 h-16 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 ring-8 ring-emerald-50 shrink-0">
           <CheckCircle className="w-9 h-9" weight="fill" />
@@ -112,7 +112,7 @@ function SuccessContent() {
           <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 text-xs font-bold text-[#043569]">
             <span>Riepilogo lezione</span>
             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/60 px-2 py-0.5 rounded-md">
-              {isPaid ? "Pagato (Stripe)" : "Paga in sede"}
+              {isPaid ? "Pagato" : "Paga in sede"}
             </span>
           </div>
 

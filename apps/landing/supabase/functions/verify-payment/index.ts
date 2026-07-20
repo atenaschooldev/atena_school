@@ -1,73 +1,79 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import Stripe from "https://esm.sh/stripe@14.16.0";
+import { handleCors, jsonResponse, createSupabaseAdmin, createStripe } from "../_shared/utils.ts";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") as string, {
-  apiVersion: "2023-10-16",
-  httpClient: Stripe.createFetchHttpClient(),
-});
+const stripe = createStripe();
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+Deno.serve(async (req) => {
+  const cors = handleCors(req);
+  if (cors) return cors;
 
   try {
     const { session_id, booking_id } = await req.json();
 
     if (!session_id || !booking_id) {
-      return new Response(JSON.stringify({ error: "Missing session_id or booking_id" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
+      return jsonResponse({ error: "Missing session_id or booking_id" }, 400, req);
     }
 
     // 1. Verify the Stripe session is actually paid
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     if (session.payment_status !== "paid") {
-      return new Response(JSON.stringify({ error: "Payment not completed", status: session.payment_status }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 402,
-      });
+      return jsonResponse({ error: "Payment not completed", status: session.payment_status }, 402, req);
     }
 
     // 2. Confirm the booking_id matches the session metadata (security check)
     if (session.metadata?.booking_id !== booking_id) {
-      return new Response(JSON.stringify({ error: "Booking ID mismatch" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 403,
-      });
+      return jsonResponse({ error: "Booking ID mismatch" }, 403, req);
     }
 
     // 3. Update booking status to "paid" using service role
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabaseAdmin = createSupabaseAdmin();
 
-    const { error: updateError } = await supabaseAdmin
+    const { data: updatedBooking, error: updateError } = await supabaseAdmin
       .from("bookings")
       .update({ status: "paid" })
       .eq("id", booking_id)
-      .in("status", ["pending_payment"]); // Only update if still pending (idempotent)
+      .select()
+      .maybeSingle();
 
     if (updateError) throw updateError;
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-  } catch (err: any) {
-    console.error(err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    let bookingData = updatedBooking;
+    if (!bookingData) {
+      const { data: bData } = await supabaseAdmin
+        .from("bookings")
+        .select("*")
+        .eq("id", booking_id)
+        .maybeSingle();
+      bookingData = bData;
+    }
+
+    let itemData: Record<string, unknown> | null = null;
+    if (bookingData?.item_id) {
+      const table = bookingData.item_type === "course" ? "courses" : "shop_items";
+      const { data } = await supabaseAdmin
+        .from(table)
+        .select("*")
+        .eq("id", bookingData.item_id)
+        .maybeSingle();
+      itemData = data;
+    }
+
+    const fullBooking = bookingData
+      ? {
+          ...bookingData,
+          item_name: itemData?.title_it ?? itemData?.name ?? itemData?.title ?? null,
+          item_price: itemData?.price ?? bookingData?.amount ?? bookingData?.price ?? null,
+          item_photo: itemData?.photo_url ?? null,
+          item_teacher: itemData?.teacher_name ?? null,
+          date: bookingData.booking_date ?? null,
+          time: bookingData.booking_time ?? null,
+        }
+      : null;
+
+    return jsonResponse({ success: true, booking: fullBooking }, 200, req);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    console.error("[verify-payment]", err);
+    return jsonResponse({ error: message }, 500, req);
   }
 });

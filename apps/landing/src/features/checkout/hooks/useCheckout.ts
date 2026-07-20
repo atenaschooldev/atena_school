@@ -159,6 +159,8 @@ export function useCheckout(type: string, id: string) {
         }
       }
 
+      const sid = getSessionId();
+
       const res = await initiateStripePaymentAction({
         type,
         id,
@@ -166,6 +168,7 @@ export function useCheckout(type: string, id: string) {
         timeParam,
         slotIdParam,
         values,
+        sessionId: sid,
       });
 
       if (res.success && res.url) {

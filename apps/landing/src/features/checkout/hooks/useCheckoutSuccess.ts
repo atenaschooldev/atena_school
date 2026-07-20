@@ -3,7 +3,12 @@ import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
-import { getBookingDetailsServer, getCurrentUserAction, dispatchMagicLinkAction } from "@/app/actions/booking";
+import {
+  getBookingDetailsServer,
+  getCurrentUserAction,
+  dispatchMagicLinkAction,
+  confirmPaymentAction,
+} from "@/app/actions/booking";
 
 export function useCheckoutSuccess() {
   const router = useRouter();
@@ -20,15 +25,6 @@ export function useCheckoutSuccess() {
   const sentRef = useRef(false);
 
   useEffect(() => {
-    async function loadBooking() {
-      if (!bookingId) return;
-      const data = await getBookingDetailsServer(bookingId);
-      if (data) setBookingData(data);
-    }
-    loadBooking();
-  }, [bookingId]);
-
-  useEffect(() => {
     async function fetchUser() {
       const res = await getCurrentUserAction();
       if (res.success) {
@@ -39,33 +35,39 @@ export function useCheckoutSuccess() {
   }, []);
 
   useEffect(() => {
-    async function verifyStripePayment() {
-      if (!sessionId || !bookingId) {
+    async function initReceipt() {
+      if (!bookingId) {
         setVerifying(false);
         return;
       }
 
-      try {
-        await fetch(
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/verify-payment`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({ session_id: sessionId, booking_id: bookingId }),
+      if (sessionId) {
+        // Stripe payment confirmation
+        try {
+          const res = await confirmPaymentAction(bookingId, sessionId);
+          if (res?.success && res?.booking) {
+            setBookingData(res.booking);
+          } else {
+            const fallback = await getBookingDetailsServer(bookingId);
+            if (fallback) setBookingData(fallback);
           }
-        );
-      } catch {
-        // Non-critical — webhook will handle it
-      } finally {
+        } catch (err) {
+          console.error("Error confirming payment:", err);
+          const fallback = await getBookingDetailsServer(bookingId);
+          if (fallback) setBookingData(fallback);
+        } finally {
+          setVerifying(false);
+        }
+      } else {
+        // Offline Paga in Sede reservation
+        const data = await getBookingDetailsServer(bookingId);
+        if (data) setBookingData(data);
         setVerifying(false);
       }
     }
 
-    verifyStripePayment();
-  }, [sessionId, bookingId]);
+    initReceipt();
+  }, [bookingId, sessionId]);
 
   useEffect(() => {
     if (verifying) return;
@@ -80,17 +82,16 @@ export function useCheckoutSuccess() {
 
   const emailDisplay = bookingData?.student_email || emailParam || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId;
+  const isPaid = !!sessionId || bookingData?.status === "paid";
 
-  // Auto-send magic link on mount for non-Gmail guests in Stripe payment flow
+  // Auto-send magic link for non-Gmail guests
   useEffect(() => {
     if (verifying) return;
-    if (user) return; // already logged in
+    if (user) return;
     if (!emailDisplay) return;
-    if (isGmail) return; // Gmail users use Google OAuth
+    if (isGmail) return;
 
     if (!isPaid) {
-      // Booking flow (offline) already sent the OTP in createOrUpdateReservation
       setMagicLinkSent(true);
       return;
     }
@@ -116,9 +117,11 @@ export function useCheckoutSuccess() {
       toast.error("Email non trovata per l'invio del link");
       return;
     }
+
     setSendingMagicLink(true);
     const res = await dispatchMagicLinkAction(emailToSend);
     setSendingMagicLink(false);
+
     if (res.success) {
       toast.success(`Magic Link inviato a ${emailToSend}! Controlla la tua posta.`);
       setMagicLinkSent(true);
