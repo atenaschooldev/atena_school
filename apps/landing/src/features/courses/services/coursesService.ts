@@ -2,14 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { getCourses, getShopItems } from "@/lib/data";
 
 // Local asset imports
-import imgKids from "@/assets/course-kids.jpg";
-import imgStarters from "@/assets/course-starters.jpeg";
-import imgMovers from "@/assets/course-movers.jpeg";
-import imgFlyers from "@/assets/course-flyers.jpeg";
-import imgA2Key from "@/assets/course-a2key.jpeg";
-import imgB1 from "@/assets/course-b1.jpeg";
-import imgB2 from "@/assets/course-b2.jpeg";
-import imgC1 from "@/assets/course-c1.jpeg";
 import imgDoposcuola from "@/assets/course-doposcuola.jpg";
 import imgRecovery from "@/assets/course-recovery.jpeg";
 import imgUniversity from "@/assets/course-university.jpg";
@@ -17,15 +9,6 @@ import imgIt from "@/assets/course-it_courses.jpg";
 import imgEipass from "@/assets/eipass.webp";
 
 const localImageMap: Record<string, any> = {
-  kids: imgKids,
-  starters: imgStarters,
-  movers: imgMovers,
-  flyers: imgFlyers,
-  a2key: imgA2Key,
-  a2: imgA2Key,
-  b1: imgB1,
-  b2: imgB2,
-  c1: imgC1,
   doposcuola: imgDoposcuola,
   recovery: imgRecovery,
   university: imgUniversity,
@@ -34,7 +17,6 @@ const localImageMap: Record<string, any> = {
   eipass_user: imgEipass,
   eipass_basic: imgEipass,
   tutor: imgRecovery,
-  young: imgMovers,
 };
 
 export interface ResolvedCourse {

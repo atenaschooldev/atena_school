@@ -64,7 +64,7 @@ const CourseCard = ({
       `}
     >
       {/* Image container */}
-      <div className="relative h-52 w-full overflow-hidden bg-muted">
+      <div className="relative h-64 w-full overflow-hidden bg-muted">
         {/* Category Badge */}
         {category && (
           <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 shadow-sm select-none">
@@ -179,7 +179,7 @@ const CourseCard = ({
             <X className="w-4 h-4 sm:w-5 sm:h-5" weight="bold" />
           </button>
           {/* Large image inside dialog */}
-          <div className="relative h-44 sm:h-72 w-full overflow-hidden rounded-2xl bg-muted mb-5">
+          <div className="relative h-64 sm:h-96 w-full overflow-hidden rounded-2xl bg-muted mb-5">
             {image ? (
               <Image 
                 src={image} 
