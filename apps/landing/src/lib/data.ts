@@ -92,23 +92,19 @@ export const getTeachers = unstable_cache(
   { tags: [CACHE_TAGS.TEACHERS], revalidate: CACHE_TTL }
 );
 
-export const getCourses = unstable_cache(
-  async () => {
-    const supabase = createClient();
-    const { data } = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);
-    return (data || []).map((c: any) => ({
-      ...c,
-      title_it: c.name || '',
-      title_en: c.name || '',
-      description_it: c.description || '',
-      description_en: c.description || '',
-      price: Number(c.price) || 0,
-      price_eur: Number(c.price) || 0,
-    }));
-  },
-  ['courses-data'],
-  { tags: [CACHE_TAGS.COURSES], revalidate: CACHE_TTL }
-);
+export async function getCourses() {
+  const supabase = createClient();
+  const { data } = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);
+  return (data || []).map((c: any) => ({
+    ...c,
+    title_it: c.name || '',
+    title_en: c.name || '',
+    description_it: c.description || '',
+    description_en: c.description || '',
+    price: Number(c.price) || 0,
+    price_eur: Number(c.price) || 0,
+  }));
+}
 
 export const getBlogPosts = unstable_cache(
   async () => {
@@ -127,23 +123,19 @@ export const getBlogPosts = unstable_cache(
   { tags: [CACHE_TAGS.BLOG], revalidate: CACHE_TTL }
 );
 
-export const getSingleCourse = (id: string) => unstable_cache(
-  async () => {
-    const supabase = createClient();
-    const { data } = await (supabase.from('courses').select('*').eq('id', id).single() as any);
-    return data ? {
-      ...data,
-      title_it: data.name || '',
-      title_en: data.name || '',
-      description_it: data.description || '',
-      description_en: data.description || '',
-      price: Number(data.price) || 0,
-      price_eur: Number(data.price) || 0,
-    } : null;
-  },
-  [`course-${id}`],
-  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: CACHE_TTL }
-)();
+export async function getSingleCourse(id: string) {
+  const supabase = createClient();
+  const { data } = await (supabase.from('courses').select('*').eq('id', id).single() as any);
+  return data ? {
+    ...data,
+    title_it: data.name || '',
+    title_en: data.name || '',
+    description_it: data.description || '',
+    description_en: data.description || '',
+    price: Number(data.price) || 0,
+    price_eur: Number(data.price) || 0,
+  } : null;
+}
 
 export const getSingleBlogPost = (slug: string) => unstable_cache(
   async () => {
@@ -161,20 +153,16 @@ export const getSingleBlogPost = (slug: string) => unstable_cache(
   { tags: [CACHE_TAGS.BLOG, `blog-${slug}`], revalidate: CACHE_TTL }
 )();
 
-export const getShopItems = unstable_cache(
-  async () => {
-    const supabase = createClient();
-    const { data } = await (supabase.from('shop_items').select('*').eq('is_active', true) as any);
-    return (data || []).map((item: any) => ({
-      ...item,
-      title_it: item.title_it || '',
-      title_en: item.title_en || '',
-      duration_it: item.duration_it || '',
-      duration_en: item.duration_en || '',
-      price: Number(item.price) || 0,
-      price_eur: Number(item.price) || 0,
-    }));
-  },
-  ['shop-items-data'],
-  { tags: [CACHE_TAGS.SHOP_ITEMS], revalidate: CACHE_TTL }
-);
+export async function getShopItems() {
+  const supabase = createClient();
+  const { data } = await (supabase.from('shop_items').select('*').eq('is_active', true) as any);
+  return (data || []).map((item: any) => ({
+    ...item,
+    title_it: item.title_it || '',
+    title_en: item.title_en || '',
+    duration_it: item.duration_it || '',
+    duration_en: item.duration_en || '',
+    price: Number(item.price) || 0,
+    price_eur: Number(item.price) || 0,
+  }));
+}

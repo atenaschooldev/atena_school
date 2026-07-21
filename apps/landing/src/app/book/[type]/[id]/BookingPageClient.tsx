@@ -320,7 +320,7 @@ export default function BookingPageClient({
             <div className="space-y-3 pt-3 border-t border-white/15">
               <div className="flex justify-between items-center">
                 <span className="font-bold uppercase tracking-wider text-xs text-white/70 select-none">TOTALE</span>
-                <span className="font-extrabold text-white text-2xl">{item.price} €</span>
+                <span className="font-extrabold text-white text-2xl">{Number(item.price || 0).toFixed(2)} €</span>
               </div>
 
               <button

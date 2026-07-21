@@ -63,10 +63,9 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
     getShopItems()
   ]);
 
-  const hasDbCourses = supabaseCourses && supabaseCourses.length > 0;
-  let courseSections: Array<{ id: string; title: string; courses?: any[]; items?: string[] }> = [];
+  let courseSections: Array<{ id: string; title: string; courses: any[] }> = [];
 
-  if (hasDbCourses && supabaseCourses) {
+  if (supabaseCourses && supabaseCourses.length > 0) {
     const categoriesMap: Record<string, any[]> = {};
     supabaseCourses.forEach((course) => {
       const cat = course.category || "Other";
@@ -92,24 +91,6 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         courses
       };
     });
-  } else {
-    courseSections = [
-      {
-        id: 'language',
-        title: t("sections.language"),
-        items: ['kids', 'starters', 'movers', 'flyers', 'a2key', 'b1', 'b2', 'c1']
-      },
-      {
-        id: 'academic',
-        title: t("sections.academic"),
-        items: ['doposcuola', 'recovery', 'university']
-      },
-      {
-        id: 'certipass',
-        title: t("sections.certipass"),
-        items: ['eipass_user', 'eipass_basic']
-      }
-    ];
   }
 
   // Append hourly private lesson packages from shop_items
@@ -128,61 +109,45 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
 
   // Resolve all sections into clean structures
   const resolvedSections = courseSections.map((section) => {
-    let resolvedCourses: any[] = [];
-
-    if (section.courses) {
-      resolvedCourses = section.courses.map((course: any) => {
-        const itemTitle = course.title_it || course.name;
-        const itemDesc = course.description_it || course.description || "";
-        const itemPrice = course.price ? `${course.price}€` : undefined;
-
-        const lowerName = (course.name || "").toLowerCase();
-        let itemImage = course.photo_url || undefined;
-        if (!itemImage) {
-          const matchedKey = Object.keys(localImageMap).find(key => {
-            const cleanKey = key.replace('_', '');
-            const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
-            return cleanName.includes(cleanKey);
-          });
-          if (matchedKey) {
-            itemImage = localImageMap[matchedKey];
-          } else if (lowerName.includes('eipass') || lowerName.includes('certipass')) {
-            itemImage = imgEipass;
-          } else {
-            itemImage = imgIt;
-          }
+    const resolvedCourses = section.courses.map((course: any) => {
+      const itemTitle = course.title_it || course.name;
+      const itemDesc = course.description_it || course.description || "";
+      let itemPrice: string | undefined = undefined;
+      if (course.price !== undefined && course.price !== null) {
+        const priceNum = typeof course.price === 'number' ? course.price : parseFloat(course.price.toString());
+        if (!isNaN(priceNum) && priceNum > 0) {
+          itemPrice = `${priceNum.toFixed(2)}€`;
         }
+      }
 
-        return {
-          id: course.id,
-          title: itemTitle,
-          description: itemDesc,
-          image: itemImage,
-          price: itemPrice,
-          type: course.type || 'course',
-          duration: course.duration || course.duration_it || undefined,
-          teacher_name: course.teacher_name || undefined
-        };
-      });
-    } else if (section.items) {
-      resolvedCourses = section.items.map((itemKey) => {
-        const match = supabaseCourses?.find(sc => sc.slug === itemKey);
-        const itemTitle = match?.title_it || t(`items.${itemKey}.title`);
-        const itemDesc = match?.description_it || t(`items.${itemKey}.description`);
-        const itemPrice = match?.price_eur ? `${match.price_eur}€` : undefined;
+      const lowerName = (course.name || "").toLowerCase();
+      let itemImage = course.photo_url || undefined;
+      if (!itemImage) {
+        const matchedKey = Object.keys(localImageMap).find(key => {
+          const cleanKey = key.replace('_', '');
+          const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
+          return cleanName.includes(cleanKey);
+        });
+        if (matchedKey) {
+          itemImage = localImageMap[matchedKey];
+        } else if (lowerName.includes('eipass') || lowerName.includes('certipass')) {
+          itemImage = imgEipass;
+        } else {
+          itemImage = imgIt;
+        }
+      }
 
-        return {
-          id: match?.id || itemKey,
-          title: itemTitle,
-          description: itemDesc,
-          image: match?.image_url || localImageMap[itemKey],
-          price: itemPrice,
-          type: 'course',
-          duration: match?.duration || undefined,
-          teacher_name: match?.teacher_name || undefined
-        };
-      });
-    }
+      return {
+        id: course.id,
+        title: itemTitle,
+        description: itemDesc,
+        image: itemImage,
+        price: itemPrice,
+        type: course.type || 'course',
+        duration: course.duration || course.duration_it || undefined,
+        teacher_name: course.teacher_name || undefined
+      };
+    });
 
     return {
       id: section.id,

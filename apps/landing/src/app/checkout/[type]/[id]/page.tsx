@@ -296,7 +296,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   <div className="pt-2.5 border-t border-white/15 space-y-1.5">
                     <div className="flex justify-between text-xs text-white/70 font-medium">
                       <span>Prezzo corso</span>
-                      <span className="text-white font-bold">€{item?.price || 0}</span>
+                      <span className="text-white font-bold">€{Number(item?.price || 0).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-xs text-white/70 font-medium">
                       <span>Commissioni</span>
@@ -309,7 +309,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
               <div className="space-y-3 pt-3 border-t border-white/15">
                 <div className="flex justify-between items-center">
                   <span className="font-bold uppercase tracking-wider text-xs text-white/70 select-none">TOTALE</span>
-                  <span className="font-extrabold text-white text-2xl">€{item?.price || 0}</span>
+                  <span className="font-extrabold text-white text-2xl">€{Number(item?.price || 0).toFixed(2)}</span>
                 </div>
 
                 {/* Payment Action Buttons */}

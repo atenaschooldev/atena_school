@@ -5,6 +5,9 @@ import CoursesCatalog from "@/features/courses/components/CoursesCatalog";
 import { getResolvedCourseSections } from "@/features/courses/services/coursesService";
 import { env } from "@/config/env";
 
+export const dynamic = 'force-dynamic';
+
+
 export async function generateMetadata() {
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const title = 'Corsi di lingua';

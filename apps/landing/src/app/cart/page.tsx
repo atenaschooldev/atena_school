@@ -188,7 +188,7 @@ export default function CartPage() {
                   <div className="flex justify-between text-2xl font-black pt-4 border-t border-background/10">
                     <span className="uppercase tracking-tight">Total</span>
                     <span className="text-primary">
-                      {bookings.reduce((acc, b) => acc + parseFloat(b.price.toString().replace('€', '')), 0)}€
+                      {bookings.reduce((acc, b) => acc + parseFloat(b.price.toString().replace('€', '')), 0).toFixed(2)}€
                     </span>
                   </div>
                 </div>

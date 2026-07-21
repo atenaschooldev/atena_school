@@ -100,64 +100,7 @@
       "academic": "Recupero materie scolastiche",
       "certipass": "Certificazioni Certipass / EIPASS"
     },
-    "items": {
-      "kids": {
-        "title": "Kids",
-        "description": "Il corso di inglese è progettato per bambini a partire dai 4 anni. Attraverso attività divertenti e attive, i piccoli studenti possono acquisire competenze linguistiche in modo naturale e coinvolgente. Il programma si concentra sulla pronuncia e sulla comprensione, creando un ambiente stimolante per l'apprendimento."
-      },
-      "starters": {
-        "title": "Starters",
-        "description": "Il corso Starters si rivolge a chi inizia a studiare inglese, rendendo l'esperienza divertente. Sviluppa le quattro abilità linguistiche di base (ascolto, conversazione, lettura, scrittura) con attività giocose e un linguaggio semplice. Prepara per il primo esame ufficiale Cambridge."
-      },
-      "movers": {
-        "title": "Movers",
-        "description": "Il corso Movers è per chi ha già le basi dell'inglese. Consolida le quattro abilità con vocabolario più ampio e strutture grammaticali più complesse. Prepara per l'esame Cambridge di livello intermedio, un passo fondamentale verso la certificazione Flyers."
-      },
-      "flyers": {
-        "title": "Flyers",
-        "description": "Il corso Flyers è per chi ha una conoscenza consolidata dell'inglese. Il programma rafforza le quattro abilità linguistiche con l'uso di frasi più complesse e un vocabolario più ricco, preparandoli a comunicare in situazioni di uso comune. Il corso è un passo importante verso i livelli successivi, come A2 Key for Schools."
-      },
-      "a2key": {
-        "title": "A2 Key",
-        "description": "Il corso A2 Key è rivolto a chi ha una conoscenza di base dell'inglese e desidera ottenere la prima certificazione Cambridge. Il programma mira a sviluppare la capacità di comunicare in situazioni quotidiane, sia scritte che orali, usando un linguaggio semplice e chiaro. Il corso è un passo cruciale per gli apprendenti che vogliono ottenere una certificazione ufficiale e passare ai livelli successivi, come il B1 Preliminary."
-      },
-      "b1": {
-        "title": "B1 Preliminary",
-        "description": "Il corso B1 Preliminary si rivolge a chi ha una conoscenza intermedia dell'inglese e vuole acquisire competenze pratiche per la vita di tutti i giorni. Il programma si concentra sull'uso della lingua in situazioni reali, come la comprensione di testi semplici, la scrittura di email e la partecipazione a conversazioni su argomenti familiari. L'obiettivo è preparare gli apprendenti all'esame B1, una certificazione che attesta un livello di autonomia nell'uso della lingua."
-      },
-      "b2": {
-        "title": "B2 First",
-        "description": "Il corso B2 First è pensato per chi ha un livello intermedio-superiore e desidera un uso più fluente e articolato dell'inglese. Il programma approfondisce le abilità linguistiche per comprendere testi complessi, partecipare a discussioni su argomenti astratti e scrivere testi dettagliati. Questo corso prepara all'esame B2 First, un certificato ampiamente riconosciuto che attesta la capacità di lavorare o studiare in un contesto anglofono."
-      },
-      "c1": {
-        "title": "C1 Advanced",
-        "description": "Il corso Cambridge C1 (CAE) prepara all'esame avanzato di inglese \"Cambridge English: Advanced\". È progettato per chi vuole usare l'inglese con sicurezza in contesti accademici o professionali, sviluppando tutte le competenze linguistiche (lettura, scrittura, ascolto e conversazione) fino a un livello di fluidità e precisione."
-      },
-      "doposcuola": {
-        "title": "Doposcuola",
-        "description": "Il nostro doposcuola offre un supporto personalizzato a studenti di tutte le età, dalle elementari alle superiori. Aiutiamo i più piccoli a consolidare le basi, i ragazzi delle medie a trovare un metodo di studio efficace, e gli studenti delle superiori a prepararsi al meglio per gli esami. Il nostro obiettivo è affiancare ogni studente nel suo percorso, trasformando il tempo del doposcuola in un'opportunità di crescita e autonomia."
-      },
-      "recovery": {
-        "title": "Recupero materie scolastiche",
-        "description": "Siamo specializzati nel recupero di materie scolastiche. Offriamo un supporto mirato per superare i debiti e consolidare le basi, con un approccio personalizzato e tutor qualificati. Il nostro obiettivo è trasformare le lacune in punti di forza, помогая студентам вернуть уверенность и достичь устойчивых результатов."
-      },
-      "university": {
-        "title": "Preparazione esami universitari",
-        "description": "Supporto specializzato nella preparazione agli esami universitari. Offriamo un aiuto su misura per affrontare ogni prova con successo, con un focus su: Organizzazione dello studio, Approfondimento dei concetti, Strategie d'esame. Ti aiutiamo a raggiungere i tuoi obiettivi accademici con sicurezza e metodo."
-      },
-      "it_courses": {
-        "title": "Corsi di informatica",
-        "description": "Office Revolution: Sfrutta al massimo la suite Microsoft. Office Pro: Massimizza la tua produttività. Excel Power: Da principiante a esperto. Word & Co.: Scrivi documenti perfetti. Presentazioni Vincenti: Corso di PowerPoint."
-      },
-      "eipass_user": {
-        "title": "EIPASS 7 Moduli User",
-        "description": "La certificazione informatica EIPASS 7 Moduli User attesta il possesso delle competenze digitali intermedie, allineate al framework europeo e-CF. Copre l'uso del PC, internet, videoscrittura, fogli di calcolo, sicurezza informatica e collaborazione online."
-      },
-      "eipass_basic": {
-        "title": "EIPASS Basic",
-        "description": "Certificazione informatica essenziale per acquisire e dimostrare abilità digitali di base. Copre l'utilizzo del sistema operativo, la navigazione web sicura, e i fondamenti dell'elaborazione testi."
-      }
-    },
+    "items": {},
     "cta": "Dettagli"
   },
   "booking": {
@@ -174,71 +117,7 @@
       "tutoring": "Tutoraggio & Doposcuola",
       "specialized": "Specialistico"
     },
-    "items": [
-      {
-        "id": "kids",
-        "title": "Corso Inglese Kids",
-        "duration": "Terminato",
-        "price": "60€",
-        "category": "language"
-      },
-      {
-        "id": "young",
-        "title": "Corso Inglese Young Learners",
-        "duration": "Terminato",
-        "price": "90€",
-        "category": "language"
-      },
-      {
-        "id": "a2",
-        "title": "Corso Inglese A2",
-        "duration": "1 ora 15 minuti",
-        "price": "90€",
-        "category": "language"
-      },
-      {
-        "id": "b1",
-        "title": "Corso Inglese B1",
-        "duration": "1 ora 15 minuti",
-        "price": "110€",
-        "category": "language"
-      },
-      {
-        "id": "b2",
-        "title": "Corso Inglese B2",
-        "duration": "1 ora 30 minuti",
-        "price": "120€",
-        "category": "language"
-      },
-      {
-        "id": "c1",
-        "title": "Corso Inglese C1",
-        "duration": "1 ora 40 minuti",
-        "price": "150€",
-        "category": "language"
-      },
-      {
-        "id": "tutor",
-        "title": "Tutoraggio privato",
-        "duration": "1 ora",
-        "price": "20€",
-        "category": "tutoring"
-      },
-      {
-        "id": "afterschool",
-        "title": "Doposcuola scuole elementari",
-        "duration": "3 ore",
-        "price": "20€",
-        "category": "tutoring"
-      },
-      {
-        "id": "university",
-        "title": "Preparazione esami universitari",
-        "duration": "1 ora",
-        "price": "35€",
-        "category": "specialized"
-      }
-    ]
+    "items": []
   },
   "footer": {
     "copyright": "© 2026 Atena School. Tutti i diritti riservati."

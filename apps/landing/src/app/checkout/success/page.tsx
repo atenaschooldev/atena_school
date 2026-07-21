@@ -140,7 +140,7 @@ function SuccessContent() {
 
             <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
               <span className="font-bold text-slate-700">Totale</span>
-              <span className="font-extrabold text-[#043569] text-base">€{coursePrice}</span>
+              <span className="font-extrabold text-[#043569] text-base">€{Number(coursePrice).toFixed(2)}</span>
             </div>
           </div>
         </div>

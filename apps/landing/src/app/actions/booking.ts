@@ -531,7 +531,16 @@ export async function fetchCartItemsAction(sessionId: string | null) {
 
           const title = item?.name || item?.title_it || item?.title || "Unknown";
           const rawPrice = item?.price || b.price || 0;
-          const price = typeof rawPrice === "number" ? `${rawPrice}€` : (rawPrice.endsWith("€") ? rawPrice : `${rawPrice}€`);
+          let priceNum = 0;
+          if (typeof rawPrice === "number") {
+            priceNum = rawPrice;
+          } else {
+            const parsed = parseFloat(rawPrice.toString().replace("€", "").trim());
+            if (!isNaN(parsed)) {
+              priceNum = parsed;
+            }
+          }
+          const price = `${priceNum.toFixed(2)}€`;
           const teacher = item?.teacher_name || "TBD";
 
           return {
