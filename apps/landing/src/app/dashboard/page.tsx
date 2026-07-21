@@ -125,9 +125,10 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {displayedBookings.map((b) => (
-                  <div
+                  <Link
                     key={b.id}
-                    className="p-6 bg-white rounded-3xl border border-border shadow-sm hover:shadow-md transition-all space-y-4"
+                    href={`/dashboard/bookings/${b.id}`}
+                    className="block p-6 bg-white hover:bg-muted/5 rounded-3xl border border-border shadow-sm hover:shadow-md hover:border-primary/30 transition-all space-y-4 cursor-pointer"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -183,7 +184,7 @@ export default function DashboardPage() {
                         </div>
                       )}
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

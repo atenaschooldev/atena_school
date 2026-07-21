@@ -1,10 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Calendar } from "@/components/ui/calendar";
-import { fetchScheduleSlotsAction } from "@/app/actions/booking";
 import {
   CaretLeft,
   Clock,
@@ -18,22 +15,17 @@ import {
   Headset,
   Sparkle
 } from "@phosphor-icons/react";
-import { Link, useRouter } from "@/i18n/routing";
-import { format, isSunday, isSaturday } from "date-fns";
+import { Link } from "@/i18n/routing";
+import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
+import { useBooking } from "@/features/booking/hooks/useBooking";
 
 interface BookingPageClientProps {
   type: string;
   id: string;
   initialItem: any;
   initialUser: any;
-}
-
-interface ScheduleSlot {
-  id: string;
-  starts_at: string;
-  ends_at: string;
 }
 
 export default function BookingPageClient({
@@ -43,58 +35,23 @@ export default function BookingPageClient({
   initialUser
 }: BookingPageClientProps) {
   const t = useTranslations("booking");
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const dateLocale = it;
 
-  const dateParam = searchParams.get("date");
-  const timeParam = searchParams.get("time");
-  const slotIdParam = searchParams.get("slot_id");
-
-  const [item] = useState<any>(initialItem);
-  const [user, setUser] = useState<any>(initialUser);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    dateParam ? new Date(dateParam) : undefined
-  );
-  const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || null);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(slotIdParam || null);
-  const [availableSlots, setAvailableSlots] = useState<ScheduleSlot[]>([]);
-
-  useEffect(() => {
-    if (user && dateParam && timeParam && slotIdParam) {
-      router.push(`/checkout/${type}/${id}?date=${dateParam}&time=${timeParam}&slot_id=${slotIdParam}`);
-    }
-  }, [user, type, id, dateParam, timeParam, slotIdParam, router]);
-
-  useEffect(() => {
-    if (!selectedDate) {
-      setAvailableSlots([]);
-      return;
-    }
-
-    async function fetchSlots() {
-      try {
-        const dateStr = format(selectedDate!, "yyyy-MM-dd");
-        const res = await fetchScheduleSlotsAction(dateStr);
-        if (res.success) {
-          setAvailableSlots(res.slots || []);
-        }
-      } catch (err) {
-        console.error("Error fetching slots:", err);
-      }
-    }
-
-    fetchSlots();
-  }, [selectedDate]);
-
-  const title = item.title_it || item.name || "Lezione / Corso Atena";
-  const courseDuration = item.duration_it || item.duration || (item.hours ? `${item.hours} ore` : item.duration_minutes ? `${item.duration_minutes} min` : "60 minuti");
-
-  const handleContinue = () => {
-    if (!selectedDate || !selectedTime || !selectedSlotId) return;
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    router.push(`/checkout/${type}/${id}?date=${dateStr}&time=${selectedTime}&slot_id=${selectedSlotId}`);
-  };
+  const {
+    item,
+    isFixedSchedule,
+    allowedDays,
+    selectedDate,
+    setSelectedDate,
+    selectedTime,
+    setSelectedTime,
+    selectedSlotId,
+    setSelectedSlotId,
+    availableSlots,
+    title,
+    courseDuration,
+    handleContinue
+  } = useBooking(type, id, initialItem, initialUser);
 
   return (
     <main className="min-h-screen pt-3 pb-6 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-[#043569]/[0.02] to-[#F8861D]/[0.03] text-foreground flex flex-col justify-between items-center relative">
@@ -114,10 +71,12 @@ export default function BookingPageClient({
               Torna ai corsi
             </Link>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#043569]">
-              Prenota la tua lezione
+              {isFixedSchedule ? "Attiva il tuo abbonamento" : "Prenota la tua lezione"}
             </h1>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Scegli la data e l'orario perfetti per la tua lezione individuale.
+              {isFixedSchedule
+                ? "Seleziona la data di inizio del tuo abbonamento mensile."
+                : "Scegli la data e l'orario perfetti per la tua lezione individuale."}
             </p>
           </div>
 
@@ -134,34 +93,47 @@ export default function BookingPageClient({
           {/* Left Area (8 cols): Date & Time Selection */}
           <div className="lg:col-span-8 p-5 sm:p-6 space-y-4 flex flex-col justify-between">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-              
+
               {/* Step 1: Calendar */}
               <div className="space-y-3 w-full">
                 <div className="flex items-center gap-2 font-bold text-xs tracking-wider text-[#043569] border-b border-slate-100 pb-2.5 select-none">
                   <span className="w-5 h-5 rounded-lg bg-orange-100 text-[#F8861D] text-xs flex items-center justify-center font-bold">1</span>
-                  <span>Seleziona la data</span>
+                  <span>{isFixedSchedule ? "Data di inizio" : "Seleziona la data"}</span>
                 </div>
-                
+
                 <div className="border border-slate-200/70 rounded-2xl p-2.5 bg-white shadow-sm flex justify-center w-full">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={(date) => {
                       setSelectedDate(date);
-                      setSelectedTime(null);
-                      setSelectedSlotId(null);
+                      if (isFixedSchedule && date) {
+                        setSelectedTime(item.standard_schedule);
+                        setSelectedSlotId("fixed_schedule");
+                      } else {
+                        setSelectedTime(null);
+                        setSelectedSlotId(null);
+                      }
                     }}
                     locale={dateLocale}
                     disabled={(date) => {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
-                      return isSunday(date) || isSaturday(date) || date < today;
+                      if (date < today) return true;
+                      if (isFixedSchedule) {
+                        return !allowedDays.includes(date.getDay());
+                      }
+                      return isSunday(date) || isSaturday(date);
                     }}
                     modifiers={{
                       free: (date) => {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
-                        return !isSunday(date) && !isSaturday(date) && date >= today;
+                        if (date < today) return false;
+                        if (isFixedSchedule) {
+                          return allowedDays.includes(date.getDay());
+                        }
+                        return !isSunday(date) && !isSaturday(date);
                       }
                     }}
                     className="w-full border-none shadow-none p-0 bg-transparent"
@@ -185,7 +157,7 @@ export default function BookingPageClient({
                 <div className="flex items-center justify-between font-bold text-xs tracking-wider text-[#043569] border-b border-slate-100 pb-2.5 select-none">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-lg bg-slate-100 text-[#043569] text-xs flex items-center justify-center font-bold">2</span>
-                    <span>Seleziona l'orario</span>
+                    <span>{isFixedSchedule ? "Orario e dettagli" : "Seleziona l'orario"}</span>
                   </div>
                   {selectedDate && availableSlots.length > 0 && (
                     <span className="text-[11px] font-semibold text-slate-400 normal-case">
@@ -195,56 +167,96 @@ export default function BookingPageClient({
                 </div>
 
                 <div className="flex-1 flex flex-col justify-between space-y-3">
-                  {!selectedDate ? (
-                    <div className="p-5 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[200px] bg-slate-50/50 text-center space-y-1.5 select-none">
-                      <p className="text-xs font-bold text-slate-700">Nessuna data selezionata</p>
-                      <p className="text-[11px] text-slate-400 max-w-[200px]">Clicca su un giorno nel calendario per vedere gli orari disponibili.</p>
-                    </div>
-                  ) : availableSlots.length === 0 ? (
-                    <div className="p-5 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[200px] bg-slate-50/50 text-center space-y-1.5 select-none">
-                      <WarningCircle className="w-6 h-6 text-amber-500" weight="duotone" />
-                      <p className="text-xs font-bold text-slate-700">Nessun orario disponibile</p>
-                      <p className="text-[11px] text-slate-400 max-w-[200px]">Non ci sono lezioni libere per la data selezionata.</p>
+                  {isFixedSchedule ? (
+                    <div className="flex-grow flex flex-col justify-between space-y-4">
+                      {!selectedDate ? (
+                        <div className="p-5 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[200px] bg-slate-50/50 text-center space-y-1.5 select-none flex-grow">
+                          <p className="text-xs font-bold text-slate-700">Nessuna data selezionata</p>
+                          <p className="text-[11px] text-slate-400 max-w-[220px]">Seleziona sul calendario il giorno in cui desideri far partire la tua iscrizione.</p>
+                        </div>
+                      ) : (
+                        <div className="flex-grow space-y-3.5">
+                          {/* Confirmation card */}
+                          <div className="p-4 sm:p-5 border border-orange-100 rounded-2xl bg-orange-50/20 shadow-sm space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold text-[#043569]">
+                              <Sparkle className="w-4 h-4 text-[#F8861D]" weight="fill" />
+                              <span>Conferma Orario e Frequenza</span>
+                            </div>
+
+                            <div className="space-y-2.5 text-xs">
+                              <div className="flex justify-between items-start border-b border-slate-100/50 pb-2">
+                                <span className="text-slate-500 font-medium">Orario standart:</span>
+                                <span className="font-extrabold text-[#043569] text-right">{item.standard_schedule}</span>
+                              </div>
+                              <div className="flex justify-between items-start border-b border-slate-100/50 pb-2">
+                                <span className="text-slate-500 font-medium">Frequenza:</span>
+                                <span className="font-extrabold text-[#043569] text-right">{courseDuration}</span>
+                              </div>
+                              <div className="flex justify-between items-start pb-1">
+                                <span className="text-slate-500 font-medium">Data inizio abbonamento:</span>
+                                <span className="font-extrabold text-emerald-600 text-right">
+                                  {format(selectedDate, "eeee d MMMM yyyy", { locale: dateLocale })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 gap-2.5 w-full">
-                      {availableSlots.map((slot) => {
-                        const time = format(new Date(slot.starts_at), "HH:mm");
-                        const isSelected = selectedSlotId === slot.id;
-                        return (
-                          <button
-                            key={slot.id}
-                            onClick={() => {
-                              setSelectedTime(time);
-                              setSelectedSlotId(slot.id);
-                            }}
-                            className={`
-                              py-3 px-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center outline-none select-none
-                              ${isSelected
-                                ? "border-2 border-[#F8861D] bg-white shadow-sm"
-                                : "border-slate-200/80 bg-white hover:border-slate-300"}
-                            `}
-                          >
-                            <span className={`text-xs font-bold ${isSelected ? "text-[#F8861D]" : "text-slate-800"}`}>{time}</span>
-                            <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? "text-[#F8861D]" : "text-emerald-600"}`}>
-                              {isSelected ? "Selezionato" : "Disponibile"}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                    <>
+                      {!selectedDate ? (
+                        <div className="p-5 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[200px] bg-slate-50/50 text-center space-y-1.5 select-none">
+                          <p className="text-xs font-bold text-slate-700">Nessuna data selezionata</p>
+                          <p className="text-[11px] text-slate-400 max-w-[200px]">Clicca su un giorno nel calendario per vedere gli orari disponibili.</p>
+                        </div>
+                      ) : availableSlots.length === 0 ? (
+                        <div className="p-5 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center min-h-[200px] bg-slate-50/50 text-center space-y-1.5 select-none">
+                          <WarningCircle className="w-6 h-6 text-amber-500" weight="duotone" />
+                          <p className="text-xs font-bold text-slate-700">Nessun orario disponibile</p>
+                          <p className="text-[11px] text-slate-400 max-w-[200px]">Non ci sono lezioni libere per la data selezionata.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-2.5 w-full">
+                          {availableSlots.map((slot) => {
+                            const time = format(new Date(slot.starts_at), "HH:mm");
+                            const isSelected = selectedSlotId === slot.id;
+                            return (
+                              <button
+                                key={slot.id}
+                                onClick={() => {
+                                  setSelectedTime(time);
+                                  setSelectedSlotId(slot.id);
+                                }}
+                                className={`
+                                  py-3 px-3.5 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col items-center justify-center outline-none select-none
+                                  ${isSelected
+                                    ? "border-2 border-[#F8861D] bg-white shadow-sm"
+                                    : "border-slate-200/80 bg-white hover:border-slate-300"}
+                                `}
+                              >
+                                <span className={`text-xs font-bold ${isSelected ? "text-[#F8861D]" : "text-slate-800"}`}>{time}</span>
+                                <span className={`text-[10px] font-semibold mt-0.5 ${isSelected ? "text-[#F8861D]" : "text-emerald-600"}`}>
+                                  {isSelected ? "Selezionato" : "Disponibile"}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                  {/* Dynamic Course Duration Banner */}
-                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-3 select-none mt-auto">
-                    <div className="w-7 h-7 rounded-lg bg-slate-200/60 flex items-center justify-center text-[#043569] shrink-0">
-                      <Clock className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-800">Durata: {courseDuration}</p>
-                      <p className="text-[11px] text-slate-500 leading-tight">Ogni lezione ha una durata di {courseDuration}.</p>
-                    </div>
-                  </div>
+                      {/* Dynamic Course Duration Banner */}
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3 flex items-center gap-3 select-none mt-auto">
+                        <div className="w-7 h-7 rounded-lg bg-slate-200/60 flex items-center justify-center text-[#043569] shrink-0">
+                          <Clock className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Durata: {courseDuration}</p>
+                          <p className="text-[11px] text-slate-500 leading-tight">Ogni lezione ha una durata di {courseDuration}.</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -300,7 +312,7 @@ export default function BookingPageClient({
                   <div className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-1.5 text-white/70 font-medium">
                       <CalendarIcon className="w-3.5 h-3.5 text-white/70" />
-                      <span>Data scelta</span>
+                      <span>Data della prima lezione</span>
                     </div>
                     <span className="font-bold text-white">
                       {selectedDate ? format(selectedDate, "d MMMM yyyy", { locale: dateLocale }) : "Non selezionata"}
@@ -309,7 +321,7 @@ export default function BookingPageClient({
                   <div className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-1.5 text-white/70 font-medium">
                       <Clock className="w-3.5 h-3.5 text-white/70" />
-                      <span>Orario scelto</span>
+                      <span>Orario standart</span>
                     </div>
                     <span className="font-bold text-white">{selectedTime || "Non selezionato"}</span>
                   </div>
@@ -324,11 +336,11 @@ export default function BookingPageClient({
               </div>
 
               <button
-                disabled={!selectedDate || !selectedTime || !selectedSlotId}
+                disabled={!selectedDate || !selectedTime || (!isFixedSchedule && !selectedSlotId)}
                 onClick={handleContinue}
                 className="w-full py-3 px-5 bg-[#F8861D] hover:bg-[#e07516] text-white rounded-xl font-bold text-xs transition-all duration-200 disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
               >
-                <span>Continua ai dettagli</span>
+                <span>{isFixedSchedule ? "Continua al pagamento" : "Continua ai dettagli"}</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </button>
 

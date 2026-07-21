@@ -56,12 +56,44 @@ Deno.serve(async (req) => {
         .single();
 
       if (booking) {
-        const itemTable = booking.item_type === "course" ? "courses" : "shop_items";
+        const itemTable = "courses";
         const { data: itemData } = await supabaseAdmin
           .from(itemTable)
           .select("*")
           .eq("id", booking.item_id)
           .single();
+
+        if (itemData) {
+          const lessons = calculateLessonDates(
+            booking.booking_date,
+            booking.booking_time,
+            itemData.category || "",
+            itemData.standard_schedule || "",
+            itemData.duration || "1h"
+          );
+
+          // Clear old lessons if any and insert new scheduled lessons
+          await supabaseAdmin
+            .from("booking_lessons")
+            .delete()
+            .eq("booking_id", bookingId);
+
+          if (lessons.length > 0) {
+            const { error: lessonsError } = await supabaseAdmin
+              .from("booking_lessons")
+              .insert(
+                lessons.map((lesson) => ({
+                  booking_id: bookingId,
+                  starts_at: lesson.startsAt,
+                  ends_at: lesson.endsAt,
+                  status: "scheduled",
+                }))
+              );
+            if (lessonsError) {
+              console.error("[stripe-webhook] Failed to insert lessons:", lessonsError);
+            }
+          }
+        }
 
         const itemName = itemData
           ? (itemData.name || itemData.title_it || itemData.title_en || "Corso/Lezione")
@@ -203,3 +235,107 @@ Deno.serve(async (req) => {
     return new Response(`Webhook Error: ${message}`, { status: 500 });
   }
 });
+
+function getRomeOffsetHours(date: Date): number {
+  const romeString = date.toLocaleString("en-US", { timeZone: "Europe/Rome" });
+  const utcString = date.toLocaleString("en-US", { timeZone: "UTC" });
+  
+  const romeDate = new Date(romeString);
+  const utcDate = new Date(utcString);
+  
+  return Math.round((romeDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
+}
+
+interface ScheduledLesson {
+  startsAt: string;
+  endsAt: string;
+}
+
+function calculateLessonDates(
+  startDateStr: string,
+  timeParam: string,
+  category: string,
+  standardSchedule: string,
+  durationMinutes = 60
+): ScheduledLesson[] {
+  const lessons: ScheduledLesson[] = [];
+  const baseDate = new Date(startDateStr);
+
+  const isFixedSchedule = category === "languages" && 
+    standardSchedule && 
+    !standardSchedule.toLowerCase().includes("flessibile") &&
+    !standardSchedule.toLowerCase().includes("concordare");
+
+  if (!isFixedSchedule) {
+    const timeMatch = (timeParam || "").match(/^(\d{2}):(\d{2})$/);
+    const startHour = timeMatch ? parseInt(timeMatch[1], 10) : 10;
+    const startMin = timeMatch ? parseInt(timeMatch[2], 10) : 0;
+
+    const startsAt = new Date(baseDate);
+    startsAt.setUTCHours(12, 0, 0, 0);
+    const offset = getRomeOffsetHours(startsAt);
+
+    startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
+
+    const endsAt = new Date(startsAt);
+    endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+
+    lessons.push({
+      startsAt: startsAt.toISOString(),
+      endsAt: endsAt.toISOString(),
+    });
+    return lessons;
+  }
+
+  const isC2 = standardSchedule.toUpperCase().includes("C2");
+  const totalLessons = isC2 ? 12 : 8;
+  const lowerSchedule = standardSchedule.toLowerCase();
+
+  const targetDays: number[] = [];
+  if (lowerSchedule.includes("luned")) targetDays.push(1);
+  if (lowerSchedule.includes("marted")) targetDays.push(2);
+  if (lowerSchedule.includes("mercoled")) targetDays.push(3);
+  if (lowerSchedule.includes("gioved")) targetDays.push(4);
+  if (lowerSchedule.includes("venerd")) targetDays.push(5);
+  if (lowerSchedule.includes("sabat")) targetDays.push(6);
+  if (lowerSchedule.includes("domenic")) targetDays.push(0);
+
+  if (targetDays.length === 0) {
+    targetDays.push(baseDate.getDay());
+  }
+
+  const timeRangeMatch = lowerSchedule.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/);
+  let startHour = 16, startMin = 0, endHour = 17, endMin = 15;
+  if (timeRangeMatch) {
+    startHour = parseInt(timeRangeMatch[1], 10);
+    startMin = parseInt(timeRangeMatch[2], 10);
+    endHour = parseInt(timeRangeMatch[3], 10);
+    endMin = parseInt(timeRangeMatch[4], 10);
+  }
+
+  let current = new Date(baseDate);
+
+  let attempts = 0;
+  while (lessons.length < totalLessons && attempts < 100) {
+    attempts++;
+    const dayOfWeek = current.getDay();
+    if (targetDays.includes(dayOfWeek)) {
+      const startsAt = new Date(current);
+      startsAt.setUTCHours(12, 0, 0, 0);
+      const offset = getRomeOffsetHours(startsAt);
+
+      startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
+
+      const endsAt = new Date(current);
+      endsAt.setUTCHours(endHour - offset, endMin, 0, 0);
+
+      lessons.push({
+        startsAt: startsAt.toISOString(),
+        endsAt: endsAt.toISOString(),
+      });
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return lessons;
+}

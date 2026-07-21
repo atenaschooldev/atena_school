@@ -45,8 +45,13 @@ export function useCheckoutSuccess() {
         // Stripe payment confirmation
         try {
           const res = await confirmPaymentAction(bookingId, sessionId);
-          if (res?.success && res?.booking) {
-            setBookingData(res.booking);
+          if (res?.success) {
+            const enriched = await getBookingDetailsServer(bookingId);
+            if (enriched) {
+              setBookingData(enriched);
+            } else {
+              setBookingData(res.booking);
+            }
           } else {
             const fallback = await getBookingDetailsServer(bookingId);
             if (fallback) setBookingData(fallback);

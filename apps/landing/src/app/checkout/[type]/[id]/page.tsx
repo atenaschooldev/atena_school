@@ -90,7 +90,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
         <form onSubmit={handleSubmit(onSubmit)} className="w-full">
           {/* Main Unified Card Container */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-lg overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch w-full">
-            
+
             {/* Left Column: Personal Details Form (7 cols) */}
             <div className="lg:col-span-7 p-5 sm:p-6 space-y-4 flex flex-col justify-between">
               <div className="space-y-4">
@@ -276,7 +276,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                       <div className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-1.5 text-white/70 font-medium">
                           <CalendarIcon className="w-3.5 h-3.5 text-white/70" />
-                          <span>Data scelta</span>
+                          <span>Data della prima lezione</span>
                         </div>
                         <span className="font-bold text-white">
                           {format(new Date(dateParam), "d MMMM yyyy", { locale: dateLocale })}
@@ -285,7 +285,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                       <div className="flex justify-between items-center text-xs">
                         <div className="flex items-center gap-1.5 text-white/70 font-medium">
                           <Clock className="w-3.5 h-3.5 text-white/70" />
-                          <span>Orario scelto</span>
+                          <span>Orario standart</span>
                         </div>
                         <span className="font-bold text-white">{timeParam}</span>
                       </div>

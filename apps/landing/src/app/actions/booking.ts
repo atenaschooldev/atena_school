@@ -1,9 +1,9 @@
 "use server";
-
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createServerClient as createSupabaseSsrClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
+import { calculateLessonDates } from "@/lib/utils/bookingScheduler";
 
 function isServiceRoleValid() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -20,6 +20,11 @@ function getSupabaseAdmin() {
     ? process.env.SUPABASE_SERVICE_ROLE_KEY!
     : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   return createClient(supabaseUrl, key);
+}
+
+function isValidUuid(id?: string | null): boolean {
+  if (!id) return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
 
 async function fetchItemData(adminClient: any, itemType: string, itemId: string) {
@@ -67,7 +72,7 @@ export async function getBookingDetailsServer(bookingId: string) {
 
     if (error || !booking) return null;
 
-    const item = await fetchItemData(admin, booking.item_type, booking.item_id);
+    const item = await fetchItemData(admin, "course", booking.item_id);
 
     return {
       ...booking,
@@ -190,7 +195,7 @@ export async function initiateStripePaymentAction(params: {
           notes: params.values.notes || "",
           date: params.dateParam,
           time: params.timeParam,
-          slotId: params.slotIdParam || null,
+          slotId: isValidUuid(params.slotIdParam) ? params.slotIdParam : null,
           locale: "it",
           origin,
           userId: user?.id || null,
@@ -227,11 +232,13 @@ export async function createOrUpdateReservationServerAction(params: {
   origin?: string;
 }) {
   try {
+    const { type, id: itemId, dateParam, timeParam, slotIdParam, values, sessionId } = params;
     const admin = getSupabaseAdmin();
+    const item = await fetchItemData(admin, type, itemId);
+    if (!item) throw new Error("Servizio non trovato");
+
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-
-    const { type, id, dateParam, timeParam, slotIdParam, values, sessionId } = params;
 
     const fullName = `${values.firstName} ${values.lastName}`.trim();
 
@@ -240,11 +247,13 @@ export async function createOrUpdateReservationServerAction(params: {
       .from("bookings")
       .select("id")
       .eq("student_email", values.email)
-      .eq("item_id", id)
+      .eq("item_id", itemId)
       .in("status", ["pending_payment", "reserved"])
       .maybeSingle();
 
     let booking;
+    const cleanSlotId = isValidUuid(slotIdParam) ? slotIdParam : null;
+
     if (existing) {
       const { data: updated, error } = await admin
         .from("bookings")
@@ -253,12 +262,11 @@ export async function createOrUpdateReservationServerAction(params: {
           session_id: user ? null : sessionId,
           booking_date: dateParam,
           booking_time: timeParam,
-          slot_id: slotIdParam || null,
+          slot_id: cleanSlotId,
           status: "reserved",
           student_name: fullName,
           student_phone: values.phone,
           notes: values.notes || "",
-          locale: "it",
         })
         .eq("id", existing.id)
         .select()
@@ -270,19 +278,17 @@ export async function createOrUpdateReservationServerAction(params: {
       const { data: inserted, error } = await admin
         .from("bookings")
         .insert([{
-          item_id: id,
-          item_type: type,
+          item_id: itemId,
           user_id: user?.id || null,
           session_id: user ? null : sessionId,
           booking_date: dateParam,
           booking_time: timeParam,
-          slot_id: slotIdParam || null,
+          slot_id: cleanSlotId,
           status: "reserved",
           student_name: fullName,
           student_email: values.email,
           student_phone: values.phone,
           notes: values.notes || "",
-          locale: "it",
         }])
         .select()
         .single();
@@ -291,11 +297,41 @@ export async function createOrUpdateReservationServerAction(params: {
       booking = inserted;
     }
 
-    return { success: true, booking };
-  } catch (err: any) {
-    console.error("Error in createOrUpdateReservationServerAction:", err);
-    return { success: false, error: err.message || "Failed to create reservation" };
-  }
+    // Calculate lesson dates
+    const lessons = calculateLessonDates(
+      dateParam,
+      timeParam,
+      item.category || "",
+      item.standard_schedule || "",
+      item.duration || "1h"
+    );
+
+    // Sync booking_lessons
+    await admin
+      .from("booking_lessons")
+      .delete()
+      .eq("booking_id", booking.id);
+
+    if (lessons.length > 0) {
+      const { error: lessonsError } = await admin
+        .from("booking_lessons")
+        .insert(
+          lessons.map(lesson => ({
+            booking_id: booking.id,
+            starts_at: lesson.startsAt,
+            ends_at: lesson.endsAt,
+            status: "scheduled"
+          }))
+        );
+
+      if (lessonsError) throw lessonsError;
+    }
+
+  return { success: true, booking };
+} catch (err: any) {
+  console.error("Error in createOrUpdateReservationServerAction:", err);
+  return { success: false, error: err.message || "Failed to create reservation" };
+}
 }
 
 // 5. Account & Guest Bookings Linker

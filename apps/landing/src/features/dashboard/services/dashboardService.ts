@@ -76,10 +76,10 @@ export async function fetchUserBookingsEnriched(
 
   const rawBookings: any[] = data || [];
 
-  // Deduplicate by item_type + item_id (favoring 'paid'/'completed' over pending/reserved)
+  // Deduplicate by item_id (favoring 'paid'/'completed' over pending/reserved)
   const deduplicatedMap = new Map<string, any>();
   for (const b of rawBookings) {
-    const key = `${b.item_type}_${b.item_id}_${b.slot_id || b.booking_date}`;
+    const key = `course_${b.item_id}_${b.slot_id || b.booking_date}`;
     const existing = deduplicatedMap.get(key);
     if (!existing) {
       deduplicatedMap.set(key, b);
@@ -94,10 +94,7 @@ export async function fetchUserBookingsEnriched(
   const userBookings = Array.from(deduplicatedMap.values());
 
   const courseIds = Array.from(
-    new Set(userBookings.filter((b) => b.item_type === "course").map((b) => b.item_id))
-  ) as string[];
-  const shopItemIds = Array.from(
-    new Set(userBookings.filter((b) => b.item_type === "shop").map((b) => b.item_id))
+    new Set(userBookings.map((b) => b.item_id))
   ) as string[];
   const slotIds = Array.from(
     new Set(userBookings.filter((b) => b.slot_id).map((b) => b.slot_id))
@@ -116,14 +113,6 @@ export async function fetchUserBookingsEnriched(
     promises.push(Promise.resolve({ data: [] }));
   }
 
-  if (shopItemIds.length > 0) {
-    promises.push(
-      supabase.from("shop_items").select("id, title_it, price").in("id", shopItemIds)
-    );
-  } else {
-    promises.push(Promise.resolve({ data: [] }));
-  }
-
   if (slotIds.length > 0) {
     promises.push(
       supabase
@@ -135,13 +124,11 @@ export async function fetchUserBookingsEnriched(
     promises.push(Promise.resolve({ data: [] }));
   }
 
-  const [cRes, sRes, slRes] = await Promise.all(promises);
+  const [cRes, slRes] = await Promise.all(promises);
   const coursesData: any[] = cRes.data || [];
-  const shopItemsData: any[] = sRes.data || [];
   const slotsData: any[] = slRes.data || [];
 
   const coursesMap = new Map(coursesData.map((c) => [c.id, c]));
-  const shopMap = new Map(shopItemsData.map((s) => [s.id, s]));
   const slotsMap = new Map(slotsData.map((sl) => [sl.id, sl]));
 
   const enrichedList: EnrichedBooking[] = userBookings.map((b) => {
@@ -150,19 +137,11 @@ export async function fetchUserBookingsEnriched(
     let teacherName = "Atena School";
     const location = "Atena School, Via Matteotti 11";
 
-    if (b.item_type === "course") {
-      const c = coursesMap.get(b.item_id);
-      if (c) {
-        title = c.name || title;
-        price = parseFloat(String(c.price).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
-        if (c.teacher_name) teacherName = c.teacher_name;
-      }
-    } else {
-      const s = shopMap.get(b.item_id);
-      if (s) {
-        title = s.title_it || title;
-        price = parseFloat(String(s.price).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
-      }
+    const c = coursesMap.get(b.item_id);
+    if (c) {
+      title = c.name || title;
+      price = parseFloat(String(c.price).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
+      if (c.teacher_name) teacherName = c.teacher_name;
     }
 
     // Get slot start time (schedule_slots has only id, starts_at, ends_at)
@@ -188,7 +167,7 @@ export async function fetchUserBookingsEnriched(
     return {
       id: b.id,
       item_id: b.item_id,
-      item_type: b.item_type,
+      item_type: "course",
       item_title: title,
       price,
       teacher_name: teacherName,

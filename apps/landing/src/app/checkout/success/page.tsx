@@ -126,14 +126,14 @@ function SuccessContent() {
 
             {formattedDate && (
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Data</span>
+                <span className="text-slate-400 font-medium">Data della prima lezione</span>
                 <span className="font-bold text-slate-800">{formattedDate}</span>
               </div>
             )}
 
             {formattedTime && (
               <div className="flex justify-between items-center">
-                <span className="text-slate-400 font-medium">Orario</span>
+                <span className="text-slate-400 font-medium">Orario standart</span>
                 <span className="font-bold text-slate-800">{formattedTime}</span>
               </div>
             )}

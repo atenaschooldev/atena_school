@@ -19,6 +19,12 @@ Deno.serve(async (req) => {
       phone, date, time, slotId, locale, origin, notes, guestSessionId,
     } = await req.json();
 
+    const isValidUuid = (id?: string | null) => {
+      if (!id) return false;
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    };
+    const resolvedSlotId = isValidUuid(slotId) ? slotId : null;
+
     // Resolve the authenticated user (may be null for guests)
     const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -53,8 +59,7 @@ Deno.serve(async (req) => {
         user_id: user?.id ?? null,
         session_id: guestSessionId ?? null,
         item_id: itemId,
-        item_type: itemType,
-        slot_id: slotId ?? null,
+        slot_id: resolvedSlotId,
         booking_date: date,
         booking_time: time,
         student_name: `${firstName} ${lastName}`.trim(),
@@ -62,7 +67,6 @@ Deno.serve(async (req) => {
         student_phone: phone,
         notes: notes ?? "",
         status: "pending_payment",
-        locale: locale ?? "it",
       })
       .select()
       .single();
@@ -90,10 +94,10 @@ Deno.serve(async (req) => {
       ],
       mode: "payment",
       success_url: `${SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}&email=${encodeURIComponent(customerEmail)}`,
-      cancel_url: `${SITE_URL}/checkout/${itemType}/${itemId}?date=${date}&time=${time}`,
+      cancel_url: `${SITE_URL}/checkout/${itemType}/${itemId}?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
       metadata: {
         booking_id: booking.id,
-        slot_id: slotId ?? "",
+        slot_id: resolvedSlotId ?? "",
       },
     });
 
