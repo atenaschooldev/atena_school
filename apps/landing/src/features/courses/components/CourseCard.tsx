@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { CaretRight, Clock, User, CreditCard, X } from "@phosphor-icons/react";
+import { CaretRight, Clock, User, CreditCard, X, Calendar } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -18,6 +18,8 @@ interface CourseCardProps {
   duration?: string;
   teacher_name?: string;
   onCtaClick?: () => void;
+  priority?: boolean;
+  standard_schedule?: string;
 }
 
 const CourseCard = ({ 
@@ -30,7 +32,9 @@ const CourseCard = ({
   type = "course", 
   duration,
   teacher_name,
-  onCtaClick 
+  onCtaClick,
+  priority = false,
+  standard_schedule
 }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
   const [isOpen, setIsOpen] = useState(false);
@@ -81,6 +85,7 @@ const CourseCard = ({
             alt={title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={priority}
             className={`
               object-cover transition-transform duration-700 ease-out
               ${isButtonHovered ? "scale-100" : "group-hover:scale-105"}
@@ -101,13 +106,19 @@ const CourseCard = ({
           {title}
         </h3>
 
-        {/* Metadata badges (duration, teacher) */}
-        {(duration || teacher_name) && (
+        {/* Metadata badges (duration, schedule, teacher) */}
+        {(duration || standard_schedule || teacher_name) && (
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mb-4 font-bold select-none">
             {duration && (
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#F8861D]" />
                 <span>{duration}</span>
+              </div>
+            )}
+            {standard_schedule && (
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
+                <span>{standard_schedule}</span>
               </div>
             )}
             {teacher_name && (
@@ -170,100 +181,119 @@ const CourseCard = ({
 
       {/* Details Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-[92vw] sm:w-full max-w-2xl bg-white rounded-3xl p-5 sm:p-8 border border-border/50 shadow-2xl overflow-y-auto max-h-[90vh] focus-visible:outline-none [&>button[class*='absolute']]:hidden">
+        <DialogContent className="w-[95vw] sm:w-full max-w-2xl lg:max-w-4xl 2xl:max-w-2xl bg-white rounded-3xl p-4 sm:p-6 md:p-8 border border-border/50 shadow-2xl flex flex-col lg:grid lg:grid-cols-[1.1fr_1fr] lg:grid-rows-[minmax(0,1fr)] lg:gap-8 2xl:flex 2xl:flex-col max-h-[92vh] sm:max-h-[88vh] lg:max-h-[85vh] 2xl:max-h-[85vh] overflow-hidden focus-visible:outline-none [&>button[class*='absolute']]:hidden">
           {/* Custom Floating Close Button */}
           <button
             onClick={() => setIsOpen(false)}
-            className="absolute top-8 right-8 sm:top-12 sm:right-12 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-foreground hover:text-[#043569] transition-all duration-300 flex items-center justify-center border border-black/10 shadow-md backdrop-blur-md cursor-pointer active:scale-90"
+            className="absolute top-6 right-6 sm:top-10 sm:right-10 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 hover:bg-white text-foreground hover:text-[#043569] transition-all duration-300 flex items-center justify-center border border-black/10 shadow-md backdrop-blur-md cursor-pointer active:scale-90"
           >
             <X className="w-4 h-4 sm:w-5 sm:h-5" weight="bold" />
           </button>
-          {/* Large image inside dialog */}
-          <div className="relative h-64 sm:h-96 w-full overflow-hidden rounded-2xl bg-muted mb-5">
-            {image ? (
-              <Image 
-                src={image} 
-                alt={title} 
-                fill 
-                sizes="(max-width: 768px) 100vw, 800px"
-                className="object-cover" 
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#043569]/5 to-[#F8861D]/10 flex items-center justify-center p-8 text-center">
-                <span className="text-[#043569]/30 font-black uppercase tracking-widest text-sm leading-tight select-none">
-                  {title}
-                </span>
-              </div>
-            )}
-            {category && (
-              <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/20 shadow-sm">
-                {category}
-              </div>
-            )}
+          
+          {/* Left Column: Image + Details Grid */}
+          <div className="flex flex-col shrink-0 lg:h-full lg:overflow-hidden 2xl:h-auto">
+            {/* Large image inside dialog */}
+            <div className="relative aspect-[16/9] w-full h-auto overflow-hidden rounded-2xl bg-white mb-4 sm:mb-5 shrink-0">
+              {image ? (
+                <Image 
+                  src={image} 
+                  alt={title} 
+                  fill 
+                  sizes="(max-width: 768px) 100vw, 800px"
+                  className="object-contain"
+                  priority
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-[#043569]/5 to-[#F8861D]/10 flex items-center justify-center p-8 text-center">
+                  <span className="text-[#043569]/30 font-black uppercase tracking-widest text-sm leading-tight select-none">
+                    {title}
+                  </span>
+                </div>
+              )}
+              {category && (
+                <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/20 shadow-sm">
+                  {category}
+                </div>
+              )}
+            </div>
+
+            {/* Details Grid (Duration, Teacher, Price) */}
+            <div className="shrink-0 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2.5 sm:gap-y-3 mb-4 sm:mb-5 py-3 sm:py-4 border-y border-border/40 text-sm select-none">
+              {duration && (
+                <div className="flex items-center gap-2.5 min-w-[120px]">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                    <Clock className="w-4.5 h-4.5" weight="bold" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Durata</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{duration}</p>
+                  </div>
+                </div>
+              )}
+              {standard_schedule && (
+                <div className="flex items-center gap-2.5 min-w-[120px]">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                    <Calendar className="w-4.5 h-4.5" weight="bold" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Orario Standard</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{standard_schedule}</p>
+                  </div>
+                </div>
+              )}
+              {teacher_name && (
+                <div className="flex items-center gap-2.5 min-w-[120px]">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                    <User className="w-4.5 h-4.5" weight="bold" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Insegnante</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{teacher_name}</p>
+                  </div>
+                </div>
+              )}
+              {price && (
+                <div className="flex items-center gap-2.5 min-w-[120px]">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                    <CreditCard className="w-4.5 h-4.5" weight="bold" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Prezzo</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{price}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <DialogHeader className="text-left space-y-2">
-            <DialogTitle className="text-2xl sm:text-3xl font-black text-[#043569] tracking-tight leading-tight">
-              {title}
-            </DialogTitle>
-          </DialogHeader>
+          {/* Right Column: Content wrapper */}
+          <div className="flex flex-col flex-grow overflow-hidden h-full">
+            <DialogHeader className="text-left space-y-1 sm:space-y-1.5 shrink-0 mb-3 sm:mb-4 lg:mb-3 2xl:mb-4 lg:pr-12 2xl:pr-0">
+              <DialogTitle className="text-xl sm:text-2xl md:text-3xl font-black text-[#043569] tracking-tight leading-tight">
+                {title}
+              </DialogTitle>
+            </DialogHeader>
 
-          {/* Details Grid (Duration, Teacher, Price) */}
-          <div className="flex flex-wrap gap-x-6 gap-y-4 my-5 py-4 border-y border-border/40 text-sm select-none">
-            {duration && (
-              <div className="flex items-center gap-2.5 min-w-[120px]">
-                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <Clock className="w-4.5 h-4.5" weight="bold" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Durata</p>
-                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{duration}</p>
-                </div>
-              </div>
-            )}
-            {teacher_name && (
-              <div className="flex items-center gap-2.5 min-w-[120px]">
-                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <User className="w-4.5 h-4.5" weight="bold" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Insegnante</p>
-                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{teacher_name}</p>
-                </div>
-              </div>
-            )}
-            {price && (
-              <div className="flex items-center gap-2.5 min-w-[120px]">
-                <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
-                  <CreditCard className="w-4.5 h-4.5" weight="bold" />
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Prezzo</p>
-                  <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{price}</p>
-                </div>
-              </div>
-            )}
-          </div>
+            {/* Detailed description */}
+            <div className="flex-grow overflow-y-auto pr-1 sm:pr-2 min-h-[80px] lg:min-h-0 space-y-2.5">
+              <h4 className="text-xs font-black uppercase tracking-widest text-foreground shrink-0">Informazioni sul corso</h4>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-line">
+                {description}
+              </p>
+            </div>
 
-          {/* Detailed description */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Informazioni sul corso</h4>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed font-medium whitespace-pre-line">
-              {description}
-            </p>
-          </div>
-
-          {/* Action button: Redirects to booking/checkout process */}
-          <div className="mt-8 flex flex-col gap-3">
-            {id && (
-              <Link 
-                href={`/book/${type}/${id}`}
-                className="w-full py-4 bg-[#F8861D] text-white border-2 border-transparent hover:bg-white hover:text-[#F8861D] hover:border-[#F8861D] rounded-2xl font-black uppercase tracking-widest text-sm text-center transition-all shadow-xl shadow-[#F8861D]/20 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {type === "shop" ? "Acquista Ora" : "Prenota Ora"}
-                <CaretRight className="w-4 h-4" weight="bold" />
-              </Link>
-            )}
+            {/* Action button: Redirects to booking/checkout process */}
+            <div className="mt-4 sm:mt-5 md:mt-6 lg:mt-4 2xl:mt-6 flex flex-col gap-3 shrink-0">
+              {id && (
+                <Link 
+                  href={`/book/${type}/${id}`}
+                  className="w-full py-4 bg-[#F8861D] text-white border-2 border-transparent hover:bg-white hover:text-[#F8861D] hover:border-[#F8861D] rounded-2xl font-black uppercase tracking-widest text-sm text-center transition-all shadow-xl shadow-[#F8861D]/20 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {type === "shop" ? "Acquista Ora" : "Prenota Ora"}
+                  <CaretRight className="w-4 h-4" weight="bold" />
+                </Link>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

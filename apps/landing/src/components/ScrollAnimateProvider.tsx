@@ -49,14 +49,14 @@ export default function ScrollAnimateProvider({
   }, [enabled]);
 
   useEffect(() => {
-    // Animate elements on scroll based on data-gsap attribute.
-    // We run this inside a setTimeout to let Next.js finish DOM updates on navigation/render.
-    const timer = setTimeout(() => {
-      // Clean up previous triggers to avoid duplicates and leaks
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    // Function to initialize GSAP animation for elements
+    const initAnimations = () => {
+      const elements = document.querySelectorAll("[data-gsap]:not(.gsap-init)");
+      if (elements.length === 0) return;
 
-      const elements = document.querySelectorAll("[data-gsap]");
       elements.forEach((el) => {
+        el.classList.add("gsap-init");
+
         const animationType = el.getAttribute("data-gsap") || "fade-up";
         const delayStr = el.getAttribute("data-gsap-delay") || "0";
         const delay = parseFloat(delayStr) / 1000;
@@ -93,10 +93,26 @@ export default function ScrollAnimateProvider({
       });
 
       ScrollTrigger.refresh();
-    }, 150);
+    };
+
+    // Run initially after Next.js finishes DOM updates
+    const timer = setTimeout(initAnimations, 150);
+
+    // Watch for new elements being added to the DOM (e.g. during tab switching)
+    const observer = new MutationObserver(() => {
+      initAnimations();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
     return () => {
       clearTimeout(timer);
+      observer.disconnect();
+      // Clean up previous triggers to avoid duplicates and leaks
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, [pathname, enabled]);
 

@@ -118,7 +118,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
       {/* Course grids */}
       <div className="space-y-24">
         {filteredSections.length > 0 ? (
-          filteredSections.map((section) => (
+           filteredSections.map((section, sIdx) => (
             <div key={section.id} className="animate-in fade-in slide-in-from-bottom-6 duration-500">
               <div className="flex items-center gap-6 mb-10">
                 <h2
@@ -146,6 +146,8 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                       type={course.type}
                       duration={course.duration}
                       teacher_name={course.teacher_name}
+                      priority={sIdx === 0 && idx < 2}
+                      standard_schedule={course.standard_schedule}
                     />
                   </div>
                 ))}

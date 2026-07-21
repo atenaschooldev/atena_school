@@ -28,6 +28,7 @@ export interface ResolvedCourse {
   type: string;
   duration?: string;
   teacher_name?: string;
+  standard_schedule?: string;
 }
 
 export interface ResolvedSection {
@@ -127,7 +128,8 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         price: itemPrice,
         type: course.type || 'course',
         duration: course.duration || course.duration_it || undefined,
-        teacher_name: course.teacher_name || undefined
+        teacher_name: course.teacher_name || undefined,
+        standard_schedule: course.standard_schedule || undefined
       };
     });
 
@@ -138,5 +140,15 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
     };
   });
 
+  // Sort sections: place "Corsi di lingua" (languages) first
+  const langIndex = resolvedSections.findIndex(
+    (s) => s.id.toLowerCase() === "languages" || s.id.toLowerCase() === "language"
+  );
+  if (langIndex > 0) {
+    const [langSection] = resolvedSections.splice(langIndex, 1);
+    resolvedSections.unshift(langSection);
+  }
+
   return resolvedSections;
 }
+
