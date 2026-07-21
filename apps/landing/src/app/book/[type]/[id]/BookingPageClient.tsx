@@ -159,17 +159,6 @@ export default function BookingPageClient({
                     className="w-full border-none shadow-none p-0 bg-transparent"
                   />
                 </div>
-
-                {/* Need Help Banner */}
-                <div className="bg-orange-50/60 border border-orange-100/80 rounded-2xl p-2.5 flex items-center gap-3 select-none">
-                  <div className="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center text-[#F8861D] shrink-0">
-                    <CalendarIcon className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">Hai bisogno di aiuto?</p>
-                    <p className="text-[11px] text-slate-500 leading-tight">Contattaci per trovare insieme l'orario migliore per te.</p>
-                  </div>
-                </div>
               </div>
 
               {/* Step 2: Time Slots */}
@@ -196,18 +185,18 @@ export default function BookingPageClient({
                         </div>
                       ) : (
                         <div className="flex-grow space-y-2 2xl:space-y-4">
-                          {/* Confirmation card */}
-                          <div className="p-3 2xl:p-5 border border-orange-100 rounded-2xl bg-orange-50/20 shadow-sm space-y-2 2xl:space-y-4">
-                            <div className="flex items-center gap-2 text-xs 2xl:text-sm font-bold text-[#043569]">
-                              <span>Orario e Frequenza</span>
-                            </div>
+                          {/* Course Details Card */}
+                          <div className="p-3.5 2xl:p-5 border border-slate-200/70 rounded-2xl bg-white shadow-sm space-y-2 2xl:space-y-4">
+                            <h3 className="text-sm font-bold text-[#043569] select-none">
+                              Dettagli del corso
+                            </h3>
 
                             <div className="space-y-1.5 2xl:space-y-3.5 text-sm 2xl:text-base">
                               {/* Orario standard */}
                               <div className="py-1 2xl:py-2.5 border-b border-slate-100/70">
-                                <div className="flex items-center gap-2 text-slate-500 mb-0.5 select-none">
-                                  <Clock className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-[#F8861D]" />
-                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest">Orario standard</span>
+                                <div className="flex items-center gap-2 text-slate-400 mb-0.5 select-none">
+                                  <Clock className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-slate-400" />
+                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-slate-400">Orario standard</span>
                                 </div>
                                 <div className="font-semibold text-[#043569] pl-6 2xl:pl-7 text-sm 2xl:text-base">
                                   {item.standard_schedule}
@@ -216,9 +205,9 @@ export default function BookingPageClient({
 
                               {/* Frequenza */}
                               <div className="py-1 2xl:py-2.5 border-b border-slate-100/70">
-                                <div className="flex items-center gap-2 text-slate-500 mb-0.5 select-none">
-                                  <CalendarIcon className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-[#F8861D]" />
-                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest">Frequenza</span>
+                                <div className="flex items-center gap-2 text-slate-400 mb-0.5 select-none">
+                                  <CalendarIcon className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-slate-400" />
+                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-slate-400">Frequenza</span>
                                 </div>
                                 <div className="font-semibold text-[#043569] pl-6 2xl:pl-7 text-sm 2xl:text-base">
                                   {courseDuration}
@@ -227,11 +216,11 @@ export default function BookingPageClient({
 
                               {/* Data inizio abbonamento */}
                               <div className="py-1 2xl:py-2.5 border-b border-slate-100/70">
-                                <div className="flex items-center gap-2 text-slate-500 mb-0.5 select-none">
+                                <div className="flex items-center gap-2 text-emerald-500 mb-0.5 select-none">
                                   <CalendarCheck className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-emerald-500" />
-                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-slate-500">Inizio abbonamento</span>
+                                  <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-emerald-500">Inizio abbonamento</span>
                                 </div>
-                                <div className="font-semibold text-emerald-600 pl-6 2xl:pl-7 text-sm 2xl:text-base">
+                                <div className="font-bold text-emerald-600 pl-6 2xl:pl-7 text-sm 2xl:text-base">
                                   {(() => {
                                     const raw = format(selectedDate, "eeee d MMMM yyyy", { locale: dateLocale });
                                     return raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -242,11 +231,11 @@ export default function BookingPageClient({
                               {/* Fine abbonamento */}
                               {endDate && (
                                 <div className="py-1 2xl:py-2.5 border-b border-slate-100/70">
-                                  <div className="flex items-center gap-2 text-slate-500 mb-0.5 select-none">
+                                  <div className="flex items-center gap-2 text-rose-500 mb-0.5 select-none">
                                     <CalendarX className="w-4 h-4 2xl:w-4.5 2xl:h-4.5 text-rose-500" />
-                                    <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-slate-500">Fine abbonamento</span>
+                                    <span className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-rose-500">Fine abbonamento</span>
                                   </div>
-                                  <div className="font-semibold text-rose-600 pl-6 2xl:pl-7 text-sm 2xl:text-base">
+                                  <div className="font-bold text-rose-600 pl-6 2xl:pl-7 text-sm 2xl:text-base">
                                     {(() => {
                                       const raw = format(endDate, "eeee d MMMM yyyy", { locale: dateLocale });
                                       return raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -258,18 +247,18 @@ export default function BookingPageClient({
                               {/* Date lezioni incluse */}
                               {previewLessons.length > 0 && (
                                 <div className="space-y-1.5 pt-2 select-none">
-                                  <span className="text-slate-600 font-bold block text-[11px] 2xl:text-xs uppercase tracking-wider">Date lezioni incluse ({previewLessons.length}):</span>
-                                  <div className="flex flex-wrap gap-x-2 gap-y-2 pt-1 pb-1">
+                                  <span className="text-slate-500 font-bold block text-[10px] 2xl:text-xs uppercase tracking-wider">Date lezioni incluse ({previewLessons.length}):</span>
+                                  <div className="flex flex-wrap gap-x-2 gap-y-1.5 pt-1 pb-1">
                                     {previewLessons.map((lesson, idx) => {
                                       const lDate = new Date(lesson.startsAt);
                                       return (
                                         <span
                                           key={idx}
-                                          className="inline-flex items-center justify-center bg-orange-50/50 hover:bg-orange-50 text-[#d46a0c] border border-orange-200/30 px-3 py-1 2xl:px-4 2xl:py-1.5 rounded-xl 2xl:rounded-2xl text-[10px] 2xl:text-xs font-bold transition-all shadow-sm hover:shadow active:scale-95 whitespace-nowrap"
+                                          className="inline-flex items-center justify-center bg-slate-100/60 hover:bg-slate-200/50 text-slate-600 border border-slate-200/20 px-2.5 py-1 rounded-xl text-[10px] 2xl:text-xs font-bold transition-all shadow-sm active:scale-95 whitespace-nowrap"
                                         >
                                           {(() => {
-                                            const raw = format(lDate, "d MMMM", { locale: dateLocale });
-                                            return raw.charAt(0).toUpperCase() + raw.slice(1);
+                                            const raw = format(lDate, "d MMM", { locale: dateLocale });
+                                            return raw;
                                           })()}
                                         </span>
                                       );
@@ -343,13 +332,13 @@ export default function BookingPageClient({
           </div>
 
           {/* Right Sidebar (4 cols): Integrated Summary */}
-          <div className="lg:col-span-4 bg-[#092543] text-white p-4 sm:p-5 2xl:p-8 flex flex-col justify-between space-y-3 2xl:space-y-6">
+          <div className="lg:col-span-4 bg-white border-l border-slate-200/60 p-4 sm:p-5 2xl:p-8 flex flex-col justify-between space-y-3 2xl:space-y-6">
             <div className="space-y-3 2xl:space-y-6">
-              <div className="flex items-center justify-between border-b border-white/15 pb-2 2xl:pb-4">
-                <h2 className="text-sm 2xl:text-base font-bold tracking-tight text-white">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2 2xl:pb-4">
+                <h2 className="text-sm 2xl:text-base font-bold tracking-tight text-[#043569]">
                   Riepilogo prenotazione
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[11px] 2xl:text-xs font-medium tracking-wider text-white/80">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[11px] 2xl:text-xs font-semibold tracking-wider text-slate-500">
                   Passo 1 di 3
                 </span>
               </div>
@@ -357,96 +346,99 @@ export default function BookingPageClient({
               {/* Items List with Icon Boxes */}
               <div className="space-y-2.5 2xl:space-y-4.5">
                 <div className="flex gap-2.5 2xl:gap-3 items-center">
-                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white">
+                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[#043569]">
                     <GraduationCap className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5" />
                   </div>
                   <div>
-                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-white/50 font-bold select-none">SERVIZIO</p>
-                    <p className="font-bold text-xs text-white 2xl:text-sm leading-snug">{title}</p>
+                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-slate-400 font-bold select-none">SERVIZIO</p>
+                    <p className="font-bold text-xs text-[#043569] 2xl:text-sm leading-snug">{title}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2.5 2xl:gap-3 items-center">
-                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white">
+                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[#043569]">
                     <User className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5" />
                   </div>
                   <div>
-                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-white/50 font-bold select-none">DOCENTE</p>
-                    <p className="font-bold text-xs text-white 2xl:text-sm">{item.teacher_name || "Elisabetta Sorrenti"}</p>
+                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-slate-400 font-bold select-none">DOCENTE</p>
+                    <p className="font-bold text-xs text-[#043569] 2xl:text-sm">{item.teacher_name || "Elisabetta Sorrenti"}</p>
                   </div>
                 </div>
 
                 <div className="flex gap-2.5 2xl:gap-3 items-center">
-                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white">
+                  <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[#043569]">
                     <MapPin className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5" />
                   </div>
                   <div>
-                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-white/50 font-bold select-none">SEDE</p>
-                    <p className="font-bold text-xs text-white 2xl:text-sm">Atena School, Via Matteotti 11</p>
+                    <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-slate-400 font-bold select-none">SEDE</p>
+                    <p className="font-bold text-xs text-[#043569] 2xl:text-sm">Atena School, Via Matteotti 11</p>
                   </div>
                 </div>
 
                 {/* Selected Date & Time Rows */}
-                <div className="pt-2 2xl:pt-4 border-t border-white/15 space-y-1.5 2xl:space-y-3">
+                <div className="pt-2 2xl:pt-4 border-t border-slate-100 space-y-1.5 2xl:space-y-3">
                   <div className="flex justify-between items-center text-xs">
-                    <div className="flex items-center gap-1.5 text-white/70 font-medium">
-                      <CalendarIcon className="w-3.5 h-3.5 text-white/70" />
+                    <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                      <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                       <span>Data della prima lezione</span>
                     </div>
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-[#043569]">
                       {selectedDate ? format(selectedDate, "d MMMM yyyy", { locale: dateLocale }) : "Non selezionata"}
                     </span>
                   </div>
                   {selectedDate && isFixedSchedule && endDate && (
                     <div className="flex justify-between items-center text-xs">
-                      <div className="flex items-center gap-1.5 text-white/70 font-medium">
-                        <CalendarIcon className="w-3.5 h-3.5 text-white/70" />
+                      <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                        <CalendarIcon className="w-3.5 h-3.5 text-slate-400" />
                         <span>Fine abbonamento</span>
                       </div>
-                      <span className="font-bold text-white">
+                      <span className="font-bold text-[#043569]">
                         {format(endDate, "d MMMM yyyy", { locale: dateLocale })}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between items-center text-xs">
-                    <div className="flex items-center gap-1.5 text-white/70 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-white/70" />
+                    <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
                       <span>Orario standard</span>
                     </div>
-                    <span className="font-bold text-white">{selectedTime || "Non selezionato"}</span>
+                    <span className="font-bold text-[#043569]">{selectedTime || "Non selezionato"}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2.5 pt-2.5 border-t border-white/15">
+            <div className="space-y-2.5 pt-2.5 border-t border-slate-100">
               <div className="flex justify-between items-center">
-                <span className="font-bold uppercase tracking-wider text-xs text-white/70 select-none">TOTALE</span>
-                <span className="font-extrabold text-white text-2xl">{Number(item.price || 0).toFixed(2)} €</span>
+                <span className="font-bold uppercase tracking-wider text-xs text-slate-500 select-none">TOTALE</span>
+                <div className="text-right">
+                  <span className="font-extrabold text-[#043569] text-2xl">{Number(item.price || 0).toFixed(2)} €</span>
+
+                </div>
               </div>
 
               <button
                 disabled={!selectedDate || !selectedTime || (!isFixedSchedule && !selectedSlotId)}
                 onClick={handleContinue}
-                className="w-full py-2.5 px-4 bg-[#F8861D] hover:bg-[#e07516] text-white rounded-xl font-bold text-xs transition-all duration-200 disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
+                className="w-full py-2.5 px-4 bg-[#F8861D] hover:bg-[#e07516] text-white rounded-xl font-bold text-xs transition-all duration-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 group cursor-pointer shadow-sm"
               >
                 <span>{isFixedSchedule ? "Continua al pagamento" : "Continua ai dettagli"}</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
               </button>
 
               {/* Bottom Guarantee Badges inside Sidebar */}
-              <div className="pt-2 border-t border-white/10 grid grid-cols-3 gap-1.5 text-[9px] text-white/60 text-center select-none">
+              <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-1.5 text-[9px] text-slate-400 text-center select-none">
                 <div className="flex flex-col items-center gap-0.5">
-                  <ShieldCheck className="w-3 h-3 text-white/80 shrink-0" />
-                  <span className="leading-tight">Pagamento sicuro<br />SSL 256-bit</span>
+                  <ShieldCheck className="w-3 h-3 text-slate-400 shrink-0" />
+                  <span className="leading-tight text-slate-500">Pagamento sicuro<br />SSL 256-bit</span>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <CalendarIcon className="w-3 h-3 text-white/80 shrink-0" />
-                  <span className="leading-tight">Cancellazione facile<br />Fino a 24h prima</span>
+                  <CalendarIcon className="w-3 h-3 text-slate-400 shrink-0" />
+                  <span className="leading-tight text-slate-500">Cancellazione facile<br />Fino a 24h prima</span>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
-                  <Headset className="w-3 h-3 text-white/80 shrink-0" />
-                  <span className="leading-tight">Supporto dedicato<br />Siamo qui per te</span>
+                  <Headset className="w-3 h-3 text-slate-400 shrink-0" />
+                  <span className="leading-tight text-slate-500">Supporto dedicato<br />Siamo qui per te</span>
                 </div>
               </div>
             </div>

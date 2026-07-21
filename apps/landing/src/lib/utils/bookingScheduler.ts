@@ -46,8 +46,7 @@ export function calculateLessonDates(
   // Parse startDate
   const baseDate = new Date(startDateStr);
   
-  const isFixedSchedule = category === "languages" && 
-    standardSchedule && 
+  const isFixedSchedule = standardSchedule && 
     !standardSchedule.toLowerCase().includes("flessibile") &&
     !standardSchedule.toLowerCase().includes("concordare");
 

@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { 
-  Calendar as CalendarIcon, 
-  Clock, 
-  MapPin, 
-  ArrowLeft, 
-  CaretLeft, 
-  CaretRight, 
-  CheckCircle, 
-  User, 
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  ArrowLeft,
+  CaretLeft,
+  CaretRight,
+  CheckCircle,
+  User,
   Info,
   Plus,
   X
@@ -46,7 +46,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -112,13 +112,12 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
   // Determine limits
   const schedule = course?.standard_schedule?.toLowerCase() || "";
-  const isFixedSchedule = course?.category === "languages" && 
-    course?.standard_schedule && 
+  const isFixedSchedule = course?.standard_schedule &&
     !schedule.includes("flessibile") &&
     !schedule.includes("concordare");
 
-  const maxLessons = isFixedSchedule 
-    ? lessons.length 
+  const maxLessons = isFixedSchedule
+    ? lessons.length
     : getDynamicMaxLessons(course?.name || "", booking.booking_date, course?.category || "", course?.lessons_per_week);
 
   // Calculate progress
@@ -134,7 +133,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const lastDay = new Date(year, month + 1, 0);
 
   // Weekdays alignment: 0 = Sun, 1 = Mon ...
-  const startDayOfWeek = firstDay.getDay(); 
+  const startDayOfWeek = firstDay.getDay();
   const blanks = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1; // Align to Monday as 1st day
   const daysInMonth = lastDay.getDate();
 
@@ -173,7 +172,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
       toast.error(`Hai già programmato tutte le lezioni disponibili per questo pacchetto (${maxLessons}/${maxLessons}).`);
       return;
     }
-    
+
     if (dateObj) {
       const today = startOfDay(new Date());
       if (isBefore(startOfDay(dateObj), today)) {
@@ -220,8 +219,8 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Back Link */}
         <div>
-          <Link 
-            href="/dashboard" 
+          <Link
+            href="/dashboard"
             className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground/60 hover:text-primary transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -239,19 +238,18 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     Corso
                   </span>
                   <span
-                    className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                      booking.status === "paid" || booking.status === "completed"
+                    className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${booking.status === "paid" || booking.status === "completed"
                         ? "bg-green-500/10 text-green-700 border border-green-500/20"
                         : booking.status === "reserved"
-                        ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
-                        : "bg-muted text-muted-foreground border border-border"
-                    }`}
+                          ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
+                          : "bg-muted text-muted-foreground border border-border"
+                      }`}
                   >
                     {booking.status === "paid" || booking.status === "completed"
                       ? "✓ Pagato"
                       : booking.status === "reserved"
-                      ? "Prenotato"
-                      : "In attesa"}
+                        ? "Prenotato"
+                        : "In attesa"}
                   </span>
                 </div>
                 <h2 className="font-black text-foreground text-xl leading-tight">
@@ -305,8 +303,8 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                 <span className="text-xs font-bold text-foreground/60">Lezioni svolte</span>
               </div>
               <div className="w-full bg-secondary/20 rounded-full h-3.5 overflow-hidden">
-                <div 
-                  className="bg-[#F8861D] h-3.5 rounded-full transition-all duration-500" 
+                <div
+                  className="bg-[#F8861D] h-3.5 rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -337,21 +335,19 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
               <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-border shadow-sm w-fit">
                 <button
                   onClick={() => setActiveTab("calendar")}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
-                    activeTab === "calendar"
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${activeTab === "calendar"
                       ? "bg-[#043569] text-white shadow-md"
                       : "text-foreground/60 hover:text-foreground hover:bg-muted/50"
-                  }`}
+                    }`}
                 >
                   Vista Calendario
                 </button>
                 <button
                   onClick={() => setActiveTab("list")}
-                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${
-                    activeTab === "list"
+                  className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all ${activeTab === "list"
                       ? "bg-[#043569] text-white shadow-md"
                       : "text-foreground/60 hover:text-foreground hover:bg-muted/50"
-                  }`}
+                    }`}
                 >
                   Lista Lezioni ({totalLessons})
                 </button>
@@ -367,13 +363,13 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     {format(currentMonth, "MMMM yyyy", { locale: it })}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <button 
+                    <button
                       onClick={handlePrevMonth}
                       className="p-2 border border-border hover:bg-muted rounded-xl transition-all"
                     >
                       <CaretLeft className="w-5 h-5 text-foreground" />
                     </button>
-                    <button 
+                    <button
                       onClick={handleNextMonth}
                       className="p-2 border border-border hover:bg-muted rounded-xl transition-all"
                     >
@@ -395,22 +391,21 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   {days.map((item, idx) => {
                     const lessonsForDay = getLessonsForDate(item.date);
                     const hasLesson = lessonsForDay.length > 0;
-                    
+
                     const today = startOfDay(new Date());
                     const isPast = item.date ? isBefore(startOfDay(item.date), today) : false;
                     const canScheduleThisDay = item.date && !isPast && !hasLesson && canScheduleMore;
-                    
+
                     return (
-                      <div 
+                      <div
                         key={idx}
                         onClick={() => canScheduleThisDay && handleOpenScheduleModal(item.date!)}
-                        className={`min-h-[50px] sm:min-h-[60px] p-1.5 flex flex-col justify-between border border-border/40 rounded-xl relative transition-all ${
-                          !item.day 
-                            ? "bg-muted/30 border-none pointer-events-none" 
-                            : canScheduleThisDay 
-                            ? "bg-white hover:bg-primary/5 hover:border-primary/40 cursor-pointer" 
-                            : "bg-white"
-                        }`}
+                        className={`min-h-[50px] sm:min-h-[60px] p-1.5 flex flex-col justify-between border border-border/40 rounded-xl relative transition-all ${!item.day
+                            ? "bg-muted/30 border-none pointer-events-none"
+                            : canScheduleThisDay
+                              ? "bg-white hover:bg-primary/5 hover:border-primary/40 cursor-pointer"
+                              : "bg-white"
+                          }`}
                       >
                         {item.day && (
                           <>
@@ -418,7 +413,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                             {hasLesson && (
                               <div className="mt-1">
                                 {lessonsForDay.map((lesson, lIdx) => (
-                                  <div 
+                                  <div
                                     key={lIdx}
                                     className="bg-[#F8861D]/10 hover:bg-[#F8861D]/20 text-[#d46a0c] border border-[#F8861D]/20 py-0.5 px-1 rounded-lg text-[8px] sm:text-[9px] font-black tracking-tighter text-center cursor-pointer transition-all"
                                     title={`Lezione: ${format(new Date(lesson.starts_at), "HH:mm")} - ${format(new Date(lesson.ends_at), "HH:mm")}`}
@@ -434,7 +429,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     );
                   })}
                 </div>
-                
+
                 {/* Legenda */}
                 <div className="pt-4 border-t border-border text-xs text-foreground/60 flex flex-wrap items-center gap-6">
                   <div className="flex items-center gap-1.5">
@@ -468,11 +463,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                       return (
                         <div key={lesson.id} className="relative">
                           {/* Circle indicator on timeline */}
-                          <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 bg-white flex items-center justify-center transition-all ${
-                            lessonPast 
-                              ? "border-[#F8861D]" 
+                          <div className={`absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 bg-white flex items-center justify-center transition-all ${lessonPast
+                              ? "border-[#F8861D]"
                               : "border-primary"
-                          }`}>
+                            }`}>
                             {lessonPast && <div className="w-1.5 h-1.5 rounded-full bg-[#F8861D]" />}
                           </div>
 
@@ -490,11 +484,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                               </div>
                             </div>
                             <div>
-                              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                                lessonPast
+                              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${lessonPast
                                   ? "bg-green-500/10 text-green-700 border border-green-500/20"
                                   : "bg-primary/10 text-primary border border-primary/20"
-                              }`}>
+                                }`}>
                                 {lessonPast ? "✓ Svolta" : "Programmata"}
                               </span>
                             </div>
@@ -517,7 +510,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="font-black text-foreground text-lg">Pianifica Lezione</h3>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 text-foreground/40 hover:text-foreground hover:bg-muted rounded-lg transition-all"
               >
@@ -529,7 +522,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
             <form onSubmit={handleConfirmSchedule} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">Data Selezionata</label>
-                <input 
+                <input
                   type="date"
                   value={modalDate}
                   onChange={(e) => setModalDate(e.target.value)}

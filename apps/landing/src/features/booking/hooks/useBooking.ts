@@ -22,7 +22,6 @@ export function useBooking(type: string, id: string, initialItem: any, initialUs
   const [user] = useState<any>(initialUser);
 
   const isFixedSchedule = type === "course" && 
-    item.category === "languages" && 
     item.standard_schedule && 
     !item.standard_schedule.toLowerCase().includes("flessibile") &&
     !item.standard_schedule.toLowerCase().includes("concordare");

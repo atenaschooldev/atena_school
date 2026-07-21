@@ -237,13 +237,13 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
             </div>
 
             {/* Right Column: Order Summary & Action Buttons (5 cols) */}
-            <div className="lg:col-span-5 bg-[#092543] text-white p-4 sm:p-5 2xl:p-8 flex flex-col justify-between space-y-3 2xl:space-y-6">
+            <div className="lg:col-span-5 bg-white border-l border-slate-200/60 p-4 sm:p-5 2xl:p-8 flex flex-col justify-between space-y-3 2xl:space-y-6">
               <div className="space-y-3 2xl:space-y-6">
-                <div className="flex items-center justify-between border-b border-white/15 pb-2 2xl:pb-4 select-none">
-                  <h3 className="text-sm 2xl:text-base font-bold tracking-tight text-white">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 2xl:pb-4 select-none">
+                  <h3 className="text-sm 2xl:text-base font-bold tracking-tight text-[#043569]">
                     Riepilogo prenotazione
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-[11px] 2xl:text-xs font-medium tracking-wider text-white/80">
+                  <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-[11px] 2xl:text-xs font-semibold tracking-wider text-slate-500">
                     Passo 2 di 3
                   </span>
                 </div>
@@ -251,65 +251,67 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 {/* Service Details with Icon Boxes */}
                 <div className="space-y-2.5 2xl:space-y-4.5">
                   <div className="flex gap-2.5 2xl:gap-3 items-center group">
-                    <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center shrink-0 text-white transition-colors">
+                    <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[#043569] transition-colors">
                       <Sparkle className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5" />
                     </div>
                     <div>
-                      <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-white/50 font-bold select-none">SERVIZIO</p>
-                      <p className="font-bold text-xs text-white 2xl:text-sm leading-snug">{title}</p>
+                      <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-slate-400 font-bold select-none">SERVIZIO</p>
+                      <p className="font-bold text-xs text-[#043569] 2xl:text-sm leading-snug">{title}</p>
                     </div>
                   </div>
 
                   <div className="flex gap-2.5 2xl:gap-3 items-center group">
-                    <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center shrink-0 text-white transition-colors">
+                    <div className="w-8 h-8 2xl:w-10 2xl:h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-[#043569] transition-colors">
                       <User className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5" />
                     </div>
                     <div>
-                      <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-white/50 font-bold select-none">DOCENTE</p>
-                      <p className="font-bold text-xs text-white 2xl:text-sm">{item?.teacher_name || "Elisabetta Sorrenti"}</p>
+                      <p className="text-[9px] 2xl:text-[10px] uppercase tracking-wider text-slate-400 font-bold select-none">DOCENTE</p>
+                      <p className="font-bold text-xs text-[#043569] 2xl:text-sm">{item?.teacher_name || "Elisabetta Sorrenti"}</p>
                     </div>
                   </div>
 
                   {/* Selected Date & Time Rows */}
                   {dateParam && timeParam && (
-                    <div className="pt-2 2xl:pt-4 border-t border-white/15 space-y-1.5 2xl:space-y-3">
+                    <div className="pt-2 2xl:pt-4 border-t border-slate-100 space-y-1.5 2xl:space-y-3">
                       <div className="flex justify-between items-center text-xs 2xl:text-sm">
-                        <div className="flex items-center gap-1.5 text-white/70 font-medium">
-                          <CalendarIcon className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-white/70" />
+                        <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                          <CalendarIcon className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-slate-400" />
                           <span>Data della prima lezione</span>
                         </div>
-                        <span className="font-bold text-white">
+                        <span className="font-bold text-[#043569]">
                           {format(new Date(dateParam), "d MMMM yyyy", { locale: dateLocale })}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-xs 2xl:text-sm">
-                        <div className="flex items-center gap-1.5 text-white/70 font-medium">
-                          <Clock className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-white/70" />
+                        <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+                          <Clock className="w-3.5 h-3.5 2xl:w-4 2xl:h-4 text-slate-400" />
                           <span>Orario standard</span>
                         </div>
-                        <span className="font-bold text-white">{timeParam}</span>
+                        <span className="font-bold text-[#043569]">{timeParam}</span>
                       </div>
                     </div>
                   )}
 
                   {/* Price Breakdown */}
-                  <div className="pt-2 2xl:pt-4 border-t border-white/15 space-y-1 2xl:space-y-2.5">
-                    <div className="flex justify-between text-xs 2xl:text-sm text-white/70 font-medium">
+                  <div className="pt-2 2xl:pt-4 border-t border-slate-100 space-y-1 2xl:space-y-2.5">
+                    <div className="flex justify-between text-xs 2xl:text-sm text-slate-500 font-medium">
                       <span>Prezzo corso</span>
-                      <span className="text-white font-bold">€{Number(item?.price || 0).toFixed(2)}</span>
+                      <span className="text-[#043569] font-bold">€{Number(item?.price || 0).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-xs 2xl:text-sm text-white/70 font-medium">
+                    <div className="flex justify-between text-xs 2xl:text-sm text-slate-500 font-medium">
                       <span>Commissioni</span>
-                      <span className="text-emerald-400 font-bold">Gratis</span>
+                      <span className="text-emerald-500 font-bold">Gratis</span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2.5 2xl:space-y-4 pt-2.5 2xl:pt-4 border-t border-white/15">
+              <div className="space-y-2.5 2xl:space-y-4 pt-2.5 2xl:pt-4 border-t border-slate-100">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold uppercase tracking-wider text-xs 2xl:text-sm text-white/70 select-none">TOTALE</span>
-                  <span className="font-extrabold text-white text-2xl 2xl:text-3xl">€{Number(item?.price || 0).toFixed(2)}</span>
+                  <span className="font-bold uppercase tracking-wider text-xs 2xl:text-sm text-slate-500 select-none">TOTALE</span>
+                  <div className="text-right">
+                    <span className="font-extrabold text-[#043569] text-2xl 2xl:text-3xl">€{Number(item?.price || 0).toFixed(2)}</span>
+                  </div>
                 </div>
 
                 {/* Payment Action Buttons */}
@@ -319,7 +321,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     type="submit"
                     onClick={() => { actionRef.current = "pay"; }}
                     disabled={submitting !== false}
-                    className="w-full py-3 px-5 2xl:py-4.5 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs 2xl:text-sm transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg disabled:bg-white/10 disabled:text-white/30 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-full py-3 px-5 2xl:py-4.5 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs 2xl:text-sm transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {submitting === "pay" ? (
                       <div className="w-full flex justify-center items-center gap-2 py-0.5">
@@ -336,7 +338,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     type="submit"
                     onClick={() => { actionRef.current = "book"; }}
                     disabled={submitting !== false}
-                    className="w-full py-2.5 px-5 2xl:py-4 bg-white hover:bg-slate-100 active:scale-[0.99] text-[#043569] rounded-2xl font-bold text-xs 2xl:text-sm transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md disabled:bg-white/20 disabled:text-white/40 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-full py-2.5 px-5 2xl:py-4 bg-white hover:bg-slate-50 active:scale-[0.99] text-[#043569] rounded-2xl border border-slate-200 hover:border-slate-300 font-bold text-xs 2xl:text-sm transition-all duration-200 flex items-center justify-center shadow-sm hover:shadow-md disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {submitting === "book" ? (
                       <div className="w-full flex justify-center items-center gap-2 py-0.5">
@@ -350,18 +352,18 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 </div>
 
                 {/* Bottom Trust Badges inside Sidebar */}
-                <div className="pt-2 2xl:pt-4 border-t border-white/10 grid grid-cols-3 gap-1.5 text-[9px] 2xl:text-[10px] text-white/60 text-center select-none">
-                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-white/5 transition-colors">
-                    <ShieldCheck className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5 text-white/80 shrink-0" />
-                    <span className="leading-tight">Pagamento sicuro<br />SSL 256-bit</span>
+                <div className="pt-2 2xl:pt-4 border-t border-slate-100 grid grid-cols-3 gap-1.5 text-[9px] 2xl:text-[10px] text-slate-400 text-center select-none">
+                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-slate-50 transition-colors">
+                    <ShieldCheck className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5 text-slate-400 shrink-0" />
+                    <span className="leading-tight text-slate-500">Pagamento sicuro<br />SSL 256-bit</span>
                   </div>
-                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-white/5 transition-colors">
-                    <CheckCircle className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5 text-white/80 shrink-0" />
-                    <span className="leading-tight">Conferma<br />Immediata</span>
+                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-slate-50 transition-colors">
+                    <CheckCircle className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5 text-slate-400 shrink-0" />
+                    <span className="leading-tight text-slate-500">Conferma<br />Immediata</span>
                   </div>
-                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-white/5 transition-colors">
-                    <Headset className="w-3.5 h-3.5 text-white/80 shrink-0" />
-                    <span className="leading-tight">Supporto dedicato<br />Siamo qui per te</span>
+                  <div className="flex flex-col items-center gap-0.5 p-1 rounded-lg hover:bg-slate-50 transition-colors">
+                    <Headset className="w-3.5 h-3.5 2xl:w-4.5 2xl:h-4.5 text-slate-400 shrink-0" />
+                    <span className="leading-tight text-slate-500">Supporto dedicato<br />Siamo qui per te</span>
                   </div>
                 </div>
               </div>
