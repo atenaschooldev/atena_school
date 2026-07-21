@@ -2,6 +2,7 @@
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { fetchUserBookingsEnriched, updateUserProfile } from "@/features/dashboard/services/dashboardService";
+import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
 
 export async function getDashboardDataAction() {
   try {
@@ -137,19 +138,12 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
       return { success: false, error: "Corso non trovato" };
     }
 
-    let maxLessons = 8;
-    const cName = (course.name || "").toLowerCase();
-    const schedule = (course.standard_schedule || "").toLowerCase();
-
-    if (cName.includes("10 lezioni")) {
-      maxLessons = 10;
-    } else if (cName.includes("singole") || course.duration?.toLowerCase().includes("1h")) {
-      maxLessons = 1;
-    } else if (cName.includes("c2") || schedule.includes("c2")) {
-      maxLessons = 12;
-    } else if (course.category === "academic" || course.category === "certipass") {
-      maxLessons = 1;
-    }
+    const maxLessons = getDynamicMaxLessons(
+      course.name || "",
+      booking.booking_date,
+      course.category || "",
+      course.lessons_per_week
+    );
 
     const { count, error: countErr } = await supabase
       .from("booking_lessons")

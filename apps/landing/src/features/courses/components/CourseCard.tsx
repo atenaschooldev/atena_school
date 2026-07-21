@@ -20,6 +20,7 @@ interface CourseCardProps {
   onCtaClick?: () => void;
   priority?: boolean;
   standard_schedule?: string;
+  lessons_per_week?: number | null;
 }
 
 const CourseCard = ({ 
@@ -34,11 +35,44 @@ const CourseCard = ({
   teacher_name,
   onCtaClick,
   priority = false,
-  standard_schedule
+  standard_schedule,
+  lessons_per_week
 }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
   const [isOpen, setIsOpen] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+
+  const getLessonsPerWeekText = (titleStr: string, scheduleStr?: string): string | null => {
+    const lowerTitle = titleStr.toLowerCase();
+    const lowerSchedule = (scheduleStr || "").toLowerCase();
+    
+    if (lowerTitle.includes("c2") || lowerSchedule.includes("c2")) {
+      return "3 lezioni a settimana";
+    }
+    if (lowerTitle.includes("c1") || lowerSchedule.includes("c1")) {
+      return "2 lezioni a settimana";
+    }
+    
+    // Count weekdays in fixed schedule
+    let count = 0;
+    if (lowerSchedule.includes("luned")) count++;
+    if (lowerSchedule.includes("marted")) count++;
+    if (lowerSchedule.includes("mercoled")) count++;
+    if (lowerSchedule.includes("gioved")) count++;
+    if (lowerSchedule.includes("venerd")) count++;
+    if (lowerSchedule.includes("sabat")) count++;
+    if (lowerSchedule.includes("domenic")) count++;
+    
+    if (count > 0) {
+      return `${count} ${count === 1 ? "lezione" : "lezioni"} a settimana`;
+    }
+    
+    return null;
+  };
+
+  const lessonsPerWeek = (typeof lessons_per_week === "number" && lessons_per_week > 0)
+    ? `${lessons_per_week} ${lessons_per_week === 1 ? "lezione" : "lezioni"} a settimana`
+    : getLessonsPerWeekText(title, standard_schedule);
 
   const handleClick = (e: React.MouseEvent) => {
     if (onCtaClick) {
@@ -106,8 +140,8 @@ const CourseCard = ({
           {title}
         </h3>
 
-        {/* Metadata badges (duration, schedule, teacher) */}
-        {(duration || standard_schedule || teacher_name) && (
+        {/* Metadata badges (duration, schedule, teacher, frequency) */}
+        {(duration || standard_schedule || teacher_name || lessonsPerWeek) && (
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mb-4 font-bold select-none">
             {duration && (
               <div className="flex items-center gap-1.5">
@@ -119,6 +153,12 @@ const CourseCard = ({
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
                 <span>{standard_schedule}</span>
+              </div>
+            )}
+            {lessonsPerWeek && (
+              <div className="flex items-center gap-1.5 text-[#043569]">
+                <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
+                <span>{lessonsPerWeek}</span>
               </div>
             )}
             {teacher_name && (
@@ -238,6 +278,17 @@ const CourseCard = ({
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Orario Standard</p>
                     <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{standard_schedule}</p>
+                  </div>
+                </div>
+              )}
+              {lessonsPerWeek && (
+                <div className="flex items-center gap-2.5 min-w-[120px]">
+                  <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
+                    <Calendar className="w-4.5 h-4.5" weight="bold" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Frequenza</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{lessonsPerWeek}</p>
                   </div>
                 </div>
               )}

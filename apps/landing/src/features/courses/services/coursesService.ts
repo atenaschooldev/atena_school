@@ -29,6 +29,7 @@ export interface ResolvedCourse {
   duration?: string;
   teacher_name?: string;
   standard_schedule?: string;
+  lessons_per_week?: number | null;
 }
 
 export interface ResolvedSection {
@@ -129,8 +130,23 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         type: course.type || 'course',
         duration: course.duration || course.duration_it || undefined,
         teacher_name: course.teacher_name || undefined,
-        standard_schedule: course.standard_schedule || undefined
+        standard_schedule: course.standard_schedule || undefined,
+        lessons_per_week: course.lessons_per_week !== undefined ? course.lessons_per_week : null,
+        sort_order: typeof course.sort_order === 'number' ? course.sort_order : 0
       };
+    });
+
+    resolvedCourses.sort((a, b) => {
+      const orderA = a.sort_order || 0;
+      const orderB = b.sort_order || 0;
+
+      if (orderA === orderB) {
+        return a.title.localeCompare(b.title);
+      }
+      if (orderA === 0) return 1;
+      if (orderB === 0) return -1;
+
+      return orderA - orderB;
     });
 
     return {

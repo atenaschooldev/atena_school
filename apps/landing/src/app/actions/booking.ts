@@ -251,6 +251,21 @@ export async function createOrUpdateReservationServerAction(params: {
       .in("status", ["pending_payment", "reserved"])
       .maybeSingle();
 
+    // Calculate lesson dates
+    const lessons = calculateLessonDates(
+      dateParam,
+      timeParam,
+      item.category || "",
+      item.standard_schedule || "",
+      item.duration || "1h"
+    );
+
+    // Compute subscription range
+    const subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(dateParam).toISOString();
+    const subEndsAtDate = new Date(subStartsAt);
+    subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
+    const subEndsAt = subEndsAtDate.toISOString();
+
     let booking;
     const cleanSlotId = isValidUuid(slotIdParam) ? slotIdParam : null;
 
@@ -267,6 +282,8 @@ export async function createOrUpdateReservationServerAction(params: {
           student_name: fullName,
           student_phone: values.phone,
           notes: values.notes || "",
+          subscription_starts_at: subStartsAt,
+          subscription_ends_at: subEndsAt,
         })
         .eq("id", existing.id)
         .select()
@@ -289,6 +306,8 @@ export async function createOrUpdateReservationServerAction(params: {
           student_email: values.email,
           student_phone: values.phone,
           notes: values.notes || "",
+          subscription_starts_at: subStartsAt,
+          subscription_ends_at: subEndsAt,
         }])
         .select()
         .single();
@@ -296,15 +315,6 @@ export async function createOrUpdateReservationServerAction(params: {
       if (error) throw error;
       booking = inserted;
     }
-
-    // Calculate lesson dates
-    const lessons = calculateLessonDates(
-      dateParam,
-      timeParam,
-      item.category || "",
-      item.standard_schedule || "",
-      item.duration || "1h"
-    );
 
     // Sync booking_lessons
     await admin
@@ -320,7 +330,8 @@ export async function createOrUpdateReservationServerAction(params: {
             booking_id: booking.id,
             starts_at: lesson.startsAt,
             ends_at: lesson.endsAt,
-            status: "scheduled"
+            status: "scheduled",
+            teacher_id: item.teacher_id || null,
           }))
         );
 

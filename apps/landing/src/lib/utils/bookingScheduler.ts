@@ -75,9 +75,13 @@ export function calculateLessonDates(
   }
 
   // Fixed schedule languages course
-  // 1. Determine number of lessons (C2 = 12, others = 8)
-  const isC2 = standardSchedule.toUpperCase().includes("C2");
-  const totalLessons = isC2 ? 12 : 8;
+  // 1. Determine active subscription end date (1 month from start date)
+  const addMonths = (d: Date, m: number): Date => {
+    const res = new Date(d);
+    res.setMonth(res.getMonth() + m);
+    return res;
+  };
+  const endDate = addMonths(baseDate, 1);
 
   // 2. Parse weekdays and time range from standardSchedule (e.g. "Martedì e Giovedì 16:00-17:15")
   const lowerSchedule = standardSchedule.toLowerCase();
@@ -112,7 +116,7 @@ export function calculateLessonDates(
 
   // Safeguard loop limit
   let attempts = 0;
-  while (lessons.length < totalLessons && attempts < 100) {
+  while (current <= endDate && attempts < 60) {
     attempts++;
     const dayOfWeek = current.getDay();
     if (targetDays.includes(dayOfWeek)) {
@@ -135,4 +139,91 @@ export function calculateLessonDates(
   }
 
   return lessons;
+}
+
+export function getDynamicMaxLessons(
+  courseName: string, 
+  startDateStr: string, 
+  category: string = "languages", 
+  lessonsPerWeek?: number | null
+): number {
+  const lowerName = courseName.toLowerCase();
+  if (lowerName.includes("10 lezioni")) return 10;
+  if (lowerName.includes("singole")) return 1;
+  
+  const baseDate = new Date(startDateStr);
+  const addMonths = (d: Date, m: number): Date => {
+    const res = new Date(d);
+    res.setMonth(res.getMonth() + m);
+    return res;
+  };
+  const endDate = addMonths(baseDate, 1);
+
+  // If lessonsPerWeek is specified in DB, use it to count weekdays dynamically
+  if (typeof lessonsPerWeek === "number" && lessonsPerWeek > 0) {
+    let targetDays: number[] = [];
+    if (lessonsPerWeek === 1) {
+      targetDays = [1]; // Mon
+    } else if (lessonsPerWeek === 2) {
+      targetDays = [1, 3]; // Mon, Wed
+    } else if (lessonsPerWeek === 3) {
+      targetDays = [1, 3, 5]; // Mon, Wed, Fri
+    } else if (lessonsPerWeek === 4) {
+      targetDays = [1, 2, 3, 4]; // Mon, Tue, Wed, Thu
+    } else if (lessonsPerWeek >= 5) {
+      targetDays = [1, 2, 3, 4, 5]; // Weekdays
+    }
+
+    let current = new Date(baseDate);
+    let count = 0;
+    let attempts = 0;
+    while (current <= endDate && attempts < 60) {
+      attempts++;
+      const day = current.getDay();
+      if (targetDays.includes(day)) {
+        count++;
+      }
+      current = addDays(current, 1);
+    }
+    return count || (lessonsPerWeek * 4);
+  }
+
+  // Fallbacks if lessonsPerWeek is null
+  if (lowerName.includes("c2")) {
+    // 3 lessons a week virtual schedule (Mon, Wed, Fri)
+    let current = new Date(baseDate);
+    let count = 0;
+    let attempts = 0;
+    while (current <= endDate && attempts < 60) {
+      attempts++;
+      const day = current.getDay();
+      if (day === 1 || day === 3 || day === 5) {
+        count++;
+      }
+      current = addDays(current, 1);
+    }
+    return count || 12;
+  }
+
+  if (lowerName.includes("c1")) {
+    // 2 lessons a week virtual schedule (Mon, Wed)
+    let current = new Date(baseDate);
+    let count = 0;
+    let attempts = 0;
+    while (current <= endDate && attempts < 60) {
+      attempts++;
+      const day = current.getDay();
+      if (day === 1 || day === 3) {
+        count++;
+      }
+      current = addDays(current, 1);
+    }
+    return count || 8;
+  }
+
+  if (category === "academic" || category === "certipass") {
+    return 1;
+  }
+
+  return 8;
 }

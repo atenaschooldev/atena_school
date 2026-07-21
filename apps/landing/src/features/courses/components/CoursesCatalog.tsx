@@ -13,6 +13,8 @@ interface CleanCourse {
   type: "course" | "shop";
   duration?: string;
   teacher_name?: string;
+  standard_schedule?: string;
+  lessons_per_week?: number | null;
 }
 
 interface CleanSection {
@@ -148,6 +150,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                       teacher_name={course.teacher_name}
                       priority={sIdx === 0 && idx < 2}
                       standard_schedule={course.standard_schedule}
+                      lessons_per_week={course.lessons_per_week}
                     />
                   </div>
                 ))}

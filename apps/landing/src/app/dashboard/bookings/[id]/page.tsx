@@ -19,6 +19,7 @@ import { it } from "date-fns/locale";
 import { Link } from "@/i18n/routing";
 import { getBookingLessonsAction, scheduleNextLessonAction } from "@/app/actions/dashboard";
 import { toast } from "sonner";
+import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
 
 interface Lesson {
   id: string;
@@ -110,18 +111,15 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const coursePrice = course?.price || 0;
 
   // Determine limits
-  let maxLessons = 8;
-  const cName = (course?.name || "").toLowerCase();
-  const schedule = (course?.standard_schedule || "").toLowerCase();
-  if (cName.includes("10 lezioni")) {
-    maxLessons = 10;
-  } else if (cName.includes("singole") || course?.duration?.toLowerCase().includes("1h")) {
-    maxLessons = 1;
-  } else if (cName.includes("c2") || schedule.includes("c2")) {
-    maxLessons = 12;
-  } else if (course?.category === "academic" || course?.category === "certipass") {
-    maxLessons = 1;
-  }
+  const schedule = course?.standard_schedule?.toLowerCase() || "";
+  const isFixedSchedule = course?.category === "languages" && 
+    course?.standard_schedule && 
+    !schedule.includes("flessibile") &&
+    !schedule.includes("concordare");
+
+  const maxLessons = isFixedSchedule 
+    ? lessons.length 
+    : getDynamicMaxLessons(course?.name || "", booking.booking_date, course?.category || "", course?.lessons_per_week);
 
   // Calculate progress
   const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;

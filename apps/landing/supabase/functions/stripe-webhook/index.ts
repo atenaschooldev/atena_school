@@ -36,42 +36,61 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ received: true }), { status: 200 });
       }
 
-      // Update booking status to 'paid'
-      const { error: updateError } = await supabaseAdmin
-        .from("bookings")
-        .update({ status: "paid" })
-        .eq("id", bookingId);
-
-      if (updateError) {
-        console.error("[stripe-webhook] Failed to update booking:", updateError);
-        // Return 500 so Stripe will retry the webhook
-        return new Response("Failed to update booking", { status: 500 });
-      }
-
-      // Fetch full booking for email
-      const { data: booking } = await supabaseAdmin
+      // Fetch full booking
+      const { data: booking, error: fetchBookingErr } = await supabaseAdmin
         .from("bookings")
         .select("*")
         .eq("id", bookingId)
         .single();
 
+      if (fetchBookingErr || !booking) {
+        console.error("[stripe-webhook] Booking not found:", fetchBookingErr || bookingId);
+        return new Response("Booking not found", { status: 404 });
+      }
+
+      const itemTable = "courses";
+      const { data: itemData } = await supabaseAdmin
+        .from(itemTable)
+        .select("*")
+        .eq("id", booking.item_id)
+        .single();
+
+      let subStartsAt = new Date(booking.booking_date).toISOString();
+      let subEndsAt = subStartsAt;
+      let lessons: ScheduledLesson[] = [];
+
+      if (itemData) {
+        lessons = calculateLessonDates(
+          booking.booking_date,
+          booking.booking_time,
+          itemData.category || "",
+          itemData.standard_schedule || "",
+          itemData.duration || "1h"
+        );
+
+        subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(booking.booking_date).toISOString();
+        const subEndsAtDate = new Date(subStartsAt);
+        subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
+        subEndsAt = subEndsAtDate.toISOString();
+      }
+
+      // Update booking status to 'paid' and populate subscription bounds
+      const { error: updateError } = await supabaseAdmin
+        .from("bookings")
+        .update({ 
+          status: "paid",
+          subscription_starts_at: subStartsAt,
+          subscription_ends_at: subEndsAt
+        })
+        .eq("id", bookingId);
+
+      if (updateError) {
+        console.error("[stripe-webhook] Failed to update booking:", updateError);
+        return new Response("Failed to update booking", { status: 500 });
+      }
+
       if (booking) {
-        const itemTable = "courses";
-        const { data: itemData } = await supabaseAdmin
-          .from(itemTable)
-          .select("*")
-          .eq("id", booking.item_id)
-          .single();
-
         if (itemData) {
-          const lessons = calculateLessonDates(
-            booking.booking_date,
-            booking.booking_time,
-            itemData.category || "",
-            itemData.standard_schedule || "",
-            itemData.duration || "1h"
-          );
-
           // Clear old lessons if any and insert new scheduled lessons
           await supabaseAdmin
             .from("booking_lessons")
@@ -87,6 +106,7 @@ Deno.serve(async (req) => {
                   starts_at: lesson.startsAt,
                   ends_at: lesson.endsAt,
                   status: "scheduled",
+                  teacher_id: itemData.teacher_id || null,
                 }))
               );
             if (lessonsError) {
@@ -251,15 +271,34 @@ interface ScheduledLesson {
   endsAt: string;
 }
 
+function parseDurationToMinutes(durationStr: string): number {
+  if (!durationStr) return 60;
+  const lower = durationStr.toLowerCase();
+  if (lower.includes("10h")) return 60;
+  
+  const matchOre = lower.match(/(\d+(?:\.\d+)?)\s*or/);
+  if (matchOre) {
+    return Math.round(parseFloat(matchOre[1]) * 60);
+  }
+  
+  const matchMin = lower.match(/(\d+)\s*min/);
+  if (matchMin) {
+    return parseInt(matchMin[1], 10);
+  }
+  
+  return 60;
+}
+
 function calculateLessonDates(
   startDateStr: string,
   timeParam: string,
   category: string,
   standardSchedule: string,
-  durationMinutes = 60
+  durationStr = "1h"
 ): ScheduledLesson[] {
   const lessons: ScheduledLesson[] = [];
   const baseDate = new Date(startDateStr);
+  const durationMinutes = parseDurationToMinutes(durationStr);
 
   const isFixedSchedule = category === "languages" && 
     standardSchedule && 
@@ -287,8 +326,12 @@ function calculateLessonDates(
     return lessons;
   }
 
-  const isC2 = standardSchedule.toUpperCase().includes("C2");
-  const totalLessons = isC2 ? 12 : 8;
+  const addMonths = (d: Date, m: number): Date => {
+    const res = new Date(d);
+    res.setMonth(res.getMonth() + m);
+    return res;
+  };
+  const endDate = addMonths(baseDate, 1);
   const lowerSchedule = standardSchedule.toLowerCase();
 
   const targetDays: number[] = [];
@@ -316,7 +359,7 @@ function calculateLessonDates(
   let current = new Date(baseDate);
 
   let attempts = 0;
-  while (lessons.length < totalLessons && attempts < 100) {
+  while (current <= endDate && attempts < 60) {
     attempts++;
     const dayOfWeek = current.getDay();
     if (targetDays.includes(dayOfWeek)) {
