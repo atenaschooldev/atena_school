@@ -74,8 +74,6 @@ Deno.serve(async (req) => {
       user = null;
     }
 
-    const supabaseAdmin = createSupabaseAdmin();
-
     // 1. Fetch the item from DB
     const table = itemType === "course" ? "courses" : "shop_items";
     const { data: itemData, error: itemError } = await supabaseAdmin
