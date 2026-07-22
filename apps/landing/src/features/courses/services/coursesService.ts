@@ -1,23 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { getCourses, getShopItems } from "@/lib/data";
+import { getCourses } from "@/lib/data";
 
-// Local asset imports
-import imgDoposcuola from "@/assets/course-doposcuola.jpg";
-import imgRecovery from "@/assets/course-recovery.jpeg";
-import imgUniversity from "@/assets/course-university.jpg";
-import imgIt from "@/assets/course-it_courses.jpg";
-import imgEipass from "@/assets/eipass.webp";
 
-const localImageMap: Record<string, any> = {
-  doposcuola: imgDoposcuola,
-  recovery: imgRecovery,
-  university: imgUniversity,
-  universi: imgUniversity,
-  it_courses: imgIt,
-  eipass_user: imgEipass,
-  eipass_basic: imgEipass,
-  tutor: imgRecovery,
-};
 
 export interface ResolvedCourse {
   id: string;
@@ -26,10 +10,15 @@ export interface ResolvedCourse {
   image: any;
   price?: string;
   type: string;
-  duration?: string;
   teacher_name?: string;
-  standard_schedule?: string;
   lessons_per_week?: number | null;
+  lesson_duration_minutes?: number | null;
+  total_hours?: number | null;
+  total_lessons?: number | null;
+  course_format?: string | null;
+  schedule_days?: number[] | null;
+  start_time?: string | null;
+  end_time?: string | null;
 }
 
 export interface ResolvedSection {
@@ -41,11 +30,8 @@ export interface ResolvedSection {
 export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
   const t = await getTranslations("coursesPage");
 
-  // Parallel fetch for courses and shop items from Supabase
-  const [supabaseCourses, shopItems] = await Promise.all([
-    getCourses(),
-    getShopItems()
-  ]);
+  // Fetch courses from Supabase
+  const supabaseCourses = await getCourses();
 
   let courseSections: Array<{ id: string; title: string; courses: any[] }> = [];
 
@@ -77,19 +63,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
     });
   }
 
-  // Append hourly private lesson packages from shop_items
-  if (shopItems && shopItems.length > 0) {
-    courseSections.push({
-      id: 'packages',
-      title: 'Lezioni Private e Pacchetti',
-      courses: shopItems.map((item: any) => ({
-        ...item,
-        name: item.title_it,
-        description: `Durata: ${item.duration_it || 'Flessibile'}. Scegli il pacchetto di lezioni individuali o di gruppo con orari flessibili.`,
-        type: 'shop'
-      }))
-    });
-  }
+
 
   // Resolve all sections into clean structures
   const resolvedSections = courseSections.map((section) => {
@@ -104,22 +78,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         }
       }
 
-      const lowerName = (course.name || "").toLowerCase();
-      let itemImage = course.photo_url || undefined;
-      if (!itemImage) {
-        const matchedKey = Object.keys(localImageMap).find(key => {
-          const cleanKey = key.replace('_', '');
-          const cleanName = lowerName.replace(/\s+/g, '').replace('-', '');
-          return cleanName.includes(cleanKey);
-        });
-        if (matchedKey) {
-          itemImage = localImageMap[matchedKey];
-        } else if (lowerName.includes('eipass') || lowerName.includes('certipass')) {
-          itemImage = imgEipass;
-        } else {
-          itemImage = imgIt;
-        }
-      }
+      const itemImage = course.photo_url || undefined;
 
       return {
         id: course.id,
@@ -128,10 +87,15 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         image: itemImage,
         price: itemPrice,
         type: course.type || 'course',
-        duration: course.duration || course.duration_it || undefined,
         teacher_name: course.teacher_name || undefined,
-        standard_schedule: course.standard_schedule || undefined,
         lessons_per_week: course.lessons_per_week !== undefined ? course.lessons_per_week : null,
+        lesson_duration_minutes: course.lesson_duration_minutes || null,
+        total_hours: course.total_hours || null,
+        total_lessons: course.total_lessons || null,
+        course_format: course.course_format || null,
+        schedule_days: course.schedule_days || null,
+        start_time: course.start_time || null,
+        end_time: course.end_time || null,
         sort_order: typeof course.sort_order === 'number' ? course.sort_order : 0
       };
     });

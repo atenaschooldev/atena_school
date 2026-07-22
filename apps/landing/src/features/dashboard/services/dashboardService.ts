@@ -3,6 +3,7 @@ import { isFuture, parseISO } from "date-fns";
 
 export interface EnrichedBooking {
   id: string;
+  course_id: string;
   item_id: string;
   item_type: string;
   item_title: string;
@@ -10,8 +11,11 @@ export interface EnrichedBooking {
   teacher_name: string;
   location: string;
   booking_date: string;
+  start_date: string;
   booking_time: string;
   status: string;
+  payment_status: string;
+  booking_status: string;
   slot_starts_at?: string;
   is_future: boolean;
 }
@@ -23,32 +27,50 @@ export async function autoLinkGuestBookings(
 ): Promise<void> {
   if (!email || !userId) return;
 
-  // Link any bookings matching this email to the user_id if they aren't linked yet.
-  // The status is never modified here (must only be set to paid via Stripe Webhook/Edge Function).
   await supabase
     .from("bookings")
     .update({ user_id: userId })
     .ilike("student_email", email)
     .is("user_id", null);
 
-  // Sync phone & name from guest booking to user metadata
   const { data: latestBooking } = await supabase
     .from("bookings")
     .select("student_phone, student_name")
     .ilike("student_email", email)
-    .not("student_phone", "is", null)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (latestBooking?.student_phone) {
+  if (latestBooking?.student_phone || latestBooking?.student_name) {
+    const rawName = (latestBooking.student_name || "").trim();
+    const parts = rawName.split(" ");
+    const firstName = parts[0] || "";
+    const lastName = parts.slice(1).join(" ") || "";
+
     try {
       await supabase.auth.updateUser({
         data: {
-          phone: latestBooking.student_phone,
-          ...(latestBooking.student_name ? { custom_full_name: latestBooking.student_name } : {})
+          phone: latestBooking.student_phone || undefined,
+          ...(rawName ? { custom_full_name: rawName } : {})
         }
       });
+    } catch {
+      // ignore
+    }
+
+    try {
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString()
+      };
+      if (latestBooking.student_phone) updateData.phone = latestBooking.student_phone;
+      if (firstName) updateData.first_name = firstName;
+      if (lastName) updateData.last_name = lastName;
+      if (rawName) updateData.full_name = rawName;
+
+      await supabase
+        .from("users")
+        .update(updateData)
+        .eq("id", userId);
     } catch {
       // ignore
     }
@@ -61,7 +83,6 @@ export async function fetchUserBookingsEnriched(
 ): Promise<EnrichedBooking[]> {
   if (!user) return [];
 
-  // Auto link first
   if (user.email) {
     await autoLinkGuestBookings(user.email, user.id, supabase);
   }
@@ -71,22 +92,25 @@ export async function fetchUserBookingsEnriched(
     .from("bookings")
     .select("*")
     .or(`user_id.eq.${user.id},student_email.ilike.${user.email}`)
-    .in("status", ["paid", "completed", "reserved", "pending_payment"])
+    .in("payment_status", ["paid", "completed", "reserved", "pending_payment", "pending"])
     .order("created_at", { ascending: false });
 
   const rawBookings: any[] = data || [];
 
-  // Deduplicate by item_id (favoring 'paid'/'completed' over pending/reserved)
+  // Deduplicate by course_id (favoring 'paid'/'completed' over pending/reserved)
   const deduplicatedMap = new Map<string, any>();
   for (const b of rawBookings) {
-    const key = `course_${b.item_id}_${b.slot_id || b.booking_date}`;
+    const cid = b.course_id || b.item_id;
+    const bdate = b.start_date || b.booking_date;
+    const pstatus = b.payment_status || b.status;
+    const key = `course_${cid}_${bdate}`;
     const existing = deduplicatedMap.get(key);
     if (!existing) {
       deduplicatedMap.set(key, b);
     } else if (
-      (b.status === "paid" || b.status === "completed") &&
-      existing.status !== "paid" &&
-      existing.status !== "completed"
+      (pstatus === "paid" || pstatus === "completed") &&
+      existing.payment_status !== "paid" &&
+      existing.payment_status !== "completed"
     ) {
       deduplicatedMap.set(key, b);
     }
@@ -94,71 +118,41 @@ export async function fetchUserBookingsEnriched(
   const userBookings = Array.from(deduplicatedMap.values());
 
   const courseIds = Array.from(
-    new Set(userBookings.map((b) => b.item_id))
-  ) as string[];
-  const slotIds = Array.from(
-    new Set(userBookings.filter((b) => b.slot_id).map((b) => b.slot_id))
-  ) as string[];
+    new Set(userBookings.map((b) => b.course_id || b.item_id))
+  ).filter(Boolean) as string[];
 
-  const promises: Promise<any>[] = [];
-
+  let coursesData: any[] = [];
   if (courseIds.length > 0) {
-    promises.push(
-      supabase
-        .from("courses")
-        .select("id, name, price, teacher_name")
-        .in("id", courseIds)
-    );
-  } else {
-    promises.push(Promise.resolve({ data: [] }));
+    const { data } = await supabase
+      .from("courses")
+      .select("id, name, price, teachers(teacher_id, full_name)")
+      .in("id", courseIds);
+    coursesData = data || [];
   }
-
-  if (slotIds.length > 0) {
-    promises.push(
-      supabase
-        .from("schedule_slots")
-        .select("id, starts_at, ends_at")
-        .in("id", slotIds)
-    );
-  } else {
-    promises.push(Promise.resolve({ data: [] }));
-  }
-
-  const [cRes, slRes] = await Promise.all(promises);
-  const coursesData: any[] = cRes.data || [];
-  const slotsData: any[] = slRes.data || [];
 
   const coursesMap = new Map(coursesData.map((c) => [c.id, c]));
-  const slotsMap = new Map(slotsData.map((sl) => [sl.id, sl]));
 
   const enrichedList: EnrichedBooking[] = userBookings.map((b) => {
     let title = "Lezione / Corso";
     let price = 0;
     let teacherName = "Atena School";
     const location = "Atena School, Via Matteotti 11";
+    const cid = b.course_id || b.item_id;
+    const bdate = b.start_date || b.booking_date || "";
+    const pstatus = b.payment_status || b.status || "pending";
+    const bstatus = b.booking_status || "active";
 
-    const c = coursesMap.get(b.item_id);
+    const c = coursesMap.get(cid);
     if (c) {
       title = c.name || title;
       price = parseFloat(String(c.price).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
-      if (c.teacher_name) teacherName = c.teacher_name;
-    }
-
-    // Get slot start time (schedule_slots has only id, starts_at, ends_at)
-    let slotStartsAt: string | undefined = undefined;
-    if (b.slot_id) {
-      const sl = slotsMap.get(b.slot_id);
-      if (sl) {
-        slotStartsAt = sl.starts_at;
-      }
+      if (c.teachers?.full_name) teacherName = c.teachers.full_name;
     }
 
     let isUpcoming = true;
-    if (slotStartsAt) {
-      isUpcoming = isFuture(parseISO(slotStartsAt));
-    } else if (b.booking_date) {
+    if (bdate) {
       try {
-        isUpcoming = isFuture(parseISO(b.booking_date));
+        isUpcoming = isFuture(parseISO(bdate));
       } catch {
         isUpcoming = true;
       }
@@ -166,16 +160,19 @@ export async function fetchUserBookingsEnriched(
 
     return {
       id: b.id,
-      item_id: b.item_id,
+      course_id: cid,
+      item_id: cid,
       item_type: "course",
       item_title: title,
       price,
       teacher_name: teacherName,
       location,
-      booking_date: b.booking_date,
-      booking_time: b.booking_time,
-      status: b.status,
-      slot_starts_at: slotStartsAt,
+      booking_date: bdate,
+      start_date: bdate,
+      booking_time: b.booking_time || "",
+      status: pstatus,
+      payment_status: pstatus,
+      booking_status: bstatus,
       is_future: isUpcoming,
     };
   });

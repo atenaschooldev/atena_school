@@ -48,12 +48,12 @@ Deno.serve(async (req) => {
     }
 
     let itemData: Record<string, unknown> | null = null;
-    if (bookingData?.item_id) {
-      const table = bookingData.item_type === "course" ? "courses" : "shop_items";
+    const cid = bookingData?.course_id ?? bookingData?.item_id;
+    if (cid) {
       const { data } = await supabaseAdmin
-        .from(table)
-        .select("*")
-        .eq("id", bookingData.item_id)
+        .from("courses")
+        .select("*, teachers(teacher_id, full_name)")
+        .eq("id", cid)
         .maybeSingle();
       itemData = data;
     }
@@ -61,11 +61,13 @@ Deno.serve(async (req) => {
     const fullBooking = bookingData
       ? {
           ...bookingData,
-          item_name: itemData?.title_it ?? itemData?.name ?? itemData?.title ?? null,
-          item_price: itemData?.price ?? bookingData?.amount ?? bookingData?.price ?? null,
+          course_id: cid,
+          item_id: cid,
+          item_name: itemData?.name ?? itemData?.title_it ?? itemData?.title ?? null,
+          item_price: itemData?.price ?? bookingData?.amount_paid ?? bookingData?.price ?? null,
           item_photo: itemData?.photo_url ?? null,
-          item_teacher: itemData?.teacher_name ?? null,
-          date: bookingData.booking_date ?? null,
+          item_teacher: (itemData?.teachers as any)?.full_name ?? null,
+          date: bookingData.start_date ?? bookingData.booking_date ?? null,
           time: bookingData.booking_time ?? null,
         }
       : null;

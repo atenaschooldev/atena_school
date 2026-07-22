@@ -107,18 +107,16 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   }
 
   const courseTitle = course?.name || course?.title_it || "Corso di Lingua";
-  const teacherName = course?.teacher_name || "Elisabetta Sorrenti";
+  const teacherName = course?.teacher_name || "Staff Atena";
   const coursePrice = course?.price || 0;
 
   // Determine limits
-  const schedule = course?.standard_schedule?.toLowerCase() || "";
-  const isFixedSchedule = course?.standard_schedule &&
-    !schedule.includes("flessibile") &&
-    !schedule.includes("concordare");
+  const isFixedSchedule = course?.schedule_type === "fixed";
 
+  const bdate = booking.start_date || booking.booking_date;
   const maxLessons = isFixedSchedule
     ? lessons.length
-    : getDynamicMaxLessons(course?.name || "", booking.booking_date, course?.category || "", course?.lessons_per_week);
+    : getDynamicMaxLessons(course?.name || "", bdate, course?.category || "", course?.lessons_per_week);
 
   // Calculate progress
   const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;
@@ -238,16 +236,17 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     Corso
                   </span>
                   <span
-                    className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${booking.status === "paid" || booking.status === "completed"
+                    className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                      (booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
                         ? "bg-green-500/10 text-green-700 border border-green-500/20"
-                        : booking.status === "reserved"
+                        : (booking.payment_status || booking.status) === "reserved"
                           ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                           : "bg-muted text-muted-foreground border border-border"
                       }`}
                   >
-                    {booking.status === "paid" || booking.status === "completed"
+                    {(booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
                       ? "✓ Pagato"
-                      : booking.status === "reserved"
+                      : (booking.payment_status || booking.status) === "reserved"
                         ? "Prenotato"
                         : "In attesa"}
                   </span>
@@ -258,6 +257,31 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
               </div>
 
               <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Studente</p>
+                    <p className="text-sm font-bold text-foreground">{booking.student_name || "—"}</p>
+                    {booking.student_birth_date && (
+                      <p className="text-[11px] text-foreground/50">Nato/a il: {format(new Date(booking.student_birth_date), "dd/MM/yyyy")}</p>
+                    )}
+                  </div>
+                </div>
+
+                {booking.purchaser_name && booking.purchaser_name !== booking.student_name && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
+                      <User className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Acquirente / Genitore</p>
+                      <p className="text-sm font-bold text-foreground">{booking.purchaser_name}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
                     <User className="w-5 h-5" />
@@ -287,11 +311,30 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-sm font-bold text-foreground">Atena School, Via Matteotti 11</p>
                   </div>
                 </div>
+
+                {booking.tax_code && (
+                  <div className="pt-2 border-t border-border/60 text-xs flex justify-between">
+                    <span className="text-foreground/50">Codice Fiscale:</span>
+                    <span className="font-mono font-bold text-foreground">{booking.tax_code}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="pt-6 border-t border-border flex items-center justify-between">
-                <span className="text-sm font-bold text-foreground/75">Importo totale</span>
-                <span className="text-xl font-black text-primary">€{Number(coursePrice).toFixed(2)}</span>
+              <div className="pt-4 border-t border-border space-y-1.5">
+                <div className="flex items-center justify-between text-xs text-foreground/60">
+                  <span>Prezzo corso</span>
+                  <span>€{Number(coursePrice).toFixed(2)}</span>
+                </div>
+                {Number(booking.registration_fee || 0) > 0 && (
+                  <div className="flex items-center justify-between text-xs text-foreground/60">
+                    <span>Quota iscrizione annuale</span>
+                    <span>€{Number(booking.registration_fee).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="pt-2 border-t border-border flex items-center justify-between">
+                  <span className="text-sm font-bold text-foreground/75">Importo totale</span>
+                  <span className="text-xl font-black text-primary">€{Number(booking.amount_paid || coursePrice).toFixed(2)}</span>
+                </div>
               </div>
             </div>
 

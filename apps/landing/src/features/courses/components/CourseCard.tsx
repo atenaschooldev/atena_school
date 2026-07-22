@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CaretRight, Clock, User, CreditCard, X, Calendar } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatCourseScheduleText, formatCourseDurationText } from "@/lib/utils/bookingScheduler";
 
 interface CourseCardProps {
   id?: string;
@@ -15,12 +16,17 @@ interface CourseCardProps {
   category?: string;
   price?: string;
   type?: "course" | "shop";
-  duration?: string;
   teacher_name?: string;
   onCtaClick?: () => void;
   priority?: boolean;
-  standard_schedule?: string;
   lessons_per_week?: number | null;
+  lesson_duration_minutes?: number | null;
+  total_hours?: number | null;
+  total_lessons?: number | null;
+  course_format?: string | null;
+  schedule_days?: number[] | null;
+  start_time?: string | null;
+  end_time?: string | null;
 }
 
 const CourseCard = ({ 
@@ -31,16 +37,25 @@ const CourseCard = ({
   category, 
   price, 
   type = "course", 
-  duration,
   teacher_name,
   onCtaClick,
   priority = false,
-  standard_schedule,
-  lessons_per_week
+  lessons_per_week,
+  lesson_duration_minutes,
+  total_hours,
+  total_lessons,
+  course_format,
+  schedule_days,
+  start_time,
+  end_time,
 }: CourseCardProps) => {
   const t = useTranslations("coursesPage");
   const [isOpen, setIsOpen] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+
+  const formattedSchedule = formatCourseScheduleText(schedule_days, start_time, end_time);
+  const showSchedule = formattedSchedule && formattedSchedule !== "Da concordare";
+  const formattedDuration = formatCourseDurationText(lesson_duration_minutes, total_hours, total_lessons);
 
   const getLessonsPerWeekText = (titleStr: string, scheduleStr?: string): string | null => {
     const lowerTitle = titleStr.toLowerCase();
@@ -72,7 +87,7 @@ const CourseCard = ({
 
   const lessonsPerWeek = (typeof lessons_per_week === "number" && lessons_per_week > 0)
     ? `${lessons_per_week} ${lessons_per_week === 1 ? "lezione" : "lezioni"} a settimana`
-    : getLessonsPerWeekText(title, standard_schedule);
+    : getLessonsPerWeekText(title, formattedSchedule);
 
   const handleClick = (e: React.MouseEvent) => {
     if (onCtaClick) {
@@ -141,18 +156,18 @@ const CourseCard = ({
         </h3>
 
         {/* Metadata badges (duration, schedule, teacher, frequency) */}
-        {(duration || standard_schedule || teacher_name || lessonsPerWeek) && (
+        {(formattedDuration || showSchedule || teacher_name || lessonsPerWeek) && (
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mb-4 font-bold select-none">
-            {duration && (
+            {formattedDuration && (
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#F8861D]" />
-                <span>{duration}</span>
+                <span>{formattedDuration}</span>
               </div>
             )}
-            {standard_schedule && (
+            {showSchedule && (
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
-                <span>{standard_schedule}</span>
+                <span>{formattedSchedule}</span>
               </div>
             )}
             {lessonsPerWeek && (
@@ -259,25 +274,25 @@ const CourseCard = ({
 
             {/* Details Grid (Duration, Teacher, Price) */}
             <div className="shrink-0 flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2.5 sm:gap-y-3 mb-4 sm:mb-5 py-3 sm:py-4 border-y border-border/40 text-sm select-none">
-              {duration && (
+              {formattedDuration && (
                 <div className="flex items-center gap-2.5 min-w-[120px]">
                   <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
                     <Clock className="w-4.5 h-4.5" weight="bold" />
                   </div>
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Durata</p>
-                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{duration}</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{formattedDuration}</p>
                   </div>
                 </div>
               )}
-              {standard_schedule && (
+              {showSchedule && (
                 <div className="flex items-center gap-2.5 min-w-[120px]">
                   <div className="w-9 h-9 rounded-xl bg-[#F8861D]/10 flex items-center justify-center shrink-0 text-[#F8861D]">
                     <Calendar className="w-4.5 h-4.5" weight="bold" />
                   </div>
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/80 leading-none mb-1">Orario Standard</p>
-                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{standard_schedule}</p>
+                    <p className="font-bold text-foreground text-xs sm:text-sm leading-none">{formattedSchedule}</p>
                   </div>
                 </div>
               )}

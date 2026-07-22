@@ -94,7 +94,13 @@ export const getTeachers = unstable_cache(
 
 export async function getCourses() {
   const supabase = createClient();
-  const { data } = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);
+  let { data, error } = await (supabase.from('courses').select('*, teachers(teacher_id, full_name)').in('status', ['active', 'published']) as any);
+  
+  if (error || !data || data.length === 0) {
+    const fallback = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);
+    data = fallback.data;
+  }
+
   return (data || []).map((c: any) => ({
     ...c,
     title_it: c.name || '',
@@ -103,6 +109,7 @@ export async function getCourses() {
     description_en: c.description || '',
     price: Number(c.price) || 0,
     price_eur: Number(c.price) || 0,
+    teacher_name: c.teachers?.full_name || undefined,
   }));
 }
 
@@ -125,7 +132,13 @@ export const getBlogPosts = unstable_cache(
 
 export async function getSingleCourse(id: string) {
   const supabase = createClient();
-  const { data } = await (supabase.from('courses').select('*').eq('id', id).single() as any);
+  let { data, error } = await (supabase.from('courses').select('*, teachers(teacher_id, full_name)').eq('id', id).single() as any);
+  
+  if (error || !data) {
+    const fallback = await (supabase.from('courses').select('*').eq('id', id).single() as any);
+    data = fallback.data;
+  }
+
   return data ? {
     ...data,
     title_it: data.name || '',
@@ -134,6 +147,7 @@ export async function getSingleCourse(id: string) {
     description_en: data.description || '',
     price: Number(data.price) || 0,
     price_eur: Number(data.price) || 0,
+    teacher_name: data.teachers?.full_name || undefined,
   } : null;
 }
 
@@ -153,16 +167,3 @@ export const getSingleBlogPost = (slug: string) => unstable_cache(
   { tags: [CACHE_TAGS.BLOG, `blog-${slug}`], revalidate: CACHE_TTL }
 )();
 
-export async function getShopItems() {
-  const supabase = createClient();
-  const { data } = await (supabase.from('shop_items').select('*').eq('is_active', true) as any);
-  return (data || []).map((item: any) => ({
-    ...item,
-    title_it: item.title_it || '',
-    title_en: item.title_en || '',
-    duration_it: item.duration_it || '',
-    duration_en: item.duration_en || '',
-    price: Number(item.price) || 0,
-    price_eur: Number(item.price) || 0,
-  }));
-}

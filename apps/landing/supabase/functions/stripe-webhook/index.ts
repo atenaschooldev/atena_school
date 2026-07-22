@@ -48,37 +48,48 @@ Deno.serve(async (req) => {
         return new Response("Booking not found", { status: 404 });
       }
 
+      const cid = booking.course_id || booking.item_id;
+      const bdate = booking.start_date || booking.booking_date;
+
       const itemTable = "courses";
       const { data: itemData } = await supabaseAdmin
         .from(itemTable)
         .select("*")
-        .eq("id", booking.item_id)
+        .eq("id", cid)
         .single();
 
-      let subStartsAt = new Date(booking.booking_date).toISOString();
+      let subStartsAt = new Date(bdate).toISOString();
       let subEndsAt = subStartsAt;
       let lessons: ScheduledLesson[] = [];
 
       if (itemData) {
         lessons = calculateLessonDates(
-          booking.booking_date,
+          bdate,
           booking.booking_time,
           itemData.category || "",
-          itemData.standard_schedule || "",
-          itemData.duration || "1h"
+          itemData.schedule_days,
+          itemData.lesson_duration_minutes || 60,
+          itemData.start_time,
+          itemData.end_time,
+          itemData.schedule_type
         );
 
-        subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(booking.booking_date).toISOString();
+        subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(bdate).toISOString();
         const subEndsAtDate = new Date(subStartsAt);
         subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
         subEndsAt = subEndsAtDate.toISOString();
       }
 
+      const paidAmount = session.amount_total ? session.amount_total / 100 : (booking.amount_paid || 0);
+
       // Update booking status to 'paid' and populate subscription bounds
       const { error: updateError } = await supabaseAdmin
         .from("bookings")
         .update({ 
-          status: "paid",
+          payment_status: "paid",
+          booking_status: "active",
+          amount_paid: paidAmount,
+          total_lessons_count: lessons.length || booking.total_lessons_count || itemData?.total_lessons || 1,
           subscription_starts_at: subStartsAt,
           subscription_ends_at: subEndsAt
         })
@@ -93,13 +104,13 @@ Deno.serve(async (req) => {
         if (itemData) {
           // Clear old lessons if any and insert new scheduled lessons
           await supabaseAdmin
-            .from("booking_lessons")
+            .from("lessons")
             .delete()
             .eq("booking_id", bookingId);
 
           if (lessons.length > 0) {
             const { error: lessonsError } = await supabaseAdmin
-              .from("booking_lessons")
+              .from("lessons")
               .insert(
                 lessons.map((lesson) => ({
                   booking_id: bookingId,
@@ -293,19 +304,21 @@ function calculateLessonDates(
   startDateStr: string,
   timeParam: string,
   category: string,
-  standardSchedule: string,
-  durationStr = "1h"
+  scheduleDaysOrLegacySchedule?: number[] | string | null,
+  durationStr: string | number = 60,
+  startTimeParam?: string | null,
+  endTimeParam?: string | null,
+  scheduleType?: string | null
 ): ScheduledLesson[] {
   const lessons: ScheduledLesson[] = [];
+  const durationMinutes = typeof durationStr === "number"
+    ? durationStr
+    : parseDurationToMinutes(durationStr);
+  
   const baseDate = new Date(startDateStr);
-  const durationMinutes = parseDurationToMinutes(durationStr);
+  const isFlexible = scheduleType === "flexible" || !scheduleDaysOrLegacySchedule;
 
-  const isFixedSchedule = category === "languages" && 
-    standardSchedule && 
-    !standardSchedule.toLowerCase().includes("flessibile") &&
-    !standardSchedule.toLowerCase().includes("concordare");
-
-  if (!isFixedSchedule) {
+  if (isFlexible) {
     const timeMatch = (timeParam || "").match(/^(\d{2}):(\d{2})$/);
     const startHour = timeMatch ? parseInt(timeMatch[1], 10) : 10;
     const startMin = timeMatch ? parseInt(timeMatch[2], 10) : 0;
@@ -332,28 +345,22 @@ function calculateLessonDates(
     return res;
   };
   const endDate = addMonths(baseDate, 1);
-  const lowerSchedule = standardSchedule.toLowerCase();
 
-  const targetDays: number[] = [];
-  if (lowerSchedule.includes("luned")) targetDays.push(1);
-  if (lowerSchedule.includes("marted")) targetDays.push(2);
-  if (lowerSchedule.includes("mercoled")) targetDays.push(3);
-  if (lowerSchedule.includes("gioved")) targetDays.push(4);
-  if (lowerSchedule.includes("venerd")) targetDays.push(5);
-  if (lowerSchedule.includes("sabat")) targetDays.push(6);
-  if (lowerSchedule.includes("domenic")) targetDays.push(0);
+  const targetDays: number[] = Array.isArray(scheduleDaysOrLegacySchedule)
+    ? scheduleDaysOrLegacySchedule
+    : [];
 
   if (targetDays.length === 0) {
     targetDays.push(baseDate.getDay());
   }
 
-  const timeRangeMatch = lowerSchedule.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/);
-  let startHour = 16, startMin = 0, endHour = 17, endMin = 15;
-  if (timeRangeMatch) {
-    startHour = parseInt(timeRangeMatch[1], 10);
-    startMin = parseInt(timeRangeMatch[2], 10);
-    endHour = parseInt(timeRangeMatch[3], 10);
-    endMin = parseInt(timeRangeMatch[4], 10);
+  let startHour = 16, startMin = 0;
+  if (startTimeParam) {
+    const sMatch = startTimeParam.match(/^(\d{2}):(\d{2})$/);
+    if (sMatch) {
+      startHour = parseInt(sMatch[1], 10);
+      startMin = parseInt(sMatch[2], 10);
+    }
   }
 
   let current = new Date(baseDate);
@@ -369,8 +376,17 @@ function calculateLessonDates(
 
       startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
 
-      const endsAt = new Date(current);
-      endsAt.setUTCHours(endHour - offset, endMin, 0, 0);
+      const endsAt = new Date(startsAt);
+      if (endTimeParam) {
+        const eMatch = endTimeParam.match(/^(\d{2}):(\d{2})$/);
+        if (eMatch) {
+          endsAt.setUTCHours(parseInt(eMatch[1], 10) - offset, parseInt(eMatch[2], 10), 0, 0);
+        } else {
+          endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+        }
+      } else {
+        endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+      }
 
       lessons.push({
         startsAt: startsAt.toISOString(),

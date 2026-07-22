@@ -33,32 +33,79 @@ function parseDurationToMinutes(durationStr: string): number {
   return 60;
 }
 
+export function formatCourseDurationText(
+  lessonDurationMinutes?: number | null,
+  totalHours?: number | null,
+  totalLessons?: number | null
+): string {
+  if (totalLessons) {
+    return `${totalLessons} ${totalLessons === 1 ? "lezione" : "lezioni"}`;
+  }
+  if (totalHours) {
+    return `${totalHours} ore`;
+  }
+  if (lessonDurationMinutes) {
+    if (lessonDurationMinutes >= 60) {
+      const hours = Math.floor(lessonDurationMinutes / 60);
+      const mins = lessonDurationMinutes % 60;
+      if (mins > 0) {
+        return `${hours}h e ${mins} min`;
+      }
+      return `${hours} ${hours === 1 ? "ora" : "ore"}`;
+    }
+    return `${lessonDurationMinutes} minuti`;
+  }
+  return "60 minuti";
+}
+
+export function formatCourseScheduleText(
+  scheduleDays?: number[] | null,
+  startTime?: string | null,
+  endTime?: string | null
+): string {
+  if (!scheduleDays || scheduleDays.length === 0 || !startTime) {
+    return "Da concordare";
+  }
+  const dayNames: Record<number, string> = {
+    1: "Lunedì",
+    2: "Martedì",
+    3: "Mercoledì",
+    4: "Giovedì",
+    5: "Venerdì",
+    6: "Sabato",
+    0: "Domenica",
+  };
+  const daysStr = scheduleDays.map((d) => dayNames[d] || "").filter(Boolean).join(" e ");
+  const timeStr = endTime ? `${startTime}-${endTime}` : startTime;
+  return `${daysStr} ${timeStr}`.trim();
+}
+
 export function calculateLessonDates(
   startDateStr: string, // "2026-07-23"
-  timeParam: string,    // "16:00" OR "Martedì e Giovedì 16:00-17:15"
+  timeParam: string,    // "16:00" OR "16:00-17:15"
   category: string,     // "languages"
-  standardSchedule: string, // "Martedì e Giovedì 16:00-17:15"
-  durationStr: string = "1h"
+  scheduleDaysOrLegacySchedule?: number[] | string | null,
+  durationStr: string | number = 60,
+  startTimeParam?: string | null,
+  endTimeParam?: string | null,
+  scheduleType?: string | null
 ): ScheduledLesson[] {
   const lessons: ScheduledLesson[] = [];
-  const durationMinutes = parseDurationToMinutes(durationStr);
+  const durationMinutes = typeof durationStr === "number"
+    ? durationStr
+    : parseDurationToMinutes(durationStr);
   
-  // Parse startDate
   const baseDate = new Date(startDateStr);
-  
-  const isFixedSchedule = standardSchedule && 
-    !standardSchedule.toLowerCase().includes("flessibile") &&
-    !standardSchedule.toLowerCase().includes("concordare");
 
-  if (!isFixedSchedule) {
-    // Flexible lesson (Single private lesson or first of 10 package)
-    // Parse timeParam like "16:00"
+  const isFlexible = scheduleType === "flexible" || !scheduleDaysOrLegacySchedule;
+
+  if (isFlexible) {
     const timeMatch = (timeParam || "").match(/^(\d{2}):(\d{2})$/);
     const startHour = timeMatch ? parseInt(timeMatch[1], 10) : 10;
     const startMin = timeMatch ? parseInt(timeMatch[2], 10) : 0;
 
     const startsAt = new Date(baseDate);
-    startsAt.setUTCHours(12, 0, 0, 0); // Temporary middle of day to fetch offset safely
+    startsAt.setUTCHours(12, 0, 0, 0);
     const offset = getRomeOffsetHours(startsAt);
 
     startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
@@ -73,8 +120,6 @@ export function calculateLessonDates(
     return lessons;
   }
 
-  // Fixed schedule languages course
-  // 1. Determine active subscription end date (1 month from start date)
   const addMonths = (d: Date, m: number): Date => {
     const res = new Date(d);
     res.setMonth(res.getMonth() + m);
@@ -82,32 +127,21 @@ export function calculateLessonDates(
   };
   const endDate = addMonths(baseDate, 1);
 
-  // 2. Parse weekdays and time range from standardSchedule (e.g. "Martedì e Giovedì 16:00-17:15")
-  const lowerSchedule = standardSchedule.toLowerCase();
-  
-  // Parse weekdays
-  const targetDays: number[] = []; // 0 = Sunday, 1 = Monday, 2 = Tuesday, etc.
-  if (lowerSchedule.includes("luned")) targetDays.push(1);
-  if (lowerSchedule.includes("marted")) targetDays.push(2);
-  if (lowerSchedule.includes("mercoled")) targetDays.push(3);
-  if (lowerSchedule.includes("gioved")) targetDays.push(4);
-  if (lowerSchedule.includes("venerd")) targetDays.push(5);
-  if (lowerSchedule.includes("sabat")) targetDays.push(6);
-  if (lowerSchedule.includes("domenic")) targetDays.push(0);
+  const targetDays: number[] = Array.isArray(scheduleDaysOrLegacySchedule)
+    ? scheduleDaysOrLegacySchedule
+    : [];
 
   if (targetDays.length === 0) {
-    // Fallback: use the starting weekday
     targetDays.push(baseDate.getDay());
   }
 
-  // Parse time range, e.g., "16:00-17:15"
-  const timeRangeMatch = lowerSchedule.match(/(\d{2}):(\d{2})\s*-\s*(\d{2}):(\d{2})/);
-  let startHour = 16, startMin = 0, endHour = 17, endMin = 15;
-  if (timeRangeMatch) {
-    startHour = parseInt(timeRangeMatch[1], 10);
-    startMin = parseInt(timeRangeMatch[2], 10);
-    endHour = parseInt(timeRangeMatch[3], 10);
-    endMin = parseInt(timeRangeMatch[4], 10);
+  let startHour = 16, startMin = 0;
+  if (startTimeParam) {
+    const sMatch = startTimeParam.match(/^(\d{2}):(\d{2})$/);
+    if (sMatch) {
+      startHour = parseInt(sMatch[1], 10);
+      startMin = parseInt(sMatch[2], 10);
+    }
   }
 
   // Generate lessons
@@ -125,8 +159,17 @@ export function calculateLessonDates(
 
       startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
 
-      const endsAt = new Date(current);
-      endsAt.setUTCHours(endHour - offset, endMin, 0, 0);
+      const endsAt = new Date(startsAt);
+      if (endTimeParam) {
+        const eMatch = endTimeParam.match(/^(\d{2}):(\d{2})$/);
+        if (eMatch) {
+          endsAt.setUTCHours(parseInt(eMatch[1], 10) - offset, parseInt(eMatch[2], 10), 0, 0);
+        } else {
+          endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+        }
+      } else {
+        endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
+      }
 
       lessons.push({
         startsAt: startsAt.toISOString(),

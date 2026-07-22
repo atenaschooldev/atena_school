@@ -12,6 +12,12 @@ export interface CheckoutFormValues {
   lastName: string;
   email: string;
   phone: string;
+  isForChild?: boolean;
+  studentFirstName?: string;
+  studentLastName?: string;
+  studentBirthDate?: string;
+  taxCode?: string;
+  includeRegistrationFee?: boolean;
   notes?: string;
 }
 
@@ -20,7 +26,6 @@ export interface BookingItem {
   name?: string;
   title_it?: string;
   price: string | number;
-  duration?: string;
   description_it?: string;
   image_url?: string;
 }
@@ -37,6 +42,12 @@ export const checkoutSchema = z.object({
   lastName: z.string().min(2, "Il cognome deve avere almeno 2 caratteri"),
   email: z.string().email("Inserisci un indirizzo email valido"),
   phone: z.string().min(6, "Inserisci un numero di telefono valido"),
+  isForChild: z.boolean().optional(),
+  studentFirstName: z.string().optional(),
+  studentLastName: z.string().optional(),
+  studentBirthDate: z.string().optional(),
+  taxCode: z.string().optional(),
+  includeRegistrationFee: z.boolean().optional(),
   notes: z.string().optional(),
 });
 
@@ -48,7 +59,6 @@ export function useCheckout(type: string, id: string) {
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
-  const slotIdParam = searchParams.get("slot_id");
 
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +73,12 @@ export function useCheckout(type: string, id: string) {
       lastName: "",
       email: "",
       phone: "",
+      isForChild: false,
+      studentFirstName: "",
+      studentLastName: "",
+      studentBirthDate: "",
+      taxCode: "",
+      includeRegistrationFee: true,
       notes: "",
     },
   });
@@ -104,9 +120,12 @@ export function useCheckout(type: string, id: string) {
     initCheckout();
   }, [id, type, reset]);
 
+  const effectiveDate = dateParam || "da_concordare";
+  const effectiveTime = timeParam || "da_concordare";
+
   const handleBook = async (values: CheckoutFormValues) => {
-    if (!dateParam || !timeParam || !item) {
-      toast.error("Informazioni di prenotazione mancanti");
+    if (!item) {
+      toast.error("Servizio non trovato");
       return;
     }
 
@@ -124,9 +143,8 @@ export function useCheckout(type: string, id: string) {
       const res = await createOrUpdateReservationServerAction({
         type,
         id,
-        dateParam,
-        timeParam,
-        slotIdParam,
+        dateParam: effectiveDate,
+        timeParam: effectiveTime,
         values,
         sessionId: sid,
         origin: window.location.origin,
@@ -138,15 +156,15 @@ export function useCheckout(type: string, id: string) {
 
       router.push(`/checkout/success?type=booking&booking_id=${res.booking.id}&email=${encodeURIComponent(values.email)}`);
     } catch (err: any) {
-      toast.error(err.message || "Qualcosa è Restrictions and Error");
+      toast.error(err.message || "Errore durante la prenotazione");
     } finally {
       setSubmitting(false);
     }
   };
 
   const handlePay = async (values: CheckoutFormValues) => {
-    if (!dateParam || !timeParam || !item) {
-      toast.error("Informazioni di prenotazione mancanti");
+    if (!item) {
+      toast.error("Servizio non trovato");
       return;
     }
 
@@ -164,9 +182,8 @@ export function useCheckout(type: string, id: string) {
       const res = await initiateStripePaymentAction({
         type,
         id,
-        dateParam,
-        timeParam,
-        slotIdParam,
+        dateParam: effectiveDate,
+        timeParam: effectiveTime,
         values,
         sessionId: sid,
       });

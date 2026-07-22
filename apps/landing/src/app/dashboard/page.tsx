@@ -146,16 +146,16 @@ export default function DashboardPage() {
                         <span className="text-lg font-black text-primary">€{Number(b.price || 0).toFixed(2)}</span>
                         <span
                           className={`block text-[10px] font-bold uppercase tracking-wider mt-1 px-2.5 py-1 rounded-full text-center ${
-                            b.status === "paid" || b.status === "completed"
+                            (b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
                               ? "bg-green-500/10 text-green-700 border border-green-500/20"
-                              : b.status === "reserved"
+                              : (b.payment_status || b.status) === "reserved"
                               ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                               : "bg-muted/60 text-muted-foreground border border-border"
                           }`}
                         >
-                          {b.status === "paid" || b.status === "completed"
+                          {(b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
                             ? "✓ Pagato"
-                            : b.status === "reserved"
+                            : (b.payment_status || b.status) === "reserved"
                             ? "Prenotato"
                             : "In attesa"}
                         </span>
@@ -163,11 +163,11 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-border text-xs text-foreground/70 font-medium">
-                      {b.booking_date && (
+                      {(b.start_date || b.booking_date) && (
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4 text-primary shrink-0" />
                           <span>
-                            {format(new Date(b.booking_date), "EEEE d MMMM yyyy", { locale: dateLocale })}
+                            {format(new Date(b.start_date || b.booking_date), "EEEE d MMMM yyyy", { locale: dateLocale })}
                           </span>
                         </div>
                       )}

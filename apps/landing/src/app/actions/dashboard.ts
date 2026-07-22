@@ -58,16 +58,16 @@ export async function getBookingLessonsAction(bookingId: string) {
       return { success: false, error: "Prenotazione non trovata" };
     }
 
-    // Fetch course metadata
+    const cid = booking.course_id || booking.item_id;
     const { data: course } = await supabase
       .from("courses")
-      .select("*")
-      .eq("id", booking.item_id)
+      .select("*, teachers(teacher_id, full_name)")
+      .eq("id", cid)
       .single();
 
     // Fetch lessons
     const { data: lessons } = await supabase
-      .from("booking_lessons")
+      .from("lessons")
       .select("*")
       .eq("booking_id", bookingId)
       .order("starts_at", { ascending: true });
@@ -128,25 +128,27 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
       return { success: false, error: "Prenotazione non trovata" };
     }
 
+    const cid = booking.course_id || booking.item_id;
     const { data: course, error: courseErr } = await supabase
       .from("courses")
-      .select("*")
-      .eq("id", booking.item_id)
+      .select("*, teachers(teacher_id, full_name)")
+      .eq("id", cid)
       .single();
 
     if (courseErr || !course) {
       return { success: false, error: "Corso non trovato" };
     }
 
+    const bdate = booking.start_date || booking.booking_date;
     const maxLessons = getDynamicMaxLessons(
       course.name || "",
-      booking.booking_date,
+      bdate,
       course.category || "",
       course.lessons_per_week
     );
 
     const { count, error: countErr } = await supabase
-      .from("booking_lessons")
+      .from("lessons")
       .select("*", { count: "exact", head: true })
       .eq("booking_id", bookingId);
 
@@ -177,7 +179,7 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
     endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
 
     const { data: newLesson, error: insertErr } = await supabase
-      .from("booking_lessons")
+      .from("lessons")
       .insert({
         booking_id: bookingId,
         starts_at: startsAt.toISOString(),

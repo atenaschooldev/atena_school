@@ -2,17 +2,32 @@
 
 import React from "react";
 import { Calendar, CreditCard, CheckCircle, Check } from "@phosphor-icons/react";
+import { Link } from "@/i18n/routing";
+import { useParams } from "next/navigation";
 
 export interface CheckoutStepperProps {
   currentStep: 1 | 2 | 3;
   dark?: boolean;
+  type?: string;
+  id?: string;
 }
 
-export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
+export function CheckoutStepper({ currentStep, dark, type: propType, id: propId }: CheckoutStepperProps) {
+  const params = useParams();
+  const type = propType || (params?.type as string) || "";
+  const id = propId || (params?.id as string) || "";
+
+  const getHref = (stepNumber: number) => {
+    if (!type || !id) return null;
+    if (stepNumber === 1) return `/book/${type}/${id}`;
+    if (stepNumber === 2) return `/checkout/${type}/${id}`;
+    return null;
+  };
+
   const steps = [
-    { number: 1, label: "Data e orario", icon: Calendar },
-    { number: 2, label: "Dettagli e pagamento", icon: CreditCard },
-    { number: 3, label: "Conferma", icon: CheckCircle },
+    { number: 1, label: "Data e orario", icon: Calendar, href: getHref(1) },
+    { number: 2, label: "Dettagli e pagamento", icon: CreditCard, href: getHref(2) },
+    { number: 3, label: "Conferma", icon: CheckCircle, href: getHref(3) },
   ];
 
   return (
@@ -33,18 +48,19 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
           const isCompleted = step.number < currentStep;
           const isCurrent = step.number === currentStep;
           const Icon = step.icon;
+          const isClickable = !!step.href && step.number !== currentStep && step.number !== 3;
 
-          return (
-            <div key={step.number} className="relative z-10 flex flex-col items-center group">
+          const content = (
+            <div className={`relative z-10 flex flex-col items-center group ${isClickable ? "cursor-pointer" : ""}`}>
               <div
                 className={`
                   w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-sm
                   ${
                     isCompleted
-                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/10"
+                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/10 group-hover:scale-110 group-hover:bg-[#F8861D]"
                       : isCurrent
                       ? "bg-[#043569] text-white ring-4 ring-[#043569]/15 shadow-md scale-105"
-                      : "bg-white text-slate-300 border border-slate-200"
+                      : "bg-white text-slate-300 border border-slate-200 group-hover:border-[#043569] group-hover:scale-110"
                   }
                 `}
               >
@@ -52,10 +68,10 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
                   <Check className="w-4 h-4 text-white stroke-[3]" />
                 ) : (
                   <Icon
-                    className={`w-4 h-4 ${
+                    className={`w-4 h-4 transition-colors ${
                       isCurrent
                         ? "text-white"
-                        : "text-slate-400"
+                        : "text-slate-400 group-hover:text-[#043569]"
                     }`}
                   />
                 )}
@@ -66,7 +82,11 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
                 className={`
                   mt-1.5 text-[11px] sm:text-xs font-semibold text-center transition-colors whitespace-nowrap leading-tight
                   ${
-                    isCurrent ? "text-[#043569] font-bold" : isCompleted ? "text-slate-600" : "text-slate-400"
+                    isCurrent
+                      ? "text-[#043569] font-bold"
+                      : isCompleted
+                      ? "text-slate-600 group-hover:text-[#043569]"
+                      : "text-slate-400 group-hover:text-[#043569]"
                   }
                 `}
               >
@@ -74,8 +94,19 @@ export function CheckoutStepper({ currentStep, dark }: CheckoutStepperProps) {
               </span>
             </div>
           );
+
+          if (isClickable && step.href) {
+            return (
+              <Link key={step.number} href={step.href as any} className="no-underline">
+                {content}
+              </Link>
+            );
+          }
+
+          return <div key={step.number}>{content}</div>;
         })}
       </div>
     </div>
   );
 }
+

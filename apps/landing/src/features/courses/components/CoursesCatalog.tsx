@@ -11,10 +11,15 @@ interface CleanCourse {
   image: any;
   price?: string;
   type: "course" | "shop";
-  duration?: string;
   teacher_name?: string;
-  standard_schedule?: string;
   lessons_per_week?: number | null;
+  lesson_duration_minutes?: number | null;
+  total_hours?: number | null;
+  total_lessons?: number | null;
+  course_format?: string | null;
+  schedule_days?: number[] | null;
+  start_time?: string | null;
+  end_time?: string | null;
 }
 
 interface CleanSection {
@@ -146,11 +151,16 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                       category={section.title}
                       price={course.price}
                       type={course.type}
-                      duration={course.duration}
                       teacher_name={course.teacher_name}
                       priority={sIdx === 0 && idx < 2}
-                      standard_schedule={course.standard_schedule}
                       lessons_per_week={course.lessons_per_week}
+                      lesson_duration_minutes={course.lesson_duration_minutes}
+                      total_hours={course.total_hours}
+                      total_lessons={course.total_lessons}
+                      course_format={course.course_format}
+                      schedule_days={course.schedule_days}
+                      start_time={course.start_time}
+                      end_time={course.end_time}
                     />
                   </div>
                 ))}

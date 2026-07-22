@@ -16,14 +16,17 @@ Deno.serve(async (req) => {
 
     const {
       itemId, itemType, customerEmail, firstName, lastName,
-      phone, date, time, slotId, locale, origin, notes, guestSessionId,
+      phone, date, time, locale, origin, notes, guestSessionId,
+      studentBirthDate, taxCode, isForChild, studentFirstName, studentLastName,
+      includeRegistrationFee,
     } = await req.json();
 
-    const isValidUuid = (id?: string | null) => {
-      if (!id) return false;
-      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-    };
-    const resolvedSlotId = isValidUuid(slotId) ? slotId : null;
+    const purchaserName = `${firstName} ${lastName}`.trim();
+    const studentName = isForChild && studentFirstName
+      ? `${studentFirstName} ${studentLastName || ""}`.trim()
+      : purchaserName;
+
+    const regFeeAmount = includeRegistrationFee !== false ? 3000 : 0; // 30 EUR in cents
 
     // Resolve the authenticated user (may be null for guests)
     const { data: { user } } = await supabaseClient.auth.getUser();
@@ -50,6 +53,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid item price" }, 422, req);
     }
 
+    const todayStr = new Date().toISOString().split("T")[0];
+    const finalBookingDate = (date && date !== "da_concordare") ? date : todayStr;
+    const finalBookingTime = (time && time !== "da_concordare") ? time : "Da concordare";
+
+    const isFlexible = itemData.schedule_type === "flexible" || finalBookingTime === "Da concordare";
+    const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
+
+    const totalAmount = unitAmount + regFeeAmount;
+
     // 2. Create draft booking with service role
     //    SECURITY: user_id is always taken from the verified JWT, never from the request body.
     const supabaseAdmin = createSupabaseAdmin();
@@ -58,15 +70,22 @@ Deno.serve(async (req) => {
       .insert({
         user_id: user?.id ?? null,
         session_id: guestSessionId ?? null,
-        item_id: itemId,
-        slot_id: resolvedSlotId,
-        booking_date: date,
-        booking_time: time,
-        student_name: `${firstName} ${lastName}`.trim(),
+        course_id: itemId,
+        start_date: finalBookingDate,
+        booking_time: finalBookingTime,
+        purchaser_name: purchaserName,
+        student_name: studentName,
+        student_birth_date: studentBirthDate ?? null,
+        tax_code: taxCode ?? null,
         student_email: customerEmail,
         student_phone: phone,
         notes: notes ?? "",
-        status: "pending_payment",
+        payment_status: "pending_payment",
+        booking_status: "active",
+        payment_method: "stripe",
+        amount_paid: totalAmount / 100,
+        registration_fee: regFeeAmount / 100,
+        scheduling_status: schedulingStatus,
       })
       .select()
       .single();
@@ -75,29 +94,44 @@ Deno.serve(async (req) => {
 
     const SITE_URL = origin || req.headers.get("origin") || Deno.env.get("SITE_URL") || "http://localhost:3000";
 
+    const lineItems: any[] = [
+      {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: title,
+            description: finalBookingTime === "Da concordare" ? "Orario flessibile: da concordare con la scuola" : `Date: ${finalBookingDate} Time: ${finalBookingTime}`,
+          },
+          unit_amount: unitAmount,
+        },
+        quantity: 1,
+      },
+    ];
+
+    if (regFeeAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: "Quota d'iscrizione annuale (Atena School)",
+            description: "Quota d'iscrizione annuale obbligatoria 2026/2027",
+          },
+          unit_amount: regFeeAmount,
+        },
+        quantity: 1,
+      });
+    }
+
     // 3. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       customer_email: customerEmail,
-      line_items: [
-        {
-          price_data: {
-            currency: "eur",
-            product_data: {
-              name: title,
-              description: `Date: ${date} Time: ${time}`,
-            },
-            unit_amount: unitAmount,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       mode: "payment",
       success_url: `${SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}&email=${encodeURIComponent(customerEmail)}`,
       cancel_url: `${SITE_URL}/checkout/${itemType}/${itemId}?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`,
       metadata: {
         booking_id: booking.id,
-        slot_id: resolvedSlotId ?? "",
       },
     });
 

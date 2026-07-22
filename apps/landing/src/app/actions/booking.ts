@@ -4,6 +4,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createServerClient as createSupabaseSsrClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { calculateLessonDates } from "@/lib/utils/bookingScheduler";
+import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
 
 function isServiceRoleValid() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -33,7 +34,7 @@ async function fetchItemData(adminClient: any, itemType: string, itemId: string)
   // 1. Search in courses by id
   const { data: course } = await adminClient
     .from("courses")
-    .select("*")
+    .select("*, teachers(teacher_id, full_name)")
     .eq("id", itemId)
     .maybeSingle();
 
@@ -51,7 +52,7 @@ async function fetchItemData(adminClient: any, itemType: string, itemId: string)
   // 3. Search in courses by slug / name match
   const { data: byName } = await adminClient
     .from("courses")
-    .select("*")
+    .select("*, teachers(teacher_id, full_name)")
     .ilike("name", `%${itemId}%`)
     .maybeSingle();
 
@@ -72,15 +73,16 @@ export async function getBookingDetailsServer(bookingId: string) {
 
     if (error || !booking) return null;
 
-    const item = await fetchItemData(admin, "course", booking.item_id);
+    const cid = booking.course_id || booking.item_id;
+    const item = await fetchItemData(admin, "course", cid);
 
     return {
       ...booking,
       item_name: item?.name || item?.title_it || item?.title || "Lezione Atena School",
-      item_price: item?.price || booking?.price || booking?.total_price || 0,
+      item_price: item?.price || booking?.amount_paid || booking?.price || 0,
       item_photo: item?.photo_url || null,
-      item_teacher: item?.teacher_name || null,
-      date: booking.booking_date || null,
+      item_teacher: item?.teachers?.full_name || null,
+      date: booking.start_date || booking.booking_date || null,
       time: booking.booking_time || null,
     };
   } catch (err) {
@@ -128,7 +130,7 @@ export async function getCartCountAction(sessionId?: string | null) {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    let query = admin.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending_payment");
+    let query = admin.from("bookings").select("id", { count: "exact", head: true }).in("payment_status", ["pending_payment", "pending", "reserved"]);
 
     if (user) {
       query = query.eq("user_id", user.id);
@@ -156,12 +158,17 @@ export async function initiateStripePaymentAction(params: {
   id: string;
   dateParam: string;
   timeParam: string;
-  slotIdParam?: string | null;
   values: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
+    isForChild?: boolean;
+    studentFirstName?: string;
+    studentLastName?: string;
+    studentBirthDate?: string;
+    taxCode?: string;
+    includeRegistrationFee?: boolean;
     notes?: string;
   };
   sessionId?: string | null;
@@ -192,10 +199,15 @@ export async function initiateStripePaymentAction(params: {
           firstName: params.values.firstName,
           lastName: params.values.lastName,
           phone: params.values.phone,
+          isForChild: params.values.isForChild,
+          studentFirstName: params.values.studentFirstName,
+          studentLastName: params.values.studentLastName,
+          studentBirthDate: params.values.studentBirthDate,
+          taxCode: params.values.taxCode,
+          includeRegistrationFee: params.values.includeRegistrationFee !== false,
           notes: params.values.notes || "",
           date: params.dateParam,
           time: params.timeParam,
-          slotId: isValidUuid(params.slotIdParam) ? params.slotIdParam : null,
           locale: "it",
           origin,
           userId: user?.id || null,
@@ -220,19 +232,24 @@ export async function createOrUpdateReservationServerAction(params: {
   id: string;
   dateParam: string;
   timeParam: string;
-  slotIdParam?: string | null;
   values: {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
+    isForChild?: boolean;
+    studentFirstName?: string;
+    studentLastName?: string;
+    studentBirthDate?: string;
+    taxCode?: string;
+    includeRegistrationFee?: boolean;
     notes?: string;
   };
   sessionId?: string | null;
   origin?: string;
 }) {
   try {
-    const { type, id: itemId, dateParam, timeParam, slotIdParam, values, sessionId } = params;
+    const { type, id: itemId, dateParam, timeParam, values, sessionId } = params;
     const admin = getSupabaseAdmin();
     const item = await fetchItemData(admin, type, itemId);
     if (!item) throw new Error("Servizio non trovato");
@@ -240,47 +257,72 @@ export async function createOrUpdateReservationServerAction(params: {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    const fullName = `${values.firstName} ${values.lastName}`.trim();
+    const purchaserName = `${values.firstName} ${values.lastName}`.trim();
+    const studentName = values.isForChild && values.studentFirstName
+      ? `${values.studentFirstName} ${values.studentLastName || ""}`.trim()
+      : purchaserName;
 
     // Check for existing pending/reserved booking
     const { data: existing } = await admin
       .from("bookings")
       .select("id")
       .eq("student_email", values.email)
-      .eq("item_id", itemId)
-      .in("status", ["pending_payment", "reserved"])
+      .or(`course_id.eq.${itemId},item_id.eq.${itemId}`)
+      .in("payment_status", ["pending_payment", "pending", "reserved"])
       .maybeSingle();
 
-    // Calculate lesson dates
-    const lessons = calculateLessonDates(
-      dateParam,
-      timeParam,
+    const isFlexible = item.schedule_type === "flexible" || !dateParam || dateParam === "da_concordare" || (!item.schedule_days || item.schedule_days.length === 0);
+    const todayStr = new Date().toISOString().split("T")[0];
+    const finalBookingDate = (dateParam && dateParam !== "da_concordare") ? dateParam : todayStr;
+    const finalBookingTime = (timeParam && timeParam !== "da_concordare") ? timeParam : "Da concordare";
+    const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
+
+    // Calculate lesson dates (only for fixed schedule)
+    const lessons = isFlexible ? [] : calculateLessonDates(
+      finalBookingDate,
+      finalBookingTime,
       item.category || "",
-      item.standard_schedule || "",
-      item.duration || "1h"
+      item.schedule_days,
+      item.lesson_duration_minutes || 60,
+      item.start_time,
+      item.end_time,
+      item.schedule_type
     );
 
+    const totalLessons = lessons.length || item.total_lessons || 1;
+    const coursePrice = typeof item.price === "number" ? item.price : parseFloat(String(item.price || 0).replace(",", "."));
+    const registrationFee = values.includeRegistrationFee !== false ? ANNUAL_REGISTRATION_FEE_EUR : 0;
+    const amountPaid = coursePrice + registrationFee;
+
     // Compute subscription range
-    const subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(dateParam).toISOString();
+    const subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date(finalBookingDate).toISOString();
     const subEndsAtDate = new Date(subStartsAt);
     subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
     const subEndsAt = subEndsAtDate.toISOString();
 
     let booking;
-    const cleanSlotId = isValidUuid(slotIdParam) ? slotIdParam : null;
 
     if (existing) {
       const { data: updated, error } = await admin
         .from("bookings")
         .update({
+          course_id: itemId,
           user_id: user?.id || null,
           session_id: user ? null : sessionId,
-          booking_date: dateParam,
-          booking_time: timeParam,
-          slot_id: cleanSlotId,
-          status: "reserved",
-          student_name: fullName,
+          start_date: finalBookingDate,
+          booking_time: finalBookingTime,
+          payment_status: "reserved",
+          booking_status: "active",
+          payment_method: "stripe",
+          amount_paid: amountPaid,
+          registration_fee: registrationFee,
+          total_lessons_count: totalLessons,
+          scheduling_status: schedulingStatus,
+          purchaser_name: purchaserName,
+          student_name: studentName,
           student_phone: values.phone,
+          student_birth_date: values.studentBirthDate || null,
+          tax_code: values.taxCode || null,
           notes: values.notes || "",
           subscription_starts_at: subStartsAt,
           subscription_ends_at: subEndsAt,
@@ -295,16 +337,24 @@ export async function createOrUpdateReservationServerAction(params: {
       const { data: inserted, error } = await admin
         .from("bookings")
         .insert([{
-          item_id: itemId,
+          course_id: itemId,
           user_id: user?.id || null,
           session_id: user ? null : sessionId,
-          booking_date: dateParam,
-          booking_time: timeParam,
-          slot_id: cleanSlotId,
-          status: "reserved",
-          student_name: fullName,
+          start_date: finalBookingDate,
+          booking_time: finalBookingTime,
+          payment_status: "reserved",
+          booking_status: "active",
+          payment_method: "stripe",
+          amount_paid: amountPaid,
+          registration_fee: registrationFee,
+          total_lessons_count: totalLessons,
+          scheduling_status: schedulingStatus,
+          purchaser_name: purchaserName,
+          student_name: studentName,
           student_email: values.email,
           student_phone: values.phone,
+          student_birth_date: values.studentBirthDate || null,
+          tax_code: values.taxCode || null,
           notes: values.notes || "",
           subscription_starts_at: subStartsAt,
           subscription_ends_at: subEndsAt,
@@ -316,15 +366,15 @@ export async function createOrUpdateReservationServerAction(params: {
       booking = inserted;
     }
 
-    // Sync booking_lessons
+    // Sync lessons
     await admin
-      .from("booking_lessons")
+      .from("lessons")
       .delete()
       .eq("booking_id", booking.id);
 
     if (lessons.length > 0) {
       const { error: lessonsError } = await admin
-        .from("booking_lessons")
+        .from("lessons")
         .insert(
           lessons.map(lesson => ({
             booking_id: booking.id,
@@ -428,29 +478,7 @@ export async function getCurrentUserAction() {
   }
 }
 
-export async function fetchScheduleSlotsAction(dateStr: string) {
-  try {
-    const supabase = createServerClient();
-    const date = new Date(dateStr);
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
 
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
-    const { data, error } = await supabase
-      .from("schedule_slots")
-      .select("*")
-      .gte("starts_at", startOfDay.toISOString())
-      .lte("starts_at", endOfDay.toISOString())
-      .order("starts_at", { ascending: true });
-
-    if (error) throw error;
-    return { success: true, slots: data || [] };
-  } catch (err: any) {
-    return { success: false, slots: [], error: err.message };
-  }
-}
 
 export async function fetchCheckoutItemAction(type: string, id: string) {
   try {
@@ -558,7 +586,7 @@ export async function fetchCartItemsAction(sessionId: string | null) {
     let query = admin
       .from("bookings")
       .select("*")
-      .in("status", ["in_cart", "pending_payment"]);
+      .in("payment_status", ["in_cart", "pending_payment", "pending", "reserved"]);
 
     if (user) {
       query = query.eq("user_id", user.id);
@@ -574,10 +602,11 @@ export async function fetchCartItemsAction(sessionId: string | null) {
     if (bookingsData && bookingsData.length > 0) {
       const formatted = await Promise.all(
         bookingsData.map(async (b) => {
-          const item = await fetchItemData(admin, b.item_type, b.item_id);
+          const cid = b.course_id || b.item_id;
+          const item = await fetchItemData(admin, b.item_type || "course", cid);
 
           const title = item?.name || item?.title_it || item?.title || "Unknown";
-          const rawPrice = item?.price || b.price || 0;
+          const rawPrice = item?.price || b.amount_paid || b.price || 0;
           let priceNum = 0;
           if (typeof rawPrice === "number") {
             priceNum = rawPrice;
@@ -588,10 +617,14 @@ export async function fetchCartItemsAction(sessionId: string | null) {
             }
           }
           const price = `${priceNum.toFixed(2)}€`;
-          const teacher = item?.teacher_name || "TBD";
+          const teacher = item?.teacher_name || "Staff Atena";
 
           return {
             ...b,
+            course_id: cid,
+            item_id: cid,
+            booking_date: b.start_date || b.booking_date,
+            start_date: b.start_date || b.booking_date,
             title,
             price,
             teacher,

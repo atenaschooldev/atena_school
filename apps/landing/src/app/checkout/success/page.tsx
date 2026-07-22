@@ -52,7 +52,7 @@ function SuccessContent() {
   const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Lezione Atena School";
   const coursePrice = bookingData?.item_price ?? bookingData?.total_price ?? bookingData?.amount ?? bookingData?.price ?? 0;
 
-  const rawDate = bookingData?.starts_at || bookingData?.booking_date || bookingData?.date;
+  const rawDate = bookingData?.starts_at || bookingData?.start_date || bookingData?.booking_date || bookingData?.date;
   const formattedDate = rawDate
     ? (typeof rawDate === "string" && !rawDate.includes("T") && !isNaN(Date.parse(rawDate))
       ? format(new Date(rawDate), "d MMMM yyyy", { locale: dateLocale })
