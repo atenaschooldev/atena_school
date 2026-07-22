@@ -45,20 +45,6 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
     handlePrev();
   };
 
-  const handleNext = () => {
-    if (currentIndex < shuffledQuestions.length - 1) {
-      transitionToQuestion(currentIndex + 1);
-    } else if (answers.every((a) => a !== null)) {
-      if (document.startViewTransition) {
-        document.startViewTransition(() => {
-          setCompleted(true);
-        });
-      } else {
-        setCompleted(true);
-      }
-    }
-  };
-
   const correctAnswersCount = shuffledQuestions.reduce(
     (acc, q, idx) => acc + (answers[idx] === q.correctAnswer ? 1 : 0),
     0
