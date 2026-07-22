@@ -212,11 +212,11 @@ export function useCheckout(type: string, id: string) {
     setSubmitting("book");
     try {
       const sid = getSessionId();
-      const res = await createOrUpdateReservationServerAction({
+      const res: any = await createOrUpdateReservationServerAction({
         type,
         id,
-        dateParam: effectiveDate,
-        timeParam: effectiveTime,
+        dateParam: effectiveDate || "",
+        timeParam: effectiveTime || "",
         values,
         sessionId: sid,
         origin: typeof window !== "undefined" ? window.location.origin : undefined,
@@ -227,8 +227,9 @@ export function useCheckout(type: string, id: string) {
         return;
       }
 
+      const bookingId = res.bookingId || res.booking?.id || "";
       toast.success("Prenotazione completata con successo!");
-      router.push(`/checkout/success?booking_id=${res.bookingId}&email=${encodeURIComponent(values.email)}`);
+      router.push(`/checkout/success?booking_id=${bookingId}&email=${encodeURIComponent(values.email)}`);
     } catch (err: any) {
       toast.error(err.message || "Errore imprevisto");
     } finally {
@@ -248,8 +249,8 @@ export function useCheckout(type: string, id: string) {
       const res = await initiateStripePaymentAction({
         type,
         id,
-        dateParam: effectiveDate,
-        timeParam: effectiveTime,
+        dateParam: effectiveDate || "",
+        timeParam: effectiveTime || "",
         values,
         sessionId: sid,
         origin: typeof window !== "undefined" ? window.location.origin : undefined,

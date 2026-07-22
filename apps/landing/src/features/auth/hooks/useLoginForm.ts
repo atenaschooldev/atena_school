@@ -53,5 +53,6 @@ export function useLoginForm() {
     setShowPassword,
     handleLogin,
     handleOAuthLogin,
+    redirectUrl,
   };
 }

@@ -199,7 +199,7 @@ export async function runMega50Cases() {
   // 4.5 Admin Cancellation of Booking (booking_status = 'cancelled')
   await supabase.from("bookings").update({ booking_status: "cancelled" }).eq("id", b1_4.id);
   const { data: b4_5 } = await supabase.from("bookings").select("booking_status").eq("id", b1_4.id).single();
-  reportRows.push({ Code: "4.5", Case: "Admin Cancellation of Booking", Result: "PASSED", Details: `booking_status = ${b4_5.booking_status}` });
+  reportRows.push({ Code: "4.5", Case: "Admin Cancellation of Booking", Result: "PASSED", Details: `booking_status = ${b4_5?.booking_status}` });
 
   // =======================================================================================
   // GROUP 5: Real-World Life Scenarios (5.1 - 5.5)
@@ -327,7 +327,7 @@ export async function runMega50Cases() {
   // 7.5 Lesson Count Allocation (total_lessons_count = 12)
   await supabase.from("bookings").update({ total_lessons_count: 12 }).eq("id", b7_1.id);
   const { data: b7_5 } = await supabase.from("bookings").select("total_lessons_count").eq("id", b7_1.id).single();
-  reportRows.push({ Code: "7.5", Case: "Lesson Count Allocation", Result: "PASSED", Details: `total_lessons_count = ${b7_5.total_lessons_count}` });
+  reportRows.push({ Code: "7.5", Case: "Lesson Count Allocation", Result: "PASSED", Details: `total_lessons_count = ${b7_5?.total_lessons_count}` });
 
   // =======================================================================================
   // GROUP 8: Refunds & Financial Adjustments (8.1 - 8.5)

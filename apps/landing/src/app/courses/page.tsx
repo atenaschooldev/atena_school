@@ -80,7 +80,7 @@ export default async function CoursesPage() {
       )}
 
       {/* Interactive Catalog Component */}
-      <CoursesCatalog sections={resolvedSections} />
+      <CoursesCatalog sections={resolvedSections as any} />
     </main>
   );
 }

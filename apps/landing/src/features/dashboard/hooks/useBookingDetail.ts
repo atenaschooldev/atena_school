@@ -43,7 +43,7 @@ export function useBookingDetail(bookingId: string) {
         if (res.success) {
           setBooking(res.booking);
           setCourse(res.course);
-          setLessons(res.lessons);
+          setLessons(res.lessons || []);
         } else {
           setError(res.error || "Impossibile caricare i dati della prenotazione");
         }
@@ -146,8 +146,7 @@ export function useBookingDetail(bookingId: string) {
 
     setScheduling(true);
     try {
-      const startsAt = `${modalDate}T${modalTime}:00`;
-      const res = await scheduleNextLessonAction(bookingId, startsAt);
+      const res = await scheduleNextLessonAction(bookingId, modalDate, modalTime);
 
       if (res.success) {
         toast.success("Lezione programmata con successo!");

@@ -278,6 +278,9 @@ export async function createOrUpdateReservationServerAction(params: {
     isForChild?: boolean;
     studentFirstName?: string;
     studentLastName?: string;
+    studentEmail?: string;
+    studentPhone?: string;
+    purchaserTaxCode?: string;
     studentBirthDate?: string;
     taxCode?: string;
     includeRegistrationFee?: boolean;
@@ -348,7 +351,7 @@ export async function createOrUpdateReservationServerAction(params: {
     // Calculate lesson dates (only for fixed schedule)
     const lessons = isFlexible ? [] : calculateLessonDates(
       finalBookingDate,
-      finalBookingTime,
+      finalBookingTime || "",
       item.category || "",
       item.schedule_days,
       item.lesson_duration_minutes || 60,

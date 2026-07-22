@@ -191,7 +191,7 @@ export default function BookingPageClient({
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        onSelect={(date) => {
+                        onSelect={(date: Date | undefined) => {
                           setSelectedDate(date);
                           if (isFixedSchedule && date) {
                             setSelectedTime(item.standard_schedule);
@@ -200,7 +200,7 @@ export default function BookingPageClient({
                           }
                         }}
                         locale={dateLocale}
-                        disabled={(date) => {
+                        disabled={(date: Date) => {
                           const today = new Date();
                           today.setHours(0, 0, 0, 0);
                           if (date < today) return true;
@@ -210,7 +210,7 @@ export default function BookingPageClient({
                           return date.getDay() === 0 || date.getDay() === 6;
                         }}
                         modifiers={{
-                          free: (date) => {
+                          free: (date: Date) => {
                             const today = new Date();
                             today.setHours(0, 0, 0, 0);
                             if (date < today) return false;

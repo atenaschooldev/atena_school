@@ -18,6 +18,7 @@ function RegisterForm() {
     loading,
     handleRegister,
     handleOAuthLogin,
+    redirectUrl,
   } = useRegisterForm();
 
   return (

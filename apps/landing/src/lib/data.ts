@@ -1,9 +1,82 @@
 import { unstable_cache } from 'next/cache';
 import { createClient } from './supabase/server';
-import { Database } from '@/types/database.types';
 import { CACHE_TAGS, CACHE_TTL } from './constants';
 
-type Tables = Database['public']['Tables'];
+interface HeroRow {
+  title_it?: string | null;
+  title_en?: string | null;
+  subtitle_it?: string | null;
+  subtitle_en?: string | null;
+  updated_at?: string | null;
+}
+
+interface AboutRow {
+  title_it?: string | null;
+  title_en?: string | null;
+  content_it?: string | null;
+  content_en?: string | null;
+  image_url?: string | null;
+  updated_at?: string | null;
+}
+
+interface TestimonialRow {
+  id: string;
+  author_name?: string | null;
+  content_it?: string | null;
+  content_en?: string | null;
+  rating?: number | null;
+  is_active?: boolean;
+  [key: string]: unknown;
+}
+
+interface ContactRow {
+  id?: number | null;
+  address?: string | null;
+  phone?: string | null;
+  landline?: string | null;
+  email?: string | null;
+  vat?: string | null;
+  whatsapp?: string | null;
+}
+
+interface TeacherProfileRow {
+  id: string;
+  full_name?: string | null;
+  bio_it?: string | null;
+  bio_en?: string | null;
+  avatar_url?: string | null;
+  [key: string]: unknown;
+}
+
+interface CourseRow {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  status: string;
+  photo_url?: string | null;
+  description?: string | null;
+  teacher_id?: string | null;
+  teachers?: {
+    teacher_id: string;
+    full_name: string | null;
+  } | null;
+  [key: string]: unknown;
+}
+
+interface BlogPostRow {
+  id: string;
+  title_it?: string | null;
+  title_en?: string | null;
+  excerpt_it?: string | null;
+  excerpt_en?: string | null;
+  content_it?: string | null;
+  content_en?: string | null;
+  image_placeholder?: string | null;
+  is_active?: boolean;
+  slug?: string;
+  [key: string]: unknown;
+}
 
 /**
  * CLEANUP MAPPERS
@@ -13,7 +86,7 @@ type Tables = Database['public']['Tables'];
 export const getHeroData = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('hero').select('*').single() as any);
+    const { data } = await supabase.from('hero').select('*').single<HeroRow>();
     return {
       title_it: data?.title_it || '',
       title_en: data?.title_en || '',
@@ -29,7 +102,7 @@ export const getHeroData = unstable_cache(
 export const getAboutData = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('about').select('*').single() as any);
+    const { data } = await supabase.from('about').select('*').single<AboutRow>();
     return {
       title_it: data?.title_it || '',
       title_en: data?.title_en || '',
@@ -46,8 +119,8 @@ export const getAboutData = unstable_cache(
 export const getTestimonials = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('testimonials').select('*').eq('is_active', true) as any);
-    return (data || []).map((t: any) => ({
+    const { data } = await supabase.from('testimonials').select('*').eq('is_active', true).returns<TestimonialRow[]>();
+    return (data || []).map((t) => ({
       ...t,
       content_it: t.content_it || '',
       content_en: t.content_en || '',
@@ -61,7 +134,7 @@ export const getTestimonials = unstable_cache(
 export const getContactData = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('site_contact').select('*').single() as any);
+    const { data } = await supabase.from('site_contact').select('*').single<ContactRow>();
     return {
       address: data?.address || '',
       phone: data?.phone || '',
@@ -79,8 +152,8 @@ export const getContactData = unstable_cache(
 export const getTeachers = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('profiles').select('*').eq('role', 'teacher').order('full_name') as any);
-    return (data || []).map((t: any) => ({
+    const { data } = await supabase.from('profiles').select('*').eq('role', 'teacher').order('full_name').returns<TeacherProfileRow[]>();
+    return (data || []).map((t) => ({
       ...t,
       full_name: t.full_name || '',
       bio_it: t.bio_it || '',
@@ -94,14 +167,22 @@ export const getTeachers = unstable_cache(
 
 export async function getCourses() {
   const supabase = createClient();
-  let { data, error } = await (supabase.from('courses').select('*, teachers!courses_teacher_id_fkey(teacher_id, full_name)').in('status', ['active', 'published']) as any);
+  let { data, error } = await supabase
+    .from('courses')
+    .select('*, teachers!courses_teacher_id_fkey(teacher_id, full_name)')
+    .in('status', ['active', 'published'])
+    .returns<CourseRow[]>();
   
   if (error || !data || data.length === 0) {
-    const fallback = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);
+    const fallback = await supabase
+      .from('courses')
+      .select('*')
+      .in('status', ['active', 'published'])
+      .returns<CourseRow[]>();
     data = fallback.data;
   }
 
-  return (data || []).map((c: any) => ({
+  return (data || []).map((c) => ({
     ...c,
     title_it: c.name || '',
     title_en: c.name || '',
@@ -116,8 +197,14 @@ export async function getCourses() {
 export const getBlogPosts = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('blog_posts').select('*').eq('is_active', true).order('created_at', { ascending: false }) as any);
-    return (data || []).map((p: any) => ({
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .returns<BlogPostRow[]>();
+
+    return (data || []).map((p) => ({
       ...p,
       title_it: p.title_it || '',
       title_en: p.title_en || '',
@@ -132,10 +219,18 @@ export const getBlogPosts = unstable_cache(
 
 export async function getSingleCourse(id: string) {
   const supabase = createClient();
-  let { data, error } = await (supabase.from('courses').select('*, teachers(teacher_id, full_name)').eq('id', id).single() as any);
+  let { data, error } = await supabase
+    .from('courses')
+    .select('*, teachers(teacher_id, full_name)')
+    .eq('id', id)
+    .single<CourseRow>();
   
   if (error || !data) {
-    const fallback = await (supabase.from('courses').select('*').eq('id', id).single() as any);
+    const fallback = await supabase
+      .from('courses')
+      .select('*')
+      .eq('id', id)
+      .single<CourseRow>();
     data = fallback.data;
   }
 
@@ -154,7 +249,7 @@ export async function getSingleCourse(id: string) {
 export const getSingleBlogPost = (slug: string) => unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await (supabase.from('blog_posts').select('*').eq('slug', slug).single() as any);
+    const { data } = await supabase.from('blog_posts').select('*').eq('slug', slug).single<BlogPostRow>();
     return data ? {
       ...data,
       title_it: data.title_it || '',

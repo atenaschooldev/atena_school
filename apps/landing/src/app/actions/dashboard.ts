@@ -12,7 +12,7 @@ export async function getDashboardDataAction() {
       return { success: false, user: null, bookings: [] };
     }
 
-    const bookings = await fetchUserBookingsEnriched(user, supabase);
+    const bookings = await fetchUserBookingsEnriched(user, supabase as any);
     return {
       success: true,
       user,
@@ -32,7 +32,7 @@ export async function updateUserProfileAction(params: { profileName: string; pro
       return { success: false, error: "Unauthorized" };
     }
 
-    await updateUserProfile(user, params, supabase);
+    await updateUserProfile(user, params, supabase as any);
     return { success: true };
   } catch (err: any) {
     console.error("Failed to run updateUserProfileAction:", err);
@@ -48,21 +48,22 @@ export async function getBookingLessonsAction(bookingId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const { data: booking, error: bookingErr } = await supabase
+    const { data: bookingData, error: bookingErr } = await supabase
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
       .single();
 
-    if (bookingErr || !booking) {
+    if (bookingErr || !bookingData) {
       return { success: false, error: "Prenotazione non trovata" };
     }
 
+    const booking = bookingData as any;
     const cid = booking.course_id || booking.item_id;
     let course: any = null;
     if (cid) {
-      const { data: cData } = await supabase
-        .from("courses")
+      const { data: cData } = await (supabase
+        .from("courses") as any)
         .select("*")
         .eq("id", cid)
         .maybeSingle();
@@ -70,8 +71,8 @@ export async function getBookingLessonsAction(bookingId: string) {
       if (cData) {
         course = { ...cData };
         if (cData.teacher_id) {
-          const { data: tData } = await supabase
-            .from("teachers")
+          const { data: tData } = await (supabase
+            .from("teachers") as any)
             .select("full_name")
             .eq("teacher_id", cData.teacher_id)
             .maybeSingle();
@@ -111,7 +112,8 @@ function getRomeOffsetHours(date: Date): number {
   return Math.round((romeDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
 }
 
-function parseDurationToMinutes(durationStr: string): number {
+function parseDurationToMinutes(durationStr?: string | number | null): number {
+  if (typeof durationStr === "number") return durationStr;
   if (!durationStr) return 60;
   const lower = durationStr.toLowerCase();
   if (lower.includes("10h")) return 60;
@@ -135,27 +137,29 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: "Non autorizzato" };
 
-    const { data: booking, error: bookingErr } = await supabase
+    const { data: bookingData, error: bookingErr } = await supabase
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
       .single();
 
-    if (bookingErr || !booking) {
+    if (bookingErr || !bookingData) {
       return { success: false, error: "Prenotazione non trovata" };
     }
 
+    const booking = bookingData as any;
     const cid = booking.course_id || booking.item_id;
-    const { data: course, error: courseErr } = await supabase
+    const { data: courseData, error: courseErr } = await supabase
       .from("courses")
       .select("*, teachers(teacher_id, full_name)")
       .eq("id", cid)
       .single();
 
-    if (courseErr || !course) {
+    if (courseErr || !courseData) {
       return { success: false, error: "Corso non trovato" };
     }
 
+    const course = courseData as any;
     const bdate = booking.start_date || booking.booking_date;
     const maxLessons = getDynamicMaxLessons(
       course.name || "",
@@ -191,12 +195,11 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
 
     startsAt.setUTCHours(startHour - offset, startMin, 0, 0);
 
-    const durationMinutes = parseDurationToMinutes(course.duration);
+    const durationMinutes = parseDurationToMinutes(course.lesson_duration_minutes || course.duration);
     const endsAt = new Date(startsAt);
     endsAt.setMinutes(endsAt.getMinutes() + durationMinutes);
 
-    const { data: newLesson, error: insertErr } = await supabase
-      .from("lessons")
+    const { data: newLesson, error: insertErr } = await (supabase.from("lessons") as any)
       .insert({
         booking_id: bookingId,
         starts_at: startsAt.toISOString(),

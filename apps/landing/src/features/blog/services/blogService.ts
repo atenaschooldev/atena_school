@@ -23,7 +23,7 @@ export interface BlogPostFull {
 export async function getBlogPostList(): Promise<BlogPostSummary[]> {
   const posts = await getBlogPosts();
   return (posts || []).map((post: any) => ({
-    slug: post.slug,
+    slug: post.slug || "",
     title: post.title_it || post.title || "",
     excerpt: post.excerpt_it || post.excerpt || "",
     mainImage: post.main_image || null,
@@ -34,11 +34,11 @@ export async function getBlogPostList(): Promise<BlogPostSummary[]> {
 }
 
 export async function getBlogPostDetail(slug: string): Promise<BlogPostFull | null> {
-  const post = await getSingleBlogPost(slug);
+  const post: any = await getSingleBlogPost(slug);
   if (!post) return null;
 
   return {
-    slug: post.slug,
+    slug: post.slug || slug,
     title: post.title_it || post.title || "",
     content: post.content_it || post.content || "",
     excerpt: post.excerpt_it || post.excerpt || "",
@@ -58,5 +58,5 @@ export async function getBlogPostDetail(slug: string): Promise<BlogPostFull | nu
 
 export async function getBlogStaticParams(): Promise<{ slug: string }[]> {
   const posts = await getBlogPosts();
-  return (posts || []).map((post: any) => ({ slug: post.slug }));
+  return (posts || []).map((post: any) => ({ slug: post.slug || "" }));
 }

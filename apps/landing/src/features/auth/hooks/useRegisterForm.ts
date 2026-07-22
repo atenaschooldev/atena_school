@@ -62,5 +62,6 @@ export function useRegisterForm() {
     loading,
     handleRegister,
     handleOAuthLogin,
+    redirectUrl,
   };
 }

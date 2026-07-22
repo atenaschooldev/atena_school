@@ -25,7 +25,7 @@ export function createClient() {
             return []
           }
         },
-        async setAll(cookiesToSet) {
+        async setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
             const store = await cookieStore;
             if (store) {

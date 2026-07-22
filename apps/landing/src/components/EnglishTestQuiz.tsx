@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Check, X, ArrowRight, ArrowLeft, ArrowClockwise, Sparkle, Trophy } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
-import { useEnglishQuiz, LEVEL_DESCRIPTIONS } from "@/features/test-inglese/hooks/useEnglishQuiz";
+import { useEnglishQuiz, LEVEL_DESCRIPTIONS, Question } from "@/features/test-inglese/hooks/useEnglishQuiz";
 
 interface EnglishTestQuizProps {
   onRestart: () => void;
@@ -240,7 +240,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
                 <button
                   key={idx}
                   disabled={!isClickable}
-                  onClick={() => transitionToQuestion(idx)}
+                  onClick={() => {}}
                   className={`h-1.5 flex-1 rounded-full border transition-all duration-300 ${barColor} ${
                     isClickable ? "cursor-pointer hover:opacity-80" : "cursor-default"
                   }`}
