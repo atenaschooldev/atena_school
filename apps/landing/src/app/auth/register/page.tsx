@@ -1,60 +1,24 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { Link, useRouter } from "@/i18n/routing";
-import { toast } from "sonner";
+import { Link } from "@/i18n/routing";
 import { User, Envelope, Lock } from "@phosphor-icons/react";
 import Image from "next/image";
-import { signUpWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
+import { useRegisterForm } from "@/features/auth/hooks/useRegisterForm";
 
 function RegisterForm() {
   const t = useTranslations("auth.register");
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const redirectUrl = searchParams.get("redirect") || "/";
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await signUpWithEmailAction({
-        email,
-        password,
-        metadata: {
-          full_name: fullName,
-        },
-      });
-
-      if (!res.success) {
-        toast.error(res.error || "Errore durante la registrazione");
-      } else {
-        toast.success(t("success"));
-        router.push(`/auth/login${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`);
-      }
-    } catch (err) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthLogin = async (provider: 'google') => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
-    const res = await getOAuthUrlAction({ provider, redirectTo });
-
-    if (res.success && res.url) {
-      window.location.href = res.url;
-    } else {
-      toast.error(res.error || "Impossibile avviare la registrazione social");
-    }
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    fullName,
+    setFullName,
+    loading,
+    handleRegister,
+    handleOAuthLogin,
+  } = useRegisterForm();
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">

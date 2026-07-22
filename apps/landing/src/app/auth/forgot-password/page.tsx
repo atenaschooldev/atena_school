@@ -1,33 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { toast } from "sonner";
 import { Envelope, CaretLeft, Key } from "@phosphor-icons/react";
 import Image from "next/image";
-import { forgotPasswordAction } from "@/app/actions/auth";
+import { useForgotPasswordForm } from "@/features/auth/hooks/useForgotPasswordForm";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations("auth.forgotPassword");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleResetRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const res = await forgotPasswordAction(email);
-
-    if (!res.success) {
-      toast.error(res.error || "Errore");
-    } else {
-      setSubmitted(true);
-      toast.success(t("success"));
-    }
-    setLoading(false);
-  };
+  const {
+    email,
+    setEmail,
+    loading,
+    submitted,
+    handleResetRequest,
+  } = useForgotPasswordForm();
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">

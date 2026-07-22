@@ -94,7 +94,7 @@ export const getTeachers = unstable_cache(
 
 export async function getCourses() {
   const supabase = createClient();
-  let { data, error } = await (supabase.from('courses').select('*, teachers(teacher_id, full_name)').in('status', ['active', 'published']) as any);
+  let { data, error } = await (supabase.from('courses').select('*, teachers!courses_teacher_id_fkey(teacher_id, full_name)').in('status', ['active', 'published']) as any);
   
   if (error || !data || data.length === 0) {
     const fallback = await (supabase.from('courses').select('*').in('status', ['active', 'published']) as any);

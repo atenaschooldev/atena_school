@@ -1,104 +1,102 @@
 "use client";
 
-import { use, Suspense } from "react";
+import React, { Suspense, use } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { it as dateLocale } from "date-fns/locale";
 import {
-  CaretLeft,
   User,
   Envelope,
   Phone,
   Calendar as CalendarIcon,
-  Clock,
   ShieldCheck,
-  Sparkle,
-  SignIn,
-  Lightning,
-  Headset,
-  ArrowRight,
-  CheckCircle,
   GraduationCap,
   MapPin,
+  Clock,
+  CheckCircle,
+  Headset,
+  Lightning,
+  SignIn,
+  CreditCard,
+  Storefront,
+  Spinner,
 } from "@phosphor-icons/react";
-import { Link } from "@/i18n/routing";
-import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { useCheckout } from "@/features/checkout/hooks/useCheckout";
 import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
 
 function CheckoutContent({ params }: { params: Promise<{ type: string; id: string }> }) {
   const { type, id } = use(params);
-  const dateLocale = it;
-
   const {
+    formMethods,
     item,
     loading,
     submitting,
+    feeCheckStatus,
     user,
     dateParam,
     timeParam,
-    hasPaidAnnualFee,
     actionRef,
-    formMethods,
     onSubmit,
   } = useCheckout(type, id);
 
-  const { register, handleSubmit, formState: { errors } } = formMethods;
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
+  const includeRegistrationFee = watch("includeRegistrationFee");
 
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#043569]" />
       </div>
     );
   }
 
-  const title = item?.name || item?.title_it || "Lezione / Corso Atena";
+  const coursePrice = Number(item?.price || 0);
+  const isFeeAddedToOnlineTotal = feeCheckStatus === "not_paid" && includeRegistrationFee !== false;
+  const totalPrice = coursePrice + (isFeeAddedToOnlineTotal ? ANNUAL_REGISTRATION_FEE_EUR : 0);
+  const title = item?.title_it || item?.name || "Lezione / Corso Atena";
 
   return (
-    <main className="min-h-screen bg-white flex flex-col">
+    <main className="min-h-screen bg-slate-50/60 pt-20 pb-16 2xl:pt-24 2xl:pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-      {/* Top nav bar */}
-      <div className="border-b border-slate-100 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <Link
-            href={`/book/${type}/${id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-[#043569] transition-all group"
-          >
-            <CaretLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-            Torna alla selezione data e ora
-          </Link>
+        {/* TOP BREADCRUMB STEPS */}
+        <div className="max-w-3xl mx-auto mb-6 2xl:mb-8">
+          <div className="flex items-center justify-between relative">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-slate-200 -z-10" />
+
+            <div className="flex flex-col items-center gap-1 bg-slate-50 px-2">
+              <div className="w-8 h-8 rounded-full bg-[#043569] text-white flex items-center justify-center text-xs font-bold shadow-md">
+                <CheckCircle className="w-4 h-4" weight="fill" />
+              </div>
+              <span className="text-[10px] 2xl:text-xs font-bold text-[#043569]">Data e Orario</span>
+            </div>
+
+            <div className="flex flex-col items-center gap-1 bg-slate-50 px-2">
+              <div className="w-8 h-8 rounded-full bg-[#F8861D] text-white flex items-center justify-center text-xs font-bold shadow-md ring-4 ring-[#F8861D]/15">
+                <CreditCard className="w-4 h-4" weight="bold" />
+              </div>
+              <span className="text-[10px] 2xl:text-xs font-bold text-[#043569]">Dati e Pagamento</span>
+            </div>
+
+            <div className="flex flex-col items-center gap-1 bg-slate-50 px-2 opacity-50">
+              <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold">
+                3
+              </div>
+              <span className="text-[10px] 2xl:text-xs font-bold text-slate-400">Conferma</span>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-2.5 2xl:py-5 flex flex-col gap-2.5 2xl:gap-4">
+        {/* MAIN GRID */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 2xl:gap-8 items-start">
 
-          {/* Page header */}
-          <div className="max-w-2xl">
-            <h1 className="text-xl sm:text-2xl 2xl:text-3xl font-black tracking-tight text-[#043569] leading-tight">
-              Dettagli e pagamento
-            </h1>
-            <p className="text-xs 2xl:text-sm text-slate-500 font-medium mt-1 leading-relaxed">
-              Inserisci i tuoi dati personali per completare la prenotazione.
-            </p>
-          </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="lg:col-span-12 grid grid-cols-1 lg:grid-cols-12 gap-6 2xl:gap-8 items-start">
 
-          {/* Stepper */}
-          <div>
-            <CheckoutStepper currentStep={2} />
-          </div>
-
-          {/* Two-column layout */}
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid grid-cols-1 lg:grid-cols-[1fr_380px] 2xl:grid-cols-[1fr_420px] gap-5 2xl:gap-6 items-stretch"
-          >
-            {/* LEFT: Form */}
-            <div className="bg-white/80 backdrop-blur-sm border border-slate-100 rounded-2xl 2xl:rounded-3xl shadow-[0_2px_24px_rgba(4,53,105,0.06)] overflow-hidden flex flex-col h-full">
+            {/* LEFT FORM (7 cols) */}
+            <div className="lg:col-span-7 bg-white rounded-2xl 2xl:rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col h-full">
 
               {/* Section header */}
-              <div className="flex items-center justify-between px-4 pt-3 pb-2.5 border-b border-slate-100/80">
+              <div className="flex items-center justify-between px-4 pt-3.5 pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2.5">
                   <span className="w-6 h-6 2xl:w-7 2xl:h-7 rounded-lg bg-gradient-to-br from-[#F8861D] to-[#e07516] text-white text-[10px] 2xl:text-xs flex items-center justify-center font-black shadow-sm">
                     1
@@ -127,7 +125,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 )}
               </div>
 
-              <div className="p-3 2xl:p-4 space-y-2.5 2xl:space-y-3 flex flex-col flex-1">
+              <div className="p-4 2xl:p-5 space-y-3.5 2xl:space-y-4 flex flex-col flex-1">
                 {/* Login nudge for guests */}
                 {!user && (
                   <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-orange-50/60 border border-orange-100">
@@ -151,7 +149,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 )}
 
                 {/* Name row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 2xl:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
                       Nome *
@@ -190,11 +188,18 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 </div>
 
                 {/* Email & Phone row */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 2xl:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
-                      Email *
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
+                        Email *
+                      </label>
+                      {feeCheckStatus === "checking" && (
+                        <span className="text-[10px] text-[#043569] flex items-center gap-1 font-semibold animate-pulse">
+                          <Spinner className="w-3 h-3 animate-spin text-[#F8861D]" /> Verifico...
+                        </span>
+                      )}
+                    </div>
                     <div className="relative group">
                       <Envelope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#043569] transition-colors" />
                       <input
@@ -228,6 +233,26 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   </div>
                 </div>
 
+                {watch("isForChild") && (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
+                      Codice Fiscale genitore / acquirente * <span className="font-normal text-slate-400 normal-case">(per fattura)</span>
+                    </label>
+                    <div className="relative group">
+                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#043569] transition-colors" />
+                      <input
+                        {...register("purchaserTaxCode")}
+                        type="text"
+                        placeholder="PRTMRA80A01H501U"
+                        className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] focus:bg-white hover:border-slate-300 transition-all uppercase"
+                      />
+                    </div>
+                    {errors.purchaserTaxCode && (
+                      <p className="text-[10px] text-red-500 font-medium">{errors.purchaserTaxCode.message}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* Parent / Child toggle */}
                 <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
                   <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -241,7 +266,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     </span>
                   </label>
 
-                  {formMethods.watch("isForChild") && (
+                  {watch("isForChild") && (
                     <div className="space-y-3 pt-2 border-t border-slate-200/60">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1">
@@ -267,27 +292,37 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                           />
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
-                          <span>Email studente</span>
-                          <span className="font-normal text-slate-400 text-[9px] normal-case">(per l'accesso Google al pannello)</span>
-                        </label>
-                        <input
-                          {...register("studentEmail")}
-                          type="email"
-                          placeholder="studente@gmail.com"
-                          className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
-                        />
-                        {errors.studentEmail && (
-                          <p className="text-[10px] text-red-500">{errors.studentEmail.message}</p>
-                        )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Email studente <span className="font-normal text-slate-400 normal-case">(opzionale)</span>
+                          </label>
+                          <input
+                            {...register("studentEmail")}
+                            type="email"
+                            placeholder="email.studente@esempio.it"
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Telefono studente <span className="font-normal text-slate-400 normal-case">(opzionale)</span>
+                          </label>
+                          <input
+                            {...register("studentPhone")}
+                            type="tel"
+                            placeholder="+39 333 1234567"
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
+                          />
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
 
                 {/* Optional Student Birth Date & Tax Code */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 2xl:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
                       Data di nascita studente <span className="font-normal text-slate-400 normal-case">(opzionale)</span>
@@ -304,7 +339,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
 
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 select-none">
-                      Codice Fiscale / P.IVA <span className="font-normal text-slate-400 normal-case">(opzionale)</span>
+                      {watch("isForChild") ? "Codice Fiscale studente *" : "Codice Fiscale / P.IVA *"}
                     </label>
                     <div className="relative group">
                       <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#043569] transition-colors" />
@@ -315,32 +350,97 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                         className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] focus:bg-white hover:border-slate-300 transition-all uppercase"
                       />
                     </div>
+                    {errors.taxCode && (
+                      <p className="text-[10px] text-red-500 font-medium">{errors.taxCode.message}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Registration Fee Option */}
-                {!hasPaidAnnualFee ? (
-                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl">
-                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                      <input
-                        {...register("includeRegistrationFee")}
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-amber-300 text-[#043569] focus:ring-[#043569] mt-0.5"
-                      />
-                      <div className="text-xs">
-                        <span className="font-bold text-amber-950">
-                          Include Quota d'iscrizione annuale (30,00 €)
-                        </span>
-                        <p className="text-[11px] text-amber-800/80 mt-0.5 leading-relaxed">
-                          Quota obbligatoria valevole per l'Anno Accademico 2026/2027. Deseleziona solo se già versata o se desideri pagarla in contanti/POS direttamente in sede.
+                {/* PREMIUM SAAS REGISTRATION FEE PAYMENT METHOD BOX */}
+                {feeCheckStatus === "paid" && (
+                  <div key="fee-paid-badge" className="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-2xl flex items-center gap-3 text-xs text-emerald-950 font-semibold select-none shadow-sm">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <CheckCircle className="w-5 h-5" weight="fill" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-emerald-950 text-xs">Quota d'iscrizione annuale 2026/2027 già attiva</p>
+                      <p className="text-[11px] text-emerald-800 font-normal mt-0.5">Nessun costo aggiuntivo applicato (€0,00)</p>
+                    </div>
+                  </div>
+                )}
+
+                {feeCheckStatus === "not_paid" && (
+                  <div key="fee-not-paid-box" className="p-4 bg-gradient-to-b from-amber-50/90 to-amber-50/40 border border-amber-200/90 rounded-2xl space-y-3 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-900 text-[10px] font-black uppercase tracking-wider">
+                            Anno Accademico 2026/2027
+                          </span>
+                        </div>
+                        <h4 className="text-xs 2xl:text-sm font-bold text-amber-950 mt-1">
+                          Quota d'iscrizione annuale (30,00 €)
+                        </h4>
+                        <p className="text-[11px] text-amber-800/90 leading-relaxed mt-0.5">
+                          La quota associativa è obbligatoria per tutti i nuovi corsisti. Scegli come preferisci saldarla:
                         </p>
                       </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex items-center gap-2.5 text-xs text-emerald-900 font-semibold select-none">
-                    <CheckCircle className="w-4.5 h-4.5 text-emerald-600 shrink-0" weight="fill" />
-                    <span>Quota d'iscrizione annuale 2026/2027: GIÀ PAGATA (€0.00)</span>
+                    </div>
+
+                    {/* Radio cards selection */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      {/* Option 1: Pay online */}
+                      <label
+                        onClick={() => setValue("includeRegistrationFee", true)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${includeRegistrationFee !== false
+                            ? "bg-white border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+                            : "bg-white/60 border-amber-200/80 hover:bg-white hover:border-amber-300"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="feePaymentMethod"
+                          checked={includeRegistrationFee !== false}
+                          onChange={() => setValue("includeRegistrationFee", true)}
+                          className="mt-0.5 text-[#043569] focus:ring-[#043569]"
+                        />
+                        <div className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <CreditCard className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                            <span className="font-bold text-[#043569]">Paga ora online</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-tight mt-1">
+                            Aggiungi 30,00 € al totale del pagamento con carta.
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Option 2: Pay on site */}
+                      <label
+                        onClick={() => setValue("includeRegistrationFee", false)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-2.5 ${includeRegistrationFee === false
+                            ? "bg-white border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+                            : "bg-white/60 border-amber-200/80 hover:bg-white hover:border-amber-300"
+                          }`}
+                      >
+                        <input
+                          type="radio"
+                          name="feePaymentMethod"
+                          checked={includeRegistrationFee === false}
+                          onChange={() => setValue("includeRegistrationFee", false)}
+                          className="mt-0.5 text-[#043569] focus:ring-[#043569]"
+                        />
+                        <div className="text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <Storefront className="w-3.5 h-3.5 text-amber-700" weight="bold" />
+                            <span className="font-bold text-amber-950">Paga in sede alla prima lezione</span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-tight mt-1">
+                            Salderai i 30,00 € in contanti o POS direttamente a scuola.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 )}
 
@@ -353,14 +453,14 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   <textarea
                     {...register("notes")}
                     placeholder="Esempio: Livello attuale, obiettivi o richieste particolari..."
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] focus:bg-white hover:border-slate-300 transition-all resize-none flex-1 min-h-[90px]"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] focus:bg-white hover:border-slate-300 transition-all resize-none flex-1 min-h-[80px]"
                   />
                 </div>
               </div>
             </div>
 
             {/* RIGHT: Dark sidebar */}
-            <div className="lg:sticky lg:top-6 flex flex-col h-full">
+            <div className="lg:col-span-5 lg:sticky lg:top-6 flex flex-col h-full">
               <div className="bg-[#062d5e] rounded-2xl 2xl:rounded-3xl overflow-hidden shadow-2xl shadow-[#043569]/20 flex flex-col h-full">
 
                 {/* Sidebar header */}
@@ -429,18 +529,24 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                     </div>
                   )}
 
-                  {/* Price breakdown */}
+                  {/* Dynamic Price breakdown */}
                   <div className="space-y-1.5 pt-2.5 border-t border-white/10">
                     <div className="flex justify-between text-xs">
                       <span className="text-white/50">Prezzo corso</span>
-                      <span className="font-bold text-white">€{Number(item?.price || 0).toFixed(2)}</span>
+                      <span className="font-bold text-white">€{coursePrice.toFixed(2)}</span>
                     </div>
-                    {formMethods.watch("includeRegistrationFee") !== false && (
+
+                    {feeCheckStatus === "not_paid" && (
                       <div className="flex justify-between text-xs">
                         <span className="text-white/50">Quota iscrizione annuale</span>
-                        <span className="font-bold text-amber-400">€{ANNUAL_REGISTRATION_FEE_EUR.toFixed(2)}</span>
+                        {includeRegistrationFee !== false ? (
+                          <span className="font-bold text-amber-400">€{ANNUAL_REGISTRATION_FEE_EUR.toFixed(2)}</span>
+                        ) : (
+                          <span className="font-semibold text-amber-300/80 text-[11px]">Da saldare in sede (€30,00)</span>
+                        )}
                       </div>
                     )}
+
                     <div className="flex justify-between text-xs">
                       <span className="text-white/50">Commissioni</span>
                       <span className="font-bold text-emerald-400">Gratis</span>
@@ -452,15 +558,11 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 <div className="px-4 2xl:px-5 py-2.5 2xl:py-3 space-y-2 2xl:space-y-2.5">
                   <div className="flex items-baseline justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-widest text-white/40 select-none">
-                      Totale
+                      Totale online
                     </span>
                     <div className="text-right">
                       <span className="text-xl 2xl:text-2xl font-black text-white">
-                        {(
-                          Number(item?.price || 0) +
-                          (formMethods.watch("includeRegistrationFee") !== false ? ANNUAL_REGISTRATION_FEE_EUR : 0)
-                        ).toFixed(2)}{" "}
-                        €
+                        {totalPrice.toFixed(2)} €
                       </span>
                     </div>
                   </div>

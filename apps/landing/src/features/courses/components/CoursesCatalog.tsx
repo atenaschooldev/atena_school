@@ -1,80 +1,23 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import CourseCard from "./CourseCard";
-
-interface CleanCourse {
-  id: string;
-  title: string;
-  description: string;
-  image: any;
-  price?: string;
-  type: "course" | "shop";
-  teacher_name?: string;
-  lessons_per_week?: number | null;
-  lesson_duration_minutes?: number | null;
-  total_hours?: number | null;
-  total_lessons?: number | null;
-  course_format?: string | null;
-  schedule_days?: number[] | null;
-  start_time?: string | null;
-  end_time?: string | null;
-}
-
-interface CleanSection {
-  id: string;
-  title: string;
-  courses: CleanCourse[];
-}
+import { useCoursesCatalog, CleanSection } from "../hooks/useCoursesCatalog";
 
 interface CoursesCatalogProps {
   sections: CleanSection[];
 }
 
 export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // Build tabs: "all" + all sections
-  const tabs = useMemo(() => {
-    return [
-      { id: "all", title: "Tutti i corsi" },
-      ...sections.map((s) => ({ id: s.id, title: s.title })),
-    ];
-  }, [sections]);
-
-  // Filter courses based on activeTab and searchQuery
-  const filteredSections = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-
-    return sections
-      .map((section) => {
-        // If not "all" tab, filter out non-matching sections
-        if (activeTab !== "all" && section.id !== activeTab) {
-          return null;
-        }
-
-        // Filter courses by search query
-        const matchedCourses = section.courses.filter((course) => {
-          if (!query) return true;
-          return (
-            course.title.toLowerCase().includes(query) ||
-            course.description.toLowerCase().includes(query)
-          );
-        });
-
-        if (matchedCourses.length === 0) {
-          return null;
-        }
-
-        return {
-          ...section,
-          courses: matchedCourses,
-        };
-      })
-      .filter((s): s is CleanSection => s !== null);
-  }, [sections, activeTab, searchQuery]);
+  const {
+    activeTab,
+    setActiveTab,
+    searchQuery,
+    setSearchQuery,
+    tabs,
+    filteredSections,
+  } = useCoursesCatalog(sections);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">

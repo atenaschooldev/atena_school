@@ -12,11 +12,14 @@ export interface CheckoutFormValues {
   lastName: string;
   email: string;
   phone: string;
+  purchaserTaxCode?: string;
   isForChild?: boolean;
   studentFirstName?: string;
   studentLastName?: string;
+  studentEmail?: string;
+  studentPhone?: string;
   studentBirthDate?: string;
-  taxCode?: string;
+  taxCode: string;
   includeRegistrationFee?: boolean;
   notes?: string;
 }
@@ -28,13 +31,13 @@ export interface BookingItem {
   price: string | number;
   description_it?: string;
   image_url?: string;
+  teacher_name?: string;
 }
 import {
   fetchCheckoutItemAction,
   createOrUpdateReservationServerAction,
   initiateStripePaymentAction,
   getCurrentUserAction,
-  updateUserPhoneAction,
   checkRegistrationFeeStatusAction,
 } from "@/app/actions/booking";
 
@@ -43,16 +46,44 @@ export const checkoutSchema = z.object({
   lastName: z.string().min(2, "Il cognome deve avere almeno 2 caratteri"),
   email: z.string().email("Inserisci un indirizzo email valido"),
   phone: z.string().min(6, "Inserisci un numero di telefono valido"),
+  purchaserTaxCode: z.string().optional(),
   isForChild: z.boolean().optional(),
   studentFirstName: z.string().optional(),
   studentLastName: z.string().optional(),
+  studentEmail: z.string().email("Inserisci un indirizzo email valido per lo studente").optional().or(z.literal("")),
+  studentPhone: z.string().optional(),
   studentBirthDate: z.string().optional(),
-  taxCode: z.string().optional(),
+  taxCode: z.string().min(11, "Il Codice Fiscale dello studente è obbligatorio (almeno 11 caratteri)"),
   includeRegistrationFee: z.boolean().optional(),
   notes: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.isForChild) {
+    if (!data.studentFirstName || data.studentFirstName.trim().length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["studentFirstName"],
+        message: "Il nome dello studente è obbligatorio",
+      });
+    }
+    if (!data.studentLastName || data.studentLastName.trim().length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["studentLastName"],
+        message: "Il cognome dello studente è obbligatorio",
+      });
+    }
+    if (!data.purchaserTaxCode || data.purchaserTaxCode.trim().length < 11) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["purchaserTaxCode"],
+        message: "Il Codice Fiscale del genitore/acquirente è obbligatorio per la fattura",
+      });
+    }
+  }
 });
 
 export type SubmitAction = "book" | "pay";
+export type FeeCheckStatus = "initial" | "checking" | "paid" | "not_paid";
 
 export function useCheckout(type: string, id: string) {
   const router = useRouter();
@@ -60,9 +91,9 @@ export function useCheckout(type: string, id: string) {
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
-  const slotIdParam = searchParams.get("slotId");
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
+  const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
@@ -76,9 +107,12 @@ export function useCheckout(type: string, id: string) {
       lastName: "",
       email: "",
       phone: "",
+      purchaserTaxCode: "",
       isForChild: false,
       studentFirstName: "",
       studentLastName: "",
+      studentEmail: "",
+      studentPhone: "",
       studentBirthDate: "",
       taxCode: "",
       includeRegistrationFee: true,
@@ -106,13 +140,15 @@ export function useCheckout(type: string, id: string) {
 
           const hasPaidFee = userRes.annualFeePaid ?? false;
           setHasPaidAnnualFee(hasPaidFee);
+          setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
 
-          // reset() pre-populates all fields atomically, even after first render
           reset({
             email: currentUser.email || "",
             phone: phone,
             firstName: parts[0] || "",
             lastName: parts.slice(1).join(" ") || "",
+            taxCode: currentUser.user_metadata?.tax_code || "",
+            purchaserTaxCode: currentUser.user_metadata?.tax_code || "",
             includeRegistrationFee: !hasPaidFee,
             notes: "",
           });
@@ -130,25 +166,42 @@ export function useCheckout(type: string, id: string) {
   const watchedEmail = formMethods.watch("email");
   const watchedPhone = formMethods.watch("phone");
   const watchedTaxCode = formMethods.watch("taxCode");
+  const watchedStudentEmail = formMethods.watch("studentEmail");
+  const watchedStudentPhone = formMethods.watch("studentPhone");
+  const watchedIsForChild = formMethods.watch("isForChild");
 
   useEffect(() => {
-    if (!watchedEmail && !watchedPhone && !watchedTaxCode) return;
+    const targetTaxCode = watchedTaxCode;
+    const targetEmail = watchedIsForChild && watchedStudentEmail ? watchedStudentEmail : watchedEmail;
+    const targetPhone = watchedIsForChild && watchedStudentPhone ? watchedStudentPhone : watchedPhone;
+
+    if (!targetTaxCode && !targetEmail && !targetPhone) return;
+
+    const hasValidInput = (targetTaxCode && targetTaxCode.length >= 11) ||
+                          (targetEmail && targetEmail.includes("@")) ||
+                          (targetPhone && targetPhone.length >= 8);
+
+    if (!hasValidInput) return;
+
+    setFeeCheckStatus("checking");
 
     const timer = setTimeout(async () => {
-      const res = await checkRegistrationFeeStatusAction(watchedEmail, watchedPhone, watchedTaxCode);
+      const res = await checkRegistrationFeeStatusAction(targetEmail, targetPhone, targetTaxCode);
       if (res.success && res.annualFeePaid) {
         setHasPaidAnnualFee(true);
+        setFeeCheckStatus("paid");
         formMethods.setValue("includeRegistrationFee", false);
-      } else if (res.success && !res.annualFeePaid && !user) {
+      } else if (res.success && !res.annualFeePaid) {
         setHasPaidAnnualFee(false);
+        setFeeCheckStatus("not_paid");
       }
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, formMethods, user]);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
 
-  const effectiveDate = dateParam || "da_concordare";
-  const effectiveTime = timeParam || "da_concordare";
+  const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
+  const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
 
   const handleBook = async (values: CheckoutFormValues) => {
     if (!item) {
@@ -203,37 +256,37 @@ export function useCheckout(type: string, id: string) {
       });
 
       if (!res.success || !res.url) {
-        toast.error(res.error || "Errore nell'avvio del pagamento");
+        toast.error(res.error || "Impossibile avviare il pagamento con Stripe");
         return;
       }
 
       window.location.href = res.url;
     } catch (err: any) {
-      toast.error(err.message || "Errore imprevisto");
+      toast.error(err.message || "Errore durante l'avvio del pagamento");
     } finally {
       setSubmitting(false);
     }
   };
 
   const onSubmit = (values: CheckoutFormValues) => {
-    if (actionRef.current === "book") {
-      handleBook(values);
-    } else {
+    if (actionRef.current === "pay") {
       handlePay(values);
+    } else {
+      handleBook(values);
     }
   };
 
   return {
+    formMethods,
     item,
     loading,
     submitting,
+    hasPaidAnnualFee,
+    feeCheckStatus,
     user,
     dateParam,
     timeParam,
-    slotIdParam,
-    hasPaidAnnualFee,
     actionRef,
-    formMethods,
     onSubmit,
   };
 }

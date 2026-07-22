@@ -16,29 +16,37 @@ Deno.serve(async (req) => {
 
     const {
       itemType, itemId, date, time, firstName, lastName, customerEmail, phone, notes,
-      studentBirthDate, taxCode, isForChild, studentFirstName, studentLastName, studentEmail: studentEmailParam,
+      studentBirthDate, taxCode, purchaserTaxCode: purchaserTaxCodeParam, isForChild, studentFirstName, studentLastName, studentEmail: studentEmailParam, studentPhone: studentPhoneParam,
       includeRegistrationFee, guestSessionId, origin,
     } = await req.json();
 
     const purchaserName = `${firstName} ${lastName}`.trim();
+    const cleanEmail = customerEmail ? String(customerEmail).trim().toLowerCase() : null;
+    const cleanPhone = phone ? String(phone).trim() : null;
+    const cleanStudentTaxCode = taxCode ? String(taxCode).trim().toUpperCase() : null;
+
+    const cleanPurchaserTaxCode = isForChild && purchaserTaxCodeParam && String(purchaserTaxCodeParam).trim() !== ""
+      ? String(purchaserTaxCodeParam).trim().toUpperCase()
+      : cleanStudentTaxCode;
+
     const studentName = isForChild && studentFirstName
       ? `${studentFirstName} ${studentLastName || ""}`.trim()
       : purchaserName;
 
-    const actualStudentEmail = isForChild && studentEmailParam && studentEmailParam.trim() !== ""
-      ? studentEmailParam.trim().toLowerCase()
-      : customerEmail;
+    const actualStudentEmail = isForChild && studentEmailParam && String(studentEmailParam).trim() !== ""
+      ? String(studentEmailParam).trim().toLowerCase()
+      : cleanEmail;
+
+    const actualStudentPhone = isForChild && studentPhoneParam && String(studentPhoneParam).trim() !== ""
+      ? String(studentPhoneParam).trim()
+      : cleanPhone;
 
     const supabaseAdmin = createSupabaseAdmin();
 
     // SERVER-AUTHORITATIVE ZERO-TRUST ANNUAL MEMBERSHIP CHECK
-    const cleanTaxCode = taxCode ? String(taxCode).trim().toUpperCase() : null;
-    const cleanEmail = customerEmail ? String(customerEmail).trim().toLowerCase() : null;
-    const cleanPhone = phone ? String(phone).trim() : null;
-
     let hasActiveMembership = false;
 
-    if (cleanTaxCode || cleanEmail || cleanPhone) {
+    if (cleanStudentTaxCode || actualStudentEmail || actualStudentPhone) {
       let mQuery = supabaseAdmin
         .from("annual_memberships")
         .select("id")
@@ -46,9 +54,9 @@ Deno.serve(async (req) => {
         .eq("status", "active");
 
       const conds: string[] = [];
-      if (cleanTaxCode) conds.push(`tax_code.ilike.${cleanTaxCode}`);
-      if (cleanEmail) conds.push(`email.ilike.${cleanEmail}`);
-      if (cleanPhone) conds.push(`phone.eq.${cleanPhone}`);
+      if (cleanStudentTaxCode) conds.push(`tax_code.ilike.${cleanStudentTaxCode}`);
+      if (actualStudentEmail) conds.push(`email.ilike.${actualStudentEmail}`);
+      if (actualStudentPhone) conds.push(`phone.eq.${actualStudentPhone}`);
 
       if (conds.length > 0) {
         mQuery = mQuery.or(conds.join(","));
@@ -98,11 +106,11 @@ Deno.serve(async (req) => {
     }
 
     const todayStr = new Date().toISOString().split("T")[0];
-    const finalBookingDate = (date && date !== "da_concordare") ? date : todayStr;
-    const courseScheduleTime = (itemData.start_time && itemData.end_time) ? `${itemData.start_time}-${itemData.end_time}` : null;
-    const finalBookingTime = (time && time !== "da_concordare" && String(time).trim() !== "") ? time : courseScheduleTime;
+    const isFlexible = itemData.schedule_type === "flexible" || !date || (!itemData.schedule_days || itemData.schedule_days.length === 0);
+    const finalBookingDate = date || todayStr;
 
-    const isFlexible = itemData.schedule_type === "flexible" || finalBookingTime === "Da concordare";
+    const courseScheduleTime = (itemData.start_time && itemData.end_time) ? `${itemData.start_time}-${itemData.end_time}` : null;
+    const finalBookingTime = isFlexible ? null : (time || courseScheduleTime);
     const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
 
     const totalAmount = unitAmount + regFeeAmount;
@@ -118,11 +126,15 @@ Deno.serve(async (req) => {
         start_date: finalBookingDate,
         booking_time: finalBookingTime,
         purchaser_name: purchaserName,
+        purchaser_email: cleanEmail,
+        purchaser_phone: cleanPhone,
+        purchaser_tax_code: cleanPurchaserTaxCode,
         student_name: studentName,
-        student_birth_date: validBirthDate,
-        tax_code: taxCode && taxCode.trim() !== "" ? taxCode.trim() : null,
         student_email: actualStudentEmail,
-        student_phone: phone,
+        student_phone: actualStudentPhone,
+        student_tax_code: cleanStudentTaxCode,
+        student_birth_date: validBirthDate,
+        tax_code: cleanStudentTaxCode,
         notes: notes ?? "",
         payment_status: "pending_payment",
         booking_status: "active",

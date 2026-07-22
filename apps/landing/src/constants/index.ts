@@ -4,5 +4,6 @@ export * from "./booking";
 export * from "./lessons";
 export * from "./students";
 export * from "./courses";
+export * from "./teachers";
 export * from "./cookies";
 export * from "./routes";

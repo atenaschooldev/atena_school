@@ -1,53 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
-import { Link, useRouter } from "@/i18n/routing";
-import { toast } from "sonner";
+import { Link } from "@/i18n/routing";
 import { Envelope, Lock, User, Eye, EyeSlash } from "@phosphor-icons/react";
-import { mergeGuestBookings } from "@/lib/utils";
 import Image from "next/image";
 import logo from "@/assets/logo.webp";
-import { loginWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
+import { useLoginForm } from "@/features/auth/hooks/useLoginForm";
 
 function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-
-  const redirectUrl = searchParams.get("redirect") || "/";
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const res = await loginWithEmailAction({ email, password });
-
-    if (!res.success) {
-      toast.error(res.error || "Errore durante l'accesso");
-    } else if (res.user) {
-      await mergeGuestBookings(null, res.user.id);
-      toast.success("Acceduto con successo!");
-      router.push(redirectUrl);
-      router.refresh();
-    }
-    setLoading(false);
-  };
-
-  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
-    const res = await getOAuthUrlAction({ provider, redirectTo });
-
-    if (res.success && res.url) {
-      window.location.href = res.url;
-    } else {
-      toast.error(res.error || "Impossibile avviare l'accesso social");
-    }
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    showPassword,
+    setShowPassword,
+    handleLogin,
+    handleOAuthLogin,
+  } = useLoginForm();
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">

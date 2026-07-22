@@ -356,16 +356,14 @@ The central ledger recording purchases, online/offline reservations, and active 
 | **`total_lessons_count`**| `integer` | YES | `NULL` | Purchased lesson quota (snapshot recorded at checkout). |
 | **`discount_amount`** | `numeric` | YES | `0` | Discount applied in EUR. |
 | **`promo_code`** | `text` | YES | `NULL` | Promo code string used during checkout. |
-| **`tax_code`** | `text` | YES | `NULL` | Purchaser's Italian Tax Code (*Codice Fiscale* / *P.IVA*). |
-| **`sdi_code`** | `text` | YES | `NULL` | Italian Electronic Invoicing SDI Code (*Codice Destinatario*). |
-| **`pec_email`** | `text` | YES | `NULL` | Certified Electronic Mail address (*Posta Elettronica Certificata*). |
-| **`start_date`** | `date` | YES | `NULL` | First scheduled lesson date or subscription start date. |
-| **`booking_time`** | `text` | YES | `NULL` | Selected time slot string (e.g., `"15:00 - 16:15"`). Stored as `NULL` if flexible/unscheduled. |
-| **`purchaser_name`** | `text` | YES | `NULL` | Purchaser full name (adult student or parent) captured at checkout. |
-| **`student_name`** | `text` | NO | *None* | Student full name entered at checkout. |
-| **`student_birth_date`**| `date` | YES | `NULL` | Student's date of birth captured at checkout. |
-| **`student_email`** | `text` | NO | *None* | Student/parent email entered at checkout. |
-| **`student_phone`** | `text` | YES | `NULL` | Student/parent contact phone. |
+| **`purchaser_name`** | `text` | YES | `NULL` | Full name of purchaser/payer (adult or parent). |
+| **`purchaser_email`** | `text` | YES | `NULL` | Billing/checkout email address of purchaser/payer. |
+| **`purchaser_phone`** | `text` | YES | `NULL` | Billing/contact phone number of purchaser/payer. |
+| **`purchaser_tax_code`** | `text` | YES | `NULL` | Purchaser's Italian Tax Code (*Codice Fiscale* / *P.IVA*). |
+| **`student_name`** | `text` | NO | *None* | Full name of actual student (child or adult self). |
+| **`student_email`** | `text` | NO | *None* | Email address of student (child or adult self). |
+| **`student_phone`** | `text` | YES | `NULL` | Phone number of student (child or adult self). |
+| **`student_tax_code`** | `text` | YES | `NULL` | Student's mandatory Italian Tax Code (*Codice Fiscale*). |
 | **`notes`** | `text` | YES | `NULL` | Special customer requests or checkout notes. |
 | **`subscription_starts_at`**| `timestamptz` | YES | `NULL` | Exact subscription window start timestamp. |
 | **`subscription_ends_at`**  | `timestamptz` | YES | `NULL` | Exact subscription window end timestamp (+1 month). |

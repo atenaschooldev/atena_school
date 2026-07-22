@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { 
   ShoppingBag, 
@@ -12,81 +11,16 @@ import {
   ArrowRight,
   ShieldCheck
 } from "@phosphor-icons/react";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link } from "@/i18n/routing";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { getSessionId } from "@/lib/utils";
-import { toast } from "sonner";
-import { deleteBookingServerAction, checkoutCartServerAction, fetchCartItemsAction } from "@/app/actions/booking";
-
-interface CartBooking {
-  id: string;
-  item_id: string;
-  item_type: string;
-  booking_date: string;
-  booking_time: string;
-  status: string;
-}
+import { useCart } from "@/features/cart/hooks/useCart";
 
 export default function CartPage() {
   const t = useTranslations("cart");
-  const router = useRouter();
   const dateLocale = it;
 
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
-
-  useEffect(() => {
-    async function fetchCart() {
-      try {
-        const sid = getSessionId();
-        const res = await fetchCartItemsAction(sid);
-        if (res.success) {
-          setBookings(res.bookings || []);
-        } else {
-          console.error("Fetch cart error:", res.error);
-        }
-      } catch (error) {
-        console.error("Cart page fetching error:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCart();
-  }, []);
-
-  const removeItem = async (id: string) => {
-    const sid = getSessionId();
-    const res = await deleteBookingServerAction(id, sid);
-    if (res.success) {
-      setBookings(prev => prev.filter(b => b.id !== id));
-      window.dispatchEvent(new Event("cartUpdated"));
-      toast.success("Rimosso dal carrello");
-    } else {
-      toast.error(res.error || "Errore durante la rimozione");
-    }
-  };
-
-  const handleCheckout = async () => {
-    setProcessing(true);
-    const sid = getSessionId();
-    
-    // Simulate payment delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const res = await checkoutCartServerAction(sid);
-
-    if (res.success) {
-      window.dispatchEvent(new Event("cartUpdated"));
-      toast.success("Pagamento completato!");
-      setBookings([]);
-      router.push("/dashboard");
-    } else {
-      toast.error(res.error || "Errore durante il pagamento");
-    }
-    setProcessing(false);
-  };
+  const { bookings, loading, processing, removeItem, handleCheckout } = useCart();
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { use } from "react";
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -14,67 +14,48 @@ import {
   Plus,
   X
 } from "@phosphor-icons/react";
-import { format, isFuture, parseISO, startOfDay, isBefore } from "date-fns";
+import { format, isFuture, parseISO, isBefore, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { Link } from "@/i18n/routing";
-import { getBookingLessonsAction, scheduleNextLessonAction } from "@/app/actions/dashboard";
-import { toast } from "sonner";
-import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
-
-interface Lesson {
-  id: string;
-  booking_id: string;
-  starts_at: string;
-  ends_at: string;
-  status: string;
-  created_at: string;
-}
-
-const TIME_SLOTS = [
-  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00"
-];
+import { useBookingDetail, TIME_SLOTS } from "@/features/dashboard/hooks/useBookingDetail";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const bookingId = resolvedParams.id;
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [booking, setBooking] = useState<any>(null);
-  const [course, setCourse] = useState<any>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalDate, setModalDate] = useState("");
-  const [modalTime, setModalTime] = useState("10:00");
-  const [scheduling, setScheduling] = useState(false);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const res = await getBookingLessonsAction(bookingId);
-        if (res.success) {
-          setBooking(res.booking);
-          setCourse(res.course);
-          setLessons(res.lessons);
-        } else {
-          setError(res.error || "Impossibile caricare i dati della prenotazione");
-        }
-      } catch (err: any) {
-        setError(err.message || "Errore durante il caricamento");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
-  }, [bookingId, refreshTrigger]);
+  const {
+    loading,
+    error,
+    booking,
+    course,
+    lessons,
+    courseTitle,
+    teacherName,
+    coursePrice,
+    regFee,
+    totalAmount,
+    maxLessons,
+    completedLessons,
+    totalLessons,
+    progressPercent,
+    canScheduleMore,
+    activeTab,
+    setActiveTab,
+    currentMonth,
+    days,
+    getLessonsForDate,
+    handlePrevMonth,
+    handleNextMonth,
+    isModalOpen,
+    setIsModalOpen,
+    modalDate,
+    setModalDate,
+    modalTime,
+    setModalTime,
+    scheduling,
+    handleOpenScheduleModal,
+    handleConfirmSchedule,
+  } = useBookingDetail(bookingId);
 
   if (loading) {
     return (
@@ -105,117 +86,6 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
       </main>
     );
   }
-
-  const courseTitle = course?.name || course?.title_it || "Corso di Lingua";
-  const teacherName = course?.teacher_name || "Staff Atena";
-  const rawCoursePrice = course?.price
-    ? parseFloat(String(course.price).replace(/[^0-9.,]/g, "").replace(",", "."))
-    : 0;
-  const regFee = Number(booking?.registration_fee || 0);
-  const totalAmount = Number(booking?.amount_paid || 0);
-  const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, totalAmount - regFee);
-
-  // Determine limits
-  const isFixedSchedule = course?.schedule_type === "fixed";
-
-  const bdate = booking.start_date || booking.booking_date;
-  const maxLessons = isFixedSchedule
-    ? lessons.length
-    : getDynamicMaxLessons(course?.name || "", bdate, course?.category || "", course?.lessons_per_week);
-
-  // Calculate progress
-  const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;
-  const totalLessons = lessons.length;
-  const progressPercent = maxLessons > 0 ? Math.round((completedLessons / maxLessons) * 100) : 0;
-  const canScheduleMore = totalLessons < maxLessons;
-
-  // Calendar builder
-  const year = currentMonth.getFullYear();
-  const month = currentMonth.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-
-  // Weekdays alignment: 0 = Sun, 1 = Mon ...
-  const startDayOfWeek = firstDay.getDay();
-  const blanks = startDayOfWeek === 0 ? 6 : startDayOfWeek - 1; // Align to Monday as 1st day
-  const daysInMonth = lastDay.getDate();
-
-  const days = [];
-  for (let i = 0; i < blanks; i++) {
-    days.push({ day: null, date: null });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(year, month, d);
-    days.push({ day: d, date });
-  }
-
-  const getLessonsForDate = (date: Date | null) => {
-    if (!date) return [];
-    return lessons.filter((l) => {
-      const lDate = new Date(l.starts_at);
-      return (
-        lDate.getFullYear() === date.getFullYear() &&
-        lDate.getMonth() === date.getMonth() &&
-        lDate.getDate() === date.getDate()
-      );
-    });
-  };
-
-  const handlePrevMonth = () => {
-    setCurrentMonth(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentMonth(new Date(year, month + 1, 1));
-  };
-
-  // Open modal handler
-  const handleOpenScheduleModal = (dateObj?: Date) => {
-    if (!canScheduleMore) {
-      toast.error(`Hai già programmato tutte le lezioni disponibili per questo pacchetto (${maxLessons}/${maxLessons}).`);
-      return;
-    }
-
-    if (dateObj) {
-      const today = startOfDay(new Date());
-      if (isBefore(startOfDay(dateObj), today)) {
-        toast.error("Non puoi programmare una lezione nel passato.");
-        return;
-      }
-      setModalDate(format(dateObj, "yyyy-MM-dd"));
-    } else {
-      // Prefill with tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setModalDate(format(tomorrow, "yyyy-MM-dd"));
-    }
-    setModalTime("10:00");
-    setIsModalOpen(true);
-  };
-
-  const handleConfirmSchedule = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!modalDate || !modalTime) {
-      toast.error("Seleziona data e orario");
-      return;
-    }
-
-    setScheduling(true);
-    try {
-      const res = await scheduleNextLessonAction(bookingId, modalDate, modalTime);
-      if (res.success) {
-        toast.success("Lezione programmata con successo!");
-        setIsModalOpen(false);
-        setRefreshTrigger(prev => prev + 1);
-      } else {
-        toast.error(res.error || "Errore durante la pianificazione");
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Errore durante la pianificazione");
-    } finally {
-      setScheduling(false);
-    }
-  };
 
   return (
     <main className="min-h-screen pt-8 md:pt-16 pb-16 px-4 bg-[#f8f9fa]">

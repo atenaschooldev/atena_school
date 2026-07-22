@@ -1,10 +1,10 @@
 export const BOOKING_PAYMENT_STATUS = {
-  PAID: "paid",
-  RESERVED: "reserved",
   PENDING_PAYMENT: "pending_payment",
-  PENDING: "pending",
+  RESERVED: "reserved",
+  PAID: "paid",
   REFUNDED: "refunded",
-  CANCELLED: "cancelled",
+  PARTIALLY_REFUNDED: "partially_refunded",
+  DISPUTED: "disputed",
   FAILED: "failed",
 } as const;
 
@@ -12,27 +12,50 @@ export const BOOKING_STATUS = {
   ACTIVE: "active",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
-  EXPIRED: "expired",
-  REFUNDED: "refunded",
 } as const;
 
-export const BOOKING_SCHEDULING_STATUS = {
+export const SCHEDULING_STATUS = {
   SCHEDULED: "scheduled",
   PENDING_COORDINATION: "pending_coordination",
-  COMPLETED: "completed",
 } as const;
 
-export const BOOKING_PAYMENT_METHOD = {
+export const PAYMENT_METHOD = {
   STRIPE: "stripe",
-  CARD: "card",
-  BANK_TRANSFER: "bank_transfer",
-  BONIFICO: "bonifico",
   CASH: "cash",
-  IN_PERSON: "in_person",
   POS: "pos",
+  BANK_TRANSFER: "bank_transfer",
 } as const;
 
-// Aliases for backwards compatibility
+export const SCHEDULE_TYPE = {
+  FIXED: "fixed",
+  FLEXIBLE: "flexible",
+} as const;
+
+export const ACADEMIC_YEAR = {
+  CURRENT: "2026/2027",
+  NEXT: "2027/2028",
+} as const;
+
+export const MEMBERSHIP_STATUS = {
+  ACTIVE: "active",
+  EXPIRED: "expired",
+  CANCELLED: "cancelled",
+} as const;
+
+export const PAYMENT_TYPE = {
+  PAYMENT: "payment",
+  REGISTRATION_FEE: "registration_fee",
+  INSTALLMENT: "installment",
+  REFUND: "refund",
+  ADJUSTMENT: "adjustment",
+} as const;
+
+export const USER_ROLE = {
+  STUDENT: "student",
+  TEACHER: "teacher",
+  ADMIN: "admin",
+  PARENT: "parent",
+} as const;
+
+// Aliases for clean imports
 export const PAYMENT_STATUS = BOOKING_PAYMENT_STATUS;
-export const SCHEDULING_STATUS = BOOKING_SCHEDULING_STATUS;
-export const PAYMENT_METHOD = BOOKING_PAYMENT_METHOD;

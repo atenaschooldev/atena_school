@@ -47,7 +47,7 @@ export function useBooking(type: string, id: string, initialItem: any, initialUs
 
   const handleContinue = () => {
     if (isFlexibleSchedule) {
-      router.push(`/checkout/${type}/${id}?date=da_concordare&time=da_concordare`);
+      router.push(`/checkout/${type}/${id}`);
       return;
     }
     if (!selectedDate || !selectedTime) return;

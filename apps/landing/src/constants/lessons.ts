@@ -3,23 +3,37 @@ export const LESSON_STATUS = {
   COMPLETED: "completed",
   CANCELLED: "cancelled",
   RESCHEDULED: "rescheduled",
-  NO_SHOW: "no_show",
 } as const;
 
 export const LESSON_LOCATION_TYPE = {
   IN_PERSON: "in_person",
   ONLINE: "online",
+  HYBRID: "hybrid",
 } as const;
 
-export const DEFAULT_LESSON_DURATION_MINUTES = 60;
+export const ATTENDANCE_STATUS = {
+  PRESENT: "present",
+  ABSENT: "absent",
+  EXCUSED: "excused",
+  LATE: "late",
+} as const;
 
-// Time slots available for flexible individual lesson scheduling
+export const SCHEDULE_LESSON_TYPE = {
+  GROUP: "group",
+  PRIVATE: "private",
+  CERTIFICATION: "certification",
+  TRIAL: "trial",
+} as const;
+
 export const FLEXIBLE_LESSON_TIME_SLOTS = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-  "18:00", "18:30", "19:00", "19:30"
+  "09:00-10:00",
+  "10:00-11:00",
+  "11:00-12:00",
+  "14:00-15:00",
+  "15:00-16:00",
+  "16:00-17:00",
+  "17:00-18:00",
+  "18:00-19:00",
 ] as const;
 
-// Aliases for backwards compatibility
-export const LOCATION_TYPE = LESSON_LOCATION_TYPE;
-export const TIME_SLOTS = FLEXIBLE_LESSON_TIME_SLOTS;
+export const DEFAULT_LESSON_TIME_SLOTS = FLEXIBLE_LESSON_TIME_SLOTS;

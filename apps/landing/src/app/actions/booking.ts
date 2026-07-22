@@ -36,12 +36,15 @@ async function fetchItemData(adminClient: any, itemType: string, itemId: string)
   // 1. Search in courses by id
   const { data: course } = await adminClient
     .from("courses")
-    .select("*")
+    .select("*, teachers!courses_teacher_id_fkey(full_name)")
     .eq("id", itemId)
     .maybeSingle();
 
   if (course) {
     item = course;
+    if (course.teachers?.full_name) {
+      item.teacher_name = course.teachers.full_name;
+    }
   } else {
     // 2. Search in shop_items by id
     const { data: shopItem } = await adminClient
@@ -56,15 +59,20 @@ async function fetchItemData(adminClient: any, itemType: string, itemId: string)
       // 3. Search in courses by slug / name match
       const { data: byName } = await adminClient
         .from("courses")
-        .select("*")
+        .select("*, teachers!courses_teacher_id_fkey(full_name)")
         .ilike("name", `%${itemId}%`)
         .maybeSingle();
 
-      if (byName) item = byName;
+      if (byName) {
+        item = byName;
+        if (byName.teachers?.full_name) {
+          item.teacher_name = byName.teachers.full_name;
+        }
+      }
     }
   }
 
-  if (item && item.teacher_id) {
+  if (item && item.teacher_id && !item.teacher_name) {
     const { data: teacher } = await adminClient
       .from("teachers")
       .select("full_name")
@@ -101,7 +109,7 @@ export async function getBookingDetailsServer(bookingId: string) {
       item_name: item?.name || item?.title_it || item?.title || "Lezione Atena School",
       item_price: item?.price || booking?.amount_paid || booking?.price || 0,
       item_photo: item?.photo_url || null,
-      item_teacher: item?.teachers?.full_name || null,
+      item_teacher: item?.teacher_name || item?.teachers?.full_name || null,
       date: booking.start_date || booking.booking_date || null,
       time: booking.booking_time || null,
     };
@@ -298,25 +306,43 @@ export async function createOrUpdateReservationServerAction(params: {
     }
 
     const purchaserName = `${values.firstName} ${values.lastName}`.trim();
-    const studentName = values.isForChild && values.studentFirstName
+    const purchaserEmail = values.email.trim().toLowerCase();
+    const purchaserPhone = values.phone.trim();
+    const isChild = !!values.isForChild;
+
+    const purchaserTaxCode = isChild && values.purchaserTaxCode && values.purchaserTaxCode.trim() !== ""
+      ? values.purchaserTaxCode.trim().toUpperCase()
+      : (values.taxCode ? values.taxCode.trim().toUpperCase() : null);
+
+    const studentName = isChild && values.studentFirstName
       ? `${values.studentFirstName} ${values.studentLastName || ""}`.trim()
       : purchaserName;
+
+    const studentEmail = isChild && values.studentEmail && values.studentEmail.trim() !== ""
+      ? values.studentEmail.trim().toLowerCase()
+      : purchaserEmail;
+
+    const studentPhone = isChild && values.studentPhone && values.studentPhone.trim() !== ""
+      ? values.studentPhone.trim()
+      : purchaserPhone;
+
+    const studentTaxCode = values.taxCode ? values.taxCode.trim().toUpperCase() : null;
 
     // Check for existing pending/reserved booking
     const { data: existing } = await admin
       .from("bookings")
       .select("id")
-      .eq("student_email", values.email)
+      .eq("student_email", purchaserEmail)
       .or(`course_id.eq.${itemId},item_id.eq.${itemId}`)
       .in("payment_status", ["pending_payment", "pending", "reserved"])
       .maybeSingle();
 
-    const isFlexible = item.schedule_type === "flexible" || (!dateParam || dateParam === "da_concordare") || (!item.schedule_days || item.schedule_days.length === 0);
+    const isFlexible = item.schedule_type === "flexible" || !dateParam || (!item.schedule_days || item.schedule_days.length === 0);
     const todayStr = new Date().toISOString().split("T")[0];
-    const finalBookingDate = (dateParam && dateParam !== "da_concordare") ? dateParam : todayStr;
+    const finalBookingDate = dateParam || todayStr;
 
     const courseScheduleTime = (item.start_time && item.end_time) ? `${item.start_time}-${item.end_time}` : null;
-    const finalBookingTime = (timeParam && timeParam !== "da_concordare" && timeParam.trim() !== "") ? timeParam : courseScheduleTime;
+    const finalBookingTime = isFlexible ? null : (timeParam || courseScheduleTime);
     const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
 
     // Calculate lesson dates (only for fixed schedule)
@@ -335,7 +361,7 @@ export async function createOrUpdateReservationServerAction(params: {
     const coursePrice = typeof item.price === "number" ? item.price : parseFloat(String(item.price || 0).replace(",", "."));
     
     // SERVER-AUTHORITATIVE ZERO-TRUST ANNUAL FEE CHECK
-    const { annualFeePaid } = await checkRegistrationFeeStatusAction(values.email, values.phone, values.taxCode);
+    const { annualFeePaid } = await checkRegistrationFeeStatusAction(studentEmail, studentPhone, studentTaxCode || undefined);
     const registrationFee = annualFeePaid ? 0 : (values.includeRegistrationFee !== false ? ANNUAL_REGISTRATION_FEE_EUR : 0);
     const amountPaid = coursePrice + registrationFee;
 
@@ -345,38 +371,40 @@ export async function createOrUpdateReservationServerAction(params: {
     subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
     const subEndsAt = subEndsAtDate.toISOString();
 
-    const actualStudentEmail = values.isForChild && values.studentEmail && values.studentEmail.trim() !== ""
-      ? values.studentEmail.trim().toLowerCase()
-      : values.email;
-
     let booking;
+
+    const bookingPayload = {
+      course_id: itemId,
+      user_id: validUserId,
+      session_id: validUserId ? null : sessionId,
+      start_date: finalBookingDate,
+      booking_time: finalBookingTime,
+      payment_status: "reserved",
+      booking_status: "active",
+      payment_method: "cash",
+      amount_paid: amountPaid,
+      registration_fee: registrationFee,
+      total_lessons_count: totalLessons,
+      scheduling_status: schedulingStatus,
+      purchaser_name: purchaserName,
+      purchaser_email: purchaserEmail,
+      purchaser_phone: purchaserPhone,
+      purchaser_tax_code: purchaserTaxCode,
+      student_name: studentName,
+      student_email: studentEmail,
+      student_phone: studentPhone,
+      student_tax_code: studentTaxCode,
+      student_birth_date: values.studentBirthDate || null,
+      tax_code: studentTaxCode,
+      notes: values.notes || "",
+      subscription_starts_at: subStartsAt,
+      subscription_ends_at: subEndsAt,
+    };
 
     if (existing) {
       const { data: updated, error } = await admin
         .from("bookings")
-        .update({
-          course_id: itemId,
-          user_id: validUserId,
-          session_id: validUserId ? null : sessionId,
-          start_date: finalBookingDate,
-          booking_time: finalBookingTime,
-          payment_status: "reserved",
-          booking_status: "active",
-          payment_method: "cash",
-          amount_paid: amountPaid,
-          registration_fee: registrationFee,
-          total_lessons_count: totalLessons,
-          scheduling_status: schedulingStatus,
-          purchaser_name: purchaserName,
-          student_name: studentName,
-          student_email: actualStudentEmail,
-          student_phone: values.phone,
-          student_birth_date: values.studentBirthDate || null,
-          tax_code: values.taxCode || null,
-          notes: values.notes || "",
-          subscription_starts_at: subStartsAt,
-          subscription_ends_at: subEndsAt,
-        })
+        .update(bookingPayload)
         .eq("id", existing.id)
         .select()
         .single();
@@ -386,29 +414,7 @@ export async function createOrUpdateReservationServerAction(params: {
     } else {
       const { data: inserted, error } = await admin
         .from("bookings")
-        .insert([{
-          course_id: itemId,
-          user_id: validUserId,
-          session_id: validUserId ? null : sessionId,
-          start_date: finalBookingDate,
-          booking_time: finalBookingTime,
-          payment_status: "reserved",
-          booking_status: "active",
-          payment_method: "cash",
-          amount_paid: amountPaid,
-          registration_fee: registrationFee,
-          total_lessons_count: totalLessons,
-          scheduling_status: schedulingStatus,
-          purchaser_name: purchaserName,
-          student_name: studentName,
-          student_email: actualStudentEmail,
-          student_phone: values.phone,
-          student_birth_date: values.studentBirthDate || null,
-          tax_code: values.taxCode || null,
-          notes: values.notes || "",
-          subscription_starts_at: subStartsAt,
-          subscription_ends_at: subEndsAt,
-        }])
+        .insert([bookingPayload])
         .select()
         .single();
 
@@ -570,7 +576,7 @@ export async function getCurrentUserAction() {
   }
 }
 
-// 7. Canonical Annual Membership Check Action (Querying annual_memberships table)
+// 7. Canonical Annual Membership Check Action (Strict Legal Identity Match by Codice Fiscale & Student Entity)
 export async function checkRegistrationFeeStatusAction(email?: string, phone?: string, taxCode?: string) {
   try {
     const admin = getSupabaseAdmin();
@@ -578,11 +584,11 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
     const cleanPhone = phone?.trim();
     const cleanTaxCode = taxCode?.trim().toUpperCase();
 
-    if (!cleanEmail && !cleanPhone && !cleanTaxCode) {
+    if (!cleanTaxCode && !cleanEmail && !cleanPhone) {
       return { success: true, annualFeePaid: false, userFound: false };
     }
 
-    // 1. Query canonical annual_memberships table for active membership in 2026/2027
+    // 1. Primary Legal Identity Check by Codice Fiscale (tax_code)
     if (cleanTaxCode) {
       const { data: mByTaxCode } = await admin
         .from("annual_memberships")
@@ -593,30 +599,35 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
         .maybeSingle();
 
       if (mByTaxCode) return { success: true, annualFeePaid: true, userFound: !!mByTaxCode.user_id };
+
+      // Fallback check students table by tax_code
+      const { data: sTax } = await admin.from("students").select("id").ilike("tax_code", cleanTaxCode).limit(1);
+      if (sTax && sTax.length > 0) {
+        const { data: mByStudent } = await admin
+          .from("annual_memberships")
+          .select("id, user_id")
+          .eq("student_id", sTax[0].id)
+          .eq("academic_year", "2026/2027")
+          .eq("status", "active")
+          .maybeSingle();
+
+        if (mByStudent) return { success: true, annualFeePaid: true, userFound: !!mByStudent.user_id };
+      }
     }
 
-    if (cleanEmail) {
-      const { data: mByEmail } = await admin
+    // 2. Strict Secondary Check: Match Email AND Phone belonging to same student entity
+    if (cleanEmail && cleanPhone) {
+      const cleanDigits = cleanPhone.replace(/[^\d+]/g, "");
+      const { data: mByEmailPhone } = await admin
         .from("annual_memberships")
         .select("id, user_id")
         .ilike("email", cleanEmail)
+        .ilike("phone", `%${cleanDigits}%`)
         .eq("academic_year", "2026/2027")
         .eq("status", "active")
         .maybeSingle();
 
-      if (mByEmail) return { success: true, annualFeePaid: true, userFound: !!mByEmail.user_id };
-    }
-
-    if (cleanPhone) {
-      const { data: mByPhone } = await admin
-        .from("annual_memberships")
-        .select("id, user_id")
-        .eq("phone", cleanPhone)
-        .eq("academic_year", "2026/2027")
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (mByPhone) return { success: true, annualFeePaid: true, userFound: !!mByPhone.user_id };
+      if (mByEmailPhone) return { success: true, annualFeePaid: true, userFound: !!mByEmailPhone.user_id };
     }
 
     return { success: true, annualFeePaid: false, userFound: false };
