@@ -220,10 +220,16 @@ Serves as the primary public identity profile table for all registered accounts 
 | **`created_at`** | `timestamptz` | NO | `CURRENT_TIMESTAMP` | Account creation timestamp. |
 | **`updated_at`** | `timestamptz` | YES | `now()` | Last profile update timestamp. |
 
-#### Database Triggers on `public.users`
-1. **`on_auth_user_created`**: Triggers `EXECUTE FUNCTION handle_new_user()`. Automatically inserts a row into `public.users` upon signup in Supabase Auth with `SECURITY DEFINER` privileges, setting role strictly to `'student'`.
-2. **`enforce_user_role_protection`**: Triggers `EXECUTE FUNCTION check_user_update()`. Restricts role modifications strictly to users with `'admin'` privileges.
-3. **`on_public_user_deleted`**: Triggers `EXECUTE FUNCTION handle_deleted_user()`. Deletes corresponding row in `auth.users` when a public user profile is removed.
+#### Database Triggers on `public.users` & `auth.users`
+1. **`on_auth_user_created`**: Triggers `EXECUTE FUNCTION handle_new_user()`. Automatically inserts a row into `public.users` upon signup in Supabase Auth with `SECURITY DEFINER` privileges, setting role strictly to `'student'`. Guest bookings and student profile linking occur only if `email_confirmed_at IS NOT NULL` (e.g. OAuth providers).
+2. **`on_email_confirmed`**: Triggers `EXECUTE FUNCTION handle_email_confirmed()`. Fires `AFTER UPDATE ON auth.users WHEN (OLD.email_confirmed_at IS NULL AND NEW.email_confirmed_at IS NOT NULL)` to sync confirmed `auth.users.email` to `public.users.email` and safely link guest `public.bookings` and `public.students` profiles only after cryptographic verification of email ownership.
+3. **`enforce_user_role_protection`**: Triggers `EXECUTE FUNCTION check_user_update()`. Restricts modifications to `role`, `is_active`, `notes`, and direct `email` column updates strictly to users with `'admin'` privileges (users must use standard Supabase Auth verification flows to change email).
+4. **`on_public_user_deleted`**: Triggers `EXECUTE FUNCTION handle_deleted_user()`. Deletes corresponding row in `auth.users` when a public user profile is removed.
+
+#### Row Level Security (RLS) Policies on `public.users`
+- **`users_select_policy`**: `FOR SELECT TO authenticated USING ((id = auth.uid()) OR (get_user_role() = 'admin') OR (get_user_role() = 'teacher' AND role = 'student'))`.
+- **`users_update_policy`**: `FOR UPDATE TO authenticated USING ((id = auth.uid()) OR (get_user_role() = 'admin'))` (Modification of `role`, `is_active`, `notes`, and `email` is strictly enforced by `check_user_update()`).
+- **`users_delete_policy`**: Restricted strictly to `'admin'` role.
 
 ---
 
@@ -322,6 +328,11 @@ The master catalog of courses, certifications, and educational services offered 
 | **`photo_url`** | `text` | YES | `NULL` | Public image URL in Supabase Storage `courses_images`. |
 | **`description`** | `text` | YES | `NULL` | Detailed course description. |
 | **`sort_order`** | `integer` | NO | `0` | UI display ordering weight. |
+
+#### Row Level Security (RLS) Policies on `public.courses`
+- **RLS Enabled**: `ALTER TABLE public.courses ENABLE ROW LEVEL SECURITY;`
+- **`courses_select_public`**: `FOR SELECT TO public USING (status IN ('active', 'published'))` (Public users can only view active/published catalog courses; drafts are hidden from Data API).
+- **`courses_insert_policy` / `update` / `delete`**: Restricted to users with `'admin'` role.
 
 ---
 
@@ -439,6 +450,23 @@ Inbound lead generation ledger storing customer contact form submissions from th
 | **`status`** | `text` | NO | `'new'` | CRM lead processing status: `'new'`, `'in_progress'`, `'contacted'`, `'closed'`. |
 | **`notes`** | `text` | YES | `NULL` | Internal CRM administrative notes on lead follow-up. |
 | **`created_at`** | `timestamptz` | YES | `now()` | Timestamp of form submission. |
+
+---
+
+### 3.11 `public.stripe_webhook_events`
+
+Log table enforcing Stripe webhook idempotency and preventing duplicate event processing.
+
+| Column | Data Type | Nullable | Default | Description |
+|---|---|:---:|---|---|
+| **`id`** | `uuid` | NO | `gen_random_uuid()` | Primary Key. |
+| **`stripe_event_id`**| `text` | NO | *None* | Unique Stripe event ID (`evt_...`). Rejects duplicate webhook payloads. |
+| **`event_type`** | `text` | NO | *None* | Event type string (e.g. `'checkout.session.completed'`). |
+| **`processed_at`** | `timestamptz` | YES | `now()` | Timestamp when the event was recorded. |
+
+#### Row Level Security (RLS) Policies on `public.stripe_webhook_events`
+- **RLS Enabled**: `ALTER TABLE public.stripe_webhook_events ENABLE ROW LEVEL SECURITY;`
+- **Public / Anon Policy**: No policies defined. All public Data API access (`anon`/`authenticated`) is blocked by default; only `service_role` can insert and inspect events.
 
 ---
 

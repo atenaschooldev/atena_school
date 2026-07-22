@@ -26,6 +26,23 @@ Deno.serve(async (req) => {
     const supabaseAdmin = createSupabaseAdmin();
     const SITE_URL = Deno.env.get("SITE_URL") || "https://atena-school-landing-three.vercel.app";
 
+    // Atomically record event for idempotency check
+    const { error: idempotencyErr } = await supabaseAdmin
+      .from("stripe_webhook_events")
+      .insert({
+        stripe_event_id: event.id,
+        event_type: event.type,
+      });
+
+    if (idempotencyErr) {
+      // Postgres error code 23505 = unique_violation
+      if (idempotencyErr.code === "23505") {
+        console.log(`[stripe-webhook] Event ${event.id} already processed. Skipping.`);
+        return new Response(JSON.stringify({ received: true, duplicate: true }), { status: 200 });
+      }
+      console.error("[stripe-webhook] Idempotency record error:", idempotencyErr);
+    }
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const bookingId = session.metadata?.booking_id;
