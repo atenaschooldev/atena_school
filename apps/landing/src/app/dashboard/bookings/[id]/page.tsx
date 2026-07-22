@@ -108,7 +108,12 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
   const courseTitle = course?.name || course?.title_it || "Corso di Lingua";
   const teacherName = course?.teacher_name || "Staff Atena";
-  const coursePrice = course?.price || 0;
+  const rawCoursePrice = course?.price
+    ? parseFloat(String(course.price).replace(/[^0-9.,]/g, "").replace(",", "."))
+    : 0;
+  const regFee = Number(booking?.registration_fee || 0);
+  const totalAmount = Number(booking?.amount_paid || 0);
+  const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, totalAmount - regFee);
 
   // Determine limits
   const isFixedSchedule = course?.schedule_type === "fixed";

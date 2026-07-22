@@ -2,9 +2,6 @@ import Stripe from "https://esm.sh/stripe@14.16.0";
 import { Resend } from "https://esm.sh/resend@2.1.0";
 import { createSupabaseAdmin, createStripe } from "../_shared/utils.ts";
 
-const stripe = createStripe();
-const cryptoProvider = Stripe.createSubtleCryptoProvider();
-
 Deno.serve(async (req) => {
   const signature = req.headers.get("Stripe-Signature");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
@@ -15,6 +12,8 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event;
   try {
+    const stripe = createStripe();
+    const cryptoProvider = Stripe.createSubtleCryptoProvider();
     const body = await req.text();
     event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret, undefined, cryptoProvider);
   } catch (err: unknown) {
@@ -98,6 +97,53 @@ Deno.serve(async (req) => {
       if (updateError) {
         console.error("[stripe-webhook] Failed to update booking:", updateError);
         return new Response("Failed to update booking", { status: 500 });
+      }
+
+      // If registration fee was paid, update student card annual_fee_paid = true
+      const regFee = Number(booking.registration_fee || 0);
+      if (regFee > 0 && booking.student_id) {
+        await supabaseAdmin
+          .from("students")
+          .update({
+            annual_fee_paid: true,
+            annual_fee_paid_at: new Date().toISOString(),
+          })
+          .eq("id", booking.student_id);
+      }
+
+      const courseAmount = paidAmount - regFee;
+
+      // 1. Record course payment in public.payments ledger
+      if (courseAmount > 0) {
+        await supabaseAdmin.from("payments").insert({
+          booking_id: bookingId,
+          user_id: booking.user_id || null,
+          amount: courseAmount,
+          currency: (session.currency || "eur").toUpperCase(),
+          payment_method: "stripe",
+          type: "payment",
+          status: "succeeded",
+          provider: "stripe",
+          provider_transaction_id: session.payment_intent || session.id,
+          paid_at: new Date().toISOString(),
+        });
+      }
+
+      // 2. Record annual registration fee as a separate linked transaction in public.payments ledger
+      if (regFee > 0) {
+        await supabaseAdmin.from("payments").insert({
+          booking_id: bookingId,
+          user_id: booking.user_id || null,
+          amount: regFee,
+          currency: (session.currency || "eur").toUpperCase(),
+          payment_method: "stripe",
+          type: "registration_fee",
+          status: "succeeded",
+          provider: "stripe",
+          provider_transaction_id: session.payment_intent || session.id,
+          notes: "Quota d'iscrizione annuale 2026/2027",
+          paid_at: new Date().toISOString(),
+        });
       }
 
       if (booking) {

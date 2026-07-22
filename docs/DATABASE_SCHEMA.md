@@ -12,13 +12,14 @@
 The Atena School database schema is designed following Third Normal Form (3NF) principles, providing a flexible foundation for web landing pages, student/teacher dashboards, payment processing via Stripe, and enterprise CRM/CMS integrations.
 
 ### Key Architectural Highlights
-1. **Unified Identity & Role Inheritance**: Supabase Auth (`auth.users`) synchronizes automatically with `public.users` via PostgreSQL triggers. Specific user roles extend identity via `public.teachers` and `public.students` using Class Table Inheritance.
-2. **Parent-Student Hierarchy**: Supports purchases made by parents for their children. `public.users` stores parent/purchaser accounts, while `public.students` maintains individual student profile cards linked via `parent_id`.
-3. **Dynamic Duration & Schedule Calculations**: Legacy static strings (e.g., `duration`) are eliminated. Course duration and frequency are stored as clean numeric primitives (`lesson_duration_minutes`, `lessons_per_week`, `total_hours`, `schedule_days`) and formatted dynamically on client applications.
-4. **Automated Student Enrollment**: A PostgreSQL trigger `trg_booking_student_enrollment` automatically creates/updates an active student record in `public.students` when a booking is created or updated, setting `registration_date` and linking `bookings.student_id`.
-5. **Decoupled Order & Calendar System**: Purchasing a course creates a snapshot entry in `public.bookings`. Individual calendar events are stored separately in `public.lessons` (1:N relationship with `ON DELETE CASCADE`), allowing independent rescheduling, attendance tracking, and Google Meet online links without mutating order data.
-6. **Multi-Status Ledger**: `public.bookings` clearly separates financial status (`payment_status`), subscription lifecycle (`booking_status`), and calendar coordination (`scheduling_status`).
-7. **Lead Management**: Inbound customer inquiries from the website are captured in `public.contact_messages` with CRM processing status (`status`, `notes`).
+1. **Unified Identity & Role Inheritance**: Supabase Auth (`auth.users`) synchronizes automatically with `public.users` via PostgreSQL triggers with `SECURITY DEFINER` privileges. User roles extend identity via `public.teachers` and `public.students`.
+2. **Parent-Student Hierarchy**: Supports purchases made by parents for their children. `public.users` stores parent/purchaser accounts, while `public.students` maintains individual student profiles linked via `parent_id` and student Google accounts via `student_user_id`.
+3. **Canonical Annual Membership Registry**: `public.annual_memberships` serves as the single server-authoritative source of truth for student annual registration fees (€30.00) for each academic year (e.g. `'2026/2027'`). Server actions and Edge Functions perform zero-trust checks against this table to enforce accurate fee calculations.
+4. **Dynamic Duration & Schedule Calculations**: Legacy static strings (e.g., `duration`) are eliminated. Course duration and frequency are stored as clean numeric primitives (`lesson_duration_minutes`, `lessons_per_week`, `total_hours`, `schedule_days`) and formatted dynamically on client applications. Unscheduled/flexible time slots are cleanly stored as SQL `NULL` values in `booking_time`.
+5. **Automated Student Enrollment**: A PostgreSQL trigger `handle_booking_student_enrollment()` automatically creates/updates an active student record in `public.students` when a booking is created or updated, linking `bookings.student_id`.
+6. **Decoupled Order & Calendar System**: Purchasing a course creates a snapshot entry in `public.bookings`. Individual calendar events are stored separately in `public.lessons` (1:N relationship with `ON DELETE CASCADE`), allowing independent rescheduling, attendance tracking, and Google Meet online links without mutating order data.
+7. **Multi-Status Ledger**: `public.bookings` clearly separates financial status (`payment_status`), subscription lifecycle (`booking_status`), and calendar coordination (`scheduling_status`).
+8. **Lead Management**: Inbound customer inquiries from the website are captured in `public.contact_messages` with CRM processing status (`status`, `notes`).
 
 ---
 
@@ -29,6 +30,7 @@ erDiagram
     auth_users ||--|| users : "1:1 Identity Sync"
     users ||--o| teachers : "Extends (role = teacher)"
     users ||--o{ students : "Parent of (parent_id)"
+    users ||--o{ students : "Student Account (student_user_id)"
     teachers ||--o{ courses : "Leads Course"
     courses ||--o{ course_teachers : "Assigned (M:N)"
     teachers ||--o{ course_teachers : "Assigned (M:N)"
@@ -37,6 +39,10 @@ erDiagram
     students ||--o{ bookings : "Enrolled Student (student_id)"
     courses ||--o{ bookings : "Contains"
     bookings ||--o{ lessons : "Schedules (1:N)"
+    bookings ||--o{ payments : "Financial Ledger (1:N)"
+    bookings ||--o{ annual_memberships : "Triggers Membership"
+    students ||--o{ annual_memberships : "Holds Membership"
+    users ||--o{ annual_memberships : "Owns Membership"
     contact_messages
 
     users {
@@ -58,15 +64,34 @@ erDiagram
     students {
         uuid id PK
         uuid parent_id FK
+        uuid student_user_id FK
         text first_name
         text last_name
         text full_name
+        text email
         date birth_date
         text photo_url
         text language_level
         text status
         date registration_date
         uuid contract_id
+        boolean annual_fee_paid
+        timestamptz annual_fee_paid_at
+    }
+
+    annual_memberships {
+        uuid id PK
+        text tax_code
+        text email
+        text phone
+        text academic_year
+        text status
+        uuid student_id FK
+        uuid user_id FK
+        uuid booking_id FK
+        timestamptz paid_at
+        timestamptz expires_at
+        timestamptz created_at
     }
 
     courses {
@@ -108,10 +133,12 @@ erDiagram
         text scheduling_status
         text payment_method
         numeric amount_paid
+        numeric registration_fee
         integer total_lessons_count
         numeric discount_amount
         text promo_code
         text tax_code
+        text purchaser_name
         text student_name
         date student_birth_date
         text student_email
@@ -120,6 +147,22 @@ erDiagram
         timestamptz subscription_starts_at
         timestamptz subscription_ends_at
         timestamptz created_at
+    }
+
+    payments {
+        uuid id PK
+        uuid booking_id FK
+        uuid user_id FK
+        numeric amount
+        text currency
+        text payment_method
+        text type
+        text status
+        text provider
+        text provider_transaction_id
+        text notes
+        timestamptz created_at
+        timestamptz paid_at
     }
 
     lessons {
@@ -178,7 +221,7 @@ Serves as the primary public identity profile table for all registered accounts 
 | **`updated_at`** | `timestamptz` | YES | `now()` | Last profile update timestamp. |
 
 #### Database Triggers on `public.users`
-1. **`on_auth_user_created`**: Triggers `EXECUTE FUNCTION handle_new_user()`. Automatically inserts a row into `public.users` upon signup in Supabase Auth, setting role strictly to `'student'`.
+1. **`on_auth_user_created`**: Triggers `EXECUTE FUNCTION handle_new_user()`. Automatically inserts a row into `public.users` upon signup in Supabase Auth with `SECURITY DEFINER` privileges, setting role strictly to `'student'`.
 2. **`enforce_user_role_protection`**: Triggers `EXECUTE FUNCTION check_user_update()`. Restricts role modifications strictly to users with `'admin'` privileges.
 3. **`on_public_user_deleted`**: Triggers `EXECUTE FUNCTION handle_deleted_user()`. Deletes corresponding row in `auth.users` when a public user profile is removed.
 
@@ -204,25 +247,58 @@ Extends `public.users` for accounts where `role = 'teacher'`.
 
 ### 3.3 `public.students`
 
-Stores individual student profile cards for school CRM tracking. Linked to parent/purchaser via `parent_id`.
+Stores individual student profile cards for school CRM tracking. Linked to parent/purchaser via `parent_id` and student Google login via `student_user_id`.
 
 | Column | Data Type | Nullable | Default | Description |
 |---|---|:---:|---|---|
 | **`id`** | `uuid` | NO | `gen_random_uuid()` | Primary Key. |
-| **`parent_id`** | `uuid` | YES | `NULL` | Foreign Key -> `users(id)` ON DELETE CASCADE. Purchaser/parent account. |
+| **`parent_id`** | `uuid` | YES | `NULL` | Foreign Key -> `users(id)` ON DELETE SET NULL. Parent/purchaser user account. |
+| **`student_user_id`**| `uuid` | YES | `NULL` | Foreign Key -> `users(id)` ON DELETE SET NULL. Student's own Google/Auth user account. |
 | **`first_name`** | `text` | YES | `NULL` | Student's first name. |
 | **`last_name`** | `text` | YES | `NULL` | Student's last name. |
 | **`full_name`** | `text` | YES | `NULL` | Student's full display name. |
+| **`email`** | `text` | YES | `NULL` | Student's personal email address. |
 | **`birth_date`** | `date` | YES | `NULL` | Student's date of birth. |
 | **`photo_url`** | `text` | YES | `NULL` | Student photo for CRM UI. |
 | **`language_level`** | `text` | NO | `'A1'` | CEFR level: `'A1'`, `'A2'`, `'B1'`, `'B2'`, `'C1'`, `'C2'`. |
 | **`status`** | `text` | NO | `'active'` | Academic status: `'active'`, `'inactive'`, `'paused'`, `'graduated'`. |
 | **`registration_date`**| `date` | NO | `CURRENT_TIMESTAMP` | Date student enrolled / purchased first course. |
 | **`contract_id`** | `uuid` | YES | `NULL` | FK -> `documents(id)`. Signed enrollment agreement. |
+| **`annual_fee_paid`** | `boolean` | YES | `false` | Quick boolean flag indicating if annual fee is settled. |
+| **`annual_fee_paid_at`** | `timestamptz` | YES | `NULL` | Timestamp when annual fee was paid. |
+
+#### Database Trigger on `public.students`
+- **`trg_sync_annual_membership_students`**: Executes `sync_annual_membership_from_students()`. Automatically creates an active membership in `public.annual_memberships` when `annual_fee_paid` is set to `true`.
 
 ---
 
-### 3.4 `public.courses`
+### 3.4 `public.annual_memberships`
+
+Canonical single source of truth for student annual registration fees (€30.00) scoped by academic year.
+
+| Column | Data Type | Nullable | Default | Description |
+|---|---|:---:|---|---|
+| **`id`** | `uuid` | NO | `gen_random_uuid()` | Primary Key. |
+| **`tax_code`** | `text` | YES | `NULL` | Italian Tax Code (*Codice Fiscale*, normalized uppercase). Primary anti-abuse anchor. |
+| **`email`** | `text` | YES | `NULL` | Student or parent email address (normalized lowercase). |
+| **`phone`** | `text` | YES | `NULL` | Contact phone number. |
+| **`academic_year`**| `text` | NO | `'2026/2027'` | Academic year identifier (e.g. `'2026/2027'`). |
+| **`status`** | `text` | NO | `'active'` | Membership status (`'active'`, `'expired'`, `'refunded'`). |
+| **`student_id`** | `uuid` | YES | `NULL` | Foreign Key -> `students(id)` ON DELETE SET NULL. |
+| **`user_id`** | `uuid` | YES | `NULL` | Foreign Key -> `users(id)` ON DELETE SET NULL. |
+| **`booking_id`** | `uuid` | YES | `NULL` | Foreign Key -> `bookings(id)` ON DELETE SET NULL. Original booking reference. |
+| **`paid_at`** | `timestamptz` | NO | `now()` | Timestamp when fee was settled. |
+| **`expires_at`** | `timestamptz` | NO | `'2027-08-31 23:59:59+00'` | Expiration timestamp of the academic year. |
+| **`created_at`** | `timestamptz` | NO | `now()` | Record creation timestamp. |
+
+#### Row Level Security (RLS) Policies on `public.annual_memberships`
+- **RLS Enabled**: `ALTER TABLE public.annual_memberships ENABLE ROW LEVEL SECURITY;`
+- **`Users can view own annual_memberships`**: `FOR SELECT USING (auth.uid() = user_id)` (Users can view their own membership status).
+- **`Admins have full access on annual_memberships`**: `FOR ALL USING (role = 'admin')` (Full administrative access).
+
+---
+
+### 3.5 `public.courses`
 
 The master catalog of courses, certifications, and educational services offered by Atena School.
 
@@ -249,7 +325,7 @@ The master catalog of courses, certifications, and educational services offered 
 
 ---
 
-### 3.5 `public.course_teachers`
+### 3.6 `public.course_teachers`
 
 Junction table mapping Many-to-Many (M:N) co-teachers and assistant instructors to courses.
 
@@ -260,7 +336,7 @@ Junction table mapping Many-to-Many (M:N) co-teachers and assistant instructors 
 
 ---
 
-### 3.6 `public.bookings`
+### 3.7 `public.bookings`
 
 The central ledger recording purchases, online/offline reservations, and active course subscriptions.
 
@@ -276,15 +352,15 @@ The central ledger recording purchases, online/offline reservations, and active 
 | **`booking_status`** | `text` | NO | `'active'` | Academic lifecycle: `'active'`, `'completed'`, `'cancelled'`, `'paused'`. |
 | **`scheduling_status`**| `text` | YES | `'scheduled'` | Calendar state: `'scheduled'`, `'pending_coordination'`, `'completed'`. |
 | **`amount_paid`** | `numeric` | YES | `NULL` | Actual amount paid in EUR after discounts. |
+| **`registration_fee`** | `numeric` | YES | `0` | Mandatory annual registration fee (*Quota Iscrizione Annuale* of €30.00). |
 | **`total_lessons_count`**| `integer` | YES | `NULL` | Purchased lesson quota (snapshot recorded at checkout). |
 | **`discount_amount`** | `numeric` | YES | `0` | Discount applied in EUR. |
 | **`promo_code`** | `text` | YES | `NULL` | Promo code string used during checkout. |
 | **`tax_code`** | `text` | YES | `NULL` | Purchaser's Italian Tax Code (*Codice Fiscale* / *P.IVA*). |
 | **`sdi_code`** | `text` | YES | `NULL` | Italian Electronic Invoicing SDI Code (*Codice Destinatario*). |
 | **`pec_email`** | `text` | YES | `NULL` | Certified Electronic Mail address (*Posta Elettronica Certificata*). |
-| **`registration_fee`** | `numeric` | YES | `0` | Mandatory annual registration fee (*Quota Iscrizione Annuale* of €30.00). |
 | **`start_date`** | `date` | YES | `NULL` | First scheduled lesson date or subscription start date. |
-| **`booking_time`** | `text` | YES | `NULL` | Selected time slot string (e.g., `"15:00 - 16:15"`). |
+| **`booking_time`** | `text` | YES | `NULL` | Selected time slot string (e.g., `"15:00 - 16:15"`). Stored as `NULL` if flexible/unscheduled. |
 | **`purchaser_name`** | `text` | YES | `NULL` | Purchaser full name (adult student or parent) captured at checkout. |
 | **`student_name`** | `text` | NO | *None* | Student full name entered at checkout. |
 | **`student_birth_date`**| `date` | YES | `NULL` | Student's date of birth captured at checkout. |
@@ -295,12 +371,38 @@ The central ledger recording purchases, online/offline reservations, and active 
 | **`subscription_ends_at`**  | `timestamptz` | YES | `NULL` | Exact subscription window end timestamp (+1 month). |
 | **`created_at`** | `timestamptz` | YES | `now()` | Order creation timestamp. |
 
-#### Database Trigger on `public.bookings`
-- **`trg_booking_student_enrollment`**: Executes `handle_booking_student_enrollment()`. When a booking is inserted or updated with a valid `user_id` and `student_name`, it automatically creates or links a student card in `public.students` (`parent_id = user_id`, `full_name = student_name`, `status = 'active'`, `registration_date = start_date`) and sets `bookings.student_id`.
+#### Database Triggers on `public.bookings`
+1. **`trg_booking_student_enrollment`**: Executes `handle_booking_student_enrollment()`. Creates or links student cards in `public.students`.
+2. **`trg_sync_annual_membership`**: Executes `sync_annual_membership_on_booking_payment()`. Automatically syncs active membership into `public.annual_memberships` when registration fee is paid.
 
 ---
 
-### 3.7 `public.lessons`
+### 3.8 `public.payments`
+
+Financial transaction ledger storing all individual payment transactions, registration fees, installments, manual cash/POS records, and Stripe refunds.
+
+| Column | Type | Nullable | Default | Description |
+|---|---|---|---|---|
+| **`id`** | `uuid` | NO | `gen_random_uuid()` | Primary Key. |
+| **`booking_id`** | `uuid` | YES | `NULL` | Foreign Key ➔ `public.bookings(id)` ON DELETE CASCADE. |
+| **`user_id`** | `uuid` | YES | `NULL` | Foreign Key ➔ `public.users(id)` ON DELETE SET NULL. |
+| **`amount`** | `numeric(10,2)` | NO | *None* | Transaction amount in EUR. |
+| **`currency`** | `text` | NO | `'EUR'` | Currency string (`'EUR'`). |
+| **`payment_method`**| `text` | NO | `'stripe'` | Payment method (`'stripe'`, `'card'`, `'bank_transfer'`, `'cash'`, `'pos'`). |
+| **`type`** | `text` | NO | `'payment'` | Transaction type (`'payment'`, `'registration_fee'`, `'installment'`, `'refund'`, `'adjustment'`). |
+| **`status`** | `text` | NO | `'succeeded'` | Transaction status (`'pending'`, `'processing'`, `'succeeded'`, `'failed'`, `'cancelled'`, `'refunded'`). |
+| **`provider`** | `text` | NO | `'stripe'` | Payment provider (`'stripe'`, `'cash'`, `'bank_transfer'`, `'pos'`). |
+| **`provider_transaction_id`** | `text` | YES | `NULL` | Provider reference ID (`pi_...`, `ch_...`, receipt number). |
+| **`notes`** | `text` | YES | `NULL` | Internal notes. |
+| **`created_at`** | `timestamptz` | NO | `now()` | Record creation timestamp. |
+| **`paid_at`** | `timestamptz` | YES | `now()` | Payment execution timestamp. |
+
+#### Database Trigger on `public.payments`
+- **`trg_sync_annual_membership_payments`**: Executes `sync_annual_membership_from_payments()`. Automatically creates an active membership in `public.annual_memberships` when a registration fee payment (`type = 'registration_fee'`) is marked `status = 'succeeded'`.
+
+---
+
+### 3.9 `public.lessons`
 
 Stores individual calendar lesson entries generated for each booking (1:N relationship).
 
@@ -323,7 +425,7 @@ Stores individual calendar lesson entries generated for each booking (1:N relati
 
 ---
 
-### 3.8 `public.contact_messages`
+### 3.10 `public.contact_messages`
 
 Inbound lead generation ledger storing customer contact form submissions from the website.
 
@@ -347,7 +449,13 @@ Inbound lead generation ledger storing customer contact form submissions from th
 ```sql
 -- Identity & Subtype Inheritance
 ALTER TABLE public.teachers ADD CONSTRAINT fk_teachers_users FOREIGN KEY (teacher_id) REFERENCES public.users(id) ON DELETE CASCADE;
-ALTER TABLE public.students ADD CONSTRAINT fk_students_parent FOREIGN KEY (parent_id) REFERENCES public.users(id) ON DELETE CASCADE;
+ALTER TABLE public.students ADD CONSTRAINT fk_students_parent FOREIGN KEY (parent_id) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE public.students ADD CONSTRAINT fk_students_user FOREIGN KEY (student_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+-- Annual Memberships Registry
+ALTER TABLE public.annual_memberships ADD CONSTRAINT fk_memberships_student FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE SET NULL;
+ALTER TABLE public.annual_memberships ADD CONSTRAINT fk_memberships_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+ALTER TABLE public.annual_memberships ADD CONSTRAINT fk_memberships_booking FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE SET NULL;
 
 -- Catalog & Relationships
 ALTER TABLE public.courses ADD CONSTRAINT fk_courses_teacher FOREIGN KEY (teacher_id) REFERENCES public.teachers(teacher_id) ON DELETE SET NULL;
@@ -361,7 +469,9 @@ ALTER TABLE public.bookings ADD CONSTRAINT fk_bookings_user FOREIGN KEY (user_id
 ALTER TABLE public.bookings ADD CONSTRAINT fk_bookings_student FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE SET NULL;
 ALTER TABLE public.bookings ADD CONSTRAINT fk_bookings_course FOREIGN KEY (course_id) REFERENCES public.courses(id) ON DELETE RESTRICT;
 
--- Calendar & Grid
+-- Financial & Calendar Grid
+ALTER TABLE public.payments ADD CONSTRAINT fk_payments_booking FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE;
+ALTER TABLE public.payments ADD CONSTRAINT fk_payments_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 ALTER TABLE public.lessons ADD CONSTRAINT fk_lessons_booking FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE;
 ALTER TABLE public.lessons ADD CONSTRAINT fk_lessons_teacher FOREIGN KEY (teacher_id) REFERENCES public.teachers(teacher_id) ON DELETE SET NULL;
 ```
@@ -382,7 +492,7 @@ LEFT JOIN public.teachers t ON c.teacher_id = t.teacher_id
 WHERE c.status IN ('active', 'published');
 ```
 
-### 5.2 Dynamic Duration Formatting
+### 5.2 Dynamic Duration & Time Formatting
 When displaying course duration in UI or API responses, calculate duration text dynamically based on primitives:
 1. If `total_lessons` is present:
    - `1` ➔ `"1 lezione"`
@@ -393,14 +503,18 @@ When displaying course duration in UI or API responses, calculate duration text 
    - `>= 60` ➔ `"Xh e Y min"` or `"X ore"` (e.g., `"1 ora"`, `"1h e 15 min"`)
    - `< 60` ➔ `"N minuti"`
 
-### 5.3 Anonymous Guest Checkout Auto-Linking
-When a user logs in or registers:
-1. Execute `autoLinkGuestBookings(email, userId)`.
-2. Query `public.bookings WHERE student_email ILIKE email AND user_id IS NULL`.
-3. Update `user_id = userId`.
-4. Parse `student_name` into `first_name` and `last_name`, and update `public.users` (`first_name`, `last_name`, `full_name`, `phone`, `updated_at`).
-5. Trigger `trg_booking_student_enrollment` automatically creates the corresponding `public.students` record for the parent account.
+Unscheduled or flexible times are stored as SQL `NULL` in `booking_time`. Presentation components display `"Da concordare"` dynamically when `booking_time` is null.
 
-### 5.4 Date & Timezone Standards
+### 5.3 Server-Authoritative Zero-Trust Fee Checking
+Always query `public.annual_memberships` for `academic_year = '2026/2027'` and `status = 'active'` using `tax_code`, `email`, or `phone`. If a record exists, force `registration_fee = 0` regardless of client form payload.
+
+### 5.4 Anonymous Guest Checkout Auto-Linking
+When a user logs in or registers:
+1. Execute `mergeGuestBookingsAction()`.
+2. Link `public.bookings` matching `student_email` or `session_id` to `user_id`.
+3. Link `public.students.parent_id` or `public.students.student_user_id` to `user_id`.
+4. Link `public.annual_memberships.user_id` to `user_id`.
+
+### 5.5 Date & Timezone Standards
 - Date-only columns (`start_date`, `birth_date`, `hire_date`, `student_birth_date`) use ISO `YYYY-MM-DD`.
-- Timestamps (`starts_at`, `ends_at`, `subscription_starts_at`, `created_at`) must always be stored in UTC (`timestamptz`, ISO-8601 string format). Timezone conversions to Europe/Rome (+01:00 / +02:00 DST) must occur at the presentation layer.
+- Timestamps (`starts_at`, `ends_at`, `subscription_starts_at`, `created_at`, `paid_at`) must always be stored in UTC (`timestamptz`, ISO-8601 string format). Timezone conversions to Europe/Rome (+01:00 / +02:00 DST) must occur at the presentation layer.

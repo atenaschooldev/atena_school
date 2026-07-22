@@ -156,7 +156,7 @@ export default function CartPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="w-4 h-4 text-primary" />
-                        {booking.booking_time.substring(0, 5)}
+                        {booking.booking_time ? booking.booking_time.substring(0, 5) : "Da concordare"}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground col-span-2">
                         <User className="w-4 h-4 text-primary" />

@@ -122,19 +122,32 @@ export async function fetchUserBookingsEnriched(
   ).filter(Boolean) as string[];
 
   let coursesData: any[] = [];
+  let teachersMap = new Map<string, string>();
+
   if (courseIds.length > 0) {
     const { data } = await supabase
       .from("courses")
-      .select("id, name, price, teachers(teacher_id, full_name)")
+      .select("id, name, price, teacher_id")
       .in("id", courseIds);
     coursesData = data || [];
+
+    const teacherIds = Array.from(new Set(coursesData.map((c) => c.teacher_id).filter(Boolean)));
+    if (teacherIds.length > 0) {
+      const { data: tData } = await supabase
+        .from("teachers")
+        .select("teacher_id, full_name")
+        .in("teacher_id", teacherIds);
+      if (tData) {
+        teachersMap = new Map(tData.map((t) => [t.teacher_id, t.full_name]));
+      }
+    }
   }
 
   const coursesMap = new Map(coursesData.map((c) => [c.id, c]));
 
   const enrichedList: EnrichedBooking[] = userBookings.map((b) => {
     let title = "Lezione / Corso";
-    let price = 0;
+    let price = b.amount_paid ? parseFloat(String(b.amount_paid)) : 0;
     let teacherName = "Atena School";
     const location = "Atena School, Via Matteotti 11";
     const cid = b.course_id || b.item_id;
@@ -145,8 +158,11 @@ export async function fetchUserBookingsEnriched(
     const c = coursesMap.get(cid);
     if (c) {
       title = c.name || title;
-      price = parseFloat(String(c.price).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
-      if (c.teachers?.full_name) teacherName = c.teachers.full_name;
+      const coursePrice = parseFloat(String(c.price || 0).replace(/[^0-9.,]/g, "").replace(",", ".") || "0");
+      if (coursePrice > 0) price = coursePrice;
+      if (c.teacher_id && teachersMap.has(c.teacher_id)) {
+        teacherName = teachersMap.get(c.teacher_id)!;
+      }
     }
 
     let isUpcoming = true;

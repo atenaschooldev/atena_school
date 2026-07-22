@@ -35,6 +35,7 @@ import {
   initiateStripePaymentAction,
   getCurrentUserAction,
   updateUserPhoneAction,
+  checkRegistrationFeeStatusAction,
 } from "@/app/actions/booking";
 
 export const checkoutSchema = z.object({
@@ -59,7 +60,9 @@ export function useCheckout(type: string, id: string) {
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
+  const slotIdParam = searchParams.get("slotId");
 
+  const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
@@ -101,12 +104,16 @@ export function useCheckout(type: string, id: string) {
           const parts = fullName.split(" ");
           const phone = currentUser.user_metadata?.phone || currentUser.phone || "";
 
+          const hasPaidFee = userRes.annualFeePaid ?? false;
+          setHasPaidAnnualFee(hasPaidFee);
+
           // reset() pre-populates all fields atomically, even after first render
           reset({
             email: currentUser.email || "",
             phone: phone,
             firstName: parts[0] || "",
             lastName: parts.slice(1).join(" ") || "",
+            includeRegistrationFee: !hasPaidFee,
             notes: "",
           });
         }
@@ -120,6 +127,26 @@ export function useCheckout(type: string, id: string) {
     initCheckout();
   }, [id, type, reset]);
 
+  const watchedEmail = formMethods.watch("email");
+  const watchedPhone = formMethods.watch("phone");
+  const watchedTaxCode = formMethods.watch("taxCode");
+
+  useEffect(() => {
+    if (!watchedEmail && !watchedPhone && !watchedTaxCode) return;
+
+    const timer = setTimeout(async () => {
+      const res = await checkRegistrationFeeStatusAction(watchedEmail, watchedPhone, watchedTaxCode);
+      if (res.success && res.annualFeePaid) {
+        setHasPaidAnnualFee(true);
+        formMethods.setValue("includeRegistrationFee", false);
+      } else if (res.success && !res.annualFeePaid && !user) {
+        setHasPaidAnnualFee(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, formMethods, user]);
+
   const effectiveDate = dateParam || "da_concordare";
   const effectiveTime = timeParam || "da_concordare";
 
@@ -132,14 +159,6 @@ export function useCheckout(type: string, id: string) {
     setSubmitting("book");
     try {
       const sid = getSessionId();
-
-      if (user && values.phone) {
-        const existingPhone = user.user_metadata?.phone || user.phone || "";
-        if (existingPhone !== values.phone) {
-          await updateUserPhoneAction(values.phone);
-        }
-      }
-
       const res = await createOrUpdateReservationServerAction({
         type,
         id,
@@ -147,16 +166,18 @@ export function useCheckout(type: string, id: string) {
         timeParam: effectiveTime,
         values,
         sessionId: sid,
-        origin: window.location.origin,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
       });
 
-      if (!res.success || !res.booking) {
-        throw new Error(res.error || "Errore durante la prenotazione");
+      if (!res.success) {
+        toast.error(res.error || "Errore durante la prenotazione");
+        return;
       }
 
-      router.push(`/checkout/success?type=booking&booking_id=${res.booking.id}&email=${encodeURIComponent(values.email)}`);
+      toast.success("Prenotazione completata con successo!");
+      router.push(`/checkout/success?booking_id=${res.bookingId}&email=${encodeURIComponent(values.email)}`);
     } catch (err: any) {
-      toast.error(err.message || "Errore durante la prenotazione");
+      toast.error(err.message || "Errore imprevisto");
     } finally {
       setSubmitting(false);
     }
@@ -170,15 +191,7 @@ export function useCheckout(type: string, id: string) {
 
     setSubmitting("pay");
     try {
-      if (user && values.phone) {
-        const existingPhone = user.user_metadata?.phone || user.phone || "";
-        if (existingPhone !== values.phone) {
-          await updateUserPhoneAction(values.phone);
-        }
-      }
-
       const sid = getSessionId();
-
       const res = await initiateStripePaymentAction({
         type,
         id,
@@ -186,15 +199,17 @@ export function useCheckout(type: string, id: string) {
         timeParam: effectiveTime,
         values,
         sessionId: sid,
+        origin: typeof window !== "undefined" ? window.location.origin : undefined,
       });
 
-      if (res.success && res.url) {
-        window.location.href = res.url;
-      } else {
-        throw new Error(res.error || "Qualcosa è andato storto");
+      if (!res.success || !res.url) {
+        toast.error(res.error || "Errore nell'avvio del pagamento");
+        return;
       }
+
+      window.location.href = res.url;
     } catch (err: any) {
-      toast.error(err.message || "Qualcosa è andato storto");
+      toast.error(err.message || "Errore imprevisto");
     } finally {
       setSubmitting(false);
     }
@@ -216,6 +231,7 @@ export function useCheckout(type: string, id: string) {
     dateParam,
     timeParam,
     slotIdParam,
+    hasPaidAnnualFee,
     actionRef,
     formMethods,
     onSubmit,

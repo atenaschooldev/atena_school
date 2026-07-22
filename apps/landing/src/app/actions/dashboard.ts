@@ -59,11 +59,28 @@ export async function getBookingLessonsAction(bookingId: string) {
     }
 
     const cid = booking.course_id || booking.item_id;
-    const { data: course } = await supabase
-      .from("courses")
-      .select("*, teachers(teacher_id, full_name)")
-      .eq("id", cid)
-      .single();
+    let course: any = null;
+    if (cid) {
+      const { data: cData } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("id", cid)
+        .maybeSingle();
+
+      if (cData) {
+        course = { ...cData };
+        if (cData.teacher_id) {
+          const { data: tData } = await supabase
+            .from("teachers")
+            .select("full_name")
+            .eq("teacher_id", cData.teacher_id)
+            .maybeSingle();
+          if (tData) {
+            course.teacher_name = tData.full_name;
+          }
+        }
+      }
+    }
 
     // Fetch lessons
     const { data: lessons } = await supabase

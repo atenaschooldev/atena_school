@@ -31,32 +31,52 @@ function isValidUuid(id?: string | null): boolean {
 async function fetchItemData(adminClient: any, itemType: string, itemId: string) {
   if (!itemId) return null;
 
+  let item: any = null;
+
   // 1. Search in courses by id
   const { data: course } = await adminClient
     .from("courses")
-    .select("*, teachers(teacher_id, full_name)")
-    .eq("id", itemId)
-    .maybeSingle();
-
-  if (course) return course;
-
-  // 2. Search in shop_items by id
-  const { data: shopItem } = await adminClient
-    .from("shop_items")
     .select("*")
     .eq("id", itemId)
     .maybeSingle();
 
-  if (shopItem) return shopItem;
+  if (course) {
+    item = course;
+  } else {
+    // 2. Search in shop_items by id
+    const { data: shopItem } = await adminClient
+      .from("shop_items")
+      .select("*")
+      .eq("id", itemId)
+      .maybeSingle();
 
-  // 3. Search in courses by slug / name match
-  const { data: byName } = await adminClient
-    .from("courses")
-    .select("*, teachers(teacher_id, full_name)")
-    .ilike("name", `%${itemId}%`)
-    .maybeSingle();
+    if (shopItem) {
+      item = shopItem;
+    } else {
+      // 3. Search in courses by slug / name match
+      const { data: byName } = await adminClient
+        .from("courses")
+        .select("*")
+        .ilike("name", `%${itemId}%`)
+        .maybeSingle();
 
-  return byName || null;
+      if (byName) item = byName;
+    }
+  }
+
+  if (item && item.teacher_id) {
+    const { data: teacher } = await adminClient
+      .from("teachers")
+      .select("full_name")
+      .eq("teacher_id", item.teacher_id)
+      .maybeSingle();
+
+    if (teacher) {
+      item.teacher_name = teacher.full_name;
+    }
+  }
+
+  return item;
 }
 
 // 1. Get enriched booking details for receipt / success page
@@ -166,19 +186,21 @@ export async function initiateStripePaymentAction(params: {
     isForChild?: boolean;
     studentFirstName?: string;
     studentLastName?: string;
+    studentEmail?: string;
     studentBirthDate?: string;
     taxCode?: string;
     includeRegistrationFee?: boolean;
     notes?: string;
   };
   sessionId?: string | null;
+  origin?: string;
 }) {
   try {
     const cookieStore = await cookies();
     const headersData = await headers();
     const host = headersData.get("host") || "localhost:3000";
     const protocol = host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
-    const origin = `${protocol}://${host}`;
+    const originUrl = params.origin || `${protocol}://${host}`;
     const guestSessionId = params.sessionId || cookieStore.get("atena_session_id")?.value || cookieStore.get("booking_session_id")?.value || null;
 
     const supabase = createServerClient();
@@ -202,6 +224,7 @@ export async function initiateStripePaymentAction(params: {
           isForChild: params.values.isForChild,
           studentFirstName: params.values.studentFirstName,
           studentLastName: params.values.studentLastName,
+          studentEmail: params.values.studentEmail,
           studentBirthDate: params.values.studentBirthDate,
           taxCode: params.values.taxCode,
           includeRegistrationFee: params.values.includeRegistrationFee !== false,
@@ -209,7 +232,7 @@ export async function initiateStripePaymentAction(params: {
           date: params.dateParam,
           time: params.timeParam,
           locale: "it",
-          origin,
+          origin: originUrl,
           userId: user?.id || null,
           guestSessionId: user ? null : guestSessionId,
         }),
@@ -217,7 +240,14 @@ export async function initiateStripePaymentAction(params: {
     );
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Errore durante il pagamento");
+    if (!res.ok) {
+      console.error("[initiateStripePaymentAction] Edge Function error response:", { status: res.status, data });
+      const rawError = typeof data.error === "string" ? data.error : JSON.stringify(data.error || data);
+      if (rawError.includes("STRIPE_SECRET_KEY") || rawError.includes("Item not found") || res.status === 500) {
+        throw new Error("Il servizio di pagamento online è temporaneamente non disponibile. Puoi prenotare con pagamento in sede.");
+      }
+      throw new Error(rawError || "Errore durante l'avvio del pagamento");
+    }
 
     return { success: true, url: data.url };
   } catch (err: any) {
@@ -257,6 +287,16 @@ export async function createOrUpdateReservationServerAction(params: {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    let validUserId: string | null = null;
+    if (user?.id) {
+      const { data: existingUser } = await admin
+        .from("users")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (existingUser) validUserId = existingUser.id;
+    }
+
     const purchaserName = `${values.firstName} ${values.lastName}`.trim();
     const studentName = values.isForChild && values.studentFirstName
       ? `${values.studentFirstName} ${values.studentLastName || ""}`.trim()
@@ -271,10 +311,12 @@ export async function createOrUpdateReservationServerAction(params: {
       .in("payment_status", ["pending_payment", "pending", "reserved"])
       .maybeSingle();
 
-    const isFlexible = item.schedule_type === "flexible" || !dateParam || dateParam === "da_concordare" || (!item.schedule_days || item.schedule_days.length === 0);
+    const isFlexible = item.schedule_type === "flexible" || (!dateParam || dateParam === "da_concordare") || (!item.schedule_days || item.schedule_days.length === 0);
     const todayStr = new Date().toISOString().split("T")[0];
     const finalBookingDate = (dateParam && dateParam !== "da_concordare") ? dateParam : todayStr;
-    const finalBookingTime = (timeParam && timeParam !== "da_concordare") ? timeParam : "Da concordare";
+
+    const courseScheduleTime = (item.start_time && item.end_time) ? `${item.start_time}-${item.end_time}` : null;
+    const finalBookingTime = (timeParam && timeParam !== "da_concordare" && timeParam.trim() !== "") ? timeParam : courseScheduleTime;
     const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
 
     // Calculate lesson dates (only for fixed schedule)
@@ -291,7 +333,10 @@ export async function createOrUpdateReservationServerAction(params: {
 
     const totalLessons = lessons.length || item.total_lessons || 1;
     const coursePrice = typeof item.price === "number" ? item.price : parseFloat(String(item.price || 0).replace(",", "."));
-    const registrationFee = values.includeRegistrationFee !== false ? ANNUAL_REGISTRATION_FEE_EUR : 0;
+    
+    // SERVER-AUTHORITATIVE ZERO-TRUST ANNUAL FEE CHECK
+    const { annualFeePaid } = await checkRegistrationFeeStatusAction(values.email, values.phone, values.taxCode);
+    const registrationFee = annualFeePaid ? 0 : (values.includeRegistrationFee !== false ? ANNUAL_REGISTRATION_FEE_EUR : 0);
     const amountPaid = coursePrice + registrationFee;
 
     // Compute subscription range
@@ -300,6 +345,10 @@ export async function createOrUpdateReservationServerAction(params: {
     subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
     const subEndsAt = subEndsAtDate.toISOString();
 
+    const actualStudentEmail = values.isForChild && values.studentEmail && values.studentEmail.trim() !== ""
+      ? values.studentEmail.trim().toLowerCase()
+      : values.email;
+
     let booking;
 
     if (existing) {
@@ -307,19 +356,20 @@ export async function createOrUpdateReservationServerAction(params: {
         .from("bookings")
         .update({
           course_id: itemId,
-          user_id: user?.id || null,
-          session_id: user ? null : sessionId,
+          user_id: validUserId,
+          session_id: validUserId ? null : sessionId,
           start_date: finalBookingDate,
           booking_time: finalBookingTime,
           payment_status: "reserved",
           booking_status: "active",
-          payment_method: "stripe",
+          payment_method: "cash",
           amount_paid: amountPaid,
           registration_fee: registrationFee,
           total_lessons_count: totalLessons,
           scheduling_status: schedulingStatus,
           purchaser_name: purchaserName,
           student_name: studentName,
+          student_email: actualStudentEmail,
           student_phone: values.phone,
           student_birth_date: values.studentBirthDate || null,
           tax_code: values.taxCode || null,
@@ -338,20 +388,20 @@ export async function createOrUpdateReservationServerAction(params: {
         .from("bookings")
         .insert([{
           course_id: itemId,
-          user_id: user?.id || null,
-          session_id: user ? null : sessionId,
+          user_id: validUserId,
+          session_id: validUserId ? null : sessionId,
           start_date: finalBookingDate,
           booking_time: finalBookingTime,
           payment_status: "reserved",
           booking_status: "active",
-          payment_method: "stripe",
+          payment_method: "cash",
           amount_paid: amountPaid,
           registration_fee: registrationFee,
           total_lessons_count: totalLessons,
           scheduling_status: schedulingStatus,
           purchaser_name: purchaserName,
           student_name: studentName,
-          student_email: values.email,
+          student_email: actualStudentEmail,
           student_phone: values.phone,
           student_birth_date: values.studentBirthDate || null,
           tax_code: values.taxCode || null,
@@ -472,9 +522,107 @@ export async function getCurrentUserAction() {
   try {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    return { success: true, user };
+    if (!user) return { success: false, user: null, annualFeePaid: false };
+
+    const admin = getSupabaseAdmin();
+
+    // 1. Check students table
+    const { data: student } = await admin
+      .from("students")
+      .select("annual_fee_paid")
+      .eq("parent_id", user.id)
+      .eq("annual_fee_paid", true)
+      .maybeSingle();
+
+    if (student?.annual_fee_paid) {
+      return { success: true, user, annualFeePaid: true };
+    }
+
+    // 2. Check paid bookings table
+    const { data: paidBooking } = await admin
+      .from("bookings")
+      .select("id")
+      .eq("user_id", user.id)
+      .gt("registration_fee", 0)
+      .in("payment_status", ["paid", "completed"])
+      .maybeSingle();
+
+    if (paidBooking) {
+      return { success: true, user, annualFeePaid: true };
+    }
+
+    // 3. Check payments ledger table
+    const { data: feePayment } = await admin
+      .from("payments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("type", "registration_fee")
+      .eq("status", "succeeded")
+      .maybeSingle();
+
+    return { 
+      success: true, 
+      user, 
+      annualFeePaid: !!feePayment 
+    };
   } catch {
-    return { success: false, user: null };
+    return { success: false, user: null, annualFeePaid: false };
+  }
+}
+
+// 7. Canonical Annual Membership Check Action (Querying annual_memberships table)
+export async function checkRegistrationFeeStatusAction(email?: string, phone?: string, taxCode?: string) {
+  try {
+    const admin = getSupabaseAdmin();
+    const cleanEmail = email?.trim().toLowerCase();
+    const cleanPhone = phone?.trim();
+    const cleanTaxCode = taxCode?.trim().toUpperCase();
+
+    if (!cleanEmail && !cleanPhone && !cleanTaxCode) {
+      return { success: true, annualFeePaid: false, userFound: false };
+    }
+
+    // 1. Query canonical annual_memberships table for active membership in 2026/2027
+    if (cleanTaxCode) {
+      const { data: mByTaxCode } = await admin
+        .from("annual_memberships")
+        .select("id, user_id")
+        .ilike("tax_code", cleanTaxCode)
+        .eq("academic_year", "2026/2027")
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (mByTaxCode) return { success: true, annualFeePaid: true, userFound: !!mByTaxCode.user_id };
+    }
+
+    if (cleanEmail) {
+      const { data: mByEmail } = await admin
+        .from("annual_memberships")
+        .select("id, user_id")
+        .ilike("email", cleanEmail)
+        .eq("academic_year", "2026/2027")
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (mByEmail) return { success: true, annualFeePaid: true, userFound: !!mByEmail.user_id };
+    }
+
+    if (cleanPhone) {
+      const { data: mByPhone } = await admin
+        .from("annual_memberships")
+        .select("id, user_id")
+        .eq("phone", cleanPhone)
+        .eq("academic_year", "2026/2027")
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (mByPhone) return { success: true, annualFeePaid: true, userFound: !!mByPhone.user_id };
+    }
+
+    return { success: true, annualFeePaid: false, userFound: false };
+  } catch (err: any) {
+    console.error("Error in checkRegistrationFeeStatusAction:", err);
+    return { success: false, annualFeePaid: false, userFound: false };
   }
 }
 

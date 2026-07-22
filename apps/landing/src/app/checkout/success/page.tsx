@@ -50,7 +50,9 @@ function SuccessContent() {
 
   const dateLocale = it;
   const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Lezione Atena School";
-  const coursePrice = bookingData?.item_price ?? bookingData?.total_price ?? bookingData?.amount ?? bookingData?.price ?? 0;
+  const regFee = Number(bookingData?.registration_fee || 0);
+  const coursePrice = Number(bookingData?.item_price ?? bookingData?.price ?? 0);
+  const totalPaid = Number(bookingData?.amount_paid ?? (coursePrice + regFee));
 
   const rawDate = bookingData?.starts_at || bookingData?.start_date || bookingData?.booking_date || bookingData?.date;
   const formattedDate = rawDate
@@ -139,8 +141,20 @@ function SuccessContent() {
             )}
 
             <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
+              <span className="text-slate-400 font-medium">Prezzo corso</span>
+              <span className="font-bold text-slate-800">€{coursePrice.toFixed(2)}</span>
+            </div>
+
+            {regFee > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400 font-medium">Quota iscrizione annuale</span>
+                <span className="font-bold text-amber-600">€{regFee.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
               <span className="font-bold text-slate-700">Totale</span>
-              <span className="font-extrabold text-[#043569] text-base">€{Number(coursePrice).toFixed(2)}</span>
+              <span className="font-extrabold text-[#043569] text-base">€{totalPaid.toFixed(2)}</span>
             </div>
           </div>
         </div>

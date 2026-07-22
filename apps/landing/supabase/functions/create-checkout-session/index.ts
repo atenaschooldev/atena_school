@@ -1,13 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { handleCors, jsonResponse, createSupabaseAdmin, createStripe } from "../_shared/utils.ts";
 
-const stripe = createStripe();
-
 Deno.serve(async (req) => {
   const cors = handleCors(req);
   if (cors) return cors;
 
   try {
+    const stripe = createStripe();
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -15,10 +15,9 @@ Deno.serve(async (req) => {
     );
 
     const {
-      itemId, itemType, customerEmail, firstName, lastName,
-      phone, date, time, locale, origin, notes, guestSessionId,
-      studentBirthDate, taxCode, isForChild, studentFirstName, studentLastName,
-      includeRegistrationFee,
+      itemType, itemId, date, time, firstName, lastName, customerEmail, phone, notes,
+      studentBirthDate, taxCode, isForChild, studentFirstName, studentLastName, studentEmail: studentEmailParam,
+      includeRegistrationFee, guestSessionId, origin,
     } = await req.json();
 
     const purchaserName = `${firstName} ${lastName}`.trim();
@@ -26,24 +25,71 @@ Deno.serve(async (req) => {
       ? `${studentFirstName} ${studentLastName || ""}`.trim()
       : purchaserName;
 
-    const regFeeAmount = includeRegistrationFee !== false ? 3000 : 0; // 30 EUR in cents
+    const actualStudentEmail = isForChild && studentEmailParam && studentEmailParam.trim() !== ""
+      ? studentEmailParam.trim().toLowerCase()
+      : customerEmail;
+
+    const supabaseAdmin = createSupabaseAdmin();
+
+    // SERVER-AUTHORITATIVE ZERO-TRUST ANNUAL MEMBERSHIP CHECK
+    const cleanTaxCode = taxCode ? String(taxCode).trim().toUpperCase() : null;
+    const cleanEmail = customerEmail ? String(customerEmail).trim().toLowerCase() : null;
+    const cleanPhone = phone ? String(phone).trim() : null;
+
+    let hasActiveMembership = false;
+
+    if (cleanTaxCode || cleanEmail || cleanPhone) {
+      let mQuery = supabaseAdmin
+        .from("annual_memberships")
+        .select("id")
+        .eq("academic_year", "2026/2027")
+        .eq("status", "active");
+
+      const conds: string[] = [];
+      if (cleanTaxCode) conds.push(`tax_code.ilike.${cleanTaxCode}`);
+      if (cleanEmail) conds.push(`email.ilike.${cleanEmail}`);
+      if (cleanPhone) conds.push(`phone.eq.${cleanPhone}`);
+
+      if (conds.length > 0) {
+        mQuery = mQuery.or(conds.join(","));
+      }
+
+      const { data: mData } = await mQuery.limit(1).maybeSingle();
+      if (mData) hasActiveMembership = true;
+    }
+
+    const regFeeAmount = hasActiveMembership ? 0 : (includeRegistrationFee !== false ? 3000 : 0); // 30 EUR in cents
+
+    // Sanitize studentBirthDate for Postgres (empty string "" -> null)
+    const validBirthDate = (typeof studentBirthDate === "string" && studentBirthDate.trim() !== "" && /^\d{4}-\d{2}-\d{2}$/.test(studentBirthDate.trim()))
+      ? studentBirthDate.trim()
+      : null;
 
     // Resolve the authenticated user (may be null for guests)
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    let user: any = null;
+    try {
+      const { data } = await supabaseClient.auth.getUser();
+      user = data?.user ?? null;
+    } catch {
+      user = null;
+    }
+
+    const supabaseAdmin = createSupabaseAdmin();
 
     // 1. Fetch the item from DB
     const table = itemType === "course" ? "courses" : "shop_items";
-    const { data: itemData, error: itemError } = await supabaseClient
+    const { data: itemData, error: itemError } = await supabaseAdmin
       .from(table)
       .select("*")
       .eq("id", itemId)
       .single();
 
     if (itemError || !itemData) {
+      console.error("[create-checkout-session] Item not found:", itemError);
       return jsonResponse({ error: "Item not found" }, 404, req);
     }
 
-    const title = itemData[`title_${locale || "it"}`] || itemData.title_it || itemData.name || "Lesson";
+    const title = itemData[`title_${"it"}`] || itemData.title_it || itemData.name || "Lesson";
 
     // Validate price before sending to Stripe
     const amountStr = String(itemData.price).replace(/[^0-9.,]/g, "").replace(",", ".");
@@ -55,7 +101,8 @@ Deno.serve(async (req) => {
 
     const todayStr = new Date().toISOString().split("T")[0];
     const finalBookingDate = (date && date !== "da_concordare") ? date : todayStr;
-    const finalBookingTime = (time && time !== "da_concordare") ? time : "Da concordare";
+    const courseScheduleTime = (itemData.start_time && itemData.end_time) ? `${itemData.start_time}-${itemData.end_time}` : null;
+    const finalBookingTime = (time && time !== "da_concordare" && String(time).trim() !== "") ? time : courseScheduleTime;
 
     const isFlexible = itemData.schedule_type === "flexible" || finalBookingTime === "Da concordare";
     const schedulingStatus = isFlexible ? "pending_coordination" : "scheduled";
@@ -64,7 +111,6 @@ Deno.serve(async (req) => {
 
     // 2. Create draft booking with service role
     //    SECURITY: user_id is always taken from the verified JWT, never from the request body.
-    const supabaseAdmin = createSupabaseAdmin();
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from("bookings")
       .insert({
@@ -75,9 +121,9 @@ Deno.serve(async (req) => {
         booking_time: finalBookingTime,
         purchaser_name: purchaserName,
         student_name: studentName,
-        student_birth_date: studentBirthDate ?? null,
-        tax_code: taxCode ?? null,
-        student_email: customerEmail,
+        student_birth_date: validBirthDate,
+        tax_code: taxCode && taxCode.trim() !== "" ? taxCode.trim() : null,
+        student_email: actualStudentEmail,
         student_phone: phone,
         notes: notes ?? "",
         payment_status: "pending_payment",
@@ -90,7 +136,10 @@ Deno.serve(async (req) => {
       .select()
       .single();
 
-    if (bookingError) throw bookingError;
+    if (bookingError) {
+      console.error("[create-checkout-session] Booking creation error:", bookingError);
+      throw bookingError;
+    }
 
     const SITE_URL = origin || req.headers.get("origin") || Deno.env.get("SITE_URL") || "http://localhost:3000";
 
@@ -136,9 +185,9 @@ Deno.serve(async (req) => {
     });
 
     return jsonResponse({ url: session.url, bookingId: booking.id }, 200, req);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal server error";
-    console.error("[create-checkout-session]", err);
+  } catch (err: any) {
+    const message = err?.message || err?.details || err?.hint || (typeof err === "string" ? err : JSON.stringify(err));
+    console.error("[create-checkout-session] Error:", err);
     return jsonResponse({ error: message }, 500, req);
   }
 });

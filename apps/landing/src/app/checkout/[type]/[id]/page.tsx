@@ -36,6 +36,7 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
     user,
     dateParam,
     timeParam,
+    hasPaidAnnualFee,
     actionRef,
     formMethods,
     onSubmit,
@@ -241,28 +242,45 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                   </label>
 
                   {formMethods.watch("isForChild") && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          Nome studente *
-                        </label>
-                        <input
-                          {...register("studentFirstName")}
-                          type="text"
-                          placeholder="Nome del figlio/a"
-                          className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
-                        />
+                    <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Nome studente *
+                          </label>
+                          <input
+                            {...register("studentFirstName")}
+                            type="text"
+                            placeholder="Nome del figlio/a"
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            Cognome studente *
+                          </label>
+                          <input
+                            {...register("studentLastName")}
+                            type="text"
+                            placeholder="Cognome del figlio/a"
+                            className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                          Cognome studente *
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                          <span>Email studente</span>
+                          <span className="font-normal text-slate-400 text-[9px] normal-case">(per l'accesso Google al pannello)</span>
                         </label>
                         <input
-                          {...register("studentLastName")}
-                          type="text"
-                          placeholder="Cognome del figlio/a"
+                          {...register("studentEmail")}
+                          type="email"
+                          placeholder="studente@gmail.com"
                           className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-[#043569]"
                         />
+                        {errors.studentEmail && (
+                          <p className="text-[10px] text-red-500">{errors.studentEmail.message}</p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -301,23 +319,30 @@ function CheckoutContent({ params }: { params: Promise<{ type: string; id: strin
                 </div>
 
                 {/* Registration Fee Option */}
-                <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl">
-                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input
-                      {...register("includeRegistrationFee")}
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-amber-300 text-[#043569] focus:ring-[#043569] mt-0.5"
-                    />
-                    <div className="text-xs">
-                      <span className="font-bold text-amber-950">
-                        Include Quota d'iscrizione annuale (30,00 €)
-                      </span>
-                      <p className="text-[11px] text-amber-800/80 mt-0.5">
-                        Quota obbligatoria valevole per l'Anno Accademico 2026/2027 (deseleziona solo se già versata).
-                      </p>
-                    </div>
-                  </label>
-                </div>
+                {!hasPaidAnnualFee ? (
+                  <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl">
+                    <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                      <input
+                        {...register("includeRegistrationFee")}
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-amber-300 text-[#043569] focus:ring-[#043569] mt-0.5"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-amber-950">
+                          Include Quota d'iscrizione annuale (30,00 €)
+                        </span>
+                        <p className="text-[11px] text-amber-800/80 mt-0.5 leading-relaxed">
+                          Quota obbligatoria valevole per l'Anno Accademico 2026/2027. Deseleziona solo se già versata o se desideri pagarla in contanti/POS direttamente in sede.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex items-center gap-2.5 text-xs text-emerald-900 font-semibold select-none">
+                    <CheckCircle className="w-4.5 h-4.5 text-emerald-600 shrink-0" weight="fill" />
+                    <span>Quota d'iscrizione annuale 2026/2027: GIÀ PAGATA (€0.00)</span>
+                  </div>
+                )}
 
                 {/* Notes */}
                 <div className="space-y-1.5 flex flex-col flex-1">
