@@ -17,8 +17,12 @@ Deno.serve(async (req) => {
     const {
       itemType, itemId, date, time, firstName, lastName, customerEmail, phone, notes,
       studentBirthDate, taxCode, purchaserTaxCode: purchaserTaxCodeParam, isForChild, studentFirstName, studentLastName, studentEmail: studentEmailParam, studentPhone: studentPhoneParam,
+      needsCompanyInvoice, sdiCode: sdiCodeParam, pecEmail: pecEmailParam,
       includeRegistrationFee, guestSessionId, origin,
     } = await req.json();
+
+    const cleanSdiCode = needsCompanyInvoice && sdiCodeParam ? String(sdiCodeParam).trim().toUpperCase() : null;
+    const cleanPecEmail = needsCompanyInvoice && pecEmailParam ? String(pecEmailParam).trim().toLowerCase() : null;
 
     const purchaserName = `${firstName} ${lastName}`.trim();
     const cleanEmail = customerEmail ? String(customerEmail).trim().toLowerCase() : null;
@@ -135,6 +139,8 @@ Deno.serve(async (req) => {
         student_tax_code: cleanStudentTaxCode,
         student_birth_date: validBirthDate,
         tax_code: cleanStudentTaxCode,
+        sdi_code: cleanSdiCode,
+        pec_email: cleanPecEmail,
         notes: notes ?? "",
         payment_status: "pending_payment",
         booking_status: "active",

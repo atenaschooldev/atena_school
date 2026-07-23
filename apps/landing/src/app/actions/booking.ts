@@ -195,8 +195,13 @@ export async function initiateStripePaymentAction(params: {
     studentFirstName?: string;
     studentLastName?: string;
     studentEmail?: string;
+    studentPhone?: string;
+    purchaserTaxCode?: string;
     studentBirthDate?: string;
     taxCode?: string;
+    needsCompanyInvoice?: boolean;
+    sdiCode?: string;
+    pecEmail?: string;
     includeRegistrationFee?: boolean;
     notes?: string;
   };
@@ -229,12 +234,17 @@ export async function initiateStripePaymentAction(params: {
           firstName: params.values.firstName,
           lastName: params.values.lastName,
           phone: params.values.phone,
+          purchaserTaxCode: params.values.purchaserTaxCode,
           isForChild: params.values.isForChild,
           studentFirstName: params.values.studentFirstName,
           studentLastName: params.values.studentLastName,
           studentEmail: params.values.studentEmail,
+          studentPhone: params.values.studentPhone,
           studentBirthDate: params.values.studentBirthDate,
           taxCode: params.values.taxCode,
+          needsCompanyInvoice: params.values.needsCompanyInvoice,
+          sdiCode: params.values.sdiCode,
+          pecEmail: params.values.pecEmail,
           includeRegistrationFee: params.values.includeRegistrationFee !== false,
           notes: params.values.notes || "",
           date: params.dateParam,
@@ -283,6 +293,9 @@ export async function createOrUpdateReservationServerAction(params: {
     purchaserTaxCode?: string;
     studentBirthDate?: string;
     taxCode?: string;
+    needsCompanyInvoice?: boolean;
+    sdiCode?: string;
+    pecEmail?: string;
     includeRegistrationFee?: boolean;
     notes?: string;
   };
@@ -399,6 +412,8 @@ export async function createOrUpdateReservationServerAction(params: {
       student_tax_code: studentTaxCode,
       student_birth_date: values.studentBirthDate || null,
       tax_code: studentTaxCode,
+      sdi_code: values.needsCompanyInvoice ? (values.sdiCode ? values.sdiCode.trim().toUpperCase() : null) : null,
+      pec_email: values.needsCompanyInvoice ? (values.pecEmail ? values.pecEmail.trim().toLowerCase() : null) : null,
       notes: values.notes || "",
       subscription_starts_at: subStartsAt,
       subscription_ends_at: subEndsAt,
@@ -448,14 +463,14 @@ export async function createOrUpdateReservationServerAction(params: {
     }
 
   return { success: true, booking };
-} catch (err: any) {
-  console.error("Error in createOrUpdateReservationServerAction:", err);
-  return { success: false, error: err.message || "Failed to create reservation" };
-}
+  } catch (err: any) {
+    console.error("Error in createOrUpdateReservationServerAction:", err);
+    return { success: false, error: err.message || "Failed to create reservation" };
+  }
 }
 
 // 5. Account & Guest Bookings Linker
-export async function mergeGuestBookingsAction(sessionId: string) {
+export async function mergeGuestBookingsAction(sessionId?: string) {
   try {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -463,7 +478,67 @@ export async function mergeGuestBookingsAction(sessionId: string) {
 
     const admin = getSupabaseAdmin();
 
-    // Link by session ID
+    // 1. Fetch real display name, phone, and tax code from bookings if available
+    const cleanEmail = user.email!.toLowerCase().trim();
+    const { data: latestBooking } = await admin
+      .from("bookings")
+      .select("student_name, purchaser_name, student_email, purchaser_email, student_phone, purchaser_phone, student_tax_code, purchaser_tax_code")
+      .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const isStudentLogin = latestBooking?.student_email?.toLowerCase() === cleanEmail;
+    const bookingName = latestBooking
+      ? (isStudentLogin ? latestBooking.student_name : latestBooking.purchaser_name)
+      : null;
+    const bookingPhone = latestBooking
+      ? (isStudentLogin ? latestBooking.student_phone : latestBooking.purchaser_phone)
+      : null;
+    const bookingTaxCode = latestBooking
+      ? (isStudentLogin ? latestBooking.student_tax_code : latestBooking.purchaser_tax_code)
+      : null;
+
+    const userMeta = user.user_metadata || {};
+    const effectiveFullName = bookingName || userMeta.custom_full_name || userMeta.full_name || "";
+    const nameParts = effectiveFullName.trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
+    const phone = bookingPhone || userMeta.phone || user.phone || null;
+    const taxCode = bookingTaxCode || userMeta.tax_code || null;
+
+    // Update Auth user metadata so full_name, phone, and tax_code match checkout data
+    if (bookingName && userMeta.full_name !== bookingName) {
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            full_name: bookingName,
+            custom_full_name: bookingName,
+            phone: phone || userMeta.phone,
+            tax_code: taxCode || userMeta.tax_code,
+          }
+        });
+      } catch (aErr) {
+        console.warn("Could not update auth metadata:", aErr);
+      }
+    }
+
+    try {
+      await admin.from("users").upsert({
+        id: user.id,
+        email: user.email!,
+        first_name: firstName,
+        last_name: lastName,
+        full_name: effectiveFullName || `${firstName} ${lastName}`.trim() || user.email!,
+        phone: phone,
+        tax_code: taxCode,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "id" });
+    } catch (uErr) {
+      console.warn("Could not upsert into public.users:", uErr);
+    }
+
+    // 2. Link by session ID
     if (sessionId) {
       await admin
         .from("bookings")
@@ -471,50 +546,37 @@ export async function mergeGuestBookingsAction(sessionId: string) {
         .eq("session_id", sessionId);
     }
 
-    // Link by email (only updating user_id, never status)
+    // 3. Link bookings by purchaser_email OR student_email
     if (user.email) {
+      const cleanEmail = user.email.toLowerCase().trim();
+
       await admin
         .from("bookings")
         .update({ user_id: user.id })
-        .ilike("student_email", user.email);
+        .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`);
 
-      const { data: latest } = await admin
+      // 4. Update student cards linked to these bookings (set parent_id = user.id or student_user_id = user.id)
+      await admin
+        .from("students")
+        .update({ student_user_id: user.id })
+        .ilike("email", cleanEmail);
+
+      const { data: userBookings } = await admin
         .from("bookings")
-        .select("student_name, student_phone")
-        .ilike("student_email", user.email)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .select("id, student_id")
+        .eq("user_id", user.id);
 
-      if (latest) {
-        const studentName = latest.student_name || "";
-        const studentPhone = latest.student_phone || "";
-        const nameParts = studentName.split(" ");
-        const firstName = nameParts[0] || "";
-        const lastName = nameParts.slice(1).join(" ") || "";
+      if (userBookings && userBookings.length > 0) {
+        const studentIds = userBookings
+          .map(b => b.student_id)
+          .filter(Boolean) as string[];
 
-        await supabase.auth.updateUser({
-          data: {
-            phone: studentPhone || user.user_metadata?.phone,
-            full_name: studentName || user.user_metadata?.full_name,
-            custom_full_name: studentName || user.user_metadata?.custom_full_name,
-          }
-        });
-
-        try {
+        if (studentIds.length > 0) {
           await admin
-            .from("users")
-            .upsert({
-              id: user.id,
-              email: user.email,
-              phone: studentPhone || null,
-              first_name: firstName || null,
-              last_name: lastName || null,
-              full_name: studentName || null,
-              updated_at: new Date().toISOString(),
-            }, { onConflict: "id" });
-        } catch (uErr) {
-          console.warn("Could not upsert into public.users table:", uErr);
+            .from("students")
+            .update({ parent_id: user.id })
+            .in("id", studentIds)
+            .neq("email", cleanEmail); // Only set as parent_id if the student email isn't the parent's own email
         }
       }
     }
@@ -532,6 +594,9 @@ export async function getCurrentUserAction() {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, user: null, annualFeePaid: false };
+
+    // Auto-sync guest bookings, parent-student relationships and public.users profile
+    await mergeGuestBookingsAction();
 
     const admin = getSupabaseAdmin();
 
@@ -574,7 +639,8 @@ export async function getCurrentUserAction() {
       user, 
       annualFeePaid: !!feePayment 
     };
-  } catch {
+  } catch (err: any) {
+    console.error("Error in getCurrentUserAction:", err);
     return { success: false, user: null, annualFeePaid: false };
   }
 }
@@ -591,7 +657,7 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
       return { success: true, annualFeePaid: false, userFound: false };
     }
 
-    // 1. Primary Legal Identity Check by Codice Fiscale (tax_code)
+    // 1. Primary Legal Identity Check by Codice Fiscale (tax_code) - Unique per Student/Child
     if (cleanTaxCode) {
       const { data: mByTaxCode } = await admin
         .from("annual_memberships")
@@ -616,9 +682,13 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
 
         if (mByStudent) return { success: true, annualFeePaid: true, userFound: !!mByStudent.user_id };
       }
+
+      // If Codice Fiscale was provided but not found in memberships, return false directly
+      // This ensures 1 parent with 2 different children (different tax codes) pays fee for EACH child!
+      return { success: true, annualFeePaid: false, userFound: false };
     }
 
-    // 2. Strict Secondary Check: Match Email AND Phone belonging to same student entity
+    // 2. Secondary Check: Match Email AND Phone when Codice Fiscale is not yet entered
     if (cleanEmail && cleanPhone) {
       const cleanDigits = cleanPhone.replace(/[^\d+]/g, "");
       const { data: mByEmailPhone } = await admin
@@ -642,13 +712,25 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
 
 
 
-export async function fetchCheckoutItemAction(type: string, id: string) {
+export async function fetchCourseAction(courseId: string) {
   try {
     const admin = getSupabaseAdmin();
-    const item = await fetchItemData(admin, type, id);
-    return { success: true, item };
+    const course = await fetchItemData(admin, "course", courseId);
+    return { success: true, item: course, course };
   } catch (err: any) {
-    return { success: false, item: null, error: err.message };
+    return { success: false, item: null, course: null, error: err.message };
+  }
+}
+
+export async function fetchCheckoutItemAction(typeOrId: string, optionalId?: string) {
+  try {
+    const type = optionalId ? typeOrId : "course";
+    const id = optionalId ? optionalId : typeOrId;
+    const admin = getSupabaseAdmin();
+    const item = await fetchItemData(admin, type, id);
+    return { success: true, item, course: item };
+  } catch (err: any) {
+    return { success: false, item: null, course: null, error: err.message };
   }
 }
 

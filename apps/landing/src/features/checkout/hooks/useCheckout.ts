@@ -20,6 +20,9 @@ export interface CheckoutFormValues {
   studentPhone?: string;
   studentBirthDate?: string;
   taxCode: string;
+  needsCompanyInvoice?: boolean;
+  sdiCode?: string;
+  pecEmail?: string;
   includeRegistrationFee?: boolean;
   notes?: string;
 }
@@ -31,6 +34,8 @@ export interface BookingItem {
   price: string | number;
   description_it?: string;
   image_url?: string;
+  photo_url?: string;
+  category?: string;
   teacher_name?: string;
 }
 import {
@@ -54,6 +59,9 @@ export const checkoutSchema = z.object({
   studentPhone: z.string().optional(),
   studentBirthDate: z.string().optional(),
   taxCode: z.string().min(11, "Il Codice Fiscale dello studente è obbligatorio (almeno 11 caratteri)"),
+  needsCompanyInvoice: z.boolean().optional(),
+  sdiCode: z.string().optional(),
+  pecEmail: z.string().email("Inserisci un indirizzo email PEC valido").optional().or(z.literal("")),
   includeRegistrationFee: z.boolean().optional(),
   notes: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -80,14 +88,26 @@ export const checkoutSchema = z.object({
       });
     }
   }
+  if (data.needsCompanyInvoice) {
+    if (!data.sdiCode && !data.pecEmail) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["sdiCode"],
+        message: "Inserisci il Codice SDI (7 caratteri) o l'email PEC per la fatturazione elettronica",
+      });
+    }
+  }
 });
 
 export type SubmitAction = "book" | "pay";
 export type FeeCheckStatus = "initial" | "checking" | "paid" | "not_paid";
 
-export function useCheckout(type: string, id: string) {
+export function useCheckout(typeOrId: string, optionalId?: string) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const type = optionalId ? typeOrId : "course";
+  const id = optionalId ? optionalId : typeOrId;
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
@@ -115,6 +135,9 @@ export function useCheckout(type: string, id: string) {
       studentPhone: "",
       studentBirthDate: "",
       taxCode: "",
+      needsCompanyInvoice: false,
+      sdiCode: "",
+      pecEmail: "",
       includeRegistrationFee: true,
       notes: "",
     },
@@ -172,16 +195,25 @@ export function useCheckout(type: string, id: string) {
 
   useEffect(() => {
     const targetTaxCode = watchedTaxCode;
-    const targetEmail = watchedIsForChild && watchedStudentEmail ? watchedStudentEmail : watchedEmail;
-    const targetPhone = watchedIsForChild && watchedStudentPhone ? watchedStudentPhone : watchedPhone;
+    const targetEmail = watchedIsForChild
+      ? (watchedStudentEmail && watchedStudentEmail.trim() !== "" ? watchedStudentEmail : watchedEmail)
+      : watchedEmail;
+    const targetPhone = watchedIsForChild
+      ? (watchedStudentPhone && watchedStudentPhone.trim() !== "" ? watchedStudentPhone : watchedPhone)
+      : watchedPhone;
 
-    if (!targetTaxCode && !targetEmail && !targetPhone) return;
-
-    const hasValidInput = (targetTaxCode && targetTaxCode.length >= 11) ||
+    const hasValidInput = (targetTaxCode && targetTaxCode.trim().length >= 11) ||
                           (targetEmail && targetEmail.includes("@")) ||
-                          (targetPhone && targetPhone.length >= 8);
+                          (targetPhone && targetPhone.trim().length >= 8);
 
-    if (!hasValidInput) return;
+    if (!hasValidInput) {
+      if (user && hasPaidAnnualFee) {
+        setFeeCheckStatus("paid");
+      } else {
+        setFeeCheckStatus("initial");
+      }
+      return;
+    }
 
     setFeeCheckStatus("checking");
 
@@ -191,14 +223,14 @@ export function useCheckout(type: string, id: string) {
         setHasPaidAnnualFee(true);
         setFeeCheckStatus("paid");
         formMethods.setValue("includeRegistrationFee", false);
-      } else if (res.success && !res.annualFeePaid) {
+      } else {
         setHasPaidAnnualFee(false);
         setFeeCheckStatus("not_paid");
       }
-    }, 600);
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, user, hasPaidAnnualFee, formMethods]);
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;

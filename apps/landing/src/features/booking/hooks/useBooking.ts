@@ -4,9 +4,19 @@ import { useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
 import { formatCourseDurationText } from "@/lib/utils/bookingScheduler";
 
-export function useBooking(type: string, id: string, initialItem: any, initialUser: any) {
+export function useBooking(
+  typeOrId: string,
+  idOrItem: any,
+  itemOrUser?: any,
+  userOrUndefined?: any
+) {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const isLegacy = typeof idOrItem === "string";
+  const id = isLegacy ? idOrItem : typeOrId;
+  const initialItem = isLegacy ? itemOrUser : idOrItem;
+  const initialUser = isLegacy ? userOrUndefined : itemOrUser;
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
@@ -15,7 +25,7 @@ export function useBooking(type: string, id: string, initialItem: any, initialUs
   const [user] = useState<any>(initialUser);
 
   const isFlexibleSchedule = item?.schedule_type === "flexible" || (!item?.schedule_days || item.schedule_days.length === 0);
-  const isFixedSchedule = !isFlexibleSchedule && type === "course";
+  const isFixedSchedule = !isFlexibleSchedule;
 
   const allowedDays: number[] = (item?.schedule_days && Array.isArray(item.schedule_days) && item.schedule_days.length > 0)
     ? item.schedule_days
@@ -32,9 +42,9 @@ export function useBooking(type: string, id: string, initialItem: any, initialUs
 
   useEffect(() => {
     if (user && dateParam && timeParam) {
-      router.push(`/checkout/${type}/${id}?date=${dateParam}&time=${timeParam}`);
+      router.push(`/checkout/${id}?date=${dateParam}&time=${timeParam}`);
     }
-  }, [user, type, id, dateParam, timeParam, router]);
+  }, [user, id, dateParam, timeParam, router]);
 
   useEffect(() => {
     if (isFixedSchedule && selectedDate && !selectedTime) {
@@ -42,17 +52,17 @@ export function useBooking(type: string, id: string, initialItem: any, initialUs
     }
   }, [isFixedSchedule, selectedDate, selectedTime, formattedTimeRange]);
 
-  const title = item.title_it || item.name || "Lezione / Corso Atena";
+  const title = item?.title_it || item?.name || "Lezione / Corso Atena";
   const courseDuration = formatCourseDurationText(item?.lesson_duration_minutes, item?.total_hours, item?.total_lessons);
 
   const handleContinue = () => {
     if (isFlexibleSchedule) {
-      router.push(`/checkout/${type}/${id}`);
+      router.push(`/checkout/${id}`);
       return;
     }
     if (!selectedDate || !selectedTime) return;
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    router.push(`/checkout/${type}/${id}?date=${dateStr}&time=${selectedTime}`);
+    router.push(`/checkout/${id}?date=${dateStr}&time=${selectedTime}`);
   };
 
   return {

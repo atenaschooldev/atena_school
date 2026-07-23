@@ -12,15 +12,14 @@ export interface CheckoutStepperProps {
   id?: string;
 }
 
-export function CheckoutStepper({ currentStep, dark, type: propType, id: propId }: CheckoutStepperProps) {
+export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepperProps) {
   const params = useParams();
-  const type = propType || (params?.type as string) || "";
   const id = propId || (params?.id as string) || "";
 
   const getHref = (stepNumber: number) => {
-    if (!type || !id) return null;
-    if (stepNumber === 1) return `/book/${type}/${id}`;
-    if (stepNumber === 2) return `/checkout/${type}/${id}`;
+    if (!id) return null;
+    if (stepNumber === 1) return `/courses/${id}`;
+    if (stepNumber === 2) return `/checkout/${id}`;
     return null;
   };
 
