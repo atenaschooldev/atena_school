@@ -117,7 +117,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* Badge 1 — Cambridge (top-left, float) */}
             <Link
               href="#corsi"
-              className="absolute top-1 left-0 sm:top-2 sm:left-0 z-30 animate-float group"
+              className="absolute top-[10%] left-0 z-30 animate-float group"
               style={{ animationDelay: '0s' }}
             >
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-1.5 transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
@@ -134,7 +134,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* Badge 2 — EIPASS (top-right, breathe) */}
             <Link
               href="#corsi"
-              className="absolute top-1 right-0 sm:top-2 sm:right-0 z-30 animate-breathe group"
+              className="absolute top-[6%] right-0 z-30 animate-breathe group"
               style={{ animationDelay: '1s' }}
             >
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-1.5 transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
@@ -151,7 +151,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* Badge 3 — Madrelingua (mid-left, float delayed) */}
             <Link
               href="#contatti"
-              className="absolute bottom-[28%] left-0 z-30 animate-float group"
+              className="absolute bottom-[40%] right-0 z-30 animate-float group"
               style={{ animationDelay: '0.7s' }}
             >
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-1.5 transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
@@ -168,7 +168,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* Badge 4 — Per tutte le età (bottom-right, breathe delayed) */}
             <a
               href="#contatti"
-              className="absolute bottom-[12%] right-0 z-30 animate-breathe group"
+              className="absolute bottom-[8%] left-0 z-30 animate-breathe group"
               style={{ animationDelay: '1.8s' }}
             >
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 sm:px-2.5 sm:py-2 flex items-center gap-1.5 transition-all duration-200 group-hover:scale-105 group-hover:shadow-xl">
