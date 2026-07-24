@@ -1,4 +1,4 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseClient, createClient as createAdminClient } from "@supabase/supabase-js";
 import { isFuture, parseISO } from "date-fns";
 
 export interface EnrichedBooking {
@@ -77,12 +77,21 @@ export async function autoLinkGuestBookings(
       if (firstName) updateData.first_name = firstName;
       if (lastName) updateData.last_name = lastName;
       if (rawName) updateData.full_name = rawName;
-      if (isPurchaser) updateData.role = "parent";
 
       await supabase
         .from("users")
         .update(updateData)
         .eq("id", userId);
+
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      if (isPurchaser && serviceRoleKey && supabaseUrl) {
+        const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
+        await adminClient
+          .from("users")
+          .update({ role: "parent" })
+          .eq("id", userId);
+      }
     } catch {
       // ignore
     }
