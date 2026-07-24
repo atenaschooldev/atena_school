@@ -193,15 +193,14 @@ const CourseCard = ({
           {/* Buttons Row */}
           <div>
             {courseSlug ? (
-              <Link
-                href={`/corsi/${courseSlug}`}
+              <span
                 onMouseEnter={() => setIsButtonHovered(true)}
                 onMouseLeave={() => setIsButtonHovered(false)}
                 className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
               >
                 {type === "shop" ? "Acquista" : "Prenota"}
                 <CaretRight className="w-3.5 h-3.5" weight="bold" />
-              </Link>
+              </span>
             ) : (
               <button
                 disabled

@@ -36,6 +36,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             src={studentImg}
             alt="Studente Atena School"
             fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
             className="object-contain object-bottom drop-shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
             priority
           />

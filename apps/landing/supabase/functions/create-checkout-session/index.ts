@@ -86,13 +86,18 @@ Deno.serve(async (req) => {
       user = null;
     }
 
-    // 1. Fetch the item from DB
+    // 1. Fetch the item from DB (support both UUID id and text slug)
     const table = itemType === "course" ? "courses" : "shop_items";
-    const { data: itemData, error: itemError } = await supabaseAdmin
-      .from(table)
-      .select("*")
-      .eq("id", itemId)
-      .single();
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(itemId));
+    
+    let itemQuery = supabaseAdmin.from(table).select("*");
+    if (isUuid) {
+      itemQuery = itemQuery.eq("id", itemId);
+    } else {
+      itemQuery = itemQuery.eq("slug", itemId);
+    }
+    
+    const { data: itemData, error: itemError } = await itemQuery.maybeSingle();
 
     if (itemError || !itemData) {
       console.error("[create-checkout-session] Item not found:", itemError);

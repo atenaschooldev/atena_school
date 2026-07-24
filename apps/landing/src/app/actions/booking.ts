@@ -235,6 +235,9 @@ export async function initiateStripePaymentAction(params: {
     const supabase = createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    const checkoutItem = await fetchCheckoutItemAction(params.type, params.id);
+    const targetItemId = checkoutItem?.item?.id || checkoutItem?.course?.id || params.id;
+
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout-session`,
       {
@@ -244,7 +247,7 @@ export async function initiateStripePaymentAction(params: {
           Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          itemId: params.id,
+          itemId: targetItemId,
           itemType: params.type,
           customerEmail: params.values.email,
           firstName: params.values.firstName,
