@@ -16,7 +16,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const t = useTranslations("hero");
 
   return (
-    <section id="home" className="relative h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-3 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
+    <section id="home" className="relative lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-16 sm:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 lg:pb-3 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
 
       {/* Subtle Background Radial Ambient Glows */}
       <div className="absolute top-0 right-0 w-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:w-[800px] h-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:h-[800px] bg-[#F8861D]/10 rounded-full blur-[100px] [@media(min-width:1024px)_and_(min-height:850px)]:blur-[160px] pointer-events-none -z-0" />
@@ -26,22 +26,22 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] [@media(min-width:1024px)_and_(min-height:850px)]:bg-[size:44px_44px] [mask-image:linear-gradient(to_bottom,transparent_80px,black_130px)] pointer-events-none -z-0" />
 
       {/* Main Content Area */}
-      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-between py-2 sm:py-3 min-h-0">
+      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-2 sm:py-3 min-h-0">
 
         {/* Mobile-only: student + 4 badges ABOVE content */}
-        <div className="lg:hidden relative h-[32vh] min-h-[200px] max-h-[280px] mt-1 mb-6 shrink-0">
+        <div className="lg:hidden relative w-full h-[310px] sm:h-[360px] my-2 shrink-0 overflow-hidden">
 
-          {/* Student image — scaled up 38% to reach text cleanly without gap */}
+          {/* Student image — clean natural fit inside container */}
           <Image
             src={studentImg}
             alt="Studente Atena School"
             fill
-            className="object-contain object-top scale-[1.38] origin-top translate-y-1 drop-shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
+            className="object-contain object-bottom drop-shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
             priority
           />
 
           {/* Cambridge — top-left */}
-          <Link href="#corsi" className="absolute top-[2%] left-0 z-30 animate-float group" style={{ animationDelay: '0s' }}>
+          <Link href="#corsi" className="absolute top-[4%] left-0 z-30 animate-float group" style={{ animationDelay: '0s' }}>
             <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100">
                 <ShieldCheck size={12} weight="bold" className="text-[#F8861D]" />
@@ -54,7 +54,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           </Link>
 
           {/* Madrelingua — top-right */}
-          <Link href="#contatti" className="absolute top-[18%] right-0 z-30 animate-breathe group" style={{ animationDelay: '0.7s' }}>
+          <Link href="#contatti" className="absolute top-[16%] right-0 z-30 animate-breathe group" style={{ animationDelay: '0.7s' }}>
             <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
                 <Star size={12} weight="fill" className="text-emerald-600" />
@@ -67,7 +67,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           </Link>
 
           {/* EIPASS — left-mid */}
-          <Link href="#corsi" className="absolute top-[48%] left-0 z-30 animate-float group" style={{ animationDelay: '1s' }}>
+          <Link href="#corsi" className="absolute top-[50%] left-0 z-30 animate-float group" style={{ animationDelay: '1s' }}>
             <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100">
                 <GraduationCap size={12} weight="fill" className="text-[#043569]" />
@@ -80,7 +80,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           </Link>
 
           {/* Per tutte le età — right-mid */}
-          <a href="#contatti" className="absolute top-[66%] right-0 z-30 animate-breathe group" style={{ animationDelay: '1.8s' }}>
+          <a href="#contatti" className="absolute top-[68%] right-0 z-30 animate-breathe group" style={{ animationDelay: '1.8s' }}>
             <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 shadow-lg rounded-xl px-2 py-1.5 flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100">
                 <Trophy size={12} weight="fill" className="text-amber-600" />
@@ -91,7 +91,6 @@ const HeroSection = ({ data }: HeroSectionProps) => {
               </div>
             </div>
           </a>
-
         </div>
 
         {/* Top Grid: Offer + Student Cutout */}
