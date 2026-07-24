@@ -1,8 +1,8 @@
 # Use Case: Покупка курса и Онбординг (Полная Библия Спецификации)
 
-> **Документ**: Каноническая библия бизнес-процесса покупки курса, архитектуры, триггеров БД, Edge Functions, RLS и обработки исключений  
+> **Документ**: Каноническая библия бизнес-процесса покупки курса, верстки, TS-файлов, триггеров БД, Edge Functions, Stripe, Vercel, RLS и обработки исключений  
 > **Проект**: Atena School (`atena_school`)  
-> **Версия**: 3.0 (Ultimate Senior Specification)  
+> **Версия**: 3.1 (Complete Source Code & System Architecture Edition)  
 > **Целевая аудитория**: Разработчики, Архитекторы БД, Специалисты по безопасности, QA, Продукт-менеджеры  
 > **Дата последнего обновления**: Июль 2026  
 
@@ -10,7 +10,7 @@
 
 ## 📖 1. Исполнительный Обзор (Executive Summary)
 
-Документ представляет собой полную спецификацию сквозного цикла чекаута и онбординга школы Atena School. Процесс охватывает путь пользователя от выбора курса анонимным посетителем на лендинге (`atenaschool.com`), клиентскую валидацию, серверную инициацию заказа в нулевом доверии (Zero-Trust), прием платежа шлюзом Stripe Gateway, фоновую обработку события через Webhooks и триггеры PostgreSQL, фиксацию бухгалтерского учета и разграниченный доступ пользователей в Личном Кабинете (`app.atenaschool.com`).
+Документ представляет собой абсолютную каноническую спецификацию сквозного цикла чекаута и онбординга школы Atena School. Процесс охватывает весь путь пользователя от выбора курса анонимным посетителем на лендинге (`atenaschool.com`), клиентскую верстку и валидацию, серверную инициацию заказа в нулевом доверии (Zero-Trust), прием платежа шлюзом Stripe Gateway, фоновую обработку события через Webhooks и триггеры PostgreSQL, фиксацию бухгалтерского учета в таблицах БД и разграниченный доступ пользователей в Личном Кабинете (`app.atenaschool.com`).
 
 ### Архитектурные роли чекаута:
 1. **Покупка Родителем для несовершеннолетнего ребенка (`isForChild = true`)**:
@@ -21,18 +21,30 @@
 
 ---
 
-## 🛠️ 2. Технический Стек и Компоненты
+## 🗂️ 2. Каталог Файлов Исходного Кода и Компонентов (Complete File Index)
 
-| Слой | Компонент / Технология | Назначение |
-| :--- | :--- | :--- |
-| **Landing Frontend** | Next.js 16 (`apps/landing`) | Страница курса, форма чекаута, экран успеха (`/checkout/success`). |
-| **Personal Cabinet** | Next.js 16 (`apps/app`) | Личный Кабинет студента/родителя (`app.atenaschool.com/dashboard`). |
-| **Validation Layer** | React Hook Form + Zod | Валидация формы чекаута (`checkoutSchema` в `useCheckout.ts`) и `superRefine()`. |
-| **Server Actions** | Next.js Server Actions | `initiateStripePaymentAction`, `confirmPaymentAction`, `getBookingDetailsServer`. |
-| **Edge Functions** | Supabase Deno Functions | `create-checkout-session`, `stripe-webhook`, `verify-payment`, `send-email`. |
-| **Payment Gateway** | Stripe API (v14 / v2026) | Прием банковских карт (`cs_test_...`, `pi_...`), вебхуки `checkout.session.completed`. |
-| **Database** | PostgreSQL 15 (Supabase) | 7 таблиц (`bookings`, `users`, `students`, `annual_memberships`, `lessons`, `payments`, `stripe_webhook_events`). |
-| **Security Layer** | Postgres RLS + Triggers | Защита таблиц на уровне ядра PostgreSQL, триггеры `SECURITY DEFINER`. |
+Ниже представлен полный реестр всех 18 файлов проекта, участвующих в сценарии покупки:
+
+| № | Файл / Выполняемый компонент | Слой / Среда | Описание и зоны ответственности |
+| :- | :--- | :--- | :--- |
+| 1 | [`apps/landing/src/app/corsi/[id]/page.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/app/corsi/%5Bid%5D/page.tsx) | Landing UI (Next.js) | Карточка курса, дата-пикер первой лекции, выбор расписания. |
+| 2 | [`apps/landing/src/app/checkout/[id]/page.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/app/checkout/%5Bid%5D/page.tsx) | Landing UI (Next.js) | Форма чекаута (верстка полей родителя, ребенка, B2B фактуры SDI/PEC, способа оплаты). |
+| 3 | [`apps/landing/src/features/checkout/hooks/useCheckout.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/features/checkout/hooks/useCheckout.ts) | React State / Zod | Управление формой через React Hook Form, схема `checkoutSchema`, функция `superRefine()`. |
+| 4 | [`apps/landing/src/app/actions/booking.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/app/actions/booking.ts) | Server Actions (Vercel) | `initiateStripePaymentAction()`, `confirmPaymentAction()`, `getBookingDetailsServer()`. |
+| 5 | [`apps/landing/supabase/functions/create-checkout-session/index.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/supabase/functions/create-checkout-session/index.ts) | Edge Function (Deno) | Zero-Trust проверка взноса, вставка черновика в `bookings`, вызов Stripe Sessions API. |
+| 6 | [`apps/landing/supabase/functions/stripe-webhook/index.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/supabase/functions/stripe-webhook/index.ts) | Edge Function (Deno) | Проверка сигнатуры Stripe, защитный лог `stripe_webhook_events`, 2 проводки в `payments`, генерирование 9 уроков. |
+| 7 | [`apps/landing/supabase/functions/verify-payment/index.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/supabase/functions/verify-payment/index.ts) | Edge Function (Deno) | Серверное подтверждение статуса оплаты `payment_status = 'paid'`. |
+| 8 | [`apps/landing/supabase/functions/_shared/utils.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/supabase/functions/_shared/utils.ts) | Edge Shared Utility | Общие утилиты CORS, инициализация `createSupabaseAdmin()` и `createStripe()`. |
+| 9 | [`apps/landing/src/lib/utils/bookingScheduler.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/lib/utils/bookingScheduler.ts) | Business Logic Utility | Математика вычисления дат и слотов занятий с учетом таймзоны `Europe/Rome`. |
+| 10 | [`apps/landing/src/app/checkout/success/page.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/app/checkout/success/page.tsx) | Landing UI (Next.js) | Экран успехи и вывода чека заказов. |
+| 11 | [`apps/landing/src/features/checkout/hooks/useCheckoutSuccess.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/features/checkout/hooks/useCheckoutSuccess.ts) | React State | Управление состояниями `verifying`, салют конфети, генерация Magic Link. |
+| 12 | [`apps/landing/src/app/autenticazione/callback/route.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/landing/src/app/autenticazione/callback/route.ts) | OAuth Callback | Перехват Google OAuth и редирект в ЛК. |
+| 13 | [`apps/app/src/app/autenticazione/callback/route.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/autenticazione/callback/route.ts) | OAuth Callback | Перехват Google OAuth на домене ЛК и вызов `autoLinkGuestBookings()`. |
+| 14 | [`packages/api/src/services/dashboardService.ts`](file:///Users/krimson/PROJECTS/atena_school/packages/api/src/services/dashboardService.ts) | Package API Logic | Чистый RLS методы `autoLinkGuestBookings()` и `fetchUserBookingsEnriched()`. |
+| 15 | [`apps/app/src/app/actions/dashboard.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/actions/dashboard.ts) | Server Actions (Vercel) | `getDashboardDataAction()` — подтяжка имени пользователя из базы данных `public.users`. |
+| 16 | [`apps/app/src/features/dashboard/hooks/useDashboard.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/features/dashboard/hooks/useDashboard.ts) | React State (App) | Управление состоянием Личного Кабинета родителя/ученика. |
+| 17 | [`apps/app/src/app/dashboard/page.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/dashboard/page.tsx) | Dashboard UI (Next.js) | Верстка панели ЛК, список уроков, кнопки разлогина и профиля. |
+| 18 | `Supabase PL/pgSQL Triggers` | Database Kernel | Триггеры `trg_booking_student_enrollment`, `trg_sync_annual_membership`, `check_user_update`. |
 
 ---
 
@@ -71,25 +83,25 @@ sequenceDiagram
     EF_Hook->>Triggers: 17. Вызывается trg_sync_annual_membership
     Triggers->>DB: 18. Активирует членство в public.annual_memberships
     EF_Hook->>DB: 19. INSERT INTO lessons (генерирует 9 уроков)
-    Stripe-->>Form: 20. Редирект на /checkout/success?session_id=...&booking_id=...
-    Form->>Action: 21. confirmPaymentAction() -> POST /verify-payment
+    Stripe-->>Landing: 20. Редирект на /checkout/success?session_id=...&booking_id=...
+    Landing->>Action: 21. confirmPaymentAction() -> POST /verify-payment
     Action->>DB: 22. getBookingDetailsServer() -> JOIN courses & payments
-    Action-->>Form: 23. Выводит подтвержденный чек (€109.80 курс + €30.00 взнос = €139.80)
+    Action-->>Landing: 23. Выводит подтвержденный чек (€109.80 курс + €30.00 взнос = €139.80)
     Guest->>Cabinet: 24. Переход в ЛК по кнопке (Google Auth / Magic Link)
-    Cabinet->>DB: 25. autoLinkGuestBookings() (чистый RLS без Service Role Key)
+    Cabinet->>DB: 25. autoLinkGuestBookings() (чистый user-scoped RLS без Service Role)
     DB-->>Cabinet: 26. Отображает курс + имя из БД (Andrii Petukhov / Viktoria Petukhova)
 ```
 
 ---
 
-## 🔍 4. Пошаговая Детализация Логики Кода и Файлов
+## 🔍 4. Пошаговое Описание Бизнес-Логики в Файлах Проекта
 
 ### Шаг 1: Выбор курса и расписания на лендинге
 - **Файл**: `apps/landing/src/app/corsi/[id]/page.tsx`
 - Пользователь выбирает дату первой лекции (например, `2026-07-30`) и временной слот (например, `Martedì e Giovedì 16:00-17:15`).
 - Клиентский код формирует URL перехода: `/checkout/a2-key-for-schools?date=2026-07-30&time=Marted%C3%AC%20e%20Gioved%C3%AC%2016:00-17:15`.
 
-### Шаг 2: Валидация и заполнение формы чекаута
+### Шаг 2: Валидация и верстка формы чекаута
 - **Файлы**: `apps/landing/src/features/checkout/hooks/useCheckout.ts`, `apps/landing/src/app/checkout/[id]/page.tsx`
 - **Zod-схема (`checkoutSchema`)**:
   - Базовые обязательные поля: `firstName` (мин. 2 симв.), `lastName` (мин. 2 симв.), `email` (valid email), `phone` (мин. 6 симв.), `taxCode` (мин. 11 симв.).
@@ -123,7 +135,7 @@ sequenceDiagram
 - Пользователь вводит карту (`4242 4242 4242 4242`) на домене `checkout.stripe.com`.
 - Stripe списывает средства (€139.80) и генерирует `payment_intent` (`pi_...`).
 
-### Шаг 6: Фоновая обработка Webhook (`stripe-webhook`)
+### Шаг 6: Фоновая обработка платежа (Webhook & Triggers)
 - **Файл**: `apps/landing/supabase/functions/stripe-webhook/index.ts`
 1. **Защита от повторной обработки (Idempotency Guard)**:
    - Вставляется запись в `public.stripe_webhook_events`. Если Postgres возвращает код ошибки `23505` (unique_violation), функция завершается с кодом `200 OK` без повторной обработки.
@@ -139,7 +151,7 @@ sequenceDiagram
 ### Шаг 7: Формирование чека успеха (`/checkout/success`)
 - **Файлы**: `apps/landing/src/features/checkout/hooks/useCheckoutSuccess.ts`, `apps/landing/src/app/checkout/success/page.tsx`
 1. Хук запускает `verifying = true`, блокируя карточку чека лоадером.
-2. Серверный метод `getBookingDetailsServer(bookingId)` выполняем JOIN `courses` и считывает проводки из `public.payments`:
+2. Серверный метод `getBookingDetailsServer(bookingId)` выполняет JOIN `courses` и считывает проводки из `public.payments`:
    - `courseName` = `courses.name` (`A2 Key for Schools`)
    - `coursePrice` = сумма транзакции `type = 'payment'` (€109.80)
    - `regFee` = сумма транзакции `type = 'registration_fee'` (€30.00)
