@@ -1,10 +1,11 @@
 "use client";
 
-import { Calendar, Clock, BookmarkSimple, MapPin } from "@phosphor-icons/react";
+import { Calendar, Clock, BookmarkSimple, MapPin, SignOut } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Link } from "@/i18n/routing";
 import { useDashboard } from "@/features/dashboard/hooks/useDashboard";
+import { signOutAction } from "@/app/actions/auth";
 
 export default function DashboardPage() {
   const dateLocale = it;
@@ -74,12 +75,24 @@ export default function DashboardPage() {
               Benvenuto, {user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}
             </p>
           </div>
-          <a
-            href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
-          >
-            Esplora altri corsi
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
+            >
+              Esplora altri corsi
+            </a>
+            <button
+              onClick={async () => {
+                await signOutAction();
+                window.location.href = "/autenticazione/accedi";
+              }}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer border border-red-200/60"
+            >
+              <SignOut className="w-4 h-4" />
+              <span>Esci</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
