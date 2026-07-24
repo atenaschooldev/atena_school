@@ -1,4 +1,4 @@
-import { SupabaseClient, createClient as createAdminClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { isFuture, parseISO } from "date-fns";
 
 export interface EnrichedBooking {
@@ -28,21 +28,15 @@ export async function autoLinkGuestBookings(
   if (!email || !userId) return;
 
   const cleanEmail = email.trim().toLowerCase();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  const client = (serviceRoleKey && supabaseUrl)
-    ? createAdminClient(supabaseUrl, serviceRoleKey)
-    : supabase;
-
-  // Link any unlinked bookings
-  await client
+  // Link unlinked guest bookings where email matches
+  await supabase
     .from("bookings")
     .update({ user_id: userId })
     .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .is("user_id", null);
 
-  const { data: latestBooking } = await client
+  const { data: latestBooking } = await supabase
     .from("bookings")
     .select("student_phone, student_name, student_email, purchaser_name, purchaser_email, purchaser_phone")
     .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
@@ -74,7 +68,7 @@ export async function autoLinkGuestBookings(
     if (isPurchaser) updateData.role = "parent";
 
     try {
-      await client
+      await supabase
         .from("users")
         .update(updateData)
         .eq("id", userId);
@@ -94,15 +88,8 @@ export async function fetchUserBookingsEnriched(
     await autoLinkGuestBookings(user.email, user.id, supabase);
   }
 
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-  const client = (serviceRoleKey && supabaseUrl)
-    ? createAdminClient(supabaseUrl, serviceRoleKey)
-    : supabase;
-
-  // Fetch raw bookings with admin client to bypass RLS restrictions for parents and students
-  const { data } = await client
+  // Fetch raw bookings via user authenticated client (enforced strictly by Postgres RLS)
+  const { data } = await supabase
     .from("bookings")
     .select("*")
     .or(`user_id.eq.${user.id},student_email.ilike.${user.email},purchaser_email.ilike.${user.email}`)
