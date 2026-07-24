@@ -10,6 +10,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_SITE_URL: z.string().url().default(
     process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://atenaschool.com'
   ),
+  NEXT_PUBLIC_APP_URL: z.string().url().default(
+    process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://atena-school-landing-three.vercel.app'
+  ),
   ADMIN_EMAILS: z.string().default('').transform((val) => {
     if (!val) return [];
     return val.split(',').map(e => e.trim());
@@ -36,6 +39,7 @@ const processEnv = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   ADMIN_EMAILS: process.env.ADMIN_EMAILS || '',
   NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
   NEXT_PUBLIC_GTM_ID: process.env.NEXT_PUBLIC_GTM_ID,

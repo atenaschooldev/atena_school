@@ -9,7 +9,8 @@ This repository is managed using **pnpm workspaces** for package management and 
 ```
 atena_school/
 ├── apps/                 # Application projects (isolated runtimes)
-│   ├── crm/              # React + Vite + TanStack Start (Admin Dashboard)
+│   ├── admin/            # React + Vite + TanStack Start (Admin & CRM Dashboard)
+│   ├── app/              # Next.js / React (Personal Cabinet for Students, Parents, Teachers)
 │   ├── landing/          # Next.js 15 + Supabase (Public & Landing pages)
 │   ├── backend/          # NestJS Fastify + Prisma (Core REST API)
 │   └── mobile/           # React Native + Expo (Mobile application)
@@ -34,7 +35,8 @@ atena_school/
 
 For detailed information, installation, and deployment steps of each individual application, please refer to their respective guides:
 
-*   **[CRM Dashboard README](apps/crm/README.md)** — Frontend CRM dashboard for administrators and teachers.
+*   **[Admin Dashboard README](apps/admin/README.md)** — Frontend administration dashboard for management and staff.
+*   **[Personal Cabinet README](apps/app/README.md)** — Personal portal for students, parents, and teachers.
 *   **[Next.js Landing README](apps/landing/README.md)** — Public marketing page and customer registration portal.
 *   **[NestJS Backend README](apps/backend/README.md)** — Core business logic, database migrations, and REST endpoints.
 *   **[Expo Mobile README](apps/mobile/README.md)** — Native application for students and staff.

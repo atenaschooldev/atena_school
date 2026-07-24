@@ -57,15 +57,11 @@ export async function GET(request: Request) {
         console.warn('Error syncing user and bookings in OAuth callback:', err);
       }
 
-      if (process.env.NODE_ENV === 'development') {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
-
-      const baseUrl = env.NEXT_PUBLIC_SITE_URL || origin;
-      return NextResponse.redirect(`${baseUrl}${next}`);
+      const appUrl = env.NEXT_PUBLIC_APP_URL || origin;
+      return NextResponse.redirect(`${appUrl}${next.startsWith('/') ? next : '/dashboard'}`);
     }
   }
 
-  const baseUrl = process.env.NODE_ENV === 'development' ? origin : (env.NEXT_PUBLIC_SITE_URL || origin);
-  return NextResponse.redirect(`${baseUrl}/autenticazione/errore`);
+  const appUrl = env.NEXT_PUBLIC_APP_URL || origin;
+  return NextResponse.redirect(`${appUrl}/autenticazione/errore`);
 }

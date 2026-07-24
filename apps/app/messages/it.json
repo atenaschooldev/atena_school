@@ -1,0 +1,291 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "Chi siamo",
+    "courses": "Corsi",
+    "blog": "Blog",
+    "contact": "Contattaci",
+    "test": "Test di inglese",
+    "navBadge": "Nuovo"
+  },
+  "hero": {
+    "title": "ATENA SCHOOL",
+    "cambridge": "Cambridge English",
+    "qualifications": "Qualifications",
+    "tagline": "\"Con le lingue, ti senti a casa ovunque\"",
+    "author": "Edward De Waal",
+    "accreditations": "Certificazioni Internazionali e Partner Ufficiali",
+    "location": "Cittanova, Calabria",
+    "badge_text": "Cambridge English & EIPASS Center",
+    "cta_booking": "Prenota una consulenza",
+    "cta_courses": "Scopri i corsi",
+    "seo_miur_val": "LINGUE",
+    "seo_miur_lbl": "Inglese",
+    "seo_exams_val": "DIGITALE",
+    "seo_exams_lbl": "Informatica",
+    "seo_voucher_val": "STUDIO",
+    "seo_voucher_lbl": "Doposcuola",
+    "feature_1": "Percorsi personalizzati individuali o in piccoli gruppi",
+    "feature_2": "Docenti qualificati e madrelingua",
+    "feature_3": "Supporto costante e materiali aggiornati",
+    "feature_4": "Risultati concreti e certificazioni riconosciute"
+  },
+  "stats": {
+    "students_val": "100+",
+    "students_lbl": "Studenti formati ogni anno",
+    "pass_rate_val": "98%",
+    "pass_rate_lbl": "Tasso di superamento esami",
+    "experience_val": "10+",
+    "experience_lbl": "Anni di esperienza",
+    "certifications_val": "2",
+    "certifications_lbl": "Certificazioni ufficiali Cambridge & EIPASS"
+  },
+  "about": {
+    "title": "Chi siamo",
+    "p1": "La nostra scuola si chiama Atena School non a caso. Il nome è un omaggio alla dea della saggezza, una figura che per gli antichi greci era protettrice delle arti, della conoscenza e della guerra strategica. La sua forza e la sua intelligenza non erano solo doti innate, ma il frutto di studio e preparazione, proprio come l'apprendimento. Abbiamo scelto la dea Atena per far capire la nostra missione: unire la ricchezza della cultura classica, che è nelle radici della nostra terra, con il mondo moderno e le sue sfide.",
+    "p2": "Il richiamo a una figura femminile così potente non è casuale. Noi, le due fondatrici, crediamo fortemente nel potere della conoscenza e nella forza delle donne. Per questo, abbiamo voluto che il nome della nostra scuola fosse un simbolo della saggezza e dell'empowerment femminile. Vogliamo che la cultura e l'educazione siano strumenti di potere, e vogliamo metterli nelle mani di chiunque voglia crescere e imparare.",
+    "p3": "Oltre alle certificazioni Cambridge English per le lingue, offriamo corsi di preparazione e certificazione Certipass/EIPASS (European Informatics Passport), ideali per studenti, docenti e professionisti che desiderano certificare le proprie competenze informatiche riconosciute a livello europeo.",
+    "cta": "Contattaci"
+  },
+  "testimonials": {
+    "title": "Le esperienze dei nostri studenti",
+    "list": [
+      {
+        "quote": "Ad ottobre dell’anno scorso mi sono iscritta all’Atena School per frequentare il corso B2 nonostante nella scuola che frequentavo precedentemente mi avevano detto che non ero ancora pronta e che per sicurezza avrei dovuto prima fare il B1+. Sin dall’inizio le mie insegnanti, Elisabetta e Rita, mi hanno detto che ero nelle condizioni di raggiungere l’obbiettivo che mi ero prefissata, studiando e seguendo i consigli che entrambe mi davano. Ricordo con grandissima emozione il giorno in cui Elisabetta mi ha chiamata per dirmi che avevo superato l’esame, ce l’avevo fatta! La cosa che più ho apprezzato durante l’anno è stato il modo in cui le insegnanti mi hanno seguita, quasi come se fossero lezioni singole private. Ciò mi è servito per non arrendermi e per imparare la lingua con costanza e assiduità. È stato davvero un bel percorso.",
+        "author": "Alice, 15 anni"
+      },
+      {
+        "quote": "Sono davvero soddisfatto delle lezioni di inglese che ho seguito per migliorare le mie competenze linguistiche per lavoro. La mia insegnante è stata molto professionale e paziente, e ha saputo adattare le lezioni alle mie esigenze specifiche",
+        "author": "Andrea, 30 anni"
+      },
+      {
+        "quote": "Atena school è una scuola piccola, con differenti corsi di inglese che variano in base all’età. Io l’ho frequentata per 3 anni quasi 4. L’ambiente è abbastanza tranquillo. I risultati sono ottimi, ma si hanno solo se si ha voglia di lavorare! Ho fatto anche 2 esami, preparati molto bene, anche se all’inizio si è ansiosi, alla fine tutto va bene.",
+        "author": "Violante, 13 anni"
+      },
+      {
+        "quote": "Ho frequentato il corso per la preparazione al C1 Advanced e sono riuscito a superare l'esame al primo colpo! Elisabetta e Rita sono fantastiche: professionali, preparate e sempre pronte a dare consigli utili. L'ambiente è stimolante e accogliente.",
+        "author": "Marco, 21 anni"
+      },
+      {
+        "quote": "Ottima scuola! Mio figlio ha frequentato il doposcuola e ha fatto enormi progressi in inglese e nelle materie scolastiche. Le insegnanti sono dolcissime e molto preparate. Consigliatissimo per i bambini.",
+        "author": "Sofia, genitore"
+      },
+      {
+        "quote": "Grazie ad Atena School ho conseguito la certificazione EIPASS in pochissimo tempo. Le spiegazioni sono chiare e il tutoraggio è eccellente. Fondamentale per i miei concorsi pubblici.",
+        "author": "Luigi, 28 anni"
+      },
+      {
+        "quote": "Un'esperienza magnifica. Le lezioni di inglese per ragazzi sono interattive e mai noiose. Si impara divertendosi e i risultati si vedono subito. La migliore scuola della zona!",
+        "author": "Chiara, 16 anni"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contattaci",
+    "subtitle": "Prenota un test di livello gratuito o contattaci per ricevere maggiori informazioni sui nostri corsi.",
+    "form": {
+      "title": "Richiedi una consulenza gratuita",
+      "firstName": "Nome",
+      "lastName": "Cognome",
+      "email": "Email",
+      "message": "Messaggio",
+      "submit": "Invia richiesta"
+    }
+  },
+  "coursesPage": {
+    "title": "I Nostri Corsi",
+    "subtitle": "Percorsi formativi su misura per ogni esigenza",
+    "sections": {
+      "language": "Corsi di lingua",
+      "academic": "Recupero materie scolastiche",
+      "certipass": "Certificazioni Certipass / EIPASS"
+    },
+    "items": {},
+    "cta": "Dettagli"
+  },
+  "booking": {
+    "title": "Prenota la tua lezione",
+    "description": "Inizia il tuo viaggio verso il successo linguistico. Prenota oggi stesso un test di livello o una lezione di prova gratuita con i nostri esperti.",
+    "cta": "Prenota ora"
+  },
+  "shop": {
+    "title": "I nostri prezzi",
+    "subtitle": "Trasparenza e qualità. Scegli il percorso più adatto alle tue esigenze.",
+    "cta": "Prenota ora",
+    "categories": {
+      "language": "Corsi di Lingua",
+      "tutoring": "Tutoraggio & Doposcuola",
+      "specialized": "Specialistico"
+    },
+    "items": []
+  },
+  "footer": {
+    "copyright": "© 2026 Atena School. Tutti i diritti riservati."
+  },
+  "cookieBanner": {
+    "title": "Gestione dei Cookie",
+    "description": "Utilizziamo i cookie per migliorare la tua esperienza di navigazione, servire pubblicità o contenuti personalizzati e analizzare il nostro traffico. Facendo clic su \"Accetta tutto\", acconsenti al nostro utilizzo dei cookie.",
+    "acceptAll": "Accetta tutto",
+    "decline": "Rifiuta",
+    "settings": "Impostazioni",
+    "save": "Salva preferenze",
+    "categories": {
+      "mandatory": {
+        "title": "Necessari",
+        "description": "Questi cookie sono essenziali per il corretto funzionamento del sito."
+      },
+      "analytics": {
+        "title": "Analitici",
+        "description": "Questi cookie ci aiutano a capire come i visitatori interagiscono con il sito."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "description": "Utilizzati per tracciare i visitatori sui siti web per mostrare annunci pertinenti."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Informativa sulla Privacy",
+    "lastUpdated": "Ultimo aggiornamento: 10 Aprile 2026",
+    "content": {
+      "intro": "Presso Atena School, attribuiamo grande importanza alla protezione dei tuoi dati personali. Questa Informativa sulla Privacy spiega come raccogliamo, utilizziamo e proteggiamo le tue informazioni.",
+      "sections": [
+        {
+          "title": "1. Titolare del Trattamento",
+          "text": "Il titolare del trattamento dei dati è Atena School, con sede in Cittanova, Italia. Email di contatto: atenaschool20@gmail.com"
+        },
+        {
+          "title": "2. Dati Raccolti",
+          "text": "Raccogliamo dati forniti volontariamente tramite moduli di contatto e iscrizione (nome, email, telefono) e dati di navigazione tramite cookie."
+        },
+        {
+          "title": "3. Finalità del Trattamento",
+          "text": "I tuoi dati vengono utilizzati per gestire le iscrizioni ai corsi, rispondere alle richieste di informazioni e migliorare i nostri servizi."
+        },
+        {
+          "title": "4. Diritti dell'Interessato",
+          "text": "Hai il diritto di accedere, rettificare o cancellare i tuoi dati personali in qualsiasi momento contattandoci via email."
+        }
+      ]
+    }
+  },
+  "cookies": {
+    "title": "Informativa sui Cookie",
+    "lastUpdated": "Ultimo aggiornamento: 10 Aprile 2026",
+    "description": "Questa pagina spiega cosa sono i cookie e come li utilizziamo sul sito di Atena School.",
+    "sections": [
+      {
+        "title": "Cosa sono i cookie?",
+        "text": "I cookie sono piccoli file di testo memorizzati sul tuo dispositivo quando visiti un sito web. Ci aiutano a far funzionare il sito in modo efficiente."
+      },
+      {
+        "title": "Tipi di cookie utilizzati",
+        "text": "Utilizziamo cookie tecnici necessari per il sito, cookie analitici (Google Analytics) per monitorare le prestazioni e cookie di marketing per contenuti personalizzati."
+      },
+      {
+        "title": "Come gestire i cookie",
+        "text": "Puoi modificare le tue preferenze in qualsiasi momento tramite il nostro banner dei cookie o le impostazioni del tuo browser."
+      }
+    ]
+  },
+  "auth": {
+    "login": {
+      "title": "Bentornato",
+      "subtitle": "Accedi al tuo account per continuare",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Accedi",
+      "oauth": "Oppure continua con",
+      "noAccount": "Non hai un account? Registrati",
+      "forgotPassword": "Password dimenticata?",
+      "error": "Email o password non corretta"
+    },
+    "register": {
+      "title": "Crea un account",
+      "subtitle": "Inizia la tua avventura con Atena School",
+      "fullName": "Nome Completo",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Registrati",
+      "oauth": "Oppure registrati con",
+      "hasAccount": "Hai già un account? Accedi",
+      "success": "Account creato! Controlla la tua email per confermare.",
+      "backToLogin": "Torna al login"
+    },
+    "forgotPassword": {
+      "title": "Recupera password",
+      "subtitle": "Inserisci la tua email per ricevere un link di ripristino",
+      "email": "Email",
+      "submit": "Invia link",
+      "success": "Link inviato! Controlla la tua email.",
+      "backToLogin": "Torna al login"
+    },
+    "resetPassword": {
+      "title": "Nuova password",
+      "subtitle": "Inserisci la tua nuova password",
+      "newPassword": "Nuova Password",
+      "submit": "Salva password",
+      "success": "Password aggiornata con successo!"
+    }
+  },
+  "booking": {
+    "title": "Prenota la tua lezione",
+    "description": "Scegli la data e l'orario più comodi per te.",
+    "cta": "Aggiungi al Carrello",
+    "success": "Prenotazione aggiunta con successo!",
+    "summary": "Riepilogo",
+    "service": "Servizio",
+    "teacher": "Insegnante",
+    "location": "Sede",
+    "date": "Data",
+    "time": "Orario",
+    "total": "Totale",
+    "back": "Torna alla lista"
+  },
+  "cart": {
+    "title": "Il tuo Carrello",
+    "empty": "Il tuo carrello è vuoto",
+    "summary": "Riepilogo Ordine",
+    "pay": "Paga Ora (Stripe)",
+    "notAvailable": "Nessun pacchetto trovato nel database."
+  },
+  "ctaBanner": {
+    "title": "Perché scegliere Atena School?",
+    "feature_1_title": "Percorsi",
+    "feature_1_desc": "su misura",
+    "feature_2_title": "Risultati",
+    "feature_2_desc": "concreti",
+    "feature_3_title": "Certificazioni",
+    "feature_3_desc": "riconosciute",
+    "feature_4_title": "Supporto",
+    "feature_4_desc": "continuo",
+    "cta_title": "Pronto a iniziare il tuo percorso?",
+    "cta_desc": "Prenota una consulenza gratuita con i nostri tutor.",
+    "cta_btn": "Prenota ora"
+  },
+  "teachers": {
+    "title": "I Nostri Insegnanti",
+    "empty": "Presto in arrivo..."
+  },
+  "englishTest": {
+    "title": "Test di Inglese Online Gratis",
+    "subtitle": "Metti alla prova le tue competenze in soli 2 minuti. Rispondi a 10 domande rapide e scopri subito il tuo livello CEFR stimato (da A1 a C2).",
+    "btnStart": "Inizia il Test di 2 Minuti ⚡",
+    "btnRestart": "Riprova il test ↻",
+    "btnContact": "Prenota una consulenza gratuita",
+    "questionOf": "Domanda {current} di {total}",
+    "correct": "Esatto!",
+    "incorrect": "Sbagliato!",
+    "feedbackCorrect": "Risposta corretta!",
+    "feedbackIncorrect": "Risposta errata. La risposta corretta era: {correctOption}",
+    "resultTitle": "Il tuo livello stimato è:",
+    "disclaimer": "*Questo test fornisce una stima indicativa del livello e non costituisce una certificazione ufficiale.",
+    "levelDescription": "Hai risposto correttamente a {correctCount} domande su {total}.",
+    "level_A1": "Principiante (A1)",
+    "level_A2": "Elementare (A2)",
+    "level_B1": "Intermedio (B1)",
+    "level_B2": "Intermedio Superiore (B2)",
+    "level_C1": "Avanzato (C1)",
+    "level_C2": "Padronanza (C2)"
+  }
+}

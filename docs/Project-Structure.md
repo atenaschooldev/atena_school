@@ -35,7 +35,8 @@ Contains runnable applications.
 apps/
 
     landing/
-    crm/
+    admin/
+    app/
     mobile/
 ```
 
@@ -65,10 +66,10 @@ Purpose:
 
 ---
 
-# apps/crm
+# apps/admin
 
 ```
-crm/
+admin/
 
     src/
 
@@ -81,7 +82,23 @@ crm/
     public/
 ```
 
-Contains administrative application.
+Contains administrative and management application (CRM/Admin).
+
+---
+
+# apps/app
+
+```
+app/
+
+    src/
+
+        app/
+        features/
+        components/
+```
+
+Contains personal portal for students, parents, and teachers (LK).
 
 ---
 

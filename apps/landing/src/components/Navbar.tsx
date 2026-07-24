@@ -14,6 +14,7 @@ import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { getCartCountAction, getCurrentUserAction } from "@/app/actions/booking";
 import { signOutAction } from "@/app/actions/auth";
 import { getSessionId, mergeGuestBookings } from "@/lib/utils";
+import { env } from "@/config/env";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -35,7 +36,7 @@ const Navbar = () => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       const limit = isHome ? window.innerHeight - 80 : 20;
-      
+
       setIsScrolled(currentScrollY > limit);
 
       if (currentScrollY <= 20) {
@@ -47,7 +48,7 @@ const Navbar = () => {
         // Scrolling up -> show header
         setVisible(true);
       }
-      
+
       lastScrollY.current = currentScrollY;
     };
 
@@ -152,9 +153,8 @@ const Navbar = () => {
 
   return (
     <>
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-2 px-4 md:px-8 ${
-        visible ? "translate-y-0" : "-translate-y-full"
-      } bg-white shadow-sm border-b border-slate-100`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-2 px-4 md:px-8 ${visible ? "translate-y-0" : "-translate-y-full"
+        } bg-white shadow-sm border-b border-slate-100`}>
         <div className="mx-auto max-w-7xl flex items-center justify-between h-16 px-6">
           {/* Logo */}
           <div className="flex items-center gap-6">
@@ -176,8 +176,8 @@ const Navbar = () => {
                 <span className="font-serif font-black text-base xs:text-lg md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
                   Atena <span style={{ color: '#FAA904' }}>School</span>
                 </span>
-                <span 
-                  className="text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5" 
+                <span
+                  className="text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5"
                   style={{ color: isLightHeader ? 'rgba(255, 255, 255, 0.6)' : '#9FA2AC' }}
                 >
                   civitatis ornamento
@@ -192,11 +192,10 @@ const Navbar = () => {
               <Link
                 key={l.href}
                 href={l.href as any}
-                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${
-                  isLightHeader 
-                    ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
+                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${isLightHeader
+                    ? "text-white hover:text-[#FAA904] hover:bg-white/10"
                     : "text-gray-700 hover:text-primary hover:bg-primary/10"
-                }`}
+                  }`}
                 onClick={() => handleLinkClick(l.href)}
               >
                 {l.label}
@@ -207,11 +206,10 @@ const Navbar = () => {
           {/* Icons & Actions */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/carrello" className="relative group">
-              <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
-                isLightHeader 
-                  ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
+              <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
+                  ? "text-white hover:text-[#FAA904] hover:bg-white/10"
                   : "text-gray-600 hover:text-primary hover:bg-primary/10"
-              }`}>
+                }`}>
                 <ShoppingCart className="w-5 h-5 cursor-pointer" />
               </div>
               {cartCount > 0 && (
@@ -224,14 +222,13 @@ const Navbar = () => {
             {user ? (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <div className={`flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300 ${
-                    isLightHeader ? "hover:bg-white/10" : "hover:bg-primary/10"
-                  }`}>
+                  <div className={`flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300 ${isLightHeader ? "hover:bg-white/10" : "hover:bg-primary/10"
+                    }`}>
                     <UserCircle className={`w-8 h-8 transition-colors ${isLightHeader ? "text-white" : "text-gray-600"}`} />
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => router.push('/dashboard' as any)}>
+                  <DropdownMenuItem onClick={() => { window.location.href = `${env.NEXT_PUBLIC_APP_URL}/dashboard`; }}>
                     Area personale
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive">
@@ -241,17 +238,15 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link
-                href="/autenticazione/accedi"
-                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${
-                  isLightHeader 
-                    ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
-                    : "text-gray-700 hover:text-primary hover:bg-primary/10"
-                }`}
-                onClick={() => handleLinkClick("/autenticazione/accedi")}
+              <a
+                href={env.NEXT_PUBLIC_APP_URL}
+                className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
+                    ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
+                    : "bg-[#043569] text-white hover:bg-[#F8861D]"
+                  }`}
               >
-                Login
-              </Link>
+                Area Personale
+              </a>
             )}
           </div>
 
@@ -259,11 +254,10 @@ const Navbar = () => {
           <button
             aria-label={open ? "Chiudi menu" : "Apri menu"}
             aria-expanded={open}
-            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
-              isLightHeader 
-                ? "text-white hover:bg-white/10" 
+            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
+                ? "text-white hover:bg-white/10"
                 : "text-gray-700 hover:bg-primary/10"
-            }`}
+              }`}
             onClick={() => setOpen(!open)}
           >
             <svg
@@ -318,159 +312,157 @@ const Navbar = () => {
       {/* Mobile Drawer (Slide-in from right) */}
       {mounted && createPortal(
         <>
-            {/* Backdrop with fade and blur */}
-            <div
-              className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
-                open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          {/* Backdrop with fade and blur */}
+          <div
+            className={`md:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
               }`}
-              style={{ zIndex: 100 }}
-              onClick={() => setOpen(false)}
-              aria-hidden="true"
-            />
+            style={{ zIndex: 100 }}
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
 
-            {/* Drawer Panel */}
-            <div
-              className={`md:hidden fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[400px] bg-white text-gray-950 shadow-2xl flex flex-col z-[101] transition-transform duration-300 ease-in-out ${
-                open ? "translate-x-0" : "translate-x-full"
+          {/* Drawer Panel */}
+          <div
+            className={`md:hidden fixed top-0 right-0 h-[100dvh] w-full sm:max-w-[400px] bg-white text-gray-950 shadow-2xl flex flex-col z-[101] transition-transform duration-300 ease-in-out ${open ? "translate-x-0" : "translate-x-full"
               }`}
-            >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100 shrink-0 bg-white">
-                {/* Logo / Brand */}
-                <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-                  <Image
-                    src={logo}
-                    alt="Atena School"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                  <div className="flex flex-col items-start leading-tight">
-                    <span className="font-serif font-black text-sm tracking-wider uppercase select-none whitespace-nowrap text-[#00328F]">
-                      Atena <span className="text-[#FAA904]">School</span>
-                    </span>
-                    <span className="text-[8px] tracking-widest uppercase select-none whitespace-nowrap text-[#9FA2AC]">
-                      civitatis ornamento
-                    </span>
-                  </div>
-                </Link>
+          >
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100 shrink-0 bg-white">
+              {/* Logo / Brand */}
+              <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+                <Image
+                  src={logo}
+                  alt="Atena School"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="font-serif font-black text-sm tracking-wider uppercase select-none whitespace-nowrap text-[#00328F]">
+                    Atena <span className="text-[#FAA904]">School</span>
+                  </span>
+                  <span className="text-[8px] tracking-widest uppercase select-none whitespace-nowrap text-[#9FA2AC]">
+                    civitatis ornamento
+                  </span>
+                </div>
+              </Link>
 
-                {/* Close Button */}
-                <button
+              {/* Close Button */}
+              <button
+                onClick={() => setOpen(false)}
+                className="p-2 rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 duration-200 flex items-center justify-center shadow-sm"
+                aria-label="Chiudi menu"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col justify-between gap-8 bg-white">
+              {/* Navigation Links */}
+              <div className="flex flex-col gap-1.5">
+                {navLinks.map((l) => {
+                  const Icon = l.icon;
+                  return (
+                    <Link
+                      key={l.href}
+                      href={l.href as any}
+                      className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
+                      onClick={() => setOpen(false)}
+                    >
+                      <div className="flex items-center gap-4">
+                        {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
+                        <span>{l.label}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+
+                {/* Shopping Cart */}
+                <Link
+                  href="/carrello"
+                  className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
                   onClick={() => setOpen(false)}
-                  className="p-2 rounded-full border border-gray-200 bg-white text-gray-500 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-95 duration-200 flex items-center justify-center shadow-sm"
-                  aria-label="Chiudi menu"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                </button>
+                  <div className="flex items-center gap-4">
+                    <ShoppingCart className="w-5 h-5 text-[#FAA904]" weight="bold" />
+                    <span>Carrello</span>
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="bg-[#FAA904] text-white text-xs font-black h-5 w-5 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
               </div>
 
-              {/* Drawer Content */}
-              <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col justify-between gap-8 bg-white">
-                {/* Navigation Links */}
-                <div className="flex flex-col gap-1.5">
-                  {navLinks.map((l) => {
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.href}
-                        href={l.href as any}
-                        className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
+              {/* Bottom Section */}
+              <div className="space-y-6">
+                {/* User Section / Login */}
+                <div className="border-t border-gray-100 pt-6 space-y-3">
+                  {user ? (
+                    <div className="space-y-2">
+                      <a
+                        href={`${env.NEXT_PUBLIC_APP_URL}/dashboard`}
+                        className="flex items-center justify-between py-3 px-4 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
                         onClick={() => setOpen(false)}
                       >
-                        <div className="flex items-center gap-4">
-                          {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
-                          <span>{l.label}</span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-
-                  {/* Shopping Cart */}
-                  <Link
-                    href="/carrello"
-                    className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
-                    onClick={() => setOpen(false)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <ShoppingCart className="w-5 h-5 text-[#FAA904]" weight="bold" />
-                      <span>Carrello</span>
+                        Area personale
+                      </a>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+                      >
+                        <SignOut className="w-4 h-4" />
+                        Logout
+                      </button>
                     </div>
-                    {cartCount > 0 && (
-                      <span className="bg-[#FAA904] text-white text-xs font-black h-5 w-5 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
-                        {cartCount}
-                      </span>
-                    )}
-                  </Link>
+                  ) : (
+                    <a
+                      href={env.NEXT_PUBLIC_APP_URL}
+                      className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"
+                      onClick={() => setOpen(false)}
+                    >
+                      Area Personale
+                    </a>
+                  )}
                 </div>
 
-                {/* Bottom Section */}
-                <div className="space-y-6">
-                  {/* User Section / Login */}
-                  <div className="border-t border-gray-100 pt-6 space-y-3">
-                    {user ? (
-                      <div className="space-y-2">
-                        <Link
-                          href="/dashboard"
-                          className="flex items-center justify-between py-3 px-4 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
-                          onClick={() => setOpen(false)}
-                        >
-                          Area personale
-                        </Link>
-                        <button
-                          onClick={() => {
-                            handleLogout();
-                            setOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                        >
-                          <SignOut className="w-4 h-4" />
-                          Logout
-                        </button>
-                      </div>
-                    ) : (
-                      <Link
-                        href="/autenticazione/accedi"
-                        className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-extrabold text-white bg-[#00328F] hover:bg-[#FAA904] rounded-xl shadow-md transition-all active:scale-95 text-center"
-                        onClick={() => setOpen(false)}
-                      >
-                        Accedi / Login
-                      </Link>
-                    )}
+                {/* Socials & Contacts */}
+                <div className="border-t border-gray-100 pt-6 flex items-center justify-between text-[11px] text-[#9FA2AC] leading-relaxed">
+                  <div className="space-y-0.5">
+                    <p className="font-bold text-gray-800">Viale G. Matteotti 11, Cittanova</p>
+                    <p className="text-gray-500">Tel: +39 375 605 2362</p>
                   </div>
-
-                  {/* Socials & Contacts */}
-                  <div className="border-t border-gray-100 pt-6 flex items-center justify-between text-[11px] text-[#9FA2AC] leading-relaxed">
-                    <div className="space-y-0.5">
-                      <p className="font-bold text-gray-800">Viale G. Matteotti 11, Cittanova</p>
-                      <p className="text-gray-500">Tel: +39 375 605 2362</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <a
-                        href="https://www.instagram.com/atenaschool_srls/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
-                      >
-                        <InstagramLogo className="w-5 h-5" />
-                      </a>
-                      <a
-                        href="https://www.facebook.com/CSAtena7"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
-                      >
-                        <FacebookLogo className="w-5 h-5" />
-                      </a>
-                    </div>
+                  <div className="flex gap-2">
+                    <a
+                      href="https://www.instagram.com/atenaschool_srls/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                    >
+                      <InstagramLogo className="w-5 h-5" />
+                    </a>
+                    <a
+                      href="https://www.facebook.com/CSAtena7"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                    >
+                      <FacebookLogo className="w-5 h-5" />
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
+        </>
         , document.body)}
     </>
   );

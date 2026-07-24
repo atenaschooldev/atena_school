@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { EnrichedBooking } from "../services/dashboardService";
+import { EnrichedBooking } from "@repo/api";
 import { getDashboardDataAction, updateUserProfileAction } from "@/app/actions/dashboard";
 
 export function useDashboard() {
