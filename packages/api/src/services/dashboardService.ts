@@ -23,7 +23,7 @@ export interface EnrichedBooking {
 export async function autoLinkGuestBookings(
   email: string,
   userId: string,
-  supabase: SupabaseClient
+  supabase: any
 ): Promise<void> {
   if (!email || !userId) return;
 
