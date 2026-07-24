@@ -143,7 +143,6 @@ Deno.serve(async (req) => {
         student_phone: actualStudentPhone,
         student_tax_code: cleanStudentTaxCode,
         student_birth_date: validBirthDate,
-        tax_code: cleanStudentTaxCode,
         sdi_code: cleanSdiCode,
         pec_email: cleanPecEmail,
         notes: notes ?? "",

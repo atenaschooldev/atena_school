@@ -430,7 +430,6 @@ export async function createOrUpdateReservationServerAction(params: {
       student_phone: studentPhone,
       student_tax_code: studentTaxCode,
       student_birth_date: values.studentBirthDate || null,
-      tax_code: studentTaxCode,
       sdi_code: values.needsCompanyInvoice ? (values.sdiCode ? values.sdiCode.trim().toUpperCase() : null) : null,
       pec_email: values.needsCompanyInvoice ? (values.pecEmail ? values.pecEmail.trim().toLowerCase() : null) : null,
       notes: values.notes || "",
