@@ -111,21 +111,41 @@ export async function getBookingDetailsServer(bookingId: string) {
     const admin = getSupabaseAdmin();
     const { data: booking, error } = await admin
       .from("bookings")
-      .select("*")
+      .select("*, courses!bookings_course_id_fkey(name, price, photo_url, slug)")
       .eq("id", bookingId)
       .maybeSingle();
 
     if (error || !booking) return null;
 
-    const cid = booking.course_id || booking.item_id;
-    const item = await fetchItemData(admin, "course", cid);
+    // Fetch ledger payments
+    const { data: payments } = await admin
+      .from("payments")
+      .select("type, amount")
+      .eq("booking_id", bookingId);
+
+    const paymentLedger = payments || [];
+    const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
+    const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
+
+    const courseObj = (booking as any).courses;
+    const coursePrice = coursePaymentRow
+      ? Number(coursePaymentRow.amount)
+      : (courseObj?.price
+        ? Number(courseObj.price)
+        : Number(booking.amount_paid || 0) - Number(booking.registration_fee || 0));
+
+    const regFee = regFeeRow
+      ? Number(regFeeRow.amount)
+      : Number(booking.registration_fee || 0);
 
     return {
       ...booking,
-      item_name: item?.name || item?.title_it || item?.title || "Lezione Atena School",
-      item_price: item?.price || booking?.amount_paid || booking?.price || 0,
-      item_photo: item?.photo_url || null,
-      item_teacher: item?.teacher_name || item?.teachers?.full_name || null,
+      item_name: courseObj?.name || booking.student_name || "Corso Atena School",
+      item_price: coursePrice,
+      course_price: coursePrice,
+      registration_fee: regFee,
+      amount_paid: Number(booking.amount_paid || coursePrice + regFee),
+      item_photo: courseObj?.photo_url || null,
       date: booking.start_date || booking.booking_date || null,
       time: booking.booking_time || null,
     };

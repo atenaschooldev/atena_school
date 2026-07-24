@@ -28,14 +28,21 @@ export async function autoLinkGuestBookings(
   if (!email || !userId) return;
 
   const cleanEmail = email.trim().toLowerCase();
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-  await supabase
+  const client = (serviceRoleKey && supabaseUrl)
+    ? createAdminClient(supabaseUrl, serviceRoleKey)
+    : supabase;
+
+  // Link any unlinked bookings
+  await client
     .from("bookings")
     .update({ user_id: userId })
     .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .is("user_id", null);
 
-  const { data: latestBooking } = await supabase
+  const { data: latestBooking } = await client
     .from("bookings")
     .select("student_phone, student_name, student_email, purchaser_name, purchaser_email, purchaser_phone")
     .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
@@ -57,41 +64,20 @@ export async function autoLinkGuestBookings(
     const firstName = parts[0] || "";
     const lastName = parts.slice(1).join(" ") || "";
 
-    try {
-      await supabase.auth.updateUser({
-        data: {
-          phone: phone || undefined,
-          ...(rawName ? { custom_full_name: rawName } : {}),
-          ...(isPurchaser ? { role: "parent" } : {})
-        }
-      });
-    } catch {
-      // ignore
-    }
+    const updateData: Record<string, any> = {
+      updated_at: new Date().toISOString()
+    };
+    if (phone) updateData.phone = phone;
+    if (firstName) updateData.first_name = firstName;
+    if (lastName) updateData.last_name = lastName;
+    if (rawName) updateData.full_name = rawName;
+    if (isPurchaser) updateData.role = "parent";
 
     try {
-      const updateData: Record<string, any> = {
-        updated_at: new Date().toISOString()
-      };
-      if (phone) updateData.phone = phone;
-      if (firstName) updateData.first_name = firstName;
-      if (lastName) updateData.last_name = lastName;
-      if (rawName) updateData.full_name = rawName;
-
-      await supabase
+      await client
         .from("users")
         .update(updateData)
         .eq("id", userId);
-
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      if (isPurchaser && serviceRoleKey && supabaseUrl) {
-        const adminClient = createAdminClient(supabaseUrl, serviceRoleKey);
-        await adminClient
-          .from("users")
-          .update({ role: "parent" })
-          .eq("id", userId);
-      }
     } catch {
       // ignore
     }
@@ -108,8 +94,15 @@ export async function fetchUserBookingsEnriched(
     await autoLinkGuestBookings(user.email, user.id, supabase);
   }
 
-  // Fetch raw bookings
-  const { data } = await supabase
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  const client = (serviceRoleKey && supabaseUrl)
+    ? createAdminClient(supabaseUrl, serviceRoleKey)
+    : supabase;
+
+  // Fetch raw bookings with admin client to bypass RLS restrictions for parents and students
+  const { data } = await client
     .from("bookings")
     .select("*")
     .or(`user_id.eq.${user.id},student_email.ilike.${user.email},purchaser_email.ilike.${user.email}`)

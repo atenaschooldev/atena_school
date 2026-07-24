@@ -49,9 +49,9 @@ function SuccessContent() {
   }
 
   const dateLocale = it;
-  const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Lezione Atena School";
+  const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Corso Atena School";
   const regFee = Number(bookingData?.registration_fee || 0);
-  const coursePrice = Number(bookingData?.item_price ?? bookingData?.price ?? 0);
+  const coursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? 0);
   const totalPaid = Number(bookingData?.amount_paid ?? (coursePrice + regFee));
 
   const rawDate = bookingData?.starts_at || bookingData?.start_date || bookingData?.booking_date || bookingData?.date;
