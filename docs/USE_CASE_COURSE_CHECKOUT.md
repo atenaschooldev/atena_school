@@ -1,152 +1,246 @@
-# Use Case: Покупка курса и Онбординг (End-to-End Flow Specification)
+# Use Case: Покупка курса и Онбординг (Полная Библия Спецификации)
 
-> **Документ**: Полная спецификация бизнес-процесса покупки курса, безопасности, RLS и аудит-матрицы  
+> **Документ**: Каноническая библия бизнес-процесса покупки курса, архитектуры, триггеров БД, Edge Functions, RLS и обработки исключений  
 > **Проект**: Atena School (`atena_school`)  
-> **Целевая аудитория**: Разработчики, Архитекторы БД, QA, Специалисты по безопасности  
-> **Последнее обновление**: Июль 2026 (Версия 2.0 — Senior Architecture Update)  
+> **Версия**: 3.0 (Ultimate Senior Specification)  
+> **Целевая аудитория**: Разработчики, Архитекторы БД, Специалисты по безопасности, QA, Продукт-менеджеры  
+> **Дата последнего обновления**: Июль 2026  
 
 ---
 
-## 🎯 1. Обзор Use Case
+## 📖 1. Исполнительный Обзор (Executive Summary)
 
-Этот документ описывает полный сквозной жизненный цикл покупки учебного курса анонимным клиентом на лендинге (`atenaschool.com`), обработку платежа через Stripe Gateway, автоматическое формирование бухучета в PostgreSQL Supabase и предоставление разграниченного доступа в Личном Кабинете (`app.atenaschool.com`).
+Документ представляет собой полную спецификацию сквозного цикла чекаута и онбординга школы Atena School. Процесс охватывает путь пользователя от выбора курса анонимным посетителем на лендинге (`atenaschool.com`), клиентскую валидацию, серверную инициацию заказа в нулевом доверии (Zero-Trust), прием платежа шлюзом Stripe Gateway, фоновую обработку события через Webhooks и триггеры PostgreSQL, фиксацию бухгалтерского учета и разграниченный доступ пользователей в Личном Кабинете (`app.atenaschool.com`).
 
-Сценарий поддерживает два ключевых варианта оформления:
-1. **Покупка родителем для несовершеннолетнего ребенка** (`isForChild = true`):
-   - **Покупатель**: Родитель (ответственен за оплату, фактуру B2B/B2C, чеки, налоговый код *Codice Fiscale*).
-   - **Ученик**: Ребенок (прохождение уроков, расписание, посещаемость).
-2. **Самостоятельная покупка взрослым учеником** (`isForChild = false`):
-   - Покупатель и Ученик — одно и то же физическое лицо.
-
----
-
-## 👥 2. Участники (Actors) & Компоненты
-
-* **Анонимный Гость / Покупатель**: Посетитель сайта, оформляющий заказ.
-* **Ученик**: Лицо, проходящее обучение по выбранному курсу.
-* **Landing App (`apps/landing`)**: Фронтенд на Next.js (Чекаут, Чек успеха, Интеграция со Stripe).
-* **Personal Cabinet App (`apps/app`)**: Личный Кабинет студента/родителя (Уроки, Профиль, Календарь).
-* **Supabase Cloud Edge Functions**:
-  * `create-checkout-session`: Серверная инициация заказа и Stripe Session (Zero-Trust).
-  * `stripe-webhook`: Фоновая обработка платежных событий Stripe (`checkout.session.completed`).
-  * `verify-payment`: Серверная подтверждающая выписка чека при возврате клиента.
-* **Stripe Payment Gateway**: Внешний шлюз приема карт (`pi_...`, `cs_test_...`).
-* **Supabase PostgreSQL Database**: Реестр БД (`bookings`, `users`, `students`, `annual_memberships`, `lessons`, `payments`, `stripe_webhook_events`).
+### Архитектурные роли чекаута:
+1. **Покупка Родителем для несовершеннолетнего ребенка (`isForChild = true`)**:
+   * **Покупатель (Parent / Purchaser)**: Финансово и юридически ответственное лицо. Заполняет поля `purchaser_name`, `purchaser_email`, `purchaser_phone`, `purchaser_tax_code`. Запрашивает чек/фактуру. При входе в ЛК получает роль `role = 'parent'`.
+   * **Ученик (Student / Child)**: Зачисляется на курс. Заполняет поля `student_name`, `student_email`, `student_phone`, `student_tax_code`, `student_birth_date`. При входе в ЛК получает роль `role = 'student'` и видит календарь посещений.
+2. **Самостоятельная покупка взрослым учеником (`isForChild = false`)**:
+   * Покупатель и Ученик — одно и то же физическое лицо. Данные из полей покупателя дублируются для ученика.
 
 ---
 
-## 📋 3. Пошаговая схема процесса (Mermaid Diagram)
+## 🛠️ 2. Технический Стек и Компоненты
+
+| Слой | Компонент / Технология | Назначение |
+| :--- | :--- | :--- |
+| **Landing Frontend** | Next.js 16 (`apps/landing`) | Страница курса, форма чекаута, экран успеха (`/checkout/success`). |
+| **Personal Cabinet** | Next.js 16 (`apps/app`) | Личный Кабинет студента/родителя (`app.atenaschool.com/dashboard`). |
+| **Validation Layer** | React Hook Form + Zod | Валидация формы чекаута (`checkoutSchema.ts`) и `superRefine()`. |
+| **Server Actions** | Next.js Server Actions | `initiateStripePaymentAction`, `confirmPaymentAction`, `getBookingDetailsServer`. |
+| **Edge Functions** | Supabase Deno Functions | `create-checkout-session`, `stripe-webhook`, `verify-payment`, `send-email`. |
+| **Payment Gateway** | Stripe API (v14 / v2026) | Прием банковских карт (`cs_test_...`, `pi_...`), вебхуки `checkout.session.completed`. |
+| **Database** | PostgreSQL 15 (Supabase) | 7 таблиц (`bookings`, `users`, `students`, `annual_memberships`, `lessons`, `payments`, `stripe_webhook_events`). |
+| **Security Layer** | Postgres RLS + Triggers | Защита таблиц на уровне ядра PostgreSQL, триггеры `SECURITY DEFINER`. |
+
+---
+
+## 📋 3. Диаграмма Последовательности (Full Sequence Diagram)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Guest as Клиент / Родитель
-    participant Landing as Landing App
-    participant EF as Supabase Edge Functions
+    participant Form as Checkout Form (Next.js)
+    participant Action as Server Action
+    participant EF_Create as Edge: create-checkout-session
     participant Stripe as Stripe Gateway
+    participant EF_Hook as Edge: stripe-webhook
     participant DB as Supabase Postgres DB
-    participant Cabinet as Personal Cabinet (App)
+    participant Triggers as PL/pgSQL Triggers
+    participant EF_Verify as Edge: verify-payment
+    participant Cabinet as App Dashboard (Next.js)
 
-    Guest->>Landing: 1. Выбирает курс (напр. A2 Key / B2 First) и дату старта
-    Landing->>Guest: 2. Отображает форму чекаута
-    Guest->>Landing: 3. Заполняет данные родителя + ребенка + выбирает способ оплаты
-    Landing->>EF: 4. POST /create-checkout-session (все 100% полей родителя + ребенка)
-    EF->>DB: 5. Проверяет annual_memberships + создает booking (payment_status='pending')
-    EF->>Stripe: 6. Создает Stripe Checkout Session
-    EF-->>Landing: 7. Возвращает session_id + URL Stripe
-    Landing->>Stripe: 8. Редирект на защищенную форму Stripe Checkout
-    Guest->>Stripe: 9. Вводит карту и подтверждает оплату
-    Stripe->>EF: 10. Webhook: checkout.session.completed
-    EF->>DB: 11. Обновляет booking (payment_status='paid'), фиксирует 2 проводки в payments, 9 lessons & student
-    Stripe-->>Landing: 12. Редирект на /checkout/success
-    Landing->>EF: 13. POST /verify-payment
-    EF-->>Landing: 14. Возвращает финансовую выписку (€109.80 курс + €30.00 взнос = €139.80)
-    Landing->>Cabinet: 15. Переход по кнопке в ЛК (Google Auth / Magic Link)
-    Cabinet->>DB: 16. autoLinkGuestBookings (чистый user-scoped RLS без Service Role)
-    DB-->>Cabinet: 17. Отображает курс + имя из БД (Andrii Petukhov / Viktoria Petukhova)
+    Guest->>Form: 1. Выбирает дату курса и заполняет форму чекаута
+    Form->>Form: 2. Выполняет Zod validation (superRefine родителя/ребенка/B2B)
+    Form->>Action: 3. initiateStripePaymentAction(bookingPayload)
+    Action->>EF_Create: 4. POST /functions/v1/create-checkout-session
+    EF_Create->>DB: 5. Zero-Trust Check: проверяет annual_memberships на 2026/2027
+    EF_Create->>DB: 6. INSERT INTO bookings (payment_status='pending_payment')
+    EF_Create->>Stripe: 7. stripe.checkout.sessions.create({ metadata: { booking_id } })
+    EF_Create-->>Action: 8. Возвращает session_id + stripe_url
+    Action-->>Form: 9. Редирект на checkout.stripe.com
+    Guest->>Stripe: 10. Оплачивает картой (4242...)
+    Stripe->>EF_Hook: 11. POST /functions/v1/stripe-webhook (checkout.session.completed)
+    EF_Hook->>DB: 12. INSERT INTO stripe_webhook_events (idempotency guard 23505)
+    EF_Hook->>DB: 13. UPDATE bookings SET payment_status='paid', booking_status='active'
+    EF_Hook->>DB: 14. INSERT INTO payments (2 проводки: курс + взнос €30)
+    EF_Hook->>Triggers: 15. Вызывается trg_booking_student_enrollment
+    Triggers->>DB: 16. Создает/обновляет запись в public.students (parent_id)
+    EF_Hook->>Triggers: 17. Вызывается trg_sync_annual_membership
+    Triggers->>DB: 18. Активирует членство в public.annual_memberships
+    EF_Hook->>DB: 19. INSERT INTO lessons (генерирует 9 уроков)
+    Stripe-->>Form: 20. Редирект на /checkout/success?session_id=...&booking_id=...
+    Form->>Action: 21. confirmPaymentAction() -> POST /verify-payment
+    Action->>DB: 22. getBookingDetailsServer() -> JOIN courses & payments
+    Action-->>Form: 23. Выводит подтвержденный чек (€109.80 курс + €30.00 взнос = €139.80)
+    Guest->>Cabinet: 24. Переход в ЛК по кнопке (Google Auth / Magic Link)
+    Cabinet->>DB: 25. autoLinkGuestBookings() (чистый RLS без Service Role Key)
+    DB-->>Cabinet: 26. Отображает курс + имя из БД (Andrii Petukhov / Viktoria Petukhova)
 ```
 
 ---
 
-## 🔍 4. Детальное описание каждого шага
+## 🔍 4. Пошаговая Детализация Логики Кода и Файлов
 
-### Шаг 1: Выбор курса и расписания
-* Клиент открывает страницу курса (например, `/corsi/a2-key-for-schools`).
-* Выбирает дату старта (например, `30 июля 2026`) и слот расписания (`16:00-17:15`).
-* Система автоматически вычисляет сетку занятий (9 уроков до 27 августа).
+### Шаг 1: Выбор курса и расписания на лендинге
+- **Файл**: `apps/landing/src/app/corsi/[id]/page.tsx`
+- Пользователь выбирает дату первой лекции (например, `2026-07-30`) и временной слот (например, `Martedì e Giovedì 16:00-17:15`).
+- Клиентский код формирует URL перехода: `/checkout/a2-key-for-schools?date=2026-07-30&time=Marted%C3%AC%20e%20Gioved%C3%AC%2016:00-17:15`.
 
-### Шаг 2: Заполнение формы чекаута (`/checkout/[id]`)
-* Клиент заполняет:
-  * **Флаг родителя**: `isForChild = true`.
-  * **Покупатель (Родитель)**: Имя (`Andrii`), Фамилия (`Petukhov`), Email (`petukhov.1205@gmail.com`), Телефон (`+380665237393`), Codice Fiscale (`SHDFJKGSDHFJHSDGF`).
-  * **Ученик (Ребенок)**: Имя (`Viktoria`), Фамилия (`Petukhova`), Email (`petukhov.1337@gmail.com`), Телефон (`+432763564723`), Дата рождения (`10.10.2010`), Codice Fiscale (`PTBNS2345236754723`).
-  * **Годовой взнос**: `Quota d'iscrizione annuale (€30.00)`.
-  * **Способ оплаты**: `Stripe`.
+### Шаг 2: Валидация и заполнение формы чекаута
+- **Файлы**: `apps/landing/src/features/checkout/hooks/useCheckout.ts`, `apps/landing/src/app/checkout/[id]/page.tsx`
+- **Zod-схема (`checkoutSchema`)**:
+  - Базовые обязательные поля: `firstName` (мин. 2 симв.), `lastName` (мин. 2 симв.), `email` (valid email), `phone` (мин. 6 симв.), `taxCode` (мин. 11 симв.).
+  - **Правило `superRefine()` для родителя (`isForChild = true`)**:
+    - `studentFirstName` и `studentLastName` становятся **обязательными**.
+    - `purchaserTaxCode` становится **обязательным** (Codice Fiscale родителя для чека).
+  - **Правило `superRefine()` для B2B фактуры (`needsCompanyInvoice = true`)**:
+    - Обязательно должно быть заполнено хотя бы одно из двух полей: `sdiCode` (7 символов) или `pecEmail`.
 
-### Шаг 3: Серверная инициация (`create-checkout-session`)
-1. Сервер производит **Zero-Trust проверку** на наличие активного годового взноса на `2026/2027` в `public.annual_memberships`. Если членство отсутствует, в чек добавляется €30.00.
-2. В таблице `public.bookings` создается запись со статусом `payment_status = 'pending'`, куда сохраняются **все 100% введенных данных** родителя и ребенка.
-3. Формируется сессия Stripe на полную сумму (€109.80 курс + €30.00 взнос = €139.80).
+### Шаг 3: Серверная инициация заказа (Server Action ➔ Edge Function)
+- **Файл**: `apps/landing/src/app/actions/booking.ts` (`initiateStripePaymentAction()`)
+- Функция собирает `bookingPayload` и делает POST-запрос к облачной Edge Function Supabase:
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-checkout-session`.
 
-### Шаг 4: Оплата через Stripe
-* Клиент переходит на форму Stripe (`checkout.stripe.com`) и вводит данные карты (`4242...`).
+### Шаг 4: Бизнес-логика Edge Function `create-checkout-session`
+- **Файл**: `apps/landing/supabase/functions/create-checkout-session/index.ts`
+1. **Нормализация строк**:
+   - `cleanEmail`, `actualStudentEmail` переводятся в `lowercase`.
+   - `cleanStudentTaxCode`, `cleanPurchaserTaxCode`, `cleanSdiCode` переводятся в `UPPERCASE`.
+2. **Zero-Trust Check Годового Взноса**:
+   - Функция выполняет поиск в `public.annual_memberships` по утренней логике: `academic_year = '2026/2027'`, `status = 'active'`, совпадение по `tax_code ILIKE`, `email ILIKE` или `phone =`.
+   - Если активный взнос найден ➔ `regFeeAmount = 0`.
+   - Если взнос отсутствует ➔ `regFeeAmount = 3000` (30.00 EUR в центах).
+3. **Создание чернового бронирования**:
+   - В таблицу `public.bookings` вставляется запись со статусом `payment_status = 'pending_payment'`, куда пишутся **все 100% полей** покупателя и ребенка.
+4. **Создание сессии Stripe**:
+   - Вызывается `stripe.checkout.sessions.create()` с передачей `metadata: { booking_id: booking.id }` и позиций курса + годового взнос.
+   - Возвращается `session_id` и `stripe_url` для редиректа.
 
-### Шаг 5: Фоновая обработка платежа (Webhook & Triggers)
-1. Stripe посылает событие `checkout.session.completed` в `stripe-webhook`.
-2. Функция переводит бронирование в `payment_status = 'paid'` и `booking_status = 'active'`.
-3. В таблице `public.payments` создаются 2 точные бухгалтерские проводки:
-   - `type = 'payment'` ➔ €109.80 (цена курса A2 Key)
-   - `type = 'registration_fee'` ➔ €30.00 (взнос)
-4. Триггер `trg_booking_student_enrollment` автоматически создает карточку ученика в `public.students` со ссылкой на родителя `parent_id`.
-5. Триггер `trg_sync_annual_membership` активирует взнос в `public.annual_memberships`.
-6. Генерируется ровно 9 календарных уроков в `public.lessons`.
+### Шаг 5: Проведение оплаты на шлюзе Stripe
+- Пользователь вводит карту (`4242 4242 4242 4242`) на домене `checkout.stripe.com`.
+- Stripe списывает средства (€139.80) и генерирует `payment_intent` (`pi_...`).
 
-### Шаг 6: Финансовый чек успеха (`/checkout/success`)
-* Компонент ожидает завершения подтверждения с сервера (`verifying`).
-* Серверный метод `getBookingDetailsServer` выполняет JOIN с `public.courses` и считывает проводки из `public.payments`:
-  - **Servizio**: `A2 Key for Schools` (из `courses.name`)
-  - **Prezzo corso**: `€109.80` (из транзакции `payments.type = 'payment'`)
-  - **Quota iscrizione**: `€30.00` (из транзакции `payments.type = 'registration_fee'`)
-  - **Totale**: `€139.80` (из `bookings.amount_paid`)
-* *Никакого хардкода или вычитаний на фронтенде — 100% бухгалтерская выписка из БД.*
+### Шаг 6: Фоновая обработка Webhook (`stripe-webhook`)
+- **Файл**: `apps/landing/supabase/functions/stripe-webhook/index.ts`
+1. **Защита от повторной обработки (Idempotency Guard)**:
+   - Вставляется запись в `public.stripe_webhook_events`. Если Postgres возвращает код ошибки `23505` (unique_violation), функция завершается с кодом `200 OK` без повторной обработки.
+2. **Обновление статуса заказа**:
+   - `bookings.payment_status` изменяется на `'paid'`, `booking_status` на `'active'`.
+3. **Фиксация Бухгалтерских Проводок в `public.payments`**:
+   - Создаются 2 независимые финансовые проводки:
+     - Запись 1: `type = 'payment'`, `amount = 109.80`, `provider_transaction_id = pi_...`
+     - Запись 2: `type = 'registration_fee'`, `amount = 30.00`, `provider_transaction_id = pi_...`
+4. **Генерация сетки уроков (`calculateLessonDates()`)**:
+   - Вычисляются точные даты и время для 9 уроков с учетом часового пояса Европы/Рима (`Europe/Rome`), и записи вставляются в `public.lessons`.
 
-### Шаг 7: Авторизация и доступ в ЛК (`app.atenaschool.com/dashboard`)
-* При входе пользователя под своим Google-аккаунтом запускается `autoLinkGuestBookings`:
-  * **Если зашел Родитель (`petukhov.1205@gmail.com`)**:
-    * Автоматически устанавливается `role = 'parent'` и имя `Andrii Petukhov` в `public.users`.
-    * Курс отображается в дашборде родителя.
-  * **Если зашел Ученик (`petukhov.1337@gmail.com`)**:
-    * Устанавливается `role = 'student'` и имя `Viktoria Petukhova` в `public.students` / `public.users`.
-    * Ученик видит свое расписание и уроки.
+### Шаг 7: Формирование чека успеха (`/checkout/success`)
+- **Файлы**: `apps/landing/src/features/checkout/hooks/useCheckoutSuccess.ts`, `apps/landing/src/app/checkout/success/page.tsx`
+1. Хук запускает `verifying = true`, блокируя карточку чека лоадером.
+2. Серверный метод `getBookingDetailsServer(bookingId)` выполняем JOIN `courses` и считывает проводки из `public.payments`:
+   - `courseName` = `courses.name` (`A2 Key for Schools`)
+   - `coursePrice` = сумма транзакции `type = 'payment'` (€109.80)
+   - `regFee` = сумма транзакции `type = 'registration_fee'` (€30.00)
+   - `totalPaid` = `amount_paid` (€139.80)
+3. Лоадер снимается, выводится гарантированный чек с праздничным салютом (конфети).
+
+### Шаг 8: Вход в Личный Кабинет и Разграничение Прав (`apps/app`)
+- **Файлы**: `packages/api/src/services/dashboardService.ts`, `apps/app/src/app/actions/dashboard.ts`
+1. Пользователь входит через Google OAuth / Magic Link.
+2. Вызывается метод `autoLinkGuestBookings(email, userId, supabase)`.
+3. Запрос выполняется через стандартный клиент `supabase` в рамках чистого пользовательского RLS-контура:
+   - Если зашел Родитель (`purchaser_email` = email) ➔ обновляет `public.users`: `role = 'parent'`, `full_name = 'Andrii Petukhov'`.
+   - Если зашел Ученик (`student_email` = email) ➔ обновляет `public.users`: `role = 'student'`, `full_name = 'Viktoria Petukhova'`.
+4. `getDashboardDataAction` подтягивает имя из `public.users` и перекрывает им метаданные профиля Google.
 
 ---
 
-## 🏛️ 5. Архитектура безопасности и RLS (Security Architecture)
+## ⚙️ 5. Полный Реестр Триггеров PostgreSQL и PL/pgSQL Функций
 
-1. **Zero Service Role Key в ЛК**:
-   Служба `dashboardService.ts` **НЕ использует** `SUPABASE_SERVICE_ROLE_KEY`. Все запросы к бронированиям выполняются строго через стандартный авторизованный клиент Supabase под RLS-контролем текущего пользователя.
-2. **Postgres Row Level Security (RLS)**:
-   Доступ к `public.bookings` защищен на уровне ядра PostgreSQL:
-   ```sql
-   ((auth.uid() = user_id) 
-    OR (student_email IS NOT NULL AND lower(student_email) = lower(auth.jwt() ->> 'email')) 
-    OR (purchaser_email IS NOT NULL AND lower(purchaser_email) = lower(auth.jwt() ->> 'email')))
-   ```
-3. **Независимость от порядка входа**:
-   Не имеет значения, кто первым зашел в ЛК (родитель или ребенок) — RLS проверяет криптографический JWT-токен пользователя и отдает заказ каждому авторизованному лицу.
-4. **Приоритет имен из базы данных**:
-   Имена в шапке ЛК берутся из профиля `public.users` (`Andrii Petukhov` / `Viktoria Petukhova`), полностью перекрывая имена профилей Google OAuth.
+### 1. Триггер `trg_booking_student_enrollment` на `public.bookings`
+* **Функция**: `handle_booking_student_enrollment()` (`SECURITY DEFINER`)
+* **Срабатывание**: `AFTER INSERT OR UPDATE ON public.bookings`
+* **Логика**:
+  - Проверяет наличие ученика в `public.students` по `student_email` или `student_tax_code`.
+  - Если ученик не найден ➔ создаёт новую карточку в `public.students` со ссылкой на родительский аккаунт `parent_id`.
+  - Если найден ➔ обновляет `annual_fee_paid = true` (если оплачен взнос) и связывает `bookings.student_id`.
+
+### 2. Триггер `trg_sync_annual_membership` на `public.bookings`
+* **Функция**: `sync_annual_membership_on_booking_payment()` (`SECURITY DEFINER`)
+* **Срабатывание**: `AFTER INSERT OR UPDATE OF payment_status ON public.bookings`
+* **Логика**:
+  - При переходе `payment_status` в `'paid'` и `registration_fee > 0` создаёт или обновляет активную запись в `public.annual_memberships` на учебный год `2026/2027` со сроком действия до `31.08.2027`.
+
+### 3. Триггер `on_auth_user_created` на `auth.users`
+* **Функция**: `handle_new_user()` (`SECURITY DEFINER`)
+* **Срабатывание**: `AFTER INSERT ON auth.users`
+* **Логика**:
+  - Автоматически создает профиль пользователя в `public.users` при регистрации, устанавливая начальную роль `'student'`.
+
+### 4. Триггер `enforce_user_role_protection` на `public.users`
+* **Функция**: `check_user_update()` (`SECURITY DEFINER`)
+* **Срабатывание**: `BEFORE UPDATE ON public.users`
+* **Логика**:
+  - Блокирует ручное изменение колонок `role`, `is_active`, `notes` обычным пользователем, разрешая их изменение только админам или при установленном флаге `app.bypass_user_guard`.
 
 ---
 
-## 📊 6. Матрица проверки 7 таблиц БД (Audit Matrix)
+## 🛡️ 6. Аудит Безопасности и RLS-Политик (Security Audit)
 
-| Таблица | Обязательные колонки | Ожидаемые значения | Назначение |
+```sql
+-- RLS Политика чтения заказов на public.bookings
+CREATE POLICY "Allow users to read own bookings" ON public.bookings
+FOR SELECT TO public
+USING (
+  (auth.uid() = user_id) 
+  OR (student_email IS NOT NULL AND lower(student_email) = lower(auth.jwt() ->> 'email'))
+  OR (purchaser_email IS NOT NULL AND lower(purchaser_email) = lower(auth.jwt() ->> 'email'))
+  OR (session_id = COALESCE(NULLIF(current_setting('request.headers', true)::json ->> 'x-session-id', ''), ''))
+);
+```
+
+### Гарантии безопасности:
+1. **Отсутствие `SUPABASE_SERVICE_ROLE_KEY` в ЛК**: Все операции дашборда выполняются в рамках RLS-контура пользователя.
+2. **Изоляция чужих данных**: Пользователь A физически не может прочитать заказы Пользователя B, так как ядро PostgreSQL сравнивает email в подписанном JWT-токене (`auth.jwt() ->> 'email'`).
+3. **Изоляция секретов**: Все секреты Stripe и Supabase Service Role хранятся исключительно в серверных переменных окружения (`.env`), которые внесены в `.gitignore` и не попадают в клиентские бандлы.
+
+---
+
+## 📊 7. Полная Матрица Проверки 7 Таблиц БД (Audit Matrix)
+
+| Таблица | Проверяемая колонка | Ожидаемое значение | Правило валидации |
 | :--- | :--- | :--- | :--- |
-| `public.bookings` | `purchaser_email`, `purchaser_phone`, `purchaser_tax_code`, `student_email`, `student_phone`, `student_tax_code`, `amount_paid`, `registration_fee` | 100% полное заполнение без `null` | Центральный реестр заказов. |
-| `public.students` | `first_name`, `last_name`, `email`, `phone`, `tax_code`, `annual_fee_paid` | `Viktoria`, `Petukhova`, `+432763564723`, `PTBNS...`, `true` | Карточка ученика в учебной части. |
-| `public.annual_memberships` | `academic_year`, `status`, `tax_code`, `email`, `booking_id` | `'2026/2027'`, `'active'`, `PTBNS...`, `petukhov.1337@gmail.com` | Единый реестр оплаченных взносов. |
-| `public.payments` | 2 записи: `type='payment'` и `type='registration_fee'` | `109.80` и `30.00` EUR, `status='succeeded'` | Бухгалтерские проводки заказа. |
-| `public.lessons` | 9 записей уроков | Даты с 30.07 по 27.08 по расписанию | Сетка календарных занятий. |
-| `public.stripe_webhook_events` | `event_type`, `stripe_event_id`, `processed_at` | `'checkout.session.completed'` | Лог обработанных событий Stripe. |
-| `public.users` | `email`, `full_name`, `role`, `phone` | `Andrii Petukhov` (`parent`) и `Viktoria Petukhova` (`student`) | Учетные записи пользователей в Auth. |
+| `public.bookings` | `purchaser_email` | `petukhov.1205@gmail.com` | Должен точно совпадать с почтой родителя. |
+| | `purchaser_phone` | `+380665237393` | Формат E.164. |
+| | `purchaser_tax_code` | `SHDFJKGSDHFJHSDGF` | Normalized UPPERCASE. |
+| | `student_name` | `Viktoria Petukhova` | Имя ученика из формы. |
+| | `student_email` | `petukhov.1337@gmail.com` | Почта ребенка. |
+| | `student_phone` | `+432763564723` | Телефон ребенка из формы. |
+| | `student_tax_code` | `PTBNS2345236754723` | Codice Fiscale ребенка (UPPERCASE). |
+| | `amount_paid` | `139.8` | Итоговая сумма заказа. |
+| | `registration_fee` | `30` | Размер годового взноса. |
+| `public.students` | `full_name` | `Viktoria Petukhova` | Имя ребенка в карточке. |
+| | `parent_id` | UUID аккаунта родителя | Автоматическая привязка триггером. |
+| | `annual_fee_paid` | `true` | Флаг оплаты взноса. |
+| `public.annual_memberships` | `academic_year` | `'2026/2027'` | Учебный сезон. |
+| | `status` | `'active'` | Статус взноса. |
+| | `expires_at` | `'2027-08-31 23:59:59+00'` | Конец академического года. |
+| `public.payments` | Запись 1: `type='payment'` | `109.80` EUR | Проводка за курс. |
+| | Запись 2: `type='registration_fee'` | `30.00` EUR | Проводка за взнос. |
+| `public.lessons` | Количество записей | `9` | Ровно 9 календарных уроков. |
+| `public.stripe_webhook_events`| `event_type` | `'checkout.session.completed'` | Подтвержденный лог Stripe. |
+| `public.users` | `full_name` | `Andrii Petukhov` (`parent`) / `Viktoria Petukhova` (`student`) | Профили пользователей из формы. |
+
+---
+
+## 🚨 8. Матрица Исключений и Граничных Кейсов (Edge Cases & Exception Handling)
+
+| Граничный кейс / Ошибка | Какая система обрабатывает | Поведение системы |
+| :--- | :--- | :--- |
+| **Повторный Webhook от Stripe** | Edge Function `stripe-webhook` | Ловится уникальным индексом `stripe_event_id` в `stripe_webhook_events`. Postgres отдаёт код `23505`. Функция логирует `Event already processed` и возвращает `200 OK`. |
+| **Ученик уже оплачивал взнос €30 в этом году** | Edge Function `create-checkout-session` | Выполняется Zero-Trust поиск в `annual_memberships`. Если найден активный взнос на `2026/2027`, `regFeeAmount` принудительно обнуляется. |
+| **Задержка сети при переходе на `/checkout/success`** | Hook `useCheckoutSuccess` | Состояние `verifying` держит лоадер до тех пор, пока с сервера не вернутся данные. Экран никогда не показывает "нулевой" чек. |
+| **Разные языковые имена в Google Auth профилях** | Action `getDashboardDataAction` | Имя приветствия берется из `public.users.full_name`, полностью игнорируя метаданные профилей Google. |
+| **Незарегистрированный гость без Google аккаунта** | Hook `useCheckoutSuccess` | Автоматически генерирует и отправляет Magic Link авторизации через `dispatchMagicLinkAction(email)` на почту клиента. |
