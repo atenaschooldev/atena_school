@@ -171,7 +171,10 @@ function SuccessContent() {
         <div className="w-full space-y-2.5 pt-1">
           {user ? (
             <button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => {
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
+                window.location.href = `${appUrl}/dashboard`;
+              }}
               className="w-full py-3.5 px-6 bg-[#043569] hover:bg-[#032850] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
               <SquaresFour className="w-4 h-4" />
@@ -179,7 +182,10 @@ function SuccessContent() {
             </button>
           ) : isGmail ? (
             <button
-              onClick={() => router.push(`/autenticazione/accedi?redirect=/dashboard`)}
+              onClick={() => {
+                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
+                window.location.href = `${appUrl}/autenticazione/accedi?redirect=/dashboard`;
+              }}
               className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
               <GoogleLogo className="w-4 h-4" weight="bold" />
