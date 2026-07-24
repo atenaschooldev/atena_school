@@ -13,6 +13,14 @@ const nunito = Nunito({
 export const metadata = {
   title: 'Pannello Studente — Atena School',
   description: 'Area riservata e личный кабинет студентов и преподавателей Atena School',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
 };
 
 export default function RootLayout({
