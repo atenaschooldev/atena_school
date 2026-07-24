@@ -262,9 +262,18 @@ CREATE POLICY "Allow public read for own booking lessons" ON public.lessons FOR 
 USING (EXISTS (SELECT 1 FROM bookings WHERE bookings.id = lessons.booking_id AND (bookings.user_id = auth.uid() OR bookings.session_id = current_setting('request.headers', true)::json ->> 'x-atena-session')));
 ```
 
+### 🔐 7. Гарантии Безопасности (Security Guarantees)
+
+1. **Отсутствие `SUPABASE_SERVICE_ROLE_KEY` в ЛК**: 
+   Все операции в ЛК (`dashboardService.ts`) выполняются исключительно в рамках пользовательского RLS-контура со стандартным JWT-токеном. `SUPABASE_SERVICE_ROLE_KEY` полностью удален из служб ЛК.
+2. **Криптографическая изоляция чужих данных**: 
+   Пользователь A физически не может прочитать или изменить заказы Пользователя B. Ядро PostgreSQL проверяет подлинность подписанного JWT-токена пользователя (`auth.jwt() ->> 'email'`) непосредственно при каждой операции на уровне СУБД.
+3. **Изоляция секретов и ключей**: 
+   Все секретные ключи Stripe (`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`) и ключи Supabase Service Role хранятся исключительно в закрытых серверных переменных окружения (`.env`), внесены в `.gitignore` и никогда не высылаются в клиентские JS-бандлы браузера.
+
 ---
 
-## 📊 7. Полная Матрица Проверки 7 Таблиц БД (Audit Matrix)
+## 📊 8. Полная Матрица Проверки 7 Таблиц БД (Audit Matrix)
 
 | Таблица | Проверяемая колонка | Ожидаемое значение | Правило валидации |
 | :--- | :--- | :--- | :--- |
@@ -291,7 +300,7 @@ USING (EXISTS (SELECT 1 FROM bookings WHERE bookings.id = lessons.booking_id AND
 
 ---
 
-## 🚨 8. Матрица Исключений и Граничных Кейсов (Edge Cases & Exception Handling)
+## 🚨 9. Матрица Исключений и Граничных Кейсов (Edge Cases & Exception Handling)
 
 | Граничный кейс / Ошибка | Какая система обрабатывает | Поведение системы |
 | :--- | :--- | :--- |
