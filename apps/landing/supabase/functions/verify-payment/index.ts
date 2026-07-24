@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     const { data: updatedBooking, error: updateError } = await supabaseAdmin
       .from("bookings")
-      .update({ status: "paid" })
+      .update({ payment_status: "paid" })
       .eq("id", booking_id)
       .select()
       .maybeSingle();
