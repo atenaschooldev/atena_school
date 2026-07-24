@@ -1,33 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useRouter } from "@/i18n/routing";
-import { toast } from "sonner";
-import { Lock } from "@phosphor-icons/react";
+import { Link } from "@/i18n/routing";
+import { Envelope, CaretLeft, Key } from "@phosphor-icons/react";
 import Image from "next/image";
-import { resetPasswordAction } from "@/app/actions/auth";
+import { useForgotPasswordForm } from "@/features/auth/hooks/useForgotPasswordForm";
 
-export default function ResetPasswordPage() {
-  const t = useTranslations("auth.resetPassword");
-  const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const res = await resetPasswordAction(password);
-
-    if (!res.success) {
-      toast.error(res.error || "Errore");
-    } else {
-      toast.success(t("success"));
-      router.push("/auth/login");
-    }
-    setLoading(false);
-  };
+export default function ForgotPasswordPage() {
+  const t = useTranslations("auth.forgotPassword");
+  const {
+    email,
+    setEmail,
+    loading,
+    submitted,
+    handleResetRequest,
+  } = useForgotPasswordForm();
 
   return (
     <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">
@@ -54,10 +41,10 @@ export default function ResetPasswordPage() {
           {/* Center Content: Title */}
           <div className="text-white space-y-2 text-left">
             <h1 className="text-4xl lg:text-5xl font-serif font-black tracking-tight leading-none uppercase">
-              Ripristino<span className="text-[#F8861D]">!</span>
+              Recupero<span className="text-[#F8861D]">!</span>
             </h1>
             <p className="text-sm text-white/70 font-medium">
-              Scegli una password sicura per il tuo account
+              Reimposta la tua password in pochi passaggi
             </p>
           </div>
 
@@ -74,54 +61,74 @@ export default function ResetPasswordPage() {
         </div>
 
         {/* Right Side - Form Card */}
-        <div className="lg:col-span-5 lg:col-start-8 bg-white border border-gray-150 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-6 max-h-[780px]:px-6 responsive-card animate-in fade-in duration-300">
+        <div className="lg:col-span-5 lg:col-start-8 bg-white border border-gray-150 rounded-[32px] p-6 sm:p-7 xl:p-10 shadow-xl flex flex-col justify-center w-full max-w-[410px] xl:max-w-[460px] mx-auto lg:max-w-none max-h-[780px]:py-6 max-h-[780px]:px-6 responsive-card">
           {/* Header */}
           <div className="flex items-center gap-4 mb-5 xl:mb-6 max-h-[780px]:mb-4 responsive-header">
             <div className="w-10 h-10 xl:w-12 xl:h-12 rounded-full border border-gray-200 flex items-center justify-center text-[#F8861D] bg-gray-50 shrink-0 responsive-avatar-circle">
-              <Lock className="w-5 h-5 xl:w-6 xl:h-6 responsive-avatar-icon text-gray-700" />
+              <Key className="w-5 h-5 xl:w-6 xl:h-6 responsive-avatar-icon text-gray-700" />
             </div>
             <div className="text-left">
               <h2 className="text-lg xl:text-xl font-serif font-black text-gray-900 leading-none max-h-[780px]:text-base">{t("title")}</h2>
-              <p className="text-[10px] xl:text-xs text-gray-500 mt-1 max-h-[780px]:mt-0.5">{t("subtitle")}</p>
+              <p className="text-[10px] xl:text-xs text-gray-500 mt-1 max-h-[780px]:mt-0.5">
+                {submitted ? t("success") : t("subtitle")}
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handleReset} className="space-y-4 xl:space-y-5 max-h-[780px]:space-y-3.5 responsive-form">
-            {/* Password Field */}
-            <div className="space-y-1.5 text-left responsive-field-container">
-              <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider responsive-label">{t("newPassword")}</label>
-              <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-gray-400 group-focus-within:text-[#F8861D] transition-colors duration-300" />
-                <input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2 px-10 text-base lg:text-xs xl:text-sm text-gray-900 placeholder-gray-400 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
-                  required
-                />
+          {!submitted ? (
+            <form onSubmit={handleResetRequest} className="space-y-4 xl:space-y-5 max-h-[780px]:space-y-3.5 responsive-form">
+              {/* Email Field */}
+              <div className="space-y-1.5 text-left responsive-field-container">
+                <label htmlFor="email" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider responsive-label">{t("email")}</label>
+                <div className="relative group">
+                  <Envelope className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 xl:w-4.5 xl:h-4.5 text-gray-400 group-focus-within:text-[#F8861D] transition-colors duration-300" />
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2 px-10 text-base lg:text-xs xl:text-sm text-gray-900 placeholder-gray-400 outline-none h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 responsive-input"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div className="pt-2 responsive-submit-container">
-              <button
-                type="submit"
-                className="w-full bg-[#F8861D] hover:bg-[#e0730d] text-white font-black text-xs xl:text-sm py-2.5 px-6 rounded-2xl flex items-center justify-center gap-2 h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none responsive-button"
-                disabled={loading}
-              >
-                {loading ? (
-                  <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <>{t("submit")}</>
-                )}
-              </button>
+              {/* Submit Button */}
+              <div className="pt-2 responsive-submit-container">
+                <button
+                  type="submit"
+                  className="w-full bg-[#F8861D] hover:bg-[#e0730d] text-white font-black text-xs xl:text-sm py-2.5 px-6 rounded-2xl flex items-center justify-center gap-2 h-10 xl:h-12 max-h-[780px]:h-9 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none responsive-button"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <svg className="animate-spin h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <>{t("submit")}</>
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-6 text-gray-600">
+              <Envelope className="w-12 h-12 text-[#F8861D] mx-auto mb-4 opacity-50" />
+              <p className="text-xs xl:text-sm">{t("success")}</p>
             </div>
-          </form>
+          )}
+
+          {/* Login Link */}
+          <div className="text-center pt-4 xl:pt-5 max-h-[780px]:pt-3 responsive-register">
+            <Link
+              href="/autenticazione/accedi"
+              className="text-[11px] xl:text-xs text-[#F8861D] hover:underline font-bold transition-colors duration-200 inline-flex items-center gap-1"
+            >
+              <CaretLeft className="w-3.5 h-3.5" />
+              {t("backToLogin")}
+            </Link>
+          </div>
 
           {/* Native CSS Media Query for viewports with height <= 780px */}
           <style>{`
@@ -166,6 +173,9 @@ export default function ResetPasswordPage() {
                 font-size: 0.75rem !important;
                 padding-top: 0 !important;
                 padding-bottom: 0 !important;
+              }
+              .responsive-register {
+                padding-top: 0.5rem !important;
               }
             }
           `}</style>

@@ -46,7 +46,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link
-            href="/auth/login?redirect=/dashboard"
+            href="/autenticazione/accedi?redirect=/dashboard"
             className="w-full py-4 bg-[#043569] text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#F8861D] transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#043569]/15"
           >
             Accedi ora
@@ -75,7 +75,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Link
-            href="/courses"
+            href="/corsi"
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
           >
             Esplora altri corsi
@@ -116,7 +116,7 @@ export default function DashboardPage() {
                   Nessuna lezione o corso trovato in questa sezione.
                 </p>
                 <Link
-                  href="/courses"
+                  href="/corsi"
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline"
                 >
                   Prenota una lezione ora →

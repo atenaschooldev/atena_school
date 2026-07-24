@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import { CaretRight, Clock, User, Calendar } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 import { formatCourseScheduleText, formatCourseDurationText } from "@/lib/utils/bookingScheduler";
 
 interface CourseCardProps {
   id?: string;
+  slug?: string;
   title: string;
   description: string;
   image?: any;
@@ -30,6 +30,7 @@ interface CourseCardProps {
 
 const CourseCard = ({ 
   id, 
+  slug,
   title, 
   description, 
   image, 
@@ -48,8 +49,8 @@ const CourseCard = ({
   start_time,
   end_time,
 }: CourseCardProps) => {
-  const t = useTranslations("coursesPage");
   const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const courseSlug = slug || id;
 
   const formattedSchedule = formatCourseScheduleText(schedule_days, start_time, end_time);
   const showSchedule = formattedSchedule && formattedSchedule !== "Da concordare";
@@ -190,26 +191,10 @@ const CourseCard = ({
           </div>
 
           {/* Buttons Row */}
-          <div className="grid grid-cols-2 gap-3">
-            {id ? (
+          <div>
+            {courseSlug ? (
               <Link
-                href={`/courses/${id}`}
-                onMouseEnter={() => setIsButtonHovered(true)}
-                onMouseLeave={() => setIsButtonHovered(false)}
-                className="w-full py-3 bg-[#043569]/5 hover:bg-[#043569] text-[#043569] hover:text-white border border-[#043569]/10 hover:border-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 cursor-pointer active:scale-95 shadow-sm hover:shadow-md hover:shadow-[#043569]/10 flex items-center justify-center"
-              >
-                {t("cta")}
-              </Link>
-            ) : (
-              <button
-                className="w-full py-3 bg-[#043569]/5 text-[#043569] border border-[#043569]/10 rounded-xl text-xs font-black uppercase tracking-widest text-center opacity-50 cursor-not-allowed"
-              >
-                {t("cta")}
-              </button>
-            )}
-            {id && (
-              <Link
-                href={`/courses/${id}`}
+                href={`/corsi/${courseSlug}`}
                 onMouseEnter={() => setIsButtonHovered(true)}
                 onMouseLeave={() => setIsButtonHovered(false)}
                 className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
@@ -217,6 +202,14 @@ const CourseCard = ({
                 {type === "shop" ? "Acquista" : "Prenota"}
                 <CaretRight className="w-3.5 h-3.5" weight="bold" />
               </Link>
+            ) : (
+              <button
+                disabled
+                className="w-full py-3 bg-[#F8861D]/50 text-white rounded-xl text-xs font-black uppercase tracking-widest text-center cursor-not-allowed flex items-center justify-center gap-1"
+              >
+                {type === "shop" ? "Acquista" : "Prenota"}
+                <CaretRight className="w-3.5 h-3.5" weight="bold" />
+              </button>
             )}
           </div>
         </div>
@@ -224,9 +217,9 @@ const CourseCard = ({
     </div>
   );
 
-  if (id) {
+  if (courseSlug) {
     return (
-      <Link href={`/courses/${id}`} className="block h-full no-underline">
+      <Link href={`/corsi/${courseSlug}`} className="block h-full no-underline">
         {cardContent}
       </Link>
     );

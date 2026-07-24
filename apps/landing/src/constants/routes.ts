@@ -1,8 +1,8 @@
 export const ROUTES = {
   HOME: "/",
-  COURSES: "/courses",
+  COURSES: "/corsi",
   CHECKOUT: "/checkout",
   SUCCESS: "/checkout/success",
   DASHBOARD: "/dashboard",
-  LOGIN: "/auth/login",
+  LOGIN: "/autenticazione/accedi",
 } as const;

@@ -5,6 +5,7 @@ import { createServerClient as createSupabaseSsrClient } from "@supabase/ssr";
 import { cookies, headers } from "next/headers";
 import { calculateLessonDates } from "@/lib/utils/bookingScheduler";
 import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
+import { slugify } from "@/lib/utils";
 
 function isServiceRoleValid() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -33,40 +34,55 @@ async function fetchItemData(adminClient: any, itemType: string, itemId: string)
 
   let item: any = null;
 
-  // 1. Search in courses by id
-  const { data: course } = await adminClient
-    .from("courses")
-    .select("*, teachers!courses_teacher_id_fkey(full_name)")
-    .eq("id", itemId)
-    .maybeSingle();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
 
-  if (course) {
-    item = course;
-    if (course.teachers?.full_name) {
-      item.teacher_name = course.teachers.full_name;
-    }
-  } else {
-    // 2. Search in shop_items by id
-    const { data: shopItem } = await adminClient
-      .from("shop_items")
-      .select("*")
+  // 1. Search in courses by id if UUID
+  if (isUuid) {
+    const { data: course } = await adminClient
+      .from("courses")
+      .select("*, teachers!courses_teacher_id_fkey(full_name)")
       .eq("id", itemId)
       .maybeSingle();
 
-    if (shopItem) {
-      item = shopItem;
-    } else {
-      // 3. Search in courses by slug / name match
-      const { data: byName } = await adminClient
-        .from("courses")
-        .select("*, teachers!courses_teacher_id_fkey(full_name)")
-        .ilike("name", `%${itemId}%`)
-        .maybeSingle();
+    if (course) {
+      item = course;
+      if (course.teachers?.full_name) {
+        item.teacher_name = course.teachers.full_name;
+      }
+    }
+  }
 
-      if (byName) {
-        item = byName;
-        if (byName.teachers?.full_name) {
-          item.teacher_name = byName.teachers.full_name;
+  // 2. Search in courses by slug if not found
+  if (!item) {
+    const { data: courseBySlug } = await adminClient
+      .from("courses")
+      .select("*, teachers!courses_teacher_id_fkey(full_name)")
+      .eq("slug", itemId)
+      .maybeSingle();
+
+    if (courseBySlug) {
+      item = courseBySlug;
+      if (courseBySlug.teachers?.full_name) {
+        item.teacher_name = courseBySlug.teachers.full_name;
+      }
+    }
+  }
+
+  // 3. Fallback: Search by slugified name or ilike match
+  if (!item) {
+    const { data: allCourses } = await adminClient
+      .from("courses")
+      .select("*, teachers!courses_teacher_id_fkey(full_name)");
+
+    if (allCourses && allCourses.length > 0) {
+      const matched = allCourses.find((c: any) => 
+        (c.slug && c.slug === itemId) || 
+        slugify(c.name || c.title_it || "") === itemId
+      );
+      if (matched) {
+        item = matched;
+        if (matched.teachers?.full_name) {
+          item.teacher_name = matched.teachers.full_name;
         }
       }
     }

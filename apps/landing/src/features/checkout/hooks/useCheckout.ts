@@ -29,6 +29,7 @@ export interface CheckoutFormValues {
 
 export interface BookingItem {
   id: string;
+  slug?: string;
   name?: string;
   title_it?: string;
   price: string | number;

@@ -79,7 +79,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
       {/* Back link */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
         <Link
-          href={`/courses/${id}`}
+          href={`/corsi/${item?.slug || id}`}
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-[#043569] transition-colors group"
         >
           <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
@@ -120,7 +120,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
               {!user && (
                 <Link
-                  href={`/auth/login?redirectTo=${encodeURIComponent(`/checkout/${id}${dateParam ? `?date=${dateParam}&time=${timeParam}` : ""}`)}`}
+                  href={`/autenticazione/accedi?redirectTo=${encodeURIComponent(`/checkout/${id}${dateParam ? `?date=${dateParam}&time=${timeParam}` : ""}`)}`}
                   className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-colors"
                 >
                   <SignIn className="w-4 h-4" />

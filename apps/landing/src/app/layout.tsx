@@ -30,10 +30,6 @@ export async function generateMetadata() {
     metadataBase: new URL(siteUrl),
     alternates: {
       canonical: siteUrl,
-      languages: {
-        'it': siteUrl,
-        'x-default': siteUrl,
-      },
     },
     icons: {
       icon: [

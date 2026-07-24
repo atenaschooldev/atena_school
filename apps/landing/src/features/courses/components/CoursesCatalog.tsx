@@ -88,6 +88,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                   >
                     <CourseCard
                       id={course.id}
+                      slug={course.slug}
                       title={course.title}
                       description={course.description}
                       image={course.image}

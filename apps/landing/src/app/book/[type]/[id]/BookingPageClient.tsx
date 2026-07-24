@@ -89,7 +89,7 @@ export default function BookingPageClient({
       <div className="relative z-10 border-b border-slate-100 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <Link
-            href="/courses"
+            href="/corsi"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-[#043569] transition-all group"
           >
             <CaretLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />

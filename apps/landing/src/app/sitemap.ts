@@ -7,7 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createClient();
 
   // Static routes
-  const staticRoutes = ['', '/courses', '/blog'];
+  const staticRoutes = ['', '/corsi', '/carrello', '/blog'];
 
   const entries: MetadataRoute.Sitemap = [];
 
@@ -20,6 +20,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: route === '' ? 1 : 0.8,
     });
   });
+
+  // Fetch dynamic courses
+  const { data: courses } = await supabase
+    .from('courses')
+    .select('id, slug, name')
+    .in('status', ['active', 'published']);
+
+  if (courses) {
+    (courses as any[]).forEach(course => {
+      const courseSlug = course.slug || course.id;
+      entries.push({
+        url: `${baseUrl}/corsi/${courseSlug}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      });
+    });
+  }
 
   // Fetch dynamic blog posts
   const { data: posts } = await supabase

@@ -67,5 +67,5 @@ export async function GET(request: Request) {
   }
 
   const baseUrl = process.env.NODE_ENV === 'development' ? origin : (env.NEXT_PUBLIC_SITE_URL || origin);
-  return NextResponse.redirect(`${baseUrl}/auth/auth-code-error`);
+  return NextResponse.redirect(`${baseUrl}/autenticazione/errore`);
 }

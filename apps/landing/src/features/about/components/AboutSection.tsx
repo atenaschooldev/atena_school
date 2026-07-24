@@ -19,7 +19,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
   const p2 = data?.content || t("p2");
 
   return (
-    <section id="about" className="relative py-20 lg:py-28 bg-gray-50 overflow-hidden px-0">
+    <section id="chi-siamo" className="relative py-20 lg:py-28 bg-gray-50 overflow-hidden px-0">
       {/* Decorative background accents */}
       <div className="absolute top-1/4 left-[5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-[5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />

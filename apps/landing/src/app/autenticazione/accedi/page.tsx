@@ -99,7 +99,7 @@ function LoginForm() {
             <div className="space-y-1 max-h-[780px]:space-y-0.5 text-left responsive-field-container">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="text-[10px] xl:text-xs font-bold text-gray-700 tracking-wider max-h-[780px]:text-[9px] responsive-label">Password</label>
-                <Link href="/auth/forgot-password" className="text-[10px] xl:text-xs text-[#F8861D] hover:underline font-bold transition-all duration-200 max-h-[780px]:text-[9px] responsive-label">
+                <Link href="/autenticazione/password-dimenticata" className="text-[10px] xl:text-xs text-[#F8861D] hover:underline font-bold transition-all duration-200 max-h-[780px]:text-[9px] responsive-label">
                   Password dimenticata?
                 </Link>
               </div>
@@ -196,7 +196,7 @@ function LoginForm() {
             <span className="text-[11px] xl:text-xs text-gray-500 font-bold max-h-[780px]:text-[10px]">
               Non hai un account?{" "}
               <Link
-                href={`/auth/register${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                href={`/autenticazione/registrati${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
                 className="text-[#F8861D] hover:underline transition-colors duration-200"
               >
                 Registrati

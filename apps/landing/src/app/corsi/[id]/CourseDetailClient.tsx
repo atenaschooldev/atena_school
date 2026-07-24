@@ -172,7 +172,7 @@ export default function CourseDetailClient({
       {/* Navigation Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
         <Link
-          href="/courses"
+          href="/corsi"
           className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-[#043569] transition-colors group"
         >
           <CaretLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />

@@ -1,10 +1,12 @@
 import { getTranslations } from "next-intl/server";
 import { getCourses } from "@/lib/data";
+import { slugify } from "@/lib/utils";
 
 
 
 export interface ResolvedCourse {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   image: any;
@@ -82,6 +84,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
 
       return {
         id: course.id,
+        slug: course.slug || slugify(itemTitle),
         title: itemTitle,
         description: itemDesc,
         image: itemImage,

@@ -137,11 +137,11 @@ const Navbar = () => {
 
   const navLinks = [
     { label: t("home"), href: "/", icon: House },
-    { label: t("about"), href: "/#about", icon: Users },
-    { label: t("courses"), href: "/courses", icon: GraduationCap },
+    { label: t("about"), href: "/#chi-siamo", icon: Users },
+    { label: t("courses"), href: "/corsi", icon: GraduationCap },
     { label: t("test"), href: "/test-inglese", icon: Sparkle },
     { label: t("blog"), href: "/blog", icon: Newspaper },
-    { label: t("contact"), href: "/#contact", icon: EnvelopeSimple },
+    { label: t("contact"), href: "/#contatti", icon: EnvelopeSimple },
   ];
 
   const isLightHeader = isHome && !isScrolled;
@@ -210,7 +210,7 @@ const Navbar = () => {
 
           {/* Icons & Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/cart" className="relative group">
+            <Link href="/carrello" className="relative group">
               <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
                 isLightHeader 
                   ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
@@ -246,13 +246,13 @@ const Navbar = () => {
               </DropdownMenu>
             ) : (
               <Link
-                href="/auth/login"
+                href="/autenticazione/accedi"
                 className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 ${
                   isLightHeader 
                     ? "text-white hover:text-[#FAA904] hover:bg-white/10" 
                     : "text-gray-700 hover:text-primary hover:bg-primary/10"
                 }`}
-                onClick={() => handleLinkClick("/auth/login")}
+                onClick={() => handleLinkClick("/autenticazione/accedi")}
               >
                 Login
               </Link>
@@ -395,7 +395,7 @@ const Navbar = () => {
 
                   {/* Shopping Cart */}
                   <Link
-                    href="/cart"
+                    href="/carrello"
                     className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
                     onClick={() => setOpen(false)}
                   >
@@ -437,7 +437,7 @@ const Navbar = () => {
                       </div>
                     ) : (
                       <Link
-                        href="/auth/login"
+                        href="/autenticazione/accedi"
                         className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-extrabold text-white bg-[#00328F] hover:bg-[#FAA904] rounded-xl shadow-md transition-all active:scale-95 text-center"
                         onClick={() => setOpen(false)}
                       >

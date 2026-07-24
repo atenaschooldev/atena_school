@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
-import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, MapPin, Phone, EnvelopeSimple } from "@phosphor-icons/react";
+import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, CaretUp, Phone, EnvelopeSimple, MapPin } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 
 const Footer = () => {
@@ -17,23 +15,32 @@ const Footer = () => {
     return null;
   }
 
+  const scrollToTop = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
-    <footer className="bg-[#043569] text-white pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-white/5 relative overflow-hidden">
-      {/* Subtle ambient light in the footer */}
-      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+    <footer className="bg-white py-10 px-3 sm:px-6 lg:px-8 relative">
+      {/* Floating Card Container */}
+      <div className="max-w-7xl mx-auto bg-[#043569] rounded-3xl p-6 sm:p-10 lg:p-12 text-white border border-white/10 shadow-2xl relative overflow-hidden">
+        
+        {/* Ambient Light */}
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#F8861D]/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 2xl:gap-16">
-
-          {/* Column 1: Brand & Contact Info */}
-          <div className="md:col-span-4 2xl:col-span-5 space-y-6">
+        {/* Top Header Row */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-10 border-b border-white/10">
+          
+          {/* Brand & Address */}
+          <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0">
+              <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0 shadow-sm">
                 <Image
                   src={logo}
                   alt="Atena School"
-                  width={40}
-                  height={40}
+                  width={36}
+                  height={36}
                   className="object-contain"
                 />
               </div>
@@ -46,172 +53,280 @@ const Footer = () => {
                 </span>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <p className="text-xs text-white/70 max-w-sm leading-relaxed">
-                Centro autorizzato per la preparazione agli esami Cambridge English e alle certificazioni informatiche EIPASS. Offriamo percorsi formativi su misura per ogni esigenza.
-              </p>
-              <p className="text-[10px] text-white/40 font-semibold tracking-wide">
-                P.IVA / C.F. 03321620803
-              </p>
-            </div>
-
-            {/* Social Icons */}
-            <div className="flex gap-3 pt-2">
-              <a
-                href="https://www.instagram.com/atenaschool_srls/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-[#F8861D] text-white hover:text-[#F8861D] flex items-center justify-center hover:bg-[#F8861D]/10 transition duration-300 active:scale-95"
-              >
-                <InstagramLogo className="w-5 h-5" weight="bold" />
-              </a>
-              <a
-                href="https://www.facebook.com/CSAtena7"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-[#F8861D] text-white hover:text-[#F8861D] flex items-center justify-center hover:bg-[#F8861D]/10 transition duration-300 active:scale-95"
-              >
-                <FacebookLogo className="w-5 h-5" weight="bold" />
-              </a>
-              <a
-                href="https://www.linkedin.com/company/atena-school-srls/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-[#F8861D] text-white hover:text-[#F8861D] flex items-center justify-center hover:bg-[#F8861D]/10 transition duration-300 active:scale-95"
-              >
-                <LinkedinLogo className="w-5 h-5" weight="bold" />
-              </a>
-              <a
-                href="https://wa.me/393756052362"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:border-[#F8861D] text-white hover:text-[#F8861D] flex items-center justify-center hover:bg-[#F8861D]/10 transition duration-300 active:scale-95"
-              >
-                <WhatsappLogo className="w-5 h-5" weight="bold" />
-              </a>
-            </div>
+            <p className="text-xs text-slate-400 font-medium leading-relaxed">
+              Via Matteotti 11, 89022 Cittanova (RC) <span className="text-white/20 mx-1">•</span> P.IVA / C.F. 03321620803
+            </p>
           </div>
 
-          {/* Column 2: Navigation Links */}
-          <div className="md:col-span-2 space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#F8861D]">
+          {/* Top CTA Button */}
+          <Link
+            href="/autenticazione/accedi"
+            className="w-full sm:w-auto text-center bg-white hover:bg-slate-100 text-slate-900 font-extrabold px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 select-none cursor-pointer"
+          >
+            Accedi alla piattaforma →
+          </Link>
+        </div>
+
+        {/* Main Columns Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-10">
+          
+          {/* Column 1: Corsi di Lingua */}
+          <div className="md:col-span-4 lg:col-span-4 space-y-4">
+            <h4 className="text-sm font-bold text-white tracking-wide">
+              Corsi di Lingua
+            </h4>
+            <ul className="space-y-2.5 text-xs text-white/85 font-medium">
+              <li>
+                <Link href="/corsi/toddlers-3-5-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Toddlers (3-5 anni)
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/kids-6-7-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Kids (6-7 anni)
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/beginners-starters-8-10-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Starters (8-10 anni)
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/movers" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Movers
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/flyers" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Flyers
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/a2-key-for-schools" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  A2 Key for Schools
+                </Link>
+              </li>
+              <li className="flex items-center gap-2">
+                <Link href="/corsi/b1-preliminary" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  B1 Preliminary
+                </Link>
+                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-[#F8861D]/20 text-[#F8861D] tracking-wider">
+                  POPULARE
+                </span>
+              </li>
+              <li>
+                <Link href="/corsi/b2-first" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  B2 First
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/c1-advanced" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  C1 Advanced
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/c2-advanced" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  C2 Advanced
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/lezioni-private-singole" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Lezioni Private Singole
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/pacchetto-10-lezioni-private" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Pacchetto 10 Lezioni Private
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 2: Certificazioni EIPASS */}
+          <div className="md:col-span-3 lg:col-span-3 space-y-4">
+            <h4 className="text-sm font-bold text-white tracking-wide">
+              Certificazioni EIPASS
+            </h4>
+            <ul className="space-y-2.5 text-xs text-white/85 font-medium">
+              <li className="flex items-center gap-2">
+                <Link href="/corsi/eipass-7-moduli-user" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS 7 Moduli User
+                </Link>
+                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 tracking-wider">
+                  EIPASS
+                </span>
+              </li>
+              <li>
+                <Link href="/corsi/eipass-it-security" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS IT Security
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/eipass-coding" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS Coding
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/eipass-lim" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS LIM
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/eipass-personale-ata" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS Personale ATA
+                </Link>
+              </li>
+              <li>
+                <Link href="/corsi/eipass-tablet" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  EIPASS Tablet
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Navigazione */}
+          <div className="md:col-span-2 lg:col-span-2 space-y-4">
+            <h4 className="text-sm font-bold text-white tracking-wide">
               Navigazione
             </h4>
-            <ul className="space-y-2.5 text-xs text-white/75">
+            <ul className="space-y-2.5 text-xs text-white/85 font-medium">
               <li>
-                <Link href="/" className="hover:text-[#F8861D] transition-colors duration-200">
+                <Link href="/" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   Home
                 </Link>
               </li>
               <li>
-                <Link href="#about" className="hover:text-[#F8861D] transition-colors duration-200">
+                <Link href="/#chi-siamo" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   Chi Siamo
                 </Link>
               </li>
               <li>
-                <Link href="#courses" className="hover:text-[#F8861D] transition-colors duration-200">
-                  Corsi e Certificazioni
+                <Link href="/corsi" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  Tutti i Corsi
                 </Link>
               </li>
               <li>
-                <Link href="#contact" className="hover:text-[#F8861D] transition-colors duration-200">
+                <Link href="/#contatti" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   Contatti
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Contact & Address details */}
-          <div className="md:col-span-3 2xl:col-span-2 space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#F8861D]">
+          {/* Column 4: Contatti */}
+          <div className="md:col-span-3 lg:col-span-3 space-y-4">
+            <h4 className="text-sm font-bold text-white tracking-wide">
               Contatti
             </h4>
-            <ul className="space-y-3.5 text-xs text-white/75">
-              <li className="flex gap-2.5 items-start">
-                <MapPin size={18} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
-                <span>Via Matteotti 11, Cittanova (RC) 89022</span>
+            <ul className="space-y-3 text-xs text-white/85 font-medium">
+              <li className="flex items-center gap-2.5">
+                <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
+                <a href="tel:+393756052362" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  +39 375 605 2362
+                </a>
               </li>
-              <li className="flex gap-2.5 items-start">
-                <Phone size={18} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
-                <div className="flex flex-col gap-1">
-                  <a href="tel:+393756052362" className="hover:text-[#F8861D] transition-colors duration-200">
-                    +39 375 605 2362
-                  </a>
-                  <a href="tel:0966447052" className="hover:text-[#F8861D] transition-colors duration-200">
-                    0966 447052
-                  </a>
-                </div>
+              <li className="flex items-center gap-2.5">
+                <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
+                <a href="tel:0966447052" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  0966 447052
+                </a>
               </li>
-              <li className="flex gap-2.5 items-start">
-                <EnvelopeSimple size={18} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
-                <a href="mailto:atenaschool20@gmail.com" className="hover:text-[#F8861D] transition-colors duration-200">
+              <li className="flex items-center gap-2.5">
+                <EnvelopeSimple size={16} className="text-[#F8861D] shrink-0" weight="bold" />
+                <a href="mailto:atenaschool20@gmail.com" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   atenaschool20@gmail.com
                 </a>
               </li>
-            </ul>
-
-            <Link
-              href="/#contact"
-              className="mt-4 inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-5 py-2.5 rounded-full font-black text-xs transition-all duration-300 shadow-lg shadow-orange-500/10 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
-            >
-              Richiedi informazioni →
-            </Link>
-          </div>
-
-          {/* Column 4: Mini Map Card */}
-          <div className="md:col-span-3 space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-wider text-[#F8861D]">
-              Mappa
-            </h4>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-3 flex items-center gap-3 overflow-hidden shadow-lg">
-              <div className="relative w-16 h-16 rounded-xl bg-white/10 border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                {/* Stylized map representation */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-white/10" />
-                <div className="absolute w-full h-[2px] bg-white/10 top-1/3 -rotate-12" />
-                <div className="absolute w-[2px] h-full bg-white/10 left-1/2 rotate-12" />
-                <div className="absolute w-full h-[2px] bg-white/10 bottom-1/4 rotate-6" />
-                <MapPin className="w-6 h-6 text-[#F8861D] relative z-10 animate-bounce" weight="fill" />
-              </div>
-              <div className="text-left flex-1 min-w-0">
-                <p className="text-xs font-black text-white truncate">Atena School</p>
-                <p className="text-[10px] text-white/50 truncate mt-0.5">Via Matteotti 11, Cittanova (RC) 89022</p>
+              <li className="flex items-start gap-2.5 pt-1">
+                <MapPin size={16} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
                 <a
                   href="https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block text-[10px] font-bold text-[#F8861D] hover:underline mt-1.5"
+                  className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5"
                 >
-                  Apri in Google Maps →
+                  Via Matteotti 11, 89022 Cittanova (RC)
                 </a>
-              </div>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 border-t border-white/10 flex flex-col lg:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+            <span>{t("copyright")}</span>
+            <span className="text-white/20">•</span>
+            <Link href="/privacy" className="hover:text-white transition-colors duration-200">
+              Privacy Policy
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/cookies" className="hover:text-white transition-colors duration-200">
+              Cookie Policy
+            </Link>
+            <span className="text-white/20">•</span>
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              <span>Visa</span>
+              <span>•</span>
+              <span>Mastercard</span>
+              <span>•</span>
+              <span>Stripe</span>
             </div>
           </div>
 
+          {/* Social Icons Row */}
+          <div className="flex items-center gap-5 text-slate-400">
+            <a
+              href="https://www.facebook.com/CSAtena7"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors duration-200"
+              aria-label="Facebook"
+            >
+              <FacebookLogo size={18} weight="bold" />
+            </a>
+            <a
+              href="https://www.instagram.com/atenaschool_srls/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors duration-200"
+              aria-label="Instagram"
+            >
+              <InstagramLogo size={18} weight="bold" />
+            </a>
+            <a
+              href="https://wa.me/393756052362"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors duration-200"
+              aria-label="WhatsApp"
+            >
+              <WhatsappLogo size={18} weight="bold" />
+            </a>
+            <a
+              href="https://www.linkedin.com/company/atena-school-srls/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors duration-200"
+              aria-label="LinkedIn"
+            >
+              <LinkedinLogo size={18} weight="bold" />
+            </a>
+          </div>
         </div>
 
-        {/* Divider */}
-        <div className="w-full h-px bg-white/10 my-8 md:my-10" />
-
-        {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-white/60">
-          <div>
-            <p>{t("copyright")}</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link href="/privacy" className="hover:text-[#F8861D] transition-colors duration-300">
-              Privacy Policy
-            </Link>
-            <Link href="/cookies" className="hover:text-[#F8861D] transition-colors duration-300">
-              Cookie Policy
-            </Link>
-            <Link href="#" className="hover:text-[#F8861D] transition-colors duration-300">
-              Termini e Condizioni
-            </Link>
-          </div>
-        </div>
       </div>
 
+      {/* Floating Scroll-to-Top Button */}
+      <button
+        onClick={scrollToTop}
+        className="fixed bottom-6 right-6 w-11 h-11 bg-white hover:bg-slate-100 text-slate-900 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 z-50 transform hover:-translate-y-1 active:translate-y-0 cursor-pointer"
+        title="Torna su"
+        aria-label="Torna su"
+      >
+        <CaretUp size={18} weight="bold" />
+      </button>
     </footer>
   );
 };

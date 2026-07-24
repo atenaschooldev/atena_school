@@ -169,7 +169,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
-              href="/#contact"
+              href="/#contatti"
               className="group inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-8 py-4 rounded-full font-black text-sm transition-all duration-300 shadow-md shadow-orange-500/10 hover:shadow-orange-500/25 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer w-full sm:w-auto"
             >
               {t("btnContact")}

@@ -84,7 +84,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* CTA Buttons */}
             <div className="hidden sm:flex sm:flex-row items-center gap-3 lg:gap-4">
               <a
-                href="#contact"
+                href="#contatti"
                 className="group inline-flex w-auto items-center justify-center gap-2 bg-white hover:bg-gray-50 text-black px-5 py-3 lg:px-6 lg:py-3.5 rounded-full font-black text-xs lg:text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer"
               >
                 Prenota una consulenza gratuita
@@ -100,7 +100,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             {/* Mobile: compact inline buttons aligned to start so they don't stretch */}
             <div className="sm:hidden flex flex-col items-start gap-2.5 w-full">
               <a
-                href="#contact"
+                href="#contatti"
                 className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-black px-10 py-2.5 rounded-full font-black text-xs shadow-md transition-all active:scale-95 select-none cursor-pointer self-start min-w-[210px]"
               >
                 Prenota ora

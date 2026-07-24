@@ -26,7 +26,7 @@ const BookingSection = () => {
         </p>
 
         <a 
-          href="#contact" 
+          href="#contatti" 
           className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full text-lg font-bold hover:bg-secondary hover:text-secondary-foreground transition-all duration-300 shadow-lg hover:shadow-primary/20 hover:-translate-y-0.5 group"
         >
           {t("cta")}

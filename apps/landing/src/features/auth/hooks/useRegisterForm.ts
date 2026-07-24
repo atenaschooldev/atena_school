@@ -32,7 +32,7 @@ export function useRegisterForm() {
         toast.error(res.error || "Errore durante la registrazione");
       } else {
         toast.success(t("success"));
-        router.push(`/auth/login${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`);
+        router.push(`/autenticazione/accedi${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`);
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
@@ -42,7 +42,7 @@ export function useRegisterForm() {
   };
 
   const handleOAuthLogin = async (provider: 'google') => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
+    const redirectTo = `${window.location.origin}/autenticazione/callback?next=${encodeURIComponent(redirectUrl)}`;
     const res = await getOAuthUrlAction({ provider, redirectTo });
 
     if (res.success && res.url) {

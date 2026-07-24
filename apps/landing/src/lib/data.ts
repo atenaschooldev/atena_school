@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { createClient } from './supabase/server';
 import { CACHE_TAGS, CACHE_TTL } from './constants';
+import { slugify } from './utils';
 
 interface HeroRow {
   title_it?: string | null;
@@ -50,6 +51,7 @@ interface TeacherProfileRow {
 
 interface CourseRow {
   id: string;
+  slug?: string | null;
   name: string;
   category: string;
   price: number;
@@ -184,6 +186,7 @@ export async function getCourses() {
 
   return (data || []).map((c) => ({
     ...c,
+    slug: (c.slug as string) || slugify(c.name || ''),
     title_it: c.name || '',
     title_en: c.name || '',
     description_it: c.description || '',

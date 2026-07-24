@@ -76,7 +76,7 @@ export async function forgotPasswordAction(email: string) {
   try {
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/autenticazione/callback?next=/autenticazione/reimposta-password`,
     });
     if (error) throw error;
     return { success: true };

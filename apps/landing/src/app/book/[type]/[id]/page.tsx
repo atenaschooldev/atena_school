@@ -6,5 +6,5 @@ interface PageProps {
 
 export default async function BookingPage({ params }: PageProps) {
   const { id } = await params;
-  redirect(`/courses/${id}`);
+  redirect(`/corsi/${id}`);
 }

@@ -33,7 +33,7 @@ export function useLoginForm() {
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectUrl)}`;
+    const redirectTo = `${window.location.origin}/autenticazione/callback?next=${encodeURIComponent(redirectUrl)}`;
     const res = await getOAuthUrlAction({ provider, redirectTo });
 
     if (res.success && res.url) {

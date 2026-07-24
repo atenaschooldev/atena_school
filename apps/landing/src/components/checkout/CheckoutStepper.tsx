@@ -18,7 +18,7 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
 
   const getHref = (stepNumber: number) => {
     if (!id) return null;
-    if (stepNumber === 1) return `/courses/${id}`;
+    if (stepNumber === 1) return `/corsi/${id}`;
     if (stepNumber === 2) return `/checkout/${id}`;
     return null;
   };

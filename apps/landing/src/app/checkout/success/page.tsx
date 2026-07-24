@@ -179,7 +179,7 @@ function SuccessContent() {
             </button>
           ) : isGmail ? (
             <button
-              onClick={() => router.push(`/auth/login?redirect=/dashboard`)}
+              onClick={() => router.push(`/autenticazione/accedi?redirect=/dashboard`)}
               className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
               <GoogleLogo className="w-4 h-4" weight="bold" />
@@ -203,7 +203,7 @@ function SuccessContent() {
           )}
 
           <button
-            onClick={() => router.push("/courses")}
+            onClick={() => router.push("/corsi")}
             className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-[#043569] transition-colors cursor-pointer"
           >
             Torna ai corsi

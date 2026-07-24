@@ -55,7 +55,7 @@ export default function CartPage() {
                 Il tuo carrello è attualmente vuoto.
               </p>
               <Link 
-                href="/courses"
+                href="/corsi"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-foreground text-background font-bold rounded-2xl hover:bg-primary transition-all duration-300 group"
               >
                 Esplora i corsi

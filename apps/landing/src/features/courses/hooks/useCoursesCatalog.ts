@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 
 export interface CleanCourse {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   image: any;

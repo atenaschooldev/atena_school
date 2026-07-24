@@ -35,7 +35,7 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     const fullPath = request.nextUrl.pathname + request.nextUrl.search;
-    url.pathname = `/auth/login`;
+    url.pathname = `/autenticazione/accedi`;
     const keys = Array.from(url.searchParams.keys());
     keys.forEach(key => url.searchParams.delete(key));
     url.searchParams.set('redirect', fullPath);

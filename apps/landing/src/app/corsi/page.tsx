@@ -17,11 +17,7 @@ export async function generateMetadata() {
     title,
     description,
     alternates: {
-      canonical: `${siteUrl}/courses`,
-      languages: {
-        'it': `${siteUrl}/courses`,
-        'x-default': `${siteUrl}/courses`,
-      },
+      canonical: `${siteUrl}/corsi`,
     },
     robots: {
       index: true,
@@ -30,7 +26,7 @@ export async function generateMetadata() {
     openGraph: {
       type: 'website',
       locale: 'it_IT',
-      url: `${siteUrl}/courses`,
+      url: `${siteUrl}/corsi`,
       siteName: 'Atena School',
       title,
       description,

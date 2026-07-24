@@ -182,7 +182,7 @@ function RegisterForm() {
           <div className="text-center pt-3 xl:pt-4 max-h-[780px]:pt-2 responsive-register">
             <span className="text-[11px] xl:text-xs text-gray-500 font-bold max-h-[780px]:text-[10px]">
               <Link
-                href={`/auth/login${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                href={`/autenticazione/accedi${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
                 className="text-[#F8861D] hover:underline transition-colors duration-200"
               >
                 {t("hasAccount")}

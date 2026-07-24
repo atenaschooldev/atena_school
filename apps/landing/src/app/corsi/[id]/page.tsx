@@ -21,6 +21,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
+  const courseSlug = course.slug || id;
   const title = `${course.title_it || course.name} | Atena School`;
   const description = course.description_it || course.description || `Scopri il corso di ${course.title_it || course.name} presso Atena School a Cittanova.`;
   const imageUrl = course.photo_url || `${siteUrl}/icon.png`;
@@ -29,12 +30,12 @@ export async function generateMetadata({ params }: PageProps) {
     title,
     description,
     alternates: {
-      canonical: `${siteUrl}/courses/${id}`,
+      canonical: `${siteUrl}/corsi/${courseSlug}`,
     },
     openGraph: {
       type: "website",
       locale: "it_IT",
-      url: `${siteUrl}/courses/${id}`,
+      url: `${siteUrl}/corsi/${courseSlug}`,
       siteName: "Atena School",
       title,
       description,
