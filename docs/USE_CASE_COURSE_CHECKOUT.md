@@ -27,7 +27,7 @@
 | :--- | :--- | :--- |
 | **Landing Frontend** | Next.js 16 (`apps/landing`) | Страница курса, форма чекаута, экран успеха (`/checkout/success`). |
 | **Personal Cabinet** | Next.js 16 (`apps/app`) | Личный Кабинет студента/родителя (`app.atenaschool.com/dashboard`). |
-| **Validation Layer** | React Hook Form + Zod | Валидация формы чекаута (`checkoutSchema.ts`) и `superRefine()`. |
+| **Validation Layer** | React Hook Form + Zod | Валидация формы чекаута (`checkoutSchema` в `useCheckout.ts`) и `superRefine()`. |
 | **Server Actions** | Next.js Server Actions | `initiateStripePaymentAction`, `confirmPaymentAction`, `getBookingDetailsServer`. |
 | **Edge Functions** | Supabase Deno Functions | `create-checkout-session`, `stripe-webhook`, `verify-payment`, `send-email`. |
 | **Payment Gateway** | Stripe API (v14 / v2026) | Прием банковских карт (`cs_test_...`, `pi_...`), вебхуки `checkout.session.completed`. |
