@@ -3,7 +3,6 @@
 import { Link } from "@/i18n/routing";
 import { Envelope, Lock, User, Eye, EyeSlash } from "@phosphor-icons/react";
 import Image from "next/image";
-import logo from "@/assets/logo.webp";
 import { useLoginForm } from "@/features/auth/hooks/useLoginForm";
 
 function LoginForm() {
