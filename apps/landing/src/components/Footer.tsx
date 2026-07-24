@@ -22,9 +22,9 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-white py-10 px-3 sm:px-6 lg:px-8 relative">
-      {/* Floating Card Container */}
-      <div className="max-w-7xl mx-auto bg-[#043569] rounded-3xl p-6 sm:p-10 lg:p-12 text-white border border-white/10 shadow-2xl relative overflow-hidden">
+    <footer className="w-full bg-[#043569] text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10">
+      {/* Centered Content Container */}
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Ambient Light */}
         <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#F8861D]/10 rounded-full blur-3xl pointer-events-none" />

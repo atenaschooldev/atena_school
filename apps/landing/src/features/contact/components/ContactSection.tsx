@@ -51,8 +51,6 @@ const ContactSection = ({ data }: ContactSectionProps) => {
 
   return (
     <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-gray-50 overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -z-10" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
 
       <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-150 shadow-xl text-gray-900 font-sans p-6 sm:p-10 lg:p-12 relative z-20">
