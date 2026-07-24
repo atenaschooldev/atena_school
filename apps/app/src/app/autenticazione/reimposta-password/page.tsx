@@ -30,7 +30,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex-grow flex items-center justify-center px-4 py-4 lg:py-0 relative bg-[#06121E] lg:h-[calc(100vh-184px)] min-h-[460px] max-h-[780px]:min-h-[400px] responsive-wrapper">
+    <div className="min-h-screen w-full flex items-center justify-center px-4 py-8 relative bg-[#06121E] responsive-wrapper">
       {/* Full Page Background Image of London */}
       <div className="absolute inset-0 z-0">
         <Image
