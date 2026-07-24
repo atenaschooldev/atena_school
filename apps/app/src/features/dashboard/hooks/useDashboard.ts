@@ -20,7 +20,7 @@ export function useDashboard() {
         if (res.success && res.user) {
           setUser(res.user);
           setProfileName(res.user.user_metadata?.full_name || "");
-          setProfilePhone(res.user.user_metadata?.phone || res.user.phone || "");
+          setProfilePhone((res.user as any).user_metadata?.phone || (res.user as any).phone || "");
           setBookings(res.bookings || []);
         }
       } catch (err) {

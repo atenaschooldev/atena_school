@@ -17,7 +17,7 @@ export function useCheckoutSuccess() {
   const bookingId = searchParams.get("booking_id");
   const emailParam = searchParams.get("email");
 
-  const [verifying, setVerifying] = useState(!!sessionId);
+  const [verifying, setVerifying] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [bookingData, setBookingData] = useState<any>(null);
   const [sendingMagicLink, setSendingMagicLink] = useState(false);

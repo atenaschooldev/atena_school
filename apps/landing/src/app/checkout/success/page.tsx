@@ -35,7 +35,7 @@ function SuccessContent() {
     handleSendMagicLink,
   } = useCheckoutSuccess();
 
-  if (verifying) {
+  if (verifying || !bookingData) {
     return (
       <main className="h-screen flex items-center justify-center bg-gradient-to-br from-[#043569] via-[#054080] to-[#021f42] px-4">
         <div className="flex flex-col items-center gap-4 text-white">

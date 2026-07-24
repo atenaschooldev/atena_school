@@ -12,10 +12,26 @@ export async function getDashboardDataAction() {
       return { success: false, user: null, bookings: [] };
     }
 
+    const { data: dbProfile } = await (supabase
+      .from("users") as any)
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const pData = dbProfile as any;
+    const dbFullName = (pData?.full_name || (pData?.first_name ? `${pData.first_name} ${pData.last_name || ""}`.trim() : "")) || undefined;
+
     const bookings = await fetchUserBookingsEnriched(user, supabase as any);
     return {
       success: true,
-      user,
+      user: {
+        ...user,
+        dbProfile: dbProfile || null,
+        user_metadata: {
+          ...user.user_metadata,
+          ...(dbFullName ? { custom_full_name: dbFullName, full_name: dbFullName } : {})
+        }
+      },
       bookings
     };
   } catch (err: any) {
