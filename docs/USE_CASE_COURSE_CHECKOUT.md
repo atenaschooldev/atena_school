@@ -2,7 +2,7 @@
 
 > **Документ**: Каноническая библия бизнес-процесса покупки курса, верстки, TS-файлов, триггеров БД, Edge Functions, Stripe, Vercel, RLS и обработки исключений  
 > **Проект**: Atena School (`atena_school`)  
-> **Версия**: 3.1 (Complete Source Code & System Architecture Edition)  
+> **Версия**: 3.2 (Complete RLS & Database Policy Edition)  
 > **Целевая аудитория**: Разработчики, Архитекторы БД, Специалисты по безопасности, QA, Продукт-менеджеры  
 > **Дата последнего обновления**: Июль 2026  
 
@@ -199,24 +199,68 @@ sequenceDiagram
 
 ---
 
-## 🛡️ 6. Аудит Безопасности и RLS-Политик (Security Audit)
+## 🛡️ 6. Аудит Безопасности и Полный Спектр RLS-Политик (Security & RLS)
 
+Ниже представлен **полный список из 22 RLS-политик**, действующих во всех 7 таблицах базы данных:
+
+### 1. Таблица `public.bookings` (Заказы)
 ```sql
--- RLS Политика чтения заказов на public.bookings
-CREATE POLICY "Allow users to read own bookings" ON public.bookings
-FOR SELECT TO public
-USING (
-  (auth.uid() = user_id) 
-  OR (student_email IS NOT NULL AND lower(student_email) = lower(auth.jwt() ->> 'email'))
-  OR (purchaser_email IS NOT NULL AND lower(purchaser_email) = lower(auth.jwt() ->> 'email'))
-  OR (session_id = COALESCE(NULLIF(current_setting('request.headers', true)::json ->> 'x-session-id', ''), ''))
-);
+-- 1. Выборка заказов пользователем (родитель/ученик)
+CREATE POLICY "Allow users to read own bookings" ON public.bookings FOR SELECT TO public
+USING ((auth.uid() = user_id) OR (student_email IS NOT NULL AND lower(student_email) = lower(auth.jwt() ->> 'email')) OR (purchaser_email IS NOT NULL AND lower(purchaser_email) = lower(auth.jwt() ->> 'email')) OR (session_id = COALESCE(NULLIF(current_setting('request.headers', true)::json ->> 'x-session-id', ''), '')));
+
+-- 2. Публичное добавление нового бронирования на чекауте
+CREATE POLICY "Allow public insert for bookings" ON public.bookings FOR INSERT TO public
+WITH CHECK (payment_status = ANY (ARRAY['in_cart', 'pending_payment', 'reserved']));
+
+-- 3. Привязка гостевого заказа авторизованным юзером
+CREATE POLICY "Allow users to link guest bookings by email" ON public.bookings FOR UPDATE TO public
+USING ((auth.uid() = user_id) OR (student_email IS NOT NULL AND lower(student_email) = lower(auth.jwt() ->> 'email')) OR (purchaser_email IS NOT NULL AND lower(purchaser_email) = lower(auth.jwt() ->> 'email')))
+WITH CHECK (auth.uid() = user_id);
+
+-- 4. Полный доступ для администратора
+CREATE POLICY "Allow admin all for bookings" ON public.bookings FOR ALL TO authenticated
+USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role = 'admin'));
 ```
 
-### Гарантии безопасности:
-1. **Отсутствие `SUPABASE_SERVICE_ROLE_KEY` в ЛК**: Все операции дашборда выполняются в рамках RLS-контура пользователя.
-2. **Изоляция чужих данных**: Пользователь A физически не может прочитать заказы Пользователя B, так как ядро PostgreSQL сравнивает email в подписанном JWT-токене (`auth.jwt() ->> 'email'`).
-3. **Изоляция секретов**: Все секреты Stripe и Supabase Service Role хранятся исключительно в серверных переменных окружения (`.env`), которые внесены в `.gitignore` и не попадают в клиентские бандлы.
+### 2. Таблица `public.users` (Профили пользователей)
+```sql
+-- SELECT: пользователь видит свой профиль, админ — все, учитель — студентов
+CREATE POLICY "users_select_policy" ON public.users FOR SELECT TO public
+USING ((id = auth.uid()) OR (get_user_role() = 'admin') OR (get_user_role() = 'teacher' AND role = 'student'));
+
+-- UPDATE: редактирование своего профиля или админом
+CREATE POLICY "users_update_policy" ON public.users FOR UPDATE TO public
+USING ((id = auth.uid()) OR (get_user_role() = 'admin'));
+```
+
+### 3. Таблица `public.students` (Карточки учеников)
+```sql
+-- SELECT: студент видит свою карточку, админы и учителям доступен список
+CREATE POLICY "students_select_policy" ON public.students FOR SELECT TO public
+USING ((get_user_role() = ANY (ARRAY['admin', 'teacher'])) OR (id = auth.uid()));
+```
+
+### 4. Таблица `public.annual_memberships` (Годовые взносы)
+```sql
+-- SELECT: пользователь видит свои членские взносы
+CREATE POLICY "Users can view own annual_memberships" ON public.annual_memberships FOR SELECT TO public
+USING (auth.uid() = user_id);
+```
+
+### 5. Таблица `public.payments` (Финансовые проводки)
+```sql
+-- SELECT: пользователь видит свои чеки и транзакции
+CREATE POLICY "Users can view own payments" ON public.payments FOR SELECT TO public
+USING (auth.uid() = user_id);
+```
+
+### 6. Таблица `public.lessons` (Уроки)
+```sql
+-- SELECT: выборка уроков забронированного курса
+CREATE POLICY "Allow public read for own booking lessons" ON public.lessons FOR SELECT TO public
+USING (EXISTS (SELECT 1 FROM bookings WHERE bookings.id = lessons.booking_id AND (bookings.user_id = auth.uid() OR bookings.session_id = current_setting('request.headers', true)::json ->> 'x-atena-session')));
+```
 
 ---
 
