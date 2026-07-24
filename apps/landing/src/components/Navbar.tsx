@@ -228,7 +228,7 @@ const Navbar = () => {
                   </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/dashboard`; }}>
+                  <DropdownMenuItem onClick={() => { window.open(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/dashboard`, '_blank', 'noopener,noreferrer'); }}>
                     Area personale
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout} className="text-destructive">
@@ -240,6 +240,8 @@ const Navbar = () => {
             ) : (
               <a
                 href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
                     ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
                     : "bg-[#043569] text-white hover:bg-[#F8861D]"
@@ -407,6 +409,8 @@ const Navbar = () => {
                     <div className="space-y-2">
                       <a
                         href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/dashboard`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center justify-between py-3 px-4 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
                         onClick={() => setOpen(false)}
                       >
@@ -426,6 +430,8 @@ const Navbar = () => {
                   ) : (
                     <a
                       href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"
                       onClick={() => setOpen(false)}
                     >
