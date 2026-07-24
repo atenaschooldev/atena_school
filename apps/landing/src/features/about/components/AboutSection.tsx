@@ -19,12 +19,15 @@ const AboutSection = ({ data }: AboutSectionProps) => {
   const p2 = data?.content || t("p2");
 
   return (
-    <section id="chi-siamo" className="relative py-20 lg:py-28 bg-gray-50 overflow-hidden px-0">
+    <section id="chi-siamo" className="relative py-20 lg:py-28 bg-slate-50/70 overflow-hidden px-0">
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
+
       {/* Decorative background accents */}
       <div className="absolute top-1/4 left-[5%] w-[400px] h-[400px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-[5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+      <div className="w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-16 2xl:px-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
 
           {/* Left Column: Text & Features */}

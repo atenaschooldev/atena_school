@@ -50,10 +50,13 @@ const ContactSection = ({ data }: ContactSectionProps) => {
   const email = data?.email || "atenaschool20@gmail.com";
 
   return (
-    <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-gray-50 overflow-hidden">
+    <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-slate-50/70 overflow-hidden">
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
+
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
 
-      <div className="max-w-6xl mx-auto bg-white rounded-3xl border border-gray-150 shadow-xl text-gray-900 font-sans p-6 sm:p-10 lg:p-12 relative z-20">
+      <div className="max-w-6xl 2xl:max-w-[1600px] mx-auto bg-white rounded-3xl border border-gray-150 shadow-xl text-gray-900 font-sans p-6 sm:p-10 lg:p-12 2xl:p-16 relative z-20">
         {submitted ? (
           <div className="py-16 flex flex-col items-center justify-center text-center space-y-4 min-h-[400px]">
             <div className="w-16 h-16 rounded-full bg-green-50 text-green-600 flex items-center justify-center shadow-lg border border-green-200">

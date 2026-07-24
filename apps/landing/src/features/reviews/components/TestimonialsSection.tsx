@@ -104,7 +104,9 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   }, [emblaApi, onSelect, activeTestimonial]);
 
   return (
-    <section className="py-6 sm:py-8 px-4 bg-white relative overflow-hidden">
+    <section className="py-12 sm:py-16 px-4 bg-slate-50/70 relative overflow-hidden">
+      {/* Background Grid Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
 
       {/* Centered Header */}
       <div className="max-w-2xl mx-auto relative z-20 text-center mb-8 px-4 space-y-1" data-gsap="fade-up">
@@ -117,7 +119,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
       </div>
 
       {/* Constrained Carousel container */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-16 overflow-hidden" data-gsap="fade-up" data-gsap-delay="100">
+      <div className="relative z-20 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-6 sm:px-10 lg:px-16 2xl:px-12 overflow-hidden" data-gsap="fade-up" data-gsap-delay="100">
         {/* Soft edge fade overlays */}
         <div className="pointer-events-none absolute left-0 top-0 h-full w-12 sm:w-20 md:w-28 z-30 bg-gradient-to-r from-white via-white/35 to-white/0" />
         <div className="pointer-events-none absolute right-0 top-0 h-full w-12 sm:w-20 md:w-28 z-30 bg-gradient-to-l from-white via-white/35 to-white/0" />

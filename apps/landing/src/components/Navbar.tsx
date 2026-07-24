@@ -144,7 +144,7 @@ const Navbar = () => {
     { label: t("contact"), href: "/#contatti", icon: EnvelopeSimple },
   ];
 
-  const isLightHeader = isHome && !isScrolled;
+  const isLightHeader = false;
 
   if (pathname && (pathname.includes("/checkout") || pathname.includes("/book"))) {
     return null;
@@ -154,11 +154,7 @@ const Navbar = () => {
     <>
       <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-2 px-4 md:px-8 ${
         visible ? "translate-y-0" : "-translate-y-full"
-      } ${
-        isScrolled 
-          ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100/80" 
-          : "bg-transparent border-transparent"
-      }`}>
+      } bg-white shadow-sm border-b border-slate-100`}>
         <div className="mx-auto max-w-7xl flex items-center justify-between h-16 px-6">
           {/* Logo */}
           <div className="flex items-center gap-6">

@@ -2,7 +2,6 @@ import HeroSection from "@/components/HeroSection";
 import StatsSection from "@/components/StatsSection";
 import AboutSection from "@/features/about/components/AboutSection";
 import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
-import CtaBanner from "@/components/CtaBanner";
 import ContactSection from "@/features/contact/components/ContactSection";
 import { getHomePageData } from "@/features/home/services/homeService";
 import { env } from "@/config/env";
@@ -50,14 +49,7 @@ export default async function IndexPage() {
       <StatsSection />
       <AboutSection data={about} />
       <TestimonialsSection data={testimonials} />
-      <div className="space-y-0">
-        <div data-gsap="fade-up" data-gsap-delay="0">
-          <CtaBanner />
-        </div>
-        <div data-gsap="fade-up" data-gsap-delay="200">
-          <ContactSection data={contact} />
-        </div>
-      </div>
+      <ContactSection data={contact} />
     </div>
   );
 }

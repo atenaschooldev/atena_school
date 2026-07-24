@@ -29,6 +29,7 @@
   
   --animate-zoom-breathing: zoom-breathing 24s ease-in-out infinite alternate;
   --animate-float: float 6s ease-in-out infinite;
+  --animate-breathe: breathe 3.5s ease-in-out infinite;
 
   @keyframes zoom-breathing {
     0% {
@@ -47,6 +48,12 @@
       transform: translateY(-10px);
     }
   }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    50% { transform: scale(1.06); box-shadow: 0 8px 28px rgba(0,0,0,0.14); }
+  }
+
 }
 
 @layer base {
