@@ -74,12 +74,12 @@ export default function DashboardPage() {
               Benvenuto, {user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}
             </p>
           </div>
-          <Link
-            href="/corsi"
+          <a
+            href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
           >
             Esplora altri corsi
-          </Link>
+          </a>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -115,12 +115,12 @@ export default function DashboardPage() {
                 <p className="text-sm font-medium text-foreground/60">
                   Nessuna lezione o corso trovato in questa sezione.
                 </p>
-                <Link
-                  href="/corsi"
+                <a
+                  href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline"
                 >
                   Prenota una lezione ora →
-                </Link>
+                </a>
               </div>
             ) : (
               <div className="space-y-4">
