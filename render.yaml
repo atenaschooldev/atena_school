@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: atena-backend
+    runtime: node
+    region: frankfurt
+    plan: free
+    rootDir: apps/backend
+    buildCommand: cd ../.. && npm install -g pnpm@latest && pnpm install --frozen-lockfile && pnpm --filter backend build
+    startCommand: node dist/main
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: APP_ENV
+        value: production
+      # Supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Stripe
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # Email (Resend)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: "Atena School <info@atena.school>"
+      - key: SCHOOL_EMAIL
+        value: "info@atena.school"
+      # CORS - allowed origins
+      - key: ALLOWED_ORIGINS
+        value: "https://atena-school-landing-three.vercel.app,https://atena-school-lk.vercel.app"

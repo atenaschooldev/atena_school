@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { SupabaseModule } from './core/supabase/supabase.module';
 import { PrismaModule } from './core/prisma/prisma.module';
+import { HealthController } from './health.controller';
 
 // Импорт бизнес-фич (Feature-First)
 import { AuthModule } from './features/auth/auth.module';
@@ -50,5 +51,6 @@ import { PortalModule } from './features/portal/portal.module';
     ActivityLogsModule,
     HomeModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
