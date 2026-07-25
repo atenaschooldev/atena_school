@@ -43,6 +43,15 @@ export class AuthGuard implements CanActivate {
           email: user.email,
           user_metadata: user.user_metadata,
         };
+
+        // Auto-sync user to public.users table in TypeScript (replacing SQL trigger)
+        const fullName = user.user_metadata?.full_name || (user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : '');
+        this.supabaseAdmin.from('users').upsert({
+          id: user.id,
+          email: user.email,
+          full_name: fullName || 'User',
+        }, { onConflict: 'id' }).then(() => {});
+
         return true;
       }
 
@@ -55,6 +64,14 @@ export class AuthGuard implements CanActivate {
           email: payload.email,
           user_metadata: payload.user_metadata,
         };
+
+        const fullName = payload.user_metadata?.full_name || '';
+        this.supabaseAdmin.from('users').upsert({
+          id: payload.sub,
+          email: payload.email,
+          full_name: fullName || 'User',
+        }, { onConflict: 'id' }).then(() => {});
+
         return true;
       }
 

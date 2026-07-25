@@ -1,7 +1,7 @@
--- Migration: Clean legacy DB business triggers and RPC functions
--- All business logic and enrollment rules are now handled by NestJS apps/backend.
+-- Migration: Clean legacy DB business triggers, RPC functions, and Auth triggers
+-- All business logic, user syncing, and role protection are now handled by NestJS apps/backend.
 
--- 1. Drop legacy DB business triggers
+-- 1. Drop ALL triggers from public and auth schemas
 DROP TRIGGER IF EXISTS trg_sync_annual_membership ON public.bookings;
 DROP TRIGGER IF EXISTS trg_booking_student_enrollment ON public.bookings;
 DROP TRIGGER IF EXISTS booking_status_transition_trigger ON public.bookings;
@@ -9,7 +9,20 @@ DROP TRIGGER IF EXISTS trg_sync_annual_membership_students ON public.students;
 DROP TRIGGER IF EXISTS trg_sync_annual_membership_payments ON public.payments;
 DROP TRIGGER IF EXISTS tr_update_courses_on_student_status_change ON public.students;
 
--- 2. Drop legacy PL/pgSQL business functions and RPC procedures dynamically
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_email_confirmed ON auth.users;
+DROP TRIGGER IF EXISTS enforce_user_role_protection ON public.users;
+DROP TRIGGER IF EXISTS on_public_user_deleted ON public.users;
+
+-- 2. Drop ALL trigger functions and PL/pgSQL routines
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_email_confirmed() CASCADE;
+DROP FUNCTION IF EXISTS public.check_user_update() CASCADE;
+DROP FUNCTION IF EXISTS public.handle_deleted_user() CASCADE;
+DROP FUNCTION IF EXISTS public.get_user_role() CASCADE;
+DROP FUNCTION IF EXISTS public.update_user_password() CASCADE;
+
+-- 3. Drop legacy PL/pgSQL business functions dynamically
 DO $$ 
 DECLARE 
     r RECORD;
