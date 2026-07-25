@@ -109,68 +109,10 @@ export async function getBookingDetailsServer(bookingId: string) {
 
   try {
     const admin = getSupabaseAdmin();
-    const { data: booking, error } = await admin
-      .from("bookings")
-      .select("*")
-      .eq("id", bookingId)
-      .maybeSingle();
+    const { data, error } = await admin.rpc("get_booking_details_rpc", { p_booking_id: bookingId });
 
-    if (error || !booking) return null;
-
-    let courseName = booking.course_name;
-    let coursePriceFromObj = 0;
-
-    const cid = booking.course_id || booking.item_id;
-    if (cid) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
-      let cQuery = admin.from("courses").select("name, price, photo_url, slug");
-      if (isUuid) {
-        cQuery = cQuery.eq("id", cid);
-      } else {
-        cQuery = cQuery.eq("slug", cid);
-      }
-      const { data: cData } = await cQuery.maybeSingle();
-      if (cData) {
-        if (!courseName) courseName = cData.name;
-        if (cData.price) coursePriceFromObj = parseFloat(String(cData.price).replace(/[^0-9.,]/g, "").replace(",", "."));
-      }
-    }
-
-    // Fetch ledger payments
-    const { data: payments } = await admin
-      .from("payments")
-      .select("type, amount")
-      .eq("booking_id", bookingId);
-
-    const paymentLedger = payments || [];
-    const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
-    const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
-
-    const regFee = regFeeRow
-      ? Number(regFeeRow.amount)
-      : Number(booking.registration_fee || 0);
-
-    const totalPaid = Number(booking.amount_paid || 0);
-    const calculatedCoursePrice = coursePaymentRow
-      ? Number(coursePaymentRow.amount)
-      : (totalPaid > 0 ? totalPaid - regFee : 0);
-
-    const coursePrice = calculatedCoursePrice > 0 ? calculatedCoursePrice : (coursePriceFromObj > 0 ? coursePriceFromObj : totalPaid);
-    const resolvedName = courseName || "Corso Atena School";
-
-    return {
-      ...booking,
-      item_name: resolvedName,
-      course_name: resolvedName,
-      title: resolvedName,
-      name: resolvedName,
-      item_price: coursePrice,
-      course_price: coursePrice,
-      registration_fee: regFee,
-      amount_paid: totalPaid > 0 ? totalPaid : coursePrice + regFee,
-      date: booking.start_date || booking.booking_date || null,
-      time: booking.booking_time || null,
-    };
+    if (error || !data) return null;
+    return data;
   } catch (err) {
     console.error("Error in getBookingDetailsServer:", err);
     return null;
