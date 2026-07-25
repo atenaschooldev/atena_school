@@ -49,7 +49,7 @@ function SuccessContent() {
   }
 
   const dateLocale = it;
-  const courseName = bookingData?.item_name || bookingData?.title_it || bookingData?.name || bookingData?.title || "Corso Atena School";
+  const courseName = bookingData?.item_name || bookingData?.course_name || bookingData?.name || bookingData?.title_it || bookingData?.title || "Corso Atena School";
   const regFee = Number(bookingData?.registration_fee || 0);
   const rawTotalPaid = Number(bookingData?.amount_paid || 0);
   const rawCoursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? 0);

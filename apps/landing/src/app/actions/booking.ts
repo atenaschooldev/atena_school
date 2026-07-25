@@ -122,14 +122,18 @@ export async function getBookingDetailsServer(bookingId: string) {
     const cid = booking.course_id || booking.item_id;
     if (cid) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
-      let cQuery = admin.from("courses").select("name, price, photo_url, slug");
       if (isUuid) {
-        cQuery = cQuery.eq("id", cid);
-      } else {
-        cQuery = cQuery.eq("slug", cid);
+        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").eq("id", cid).maybeSingle();
+        courseObj = cData;
       }
-      const { data: cData } = await cQuery.maybeSingle();
-      courseObj = cData;
+      if (!courseObj) {
+        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").eq("slug", cid).maybeSingle();
+        courseObj = cData;
+      }
+      if (!courseObj) {
+        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").ilike("name", `%${cid}%`).limit(1).maybeSingle();
+        courseObj = cData;
+      }
     }
 
     // Fetch ledger payments
@@ -159,7 +163,8 @@ export async function getBookingDetailsServer(bookingId: string) {
 
     return {
       ...booking,
-      item_name: courseObj?.name || booking.student_name || "Corso Atena School",
+      item_name: courseObj?.name || "Corso Atena School",
+      course_name: courseObj?.name || "Corso Atena School",
       item_price: coursePrice,
       course_price: coursePrice,
       registration_fee: regFee,

@@ -50,25 +50,38 @@ Deno.serve(async (req) => {
     let itemData: Record<string, unknown> | null = null;
     const cid = bookingData?.course_id ?? bookingData?.item_id;
     if (cid) {
-      const { data } = await supabaseAdmin
-        .from("courses")
-        .select("*, teachers(teacher_id, full_name)")
-        .eq("id", cid)
-        .maybeSingle();
-      itemData = data;
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
+      if (isUuid) {
+        const { data } = await supabaseAdmin
+          .from("courses")
+          .select("*, teachers(teacher_id, full_name)")
+          .eq("id", cid)
+          .maybeSingle();
+        itemData = data;
+      }
+      if (!itemData) {
+        const { data } = await supabaseAdmin
+          .from("courses")
+          .select("*, teachers(teacher_id, full_name)")
+          .eq("slug", cid)
+          .maybeSingle();
+        itemData = data;
+      }
     }
 
     const regFee = Number(bookingData?.registration_fee || 0);
     const amountPaid = Number(bookingData?.amount_paid || 0);
     const rawCoursePrice = itemData?.price ? Number(itemData.price) : (amountPaid > 0 ? amountPaid - regFee : 0);
     const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, amountPaid - regFee);
+    const courseName = (itemData?.name ?? itemData?.title_it ?? itemData?.title ?? "Corso Atena School") as string;
 
     const fullBooking = bookingData
       ? {
           ...bookingData,
           course_id: cid,
           item_id: cid,
-          item_name: itemData?.name ?? itemData?.title_it ?? itemData?.title ?? null,
+          item_name: courseName,
+          course_name: courseName,
           item_price: coursePrice,
           course_price: coursePrice,
           registration_fee: regFee,
