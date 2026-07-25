@@ -27,22 +27,32 @@ export async function autoLinkGuestBookings(
 ): Promise<void> {
   if (!email || !userId) return;
 
+  const cleanEmail = email.trim().toLowerCase();
+
   await supabase
     .from("bookings")
     .update({ user_id: userId })
-    .ilike("student_email", email)
+    .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .is("user_id", null);
 
   const { data: latestBooking } = await supabase
     .from("bookings")
-    .select("student_phone, student_name")
-    .ilike("student_email", email)
+    .select("student_phone, student_name, student_email, purchaser_name, purchaser_email, purchaser_phone")
+    .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (latestBooking?.student_phone || latestBooking?.student_name) {
-    const rawName = (latestBooking.student_name || "").trim();
+  if (latestBooking) {
+    const isPurchaser = latestBooking.purchaser_email?.toLowerCase() === cleanEmail;
+    const rawName = isPurchaser
+      ? (latestBooking.purchaser_name || latestBooking.student_name || "").trim()
+      : (latestBooking.student_name || "").trim();
+
+    const phone = isPurchaser
+      ? (latestBooking.purchaser_phone || latestBooking.student_phone || "")
+      : (latestBooking.student_phone || "");
+
     const parts = rawName.split(" ");
     const firstName = parts[0] || "";
     const lastName = parts.slice(1).join(" ") || "";
@@ -50,7 +60,7 @@ export async function autoLinkGuestBookings(
     try {
       await supabase.auth.updateUser({
         data: {
-          phone: latestBooking.student_phone || undefined,
+          phone: phone || undefined,
           ...(rawName ? { custom_full_name: rawName } : {})
         }
       });
@@ -62,10 +72,11 @@ export async function autoLinkGuestBookings(
       const updateData: Record<string, any> = {
         updated_at: new Date().toISOString()
       };
-      if (latestBooking.student_phone) updateData.phone = latestBooking.student_phone;
+      if (phone) updateData.phone = phone;
       if (firstName) updateData.first_name = firstName;
       if (lastName) updateData.last_name = lastName;
       if (rawName) updateData.full_name = rawName;
+      if (isPurchaser) updateData.role = "parent";
 
       await supabase
         .from("users")
@@ -83,15 +94,17 @@ export async function fetchUserBookingsEnriched(
 ): Promise<EnrichedBooking[]> {
   if (!user) return [];
 
-  if (user.email) {
-    await autoLinkGuestBookings(user.email, user.id, supabase);
+  const cleanEmail = user.email ? user.email.trim().toLowerCase() : "";
+
+  if (cleanEmail) {
+    await autoLinkGuestBookings(cleanEmail, user.id, supabase);
   }
 
   // Fetch raw bookings
   const { data } = await supabase
     .from("bookings")
     .select("*")
-    .or(`user_id.eq.${user.id},student_email.ilike.${user.email}`)
+    .or(`user_id.eq.${user.id},student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .in("payment_status", ["paid", "completed", "reserved", "pending_payment", "pending"])
     .order("created_at", { ascending: false });
 
