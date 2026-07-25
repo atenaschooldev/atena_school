@@ -13,6 +13,11 @@ export interface CourseItem {
   id: string;
   name: string;
   title_it?: string;
+  slug?: string;
+  description?: string;
+  description_it?: string;
+  photo_url?: string;
+  image_url?: string;
   price: number | string;
   status: 'active' | 'published' | 'draft' | 'archived';
   category?: string;

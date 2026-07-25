@@ -149,14 +149,14 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   useEffect(() => {
     async function initCheckout() {
       try {
-        const itemRes = await fetchCheckoutItemAction(type, id);
+        const itemRes = await fetchCheckoutItemAction(id);
         if (itemRes.success && itemRes.item) {
           setItem(itemRes.item);
         }
 
         const userRes = await getCurrentUserAction();
-        if (userRes.success && userRes.user) {
-          const currentUser = userRes.user;
+        if (userRes.success && (userRes as any).user) {
+          const currentUser = (userRes as any).user;
           setUser(currentUser);
           const fullName = currentUser.user_metadata?.full_name || "";
           const parts = fullName.split(" ");
@@ -215,7 +215,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setFeeCheckStatus("checking");
 
     const timer = setTimeout(async () => {
-      const res = await checkRegistrationFeeStatusAction(targetEmail, targetPhone, targetTaxCode);
+      const res = await checkRegistrationFeeStatusAction({ email: targetEmail, phone: targetPhone, taxCode: targetTaxCode });
       if (res.success && res.annualFeePaid) {
         setHasPaidAnnualFee(true);
         setFeeCheckStatus("paid");

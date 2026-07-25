@@ -12,7 +12,6 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { getCartCountAction, getCurrentUserAction } from "@/app/actions/booking";
-import { signOutAction } from "@/app/actions/auth";
 import { getSessionId, mergeGuestBookings } from "@/lib/utils";
 import { env } from "@/config/env";
 
