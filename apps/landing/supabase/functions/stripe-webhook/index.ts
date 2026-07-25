@@ -116,16 +116,69 @@ Deno.serve(async (req) => {
         return new Response("Failed to update booking", { status: 500 });
       }
 
-      // If registration fee was paid, update student card annual_fee_paid = true
+      // If registration fee was paid, upsert annual_memberships and update student record
       const regFee = Number(booking.registration_fee || 0);
-      if (regFee > 0 && booking.student_id) {
-        await supabaseAdmin
-          .from("students")
-          .update({
-            annual_fee_paid: true,
-            annual_fee_paid_at: new Date().toISOString(),
-          })
-          .eq("id", booking.student_id);
+      const studentTaxCode = (booking.student_tax_code || booking.purchaser_tax_code || "").trim().toUpperCase();
+      const studentEmail = (booking.student_email || booking.purchaser_email || "").trim().toLowerCase();
+      const studentPhone = (booking.student_phone || booking.purchaser_phone || "").trim();
+
+      if (regFee > 0) {
+        let targetStudentId = booking.student_id;
+        if (!targetStudentId && studentTaxCode) {
+          const { data: existingStudent } = await supabaseAdmin
+            .from("students")
+            .select("id")
+            .ilike("tax_code", studentTaxCode)
+            .maybeSingle();
+
+          if (existingStudent) {
+            targetStudentId = existingStudent.id;
+          } else {
+            const parts = (booking.student_name || booking.purchaser_name || "Studente").split(" ");
+            const { data: newStudent } = await supabaseAdmin
+              .from("students")
+              .insert({
+                first_name: parts[0] || "",
+                last_name: parts.slice(1).join(" ") || "",
+                full_name: booking.student_name || booking.purchaser_name || "Studente",
+                email: studentEmail,
+                phone: studentPhone,
+                tax_code: studentTaxCode,
+                annual_fee_paid: true,
+                annual_fee_paid_at: new Date().toISOString(),
+              })
+              .select("id")
+              .maybeSingle();
+            if (newStudent) targetStudentId = newStudent.id;
+          }
+        }
+
+        if (targetStudentId) {
+          await supabaseAdmin
+            .from("students")
+            .update({
+              annual_fee_paid: true,
+              annual_fee_paid_at: new Date().toISOString(),
+            })
+            .eq("id", targetStudentId);
+
+          if (!booking.student_id) {
+            await supabaseAdmin.from("bookings").update({ student_id: targetStudentId }).eq("id", bookingId);
+          }
+        }
+
+        await supabaseAdmin.from("annual_memberships").upsert({
+          tax_code: studentTaxCode || null,
+          email: studentEmail || null,
+          phone: studentPhone || null,
+          academic_year: "2026/2027",
+          status: "active",
+          booking_id: bookingId,
+          user_id: booking.user_id || null,
+          student_id: targetStudentId || null,
+          paid_at: new Date().toISOString(),
+          expires_at: "2027-08-31T23:59:59.000Z",
+        }, { onConflict: "booking_id" });
       }
 
       const courseAmount = paidAmount - regFee;
