@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "pnpm --filter app build"
+  "buildCommand": "next build"
 }
