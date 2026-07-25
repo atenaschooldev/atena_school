@@ -246,6 +246,9 @@ importers:
       '@atena/api-types':
         specifier: workspace:*
         version: link:../../packages/api-types
+      '@atena/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@atena/validators':
         specifier: workspace:*
         version: link:../../packages/validators

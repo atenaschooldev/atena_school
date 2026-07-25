@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './portal.controller';
 import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
+import { getDynamicMaxLessons } from '@atena/utils';
 
 @Injectable()
 export class PortalService {
@@ -154,7 +155,17 @@ export class PortalService {
       created_at: booking.created_at,
     }));
 
-    return { success: true, booking, course, lessons };
+    const isFixedSchedule = course?.schedule_type === 'fixed';
+    const maxLessons = isFixedSchedule
+      ? lessons.length
+      : getDynamicMaxLessons(
+          course?.name || '',
+          bdate,
+          course?.category || '',
+          course?.lessons_per_week,
+        );
+
+    return { success: true, booking, course, lessons, max_lessons: maxLessons };
   }
 
   async updateProfile(user: any, dto: UpdateProfileDto) {

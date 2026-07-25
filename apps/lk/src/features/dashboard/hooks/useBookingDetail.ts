@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { format, isFuture, parseISO, startOfDay, isBefore } from "date-fns";
 import { getBookingLessonsAction, scheduleNextLessonAction } from "@/app/actions/dashboard";
 import { toast } from "sonner";
-import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
 
 export interface Lesson {
   id: string;
@@ -25,6 +24,7 @@ export function useBookingDetail(bookingId: string) {
   const [booking, setBooking] = useState<any>(null);
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [maxLessons, setMaxLessons] = useState(8);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
@@ -44,6 +44,7 @@ export function useBookingDetail(bookingId: string) {
           setBooking(res.booking);
           setCourse(res.course);
           setLessons(res.lessons || []);
+          setMaxLessons(res.max_lessons ?? 8);
         } else {
           setError(res.error || "Impossibile caricare i dati della prenotazione");
         }
@@ -66,15 +67,12 @@ export function useBookingDetail(bookingId: string) {
   const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, totalAmount - regFee);
 
   const isFixedSchedule = course?.schedule_type === "fixed";
-  const bdate = booking?.start_date || booking?.booking_date;
-  const maxLessons = isFixedSchedule
-    ? lessons.length
-    : getDynamicMaxLessons(course?.name || "", bdate, course?.category || "", course?.lessons_per_week);
+  const effectiveMaxLessons = isFixedSchedule ? lessons.length : maxLessons;
 
   const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;
   const totalLessons = lessons.length;
-  const progressPercent = maxLessons > 0 ? Math.round((completedLessons / maxLessons) * 100) : 0;
-  const canScheduleMore = totalLessons < maxLessons;
+  const progressPercent = effectiveMaxLessons > 0 ? Math.round((completedLessons / effectiveMaxLessons) * 100) : 0;
+  const canScheduleMore = totalLessons < effectiveMaxLessons;
 
   // Calendar calculations
   const year = currentMonth.getFullYear();
