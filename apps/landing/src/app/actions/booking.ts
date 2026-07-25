@@ -452,82 +452,50 @@ export async function createOrUpdateReservationServerAction(params: {
     subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
     const subEndsAt = subEndsAtDate.toISOString();
 
-    let booking;
+    const lessonsJson = lessons.map(l => ({
+      starts_at: l.startsAt,
+      ends_at: l.endsAt,
+      teacher_id: item.teacher_id || null,
+    }));
 
-    const bookingPayload = {
-      course_id: realCourseId,
-      course_name: resolvedCourseName,
-      user_id: validUserId,
-      session_id: validUserId ? null : sessionId,
-      start_date: finalBookingDate,
-      booking_time: finalBookingTime,
-      payment_status: "reserved",
-      booking_status: "active",
-      payment_method: "cash",
-      amount_paid: amountPaid,
-      registration_fee: registrationFee,
-      total_lessons_count: totalLessons,
-      scheduling_status: schedulingStatus,
-      purchaser_name: purchaserName,
-      purchaser_email: purchaserEmail,
-      purchaser_phone: purchaserPhone,
-      purchaser_tax_code: purchaserTaxCode,
-      student_name: studentName,
-      student_email: studentEmail,
-      student_phone: studentPhone,
-      student_tax_code: studentTaxCode,
-      student_birth_date: values.studentBirthDate || null,
-      sdi_code: values.needsCompanyInvoice ? (values.sdiCode ? values.sdiCode.trim().toUpperCase() : null) : null,
-      pec_email: values.needsCompanyInvoice ? (values.pecEmail ? values.pecEmail.trim().toLowerCase() : null) : null,
-      notes: values.notes || "",
-      subscription_starts_at: subStartsAt,
-      subscription_ends_at: subEndsAt,
-    };
+    const { data: createdBookingId, error: rpcError } = await admin.rpc("create_or_update_reservation_rpc", {
+      p_course_id: realCourseId,
+      p_course_name: resolvedCourseName,
+      p_item_id: slugOrId,
+      p_user_id: validUserId,
+      p_session_id: validUserId ? null : sessionId,
+      p_start_date: finalBookingDate,
+      p_booking_time: finalBookingTime,
+      p_amount_paid: amountPaid,
+      p_registration_fee: registrationFee,
+      p_total_lessons_count: totalLessons,
+      p_scheduling_status: schedulingStatus,
+      p_purchaser_name: purchaserName,
+      p_purchaser_email: purchaserEmail,
+      p_purchaser_phone: purchaserPhone,
+      p_purchaser_tax_code: purchaserTaxCode,
+      p_student_name: studentName,
+      p_student_email: studentEmail,
+      p_student_phone: studentPhone,
+      p_student_tax_code: studentTaxCode,
+      p_student_birth_date: values.studentBirthDate || null,
+      p_sdi_code: values.needsCompanyInvoice ? (values.sdiCode ? values.sdiCode.trim().toUpperCase() : null) : null,
+      p_pec_email: values.needsCompanyInvoice ? (values.pecEmail ? values.pecEmail.trim().toLowerCase() : null) : null,
+      p_notes: values.notes || "",
+      p_sub_starts_at: subStartsAt,
+      p_sub_ends_at: subEndsAt,
+      p_lessons_json: lessonsJson,
+    });
 
-    if (existing) {
-      const { data: updated, error } = await admin
-        .from("bookings")
-        .update(bookingPayload)
-        .eq("id", existing.id)
-        .select()
-        .single();
+    if (rpcError) throw rpcError;
 
-      if (error) throw error;
-      booking = updated;
-    } else {
-      const { data: inserted, error } = await admin
-        .from("bookings")
-        .insert([bookingPayload])
-        .select()
-        .single();
+    const { data: booking } = await admin
+      .from("bookings")
+      .select("*")
+      .eq("id", createdBookingId)
+      .single();
 
-      if (error) throw error;
-      booking = inserted;
-    }
-
-    // Sync lessons
-    await admin
-      .from("lessons")
-      .delete()
-      .eq("booking_id", booking.id);
-
-    if (lessons.length > 0) {
-      const { error: lessonsError } = await admin
-        .from("lessons")
-        .insert(
-          lessons.map(lesson => ({
-            booking_id: booking.id,
-            starts_at: lesson.startsAt,
-            ends_at: lesson.endsAt,
-            status: "scheduled",
-            teacher_id: item.teacher_id || null,
-          }))
-        );
-
-      if (lessonsError) throw lessonsError;
-    }
-
-  return { success: true, booking };
+    return { success: true, booking: booking || { id: createdBookingId } };
   } catch (err: any) {
     console.error("Error in createOrUpdateReservationServerAction:", err);
     return { success: false, error: err.message || "Failed to create reservation" };
