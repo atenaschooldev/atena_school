@@ -196,12 +196,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   useEffect(() => {
     const targetTaxCode = watchedTaxCode;
-    const targetEmail = watchedIsForChild
-      ? (watchedStudentEmail && watchedStudentEmail.trim() !== "" ? watchedStudentEmail : watchedEmail)
-      : watchedEmail;
-    const targetPhone = watchedIsForChild
-      ? (watchedStudentPhone && watchedStudentPhone.trim() !== "" ? watchedStudentPhone : watchedPhone)
-      : watchedPhone;
+    const targetEmail = watchedIsForChild ? (watchedStudentEmail || "") : watchedEmail;
+    const targetPhone = watchedIsForChild ? (watchedStudentPhone || "") : watchedPhone;
 
     const hasValidInput = (targetTaxCode && targetTaxCode.trim().length >= 11) ||
                           (targetEmail && targetEmail.includes("@")) ||
