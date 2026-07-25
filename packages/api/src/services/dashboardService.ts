@@ -29,80 +29,13 @@ export async function autoLinkGuestBookings(
 
   const cleanEmail = email.trim().toLowerCase();
 
-  // Link unlinked guest bookings where email matches
-  await supabase
-    .from("bookings")
-    .update({ user_id: userId })
-    .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
-    .is("user_id", null);
-
-  // Link student card (parent_id or student_user_id) in public.students
   try {
-    // 1. If student email matches, link student_user_id
-    await supabase
-      .from("students")
-      .update({ student_user_id: userId })
-      .ilike("email", cleanEmail);
-
-    // 2. If purchaser email matches, link parent_id for associated student cards
-    const { data: purchaserBookings } = await supabase
-      .from("bookings")
-      .select("student_id, student_email")
-      .ilike("purchaser_email", cleanEmail);
-
-    if (purchaserBookings && purchaserBookings.length > 0) {
-      const studentIds = purchaserBookings.map((b: any) => b.student_id).filter(Boolean);
-      if (studentIds.length > 0) {
-        await supabase
-          .from("students")
-          .update({ parent_id: userId })
-          .in("id", studentIds);
-      }
-    }
+    await supabase.rpc("sync_user_profile_from_bookings", {
+      p_user_id: userId,
+      p_email: cleanEmail,
+    });
   } catch {
     // ignore
-  }
-
-  const { data: latestBooking } = await supabase
-    .from("bookings")
-    .select("student_phone, student_name, student_email, purchaser_name, purchaser_email, purchaser_phone")
-    .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (latestBooking) {
-    const isPurchaser = latestBooking.purchaser_email?.toLowerCase() === cleanEmail;
-    const rawName = isPurchaser
-      ? (latestBooking.purchaser_name || latestBooking.student_name || "").trim()
-      : (latestBooking.student_name || "").trim();
-
-    const phone = isPurchaser
-      ? (latestBooking.purchaser_phone || latestBooking.student_phone || "")
-      : (latestBooking.student_phone || "");
-
-    const parts = rawName.split(" ");
-    const firstName = parts[0] || "";
-    const lastName = parts.slice(1).join(" ");
-
-    try {
-      const userPayload: Record<string, any> = {
-        id: userId,
-        email: cleanEmail,
-        updated_at: new Date().toISOString()
-      };
-      if (phone) userPayload.phone = phone;
-      if (firstName) userPayload.first_name = firstName;
-      if (lastName) userPayload.last_name = lastName;
-      if (rawName) userPayload.full_name = rawName;
-      if (isPurchaser) userPayload.role = "parent";
-
-      await supabase
-        .from("users")
-        .upsert(userPayload, { onConflict: "id" });
-    } catch {
-      // ignore
-    }
   }
 }
 

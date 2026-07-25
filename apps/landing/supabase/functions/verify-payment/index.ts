@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
     const rawCoursePrice = itemData?.price ? Number(itemData.price) : calculatedCoursePrice;
     const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, amountPaid - regFee);
-    const courseName = (itemData?.name ?? itemData?.title_it ?? itemData?.title ?? "Corso Atena School") as string;
+    const courseName = (bookingData?.course_name ?? itemData?.name ?? itemData?.title_it ?? itemData?.title ?? "Corso Atena School") as string;
 
     const fullBooking = bookingData
       ? {
