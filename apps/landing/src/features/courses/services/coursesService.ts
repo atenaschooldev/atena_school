@@ -39,7 +39,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
 
   if (supabaseCourses && supabaseCourses.length > 0) {
     const categoriesMap: Record<string, any[]> = {};
-    supabaseCourses.forEach((course) => {
+    supabaseCourses.forEach((course: any) => {
       const cat = course.category || "Other";
       if (!categoriesMap[cat]) {
         categoriesMap[cat] = [];
