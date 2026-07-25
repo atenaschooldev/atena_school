@@ -57,7 +57,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   }
 
   const coursePrice = Number(item?.price || 0);
-  const isFeeAddedToOnlineTotal = feeCheckStatus === "not_paid" && includeRegistrationFee !== false;
+  const isFeeAddedToOnlineTotal = includeRegistrationFee !== false && feeCheckStatus !== "paid";
   const totalPrice = coursePrice + (isFeeAddedToOnlineTotal ? ANNUAL_REGISTRATION_FEE_EUR : 0);
   const title = item?.title_it || item?.name || "Corso Atena School";
 
@@ -628,7 +628,15 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   <span className="font-bold text-slate-800">{coursePrice.toFixed(2)}€</span>
                 </div>
 
-                {feeCheckStatus === "not_paid" && (
+                {feeCheckStatus === "paid" && (
+                  <div className="flex items-center justify-between text-xs py-1 px-2.5 bg-emerald-50 rounded-xl border border-emerald-200/60">
+                    <span className="text-emerald-800 font-semibold">Quota iscrizione 2026/2027</span>
+                    <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md text-[11px]">
+                      0,00€ (Già pagata)
+                    </span>
+                  </div>
+                )}
+                {feeCheckStatus !== "paid" && (
                   <div className="flex items-center justify-between text-xs py-0.5">
                     <span className="text-slate-600 font-medium">Quota iscrizione annuale</span>
                     {includeRegistrationFee !== false ? (

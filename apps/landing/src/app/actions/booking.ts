@@ -730,8 +730,10 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
       if (mByTaxCode) return { success: true, annualFeePaid: true, userFound: !!mByTaxCode.user_id };
 
       // Fallback check students table by tax_code
-      const { data: sTax } = await admin.from("students").select("id").ilike("tax_code", cleanTaxCode).limit(1);
+      const { data: sTax } = await admin.from("students").select("id, annual_fee_paid").ilike("tax_code", cleanTaxCode).limit(1);
       if (sTax && sTax.length > 0) {
+        if (sTax[0].annual_fee_paid) return { success: true, annualFeePaid: true, userFound: true };
+
         const { data: mByStudent } = await admin
           .from("annual_memberships")
           .select("id, user_id")
@@ -742,25 +744,24 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
 
         if (mByStudent) return { success: true, annualFeePaid: true, userFound: !!mByStudent.user_id };
       }
-
-      // If Codice Fiscale was provided but not found in memberships, return false directly
-      // This ensures 1 parent with 2 different children (different tax codes) pays fee for EACH child!
-      return { success: true, annualFeePaid: false, userFound: false };
     }
 
-    // 2. Secondary Check: Match Email AND Phone when Codice Fiscale is not yet entered
-    if (cleanEmail && cleanPhone) {
-      const cleanDigits = cleanPhone.replace(/[^\d+]/g, "");
-      const { data: mByEmailPhone } = await admin
+    // 2. Secondary Check: Match Email on annual_memberships or students
+    if (cleanEmail) {
+      const { data: mByEmail } = await admin
         .from("annual_memberships")
         .select("id, user_id")
         .ilike("email", cleanEmail)
-        .ilike("phone", `%${cleanDigits}%`)
         .eq("academic_year", "2026/2027")
         .eq("status", "active")
         .maybeSingle();
 
-      if (mByEmailPhone) return { success: true, annualFeePaid: true, userFound: !!mByEmailPhone.user_id };
+      if (mByEmail) return { success: true, annualFeePaid: true, userFound: !!mByEmail.user_id };
+
+      const { data: sEmail } = await admin.from("students").select("id, annual_fee_paid").ilike("email", cleanEmail).limit(1);
+      if (sEmail && sEmail.length > 0 && sEmail[0].annual_fee_paid) {
+        return { success: true, annualFeePaid: true, userFound: true };
+      }
     }
 
     return { success: true, annualFeePaid: false, userFound: false };
