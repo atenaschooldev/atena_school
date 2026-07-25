@@ -457,28 +457,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
             </div>
 
             {/* Fee Status Card 1: ALREADY PAID (Green Badge) */}
-            {feeCheckStatus === "paid" && (
-              <div className="bg-emerald-50/90 rounded-3xl p-5 border border-emerald-200/80 flex items-start gap-3.5">
-                <div className="w-9 h-9 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                  <CheckCircle className="w-5 h-5" weight="fill" />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-black text-emerald-950 uppercase tracking-tight">
-                      Quota d'iscrizione annuale 2026/2027 già versata
-                    </span>
-                    <span className="bg-emerald-200/80 text-emerald-900 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
-                      Tesseramento Attivo
-                    </span>
-                  </div>
-                  <p className="text-xs text-emerald-800 font-medium leading-relaxed">
-                    La quota di iscrizione annuale (€30,00) per questo studente risulta già regolarmente saldata per l'anno accademico in corso. Non è richiesto alcun versamento aggiuntivo.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Fee Status Card 2: NOT PAID (Yellow Choice Card) */}
+            {/* Registration Fee Card: Render ONLY when feeCheckStatus is 'not_paid' */}
             {feeCheckStatus === "not_paid" && (
               <div className="bg-[#FFFBEB] rounded-3xl p-5 sm:p-6 border border-[#FDE68A] space-y-4">
                 <div className="space-y-1">
@@ -628,15 +607,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   <span className="font-bold text-slate-800">{coursePrice.toFixed(2)}€</span>
                 </div>
 
-                {feeCheckStatus === "paid" && (
-                  <div className="flex items-center justify-between text-xs py-1 px-2.5 bg-emerald-50 rounded-xl border border-emerald-200/60">
-                    <span className="text-emerald-800 font-semibold">Quota iscrizione 2026/2027</span>
-                    <span className="font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md text-[11px]">
-                      0,00€ (Già pagata)
-                    </span>
-                  </div>
-                )}
-                {feeCheckStatus !== "paid" && (
+                {feeCheckStatus === "not_paid" && (
                   <div className="flex items-center justify-between text-xs py-0.5">
                     <span className="text-slate-600 font-medium">Quota iscrizione annuale</span>
                     {includeRegistrationFee !== false ? (
