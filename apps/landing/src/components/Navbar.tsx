@@ -94,23 +94,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setMounted(true);
-    const getUser = async () => {
-      try {
-        const res = await getCurrentUserAction();
-        if (res.success && res.user) {
-          setUser(res.user);
-          // Link guest bookings upon login detection on mount
-          const sid = getSessionId();
-          if (sid) {
-            await mergeGuestBookings(null, res.user.id);
-          }
-        }
-      } catch (err) {
-        console.error("Error loading user on mount:", err);
-      }
-      fetchCartCount();
-    };
-    getUser();
+    fetchCartCount();
 
     // Listen for cart updates
     window.addEventListener("cartUpdated", fetchCartCount);
@@ -119,18 +103,6 @@ const Navbar = () => {
       window.removeEventListener("cartUpdated", fetchCartCount);
     };
   }, []);
-
-  const handleLogout = async () => {
-    const res = await signOutAction();
-    if (!res.success) {
-      toast.error(res.error || "Errore durante il logout");
-    } else {
-      setUser(null);
-      setCartCount(0);
-      toast.success("Logged out");
-      router.refresh();
-    }
-  };
 
   const handleLinkClick = (href: string) => {
     setOpen(false);
@@ -219,37 +191,17 @@ const Navbar = () => {
               )}
             </Link>
 
-            {user ? (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <div className={`flex items-center gap-2 cursor-pointer hover:scale-105 active:scale-95 p-0.5 rounded-full transition-all duration-300 ${isLightHeader ? "hover:bg-white/10" : "hover:bg-primary/10"
-                    }`}>
-                    <UserCircle className={`w-8 h-8 transition-colors ${isLightHeader ? "text-white" : "text-gray-600"}`} />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => { window.open(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/dashboard`, '_blank', 'noopener,noreferrer'); }}>
-                    Area personale
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                    <SignOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <a
-                href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
-                    ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
-                    : "bg-[#043569] text-white hover:bg-[#F8861D]"
-                  }`}
-              >
-                Area Personale
-              </a>
-            )}
+            <a
+              href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
+                  ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
+                  : "bg-[#043569] text-white hover:bg-[#F8861D]"
+                }`}
+            >
+              Area Personale
+            </a>
           </div>
 
           {/* Animated hamburger button */}
@@ -405,39 +357,15 @@ const Navbar = () => {
               <div className="space-y-6">
                 {/* User Section / Login */}
                 <div className="border-t border-gray-100 pt-6 space-y-3">
-                  {user ? (
-                    <div className="space-y-2">
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/dashboard`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between py-3 px-4 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200"
-                        onClick={() => setOpen(false)}
-                      >
-                        Area personale
-                      </a>
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2 py-3 px-4 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                      >
-                        <SignOut className="w-4 h-4" />
-                        Logout
-                      </button>
-                    </div>
-                  ) : (
-                    <a
-                      href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"
-                      onClick={() => setOpen(false)}
-                    >
-                      Area Personale
-                    </a>
-                  )}
+                  <a
+                    href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"
+                    onClick={() => setOpen(false)}
+                  >
+                    Area Personale
+                  </a>
                 </div>
 
                 {/* Socials & Contacts */}
