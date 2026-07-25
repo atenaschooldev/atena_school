@@ -69,19 +69,20 @@ export async function autoLinkGuestBookings(
     }
 
     try {
-      const updateData: Record<string, any> = {
+      const userPayload: Record<string, any> = {
+        id: userId,
+        email: cleanEmail,
         updated_at: new Date().toISOString()
       };
-      if (phone) updateData.phone = phone;
-      if (firstName) updateData.first_name = firstName;
-      if (lastName) updateData.last_name = lastName;
-      if (rawName) updateData.full_name = rawName;
-      if (isPurchaser) updateData.role = "parent";
+      if (phone) userPayload.phone = phone;
+      if (firstName) userPayload.first_name = firstName;
+      if (lastName) userPayload.last_name = lastName;
+      if (rawName) userPayload.full_name = rawName;
+      if (isPurchaser) userPayload.role = "parent";
 
       await supabase
         .from("users")
-        .update(updateData)
-        .eq("id", userId);
+        .upsert(userPayload, { onConflict: "id" });
     } catch {
       // ignore
     }

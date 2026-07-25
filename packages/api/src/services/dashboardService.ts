@@ -83,22 +83,23 @@ export async function autoLinkGuestBookings(
 
     const parts = rawName.split(" ");
     const firstName = parts[0] || "";
-    const lastName = parts.slice(1).join(" ") || "";
-
-    const updateData: Record<string, any> = {
-      updated_at: new Date().toISOString()
-    };
-    if (phone) updateData.phone = phone;
-    if (firstName) updateData.first_name = firstName;
-    if (lastName) updateData.last_name = lastName;
-    if (rawName) updateData.full_name = rawName;
-    if (isPurchaser) updateData.role = "parent";
+    const lastName = parts.slice(1).join(" ");
 
     try {
+      const userPayload: Record<string, any> = {
+        id: userId,
+        email: cleanEmail,
+        updated_at: new Date().toISOString()
+      };
+      if (phone) userPayload.phone = phone;
+      if (firstName) userPayload.first_name = firstName;
+      if (lastName) userPayload.last_name = lastName;
+      if (rawName) userPayload.full_name = rawName;
+      if (isPurchaser) userPayload.role = "parent";
+
       await supabase
         .from("users")
-        .update(updateData)
-        .eq("id", userId);
+        .upsert(userPayload, { onConflict: "id" });
     } catch {
       // ignore
     }
