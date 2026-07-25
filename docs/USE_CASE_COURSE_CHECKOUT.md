@@ -2,7 +2,7 @@
 
 > **Документ**: Каноническая библия бизнес-процесса покупки курса, верстки, TS-файлов, триггеров БД, Edge Functions, Stripe, Vercel, RLS и обработки исключений  
 > **Проект**: Atena School (`atena_school`)  
-> **Версия**: 3.2 (Complete RLS & Database Policy Edition)  
+> **Версия**: 3.3 (Vercel Dynamic Cache & Complete Specification Edition)  
 > **Целевая аудитория**: Разработчики, Архитекторы БД, Специалисты по безопасности, QA, Продукт-менеджеры  
 > **Дата последнего обновления**: Июль 2026  
 
@@ -44,7 +44,8 @@
 | 15 | [`apps/app/src/app/actions/dashboard.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/actions/dashboard.ts) | Server Actions (Vercel) | `getDashboardDataAction()` — подтяжка имени пользователя из базы данных `public.users`. |
 | 16 | [`apps/app/src/features/dashboard/hooks/useDashboard.ts`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/features/dashboard/hooks/useDashboard.ts) | React State (App) | Управление состоянием Личного Кабинета родителя/ученика. |
 | 17 | [`apps/app/src/app/dashboard/page.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/dashboard/page.tsx) | Dashboard UI (Next.js) | Верстка панели ЛК, список уроков, кнопки разлогина и профиля. |
-| 18 | `Supabase PL/pgSQL Triggers` | Database Kernel | Триггеры `trg_booking_student_enrollment`, `trg_sync_annual_membership`, `check_user_update`. |
+| 18 | [`apps/app/src/app/layout.tsx`](file:///Users/krimson/PROJECTS/atena_school/apps/app/src/app/layout.tsx) | App Layout (Next.js) | Настройка `force-dynamic` и `revalidate = 0` для отключения статического кэша Vercel. |
+| 19 | `Supabase PL/pgSQL Triggers` | Database Kernel | Триггеры `trg_booking_student_enrollment`, `trg_sync_annual_membership`, `check_user_update`. |
 
 ---
 
@@ -308,4 +309,5 @@ USING (EXISTS (SELECT 1 FROM bookings WHERE bookings.id = lessons.booking_id AND
 | **Ученик уже оплачивал взнос €30 в этом году** | Edge Function `create-checkout-session` | Выполняется Zero-Trust поиск в `annual_memberships`. Если найден активный взнос на `2026/2027`, `regFeeAmount` принудительно обнуляется. |
 | **Задержка сети при переходе на `/checkout/success`** | Hook `useCheckoutSuccess` | Состояние `verifying` держит лоадер до тех пор, пока с сервера не вернутся данные. Экран никогда не показывает "нулевой" чек. |
 | **Разные языковые имена в Google Auth профилях** | Action `getDashboardDataAction` | Имя приветствия берется из `public.users.full_name`, полностью игнорируя метаданные профилей Google. |
+| **Статический кэш Vercel (`cache: PRERENDER`) на дашборде ЛК** | App Layout `apps/app/src/app/layout.tsx` | Директивы `export const dynamic = 'force-dynamic'` и `revalidate = 0` принудительно переводят роуты в режим `dynamic`, предотвращая отдачу старого закэшированного HTML. |
 | **Незарегистрированный гость без Google аккаунта** | Hook `useCheckoutSuccess` | Автоматически генерирует и отправляет Magic Link авторизации через `dispatchMagicLinkAction(email)` на почту клиента. |
