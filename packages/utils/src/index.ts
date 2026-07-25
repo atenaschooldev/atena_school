@@ -2,6 +2,11 @@ import { format, parseISO, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
 
 /**
+ * Annual registration fee in EUR
+ */
+export const ANNUAL_REGISTRATION_FEE_EUR = 30;
+
+/**
  * Format currency amount to EUR (e.g. €152.00)
  */
 export function formatCurrency(amount: number | string): string {

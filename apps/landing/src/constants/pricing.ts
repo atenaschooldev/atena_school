@@ -1,5 +1,9 @@
-export const ANNUAL_REGISTRATION_FEE_EUR = 30.00;
-export const VAT_RATE_PERCENT = 22;
-export const VAT_INCLUDED_IN_PRICE = true;
-export const CURRENCY_SYMBOL = "€";
-export const CURRENCY_CODE = "EUR";
+import { ANNUAL_REGISTRATION_FEE_EUR } from "@atena/utils";
+
+export { ANNUAL_REGISTRATION_FEE_EUR };
+
+export const PRICING_CONFIG = {
+  ANNUAL_REGISTRATION_FEE: ANNUAL_REGISTRATION_FEE_EUR,
+  CURRENCY: "EUR",
+  CURRENCY_SYMBOL: "€",
+};
