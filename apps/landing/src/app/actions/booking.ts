@@ -117,7 +117,26 @@ export async function getBookingDetailsServer(bookingId: string) {
 
     if (error || !booking) return null;
 
-    // Fetch course directly by course_id to guarantee exact course name & price
+    // Fetch ledger payments
+    const { data: payments } = await admin
+      .from("payments")
+      .select("type, amount")
+      .eq("booking_id", bookingId);
+
+    const paymentLedger = payments || [];
+    const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
+    const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
+
+    const regFee = regFeeRow
+      ? Number(regFeeRow.amount)
+      : Number(booking.registration_fee || 0);
+
+    const totalPaid = Number(booking.amount_paid || 0);
+    const calculatedCoursePrice = coursePaymentRow
+      ? Number(coursePaymentRow.amount)
+      : (totalPaid > 0 ? totalPaid - regFee : 0);
+
+    // 4-step Course Resolver: ID -> Slug -> Name -> Price Match
     let courseObj: any = null;
     const cid = booking.course_id || booking.item_id;
     if (cid) {
@@ -136,35 +155,30 @@ export async function getBookingDetailsServer(bookingId: string) {
       }
     }
 
-    // Fetch ledger payments
-    const { data: payments } = await admin
-      .from("payments")
-      .select("type, amount")
-      .eq("booking_id", bookingId);
+    // Step 4 Fallback: Price match from active courses if courseObj is still null
+    if (!courseObj && calculatedCoursePrice > 0) {
+      const { data: allCourses } = await admin.from("courses").select("name, price, photo_url, slug");
+      if (allCourses && allCourses.length > 0) {
+        const matched = allCourses.find((c: any) => {
+          const cPrice = parseFloat(String(c.price || 0).replace(/[^0-9.,]/g, "").replace(",", "."));
+          return Math.abs(cPrice - calculatedCoursePrice) < 0.05;
+        });
+        if (matched) courseObj = matched;
+      }
+    }
 
-    const paymentLedger = payments || [];
-    const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
-    const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
+    const coursePrice = courseObj?.price
+      ? parseFloat(String(courseObj.price).replace(/[^0-9.,]/g, "").replace(",", "."))
+      : (calculatedCoursePrice > 0 ? calculatedCoursePrice : totalPaid);
 
-    const regFee = regFeeRow
-      ? Number(regFeeRow.amount)
-      : Number(booking.registration_fee || 0);
-
-    const totalPaid = Number(booking.amount_paid || 0);
-    const rawCoursePrice = coursePaymentRow
-      ? Number(coursePaymentRow.amount)
-      : (courseObj?.price
-        ? Number(courseObj.price)
-        : (totalPaid > 0 ? totalPaid - regFee : 0));
-
-    const coursePrice = (totalPaid > 0 && regFee > 0 && rawCoursePrice === totalPaid)
-      ? Math.max(0, totalPaid - regFee)
-      : rawCoursePrice;
+    const resolvedName = courseObj?.name || "Corso Atena School";
 
     return {
       ...booking,
-      item_name: courseObj?.name || "Corso Atena School",
-      course_name: courseObj?.name || "Corso Atena School",
+      item_name: resolvedName,
+      course_name: resolvedName,
+      title: resolvedName,
+      name: resolvedName,
       item_price: coursePrice,
       course_price: coursePrice,
       registration_fee: regFee,

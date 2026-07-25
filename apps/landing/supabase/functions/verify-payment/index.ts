@@ -47,6 +47,10 @@ Deno.serve(async (req) => {
       bookingData = bData;
     }
 
+    const regFee = Number(bookingData?.registration_fee || 0);
+    const amountPaid = Number(bookingData?.amount_paid || 0);
+    const calculatedCoursePrice = amountPaid > 0 ? amountPaid - regFee : 0;
+
     let itemData: Record<string, unknown> | null = null;
     const cid = bookingData?.course_id ?? bookingData?.item_id;
     if (cid) {
@@ -69,9 +73,20 @@ Deno.serve(async (req) => {
       }
     }
 
-    const regFee = Number(bookingData?.registration_fee || 0);
-    const amountPaid = Number(bookingData?.amount_paid || 0);
-    const rawCoursePrice = itemData?.price ? Number(itemData.price) : (amountPaid > 0 ? amountPaid - regFee : 0);
+    if (!itemData && calculatedCoursePrice > 0) {
+      const { data: allCourses } = await supabaseAdmin
+        .from("courses")
+        .select("*, teachers(teacher_id, full_name)");
+      if (allCourses && allCourses.length > 0) {
+        const matched = allCourses.find((c: any) => {
+          const cPrice = parseFloat(String(c.price || 0).replace(/[^0-9.,]/g, "").replace(",", "."));
+          return Math.abs(cPrice - calculatedCoursePrice) < 0.05;
+        });
+        if (matched) itemData = matched as Record<string, unknown>;
+      }
+    }
+
+    const rawCoursePrice = itemData?.price ? Number(itemData.price) : calculatedCoursePrice;
     const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, amountPaid - regFee);
     const courseName = (itemData?.name ?? itemData?.title_it ?? itemData?.title ?? "Corso Atena School") as string;
 
