@@ -17,6 +17,8 @@ import { PaymentsModule } from './features/payments/payments.module';
 import { MailModule } from './features/mail/mail.module';
 import { ActivityLogsModule } from './features/activity_logs/activity_logs.module';
 import { HomeModule } from './features/home/home.module';
+import { CheckoutModule } from './features/checkout/checkout.module';
+import { PortalModule } from './features/portal/portal.module';
 
 @Module({
   imports: [
@@ -29,7 +31,11 @@ import { HomeModule } from './features/home/home.module';
     SupabaseModule,
     PrismaModule,
 
-    // Бизнес-модули
+    // Бизнес-модули клиентов
+    CheckoutModule,
+    PortalModule,
+
+    // CRM Бизнес-модули
     AuthModule,
     SettingsModule,
     StudentsModule,

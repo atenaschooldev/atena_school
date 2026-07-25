@@ -19,7 +19,7 @@ export async function getDashboardDataAction() {
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
         if (token) {
-          const res = await fetch(`${backendUrl}/api/v1/me/dashboard`, {
+          const res = await fetch(`${backendUrl}/api/v1/portal/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {

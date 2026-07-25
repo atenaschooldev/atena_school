@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { StudentsRepository } from './domain/students.repository.interface';
 import { UsersRepository } from '../auth/domain/users.repository.interface';
-import { UpdateProfileDto } from './me.controller';
+import { UpdateProfileDto } from '../portal/portal.controller';
 
 @Injectable()
 export class StudentsService {
