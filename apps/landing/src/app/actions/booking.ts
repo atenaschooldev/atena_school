@@ -320,6 +320,47 @@ export async function createOrUpdateReservationServerAction(params: {
 }) {
   try {
     const { type, id: itemId, dateParam, timeParam, values, sessionId } = params;
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/api/v1/checkout/reserve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            itemId,
+            itemType: type,
+            date: dateParam,
+            time: timeParam,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            email: values.email,
+            phone: values.phone,
+            isForChild: values.isForChild,
+            studentFirstName: values.studentFirstName,
+            studentLastName: values.studentLastName,
+            studentEmail: values.studentEmail,
+            studentPhone: values.studentPhone,
+            purchaserTaxCode: values.purchaserTaxCode || values.taxCode,
+            studentBirthDate: values.studentBirthDate,
+            taxCode: values.taxCode,
+            needsCompanyInvoice: values.needsCompanyInvoice,
+            sdiCode: values.sdiCode,
+            pecEmail: values.pecEmail,
+            includeRegistrationFee: values.includeRegistrationFee,
+            notes: values.notes,
+          }),
+        });
+
+        if (res.ok) {
+          const bData = await res.json();
+          if (bData.success && bData.bookingId) return bData;
+        }
+      } catch (bErr) {
+        console.warn("Backend reserve fallback:", bErr);
+      }
+    }
+
     const admin = getSupabaseAdmin();
     const item = await fetchItemData(admin, type, itemId);
     if (!item) throw new Error("Servizio non trovato");
