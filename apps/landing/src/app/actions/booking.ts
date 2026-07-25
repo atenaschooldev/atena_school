@@ -117,6 +117,25 @@ export async function getBookingDetailsServer(bookingId: string) {
 
     if (error || !booking) return null;
 
+    let courseName = booking.course_name;
+    let coursePriceFromObj = 0;
+
+    const cid = booking.course_id || booking.item_id;
+    if (cid) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
+      let cQuery = admin.from("courses").select("name, price, photo_url, slug");
+      if (isUuid) {
+        cQuery = cQuery.eq("id", cid);
+      } else {
+        cQuery = cQuery.eq("slug", cid);
+      }
+      const { data: cData } = await cQuery.maybeSingle();
+      if (cData) {
+        if (!courseName) courseName = cData.name;
+        if (cData.price) coursePriceFromObj = parseFloat(String(cData.price).replace(/[^0-9.,]/g, "").replace(",", "."));
+      }
+    }
+
     // Fetch ledger payments
     const { data: payments } = await admin
       .from("payments")
@@ -136,42 +155,8 @@ export async function getBookingDetailsServer(bookingId: string) {
       ? Number(coursePaymentRow.amount)
       : (totalPaid > 0 ? totalPaid - regFee : 0);
 
-    // 4-step Course Resolver: ID -> Slug -> Name -> Price Match
-    let courseObj: any = null;
-    const cid = booking.course_id || booking.item_id;
-    if (cid) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
-      if (isUuid) {
-        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").eq("id", cid).maybeSingle();
-        courseObj = cData;
-      }
-      if (!courseObj) {
-        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").eq("slug", cid).maybeSingle();
-        courseObj = cData;
-      }
-      if (!courseObj) {
-        const { data: cData } = await admin.from("courses").select("name, price, photo_url, slug").ilike("name", `%${cid}%`).limit(1).maybeSingle();
-        courseObj = cData;
-      }
-    }
-
-    // Step 4 Fallback: Price match from active courses if courseObj is still null
-    if (!courseObj && calculatedCoursePrice > 0) {
-      const { data: allCourses } = await admin.from("courses").select("name, price, photo_url, slug");
-      if (allCourses && allCourses.length > 0) {
-        const matched = allCourses.find((c: any) => {
-          const cPrice = parseFloat(String(c.price || 0).replace(/[^0-9.,]/g, "").replace(",", "."));
-          return Math.abs(cPrice - calculatedCoursePrice) < 0.05;
-        });
-        if (matched) courseObj = matched;
-      }
-    }
-
-    const coursePrice = courseObj?.price
-      ? parseFloat(String(courseObj.price).replace(/[^0-9.,]/g, "").replace(",", "."))
-      : (calculatedCoursePrice > 0 ? calculatedCoursePrice : totalPaid);
-
-    const resolvedName = courseObj?.name || "Corso Atena School";
+    const coursePrice = calculatedCoursePrice > 0 ? calculatedCoursePrice : (coursePriceFromObj > 0 ? coursePriceFromObj : totalPaid);
+    const resolvedName = courseName || "Corso Atena School";
 
     return {
       ...booking,
@@ -183,7 +168,6 @@ export async function getBookingDetailsServer(bookingId: string) {
       course_price: coursePrice,
       registration_fee: regFee,
       amount_paid: totalPaid > 0 ? totalPaid : coursePrice + regFee,
-      item_photo: courseObj?.photo_url || null,
       date: booking.start_date || booking.booking_date || null,
       time: booking.booking_time || null,
     };

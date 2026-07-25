@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
         user_id: user?.id ?? null,
         session_id: guestSessionId ?? null,
         course_id: itemId,
+        course_name: itemData.name,
         start_date: finalBookingDate,
         booking_time: finalBookingTime,
         purchaser_name: purchaserName,
