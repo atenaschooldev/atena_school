@@ -1,13 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
 
 @Injectable()
 export class CheckoutService {
   private supabaseAdmin: SupabaseClient;
-  private stripe: Stripe;
+  private stripe: any;
 
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -15,7 +17,8 @@ export class CheckoutService {
     const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || process.env.STRIPE_SECRET_KEY || '';
 
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
-    this.stripe = new Stripe(stripeSecret, { apiVersion: '2023-10-16' as any });
+    const StripeConstructor = typeof StripeClient === 'function' ? StripeClient : StripeClient.default;
+    this.stripe = new StripeConstructor(stripeSecret, { apiVersion: '2023-10-16' });
   }
 
   async checkFeeStatus(dto: CheckFeeDto) {
