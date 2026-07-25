@@ -36,4 +36,4 @@ services:
         value: "info@atena.school"
       # CORS - allowed origins
       - key: ALLOWED_ORIGINS
-        value: "https://atena-school-landing-three.vercel.app,https://atena-school-lk.vercel.app"
+        value: "https://atena-school-landing-three.vercel.app,https://atena-school-app.vercel.app"
