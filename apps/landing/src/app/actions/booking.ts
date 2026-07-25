@@ -405,12 +405,16 @@ export async function createOrUpdateReservationServerAction(params: {
 
     const studentTaxCode = values.taxCode ? values.taxCode.trim().toUpperCase() : null;
 
+    const realCourseId = item.id;
+    const resolvedCourseName = item.name || item.title_it || item.title || "Corso Atena School";
+    const slugOrId = item.slug || itemId;
+
     // Check for existing pending/reserved booking
     const { data: existing } = await admin
       .from("bookings")
       .select("id")
       .eq("student_email", purchaserEmail)
-      .or(`course_id.eq.${itemId},item_id.eq.${itemId}`)
+      .eq("course_id", realCourseId)
       .in("payment_status", ["pending_payment", "pending", "reserved"])
       .maybeSingle();
 
@@ -451,7 +455,8 @@ export async function createOrUpdateReservationServerAction(params: {
     let booking;
 
     const bookingPayload = {
-      course_id: itemId,
+      course_id: realCourseId,
+      course_name: resolvedCourseName,
       user_id: validUserId,
       session_id: validUserId ? null : sessionId,
       start_date: finalBookingDate,

@@ -57,7 +57,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   }
 
   const coursePrice = Number(item?.price || 0);
-  const isFeeAddedToOnlineTotal = includeRegistrationFee !== false && feeCheckStatus !== "paid";
+  const isFeeAddedToOnlineTotal = feeCheckStatus === "not_paid" && includeRegistrationFee !== false;
   const totalPrice = coursePrice + (isFeeAddedToOnlineTotal ? ANNUAL_REGISTRATION_FEE_EUR : 0);
   const title = item?.title_it || item?.name || "Corso Atena School";
 
