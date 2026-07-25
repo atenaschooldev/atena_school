@@ -646,8 +646,8 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
     const row = Array.isArray(data) ? data[0] : data;
     return {
       success: true,
-      annualFeePaid: !!row?.annual_fee_paid,
-      userFound: !!row?.user_found,
+      annualFeePaid: !!(row?.fee_paid ?? row?.annual_fee_paid ?? false),
+      userFound: !!(row?.found ?? row?.user_found ?? false),
     };
   } catch (err: any) {
     console.error("Error in checkRegistrationFeeStatusAction:", err);
