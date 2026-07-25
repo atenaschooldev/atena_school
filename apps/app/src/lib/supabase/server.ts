@@ -4,14 +4,6 @@ import { env } from '@/config/env'
 import { Database } from '@/types/database.types'
 
 export function createClient() {
-  let cookieStore: any;
-  
-  try {
-    cookieStore = cookies();
-  } catch (e) {
-    // cookies() throws when called during static generation
-  }
-
   return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -19,26 +11,23 @@ export function createClient() {
       cookies: {
         async getAll() {
           try {
-            const store = await cookieStore;
-            return store?.getAll() ?? []
+            const cookieStore = await cookies();
+            return cookieStore.getAll();
           } catch {
-            return []
+            return [];
           }
         },
         async setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
-            const store = await cookieStore;
-            if (store) {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                store.set(name, value, options)
-              )
-            }
+            const cookieStore = await cookies();
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
           } catch {
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // The `setAll` method was called from a Server Component.
           }
         },
       },
     }
-  )
+  );
 }
