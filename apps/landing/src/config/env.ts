@@ -8,10 +8,10 @@ const envSchema = z.object({
   
   // App
   NEXT_PUBLIC_SITE_URL: z.string().url().default(
-    process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://atenaschool.com'
+    process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://atena-school-landing-three.vercel.app'
   ),
   NEXT_PUBLIC_APP_URL: z.string().url().default(
-    process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://atena-school-landing-three.vercel.app'
+    process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://atena-school-app.vercel.app'
   ),
   ADMIN_EMAILS: z.string().default('').transform((val) => {
     if (!val) return [];
