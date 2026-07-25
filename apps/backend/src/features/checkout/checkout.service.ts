@@ -14,7 +14,7 @@ export class CheckoutService {
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || process.env.STRIPE_SECRET_KEY || '';
+    const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_dev';
 
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
     const StripeConstructor = typeof StripeClient === 'function' ? StripeClient : StripeClient.default;
