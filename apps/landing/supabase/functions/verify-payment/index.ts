@@ -58,13 +58,21 @@ Deno.serve(async (req) => {
       itemData = data;
     }
 
+    const regFee = Number(bookingData?.registration_fee || 0);
+    const amountPaid = Number(bookingData?.amount_paid || 0);
+    const rawCoursePrice = itemData?.price ? Number(itemData.price) : (amountPaid > 0 ? amountPaid - regFee : 0);
+    const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, amountPaid - regFee);
+
     const fullBooking = bookingData
       ? {
           ...bookingData,
           course_id: cid,
           item_id: cid,
           item_name: itemData?.name ?? itemData?.title_it ?? itemData?.title ?? null,
-          item_price: itemData?.price ?? bookingData?.amount_paid ?? bookingData?.price ?? null,
+          item_price: coursePrice,
+          course_price: coursePrice,
+          registration_fee: regFee,
+          amount_paid: amountPaid > 0 ? amountPaid : coursePrice + regFee,
           item_photo: itemData?.photo_url ?? null,
           item_teacher: (itemData?.teachers as any)?.full_name ?? null,
           date: bookingData.start_date ?? bookingData.booking_date ?? null,

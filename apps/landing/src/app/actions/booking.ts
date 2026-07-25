@@ -142,15 +142,20 @@ export async function getBookingDetailsServer(bookingId: string) {
     const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
     const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
 
-    const coursePrice = coursePaymentRow
-      ? Number(coursePaymentRow.amount)
-      : (courseObj?.price
-        ? Number(courseObj.price)
-        : Number(booking.amount_paid || 0) - Number(booking.registration_fee || 0));
-
     const regFee = regFeeRow
       ? Number(regFeeRow.amount)
       : Number(booking.registration_fee || 0);
+
+    const totalPaid = Number(booking.amount_paid || 0);
+    const rawCoursePrice = coursePaymentRow
+      ? Number(coursePaymentRow.amount)
+      : (courseObj?.price
+        ? Number(courseObj.price)
+        : (totalPaid > 0 ? totalPaid - regFee : 0));
+
+    const coursePrice = (totalPaid > 0 && regFee > 0 && rawCoursePrice === totalPaid)
+      ? Math.max(0, totalPaid - regFee)
+      : rawCoursePrice;
 
     return {
       ...booking,
@@ -158,7 +163,7 @@ export async function getBookingDetailsServer(bookingId: string) {
       item_price: coursePrice,
       course_price: coursePrice,
       registration_fee: regFee,
-      amount_paid: Number(booking.amount_paid || coursePrice + regFee),
+      amount_paid: totalPaid > 0 ? totalPaid : coursePrice + regFee,
       item_photo: courseObj?.photo_url || null,
       date: booking.start_date || booking.booking_date || null,
       time: booking.booking_time || null,

@@ -36,6 +36,33 @@ export async function autoLinkGuestBookings(
     .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .is("user_id", null);
 
+  // Link student card (parent_id or student_user_id) in public.students
+  try {
+    // 1. If student email matches, link student_user_id
+    await supabase
+      .from("students")
+      .update({ student_user_id: userId })
+      .ilike("email", cleanEmail);
+
+    // 2. If purchaser email matches, link parent_id for associated student cards
+    const { data: purchaserBookings } = await supabase
+      .from("bookings")
+      .select("student_id, student_email")
+      .ilike("purchaser_email", cleanEmail);
+
+    if (purchaserBookings && purchaserBookings.length > 0) {
+      const studentIds = purchaserBookings.map((b: any) => b.student_id).filter(Boolean);
+      if (studentIds.length > 0) {
+        await supabase
+          .from("students")
+          .update({ parent_id: userId })
+          .in("id", studentIds);
+      }
+    }
+  } catch {
+    // ignore
+  }
+
   const { data: latestBooking } = await supabase
     .from("bookings")
     .select("student_phone, student_name, student_email, purchaser_name, purchaser_email, purchaser_phone")
@@ -65,6 +92,7 @@ export async function autoLinkGuestBookings(
     if (firstName) updateData.first_name = firstName;
     if (lastName) updateData.last_name = lastName;
     if (rawName) updateData.full_name = rawName;
+    if (isPurchaser) updateData.role = "parent";
 
     try {
       await supabase
@@ -83,15 +111,17 @@ export async function fetchUserBookingsEnriched(
 ): Promise<EnrichedBooking[]> {
   if (!user) return [];
 
-  if (user.email) {
-    await autoLinkGuestBookings(user.email, user.id, supabase);
+  const cleanEmail = user.email ? user.email.trim().toLowerCase() : "";
+
+  if (cleanEmail) {
+    await autoLinkGuestBookings(cleanEmail, user.id, supabase);
   }
 
   // Fetch raw bookings via user authenticated client (enforced strictly by Postgres RLS)
   const { data } = await supabase
     .from("bookings")
     .select("*")
-    .or(`user_id.eq.${user.id},student_email.ilike.${user.email},purchaser_email.ilike.${user.email}`)
+    .or(`user_id.eq.${user.id},student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
     .in("payment_status", ["paid", "completed", "reserved", "pending_payment", "pending"])
     .order("created_at", { ascending: false });
 

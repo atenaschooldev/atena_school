@@ -120,10 +120,20 @@ export async function getBookingDetailsServer(bookingId: string) {
     const cid = booking.course_id || booking.item_id;
     const item = await fetchItemData(admin, "course", cid);
 
+    const regFee = Number(booking.registration_fee || 0);
+    const totalPaid = Number(booking.amount_paid || 0);
+    const rawCoursePrice = item?.price ? Number(item.price) : (totalPaid > 0 ? totalPaid - regFee : 0);
+    const coursePrice = (totalPaid > 0 && regFee > 0 && rawCoursePrice === totalPaid)
+      ? Math.max(0, totalPaid - regFee)
+      : rawCoursePrice;
+
     return {
       ...booking,
       item_name: item?.name || item?.title_it || item?.title || "Lezione Atena School",
-      item_price: item?.price || booking?.amount_paid || booking?.price || 0,
+      item_price: coursePrice,
+      course_price: coursePrice,
+      registration_fee: regFee,
+      amount_paid: totalPaid > 0 ? totalPaid : coursePrice + regFee,
       item_photo: item?.photo_url || null,
       item_teacher: item?.teacher_name || item?.teachers?.full_name || null,
       date: booking.start_date || booking.booking_date || null,
