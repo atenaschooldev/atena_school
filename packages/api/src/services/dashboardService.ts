@@ -65,7 +65,6 @@ export async function autoLinkGuestBookings(
     if (firstName) updateData.first_name = firstName;
     if (lastName) updateData.last_name = lastName;
     if (rawName) updateData.full_name = rawName;
-    if (isPurchaser) updateData.role = "parent";
 
     try {
       await supabase

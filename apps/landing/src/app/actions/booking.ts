@@ -111,11 +111,26 @@ export async function getBookingDetailsServer(bookingId: string) {
     const admin = getSupabaseAdmin();
     const { data: booking, error } = await admin
       .from("bookings")
-      .select("*, courses!bookings_course_id_fkey(name, price, photo_url, slug)")
+      .select("*")
       .eq("id", bookingId)
       .maybeSingle();
 
     if (error || !booking) return null;
+
+    // Fetch course directly by course_id to guarantee exact course name & price
+    let courseObj: any = null;
+    const cid = booking.course_id || booking.item_id;
+    if (cid) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(cid));
+      let cQuery = admin.from("courses").select("name, price, photo_url, slug");
+      if (isUuid) {
+        cQuery = cQuery.eq("id", cid);
+      } else {
+        cQuery = cQuery.eq("slug", cid);
+      }
+      const { data: cData } = await cQuery.maybeSingle();
+      courseObj = cData;
+    }
 
     // Fetch ledger payments
     const { data: payments } = await admin
@@ -127,7 +142,6 @@ export async function getBookingDetailsServer(bookingId: string) {
     const coursePaymentRow = paymentLedger.find((p: any) => p.type === "payment");
     const regFeeRow = paymentLedger.find((p: any) => p.type === "registration_fee");
 
-    const courseObj = (booking as any).courses;
     const coursePrice = coursePaymentRow
       ? Number(coursePaymentRow.amount)
       : (courseObj?.price

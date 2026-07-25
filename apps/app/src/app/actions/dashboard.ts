@@ -29,7 +29,8 @@ export async function getDashboardDataAction() {
         dbProfile: dbProfile || null,
         user_metadata: {
           ...user.user_metadata,
-          ...(dbFullName ? { custom_full_name: dbFullName, full_name: dbFullName } : {})
+          ...(dbFullName ? { custom_full_name: dbFullName, full_name: dbFullName } : {}),
+          ...(pData?.phone ? { phone: pData.phone } : {})
         }
       },
       bookings
