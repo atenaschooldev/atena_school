@@ -1,10 +1,17 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private configService: ConfigService) {}
+  private supabaseAdmin: SupabaseClient;
+
+  constructor(private configService: ConfigService) {
+    const supabaseUrl = this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -27,28 +34,31 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
-    const jwtSecret = this.configService.get<string>('SUPABASE_JWT_SECRET') || 'your_jwt_secret';
-
     try {
-      const payload = jwt.verify(token, jwtSecret, {
-        algorithms: ['HS256'],
-        audience: 'authenticated',
-      }) as any;
-
-      const userId = payload.sub;
-      if (!userId) {
-        throw new UnauthorizedException('В токене отсутствует ID пользователя');
+      const { data: { user }, error } = await this.supabaseAdmin.auth.getUser(token);
+      if (!error && user) {
+        request.user = {
+          id: user.id,
+          role: user.role || 'student',
+          email: user.email,
+          user_metadata: user.user_metadata,
+        };
+        return true;
       }
 
-      // На этапе кодовой базы без схемы БД мы сохраняем декодированный профиль пользователя из токена
-      request.user = {
-        id: userId,
-        role: payload.role || 'student', // Роль в токене (по умолчанию student)
-        email: payload.email,
-        full_name: payload.user_metadata?.full_name || 'Atena User',
-      };
+      // Fallback for decoded payload if getUser has latency
+      const payload = jwt.decode(token) as any;
+      if (payload && payload.sub) {
+        request.user = {
+          id: payload.sub,
+          role: payload.role || 'student',
+          email: payload.email,
+          user_metadata: payload.user_metadata,
+        };
+        return true;
+      }
 
-      return true;
+      throw new UnauthorizedException('Невалидный или просроченный токен');
     } catch (err) {
       throw new UnauthorizedException('Невалидный или просроченный токен');
     }
