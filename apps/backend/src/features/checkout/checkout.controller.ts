@@ -179,30 +179,6 @@ export class CheckoutController {
     return this.checkoutService.getPublicCourses();
   }
 
-  @Get('site-content')
-  @ApiOperation({ summary: 'Получить контент главной страницы (Hero, About, Testimonials, Contact)' })
-  async getSiteContent() {
-    return this.checkoutService.getSiteContent();
-  }
-
-  @Get('teachers')
-  @ApiOperation({ summary: 'Получить список преподавателей' })
-  async getPublicTeachers() {
-    return this.checkoutService.getPublicTeachers();
-  }
-
-  @Get('blog')
-  @ApiOperation({ summary: 'Получить список постов блога' })
-  async getPublicBlogPosts() {
-    return this.checkoutService.getPublicBlogPosts();
-  }
-
-  @Get('blog/:slug')
-  @ApiOperation({ summary: 'Получить пост блога по slug' })
-  async getPublicBlogPostBySlug(@Param('slug') slug: string) {
-    return this.checkoutService.getPublicBlogPostBySlug(slug);
-  }
-
   @Post('contact')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Отправка формы обратной связи' })

@@ -87,27 +87,6 @@ interface BlogPostRow {
 
 export const getHeroData = unstable_cache(
   async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-    if (backendUrl) {
-      try {
-        const res = await fetch(`${backendUrl}/api/v1/checkout/site-content`);
-        if (res.ok) {
-          const bData = await res.json();
-          if (bData.success && bData.hero) {
-            return {
-              title_it: bData.hero.title_it || '',
-              title_en: bData.hero.title_en || '',
-              subtitle_it: bData.hero.subtitle_it || '',
-              subtitle_en: bData.hero.subtitle_en || '',
-              updated_at: bData.hero.updated_at || new Date().toISOString(),
-            };
-          }
-        }
-      } catch (bErr) {
-        console.warn("Backend getHeroData fallback:", bErr);
-      }
-    }
-
     const supabase = createClient();
     const { data } = await supabase.from('hero').select('*').single<HeroRow>();
     return {
@@ -124,28 +103,6 @@ export const getHeroData = unstable_cache(
 
 export const getAboutData = unstable_cache(
   async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-    if (backendUrl) {
-      try {
-        const res = await fetch(`${backendUrl}/api/v1/checkout/site-content`);
-        if (res.ok) {
-          const bData = await res.json();
-          if (bData.success && bData.about) {
-            return {
-              title_it: bData.about.title_it || '',
-              title_en: bData.about.title_en || '',
-              content_it: bData.about.content_it || '',
-              content_en: bData.about.content_en || '',
-              image_url: bData.about.image_url || '',
-              updated_at: bData.about.updated_at || new Date().toISOString(),
-            };
-          }
-        }
-      } catch (bErr) {
-        console.warn("Backend getAboutData fallback:", bErr);
-      }
-    }
-
     const supabase = createClient();
     const { data } = await supabase.from('about').select('*').single<AboutRow>();
     return {
@@ -163,26 +120,6 @@ export const getAboutData = unstable_cache(
 
 export const getTestimonials = unstable_cache(
   async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-    if (backendUrl) {
-      try {
-        const res = await fetch(`${backendUrl}/api/v1/checkout/site-content`);
-        if (res.ok) {
-          const bData = await res.json();
-          if (bData.success && bData.testimonials) {
-            return bData.testimonials.map((t: any) => ({
-              ...t,
-              content_it: t.content_it || '',
-              content_en: t.content_en || '',
-              author_name: t.author_name || 'Anonimo',
-            }));
-          }
-        }
-      } catch (bErr) {
-        console.warn("Backend getTestimonials fallback:", bErr);
-      }
-    }
-
     const supabase = createClient();
     const { data } = await supabase.from('testimonials').select('*').eq('is_active', true).returns<TestimonialRow[]>();
     return (data || []).map((t) => ({
@@ -198,29 +135,6 @@ export const getTestimonials = unstable_cache(
 
 export const getContactData = unstable_cache(
   async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-    if (backendUrl) {
-      try {
-        const res = await fetch(`${backendUrl}/api/v1/checkout/site-content`);
-        if (res.ok) {
-          const bData = await res.json();
-          if (bData.success && bData.contact) {
-            return {
-              address: bData.contact.address || '',
-              phone: bData.contact.phone || '',
-              landline: bData.contact.landline || '',
-              email: bData.contact.email || '',
-              vat: bData.contact.vat || '',
-              whatsapp: bData.contact.whatsapp || '',
-              id: bData.contact.id || 1,
-            };
-          }
-        }
-      } catch (bErr) {
-        console.warn("Backend getContactData fallback:", bErr);
-      }
-    }
-
     const supabase = createClient();
     const { data } = await supabase.from('site_contact').select('*').single<ContactRow>();
     return {
@@ -239,27 +153,6 @@ export const getContactData = unstable_cache(
 
 export const getTeachers = unstable_cache(
   async () => {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-    if (backendUrl) {
-      try {
-        const res = await fetch(`${backendUrl}/api/v1/checkout/teachers`);
-        if (res.ok) {
-          const bData = await res.json();
-          if (bData.success && bData.teachers) {
-            return bData.teachers.map((t: any) => ({
-              ...t,
-              full_name: t.full_name || '',
-              bio_it: t.bio_it || '',
-              bio_en: t.bio_en || '',
-              avatar_url: t.avatar_url || '',
-            }));
-          }
-        }
-      } catch (bErr) {
-        console.warn("Backend getTeachers fallback:", bErr);
-      }
-    }
-
     const supabase = createClient();
     const { data } = await supabase.from('profiles').select('*').eq('role', 'teacher').order('full_name').returns<TeacherProfileRow[]>();
     return (data || []).map((t) => ({
