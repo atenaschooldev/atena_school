@@ -5,6 +5,7 @@ import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
+import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
 
 @Injectable()
 export class CheckoutService {
@@ -106,6 +107,22 @@ export class CheckoutService {
       ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
       : purchaserName;
 
+    const lessons = calculateLessonDates(
+      dto.date || new Date().toISOString(),
+      dto.time || '10:00',
+      course?.category || 'general',
+      course?.schedule_days || null,
+      course?.lesson_duration_minutes || 60,
+      course?.start_time || null,
+      course?.end_time || null,
+      course?.schedule_type || null
+    );
+
+    const subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date().toISOString();
+    const subEndsAtDate = new Date(subStartsAt);
+    subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
+    const subEndsAt = subEndsAtDate.toISOString();
+
     const { data: booking, error } = await this.supabaseAdmin
       .from('bookings')
       .insert({
@@ -126,6 +143,9 @@ export class CheckoutService {
         payment_method: 'cash',
         amount_paid: totalPaidAmount,
         registration_fee: regFee,
+        total_lessons_count: lessons.length || 8,
+        subscription_starts_at: subStartsAt,
+        subscription_ends_at: subEndsAt,
         notes: dto.notes || '',
         sdi_code: dto.sdiCode || null,
         pec_email: dto.pecEmail || null,

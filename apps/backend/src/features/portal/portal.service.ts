@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './portal.controller';
+import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
 
 @Injectable()
 export class PortalService {
@@ -75,7 +76,41 @@ export class PortalService {
       throw new NotFoundException('Prenotazione non trovata');
     }
 
-    return { success: true, booking, lessons: [] };
+    const cid = booking.course_id || booking.item_id;
+    let course: any = null;
+    if (cid) {
+      const { data: cData } = await this.supabaseAdmin
+        .from('courses')
+        .select('*')
+        .eq('id', cid)
+        .maybeSingle();
+      course = cData;
+    }
+
+    const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
+    const btime = booking.booking_time || '10:00';
+
+    const calculated = calculateLessonDates(
+      bdate,
+      btime,
+      course?.category || 'general',
+      course?.schedule_days || null,
+      course?.lesson_duration_minutes || 60,
+      course?.start_time || null,
+      course?.end_time || null,
+      course?.schedule_type || null
+    );
+
+    const lessons = calculated.map((item, idx) => ({
+      id: `lesson-${booking.id}-${idx}`,
+      booking_id: booking.id,
+      starts_at: item.startsAt,
+      ends_at: item.endsAt,
+      status: idx === 0 ? 'scheduled' : 'upcoming',
+      created_at: booking.created_at,
+    }));
+
+    return { success: true, booking, course, lessons };
   }
 
   async updateProfile(user: any, dto: UpdateProfileDto) {
