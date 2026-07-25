@@ -717,54 +717,23 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
       return { success: true, annualFeePaid: false, userFound: false };
     }
 
-    // 1. Primary Legal Identity Check by Codice Fiscale (tax_code) - Unique per Student/Child
-    if (cleanTaxCode) {
-      const { data: mByTaxCode } = await admin
-        .from("annual_memberships")
-        .select("id, user_id")
-        .ilike("tax_code", cleanTaxCode)
-        .eq("academic_year", "2026/2027")
-        .eq("status", "active")
-        .maybeSingle();
+    const { data, error } = await admin.rpc("check_annual_membership_status", {
+      p_tax_code: cleanTaxCode || null,
+      p_email: cleanEmail || null,
+      p_phone: cleanPhone || null,
+    });
 
-      if (mByTaxCode) return { success: true, annualFeePaid: true, userFound: !!mByTaxCode.user_id };
-
-      // Fallback check students table by tax_code
-      const { data: sTax } = await admin.from("students").select("id, annual_fee_paid").ilike("tax_code", cleanTaxCode).limit(1);
-      if (sTax && sTax.length > 0) {
-        if (sTax[0].annual_fee_paid) return { success: true, annualFeePaid: true, userFound: true };
-
-        const { data: mByStudent } = await admin
-          .from("annual_memberships")
-          .select("id, user_id")
-          .eq("student_id", sTax[0].id)
-          .eq("academic_year", "2026/2027")
-          .eq("status", "active")
-          .maybeSingle();
-
-        if (mByStudent) return { success: true, annualFeePaid: true, userFound: !!mByStudent.user_id };
-      }
+    if (error) {
+      console.error("Error in RPC check_annual_membership_status:", error);
+      return { success: false, annualFeePaid: false, userFound: false };
     }
 
-    // 2. Secondary Check: Match Email on annual_memberships or students
-    if (cleanEmail) {
-      const { data: mByEmail } = await admin
-        .from("annual_memberships")
-        .select("id, user_id")
-        .ilike("email", cleanEmail)
-        .eq("academic_year", "2026/2027")
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (mByEmail) return { success: true, annualFeePaid: true, userFound: !!mByEmail.user_id };
-
-      const { data: sEmail } = await admin.from("students").select("id, annual_fee_paid").ilike("email", cleanEmail).limit(1);
-      if (sEmail && sEmail.length > 0 && sEmail[0].annual_fee_paid) {
-        return { success: true, annualFeePaid: true, userFound: true };
-      }
-    }
-
-    return { success: true, annualFeePaid: false, userFound: false };
+    const row = Array.isArray(data) ? data[0] : data;
+    return {
+      success: true,
+      annualFeePaid: !!row?.annual_fee_paid,
+      userFound: !!row?.user_found,
+    };
   } catch (err: any) {
     console.error("Error in checkRegistrationFeeStatusAction:", err);
     return { success: false, annualFeePaid: false, userFound: false };
