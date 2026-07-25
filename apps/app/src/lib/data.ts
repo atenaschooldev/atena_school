@@ -168,6 +168,30 @@ export const getTeachers = unstable_cache(
 );
 
 export async function getCourses() {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+  if (backendUrl) {
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/checkout/courses`);
+      if (res.ok) {
+        const bData = await res.json();
+        if (bData.success && bData.courses) {
+          return bData.courses.map((c: any) => ({
+            ...c,
+            slug: (c.slug as string) || slugify(c.name || ''),
+            title_it: c.name || '',
+            title_en: c.name || '',
+            description_it: c.description || '',
+            description_en: c.description || '',
+            price: Number(c.price) || 0,
+            price_eur: Number(c.price) || 0,
+          }));
+        }
+      }
+    } catch (bErr) {
+      console.warn("Backend getCourses fallback:", bErr);
+    }
+  }
+
   const supabase = createClient();
   let { data, error } = await supabase
     .from('courses')
@@ -221,6 +245,31 @@ export const getBlogPosts = unstable_cache(
 );
 
 export async function getSingleCourse(id: string) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+  if (backendUrl) {
+    try {
+      const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`);
+      if (res.ok) {
+        const bData = await res.json();
+        const c = bData.item || bData.course;
+        if (c) {
+          return {
+            ...c,
+            slug: (c.slug as string) || slugify(c.name || ''),
+            title_it: c.name || '',
+            title_en: c.name || '',
+            description_it: c.description || '',
+            description_en: c.description || '',
+            price: Number(c.price) || 0,
+            price_eur: Number(c.price) || 0,
+          };
+        }
+      }
+    } catch (bErr) {
+      console.warn("Backend getSingleCourse fallback:", bErr);
+    }
+  }
+
   const supabase = createClient();
   let { data, error } = await supabase
     .from('courses')

@@ -173,6 +173,12 @@ export class CheckoutController {
     return this.checkoutService.getBookingDetails(id);
   }
 
+  @Get('courses')
+  @ApiOperation({ summary: 'Получить полный список активных витринных курсов' })
+  async getPublicCourses() {
+    return this.checkoutService.getPublicCourses();
+  }
+
   @Post('contact')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Отправка формы обратной связи' })

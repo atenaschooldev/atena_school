@@ -325,6 +325,20 @@ export class CheckoutService {
     };
   }
 
+  async getPublicCourses() {
+    const { data } = await this.supabaseAdmin
+      .from('courses')
+      .select('*, teachers!courses_teacher_id_fkey(full_name)')
+      .in('status', ['active', 'published']);
+
+    const courses = (data || []).map((c: any) => ({
+      ...c,
+      teacher_name: c.teachers?.full_name || undefined,
+    }));
+
+    return { success: true, courses };
+  }
+
   async submitContact(dto: any) {
     const { error } = await this.supabaseAdmin
       .from('contact_messages')
