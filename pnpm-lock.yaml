@@ -859,15 +859,12 @@ importers:
 
   packages/api:
     dependencies:
-      '@supabase/ssr':
-        specifier: ^0.5.2
-        version: 0.5.2(@supabase/supabase-js@2.110.6)
-      '@supabase/supabase-js':
-        specifier: ^2.49.1
-        version: 2.110.6
-      date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
+      '@atena/api-types':
+        specifier: workspace:*
+        version: link:../api-types
+      '@atena/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       typescript:
         specifier: ^5.8.3

@@ -46,8 +46,10 @@ export interface BookingRecord {
   student_phone?: string;
   student_tax_code?: string;
   student_birth_date?: string;
+  booking_date: string;
   start_date: string;
   booking_time: string;
+  status: string;
   payment_status: 'paid' | 'reserved' | 'completed' | 'pending' | 'cancelled';
   payment_method: 'stripe' | 'cash' | 'card';
   amount_paid: number;
@@ -66,6 +68,9 @@ export interface EnrichedBooking extends BookingRecord {
   teacher_name: string;
   location?: string;
   is_future: boolean;
+  status: string;
+  booking_status?: string;
+  slot_starts_at?: string;
 }
 
 export interface FeeStatusResponse {

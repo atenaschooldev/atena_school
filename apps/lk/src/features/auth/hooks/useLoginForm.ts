@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
-import { mergeGuestBookings } from "@/lib/utils";
+
 import { loginWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
 
 export function useLoginForm() {
@@ -24,7 +24,6 @@ export function useLoginForm() {
     if (!res.success) {
       toast.error(res.error || "Errore durante l'accesso");
     } else if (res.user) {
-      await mergeGuestBookings(null, res.user.id);
       toast.success("Acceduto con successo!");
       router.push(redirectUrl);
       router.refresh();

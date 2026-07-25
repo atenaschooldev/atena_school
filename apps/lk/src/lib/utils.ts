@@ -1,6 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { autoLinkGuestBookings } from "@repo/api";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -29,11 +28,3 @@ export function getSessionId() {
   return sessionId;
 }
 
-export async function mergeGuestBookings(supabase: any, userId: string) {
-  const sessionId = getSessionId();
-  if (!sessionId) return;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user?.email) {
-    await autoLinkGuestBookings(user.email, userId, supabase);
-  }
-}
