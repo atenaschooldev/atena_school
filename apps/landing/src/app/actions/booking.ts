@@ -108,6 +108,19 @@ export async function getBookingDetailsServer(bookingId: string) {
   if (!bookingId) return null;
 
   try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/api/v1/checkout/booking-details/${bookingId}`);
+        if (res.ok) {
+          const bData = await res.json();
+          if (bData.success && bData.booking) return bData.booking;
+        }
+      } catch (bErr) {
+        console.warn("Backend booking-details fallback to RPC:", bErr);
+      }
+    }
+
     const admin = getSupabaseAdmin();
     const { data, error } = await admin.rpc("get_booking_details_rpc", { p_booking_id: bookingId });
 
@@ -688,6 +701,20 @@ export async function fetchCheckoutItemAction(typeOrId: string, optionalId?: str
   try {
     const type = optionalId ? typeOrId : "course";
     const id = optionalId ? optionalId : typeOrId;
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`);
+        if (res.ok) {
+          const bData = await res.json();
+          if (bData.success && bData.item) return bData;
+        }
+      } catch (bErr) {
+        console.warn("Backend checkout item fallback to local fetch:", bErr);
+      }
+    }
+
     const admin = getSupabaseAdmin();
     const item = await fetchItemData(admin, type, id);
     return { success: true, item, course: item };

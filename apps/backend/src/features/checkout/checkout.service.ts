@@ -251,4 +251,77 @@ export class CheckoutService {
 
     return { received: true };
   }
+
+  async getItem(itemId: string) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(itemId);
+    let item: any = null;
+
+    if (isUuid) {
+      const { data } = await this.supabaseAdmin
+        .from('courses')
+        .select('*, teachers!courses_teacher_id_fkey(full_name)')
+        .eq('id', itemId)
+        .maybeSingle();
+      if (data) item = data;
+    }
+
+    if (!item) {
+      const { data } = await this.supabaseAdmin
+        .from('courses')
+        .select('*, teachers!courses_teacher_id_fkey(full_name)')
+        .eq('slug', itemId)
+        .maybeSingle();
+      if (data) item = data;
+    }
+
+    if (item && item.teachers?.full_name) {
+      item.teacher_name = item.teachers.full_name;
+    }
+
+    return { success: true, item, course: item };
+  }
+
+  async getBookingDetails(bookingId: string) {
+    const { data: booking, error } = await this.supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .maybeSingle();
+
+    if (error || !booking) {
+      return { success: false, error: 'Booking not found' };
+    }
+
+    const cid = booking.course_id || booking.item_id;
+    let courseName = booking.course_name || 'Corso Atena School';
+
+    if (cid) {
+      const { data: course } = await this.supabaseAdmin
+        .from('courses')
+        .select('name, title_it')
+        .eq('id', cid)
+        .maybeSingle();
+
+      if (course) {
+        courseName = course.name || course.title_it || courseName;
+      }
+    }
+
+    return {
+      success: true,
+      booking: {
+        id: booking.id,
+        course_name: courseName,
+        amount_paid: Number(booking.amount_paid || 0),
+        student_name: booking.student_name || booking.purchaser_name || 'Studente',
+        purchaser_name: booking.purchaser_name || booking.student_name || 'Acquirente',
+        student_email: booking.student_email || booking.purchaser_email || '',
+        payment_method: booking.payment_method || 'card',
+        payment_status: booking.payment_status || 'reserved',
+        start_date: booking.start_date || booking.booking_date,
+        booking_time: booking.booking_time || '10:00',
+        registration_fee: Number(booking.registration_fee || 0),
+      },
+    };
+  }
 }

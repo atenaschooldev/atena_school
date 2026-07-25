@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.service';
 import { IsString, IsOptional, IsBoolean } from 'class-validator';
@@ -137,5 +137,17 @@ export class CheckoutController {
   @ApiOperation({ summary: 'Синхронное подтверждение оплаты Stripe' })
   async verifyPayment(@Body() dto: VerifyPaymentDto) {
     return this.checkoutService.verifyPayment(dto);
+  }
+
+  @Get('item/:id')
+  @ApiOperation({ summary: 'Получить публичную информацию о курсе по ID или slug' })
+  async getItem(@Param('id') id: string) {
+    return this.checkoutService.getItem(id);
+  }
+
+  @Get('booking-details/:id')
+  @ApiOperation({ summary: 'Получить детали квитанции для экрана успеха' })
+  async getBookingDetails(@Param('id') id: string) {
+    return this.checkoutService.getBookingDetails(id);
   }
 }
