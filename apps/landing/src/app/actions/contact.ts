@@ -12,6 +12,23 @@ export async function submitContactForm(formData: {
   messaggio: string;
 }) {
   try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/api/v1/checkout/contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        });
+        if (res.ok) {
+          const bData = await res.json();
+          if (bData.success) return bData;
+        }
+      } catch (bErr) {
+        console.warn("Backend contact form submission fallback:", bErr);
+      }
+    }
+
     const supabase = createClient() as any;
     
     // 1. Insert message into public.contact_messages

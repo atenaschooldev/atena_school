@@ -106,6 +106,28 @@ export class VerifyPaymentDto {
   bookingId: string;
 }
 
+export class ContactFormDto {
+  @IsString()
+  nome: string;
+
+  @IsString()
+  cognome: string;
+
+  @IsString()
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+
+  @IsOptional()
+  @IsString()
+  interesse?: string;
+
+  @IsString()
+  messaggio: string;
+}
+
 @ApiTags('Public Landing Checkout')
 @Controller('checkout')
 export class CheckoutController {
@@ -149,5 +171,12 @@ export class CheckoutController {
   @ApiOperation({ summary: 'Получить детали квитанции для экрана успеха' })
   async getBookingDetails(@Param('id') id: string) {
     return this.checkoutService.getBookingDetails(id);
+  }
+
+  @Post('contact')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Отправка формы обратной связи' })
+  async submitContact(@Body() dto: ContactFormDto) {
+    return this.checkoutService.submitContact(dto);
   }
 }

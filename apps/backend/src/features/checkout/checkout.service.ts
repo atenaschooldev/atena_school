@@ -324,4 +324,23 @@ export class CheckoutService {
       },
     };
   }
+
+  async submitContact(dto: any) {
+    const { error } = await this.supabaseAdmin
+      .from('contact_messages')
+      .insert({
+        first_name: dto.nome,
+        last_name: dto.cognome,
+        email: dto.email,
+        phone: dto.telefono || null,
+        interest: dto.interesse || null,
+        message: dto.messaggio,
+      });
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return { success: true };
+  }
 }
