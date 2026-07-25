@@ -307,12 +307,19 @@ export class CheckoutService {
       }
     }
 
+    const amountPaid = Number(booking.amount_paid || 0);
+    const regFee = Number(booking.registration_fee || 0);
+    const coursePrice = amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid;
+
     return {
       success: true,
       booking: {
         id: booking.id,
         course_name: courseName,
-        amount_paid: Number(booking.amount_paid || 0),
+        amount_paid: amountPaid,
+        registration_fee: regFee,
+        course_price: coursePrice,
+        item_price: coursePrice,
         student_name: booking.student_name || booking.purchaser_name || 'Studente',
         purchaser_name: booking.purchaser_name || booking.student_name || 'Acquirente',
         student_email: booking.student_email || booking.purchaser_email || '',
@@ -320,7 +327,6 @@ export class CheckoutService {
         payment_status: booking.payment_status || 'reserved',
         start_date: booking.start_date || booking.booking_date,
         booking_time: booking.booking_time || '10:00',
-        registration_fee: Number(booking.registration_fee || 0),
       },
     };
   }

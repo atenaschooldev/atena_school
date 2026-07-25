@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 import { fetchUserBookingsEnriched, updateUserProfile } from "@/features/dashboard/services/dashboardService";
 import type { EnrichedBooking } from "@repo/api";
 import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
@@ -17,7 +18,22 @@ export async function getDashboardDataAction() {
     if (backendUrl) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        let token = session?.access_token;
+
+        if (!token) {
+          const cookieStore = await cookies();
+          const allCookies = cookieStore.getAll();
+          const authCookie = allCookies.find((c) => c.name.includes("auth-token") || c.name.includes("access-token"));
+          if (authCookie) {
+            try {
+              const parsed = JSON.parse(authCookie.value);
+              token = parsed.access_token || parsed[0];
+            } catch {
+              token = authCookie.value;
+            }
+          }
+        }
+
         if (token) {
           const res = await fetch(`${backendUrl}/api/v1/portal/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
