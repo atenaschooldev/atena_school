@@ -13,6 +13,10 @@
     "test": "npx tsx --test src/tests/*.test.ts"
   },
   "dependencies": {
+    "@atena/api-client": "workspace:*",
+    "@atena/api-types": "workspace:*",
+    "@atena/utils": "workspace:*",
+    "@atena/validators": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-accordion": "^1.2.11",
