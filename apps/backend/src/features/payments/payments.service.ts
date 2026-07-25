@@ -1,44 +1,248 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PaymentsRepository } from './domain/payments.repository.interface';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
 
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly paymentsRepository: PaymentsRepository) {}
+  private supabaseAdmin: SupabaseClient;
+  private stripe: Stripe;
+
+  constructor(private configService: ConfigService) {
+    const supabaseUrl = this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || process.env.STRIPE_SECRET_KEY || '';
+
+    this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
+    this.stripe = new Stripe(stripeSecret, { apiVersion: '2023-10-16' as any });
+  }
+
+  async checkFeeStatus(dto: CheckFeeDto) {
+    const cleanTax = dto.taxCode ? dto.taxCode.trim().toUpperCase() : null;
+    const cleanEmail = dto.email ? dto.email.trim().toLowerCase() : null;
+    const cleanPhone = dto.phone ? dto.phone.trim() : null;
+
+    if (!cleanTax && !cleanEmail && !cleanPhone) {
+      return { success: true, annualFeePaid: false, userFound: false };
+    }
+
+    if (cleanTax) {
+      const { data: mem } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .select('id')
+        .ilike('tax_code', cleanTax)
+        .eq('academic_year', '2026/2027')
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (mem) return { success: true, annualFeePaid: true, userFound: true };
+
+      const { data: st } = await this.supabaseAdmin
+        .from('students')
+        .select('id')
+        .ilike('tax_code', cleanTax)
+        .eq('annual_fee_paid', true)
+        .maybeSingle();
+
+      if (st) return { success: true, annualFeePaid: true, userFound: true };
+    }
+
+    if (cleanEmail) {
+      const { data: mem } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .select('id')
+        .ilike('email', cleanEmail)
+        .eq('academic_year', '2026/2027')
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (mem) return { success: true, annualFeePaid: true, userFound: true };
+
+      const { data: st } = await this.supabaseAdmin
+        .from('students')
+        .select('id')
+        .ilike('email', cleanEmail)
+        .eq('annual_fee_paid', true)
+        .maybeSingle();
+
+      if (st) return { success: true, annualFeePaid: true, userFound: true };
+    }
+
+    return { success: true, annualFeePaid: false, userFound: false };
+  }
+
+  async createReservation(dto: CreateReservationDto) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
+    let course: any = null;
+
+    if (isUuid) {
+      const { data } = await this.supabaseAdmin.from('courses').select('*').eq('id', dto.itemId).maybeSingle();
+      course = data;
+    }
+    if (!course) {
+      const { data } = await this.supabaseAdmin.from('courses').select('*').eq('slug', dto.itemId).maybeSingle();
+      course = data;
+    }
+
+    const courseId = course?.id || dto.itemId;
+    const coursePrice = course ? Number(course.price) : 73.20;
+
+    const feeStatus = await this.checkFeeStatus({
+      taxCode: dto.isForChild ? dto.studentTaxCode : dto.purchaserTaxCode,
+      email: dto.isForChild ? dto.studentEmail : dto.email,
+      phone: dto.isForChild ? dto.studentPhone : dto.phone
+    });
+
+    const isFeeRequired = feeStatus.annualFeePaid === false && dto.includeRegistrationFee !== false;
+    const regFee = isFeeRequired ? 30 : 0;
+    const totalPaidAmount = coursePrice + regFee;
+
+    const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
+    const studentName = dto.isForChild
+      ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
+      : purchaserName;
+
+    const { data: booking, error } = await this.supabaseAdmin
+      .from('bookings')
+      .insert({
+        course_id: courseId,
+        course_name: course?.name || course?.title_it || 'Corso Atena School',
+        purchaser_name: purchaserName,
+        purchaser_email: dto.email,
+        purchaser_phone: dto.phone,
+        purchaser_tax_code: dto.purchaserTaxCode || '',
+        student_name: studentName,
+        student_email: dto.isForChild ? (dto.studentEmail || dto.email) : dto.email,
+        student_phone: dto.isForChild ? (dto.studentPhone || dto.phone) : dto.phone,
+        student_tax_code: dto.isForChild ? (dto.studentTaxCode || '') : (dto.purchaserTaxCode || ''),
+        student_birth_date: dto.studentBirthDate || null,
+        start_date: dto.date || new Date().toISOString(),
+        booking_time: dto.time || '10:00',
+        payment_status: 'reserved',
+        payment_method: 'cash',
+        amount_paid: totalPaidAmount,
+        registration_fee: regFee,
+        notes: dto.notes || '',
+        sdi_code: dto.sdiCode || null,
+        pec_email: dto.pecEmail || null,
+      })
+      .select('*')
+      .single();
+
+    if (error || !booking) {
+      throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
+    }
+
+    return { success: true, bookingId: booking.id, booking };
+  }
+
+  async createStripeSession(dto: CreateReservationDto) {
+    const reservation = await this.createReservation(dto);
+    const booking = reservation.booking;
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: booking.course_name,
+          },
+          unit_amount: Math.round(Number(booking.amount_paid - booking.registration_fee) * 100),
+        },
+        quantity: 1,
+      },
+    ];
+
+    if (booking.registration_fee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: "Quota d'iscrizione annuale (Atena School)",
+          },
+          unit_amount: 3000,
+        },
+        quantity: 1,
+      });
+    }
+
+    const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || 'https://atena-school.vercel.app';
+
+    const session = await this.stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      customer_email: dto.email,
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}&email=${encodeURIComponent(dto.email)}`,
+      cancel_url: `${siteUrl}/checkout/course/${dto.itemId}`,
+      metadata: {
+        booking_id: booking.id,
+      },
+    });
+
+    return { success: true, url: session.url, bookingId: booking.id };
+  }
+
+  async verifyPayment(dto: VerifyPaymentDto) {
+    const session = await this.stripe.checkout.sessions.retrieve(dto.sessionId);
+    if (session.payment_status !== 'paid') {
+      throw new BadRequestException('Платеж не завершен в Stripe');
+    }
+
+    await this.supabaseAdmin
+      .from('bookings')
+      .update({ payment_status: 'paid' })
+      .eq('id', dto.bookingId);
+
+    const { data: booking } = await this.supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('id', dto.bookingId)
+      .single();
+
+    return { success: true, booking };
+  }
+
+  async handleStripeWebhook(body: any, signature: string) {
+    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    let event: Stripe.Event;
+
+    try {
+      event = this.stripe.webhooks.constructEvent(body, signature, webhookSecret || '');
+    } catch (err: any) {
+      throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const bookingId = session.metadata?.booking_id;
+
+      if (bookingId) {
+        await this.supabaseAdmin
+          .from('bookings')
+          .update({ payment_status: 'paid' })
+          .eq('id', bookingId);
+      }
+    }
+
+    return { received: true };
+  }
 
   async listPayments() {
-    const list = await this.paymentsRepository.findMany();
-    return list.map((p) => this.mapResponse(p));
+    const { data } = await this.supabaseAdmin.from('payments').select('*');
+    return data || [];
   }
 
   async getPayment(id: string) {
-    const p = await this.paymentsRepository.findOne(id);
-    if (!p) throw new NotFoundException('Платеж не найден');
-    return this.mapResponse(p);
+    const { data } = await this.supabaseAdmin.from('payments').select('*').eq('id', id).single();
+    if (!data) throw new NotFoundException('Платеж не найден');
+    return data;
   }
 
   async createPayment(dto: any) {
-    const payNumber = dto.payment_number || `PAY-${Date.now()}`;
-    const p = await this.paymentsRepository.create({
-      paymentNumber: payNumber,
-      studentId: dto.student_id || dto.studentId,
-      price: Number(dto.amount || dto.price || 0),
-      paymentType: dto.payment_type || dto.paymentType || 'invoice',
-      status: dto.status || 'pending',
-      paymentDate: dto.created_at ? new Date(dto.created_at) : new Date(),
-    });
-    return this.mapResponse(p);
-  }
-
-  private mapResponse(p: any) {
-    return {
-      id: p.id,
-      payment_number: p.paymentNumber,
-      student_id: p.studentId,
-      amount: p.price,
-      payment_type: p.paymentType,
-      status: p.status,
-      created_at: p.paymentDate.toISOString(),
-      student_name: p.studentName,
-    };
+    const { data, error } = await this.supabaseAdmin.from('payments').insert(dto).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
   }
 }

@@ -632,6 +632,23 @@ export async function checkRegistrationFeeStatusAction(email?: string, phone?: s
       return { success: true, annualFeePaid: false, userFound: false };
     }
 
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const res = await fetch(`${backendUrl}/api/v1/checkout/check-fee`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taxCode: cleanTaxCode, email: cleanEmail, phone: cleanPhone }),
+        });
+        if (res.ok) {
+          const bData = await res.json();
+          return { success: true, annualFeePaid: !!bData.annualFeePaid, userFound: !!bData.userFound };
+        }
+      } catch (bErr) {
+        console.warn("Backend check-fee fallback to RPC:", bErr);
+      }
+    }
+
     const { data, error } = await admin.rpc("check_annual_membership_status", {
       p_tax_code: cleanTaxCode || null,
       p_email: cleanEmail || null,

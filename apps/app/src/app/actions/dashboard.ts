@@ -13,6 +13,25 @@ export async function getDashboardDataAction() {
       return { success: false, user: null, bookings: [] };
     }
 
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          const res = await fetch(`${backendUrl}/api/v1/me/dashboard`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const bData = await res.json();
+            return bData;
+          }
+        }
+      } catch (bErr) {
+        console.warn("Backend me/dashboard fallback to local fetch:", bErr);
+      }
+    }
+
     let bookings: EnrichedBooking[] = [];
     try {
       bookings = await fetchUserBookingsEnriched(user, supabase as any);
