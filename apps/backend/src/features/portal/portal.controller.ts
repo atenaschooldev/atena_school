@@ -15,7 +15,7 @@ export class UpdateProfileDto {
 @ApiTags('Student & Parent Portal (LK)')
 @ApiBearerAuth()
 @UseGuards(AuthGuard)
-@Controller('api/v1/portal')
+@Controller('portal')
 export class PortalController {
   constructor(private readonly portalService: PortalService) {}
 

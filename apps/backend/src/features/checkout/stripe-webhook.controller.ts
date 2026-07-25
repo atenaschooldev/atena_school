@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.service';
 
 @ApiTags('Public Landing Checkout')
-@Controller('api/v1/webhooks')
+@Controller('webhooks')
 export class StripeWebhookController {
   constructor(private readonly checkoutService: CheckoutService) {}
 

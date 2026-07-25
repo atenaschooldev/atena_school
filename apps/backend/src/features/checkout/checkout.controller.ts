@@ -107,7 +107,7 @@ export class VerifyPaymentDto {
 }
 
 @ApiTags('Public Landing Checkout')
-@Controller('api/v1/checkout')
+@Controller('checkout')
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
 
