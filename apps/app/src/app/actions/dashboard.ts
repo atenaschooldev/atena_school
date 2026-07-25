@@ -2,23 +2,35 @@
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { fetchUserBookingsEnriched, updateUserProfile } from "@/features/dashboard/services/dashboardService";
+import type { EnrichedBooking } from "@repo/api";
 import { getDynamicMaxLessons } from "@/lib/utils/bookingScheduler";
 
 export async function getDashboardDataAction() {
   try {
     const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) {
       return { success: false, user: null, bookings: [] };
     }
 
-    const bookings = await fetchUserBookingsEnriched(user, supabase as any);
+    let bookings: EnrichedBooking[] = [];
+    try {
+      bookings = await fetchUserBookingsEnriched(user, supabase as any);
+    } catch (bErr) {
+      console.warn("Could not fetch user bookings:", bErr);
+    }
 
-    const { data: dbProfile } = await (supabase
-      .from("users") as any)
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    let dbProfile: any = null;
+    try {
+      const { data } = await (supabase
+        .from("users") as any)
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      dbProfile = data;
+    } catch (uErr) {
+      console.warn("Could not fetch user dbProfile:", uErr);
+    }
 
     const pData = dbProfile as any;
     const dbFullName = (pData?.full_name || (pData?.first_name ? `${pData.first_name} ${pData.last_name || ""}`.trim() : "")) || undefined;
