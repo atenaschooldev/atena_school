@@ -176,4 +176,71 @@ export class PortalService {
 
     return { success: true };
   }
+
+  async scheduleNextLesson(bookingId: string, dateStr: string, timeStr: string, user: any) {
+    const { data: booking } = await this.supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .eq('id', bookingId)
+      .maybeSingle();
+
+    if (!booking) throw new NotFoundException('Prenotazione non trovata');
+
+    const cid = booking.course_id || booking.item_id;
+    const { data: course } = await this.supabaseAdmin
+      .from('courses')
+      .select('*')
+      .eq('id', cid)
+      .maybeSingle();
+
+    if (!course) throw new NotFoundException('Corso non trovato');
+
+    const { count } = await this.supabaseAdmin
+      .from('lessons')
+      .select('*', { count: 'exact', head: true })
+      .eq('booking_id', bookingId);
+
+    const maxLessons = 8;
+    if ((count || 0) >= maxLessons) {
+      return {
+        success: false,
+        error: `Hai già programmato tutte le lezioni disponibili (${maxLessons}/${maxLessons}).`,
+      };
+    }
+
+    const timeMatch = (timeStr || '').match(/^(\d{2}):(\d{2})$/);
+    if (!timeMatch) return { success: false, error: 'Formato orario non valido. Usa HH:MM.' };
+
+    const startHour = parseInt(timeMatch[1], 10);
+    const startMin = parseInt(timeMatch[2], 10);
+    const baseDate = new Date(dateStr);
+
+    const romeString = baseDate.toLocaleString('en-US', { timeZone: 'Europe/Rome' });
+    const utcString = baseDate.toLocaleString('en-US', { timeZone: 'UTC' });
+    const offset = Math.round((new Date(romeString).getTime() - new Date(utcString).getTime()) / (1000 * 60 * 60));
+
+    const startsAt = new Date(Date.UTC(
+      baseDate.getUTCFullYear(),
+      baseDate.getUTCMonth(),
+      baseDate.getUTCDate(),
+      startHour - offset,
+      startMin,
+      0,
+    ));
+    const durationMinutes = Number(course.lesson_duration_minutes || 60);
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
+
+    const { data: newLesson, error: insertErr } = await (this.supabaseAdmin.from('lessons') as any)
+      .insert({
+        booking_id: bookingId,
+        starts_at: startsAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+        status: 'scheduled',
+      })
+      .select()
+      .single();
+
+    if (insertErr) throw insertErr;
+    return { success: true, lesson: newLesson };
+  }
 }

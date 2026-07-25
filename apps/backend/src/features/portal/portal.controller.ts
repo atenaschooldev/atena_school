@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { PortalService } from './portal.service';
@@ -29,6 +29,16 @@ export class PortalController {
   @ApiOperation({ summary: 'Получение расписания уроков для курса' })
   async getBookingLessons(@Param('id') bookingId: string, @Req() req: any) {
     return this.portalService.getBookingLessons(bookingId, req.user);
+  }
+
+  @Post('bookings/:id/schedule-lesson')
+  @ApiOperation({ summary: 'Запланировать следующий урок для бронирования' })
+  async scheduleNextLesson(
+    @Param('id') bookingId: string,
+    @Body() body: { dateStr: string; timeStr: string },
+    @Req() req: any,
+  ) {
+    return this.portalService.scheduleNextLesson(bookingId, body.dateStr, body.timeStr, req.user);
   }
 
   @Patch('profile')
