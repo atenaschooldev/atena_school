@@ -10,6 +10,9 @@ const nunito = Nunito({
   variable: '--font-nunito',
 });
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata = {
   title: 'Pannello Studente — Atena School',
   description: 'Area riservata e личный кабинет студентов и преподавателей Atena School',
