@@ -50,8 +50,15 @@ export async function getDashboardDataAction() {
     }
 
     // Fallback: direct Supabase read
+    const userEmail = (user.email || "").trim().toLowerCase();
+    const orConds = [`user_id.eq.${user.id}`];
+    if (userEmail) {
+      orConds.push(`student_email.ilike.${userEmail}`);
+      orConds.push(`purchaser_email.ilike.${userEmail}`);
+    }
+
     const [bookingsRes, profileRes] = await Promise.all([
-      (supabase as any).from("bookings").select("*, courses(*)").eq("user_id", user.id),
+      (supabase as any).from("bookings").select("*, courses(*)").or(orConds.join(",")).order("created_at", { ascending: false }),
       (supabase as any).from("users").select("*").eq("id", user.id).maybeSingle(),
     ]);
 
@@ -160,6 +167,13 @@ export async function getBookingLessonsAction(bookingId: string) {
     const { data: booking } = await (supabase as any).from("bookings").select("*").eq("id", bookingId).single();
     if (!booking) return { success: false, error: "Prenotazione non trovata" };
 
+    const uEmail = (user.email || "").trim().toLowerCase();
+    const isOwner = booking.user_id === user.id ||
+      (uEmail && booking.student_email?.toLowerCase() === uEmail) ||
+      (uEmail && booking.purchaser_email?.toLowerCase() === uEmail);
+
+    if (!isOwner) return { success: false, error: "Non autorizzato" };
+
     const { data: lessons } = await (supabase as any)
       .from("lessons").select("*").eq("booking_id", bookingId).order("starts_at");
 
@@ -197,6 +211,16 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
     }
 
     // Fallback: direct Supabase write
+    const { data: booking } = await (supabase as any).from("bookings").select("*").eq("id", bookingId).single();
+    if (!booking) return { success: false, error: "Prenotazione non trovata" };
+
+    const uEmail = (user.email || "").trim().toLowerCase();
+    const isOwner = booking.user_id === user.id ||
+      (uEmail && booking.student_email?.toLowerCase() === uEmail) ||
+      (uEmail && booking.purchaser_email?.toLowerCase() === uEmail);
+
+    if (!isOwner) return { success: false, error: "Non autorizzato" };
+
     const timeMatch = (timeStr || "").match(/^(\d{2}):(\d{2})$/);
     if (!timeMatch) return { success: false, error: "Formato orario non valido. Usa HH:MM." };
 
@@ -212,7 +236,15 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
       baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(),
       startHour - offset, startMin, 0,
     ));
-    const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
+    let durationMinutes = 60;
+    const cid = booking.course_id || booking.item_id;
+    if (cid) {
+      const { data: course } = await (supabase as any).from("courses").select("lesson_duration_minutes").eq("id", cid).maybeSingle();
+      if (course?.lesson_duration_minutes) {
+        durationMinutes = Number(course.lesson_duration_minutes);
+      }
+    }
+    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
 
     const { data: newLesson, error: insertErr } = await (supabase as any)
       .from("lessons")

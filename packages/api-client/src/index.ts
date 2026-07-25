@@ -7,6 +7,14 @@ import type {
   BookingRecord,
 } from "@atena/api-types";
 
+async function handleResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.message || `API Error: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
 export function createApiClient(baseUrl?: string) {
   const apiBase = baseUrl || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
@@ -18,7 +26,7 @@ export function createApiClient(baseUrl?: string) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(params),
         });
-        return res.json();
+        return handleResponse<FeeStatusResponse>(res);
       },
 
       async createReservation(payload: any): Promise<ReservationResponse> {
@@ -27,7 +35,7 @@ export function createApiClient(baseUrl?: string) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        return res.json();
+        return handleResponse<ReservationResponse>(res);
       },
 
       async createStripeSession(payload: any): Promise<CheckoutSessionResponse> {
@@ -36,17 +44,26 @@ export function createApiClient(baseUrl?: string) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        return res.json();
+        return handleResponse<CheckoutSessionResponse>(res);
       },
 
       async getItem(itemId: string): Promise<{ success: boolean; item: CourseItem }> {
         const res = await fetch(`${apiBase}/api/v1/checkout/item/${itemId}`);
-        return res.json();
+        return handleResponse<{ success: boolean; item: CourseItem }>(res);
       },
 
       async getBookingDetails(bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> {
         const res = await fetch(`${apiBase}/api/v1/checkout/booking-details/${bookingId}`);
-        return res.json();
+        return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
+      },
+
+      async verifyPayment(dto: { sessionId: string; bookingId: string }): Promise<{ success: boolean; booking: BookingRecord }> {
+        const res = await fetch(`${apiBase}/api/v1/checkout/verify-payment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dto),
+        });
+        return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
       },
     },
 
@@ -55,7 +72,7 @@ export function createApiClient(baseUrl?: string) {
         const res = await fetch(`${apiBase}/api/v1/portal/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return res.json();
+        return handleResponse(res);
       },
 
       async updateProfile(token: string, data: { profileName: string; profilePhone: string }) {
@@ -67,14 +84,14 @@ export function createApiClient(baseUrl?: string) {
           },
           body: JSON.stringify(data),
         });
-        return res.json();
+        return handleResponse(res);
       },
     },
 
     cms: {
       async getCourses(): Promise<{ success: boolean; courses: CourseItem[] }> {
         const res = await fetch(`${apiBase}/api/v1/checkout/courses`);
-        return res.json();
+        return handleResponse<{ success: boolean; courses: CourseItem[] }>(res);
       },
     },
   };

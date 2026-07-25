@@ -164,30 +164,36 @@ export class CheckoutService {
 
     if (sEmail || sTaxCode) {
       try {
-        const { data: existingStudent } = await this.supabaseAdmin
-          .from('students')
-          .select('id')
-          .or(`email.ilike.${sEmail},tax_code.ilike.${sTaxCode}`)
-          .maybeSingle();
+        const orConditions: string[] = [];
+        if (sEmail) orConditions.push(`email.ilike.${sEmail}`);
+        if (sTaxCode) orConditions.push(`tax_code.ilike.${sTaxCode}`);
 
-        if (!existingStudent) {
-          await this.supabaseAdmin.from('students').insert({
-            full_name: sName || 'Studente',
-            email: sEmail,
-            phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
-            tax_code: sTaxCode || null,
-            birth_date: dto.studentBirthDate || null,
-            status: 'active',
-            annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid,
-          });
-        } else {
-          await this.supabaseAdmin.from('students').update({
-            full_name: sName || undefined,
-            phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
-            tax_code: sTaxCode || undefined,
-            birth_date: dto.studentBirthDate || undefined,
-            annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid ? true : undefined,
-          }).eq('id', existingStudent.id);
+        if (orConditions.length > 0) {
+          const { data: existingStudent } = await this.supabaseAdmin
+            .from('students')
+            .select('id')
+            .or(orConditions.join(','))
+            .maybeSingle();
+
+          if (!existingStudent) {
+            await this.supabaseAdmin.from('students').insert({
+              full_name: sName || 'Studente',
+              email: sEmail,
+              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
+              tax_code: sTaxCode || null,
+              birth_date: dto.studentBirthDate || null,
+              status: 'active',
+              annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid,
+            });
+          } else {
+            await this.supabaseAdmin.from('students').update({
+              full_name: sName || undefined,
+              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
+              tax_code: sTaxCode || undefined,
+              birth_date: dto.studentBirthDate || undefined,
+              annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid ? true : undefined,
+            }).eq('id', existingStudent.id);
+          }
         }
       } catch (sErr) {
         console.warn('Auto-create student error in backend checkout:', sErr);
@@ -250,9 +256,14 @@ export class CheckoutService {
       throw new BadRequestException('Платеж не завершен в Stripe');
     }
 
+    const metaBookingId = session.metadata?.booking_id;
+    if (metaBookingId && metaBookingId !== dto.bookingId) {
+      throw new BadRequestException('Сессия Stripe не соответствует данному бронированию');
+    }
+
     await this.supabaseAdmin
       .from('bookings')
-      .update({ payment_status: 'paid' })
+      .update({ payment_status: 'paid', session_id: dto.sessionId })
       .eq('id', dto.bookingId);
 
     const { data: booking } = await this.supabaseAdmin
@@ -274,6 +285,18 @@ export class CheckoutService {
       throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
     }
 
+    if (event && event.id) {
+      const { data: existingEvent } = await this.supabaseAdmin
+        .from('stripe_webhook_events')
+        .select('id')
+        .eq('stripe_event_id', event.id)
+        .maybeSingle();
+
+      if (existingEvent) {
+        return { received: true, duplicate: true };
+      }
+    }
+
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const bookingId = session.metadata?.booking_id;
@@ -284,6 +307,13 @@ export class CheckoutService {
           .update({ payment_status: 'paid' })
           .eq('id', bookingId);
       }
+    }
+
+    if (event && event.id) {
+      await this.supabaseAdmin.from('stripe_webhook_events').insert({
+        stripe_event_id: event.id,
+        event_type: event.type,
+      });
     }
 
     return { received: true };

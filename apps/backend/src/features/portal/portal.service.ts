@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './portal.controller';
@@ -7,12 +7,23 @@ import { getDynamicMaxLessons } from '@atena/utils';
 
 @Injectable()
 export class PortalService {
+  private readonly logger = new Logger(PortalService.name);
   private supabaseAdmin: SupabaseClient;
 
   constructor(private configService: ConfigService) {
     const supabaseUrl = this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  }
+
+  private isUserBookingAuthorized(booking: any, user: any): boolean {
+    if (!user || !booking) return false;
+    if (booking.user_id && booking.user_id === user.id) return true;
+    const userEmail = (user.email || '').trim().toLowerCase();
+    if (!userEmail) return false;
+    const sEmail = (booking.student_email || '').trim().toLowerCase();
+    const pEmail = (booking.purchaser_email || '').trim().toLowerCase();
+    return sEmail === userEmail || pEmail === userEmail;
   }
 
   async getDashboardData(user: any) {
@@ -28,15 +39,21 @@ export class PortalService {
           p_user_id: user.id,
           p_email: cleanEmail,
         });
-      } catch {
-        // ignore
+      } catch (err: any) {
+        this.logger.warn(`Failed to sync profile from bookings for ${user.id}: ${err?.message || err}`);
       }
+    }
+
+    const filterConditions = [`user_id.eq.${user.id}`];
+    if (cleanEmail) {
+      filterConditions.push(`student_email.ilike.${cleanEmail}`);
+      filterConditions.push(`purchaser_email.ilike.${cleanEmail}`);
     }
 
     const { data: rawBookings } = await this.supabaseAdmin
       .from('bookings')
       .select('*')
-      .or(`user_id.eq.${user.id},student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
+      .or(filterConditions.join(','))
       .in('payment_status', ['paid', 'completed', 'reserved', 'pending_payment', 'pending'])
       .order('created_at', { ascending: false });
 
@@ -121,6 +138,10 @@ export class PortalService {
       throw new NotFoundException('Prenotazione non trovata');
     }
 
+    if (!this.isUserBookingAuthorized(booking, user)) {
+      throw new ForbiddenException('Non sei autorizzato ad accedere a questa prenotazione');
+    }
+
     const cid = booking.course_id || booking.item_id;
     let course: any = null;
     if (cid) {
@@ -197,6 +218,10 @@ export class PortalService {
 
     if (!booking) throw new NotFoundException('Prenotazione non trovata');
 
+    if (!this.isUserBookingAuthorized(booking, user)) {
+      throw new ForbiddenException('Non sei autorizzato ad accedere a questa prenotazione');
+    }
+
     const cid = booking.course_id || booking.item_id;
     const { data: course } = await this.supabaseAdmin
       .from('courses')
@@ -211,7 +236,14 @@ export class PortalService {
       .select('*', { count: 'exact', head: true })
       .eq('booking_id', bookingId);
 
-    const maxLessons = 8;
+    const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
+    const maxLessons = booking.total_lessons_count || getDynamicMaxLessons(
+      course.name || '',
+      bdate,
+      course.category || '',
+      course.lessons_per_week
+    );
+
     if ((count || 0) >= maxLessons) {
       return {
         success: false,

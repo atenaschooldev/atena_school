@@ -42,7 +42,7 @@ export async function checkRegistrationFeeStatusAction(params: {
   }
 }
 
-export async function createOrUpdateReservationServerAction(payload: any, secondParam?: any, thirdParam?: any) {
+export async function createOrUpdateReservationServerAction(payload: any) {
   try {
     const api = getApi();
     const res = await api.checkout.createReservation(payload);
@@ -60,7 +60,7 @@ export async function createOrUpdateReservationServerAction(payload: any, second
   }
 }
 
-export async function initiateStripePaymentAction(payload: any, secondParam?: any) {
+export async function initiateStripePaymentAction(payload: any) {
   try {
     const api = getApi();
     const res = await api.checkout.createStripeSession(payload);
@@ -74,7 +74,7 @@ export async function initiateStripePaymentAction(payload: any, secondParam?: an
   }
 }
 
-export async function getBookingDetailsServer(bookingId: string, secondParam?: any) {
+export async function getBookingDetailsServer(bookingId: string) {
   try {
     const api = getApi();
     const res = await api.checkout.getBookingDetails(bookingId);
@@ -95,11 +95,40 @@ export async function getBookingDetailsServer(bookingId: string, secondParam?: a
 }
 
 export async function dispatchMagicLinkAction(email: string) {
-  return { success: true, error: null };
+  try {
+    if (!email) return { success: false, error: "Email non valida" };
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = createClient();
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://atena-school.vercel.app";
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/autenticazione/callback`,
+      },
+    });
+    if (error) {
+      console.error("dispatchMagicLinkAction error:", error);
+      return { success: false, error: error.message };
+    }
+    return { success: true, error: null };
+  } catch (err: any) {
+    console.error("dispatchMagicLinkAction exception:", err);
+    return { success: false, error: err.message || "Failed to send magic link" };
+  }
 }
 
-export async function confirmPaymentAction(bookingId: string) {
-  return { success: true, booking: { id: bookingId }, error: null };
+export async function confirmPaymentAction(bookingId: string, sessionId?: string) {
+  try {
+    if (sessionId && bookingId) {
+      const api = getApi();
+      const res = await api.checkout.verifyPayment({ sessionId, bookingId });
+      return { success: res.success, booking: res.booking, error: null };
+    }
+    return { success: true, booking: { id: bookingId }, error: null };
+  } catch (err: any) {
+    console.error("confirmPaymentAction error:", err);
+    return { success: false, booking: { id: bookingId }, error: err.message };
+  }
 }
 
 export async function mergeGuestBookingsAction(sessionId?: string | null, userId?: string) {

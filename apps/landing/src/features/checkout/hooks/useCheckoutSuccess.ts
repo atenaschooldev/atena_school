@@ -44,19 +44,19 @@ export function useCheckoutSuccess() {
       if (sessionId) {
         // Stripe payment confirmation
         try {
-          const res = await confirmPaymentAction(bookingId);
+          const res = await confirmPaymentAction(bookingId, sessionId);
           const enriched = await getBookingDetailsServer(bookingId);
-          setBookingData(enriched || res?.booking || { id: bookingId, payment_status: "paid" });
+          setBookingData(enriched?.booking || enriched || res?.booking || { id: bookingId, payment_status: "paid" });
         } catch (err) {
           console.error("Error confirming payment:", err);
           const fallback = await getBookingDetailsServer(bookingId);
-          setBookingData(fallback || { id: bookingId, payment_status: "paid" });
+          setBookingData(fallback?.booking || fallback || { id: bookingId, payment_status: "paid" });
         } finally {
           setVerifying(false);
         }
       } else {
         const data = await getBookingDetailsServer(bookingId);
-        setBookingData(data || { id: bookingId });
+        setBookingData(data?.booking || data || { id: bookingId });
         setVerifying(false);
       }
     }
@@ -77,7 +77,7 @@ export function useCheckoutSuccess() {
 
   const emailDisplay = bookingData?.student_email || emailParam || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId || bookingData?.status === "paid";
+  const isPaid = !!sessionId || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
 
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {
