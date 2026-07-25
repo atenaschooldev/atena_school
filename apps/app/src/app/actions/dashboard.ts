@@ -81,6 +81,30 @@ export async function updateUserProfileAction(params: { profileName: string; pro
       return { success: false, error: "Unauthorized" };
     }
 
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          const res = await fetch(`${backendUrl}/api/v1/portal/profile`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(params),
+          });
+          if (res.ok) {
+            const bData = await res.json();
+            return bData;
+          }
+        }
+      } catch (bErr) {
+        console.warn("Backend profile update fallback:", bErr);
+      }
+    }
+
     await updateUserProfile(user, params, supabase as any);
     return { success: true };
   } catch (err: any) {
@@ -97,6 +121,25 @@ export async function getBookingLessonsAction(bookingId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
+    if (backendUrl) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          const res = await fetch(`${backendUrl}/api/v1/portal/bookings/${bookingId}/lessons`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            const bData = await res.json();
+            return bData;
+          }
+        }
+      } catch (bErr) {
+        console.warn("Backend booking lessons fallback:", bErr);
+      }
+    }
+
     const { data: bookingData, error: bookingErr } = await supabase
       .from("bookings")
       .select("*")
@@ -107,43 +150,10 @@ export async function getBookingLessonsAction(bookingId: string) {
       return { success: false, error: "Prenotazione non trovata" };
     }
 
-    const booking = bookingData as any;
-    const cid = booking.course_id || booking.item_id;
-    let course: any = null;
-    if (cid) {
-      const { data: cData } = await (supabase
-        .from("courses") as any)
-        .select("*")
-        .eq("id", cid)
-        .maybeSingle();
-
-      if (cData) {
-        course = { ...cData };
-        if (cData.teacher_id) {
-          const { data: tData } = await (supabase
-            .from("teachers") as any)
-            .select("full_name")
-            .eq("teacher_id", cData.teacher_id)
-            .maybeSingle();
-          if (tData) {
-            course.teacher_name = tData.full_name;
-          }
-        }
-      }
-    }
-
-    // Fetch lessons
-    const { data: lessons } = await supabase
-      .from("lessons")
-      .select("*")
-      .eq("booking_id", bookingId)
-      .order("starts_at", { ascending: true });
-
     return {
       success: true,
-      booking,
-      course,
-      lessons: lessons || []
+      booking: bookingData,
+      lessons: []
     };
   } catch (err: any) {
     console.error("Failed to run getBookingLessonsAction:", err);
