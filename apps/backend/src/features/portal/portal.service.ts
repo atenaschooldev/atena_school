@@ -41,6 +41,50 @@ export class PortalService {
 
     const bookingsList = rawBookings || [];
 
+    const courseIds = Array.from(new Set(bookingsList.map((b) => b.course_id || b.item_id).filter(Boolean)));
+    let coursesMap = new Map<string, any>();
+
+    if (courseIds.length > 0) {
+      const { data: cData } = await this.supabaseAdmin
+        .from('courses')
+        .select('id, name, title_it, price, teachers!courses_teacher_id_fkey(full_name)')
+        .in('id', courseIds);
+
+      if (cData) {
+        coursesMap = new Map(cData.map((c) => [c.id, c]));
+      }
+    }
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const enrichedBookings = bookingsList.map((b: any) => {
+      const cid = b.course_id || b.item_id;
+      const c = coursesMap.get(cid);
+      const title = c?.name || c?.title_it || b.course_name || 'Corso Atena School';
+      const coursePrice = c?.price ? Number(c.price) : Number(b.amount_paid || 0);
+      const teacherName = (c as any)?.teachers?.full_name || 'Atena School';
+
+      const bdateStr = b.start_date || b.booking_date || b.created_at;
+      let isFuture = true;
+      if (bdateStr) {
+        const d = new Date(bdateStr);
+        if (!isNaN(d.getTime())) {
+          isFuture = d.getTime() >= now.getTime();
+        }
+      }
+
+      return {
+        ...b,
+        item_id: cid,
+        item_title: title,
+        course_name: title,
+        price: coursePrice,
+        teacher_name: teacherName,
+        is_future: isFuture,
+      };
+    });
+
     const { data: dbProfile } = await this.supabaseAdmin
       .from('users')
       .select('*')
@@ -61,7 +105,7 @@ export class PortalService {
           ...(pData?.phone ? { phone: pData.phone } : {}),
         },
       },
-      bookings: bookingsList,
+      bookings: enrichedBookings,
     };
   }
 

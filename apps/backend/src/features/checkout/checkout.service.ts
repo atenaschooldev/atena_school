@@ -157,6 +157,43 @@ export class CheckoutService {
       throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
     }
 
+    // Auto-create / update student record in public.students table
+    const sEmail = dto.isForChild ? (dto.studentEmail || dto.email) : dto.email;
+    const sName = studentName || purchaserName || 'Studente';
+    const sTaxCode = dto.isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
+
+    if (sEmail || sTaxCode) {
+      try {
+        const { data: existingStudent } = await this.supabaseAdmin
+          .from('students')
+          .select('id')
+          .or(`email.ilike.${sEmail},tax_code.ilike.${sTaxCode}`)
+          .maybeSingle();
+
+        if (!existingStudent) {
+          await this.supabaseAdmin.from('students').insert({
+            full_name: sName || 'Studente',
+            email: sEmail,
+            phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
+            tax_code: sTaxCode || null,
+            birth_date: dto.studentBirthDate || null,
+            status: 'active',
+            annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid,
+          });
+        } else {
+          await this.supabaseAdmin.from('students').update({
+            full_name: sName || undefined,
+            phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
+            tax_code: sTaxCode || undefined,
+            birth_date: dto.studentBirthDate || undefined,
+            annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid ? true : undefined,
+          }).eq('id', existingStudent.id);
+        }
+      } catch (sErr) {
+        console.warn('Auto-create student error in backend checkout:', sErr);
+      }
+    }
+
     return { success: true, bookingId: booking.id, booking };
   }
 
