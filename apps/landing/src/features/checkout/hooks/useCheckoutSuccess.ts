@@ -34,12 +34,16 @@ export function useCheckoutSuccess() {
     fetchUser();
   }, []);
 
+  const fetchedRef = useRef(false);
+
   useEffect(() => {
     async function initReceipt() {
       if (!bookingId) {
         setVerifying(false);
         return;
       }
+      if (fetchedRef.current) return;
+      fetchedRef.current = true;
 
       if (sessionId) {
         // Stripe payment confirmation

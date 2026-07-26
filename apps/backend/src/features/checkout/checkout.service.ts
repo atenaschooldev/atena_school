@@ -204,75 +204,78 @@ export class CheckoutService {
   }
 
   async createStripeSession(dto: CreateReservationDto) {
-    const reservation = await this.createReservation(dto);
-    const booking = reservation.booking;
+    const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
-      {
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: booking.course_name,
-          },
-          unit_amount: Math.round(Number(booking.amount_paid - booking.registration_fee) * 100),
-        },
-        quantity: 1,
-      },
-    ];
-
-    if (booking.registration_fee > 0) {
-      lineItems.push({
-        price_data: {
-          currency: 'eur',
-          product_data: {
-            name: "Quota d'iscrizione annuale (Atena School)",
-          },
-          unit_amount: 3000,
-        },
-        quantity: 1,
-      });
+    let resolvedItemId = dto.itemId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
+    if (!isUuid) {
+      const { data: course } = await this.supabaseAdmin.from('courses').select('id').eq('slug', dto.itemId).maybeSingle();
+      if (course?.id) {
+        resolvedItemId = course.id;
+      }
     }
 
-    const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || 'https://atena-school.vercel.app';
-
-    const session = await this.stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      customer_email: dto.email,
-      line_items: lineItems,
-      mode: 'payment',
-      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}&email=${encodeURIComponent(dto.email)}`,
-      cancel_url: `${siteUrl}/checkout/course/${dto.itemId}`,
-      metadata: {
-        booking_id: booking.id,
+    const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('create-checkout-session', {
+      body: {
+        itemType: dto.itemType || 'course',
+        itemId: resolvedItemId,
+        date: dto.date,
+        time: dto.time,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        customerEmail: dto.email,
+        phone: dto.phone,
+        notes: dto.notes,
+        studentFirstName: dto.studentFirstName,
+        studentLastName: dto.studentLastName,
+        studentEmail: dto.studentEmail,
+        studentPhone: dto.studentPhone,
+        purchaserTaxCode: dto.purchaserTaxCode,
+        taxCode: dto.studentTaxCode,
+        studentBirthDate: dto.studentBirthDate,
+        needsCompanyInvoice: dto.needsCompanyInvoice,
+        sdiCode: dto.sdiCode,
+        pecEmail: dto.pecEmail,
+        includeRegistrationFee: dto.includeRegistrationFee,
+        isForChild: dto.isForChild,
+        origin: siteUrl,
       },
     });
 
-    return { success: true, url: session.url, bookingId: booking.id };
+    if (edgeErr || !edgeData?.url) {
+      let detailMessage = edgeErr?.message || edgeData?.error || 'Ошибка создания сессии оплаты в Edge Function';
+      if (edgeErr && (edgeErr as any).context) {
+        try {
+          const body = await (edgeErr as any).context.json();
+          if (body?.error) detailMessage = body.error;
+        } catch {}
+      }
+      throw new BadRequestException(detailMessage);
+    }
+
+    return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
   }
 
   async verifyPayment(dto: VerifyPaymentDto) {
-    const session = await this.stripe.checkout.sessions.retrieve(dto.sessionId);
-    if (session.payment_status !== 'paid') {
-      throw new BadRequestException('Платеж не завершен в Stripe');
+    const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('verify-payment', {
+      body: {
+        session_id: dto.sessionId,
+        booking_id: dto.bookingId,
+      },
+    });
+
+    if (edgeErr || edgeData?.error) {
+      let detailMessage = edgeErr?.message || edgeData?.error || 'Ошибка подтверждения платежа';
+      if (edgeErr && (edgeErr as any).context) {
+        try {
+          const body = await (edgeErr as any).context.json();
+          if (body?.error) detailMessage = body.error;
+        } catch {}
+      }
+      throw new BadRequestException(detailMessage);
     }
 
-    const metaBookingId = session.metadata?.booking_id;
-    if (metaBookingId && metaBookingId !== dto.bookingId) {
-      throw new BadRequestException('Сессия Stripe не соответствует данному бронированию');
-    }
-
-    await this.supabaseAdmin
-      .from('bookings')
-      .update({ payment_status: 'paid', session_id: dto.sessionId })
-      .eq('id', dto.bookingId);
-
-    const { data: booking } = await this.supabaseAdmin
-      .from('bookings')
-      .select('*')
-      .eq('id', dto.bookingId)
-      .single();
-
-    return { success: true, booking };
+    return { success: true, booking: edgeData?.booking };
   }
 
   async handleStripeWebhook(body: any, signature: string) {

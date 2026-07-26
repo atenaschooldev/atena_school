@@ -42,10 +42,39 @@ export async function checkRegistrationFeeStatusAction(params: {
   }
 }
 
+function normalizeReservationPayload(payload: any) {
+  if (!payload) return {};
+  const v = payload.values || payload;
+  return {
+    itemId: String(payload.itemId || payload.id || v.itemId || v.id || ""),
+    itemType: payload.itemType || payload.type || v.itemType || v.type || "course",
+    date: payload.date || payload.dateParam || v.date || v.dateParam || "",
+    time: payload.time || payload.timeParam || v.time || v.timeParam || "",
+    firstName: String(v.firstName || payload.firstName || ""),
+    lastName: String(v.lastName || payload.lastName || ""),
+    email: String(v.email || payload.email || ""),
+    phone: String(v.phone || payload.phone || ""),
+    isForChild: Boolean(v.isForChild ?? payload.isForChild),
+    studentFirstName: v.studentFirstName || payload.studentFirstName,
+    studentLastName: v.studentLastName || payload.studentLastName,
+    studentEmail: v.studentEmail || payload.studentEmail,
+    studentPhone: v.studentPhone || payload.studentPhone,
+    purchaserTaxCode: v.purchaserTaxCode || payload.purchaserTaxCode,
+    studentTaxCode: v.studentTaxCode || payload.studentTaxCode,
+    studentBirthDate: v.studentBirthDate || payload.studentBirthDate,
+    needsCompanyInvoice: v.needsCompanyInvoice ?? payload.needsCompanyInvoice,
+    sdiCode: v.sdiCode || payload.sdiCode,
+    pecEmail: v.pecEmail || payload.pecEmail,
+    includeRegistrationFee: v.includeRegistrationFee ?? payload.includeRegistrationFee,
+    notes: v.notes || payload.notes,
+  };
+}
+
 export async function createOrUpdateReservationServerAction(payload: any) {
   try {
     const api = getApi();
-    const res = await api.checkout.createReservation(payload);
+    const dto = normalizeReservationPayload(payload);
+    const res = await api.checkout.createReservation(dto);
     if (res.success && res.booking) {
       return {
         success: true,
@@ -63,7 +92,8 @@ export async function createOrUpdateReservationServerAction(payload: any) {
 export async function initiateStripePaymentAction(payload: any) {
   try {
     const api = getApi();
-    const res = await api.checkout.createStripeSession(payload);
+    const dto = normalizeReservationPayload(payload);
+    const res = await api.checkout.createStripeSession(dto);
     if (res.success && res.url) {
       return { success: true, url: res.url, bookingId: res.bookingId };
     }
