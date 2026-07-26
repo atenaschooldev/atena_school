@@ -1,19 +1,25 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 async function getAuthToken(): Promise<string | null> {
+  try {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) return session.access_token;
+  } catch {}
+
   const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();
-  let token = "";
   for (const c of allCookies) {
     if (c.name.includes("auth-token") || c.name.includes("access-token")) {
       try {
         const parsed = JSON.parse(c.value);
-        token = parsed.access_token || parsed[0]?.access_token || c.value;
-        if (token) return token;
+        const tok = parsed.access_token || parsed[0]?.access_token || c.value;
+        if (tok && typeof tok === "string") return tok;
       } catch {
-        return c.value;
+        if (c.value) return c.value;
       }
     }
   }

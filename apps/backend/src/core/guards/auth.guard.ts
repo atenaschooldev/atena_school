@@ -45,12 +45,18 @@ export class AuthGuard implements CanActivate {
         };
 
         // Auto-sync user to public.users table in TypeScript (replacing SQL trigger)
-        const fullName = user.user_metadata?.full_name || (user.user_metadata?.first_name ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim() : '');
+        const meta = user.user_metadata || {};
+        const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (user.email ? user.email.split('@')[0] : 'User');
+        const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
+        const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
+
         this.supabaseAdmin.from('users').upsert({
           id: user.id,
           email: user.email,
-          full_name: fullName || 'User',
-        }, { onConflict: 'id' }).then(() => {});
+          first_name: firstName,
+          last_name: lastName,
+          full_name: fullName,
+        }, { onConflict: 'id' }).then(() => {}, () => {});
 
         return true;
       }
@@ -65,12 +71,18 @@ export class AuthGuard implements CanActivate {
           user_metadata: payload.user_metadata,
         };
 
-        const fullName = payload.user_metadata?.full_name || '';
+        const meta = payload.user_metadata || {};
+        const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (payload.email ? payload.email.split('@')[0] : 'User');
+        const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
+        const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
+
         this.supabaseAdmin.from('users').upsert({
           id: payload.sub,
           email: payload.email,
-          full_name: fullName || 'User',
-        }, { onConflict: 'id' }).then(() => {});
+          first_name: firstName,
+          last_name: lastName,
+          full_name: fullName,
+        }, { onConflict: 'id' }).then(() => {}, () => {});
 
         return true;
       }
