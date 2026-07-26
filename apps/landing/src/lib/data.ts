@@ -168,134 +168,62 @@ export const getTeachers = unstable_cache(
 );
 
 export async function getCourses() {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-  if (backendUrl) {
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/checkout/courses`);
-      if (res.ok) {
-        const bData = await res.json();
-        if (bData.success && bData.courses) {
-          return bData.courses.map((c: any) => ({
-            ...c,
-            slug: (c.slug as string) || slugify(c.name || ''),
-            title_it: c.name || '',
-            title_en: c.name || '',
-            description_it: c.description || '',
-            description_en: c.description || '',
-            price: Number(c.price) || 0,
-            price_eur: Number(c.price) || 0,
-          }));
-        }
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/checkout/courses`, { cache: 'no-store' });
+    if (res.ok) {
+      const bData = await res.json();
+      if (bData.success && bData.courses) {
+        return bData.courses.map((c: any) => ({
+          ...c,
+          slug: (c.slug as string) || slugify(c.name || ''),
+          title_it: c.name || '',
+          title_en: c.name || '',
+          description_it: c.description || '',
+          description_en: c.description || '',
+          price: Number(c.price) || 0,
+          price_eur: Number(c.price) || 0,
+        }));
       }
-    } catch (bErr) {
-      console.warn("Backend getCourses fallback:", bErr);
     }
+  } catch (bErr) {
+    console.error("Backend getCourses error:", bErr);
   }
-
-  const supabase = createClient();
-  let { data, error } = await supabase
-    .from('courses')
-    .select('*, teachers!courses_teacher_id_fkey(teacher_id, full_name)')
-    .in('status', ['active', 'published'])
-    .returns<CourseRow[]>();
-  
-  if (error || !data || data.length === 0) {
-    const fallback = await supabase
-      .from('courses')
-      .select('*')
-      .in('status', ['active', 'published'])
-      .returns<CourseRow[]>();
-    data = fallback.data;
-  }
-
-  return (data || []).map((c) => ({
-    ...c,
-    slug: (c.slug as string) || slugify(c.name || ''),
-    title_it: c.name || '',
-    title_en: c.name || '',
-    description_it: c.description || '',
-    description_en: c.description || '',
-    price: Number(c.price) || 0,
-    price_eur: Number(c.price) || 0,
-    teacher_name: c.teachers?.full_name || undefined,
-  }));
+  return [];
 }
 
 export const getBlogPosts = unstable_cache(
   async () => {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .returns<BlogPostRow[]>();
-
-    return (data || []).map((p) => ({
-      ...p,
-      title_it: p.title_it || '',
-      title_en: p.title_en || '',
-      excerpt_it: p.excerpt_it || '',
-      excerpt_en: p.excerpt_en || '',
-      image_placeholder: p.image_placeholder || '',
-    }));
+    return [];
   },
   ['blog-posts-data'],
   { tags: [CACHE_TAGS.BLOG], revalidate: CACHE_TTL }
 );
 
 export async function getSingleCourse(id: string) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-  if (backendUrl) {
-    try {
-      const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`);
-      if (res.ok) {
-        const bData = await res.json();
-        const c = bData.item || bData.course;
-        if (c) {
-          return {
-            ...c,
-            slug: (c.slug as string) || slugify(c.name || ''),
-            title_it: c.name || '',
-            title_en: c.name || '',
-            description_it: c.description || '',
-            description_en: c.description || '',
-            price: Number(c.price) || 0,
-            price_eur: Number(c.price) || 0,
-          };
-        }
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`, { cache: 'no-store' });
+    if (res.ok) {
+      const bData = await res.json();
+      const c = bData.item || bData.course;
+      if (c) {
+        return {
+          ...c,
+          slug: (c.slug as string) || slugify(c.name || ''),
+          title_it: c.name || '',
+          title_en: c.name || '',
+          description_it: c.description || '',
+          description_en: c.description || '',
+          price: Number(c.price) || 0,
+          price_eur: Number(c.price) || 0,
+        };
       }
-    } catch (bErr) {
-      console.warn("Backend getSingleCourse fallback:", bErr);
     }
+  } catch (bErr) {
+    console.error("Backend getSingleCourse error:", bErr);
   }
-
-  const supabase = createClient();
-  let { data, error } = await supabase
-    .from('courses')
-    .select('*, teachers(teacher_id, full_name)')
-    .eq('id', id)
-    .single<CourseRow>();
-  
-  if (error || !data) {
-    const fallback = await supabase
-      .from('courses')
-      .select('*')
-      .eq('id', id)
-      .single<CourseRow>();
-    data = fallback.data;
-  }
-
-  return data ? {
-    ...data,
-    title_it: data.name || '',
-    title_en: data.name || '',
-    description_it: data.description || '',
-    description_en: data.description || '',
-    price: Number(data.price) || 0,
-    price_eur: Number(data.price) || 0,
-    teacher_name: data.teachers?.full_name || undefined,
-  } : null;
+  return null;
 }
 
 export const getSingleBlogPost = (slug: string) => unstable_cache(

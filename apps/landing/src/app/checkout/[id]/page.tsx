@@ -40,6 +40,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     timeParam,
     actionRef,
     onSubmit,
+    fillTestData,
   } = useCheckout(id);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
@@ -119,13 +120,13 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {!user && (
-                <Link
-                  href={`/autenticazione/accedi?redirectTo=${encodeURIComponent(`/checkout/${id}${dateParam ? `?date=${dateParam}&time=${timeParam}` : ""}`)}`}
+                <a
+                  href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/autenticazione/accedi?redirectTo=${encodeURIComponent(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/checkout/${id}${dateParam ? `?date=${dateParam}&time=${timeParam}` : ""}`)}`}
                   className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl transition-colors"
                 >
                   <SignIn className="w-4 h-4" />
                   Hai già un account?
-                </Link>
+                </a>
               )}
             </div>
 
@@ -150,9 +151,18 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
             {/* Purchaser / Parent Fields */}
             <div className="space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                {watch("isForChild") ? "Dati del Genitore / Acquirente" : "Dati Personali"}
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+                  {watch("isForChild") ? "Dati del Genitore / Acquirente" : "Dati Personali"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={fillTestData}
+                  className="px-2.5 py-1 text-[11px] font-extrabold text-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 border border-[#F8861D]/30 rounded-lg transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                >
+                  🧪 Auto-Fill тестовыми данными
+                </button>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

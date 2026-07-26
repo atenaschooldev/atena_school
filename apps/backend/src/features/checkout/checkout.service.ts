@@ -157,7 +157,63 @@ export class CheckoutService {
       throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
     }
 
-    // Auto-create / update student record in public.students table
+    const purchaserEmail = dto.email;
+    const purchaserTaxCode = dto.purchaserTaxCode || '';
+
+    // Auto-link Auth User if purchaser email exists in auth.users
+    let linkedUserId: string | null = null;
+    if (purchaserEmail) {
+      try {
+        const { data: authUsers } = await this.supabaseAdmin.auth.admin.listUsers();
+        const foundUser = authUsers?.users?.find((u) => u.email?.toLowerCase() === purchaserEmail.toLowerCase());
+        if (foundUser) linkedUserId = foundUser.id;
+      } catch (aErr) {
+        console.warn('Auth user lookup error:', aErr);
+      }
+    }
+
+    if (linkedUserId) {
+      await this.supabaseAdmin.from('bookings').update({ user_id: linkedUserId }).eq('id', booking.id);
+      booking.user_id = linkedUserId;
+    }
+
+    // Handle Parent student record & parent_id linking when isForChild is true
+    let parentStudentId: string | null = null;
+    if (dto.isForChild && (purchaserEmail || purchaserTaxCode)) {
+      try {
+        const pOrConds: string[] = [];
+        if (purchaserEmail) pOrConds.push(`email.ilike.${purchaserEmail}`);
+        if (purchaserTaxCode) pOrConds.push(`tax_code.ilike.${purchaserTaxCode}`);
+
+        const { data: existingParent } = await this.supabaseAdmin
+          .from('students')
+          .select('id')
+          .or(pOrConds.join(','))
+          .maybeSingle();
+
+        if (existingParent?.id) {
+          parentStudentId = existingParent.id;
+        } else {
+          const { data: newParent } = await this.supabaseAdmin
+            .from('students')
+            .insert({
+              full_name: purchaserName || 'Genitore',
+              email: purchaserEmail || null,
+              phone: dto.phone || null,
+              tax_code: purchaserTaxCode || null,
+              status: 'active',
+              student_user_id: linkedUserId || null,
+            })
+            .select('id')
+            .single();
+          if (newParent?.id) parentStudentId = newParent.id;
+        }
+      } catch (pErr) {
+        console.warn('Parent student creation error:', pErr);
+      }
+    }
+
+    // Create / Update Student Record
     const sEmail = dto.isForChild ? (dto.studentEmail || dto.email) : dto.email;
     const sName = studentName || purchaserName || 'Studente';
     const sTaxCode = dto.isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
@@ -168,6 +224,15 @@ export class CheckoutService {
         if (sEmail) orConditions.push(`email.ilike.${sEmail}`);
         if (sTaxCode) orConditions.push(`tax_code.ilike.${sTaxCode}`);
 
+        let studentAuthUserId: string | null = null;
+        if (sEmail) {
+          try {
+            const { data: authUsers } = await this.supabaseAdmin.auth.admin.listUsers();
+            const foundStudentUser = authUsers?.users?.find((u) => u.email?.toLowerCase() === sEmail.toLowerCase());
+            if (foundStudentUser) studentAuthUserId = foundStudentUser.id;
+          } catch {}
+        }
+
         if (orConditions.length > 0) {
           const { data: existingStudent } = await this.supabaseAdmin
             .from('students')
@@ -175,24 +240,59 @@ export class CheckoutService {
             .or(orConditions.join(','))
             .maybeSingle();
 
+          let studentId: string | null = null;
+
           if (!existingStudent) {
-            await this.supabaseAdmin.from('students').insert({
-              full_name: sName || 'Studente',
-              email: sEmail,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
-              tax_code: sTaxCode || null,
-              birth_date: dto.studentBirthDate || null,
-              status: 'active',
-              annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid,
-            });
+            const { data: newStudent } = await this.supabaseAdmin
+              .from('students')
+              .insert({
+                full_name: sName || 'Studente',
+                email: sEmail,
+                phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
+                tax_code: sTaxCode || null,
+                birth_date: dto.studentBirthDate || null,
+                parent_id: parentStudentId || null,
+                student_user_id: studentAuthUserId || null,
+                status: 'active',
+                annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid,
+              })
+              .select('id')
+              .single();
+
+            studentId = newStudent?.id || null;
           } else {
-            await this.supabaseAdmin.from('students').update({
-              full_name: sName || undefined,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
-              tax_code: sTaxCode || undefined,
-              birth_date: dto.studentBirthDate || undefined,
-              annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid ? true : undefined,
-            }).eq('id', existingStudent.id);
+            studentId = existingStudent.id;
+            await this.supabaseAdmin
+              .from('students')
+              .update({
+                full_name: sName || undefined,
+                phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
+                tax_code: sTaxCode || undefined,
+                birth_date: dto.studentBirthDate || undefined,
+                parent_id: parentStudentId || undefined,
+                student_user_id: studentAuthUserId || undefined,
+                annual_fee_paid: regFee > 0 || feeStatus.annualFeePaid ? true : undefined,
+              })
+              .eq('id', existingStudent.id);
+          }
+
+          if (studentId) {
+            await this.supabaseAdmin.from('bookings').update({ student_id: studentId }).eq('id', booking.id);
+          }
+
+          if (regFee > 0 || feeStatus.annualFeePaid) {
+            await this.supabaseAdmin.from('annual_memberships').upsert({
+              tax_code: sTaxCode || null,
+              email: sEmail || null,
+              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
+              academic_year: '2026/2027',
+              status: 'active',
+              student_id: studentId || null,
+              user_id: linkedUserId || studentAuthUserId || null,
+              booking_id: booking.id,
+              paid_at: new Date().toISOString(),
+              expires_at: '2027-08-31T23:59:59.000Z',
+            }, { onConflict: 'booking_id' });
           }
         }
       } catch (sErr) {
@@ -231,7 +331,7 @@ export class CheckoutService {
         studentEmail: dto.studentEmail,
         studentPhone: dto.studentPhone,
         purchaserTaxCode: dto.purchaserTaxCode,
-        taxCode: dto.studentTaxCode,
+        taxCode: dto.studentTaxCode || dto.purchaserTaxCode,
         studentBirthDate: dto.studentBirthDate,
         needsCompanyInvoice: dto.needsCompanyInvoice,
         sdiCode: dto.sdiCode,

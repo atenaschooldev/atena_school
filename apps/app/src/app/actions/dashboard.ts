@@ -1,97 +1,45 @@
 "use server";
 
-import { createClient as createServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 
 async function getAuthToken(): Promise<string | null> {
-  const supabase = createServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session?.access_token) return session.access_token;
-
   const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();
-  const authCookie = allCookies.find((c) => c.name.includes("auth-token") || c.name.includes("access-token"));
-  if (authCookie) {
-    try {
-      const parsed = JSON.parse(authCookie.value);
-      return parsed.access_token || parsed[0] || null;
-    } catch {
-      return authCookie.value;
+  let token = "";
+  for (const c of allCookies) {
+    if (c.name.includes("auth-token") || c.name.includes("access-token")) {
+      try {
+        const parsed = JSON.parse(c.value);
+        token = parsed.access_token || parsed[0]?.access_token || c.value;
+        if (token) return token;
+      } catch {
+        return c.value;
+      }
     }
   }
   return null;
 }
 
-function getBackendUrl(): string | null {
-  return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || null;
+function getBackendUrl(): string {
+  return process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
 }
 
 // ─── getDashboardDataAction ───────────────────────────────────────────────────
 
 export async function getDashboardDataAction() {
   try {
-    const supabase = createServerClient();
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return { success: false, user: null, bookings: [] };
+    const token = await getAuthToken();
+    if (!token) return { success: false, user: null, bookings: [] };
 
     const backendUrl = getBackendUrl();
-    if (backendUrl) {
-      try {
-        const token = await getAuthToken();
-        if (token) {
-          const res = await fetch(`${backendUrl}/api/v1/portal/dashboard`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) return res.json();
-        }
-      } catch (bErr) {
-        console.warn("Backend getDashboardDataAction fallback:", bErr);
-      }
-    }
-
-    // Fallback: direct Supabase read
-    const userEmail = (user.email || "").trim().toLowerCase();
-    const orConds = [`user_id.eq.${user.id}`];
-    if (userEmail) {
-      orConds.push(`student_email.ilike.${userEmail}`);
-      orConds.push(`purchaser_email.ilike.${userEmail}`);
-    }
-
-    const [bookingsRes, profileRes] = await Promise.all([
-      (supabase as any).from("bookings").select("*, courses(*)").or(orConds.join(",")).order("created_at", { ascending: false }),
-      (supabase as any).from("users").select("*").eq("id", user.id).maybeSingle(),
-    ]);
-
-    const dbProfile = profileRes.data as any;
-    const pData = dbProfile || {};
-    const dbFullName = pData.full_name || (pData.first_name ? `${pData.first_name} ${pData.last_name || ""}`.trim() : "");
-
-    const bookings = (bookingsRes.data || []).map((b: any) => {
-      const course = b.courses || {};
-      return {
-        ...b,
-        item_id: b.course_id || b.item_id,
-        item_title: course.name || "Corso",
-        course_name: course.name || "Corso",
-        teacher_name: course.teacher_name || "Staff Atena",
-        price: Number(course.price) || Number(b.amount_paid) || 0,
-        is_future: b.start_date ? new Date(b.start_date) >= new Date() : true,
-      };
+    const res = await fetch(`${backendUrl}/api/v1/portal/dashboard`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
     });
 
-    return {
-      success: true,
-      user: {
-        ...user,
-        dbProfile: dbProfile || null,
-        user_metadata: {
-          ...user.user_metadata,
-          ...(dbFullName ? { custom_full_name: dbFullName, full_name: dbFullName } : {}),
-          ...(pData.phone ? { phone: pData.phone } : {}),
-        },
-      },
-      bookings,
-    };
+    if (res.ok) return res.json();
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, user: null, bookings: [], error: errData.message || "Ошибка получения дашборда" };
   } catch (err: any) {
     console.error("getDashboardDataAction error:", err);
     return { success: false, user: null, bookings: [], error: err.message };
@@ -102,39 +50,19 @@ export async function getDashboardDataAction() {
 
 export async function updateUserProfileAction(params: { profileName: string; profilePhone: string }) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Unauthorized" };
+    const token = await getAuthToken();
+    if (!token) return { success: false, error: "Unauthorized" };
 
     const backendUrl = getBackendUrl();
-    if (backendUrl) {
-      try {
-        const token = await getAuthToken();
-        if (token) {
-          const res = await fetch(`${backendUrl}/api/v1/portal/profile`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify(params),
-          });
-          if (res.ok) return res.json();
-        }
-      } catch (bErr) {
-        console.warn("Backend updateUserProfileAction fallback:", bErr);
-      }
-    }
-
-    // Fallback: direct Supabase write
-    const parts = params.profileName.trim().split(" ");
-    await (supabase as any).from("users").upsert({
-      id: user.id,
-      email: user.email,
-      full_name: params.profileName,
-      first_name: parts[0] || "",
-      last_name: parts.slice(1).join(" ") || "",
-      phone: params.profilePhone,
-      updated_at: new Date().toISOString(),
+    const res = await fetch(`${backendUrl}/api/v1/portal/profile`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(params),
     });
-    return { success: true };
+
+    if (res.ok) return res.json();
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, error: errData.message || "Impossibile aggiornare il profilo" };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -144,40 +72,18 @@ export async function updateUserProfileAction(params: { profileName: string; pro
 
 export async function getBookingLessonsAction(bookingId: string) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Unauthorized" };
+    const token = await getAuthToken();
+    if (!token) return { success: false, error: "Unauthorized" };
 
     const backendUrl = getBackendUrl();
-    if (backendUrl) {
-      try {
-        const token = await getAuthToken();
-        if (token) {
-          const res = await fetch(`${backendUrl}/api/v1/portal/bookings/${bookingId}/lessons`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (res.ok) return res.json();
-        }
-      } catch (bErr) {
-        console.warn("Backend getBookingLessonsAction fallback:", bErr);
-      }
-    }
+    const res = await fetch(`${backendUrl}/api/v1/portal/bookings/${bookingId}/lessons`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
 
-    // Fallback: direct Supabase read
-    const { data: booking } = await (supabase as any).from("bookings").select("*").eq("id", bookingId).single();
-    if (!booking) return { success: false, error: "Prenotazione non trovata" };
-
-    const uEmail = (user.email || "").trim().toLowerCase();
-    const isOwner = booking.user_id === user.id ||
-      (uEmail && booking.student_email?.toLowerCase() === uEmail) ||
-      (uEmail && booking.purchaser_email?.toLowerCase() === uEmail);
-
-    if (!isOwner) return { success: false, error: "Non autorizzato" };
-
-    const { data: lessons } = await (supabase as any)
-      .from("lessons").select("*").eq("booking_id", bookingId).order("starts_at");
-
-    return { success: true, booking, course: null, lessons: lessons || [], max_lessons: 8 };
+    if (res.ok) return res.json();
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, error: errData.message || "Prenotazione non trovata" };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
@@ -187,72 +93,19 @@ export async function getBookingLessonsAction(bookingId: string) {
 
 export async function scheduleNextLessonAction(bookingId: string, dateStr: string, timeStr: string) {
   try {
-    const supabase = createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: "Non autorizzato" };
+    const token = await getAuthToken();
+    if (!token) return { success: false, error: "Non autorizzato" };
 
     const backendUrl = getBackendUrl();
-    if (backendUrl) {
-      try {
-        const token = await getAuthToken();
-        if (token) {
-          const res = await fetch(`${backendUrl}/api/v1/portal/bookings/${bookingId}/schedule-lesson`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ dateStr, timeStr }),
-          });
-          if (res.ok) return res.json();
-          const errData = await res.json();
-          return { success: false, error: errData.message || "Impossibile programmare la lezione" };
-        }
-      } catch (bErr) {
-        console.warn("Backend scheduleNextLessonAction fallback:", bErr);
-      }
-    }
+    const res = await fetch(`${backendUrl}/api/v1/portal/bookings/${bookingId}/schedule-lesson`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ dateStr, timeStr }),
+    });
 
-    // Fallback: direct Supabase write
-    const { data: booking } = await (supabase as any).from("bookings").select("*").eq("id", bookingId).single();
-    if (!booking) return { success: false, error: "Prenotazione non trovata" };
-
-    const uEmail = (user.email || "").trim().toLowerCase();
-    const isOwner = booking.user_id === user.id ||
-      (uEmail && booking.student_email?.toLowerCase() === uEmail) ||
-      (uEmail && booking.purchaser_email?.toLowerCase() === uEmail);
-
-    if (!isOwner) return { success: false, error: "Non autorizzato" };
-
-    const timeMatch = (timeStr || "").match(/^(\d{2}):(\d{2})$/);
-    if (!timeMatch) return { success: false, error: "Formato orario non valido. Usa HH:MM." };
-
-    const startHour = parseInt(timeMatch[1], 10);
-    const startMin = parseInt(timeMatch[2], 10);
-    const baseDate = new Date(dateStr);
-
-    const romeStr = baseDate.toLocaleString("en-US", { timeZone: "Europe/Rome" });
-    const utcStr = baseDate.toLocaleString("en-US", { timeZone: "UTC" });
-    const offset = Math.round((new Date(romeStr).getTime() - new Date(utcStr).getTime()) / (1000 * 60 * 60));
-
-    const startsAt = new Date(Date.UTC(
-      baseDate.getUTCFullYear(), baseDate.getUTCMonth(), baseDate.getUTCDate(),
-      startHour - offset, startMin, 0,
-    ));
-    let durationMinutes = 60;
-    const cid = booking.course_id || booking.item_id;
-    if (cid) {
-      const { data: course } = await (supabase as any).from("courses").select("lesson_duration_minutes").eq("id", cid).maybeSingle();
-      if (course?.lesson_duration_minutes) {
-        durationMinutes = Number(course.lesson_duration_minutes);
-      }
-    }
-    const endsAt = new Date(startsAt.getTime() + durationMinutes * 60 * 1000);
-
-    const { data: newLesson, error: insertErr } = await (supabase as any)
-      .from("lessons")
-      .insert({ booking_id: bookingId, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: "scheduled" })
-      .select().single();
-
-    if (insertErr) throw insertErr;
-    return { success: true, lesson: newLesson };
+    if (res.ok) return res.json();
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, error: errData.message || "Impossibile programmare la lezione" };
   } catch (err: any) {
     return { success: false, error: err.message || "Impossibile programmare la lezione" };
   }

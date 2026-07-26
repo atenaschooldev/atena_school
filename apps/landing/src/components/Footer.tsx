@@ -59,12 +59,12 @@ const Footer = () => {
           </div>
 
           {/* Top CTA Button */}
-          <Link
-            href="/autenticazione/accedi"
+          <a
+            href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/autenticazione/accedi`}
             className="w-full sm:w-auto text-center bg-white hover:bg-slate-100 text-slate-900 font-extrabold px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 select-none cursor-pointer"
           >
             Accedi alla piattaforma →
-          </Link>
+          </a>
         </div>
 
         {/* Main Columns Grid */}

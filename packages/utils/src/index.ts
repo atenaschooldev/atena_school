@@ -157,10 +157,12 @@ export function calculateLessonDates(
   const baseDate = new Date(startDateStr);
   if (isNaN(baseDate.getTime())) return [];
 
+  const isFlexible = dbScheduleType === "flexible" || courseType === "flexible";
+
   let startTime = dbStartTime || "10:00";
   let durationMinutes = dbDurationMinutes || 60;
 
-  if (!dbStartTime) {
+  if (!dbStartTime && timeStr) {
     const timeMatch = timeStr.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
     if (timeMatch) {
       startTime = timeMatch[1];
@@ -177,10 +179,25 @@ export function calculateLessonDates(
 
   const [startHour, startMin] = startTime.split(":").map((n) => parseInt(n, 10));
 
+  if (isFlexible) {
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+    const day = baseDate.getDate();
+
+    const candidateLocalStart = new Date(year, month, day, startHour, startMin, 0);
+    const romeOffsetHours = getRomeOffsetHours(candidateLocalStart);
+
+    const utcTimeMs = Date.UTC(year, month, day, startHour - romeOffsetHours, startMin, 0);
+    return [{
+      startsAt: new Date(utcTimeMs).toISOString(),
+      endsAt: new Date(utcTimeMs + durationMinutes * 60 * 1000).toISOString(),
+    }];
+  }
+
   let targetDays: number[] = [];
   if (dbScheduleDays && dbScheduleDays.length > 0) {
     targetDays = dbScheduleDays;
-  } else {
+  } else if (timeStr) {
     const timeLower = timeStr.toLowerCase();
     if (timeLower.includes("lunedì") || timeLower.includes("lunedi")) targetDays.push(1);
     if (timeLower.includes("martedì") || timeLower.includes("martedi")) targetDays.push(2);
@@ -189,19 +206,20 @@ export function calculateLessonDates(
     if (timeLower.includes("venerdì") || timeLower.includes("venerdi")) targetDays.push(5);
     if (timeLower.includes("sabato")) targetDays.push(6);
     if (timeLower.includes("domenica")) targetDays.push(0);
-
-    if (targetDays.length === 0) {
-      targetDays = [baseDate.getDay()];
-    }
   }
 
-  let totalLessonsNeeded = customMaxLessons || getDynamicMaxLessons("General Course", startDateStr, courseType, targetDays.length);
+  if (targetDays.length === 0) {
+    targetDays = [baseDate.getDay()];
+  }
+
+  const endDate = new Date(baseDate);
+  endDate.setMonth(endDate.getMonth() + 1);
 
   const lessons: ScheduledLesson[] = [];
   let currDate = new Date(baseDate);
   let attempts = 0;
 
-  while (lessons.length < totalLessonsNeeded && attempts < 90) {
+  while (currDate <= endDate && attempts < 60) {
     attempts++;
     const dayOfWeek = currDate.getDay();
 

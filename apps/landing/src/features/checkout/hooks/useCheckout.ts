@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { getSessionId } from "@/lib/utils";
+import { MOCK_CHECKOUT_DATA } from "../constants/mockData";
 
 export interface CheckoutFormValues {
   firstName: string;
@@ -158,9 +159,13 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         if (userRes.success && (userRes as any).user) {
           const currentUser = (userRes as any).user;
           setUser(currentUser);
-          const fullName = currentUser.user_metadata?.full_name || "";
+          const meta = currentUser.user_metadata || {};
+          const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
           const parts = fullName.split(" ");
-          const phone = currentUser.user_metadata?.phone || currentUser.phone || "";
+          const firstName = meta.first_name || parts[0] || "";
+          const lastName = meta.last_name || parts.slice(1).join(" ") || "";
+          const phone = meta.phone || currentUser.phone || "";
+          const taxCode = meta.tax_code || "";
 
           const hasPaidFee = userRes.annualFeePaid ?? false;
           setHasPaidAnnualFee(hasPaidFee);
@@ -169,10 +174,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           reset({
             email: currentUser.email || "",
             phone: phone,
-            firstName: parts[0] || "",
-            lastName: parts.slice(1).join(" ") || "",
-            taxCode: currentUser.user_metadata?.tax_code || "",
-            purchaserTaxCode: currentUser.user_metadata?.tax_code || "",
+            firstName: firstName,
+            lastName: lastName,
+            taxCode: taxCode,
+            purchaserTaxCode: taxCode,
             includeRegistrationFee: !hasPaidFee,
             notes: "",
           });
@@ -306,6 +311,35 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   };
 
+  const fillTestData = () => {
+    const isChild = formMethods.getValues("isForChild");
+    const { purchaser, student } = MOCK_CHECKOUT_DATA;
+
+    const pEmail = purchaser.emailPrefix.includes("@") 
+      ? purchaser.emailPrefix 
+      : `${purchaser.emailPrefix}@${purchaser.emailDomain}`;
+
+    const sEmail = student.studentEmailPrefix.includes("@") 
+      ? student.studentEmailPrefix 
+      : `${student.studentEmailPrefix}@${student.studentEmailDomain}`;
+
+    formMethods.setValue("firstName", purchaser.firstName, { shouldValidate: true });
+    formMethods.setValue("lastName", purchaser.lastName, { shouldValidate: true });
+    formMethods.setValue("email", pEmail, { shouldValidate: true });
+    formMethods.setValue("phone", purchaser.phone, { shouldValidate: true });
+    formMethods.setValue("purchaserTaxCode", purchaser.purchaserTaxCode, { shouldValidate: true });
+    formMethods.setValue("notes", MOCK_CHECKOUT_DATA.notes || "", { shouldValidate: true });
+
+    if (isChild) {
+      formMethods.setValue("studentFirstName", student.studentFirstName, { shouldValidate: true });
+      formMethods.setValue("studentLastName", student.studentLastName, { shouldValidate: true });
+      formMethods.setValue("studentEmail", sEmail, { shouldValidate: true });
+      formMethods.setValue("studentPhone", student.studentPhone, { shouldValidate: true });
+      formMethods.setValue("taxCode", student.taxCode, { shouldValidate: true });
+      formMethods.setValue("studentBirthDate", student.studentBirthDate, { shouldValidate: true });
+    }
+  };
+
   return {
     formMethods,
     item,
@@ -318,5 +352,6 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     timeParam,
     actionRef,
     onSubmit,
+    fillTestData,
   };
 }

@@ -45,28 +45,36 @@ export async function checkRegistrationFeeStatusAction(params: {
 function normalizeReservationPayload(payload: any) {
   if (!payload) return {};
   const v = payload.values || payload;
+  const isForChild = Boolean(v.isForChild ?? payload.isForChild);
+
+  const firstName = String(v.firstName || payload.firstName || "");
+  const lastName = String(v.lastName || payload.lastName || "");
+  const email = String(v.email || payload.email || "");
+  const phone = String(v.phone || payload.phone || "");
+  const purchaserTaxCode = String(v.purchaserTaxCode || payload.purchaserTaxCode || "");
+
   return {
     itemId: String(payload.itemId || payload.id || v.itemId || v.id || ""),
     itemType: payload.itemType || payload.type || v.itemType || v.type || "course",
     date: payload.date || payload.dateParam || v.date || v.dateParam || "",
     time: payload.time || payload.timeParam || v.time || v.timeParam || "",
-    firstName: String(v.firstName || payload.firstName || ""),
-    lastName: String(v.lastName || payload.lastName || ""),
-    email: String(v.email || payload.email || ""),
-    phone: String(v.phone || payload.phone || ""),
-    isForChild: Boolean(v.isForChild ?? payload.isForChild),
-    studentFirstName: v.studentFirstName || payload.studentFirstName,
-    studentLastName: v.studentLastName || payload.studentLastName,
-    studentEmail: v.studentEmail || payload.studentEmail,
-    studentPhone: v.studentPhone || payload.studentPhone,
-    purchaserTaxCode: v.purchaserTaxCode || payload.purchaserTaxCode,
-    studentTaxCode: v.studentTaxCode || payload.studentTaxCode,
-    studentBirthDate: v.studentBirthDate || payload.studentBirthDate,
-    needsCompanyInvoice: v.needsCompanyInvoice ?? payload.needsCompanyInvoice,
-    sdiCode: v.sdiCode || payload.sdiCode,
-    pecEmail: v.pecEmail || payload.pecEmail,
+    firstName,
+    lastName,
+    email,
+    phone,
+    isForChild,
+    purchaserTaxCode,
+    studentFirstName: isForChild ? (v.studentFirstName || payload.studentFirstName || "") : firstName,
+    studentLastName: isForChild ? (v.studentLastName || payload.studentLastName || "") : lastName,
+    studentEmail: isForChild ? (v.studentEmail || payload.studentEmail || "") : email,
+    studentPhone: isForChild ? (v.studentPhone || payload.studentPhone || "") : phone,
+    studentTaxCode: isForChild ? (v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "") : purchaserTaxCode,
+    studentBirthDate: v.studentBirthDate || payload.studentBirthDate || null,
+    needsCompanyInvoice: Boolean(v.needsCompanyInvoice ?? payload.needsCompanyInvoice),
+    sdiCode: v.sdiCode || payload.sdiCode || null,
+    pecEmail: v.pecEmail || payload.pecEmail || null,
     includeRegistrationFee: v.includeRegistrationFee ?? payload.includeRegistrationFee,
-    notes: v.notes || payload.notes,
+    notes: v.notes || payload.notes || "",
   };
 }
 
@@ -182,5 +190,41 @@ export async function fetchCartItemsAction(sessionId?: string | null) {
 }
 
 export async function getCurrentUserAction() {
-  return { success: false, user: null, error: "Landing is anonymous showcase", annualFeePaid: false };
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    
+    // Find Supabase JWT token from cookies
+    const allCookies = cookieStore.getAll();
+    let token = "";
+    for (const c of allCookies) {
+      if (c.name.includes("auth-token") || c.name.includes("access-token")) {
+        try {
+          const parsed = JSON.parse(c.value);
+          token = parsed.access_token || parsed[0]?.access_token || c.value;
+          if (token) break;
+        } catch {
+          token = c.value;
+        }
+      }
+    }
+
+    if (!token) {
+      return { success: false, user: null, annualFeePaid: false };
+    }
+
+    const api = getApi();
+    const res = (await api.portal.getDashboard(token)) as any;
+
+    if (res?.success && res?.user) {
+      return {
+        success: true,
+        user: res.user,
+        annualFeePaid: Boolean(res.user?.annualFeePaid || res.annualFeePaid),
+      };
+    }
+    return { success: false, user: null, annualFeePaid: false };
+  } catch (err: any) {
+    return { success: false, user: null, error: err.message, annualFeePaid: false };
+  }
 }

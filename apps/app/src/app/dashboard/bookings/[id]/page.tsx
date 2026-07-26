@@ -187,10 +187,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {booking.tax_code && (
+                {(booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code) && (
                   <div className="pt-2 border-t border-border/60 text-xs flex justify-between">
                     <span className="text-foreground/50">Codice Fiscale:</span>
-                    <span className="font-mono font-bold text-foreground">{booking.tax_code}</span>
+                    <span className="font-mono font-bold text-foreground">{booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code}</span>
                   </div>
                 )}
               </div>

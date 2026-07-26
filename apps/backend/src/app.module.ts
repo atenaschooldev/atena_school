@@ -21,6 +21,29 @@ import { HomeModule } from './features/home/home.module';
 import { CheckoutModule } from './features/checkout/checkout.module';
 import { PortalModule } from './features/portal/portal.module';
 
+const isCrmEnabled = process.env.ENABLE_CRM === 'true';
+
+const clientModules = [
+  CheckoutModule,
+  PortalModule,
+];
+
+const crmModules = isCrmEnabled ? [
+  AuthModule,
+  SettingsModule,
+  StudentsModule,
+  TeachersModule,
+  CoursesModule,
+  SchedulesModule,
+  AttendanceModule,
+  GradesModule,
+  DocumentsModule,
+  PaymentsModule,
+  MailModule,
+  ActivityLogsModule,
+  HomeModule,
+] : [];
+
 @Module({
   imports: [
     // Конфигурация приложения (.env)
@@ -32,24 +55,9 @@ import { PortalModule } from './features/portal/portal.module';
     SupabaseModule,
     PrismaModule,
 
-    // Бизнес-модули клиентов
-    CheckoutModule,
-    PortalModule,
-
-    // CRM Бизнес-модули
-    AuthModule,
-    SettingsModule,
-    StudentsModule,
-    TeachersModule,
-    CoursesModule,
-    SchedulesModule,
-    AttendanceModule,
-    GradesModule,
-    DocumentsModule,
-    PaymentsModule,
-    MailModule,
-    ActivityLogsModule,
-    HomeModule,
+    // Бизнес-модули клиентов (по умолчанию без CRM)
+    ...clientModules,
+    ...crmModules,
   ],
   controllers: [HealthController],
 })

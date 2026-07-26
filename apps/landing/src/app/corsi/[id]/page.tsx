@@ -1,7 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import CourseDetailClient from "./CourseDetailClient";
-import { fetchCourseAction } from "@/app/actions/booking";
+import { fetchCourseAction, getCurrentUserAction } from "@/app/actions/booking";
 import CourseSchema from "@/features/courses/components/CourseSchema";
 import { env } from "@/config/env";
 
@@ -67,8 +66,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const userRes = await getCurrentUserAction();
+  const user = userRes?.user || null;
 
   const title = course.title_it || course.name;
   const description = course.description_it || course.description || "";

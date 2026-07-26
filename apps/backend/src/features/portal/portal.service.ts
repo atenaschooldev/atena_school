@@ -33,14 +33,138 @@ export class PortalService {
 
     const cleanEmail = user.email ? user.email.trim().toLowerCase() : '';
 
-    if (cleanEmail) {
+    if (cleanEmail && user.id) {
+      let officialFullName: string | null = null;
+      let phoneFromBooking: string | null = null;
+      let userRole = 'student';
+
+      try {
+        const { data: userBookings } = await this.supabaseAdmin
+          .from('bookings')
+          .select('*')
+          .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`);
+
+        if (userBookings && userBookings.length > 0) {
+          const parentBooking = userBookings.find(
+            (b) => b.purchaser_email?.toLowerCase() === cleanEmail && b.student_email?.toLowerCase() !== cleanEmail,
+          );
+          if (parentBooking) {
+            userRole = 'parent';
+            phoneFromBooking = parentBooking.purchaser_phone || parentBooking.student_phone || null;
+            officialFullName = parentBooking.purchaser_name || null;
+          } else {
+            const studentBooking = userBookings.find((b) => b.student_email?.toLowerCase() === cleanEmail);
+            const anyB = studentBooking || userBookings[0];
+            const isPurchaser = anyB.purchaser_email?.toLowerCase() === cleanEmail;
+            phoneFromBooking = isPurchaser ? anyB.purchaser_phone : anyB.student_phone;
+            officialFullName = isPurchaser ? anyB.purchaser_name : (anyB.student_name || anyB.purchaser_name);
+          }
+        }
+      } catch {}
+
+      const meta = user.user_metadata || {};
+      const fallbackFirstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || cleanEmail.split('@')[0] || 'User';
+      const fallbackLastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
+
+      let firstName = fallbackFirstName;
+      let lastName = fallbackLastName;
+
+      if (officialFullName && officialFullName.trim() !== '') {
+        const parts = officialFullName.trim().split(' ');
+        firstName = parts[0] || fallbackFirstName;
+        lastName = parts.slice(1).join(' ') || fallbackLastName;
+      }
+
+      const calculatedFullName = `${firstName} ${lastName}`.trim();
+
+      try {
+        // Upsert public.users with official full name, role, and phone
+        await this.supabaseAdmin.from('users').upsert({
+          id: user.id,
+          email: cleanEmail,
+          first_name: firstName,
+          last_name: lastName,
+          full_name: calculatedFullName,
+          role: userRole,
+          phone: phoneFromBooking || null,
+          is_active: true,
+        }, { onConflict: 'id' });
+      } catch (uErr: any) {
+        this.logger.warn(`Users upsert error: ${uErr?.message || uErr}`);
+      }
+
       try {
         await this.supabaseAdmin.rpc('sync_user_profile_from_bookings', {
           p_user_id: user.id,
           p_email: cleanEmail,
         });
-      } catch (err: any) {
-        this.logger.warn(`Failed to sync profile from bookings for ${user.id}: ${err?.message || err}`);
+      } catch {}
+
+      try {
+        // Link bookings.user_id
+        await this.supabaseAdmin.from('bookings').update({ user_id: user.id })
+          .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`)
+          .is('user_id', null);
+      } catch (bErr: any) {
+        this.logger.warn(`Bookings link error: ${bErr?.message || bErr}`);
+      }
+
+      try {
+        // Link payments.user_id for all linked bookings
+        const { data: matchingBookings } = await this.supabaseAdmin
+          .from('bookings')
+          .select('id')
+          .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail},user_id.eq.${user.id}`);
+
+        if (matchingBookings && matchingBookings.length > 0) {
+          const bIds = matchingBookings.map((b) => b.id);
+          await this.supabaseAdmin.from('payments').update({ user_id: user.id })
+            .in('booking_id', bIds)
+            .is('user_id', null);
+        }
+      } catch (pErr: any) {
+        this.logger.warn(`Payments link error: ${pErr?.message || pErr}`);
+      }
+
+      try {
+        // Link students.student_user_id
+        await this.supabaseAdmin.from('students').update({ student_user_id: user.id })
+          .ilike('email', cleanEmail)
+          .is('student_user_id', null);
+      } catch (sErr: any) {
+        this.logger.warn(`Students link error: ${sErr?.message || sErr}`);
+      }
+
+      try {
+        // Link annual_memberships.user_id
+        await this.supabaseAdmin.from('annual_memberships').update({ user_id: user.id })
+          .ilike('email', cleanEmail)
+          .is('user_id', null);
+      } catch (mErr: any) {
+        this.logger.warn(`Memberships link error: ${mErr?.message || mErr}`);
+      }
+
+      // Link Parent / Child students.parent_id
+      try {
+        if (userRole === 'parent') {
+          const { data: parentBookings } = await this.supabaseAdmin
+            .from('bookings')
+            .select('student_email')
+            .ilike('purchaser_email', cleanEmail);
+
+          if (parentBookings && parentBookings.length > 0) {
+            for (const pb of parentBookings) {
+              if (pb.student_email && pb.student_email.toLowerCase() !== cleanEmail) {
+                await this.supabaseAdmin
+                  .from('students')
+                  .update({ parent_id: user.id })
+                  .ilike('email', pb.student_email.trim());
+              }
+            }
+          }
+        }
+      } catch (parErr: any) {
+        this.logger.warn(`Parent-child linking error: ${parErr?.message || parErr}`);
       }
     }
 
@@ -103,6 +227,19 @@ export class PortalService {
       };
     });
 
+    let annualFeePaid = false;
+    if (cleanEmail) {
+      try {
+        const { data: mem } = await this.supabaseAdmin
+          .from('annual_memberships')
+          .select('id')
+          .ilike('email', cleanEmail)
+          .eq('status', 'active')
+          .maybeSingle();
+        if (mem?.id) annualFeePaid = true;
+      } catch {}
+    }
+
     const { data: dbProfile } = await this.supabaseAdmin
       .from('users')
       .select('*')
@@ -114,13 +251,16 @@ export class PortalService {
 
     return {
       success: true,
+      annualFeePaid,
       user: {
         ...user,
+        annualFeePaid,
         dbProfile: dbProfile || null,
         user_metadata: {
           ...user.user_metadata,
           ...(dbFullName ? { custom_full_name: dbFullName, full_name: dbFullName } : {}),
           ...(pData?.phone ? { phone: pData.phone } : {}),
+          ...(pData?.tax_code ? { tax_code: pData.tax_code } : {}),
         },
       },
       bookings: enrichedBookings,
