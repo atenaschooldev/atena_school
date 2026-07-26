@@ -24,17 +24,8 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
 
     const list = await this.prisma.schedule.findMany({
       where,
-      include: {
-        course: true,
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        startDate: 'asc',
-      },
+      include: { course: true },
+      orderBy: { startDate: 'asc' },
     });
 
     return list.map((s) => this.mapToEntity(s));
@@ -43,14 +34,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
   async findOne(id: string): Promise<ScheduleEntity | null> {
     const s = await this.prisma.schedule.findUnique({
       where: { id },
-      include: {
-        course: true,
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      include: { course: true },
     });
     if (!s) return null;
     return this.mapToEntity(s);
@@ -77,16 +61,8 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         lessonType: data.lessonType || 'offline',
         meetingUrl: data.meetingUrl || null,
       },
-      include: {
-        course: true,
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      include: { course: true },
     });
-
     return this.mapToEntity(s);
   }
 
@@ -100,9 +76,6 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     lessonType?: string;
     meetingUrl?: string | null;
   }[]): Promise<ScheduleEntity[]> {
-    // В Prisma createMany не возвращает созданные записи во всех БД напрямую, 
-    // но мы можем сделать индивидуальные инсерты через транзакцию или просто вернуть пустой массив/сделать через Promise.all.
-    // Сделаем через Promise.all для простоты и переносимости.
     const created = await Promise.all(
       data.map((item) =>
         this.prisma.schedule.create({
@@ -116,18 +89,10 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
             lessonType: item.lessonType || 'offline',
             meetingUrl: item.meetingUrl || null,
           },
-          include: {
-            course: true,
-            teacher: {
-              include: {
-                user: true,
-              },
-            },
-          },
-        })
-      )
+          include: { course: true },
+        }),
+      ),
     );
-
     return created.map((s) => this.mapToEntity(s));
   }
 
@@ -145,31 +110,16 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     const s = await this.prisma.schedule.update({
       where: { id },
       data: updateData,
-      include: {
-        course: true,
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      include: { course: true },
     });
-
     return this.mapToEntity(s);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.schedule.delete({
-      where: { id },
-    });
+    await this.prisma.schedule.delete({ where: { id } });
   }
 
   private mapToEntity(s: any): ScheduleEntity {
-    let teacherName = 'Not Assigned';
-    if (s.teacher && s.teacher.user) {
-      teacherName = `${s.teacher.user.firstName} ${s.teacher.user.lastName}`;
-    }
-
     return {
       id: s.id,
       courseId: s.courseId,
@@ -181,7 +131,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       lessonType: s.lessonType,
       meetingUrl: s.meetingUrl,
       courseName: s.course?.name || 'Unknown Course',
-      teacherName,
+      teacherName: s.teacherName || null,
     };
   }
 }

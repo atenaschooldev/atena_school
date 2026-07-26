@@ -50,6 +50,61 @@ export class SchedulesService {
     return this.mapResponse(s);
   }
 
+  async updateSchedule(id: string, dto: any) {
+    const existing = await this.schedulesRepository.findOne(id);
+    if (!existing) throw new NotFoundException('Расписание не найдено');
+
+    let startDate = existing.startDate;
+    if (dto.start_date !== undefined) {
+      startDate = new Date(dto.start_date);
+    } else if (dto.day_of_week !== undefined && dto.start_time) {
+      const today = new Date();
+      const targetDay = dto.day_of_week;
+      const currentDay = today.getDay();
+      let diff = targetDay - currentDay;
+      if (diff < 0) diff += 7;
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() + diff);
+      const [h, m] = dto.start_time.split(':');
+      startDate.setHours(Number(h), Number(m), 0, 0);
+    } else if (dto.start_time) {
+      const [h, m] = dto.start_time.split(':');
+      startDate = new Date(existing.startDate);
+      startDate.setHours(Number(h), Number(m), 0, 0);
+    }
+
+    let endDate = existing.endDate;
+    if (dto.end_date !== undefined) {
+      endDate = new Date(dto.end_date);
+    } else if (dto.end_time) {
+      const [h, m] = dto.end_time.split(':');
+      endDate = new Date(startDate);
+      endDate.setHours(Number(h), Number(m), 0, 0);
+    }
+
+    const s = await this.schedulesRepository.update(id, {
+      courseId: dto.course_id !== undefined ? dto.course_id : dto.courseId !== undefined ? dto.courseId : existing.courseId,
+      teacherId: dto.teacher_id !== undefined ? dto.teacher_id : dto.teacherId !== undefined ? dto.teacherId : existing.teacherId,
+      room: dto.room !== undefined ? dto.room : existing.room,
+      status: dto.status !== undefined ? dto.status : existing.status,
+      startDate,
+      endDate,
+      lessonType: (dto.format !== undefined ? dto.format : dto.lessonType !== undefined ? dto.lessonType : existing.lessonType),
+      meetingUrl: ((dto.format !== undefined ? dto.format : dto.lessonType) === 'online' 
+        ? (dto.meeting_url || existing.meetingUrl || 'https://meet.google.com/mock-meet')
+        : ((dto.format !== undefined ? dto.format : dto.lessonType) === 'offline' ? null : existing.meetingUrl)),
+    });
+
+    return this.mapResponse(s);
+  }
+
+  async deleteSchedule(id: string) {
+    const existing = await this.schedulesRepository.findOne(id);
+    if (!existing) throw new NotFoundException('Расписание не найдено');
+    await this.schedulesRepository.delete(id);
+    return { success: true, id };
+  }
+
   async generateLessons(scheduleId: string, startDate: string, endDate: string) {
     const template = await this.schedulesRepository.findOne(scheduleId);
     if (!template) throw new NotFoundException('Расписание (шаблон урока) не найдено');

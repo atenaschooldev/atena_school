@@ -7,12 +7,10 @@ import type { TableCol } from "@/components/data-table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CourseForm } from "./course-form";
 import type { Course } from "../types";
-import type { Student } from "@/features/students";
-import type { Teacher } from "@/features/teachers";
 import { useCourses } from "../hooks/use-courses";
 import { CourseCard } from "./course-card";
 
-const getCols = (teachers: Teacher[], students: Student[]): TableCol<Course>[] => [
+const getCols = (): TableCol<Course>[] => [
   {
     key: "nome",
     label: "Corso",
@@ -126,75 +124,17 @@ const getCols = (teachers: Teacher[], students: Student[]): TableCol<Course>[] =
     },
   },
   {
-    key: "studentiIscritti",
-    label: "Iscritti",
+    key: "capienza",
+    label: "Capienza",
     width: 110,
     align: "center",
-    render: (c) => {
-      const iscritti = students.filter((s) => s.corsiIds.includes(c.id)).length;
-      return (
-        <span className="text-sm font-medium whitespace-nowrap">
-          {iscritti} / {c.capienza}
-        </span>
-      );
-    },
-    copy: (c) => {
-      const iscritti = students.filter((s) => s.corsiIds.includes(c.id)).length;
-      return `${iscritti} / ${c.capienza}`;
-    },
-    sortAscLabel: "Meno frequentati",
-    sortDescLabel: "Più frequentati",
-    sortFn: (a, b) => {
-      const countA = students.filter((s) => s.corsiIds.includes(a.id)).length;
-      const countB = students.filter((s) => s.corsiIds.includes(b.id)).length;
-      return countA - countB;
-    },
-  },
-  {
-    key: "insegnanti",
-    label: "Insegnanti",
-    width: 220,
-    flexGrow: true,
-    maxWidth: 350,
     render: (c) => (
-      <div className="flex gap-1.5 flex-nowrap overflow-visible py-1">
-        {(c.insegnanteIds || [c.insegnanteId]).map((tid) => {
-          const t = teachers.find((x) => x.id === tid);
-          return t ? (
-            <Badge
-              key={tid}
-              variant="outline"
-              className="text-[10px] rounded-full whitespace-nowrap bg-primary/5 text-primary border-primary/20"
-            >
-              {t.nome} {t.cognome}
-            </Badge>
-          ) : null;
-        })}
-        {(!c.insegnanteIds || c.insegnanteIds.length === 0) && !c.insegnanteId && (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
-      </div>
+      <span className="text-sm font-medium whitespace-nowrap">{c.capienza} pax</span>
     ),
-    copy: (c) =>
-      (c.insegnanteIds || [c.insegnanteId])
-        .map((tid) => {
-          const t = teachers.find((x) => x.id === tid);
-          return t ? `${t.nome} ${t.cognome}` : "";
-        })
-        .filter(Boolean)
-        .join(", "),
-    hasFilter: true,
-    hasSearch: true,
-    directFilter: true,
-    filterOptions: teachers.map((t) => ({ value: t.id, label: `${t.nome} ${t.cognome}` })),
-    filterFn: (c, filter) => {
-      const ids = c.insegnanteIds || [c.insegnanteId];
-      const selectMatch =
-        !filter.selected ||
-        filter.selected.length === 0 ||
-        ids.some((tid) => filter.selected!.includes(tid));
-      return selectMatch;
-    },
+    copy: (c) => `${c.capienza} pax`,
+    sortAscLabel: "Più piccoli",
+    sortDescLabel: "Più grandi",
+    sortFn: (a, b) => a.capienza - b.capienza,
   },
   {
     key: "descrizione",
@@ -215,8 +155,6 @@ const STORAGE_KEY = "atena-corsi-cols-v1";
 export function CorsiView() {
   const {
     coursesList,
-    teachers,
-    students,
     open,
     editing,
     initialFormValues,
@@ -228,7 +166,7 @@ export function CorsiView() {
     handleCloseDialog,
   } = useCourses();
 
-  const defaultCols = useMemo(() => getCols(teachers, students), [teachers, students]);
+  const defaultCols = useMemo(() => getCols(), []);
 
   return (
     <>
@@ -252,8 +190,6 @@ export function CorsiView() {
           renderCard={(c) => (
             <CourseCard
               course={c}
-              students={students}
-              teachers={teachers}
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
             />
@@ -275,7 +211,7 @@ export function CorsiView() {
             </DialogTitle>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {editing
-                ? "Modifica le informazioni generali, il prezzo, gli insegnanti e la descrizione del corso."
+                ? "Modifica le informazioni generali, il prezzo e la descrizione del corso."
                 : "Crea un nuovo corso inserendo tutti i dettagli professionali."}
             </p>
           </DialogHeader>

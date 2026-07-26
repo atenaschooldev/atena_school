@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { BookingOrder } from "../types/booking";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
@@ -109,8 +110,27 @@ export function useBookings() {
           return b;
         })
       );
+      toast.success("Stato aggiornato");
     } catch (e) {
       console.error("Failed to update booking status:", e);
+      toast.error("Errore nell'aggiornamento dello stato");
+    }
+  };
+
+  const deleteBooking = async (id: string) => {
+    try {
+      await apiFetch<{ success: boolean }>(`/admin/bookings/${id}`, {
+        method: "DELETE",
+      });
+
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+      if (selectedBooking?.id === id) setSelectedBooking(null);
+      toast.success("Prenotazione eliminata");
+      return true;
+    } catch (e) {
+      console.error("Failed to delete booking:", e);
+      toast.error("Errore nell'eliminazione della prenotazione");
+      return false;
     }
   };
 
@@ -127,5 +147,6 @@ export function useBookings() {
     setSelectedBooking,
     stats: { totalCount, paidCount, reservedCount, leadsCount, totalRevenue },
     updateBookingStatus,
+    deleteBooking,
   };
 }

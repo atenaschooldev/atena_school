@@ -1,4 +1,41 @@
+import { useState } from "react";
 import { BookingOrder } from "../types/booking";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  FileText,
+  Building2,
+  Tag,
+  GraduationCap,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
 const DAYS_IT = ["", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
 
@@ -12,38 +49,13 @@ function formatScheduleText(days?: number[] | null, startTime?: string | null, e
   }
   return `${dayNames} ${startTime}`;
 }
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  User,
-  Mail,
-  Phone,
-  CreditCard,
-  Calendar,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  FileText,
-  Building2,
-  Tag,
-  GraduationCap,
-  Sparkles,
-} from "lucide-react";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
 
 interface BookingDetailDialogProps {
   booking: BookingOrder | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdateStatus?: (id: string, paymentStatus: "paid" | "reserved" | "pending_payment", scheduleStatus?: "scheduled" | "pending_coordination" | "confirmed") => void;
+  onDelete?: (id: string) => Promise<boolean>;
 }
 
 export function BookingDetailDialog({
@@ -51,7 +63,11 @@ export function BookingDetailDialog({
   isOpen,
   onClose,
   onUpdateStatus,
+  onDelete,
 }: BookingDetailDialogProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   if (!booking) return null;
 
   const isPaid = booking.payment_status === "paid";
@@ -263,12 +279,52 @@ export function BookingDetailDialog({
                 Segna come Pagato
               </Button>
             )}
+            {onDelete && (
+              <Button
+                size="sm"
+                variant="destructive"
+                className="font-bold text-xs"
+                onClick={() => setConfirmOpen(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-1.5" />
+                Elimina
+              </Button>
+            )}
           </div>
           <Button variant="outline" size="sm" onClick={onClose} className="font-bold text-xs">
             Chiudi Scheda
           </Button>
         </div>
       </DialogContent>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la prenotazione?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Verranno eliminati anche lezioni e membership collegati. L&apos;azione non può essere
+              annullata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!onDelete) return;
+                setDeleting(true);
+                const ok = await onDelete(booking.id);
+                setDeleting(false);
+                if (ok) setConfirmOpen(false);
+              }}
+            >
+              {deleting ? "Eliminazione..." : "Elimina"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

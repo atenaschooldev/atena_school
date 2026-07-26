@@ -2,15 +2,8 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   ShoppingBag,
-  GraduationCap,
-  Users,
   BookOpen,
-  FileText,
-  CreditCard,
   Calendar,
-  ClipboardCheck,
-  UserCheck,
-  Activity,
   LogOut,
   Moon,
   Sun,
@@ -36,7 +29,7 @@ import { Button } from "@/components/ui/button";
 type Item = {
   title: string;
   url: string;
-  icon: typeof Users;
+  icon: typeof LayoutDashboard;
   roles: Array<"admin" | "insegnante" | "studente">;
 };
 
@@ -48,31 +41,8 @@ const gestione: Item[] = [
     roles: ["admin", "insegnante", "studente"],
   },
   { title: "Ordini & Prenotazioni", url: "/prenotazioni", icon: ShoppingBag, roles: ["admin"] },
-  { title: "Studenti", url: "/studenti", icon: GraduationCap, roles: ["admin"] },
-  { title: "Insegnanti", url: "/insegnanti", icon: Users, roles: ["admin"] },
   { title: "Corsi", url: "/corsi", icon: BookOpen, roles: ["admin", "insegnante", "studente"] },
-];
-
-const documenti: Item[] = [
-  { title: "Documenti", url: "/documenti", icon: FileText, roles: ["admin", "studente"] },
-  { title: "Pagamenti", url: "/pagamenti", icon: CreditCard, roles: ["admin", "studente"] },
-];
-
-const scuola: Item[] = [
   { title: "Orari", url: "/orari", icon: Calendar, roles: ["admin", "insegnante", "studente"] },
-  {
-    title: "Valutazioni",
-    url: "/valutazioni",
-    icon: ClipboardCheck,
-    roles: ["admin", "insegnante", "studente"],
-  },
-  {
-    title: "Presenze",
-    url: "/presenze",
-    icon: UserCheck,
-    roles: ["admin", "insegnante", "studente"],
-  },
-  { title: "Registro Attività", url: "/registro", icon: Activity, roles: ["admin"] },
 ];
 
 export function AppSidebar() {
@@ -140,8 +110,6 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2">
         {renderGroup("Gestione", gestione)}
-        {renderGroup("Documenti", documenti)}
-        {renderGroup("Scuola", scuola)}
       </SidebarContent>
 
       <SidebarFooter className="p-3">

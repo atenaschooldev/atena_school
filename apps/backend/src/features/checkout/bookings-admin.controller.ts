@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Patch, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
+import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { CheckoutService } from './checkout.service';
 
@@ -36,5 +37,14 @@ export class BookingsAdminController {
   @ApiOperation({ summary: 'Обновить статус оплаты / расписания бронирования' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateBookingStatusDto) {
     return this.checkoutService.updateBookingPaymentStatus(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @Audit('bookings', 'delete')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Удалить бронирование и связанные уроки / membership' })
+  async deleteBooking(@Param('id') id: string) {
+    return this.checkoutService.deleteBooking(id);
   }
 }

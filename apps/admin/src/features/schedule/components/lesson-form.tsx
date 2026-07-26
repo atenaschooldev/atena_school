@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { courses, teachers, lessons } from "@/lib/mock-data";
 import { GIORNI } from "@/lib/utils";
 import type { Lesson, LessonFormValues } from "../types";
+import type { Course } from "@/features/courses";
+import type { TeacherMock } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,9 @@ interface LessonFormProps {
   onCancel: () => void;
   compact?: boolean;
   submitLabel?: string;
+  courses?: Course[];
+  teachers?: TeacherMock[];
+  aulaSuggestions?: string[];
 }
 
 function generateMeetLink(): string {
@@ -30,8 +34,6 @@ function generateMeetLink(): string {
     Array.from({ length: n }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return `https://meet.google.com/${seg(3)}-${seg(4)}-${seg(3)}`;
 }
-
-const AULA_SUGGESTIONS = [...new Set(lessons.map((l) => l.aula))].sort();
 
 /** Inline autocomplete — type in the field, see filtered options below */
 function InlineCombobox({
@@ -226,6 +228,9 @@ export function LessonForm({
   onCancel,
   compact = false,
   submitLabel = "✓ Crea Lezione",
+  courses = [],
+  teachers = [],
+  aulaSuggestions = [],
 }: LessonFormProps) {
   const [corsoId, setCorsoId] = useState(defaultValues?.corsoId ?? "");
   const [insegnanteId, setInsegnanteId] = useState(defaultValues?.insegnanteId ?? "");
@@ -247,8 +252,8 @@ export function LessonForm({
   useEffect(() => {
     if (!corsoId) return;
     const course = courses.find((c) => c.id === corsoId);
-    if (course) setInsegnanteId(course.insegnanteId);
-  }, [corsoId]);
+    if (course && course.insegnanteId) setInsegnanteId(course.insegnanteId);
+  }, [corsoId, courses]);
 
   const selectedCourse = courses.find((c) => c.id === corsoId);
   const isValid = corsoId && insegnanteId && aula && oraInizio && oraFine;
@@ -279,7 +284,7 @@ export function LessonForm({
     label: `${t.nome} ${t.cognome}`,
   }));
 
-  const aulaOptions = AULA_SUGGESTIONS.map((a) => ({ key: a, label: a }));
+  const aulaOptions = aulaSuggestions.map((a) => ({ key: a, label: a }));
 
   return (
     <div className="flex flex-col gap-3">

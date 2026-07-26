@@ -2,19 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { Euro, Pencil, Trash2 } from "lucide-react";
 import { type Course } from "../types";
 import { levelColor } from "../utils";
-import type { Student } from "@/features/students";
-import type { Teacher } from "@/features/teachers";
 
 interface CourseCardProps {
   course: Course;
-  students: Student[];
-  teachers: Teacher[];
   onEdit: (course: Course) => void;
   onDelete: (course: Course) => void;
 }
 
-export function CourseCard({ course, students, teachers, onEdit, onDelete }: CourseCardProps) {
-  const iscritti = students.filter((s) => s.corsiIds.includes(course.id)).length;
+export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
+  const iscritti = 0;
   const statusLabel = {
     attivo: "Attivo",
     "in-programmazione": "Pianificato",
@@ -116,7 +112,6 @@ export function CourseCard({ course, students, teachers, onEdit, onDelete }: Cou
           </p>
         </div>
 
-        {/* Spacer — pushes progress+teachers to bottom */}
         <div className="flex-1" />
 
         {/* Capacity bar */}
@@ -124,43 +119,14 @@ export function CourseCard({ course, students, teachers, onEdit, onDelete }: Cou
           <div className="flex items-center justify-between card-progress-label font-bold text-muted-foreground">
             <span>Riempimento</span>
             <span className="font-mono text-foreground">
-              {Math.round((iscritti / course.capienza) * 100)}%
+              {Math.round((iscritti / Math.max(1, course.capienza)) * 100)}%
             </span>
           </div>
           <div className="card-progress-bar bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (iscritti / course.capienza) * 100)}%` }}
+              style={{ width: `${Math.min(100, (iscritti / Math.max(1, course.capienza)) * 100)}%` }}
             />
-          </div>
-        </div>
-
-        {/* Teachers row */}
-        <div className="mt-3 pt-3 border-t border-border/30 flex items-center justify-between gap-2">
-          <span className="card-teacher-label text-muted-foreground font-medium">Insegnanti</span>
-          <div className="flex -space-x-2">
-            {(course.insegnanteIds || [course.insegnanteId]).map((tid, idx) => {
-              const t = teachers.find((x) => x.id === tid);
-              if (!t) return null;
-              return (
-                <div
-                  key={tid}
-                  title={`${t.nome} ${t.cognome}`}
-                  className="card-teacher-avatar rounded-full border-2 border-background bg-primary/10 flex items-center justify-center font-bold text-primary shadow-sm hover:z-10 hover:scale-110 transition-all cursor-default relative"
-                  style={{ zIndex: 10 - idx }}
-                >
-                  {t.foto ? (
-                    <img
-                      src={t.foto}
-                      alt={t.nome}
-                      className="h-full w-full object-cover rounded-full"
-                    />
-                  ) : (
-                    `${t.nome[0]}${t.cognome[0]}`
-                  )}
-                </div>
-              );
-            })}
           </div>
         </div>
       </div>

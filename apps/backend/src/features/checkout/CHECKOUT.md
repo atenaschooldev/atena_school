@@ -46,6 +46,13 @@ checkout/
   * **Безопасность**: Проверяет подпись `stripe-signature` через секретный ключ `STRIPE_WEBHOOK_SECRET`.
   * **Бизнес-логика**: Атомарно переводит статус заказа в `paid`, активирует запись в `annual_memberships` и генерирует календарь уроков.
 
+* **`GET /api/v1/admin/bookings`**
+  * **Описание**: Список всех бронирований для CRM (только admin).
+* **`PATCH /api/v1/admin/bookings/:id/status`**
+  * **Описание**: Обновление `payment_status` / `scheduling_status`.
+* **`DELETE /api/v1/admin/bookings/:id`**
+  * **Описание**: Удаляет бронирование вместе со связанными `lessons` и `annual_memberships`.
+
 ---
 
 ## 3. Сервисный Слой (`checkout.service.ts`)

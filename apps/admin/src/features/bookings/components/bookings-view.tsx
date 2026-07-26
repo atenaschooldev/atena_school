@@ -48,6 +48,7 @@ export function BookingsView() {
     setSelectedBooking,
     stats,
     updateBookingStatus,
+    deleteBooking,
   } = useBookings();
 
   return (
@@ -352,6 +353,7 @@ export function BookingsView() {
         isOpen={!!selectedBooking}
         onClose={() => setSelectedBooking(null)}
         onUpdateStatus={updateBookingStatus}
+        onDelete={deleteBooking}
       />
     </div>
   );

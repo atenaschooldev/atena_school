@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { AppHeader } from "@/components/app-header";
-import { courses, teachers } from "@/lib/mock-data";
+import { teachers } from "@/lib/mock-data";
 import { GIORNI } from "@/lib/utils";
-import { levelColor, levelColorSolid } from "@/features/courses";
+import { levelColor, levelColorSolid, useCourses } from "@/features/courses";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -102,6 +102,7 @@ function computeOverlapLayout(
 }
 
 export function OrariView() {
+  const { coursesList: courses, loading: coursesLoading } = useCourses();
   const {
     currentDate,
     setCurrentDate,
@@ -147,6 +148,29 @@ export function OrariView() {
 
   const GIORNI_BREVI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"];
   const GIORNI_COMPLETI = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+
+  const getCourseSafe = (id: string): Course | null => {
+    const c = courses.find((x) => x.id === id);
+    if (c) return c;
+    if (courses.length === 0 || coursesLoading) {
+      return {
+        id,
+        nome: "Corso",
+        livello: "A1",
+        insegnanteId: "",
+        insegnanteIds: [],
+        moduli: 8,
+        capienza: 10,
+        colore: "chart-1",
+        descrizione: "",
+        categoria: "General English",
+        durata: "60 ore",
+        prezzo: 0,
+        stato: "attivo",
+      } as Course;
+    }
+    return courses[0] as Course;
+  };
 
   const renderDayColumn = (giornoIdx: number, colKey: string | number) => {
     const currentH = currentTime.getHours();
@@ -287,7 +311,7 @@ export function OrariView() {
                 const colW = 100 / layout.totalColumns;
                 const leftPct = layout.columnIdx * colW;
                 const rightPct = 100 - leftPct - colW;
-                const c = courses.find((x) => x.id === l.corsoId)!;
+                const c = getCourseSafe(l.corsoId)!;
                 const t = teachers.find((x) => x.id === c.insegnanteId);
                 const lStartH = parseInt(l.oraInizio.split(":")[0]);
                 const lStartM = parseInt(l.oraInizio.split(":")[1]);
@@ -465,6 +489,8 @@ export function OrariView() {
                     oraInizio: creatingLesson.oraInizio,
                     oraFine: creatingLesson.oraFine,
                   }}
+                  courses={courses}
+                  teachers={teachers}
                   onSubmit={handleCreateLesson}
                   onCancel={() => setCreatingLesson(null)}
                 />
@@ -487,6 +513,8 @@ export function OrariView() {
                   oraInizio: "09:00",
                   oraFine: "10:30",
                 }}
+                courses={courses}
+                teachers={teachers}
                 onSubmit={handleCreateLesson}
                 onCancel={() => setShowCreateDialog(false)}
               />
@@ -521,6 +549,8 @@ export function OrariView() {
                     isOnline: editingLesson.isOnline,
                     meetLink: editingLesson.meetLink,
                   }}
+                  courses={courses}
+                  teachers={teachers}
                   onSubmit={handleSaveEdit}
                   onCancel={() => setEditingLesson(null)}
                   submitLabel="✓ Salva modifiche"
@@ -685,7 +715,7 @@ export function OrariView() {
                       </span>
                       <div className="flex flex-col gap-0.5 overflow-hidden flex-1 min-h-0">
                         {dayLessons.slice(0, 3).map((l) => {
-                          const c = courses.find((x) => x.id === l.corsoId);
+                          const c = getCourseSafe(l.corsoId);
                           if (!c) return null;
                           const t = teachers.find((x) => x.id === c.insegnanteId);
                           const q = tableSearch.toLowerCase().trim();

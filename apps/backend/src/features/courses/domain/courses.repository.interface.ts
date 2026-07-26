@@ -10,6 +10,10 @@ export abstract class CoursesRepository {
     price: number;
     status?: string;
     teacherId?: string | null;
+    description?: string | null;
+    imageUrl?: string | null;
+    level?: string | null;
+    capacity?: number;
   }): Promise<CourseEntity>;
   abstract update(id: string, data: Partial<CourseEntity>): Promise<CourseEntity>;
   abstract delete(id: string): Promise<void>;

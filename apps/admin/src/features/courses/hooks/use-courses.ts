@@ -1,18 +1,53 @@
-import { useState, useMemo } from "react";
-import { useAppStore } from "@/stores/app-store";
-import { type Course, type CourseFormValues } from "../types";
+import { useState, useMemo, useEffect } from "react";
+import { type Course, type CourseFormValues, type CourseApiResponse, mapApiToCourse, mapCourseToApiPayload } from "../types";
 import { toast } from "sonner";
 
-export function useCourses() {
-  const coursesList = useAppStore((s) => s.courses);
-  const addCourse = useAppStore((s) => s.addCourse);
-  const updateCourse = useAppStore((s) => s.updateCourse);
-  const removeCourse = useAppStore((s) => s.removeCourse);
-  const teachers = useAppStore((s) => s.teachers);
-  const students = useAppStore((s) => s.students);
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const ADMIN_TOKEN =
+  import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
 
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${ADMIN_TOKEN}`,
+      ...options?.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Backend error ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
+
+export function useCourses() {
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
+
+  useEffect(() => {
+    async function loadCourses() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await apiFetch<CourseApiResponse[]>("/courses");
+        setAllCourses(Array.isArray(data) ? data.map(mapApiToCourse) : []);
+      } catch (e) {
+        console.error("Failed to fetch courses:", e);
+        setError(e instanceof Error ? e.message : "Errore nel caricamento corsi");
+        setAllCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCourses();
+  }, []);
 
   const handleNewClick = () => {
     setEditing(null);
@@ -24,32 +59,61 @@ export function useCourses() {
     setOpen(true);
   };
 
-  const handleDeleteClick = (course: Course) => {
-    removeCourse(course.id);
-    toast.success("Corso eliminato");
+  const handleDeleteClick = async (course: Course) => {
+    try {
+      await apiFetch<{ success: boolean }>(`/courses/${course.id}`, {
+        method: "DELETE",
+      });
+      setAllCourses((prev) => prev.filter((c) => c.id !== course.id));
+      toast.success("Corso eliminato");
+    } catch (e) {
+      console.error("Failed to delete course:", e);
+      toast.error("Errore nell'eliminazione del corso");
+    }
   };
 
-  const handleDeleteSelected = (ids: string[]) => {
-    ids.forEach((id) => removeCourse(id));
+  const handleDeleteSelected = async (ids: string[]) => {
+    for (const id of ids) {
+      try {
+        await apiFetch<{ success: boolean }>(`/courses/${id}`, {
+          method: "DELETE",
+        });
+      } catch (e) {
+        console.warn(`Skip delete ${id}:`, e);
+      }
+    }
+    setAllCourses((prev) => prev.filter((c) => !ids.includes(c.id)));
     toast.success("Corsi eliminati");
   };
 
-  const handleFormSubmit = (formData: CourseFormValues) => {
-    // Primary teacher is mapped to the first teacher in teachers array
-    const primaryId = formData.insegnanteIds[0] || "";
-    const payload = {
-      ...formData,
-      insegnanteId: primaryId,
-    };
-    if (editing) {
-      updateCourse(editing.id, payload);
-      toast.success("Corso aggiornato");
-    } else {
-      addCourse(payload);
-      toast.success("Corso creato");
+  const handleFormSubmit = async (formData: CourseFormValues) => {
+    const payload = mapCourseToApiPayload(formData);
+    try {
+      if (editing) {
+        const updated = await apiFetch<CourseApiResponse>(`/courses/${editing.id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        const updatedCourse = mapApiToCourse(updated);
+        setAllCourses((prev) =>
+          prev.map((c) => (c.id === editing.id ? updatedCourse : c)),
+        );
+        toast.success("Corso aggiornato");
+      } else {
+        const created = await apiFetch<CourseApiResponse>("/courses", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        const newCourse = mapApiToCourse(created);
+        setAllCourses((prev) => [...prev, newCourse]);
+        toast.success("Corso creato");
+      }
+      setOpen(false);
+      setEditing(null);
+    } catch (e) {
+      console.error("Failed to save course:", e);
+      toast.error("Errore nel salvataggio del corso");
     }
-    setOpen(false);
-    setEditing(null);
   };
 
   const handleCloseDialog = () => {
@@ -62,8 +126,8 @@ export function useCourses() {
       return {
         nome: editing.nome,
         livello: editing.livello || "A1",
-        insegnanteIds: editing.insegnanteIds || [editing.insegnanteId].filter(Boolean),
-        moduli: editing.moduli || 1,
+        insegnanteIds: editing.insegnanteIds || [editing.insegnanteId].filter(Boolean) as string[],
+        moduli: editing.moduli || 8,
         capienza: editing.capienza || 10,
         colore: editing.colore || "chart-1",
         descrizione: editing.descrizione || "",
@@ -91,9 +155,9 @@ export function useCourses() {
   }, [editing]);
 
   return {
-    coursesList,
-    teachers,
-    students,
+    coursesList: allCourses,
+    loading,
+    error,
     open,
     editing,
     initialFormValues,

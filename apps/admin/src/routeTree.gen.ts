@@ -9,62 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ValutazioniRouteImport } from './routes/valutazioni'
-import { Route as StudentiRouteImport } from './routes/studenti'
-import { Route as RegistroRouteImport } from './routes/registro'
-import { Route as PresenzeRouteImport } from './routes/presenze'
 import { Route as PrenotazioniRouteImport } from './routes/prenotazioni'
-import { Route as PagamentiRouteImport } from './routes/pagamenti'
 import { Route as OrariRouteImport } from './routes/orari'
-import { Route as InsegnantiRouteImport } from './routes/insegnanti'
-import { Route as DocumentiRouteImport } from './routes/documenti'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CorsiRouteImport } from './routes/corsi'
 import { Route as IndexRouteImport } from './routes/index'
 
-const ValutazioniRoute = ValutazioniRouteImport.update({
-  id: '/valutazioni',
-  path: '/valutazioni',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StudentiRoute = StudentiRouteImport.update({
-  id: '/studenti',
-  path: '/studenti',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegistroRoute = RegistroRouteImport.update({
-  id: '/registro',
-  path: '/registro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PresenzeRoute = PresenzeRouteImport.update({
-  id: '/presenze',
-  path: '/presenze',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrenotazioniRoute = PrenotazioniRouteImport.update({
   id: '/prenotazioni',
   path: '/prenotazioni',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PagamentiRoute = PagamentiRouteImport.update({
-  id: '/pagamenti',
-  path: '/pagamenti',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OrariRoute = OrariRouteImport.update({
   id: '/orari',
   path: '/orari',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InsegnantiRoute = InsegnantiRouteImport.update({
-  id: '/insegnanti',
-  path: '/insegnanti',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentiRoute = DocumentiRouteImport.update({
-  id: '/documenti',
-  path: '/documenti',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -87,135 +45,42 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/corsi': typeof CorsiRoute
   '/dashboard': typeof DashboardRoute
-  '/documenti': typeof DocumentiRoute
-  '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
-  '/pagamenti': typeof PagamentiRoute
   '/prenotazioni': typeof PrenotazioniRoute
-  '/presenze': typeof PresenzeRoute
-  '/registro': typeof RegistroRoute
-  '/studenti': typeof StudentiRoute
-  '/valutazioni': typeof ValutazioniRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/corsi': typeof CorsiRoute
   '/dashboard': typeof DashboardRoute
-  '/documenti': typeof DocumentiRoute
-  '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
-  '/pagamenti': typeof PagamentiRoute
   '/prenotazioni': typeof PrenotazioniRoute
-  '/presenze': typeof PresenzeRoute
-  '/registro': typeof RegistroRoute
-  '/studenti': typeof StudentiRoute
-  '/valutazioni': typeof ValutazioniRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/corsi': typeof CorsiRoute
   '/dashboard': typeof DashboardRoute
-  '/documenti': typeof DocumentiRoute
-  '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
-  '/pagamenti': typeof PagamentiRoute
   '/prenotazioni': typeof PrenotazioniRoute
-  '/presenze': typeof PresenzeRoute
-  '/registro': typeof RegistroRoute
-  '/studenti': typeof StudentiRoute
-  '/valutazioni': typeof ValutazioniRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/corsi'
-    | '/dashboard'
-    | '/documenti'
-    | '/insegnanti'
-    | '/orari'
-    | '/pagamenti'
-    | '/prenotazioni'
-    | '/presenze'
-    | '/registro'
-    | '/studenti'
-    | '/valutazioni'
+  fullPaths: '/' | '/corsi' | '/dashboard' | '/orari' | '/prenotazioni'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/corsi'
-    | '/dashboard'
-    | '/documenti'
-    | '/insegnanti'
-    | '/orari'
-    | '/pagamenti'
-    | '/prenotazioni'
-    | '/presenze'
-    | '/registro'
-    | '/studenti'
-    | '/valutazioni'
-  id:
-    | '__root__'
-    | '/'
-    | '/corsi'
-    | '/dashboard'
-    | '/documenti'
-    | '/insegnanti'
-    | '/orari'
-    | '/pagamenti'
-    | '/prenotazioni'
-    | '/presenze'
-    | '/registro'
-    | '/studenti'
-    | '/valutazioni'
+  to: '/' | '/corsi' | '/dashboard' | '/orari' | '/prenotazioni'
+  id: '__root__' | '/' | '/corsi' | '/dashboard' | '/orari' | '/prenotazioni'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CorsiRoute: typeof CorsiRoute
   DashboardRoute: typeof DashboardRoute
-  DocumentiRoute: typeof DocumentiRoute
-  InsegnantiRoute: typeof InsegnantiRoute
   OrariRoute: typeof OrariRoute
-  PagamentiRoute: typeof PagamentiRoute
   PrenotazioniRoute: typeof PrenotazioniRoute
-  PresenzeRoute: typeof PresenzeRoute
-  RegistroRoute: typeof RegistroRoute
-  StudentiRoute: typeof StudentiRoute
-  ValutazioniRoute: typeof ValutazioniRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/valutazioni': {
-      id: '/valutazioni'
-      path: '/valutazioni'
-      fullPath: '/valutazioni'
-      preLoaderRoute: typeof ValutazioniRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/studenti': {
-      id: '/studenti'
-      path: '/studenti'
-      fullPath: '/studenti'
-      preLoaderRoute: typeof StudentiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/registro': {
-      id: '/registro'
-      path: '/registro'
-      fullPath: '/registro'
-      preLoaderRoute: typeof RegistroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/presenze': {
-      id: '/presenze'
-      path: '/presenze'
-      fullPath: '/presenze'
-      preLoaderRoute: typeof PresenzeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/prenotazioni': {
       id: '/prenotazioni'
       path: '/prenotazioni'
@@ -223,32 +88,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrenotazioniRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pagamenti': {
-      id: '/pagamenti'
-      path: '/pagamenti'
-      fullPath: '/pagamenti'
-      preLoaderRoute: typeof PagamentiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/orari': {
       id: '/orari'
       path: '/orari'
       fullPath: '/orari'
       preLoaderRoute: typeof OrariRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/insegnanti': {
-      id: '/insegnanti'
-      path: '/insegnanti'
-      fullPath: '/insegnanti'
-      preLoaderRoute: typeof InsegnantiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documenti': {
-      id: '/documenti'
-      path: '/documenti'
-      fullPath: '/documenti'
-      preLoaderRoute: typeof DocumentiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -279,15 +123,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CorsiRoute: CorsiRoute,
   DashboardRoute: DashboardRoute,
-  DocumentiRoute: DocumentiRoute,
-  InsegnantiRoute: InsegnantiRoute,
   OrariRoute: OrariRoute,
-  PagamentiRoute: PagamentiRoute,
   PrenotazioniRoute: PrenotazioniRoute,
-  PresenzeRoute: PresenzeRoute,
-  RegistroRoute: RegistroRoute,
-  StudentiRoute: StudentiRoute,
-  ValutazioniRoute: ValutazioniRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,17 +1,13 @@
 import * as React from "react";
 import { useState } from "react";
-import { useAppStore, LEVELS_UI } from "@/stores/app-store";
-import type { Level, CourseFormValues } from "../types";
+import { LEVELS_UI } from "@/stores/app-store";
+import type { CourseFormValues } from "../types";
 import { levelColorSolid } from "../utils";
 import { X, Check, Euro } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -44,29 +40,11 @@ const COLORS = [
 ];
 
 export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: CourseFormProps) {
-  const teachers = useAppStore((s) => s.teachers);
   const [form, setForm] = useState<CourseFormValues>(initialValues);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
-  };
-
-  const filteredTeachers = teachers.filter((t) =>
-    `${t.nome} ${t.cognome}`.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
-  const toggleTeacher = (tid: string) => {
-    const checked = form.insegnanteIds.includes(tid);
-    setForm({
-      ...form,
-      insegnanteIds: checked
-        ? form.insegnanteIds.filter((x) => x !== tid)
-        : [...form.insegnanteIds, tid],
-    });
-    setSearchQuery("");
   };
 
   return (
@@ -220,7 +198,7 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
 
         <div>
           <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Capienza Massima Studenti
+            Capienza Massima
           </Label>
           <Input
             type="number"
@@ -302,104 +280,6 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
               );
             })}
           </div>
-        </div>
-
-        {/* Assigned Teachers (Multi-select) */}
-        <div className="col-span-2 relative">
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Insegnanti Assegnati
-          </Label>
-          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-            <PopoverTrigger asChild>
-              <div
-                className="mt-1.5 w-full min-h-9 p-1.5 rounded-md border border-input bg-background flex flex-wrap gap-1.5 items-center focus-within:ring-1 focus-within:ring-primary/45 cursor-text select-none"
-                onClick={() => {
-                  const input = document.getElementById("course-teacher-search-input");
-                  if (input) input.focus();
-                }}
-              >
-                {form.insegnanteIds.map((tid) => {
-                  const teacher = teachers.find((t) => t.id === tid);
-                  if (!teacher) return null;
-                  return (
-                    <Badge
-                      key={tid}
-                      variant="secondary"
-                      className="h-7 pl-2.5 pr-1 py-0 text-xs font-semibold bg-primary/10 text-primary border-primary/20 gap-1.5 flex items-center shrink-0 rounded-md"
-                    >
-                      <span>
-                        {teacher.nome} {teacher.cognome}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleTeacher(tid);
-                        }}
-                        className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-primary/20 hover:text-primary active:scale-90 transition-all cursor-pointer"
-                        title="Rimuovi insegnante"
-                      >
-                        <X className="h-3 w-3 stroke-[2.5]" />
-                      </button>
-                    </Badge>
-                  );
-                })}
-                <input
-                  id="course-teacher-search-input"
-                  type="text"
-                  placeholder={form.insegnanteIds.length === 0 ? "Cerca insegnanti..." : ""}
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setPopoverOpen(true);
-                  }}
-                  className="flex-1 min-w-[150px] bg-transparent border-0 outline-none text-xs h-6 p-0 px-1 text-foreground placeholder:text-muted-foreground/50"
-                />
-              </div>
-            </PopoverTrigger>
-
-            <PopoverPrimitive.Content
-              align="start"
-              sideOffset={4}
-              className="z-50 p-1 flex flex-col w-[340px] rounded-xl shadow-lg border border-border bg-popover text-popover-foreground overflow-hidden"
-              onOpenAutoFocus={(e) => e.preventDefault()}
-            >
-              <div className="p-1 flex flex-col gap-1 max-h-48 overflow-y-auto">
-                {filteredTeachers.length === 0 ? (
-                  <div className="text-xs text-muted-foreground p-4 text-center">
-                    Nessun insegnante trovato
-                  </div>
-                ) : (
-                  filteredTeachers.map((t) => {
-                    const checked = form.insegnanteIds.includes(t.id);
-                    return (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => toggleTeacher(t.id)}
-                        className={`rounded-full px-3.5 py-1.5 flex items-center justify-between text-xs cursor-pointer select-none outline-none transition-all duration-150 w-full text-left
-                          ${
-                            checked
-                              ? "bg-primary hover:bg-primary/90 focus:bg-primary text-white font-semibold hover:scale-[1.02] focus:scale-[1.02] hover:shadow-md focus:shadow-md active:scale-95"
-                              : "bg-muted/40 hover:bg-muted/70 focus:bg-muted/70 text-muted-foreground hover:text-foreground focus:text-foreground font-medium hover:scale-[1.02] focus:scale-[1.02] hover:shadow-sm focus:shadow-sm active:scale-95"
-                          }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${checked ? "bg-white" : "bg-primary/45"}`}
-                          />
-                          <span>
-                            {t.nome} {t.cognome}
-                          </span>
-                        </div>
-                        {checked && <Check className="h-3 w-3 shrink-0 stroke-[2.5]" />}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </PopoverPrimitive.Content>
-          </Popover>
         </div>
 
         {/* Description */}

@@ -24,12 +24,9 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 
 const routes = [
   { label: "Dashboard", url: "/dashboard" },
-  { label: "Studenti", url: "/studenti" },
-  { label: "Insegnanti", url: "/insegnanti" },
   { label: "Corsi", url: "/corsi" },
   { label: "Orari", url: "/orari" },
-  { label: "Valutazioni", url: "/valutazioni" },
-  { label: "Presenze", url: "/presenze" },
+  { label: "Prenotazioni", url: "/prenotazioni" },
 ];
 
 export function AppHeader({
@@ -235,7 +232,7 @@ export function AppHeader({
       </div>
 
       <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Cerca sezione o studente..." />
+        <CommandInput placeholder="Cerca sezione, corso o prenotazione..." />
         <CommandList>
           <CommandEmpty>Nessun risultato.</CommandEmpty>
           <CommandGroup heading="Navigazione">

@@ -9,30 +9,12 @@ export class PrismaCoursesRepository implements CoursesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findMany(): Promise<CourseEntity[]> {
-    const list = await this.prisma.course.findMany({
-      include: {
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
-    });
-
+    const list = await this.prisma.course.findMany();
     return list.map((c) => this.mapToEntity(c));
   }
 
   async findOne(id: string): Promise<CourseEntity | null> {
-    const c = await this.prisma.course.findUnique({
-      where: { id },
-      include: {
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
-    });
+    const c = await this.prisma.course.findUnique({ where: { id } });
     if (!c) return null;
     return this.mapToEntity(c);
   }
@@ -44,6 +26,10 @@ export class PrismaCoursesRepository implements CoursesRepository {
     price: number;
     status?: string;
     teacherId?: string | null;
+    description?: string | null;
+    imageUrl?: string | null;
+    level?: string | null;
+    capacity?: number;
   }): Promise<CourseEntity> {
     const c = await this.prisma.course.create({
       data: {
@@ -53,16 +39,12 @@ export class PrismaCoursesRepository implements CoursesRepository {
         price: new Prisma.Decimal(data.price),
         status: data.status || 'active',
         teacherId: data.teacherId || null,
-      },
-      include: {
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
+        description: data.description ?? '',
+        imageUrl: data.imageUrl ?? null,
+        level: data.level ?? 'A1',
+        capacity: data.capacity ?? 10,
       },
     });
-
     return this.mapToEntity(c);
   }
 
@@ -75,19 +57,12 @@ export class PrismaCoursesRepository implements CoursesRepository {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
     if (data.studentCount !== undefined) updateData.studentCount = data.studentCount;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
+    if (data.level !== undefined) updateData.level = data.level;
+    if (data.capacity !== undefined) updateData.capacity = data.capacity;
 
-    const c = await this.prisma.course.update({
-      where: { id },
-      data: updateData,
-      include: {
-        teacher: {
-          include: {
-            user: true,
-          },
-        },
-      },
-    });
-
+    const c = await this.prisma.course.update({ where: { id }, data: updateData });
     return this.mapToEntity(c);
   }
 
@@ -99,11 +74,6 @@ export class PrismaCoursesRepository implements CoursesRepository {
   }
 
   private mapToEntity(c: any): CourseEntity {
-    let teacherName = 'Not Assigned';
-    if (c.teacher && c.teacher.user) {
-      teacherName = `${c.teacher.user.firstName} ${c.teacher.user.lastName}`;
-    }
-
     return {
       id: c.id,
       name: c.name,
@@ -113,7 +83,11 @@ export class PrismaCoursesRepository implements CoursesRepository {
       status: c.status,
       teacherId: c.teacherId,
       studentCount: c.studentCount,
-      teacherName,
+      description: c.description ?? null,
+      imageUrl: c.imageUrl ?? null,
+      level: c.level ?? null,
+      capacity: c.capacity ?? 10,
+      teacherName: c.teacherName ?? null,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, UseInterceptors, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, UseInterceptors, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
@@ -28,6 +28,22 @@ export class SchedulesController {
   @ApiOperation({ summary: 'Создать новый элемент расписания' })
   async createSchedule(@Body() dto: any) {
     return this.schedulesService.createSchedule(dto);
+  }
+
+  @Patch(':id')
+  @Roles('admin')
+  @Audit('schedules', 'update')
+  @ApiOperation({ summary: 'Обновить элемент расписания' })
+  async updateSchedule(@Param('id') id: string, @Body() dto: any) {
+    return this.schedulesService.updateSchedule(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @Audit('schedules', 'delete')
+  @ApiOperation({ summary: 'Удалить элемент расписания' })
+  async deleteSchedule(@Param('id') id: string) {
+    return this.schedulesService.deleteSchedule(id);
   }
 
   @Post(':id/generate-lessons')

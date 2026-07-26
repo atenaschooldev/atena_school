@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
@@ -586,5 +586,39 @@ export class CheckoutService {
 
     if (error) throw new BadRequestException(error.message);
     return data;
+  }
+
+  async deleteBooking(id: string) {
+    const { data: existing, error: findError } = await this.supabaseAdmin
+      .from('bookings')
+      .select('id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (findError) throw new BadRequestException(findError.message);
+    if (!existing) throw new NotFoundException(`Booking ${id} not found`);
+
+    const { error: lessonsError } = await this.supabaseAdmin
+      .from('lessons')
+      .delete()
+      .eq('booking_id', id);
+
+    if (lessonsError) throw new BadRequestException(lessonsError.message);
+
+    const { error: membershipsError } = await this.supabaseAdmin
+      .from('annual_memberships')
+      .delete()
+      .eq('booking_id', id);
+
+    if (membershipsError) throw new BadRequestException(membershipsError.message);
+
+    const { error: bookingError } = await this.supabaseAdmin
+      .from('bookings')
+      .delete()
+      .eq('id', id);
+
+    if (bookingError) throw new BadRequestException(bookingError.message);
+
+    return { success: true };
   }
 }

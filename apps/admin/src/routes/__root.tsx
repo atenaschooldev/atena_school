@@ -85,13 +85,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Sistema completo di gestione per scuole d'inglese: studenti, insegnanti, corsi, orari, valutazioni e presenze.",
+          "Sistema di gestione per scuole d'inglese: gestisci prenotazioni, corsi e orari.",
       },
       { property: "og:title", content: "Atena Scuola — Gestionale Scuola d'Inglese" },
       {
         property: "og:description",
         content:
-          "Gestisci studenti, corsi e valutazioni della tua scuola d'inglese in un'unica piattaforma.",
+          "Gestisci prenotazioni, corsi e orari della tua scuola d'inglese in un'unica piattaforma.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
