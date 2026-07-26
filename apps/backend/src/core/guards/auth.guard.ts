@@ -23,8 +23,8 @@ export class AuthGuard implements CanActivate {
 
     const token = authHeader.split(' ')[1];
 
-    // Тестовый токен для локальной разработки
-    if (token === 'DEVELOPMENT_TEST_TOKEN') {
+    // Allow test token strictly in non-production environments
+    if (process.env.NODE_ENV !== 'production' && token === 'DEVELOPMENT_TEST_TOKEN') {
       request.user = {
         id: '00000000-0000-0000-0000-000000000000',
         role: 'admin',
@@ -36,58 +36,34 @@ export class AuthGuard implements CanActivate {
 
     try {
       const { data: { user }, error } = await this.supabaseAdmin.auth.getUser(token);
-      if (!error && user) {
-        request.user = {
-          id: user.id,
-          role: user.role || 'student',
-          email: user.email,
-          user_metadata: user.user_metadata,
-        };
+      if (error || !user) {
+        throw new UnauthorizedException('Невалидный или просроченный токен');
+      }
 
-        // Auto-sync user to public.users table in TypeScript (replacing SQL trigger)
-        const meta = user.user_metadata || {};
-        const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (user.email ? user.email.split('@')[0] : 'User');
-        const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
-        const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
+      request.user = {
+        id: user.id,
+        role: user.role || 'student',
+        email: user.email,
+        user_metadata: user.user_metadata,
+      };
 
-        this.supabaseAdmin.from('users').upsert({
+      // Sync user profile to public.users table
+      const meta = user.user_metadata || {};
+      const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (user.email ? user.email.split('@')[0] : 'User');
+      const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
+      const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
+
+      try {
+        await this.supabaseAdmin.from('users').upsert({
           id: user.id,
           email: user.email,
           first_name: firstName,
           last_name: lastName,
           full_name: fullName,
-        }, { onConflict: 'id' }).then(() => {}, () => {});
+        }, { onConflict: 'id' });
+      } catch {}
 
-        return true;
-      }
-
-      // Fallback for decoded payload if getUser has latency
-      const payload = jwt.decode(token) as any;
-      if (payload && payload.sub) {
-        request.user = {
-          id: payload.sub,
-          role: payload.role || 'student',
-          email: payload.email,
-          user_metadata: payload.user_metadata,
-        };
-
-        const meta = payload.user_metadata || {};
-        const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (payload.email ? payload.email.split('@')[0] : 'User');
-        const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
-        const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
-
-        this.supabaseAdmin.from('users').upsert({
-          id: payload.sub,
-          email: payload.email,
-          first_name: firstName,
-          last_name: lastName,
-          full_name: fullName,
-        }, { onConflict: 'id' }).then(() => {}, () => {});
-
-        return true;
-      }
-
-      throw new UnauthorizedException('Невалидный или просроченный токен');
+      return true;
     } catch (err) {
       throw new UnauthorizedException('Невалидный или просроченный токен');
     }

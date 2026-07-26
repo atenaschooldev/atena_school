@@ -15,6 +15,31 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return res.json();
 }
 
+export interface ReservationPayload {
+  itemId: string;
+  itemType?: string;
+  date?: string;
+  time?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  purchaserTaxCode?: string;
+  isForChild?: boolean;
+  studentFirstName?: string;
+  studentLastName?: string;
+  studentEmail?: string;
+  studentPhone?: string;
+  studentTaxCode?: string;
+  studentBirthDate?: string;
+  includeRegistrationFee?: boolean;
+}
+
+export interface StripeSessionPayload extends ReservationPayload {
+  successUrl?: string;
+  cancelUrl?: string;
+}
+
 export function createApiClient(baseUrl?: string) {
   const apiBase = baseUrl || process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
 
@@ -29,7 +54,7 @@ export function createApiClient(baseUrl?: string) {
         return handleResponse<FeeStatusResponse>(res);
       },
 
-      async createReservation(payload: any): Promise<ReservationResponse> {
+      async createReservation(payload: ReservationPayload | Record<string, unknown>): Promise<ReservationResponse> {
         const res = await fetch(`${apiBase}/api/v1/checkout/reserve`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -38,7 +63,7 @@ export function createApiClient(baseUrl?: string) {
         return handleResponse<ReservationResponse>(res);
       },
 
-      async createStripeSession(payload: any): Promise<CheckoutSessionResponse> {
+      async createStripeSession(payload: StripeSessionPayload | Record<string, unknown>): Promise<CheckoutSessionResponse> {
         const res = await fetch(`${apiBase}/api/v1/checkout/create-stripe-session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

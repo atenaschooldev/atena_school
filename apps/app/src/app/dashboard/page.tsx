@@ -7,6 +7,8 @@ import { Link } from "@/i18n/routing";
 import { useDashboard } from "@/features/dashboard/hooks/useDashboard";
 import { signOutAction } from "@/app/actions/auth";
 
+import { formatCourseScheduleText } from "@atena/utils";
+
 export default function DashboardPage() {
   const dateLocale = it;
 
@@ -184,10 +186,10 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       )}
-                      {b.booking_time && (
+                      {(b.schedule_days?.length || b.start_time) && (
                         <div className="flex items-center gap-1.5">
                           <Clock className="w-4 h-4 text-primary shrink-0" />
-                          <span>Ore {b.booking_time}</span>
+                          <span>{formatCourseScheduleText(b.schedule_days, b.start_time, b.end_time)}</span>
                         </div>
                       )}
                       {b.location && (

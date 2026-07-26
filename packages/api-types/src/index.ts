@@ -48,7 +48,10 @@ export interface BookingRecord {
   student_birth_date?: string;
   booking_date: string;
   start_date: string;
-  booking_time: string;
+  schedule_days?: number[];
+  start_time?: string;
+  end_time?: string;
+  schedule_type?: string;
   status: string;
   payment_status: 'paid' | 'reserved' | 'completed' | 'pending' | 'cancelled';
   payment_method: 'stripe' | 'cash' | 'card';

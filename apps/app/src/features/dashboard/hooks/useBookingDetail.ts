@@ -24,7 +24,7 @@ export function useBookingDetail(bookingId: string) {
   const [booking, setBooking] = useState<any>(null);
   const [course, setCourse] = useState<any>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [maxLessons, setMaxLessons] = useState(8);
+  const [maxLessons, setMaxLessons] = useState<number | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [activeTab, setActiveTab] = useState<"calendar" | "list">("calendar");
@@ -44,7 +44,7 @@ export function useBookingDetail(bookingId: string) {
           setBooking(res.booking);
           setCourse(res.course);
           setLessons(res.lessons || []);
-          setMaxLessons(res.max_lessons ?? 8);
+          setMaxLessons(res.max_lessons ?? null);
         } else {
           setError(res.error || "Impossibile caricare i dati della prenotazione");
         }
@@ -67,12 +67,14 @@ export function useBookingDetail(bookingId: string) {
   const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, totalAmount - regFee);
 
   const isFixedSchedule = course?.schedule_type === "fixed";
-  const effectiveMaxLessons = isFixedSchedule ? lessons.length : maxLessons;
+  const effectiveMaxLessons = isFixedSchedule ? lessons.length : (maxLessons ?? Infinity);
 
   const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;
   const totalLessons = lessons.length;
-  const progressPercent = effectiveMaxLessons > 0 ? Math.round((completedLessons / effectiveMaxLessons) * 100) : 0;
-  const canScheduleMore = totalLessons < effectiveMaxLessons;
+  const progressPercent = isFinite(effectiveMaxLessons) && effectiveMaxLessons > 0
+    ? Math.round((completedLessons / effectiveMaxLessons) * 100)
+    : 0;
+  const canScheduleMore = maxLessons === null || totalLessons < effectiveMaxLessons;
 
   // Calendar calculations
   const year = currentMonth.getFullYear();
@@ -114,7 +116,8 @@ export function useBookingDetail(bookingId: string) {
   };
 
   const handleOpenScheduleModal = (dateObj?: Date) => {
-    if (!canScheduleMore) {
+    // For hours-based courses (EIPASS) maxLessons is null — always allow scheduling
+    if (maxLessons !== null && !canScheduleMore) {
       toast.error(`Hai già programmato tutte le lezioni disponibili per questo pacchetto (${maxLessons}/${maxLessons}).`);
       return;
     }

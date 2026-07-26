@@ -38,7 +38,7 @@ export async function checkRegistrationFeeStatusAction(params: {
     };
   } catch (err: any) {
     console.error("checkRegistrationFeeStatusAction error:", err);
-    return { success: true, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true };
+    return { success: false, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true, error: err.message || "Errore di connessione" };
   }
 }
 

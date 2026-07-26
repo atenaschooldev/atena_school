@@ -5,6 +5,25 @@ import { UpdateProfileDto } from './portal.controller';
 import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
 import { getDynamicMaxLessons } from '@atena/utils';
 
+export interface PortalUser {
+  id: string;
+  email?: string;
+  role?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export interface PortalBooking {
+  id: string;
+  user_id?: string | null;
+  student_email?: string | null;
+  purchaser_email?: string | null;
+  purchaser_phone?: string | null;
+  student_phone?: string | null;
+  purchaser_name?: string | null;
+  student_name?: string | null;
+}
+
 @Injectable()
 export class PortalService {
   private readonly logger = new Logger(PortalService.name);
@@ -16,7 +35,7 @@ export class PortalService {
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
   }
 
-  private isUserBookingAuthorized(booking: any, user: any): boolean {
+  private isUserBookingAuthorized(booking: PortalBooking, user: PortalUser): boolean {
     if (!user || !booking) return false;
     if (booking.user_id && booking.user_id === user.id) return true;
     const userEmail = (user.email || '').trim().toLowerCase();
@@ -189,7 +208,7 @@ export class PortalService {
     if (courseIds.length > 0) {
       const { data: cData } = await this.supabaseAdmin
         .from('courses')
-        .select('id, name, title_it, price, teachers!courses_teacher_id_fkey(full_name)')
+        .select('id, name, title_it, price, schedule_days, start_time, end_time, schedule_type, teachers!courses_teacher_id_fkey(full_name)')
         .in('id', courseIds);
 
       if (cData) {
@@ -224,6 +243,10 @@ export class PortalService {
         price: coursePrice,
         teacher_name: teacherName,
         is_future: isFuture,
+        schedule_days: b.schedule_days || c?.schedule_days || null,
+        start_time: b.start_time || c?.start_time || null,
+        end_time: b.end_time || c?.end_time || null,
+        schedule_type: b.schedule_type || c?.schedule_type || null,
       };
     });
 
@@ -294,11 +317,10 @@ export class PortalService {
     }
 
     const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
-    const btime = booking.booking_time || '10:00';
 
     const calculated = calculateLessonDates(
       bdate,
-      btime,
+      course?.start_time || '10:00',
       course?.category || 'general',
       course?.schedule_days || null,
       course?.lesson_duration_minutes || 60,
@@ -317,14 +339,16 @@ export class PortalService {
     }));
 
     const isFixedSchedule = course?.schedule_type === 'fixed';
-    const maxLessons = isFixedSchedule
-      ? lessons.length
-      : getDynamicMaxLessons(
-          course?.name || '',
-          bdate,
-          course?.category || '',
-          course?.lessons_per_week,
-        );
+    const maxLessons = booking.total_lessons_count != null
+      ? booking.total_lessons_count
+      : isFixedSchedule
+        ? lessons.length
+        : getDynamicMaxLessons(
+            course?.name || '',
+            bdate,
+            course?.category || '',
+            course?.lessons_per_week,
+          );
 
     return { success: true, booking, course, lessons, max_lessons: maxLessons };
   }

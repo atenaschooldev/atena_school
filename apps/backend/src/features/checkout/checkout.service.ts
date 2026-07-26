@@ -7,6 +7,19 @@ const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
 import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
 
+export interface CourseRecord {
+  id: string;
+  name?: string;
+  title_it?: string;
+  category?: string;
+  price: number | string;
+  schedule_days?: number[] | null;
+  lesson_duration_minutes?: number | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  schedule_type?: string | null;
+}
+
 @Injectable()
 export class CheckoutService {
   private supabaseAdmin: SupabaseClient;
@@ -76,9 +89,22 @@ export class CheckoutService {
     return { success: true, annualFeePaid: false, userFound: false };
   }
 
+  private computeTotalLessonsCount(course: any, calculatedLessonsCount: number): number | null {
+    // Fixed lessons package (e.g. Pacchetto 10, Lezioni Singole)
+    if (course?.total_lessons != null) return course.total_lessons;
+    // Hours-based course (e.g. EIPASS) — no fixed lesson count, stored as null
+    if (course?.total_hours != null) return null;
+    // Flexible with lessons_per_week (e.g. C2, C1 private) — estimate 1 month
+    if (course?.lessons_per_week != null && course?.schedule_type === 'flexible') {
+      return course.lessons_per_week * 4;
+    }
+    // Fixed schedule — use calendar-calculated count
+    return calculatedLessonsCount || 8;
+  }
+
   async createReservation(dto: CreateReservationDto) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
-    let course: any = null;
+    let course: CourseRecord | null = null;
 
     if (isUuid) {
       const { data } = await this.supabaseAdmin.from('courses').select('*').eq('id', dto.itemId).maybeSingle();
@@ -138,12 +164,14 @@ export class CheckoutService {
         student_tax_code: dto.isForChild ? (dto.studentTaxCode || '') : (dto.purchaserTaxCode || ''),
         student_birth_date: dto.studentBirthDate || null,
         start_date: dto.date || new Date().toISOString(),
-        booking_time: dto.time || '10:00',
+        schedule_days: course?.schedule_days || null,
+        start_time: course?.start_time || dto.time || null,
+        end_time: course?.end_time || null,
         payment_status: 'reserved',
         payment_method: 'cash',
         amount_paid: totalPaidAmount,
         registration_fee: regFee,
-        total_lessons_count: lessons.length || 8,
+        total_lessons_count: this.computeTotalLessonsCount(course, lessons.length),
         subscription_starts_at: subStartsAt,
         subscription_ends_at: subEndsAt,
         notes: dto.notes || '',
@@ -496,7 +524,6 @@ export class CheckoutService {
         payment_method: booking.payment_method || 'card',
         payment_status: booking.payment_status || 'reserved',
         start_date: booking.start_date || booking.booking_date,
-        booking_time: booking.booking_time || '10:00',
       },
     };
   }

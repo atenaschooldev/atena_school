@@ -67,7 +67,7 @@ function SuccessContent() {
         : rawDate)
     : null;
 
-  const rawTime = bookingData?.starts_at || bookingData?.booking_time || bookingData?.time;
+  const rawTime = bookingData?.starts_at || bookingData?.start_time || bookingData?.time;
   const formattedTime = rawTime
     ? (typeof rawTime === "string" && rawTime.includes("T") ? format(new Date(rawTime), "HH:mm") : rawTime)
     : null;

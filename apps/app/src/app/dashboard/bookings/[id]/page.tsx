@@ -18,6 +18,7 @@ import { format, isFuture, parseISO, isBefore, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { Link } from "@/i18n/routing";
 import { useBookingDetail, TIME_SLOTS } from "@/features/dashboard/hooks/useBookingDetail";
+import { formatCourseScheduleText } from "@atena/utils";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -167,15 +168,19 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
+                {(booking.schedule_days?.length || booking.start_time) && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
                     <CalendarIcon className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Orario Standard</p>
-                    <p className="text-sm font-bold text-foreground">{booking.booking_time || "Vedi calendario"}</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {formatCourseScheduleText(booking.schedule_days, booking.start_time, booking.end_time)}
+                    </p>
                   </div>
                 </div>
+                )}
 
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
@@ -215,34 +220,58 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Progress Card */}
             <div className="bg-white p-6 rounded-3xl border border-border shadow-sm space-y-4">
-              <h3 className="font-bold text-foreground text-md">Progresso Lezioni</h3>
-              <div className="flex justify-between items-baseline">
-                <span className="text-2xl font-black text-primary">{completedLessons} / {maxLessons}</span>
-                <span className="text-xs font-bold text-foreground/60">Lezioni svolte</span>
-              </div>
-              <div className="w-full bg-secondary/20 rounded-full h-3.5 overflow-hidden">
-                <div
-                  className="bg-[#F8861D] h-3.5 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-
-              <div className="pt-2">
-                {canScheduleMore ? (
+              {course?.total_hours != null ? (
+                /* EIPASS / hours-based courses */
+                <>
+                  <h3 className="font-bold text-foreground text-md">Durata del Corso</h3>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-2xl font-black text-primary">{course.total_hours} ore</span>
+                    <span className="text-xs font-bold text-foreground/60">Totale corso</span>
+                  </div>
+                  <div className="text-xs text-foreground/50 bg-muted/50 rounded-2xl px-4 py-3">
+                    Il calendario delle sessioni verrà concordato con la scuola.
+                  </div>
                   <button
                     onClick={() => handleOpenScheduleModal()}
                     className="w-full py-3 bg-[#043569] hover:bg-[#032850] text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
                   >
                     <Plus className="w-4 h-4" weight="bold" />
-                    <span>Pianifica Lezione ({totalLessons}/{maxLessons})</span>
+                    <span>Pianifica Sessione ({totalLessons} pianificate)</span>
                   </button>
-                ) : (
-                  <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2">
-                    <CheckCircle className="w-4 h-4" weight="fill" />
-                    <span>Tutti gli incontri pianificati</span>
+                </>
+              ) : (
+                /* Standard lesson-count based courses */
+                <>
+                  <h3 className="font-bold text-foreground text-md">Progresso Lezioni</h3>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-2xl font-black text-primary">{completedLessons} / {maxLessons}</span>
+                    <span className="text-xs font-bold text-foreground/60">Lezioni svolte</span>
                   </div>
-                )}
-              </div>
+                  <div className="w-full bg-secondary/20 rounded-full h-3.5 overflow-hidden">
+                    <div
+                      className="bg-[#F8861D] h-3.5 rounded-full transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    {canScheduleMore ? (
+                      <button
+                        onClick={() => handleOpenScheduleModal()}
+                        className="w-full py-3 bg-[#043569] hover:bg-[#032850] text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" weight="bold" />
+                        <span>Pianifica Lezione ({totalLessons}/{maxLessons})</span>
+                      </button>
+                    ) : (
+                      <div className="w-full py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                        <CheckCircle className="w-4 h-4" weight="fill" />
+                        <span>Tutti gli incontri pianificati</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
