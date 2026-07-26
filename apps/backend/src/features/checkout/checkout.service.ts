@@ -560,4 +560,31 @@ export class CheckoutService {
 
     return { success: true };
   }
+
+  // ─── Admin: Bookings Management ────────────────────────────────────────────
+
+  async listAllBookings() {
+    const { data, error } = await this.supabaseAdmin
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new BadRequestException(error.message);
+    return data ?? [];
+  }
+
+  async updateBookingPaymentStatus(id: string, dto: { payment_status: string; scheduling_status?: string }) {
+    const update: Record<string, string> = { payment_status: dto.payment_status };
+    if (dto.scheduling_status) update.scheduling_status = dto.scheduling_status;
+
+    const { data, error } = await this.supabaseAdmin
+      .from('bookings')
+      .update(update)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
 }

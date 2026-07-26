@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
+  ShoppingBag,
   GraduationCap,
   Users,
   BookOpen,
@@ -46,6 +47,7 @@ const gestione: Item[] = [
     icon: LayoutDashboard,
     roles: ["admin", "insegnante", "studente"],
   },
+  { title: "Ordini & Prenotazioni", url: "/prenotazioni", icon: ShoppingBag, roles: ["admin"] },
   { title: "Studenti", url: "/studenti", icon: GraduationCap, roles: ["admin"] },
   { title: "Insegnanti", url: "/insegnanti", icon: Users, roles: ["admin"] },
   { title: "Corsi", url: "/corsi", icon: BookOpen, roles: ["admin", "insegnante", "studente"] },

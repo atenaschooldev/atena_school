@@ -13,6 +13,7 @@ import { Route as ValutazioniRouteImport } from './routes/valutazioni'
 import { Route as StudentiRouteImport } from './routes/studenti'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as PresenzeRouteImport } from './routes/presenze'
+import { Route as PrenotazioniRouteImport } from './routes/prenotazioni'
 import { Route as PagamentiRouteImport } from './routes/pagamenti'
 import { Route as OrariRouteImport } from './routes/orari'
 import { Route as InsegnantiRouteImport } from './routes/insegnanti'
@@ -39,6 +40,11 @@ const RegistroRoute = RegistroRouteImport.update({
 const PresenzeRoute = PresenzeRouteImport.update({
   id: '/presenze',
   path: '/presenze',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrenotazioniRoute = PrenotazioniRouteImport.update({
+  id: '/prenotazioni',
+  path: '/prenotazioni',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PagamentiRoute = PagamentiRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
   '/pagamenti': typeof PagamentiRoute
+  '/prenotazioni': typeof PrenotazioniRoute
   '/presenze': typeof PresenzeRoute
   '/registro': typeof RegistroRoute
   '/studenti': typeof StudentiRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
   '/pagamenti': typeof PagamentiRoute
+  '/prenotazioni': typeof PrenotazioniRoute
   '/presenze': typeof PresenzeRoute
   '/registro': typeof RegistroRoute
   '/studenti': typeof StudentiRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/insegnanti': typeof InsegnantiRoute
   '/orari': typeof OrariRoute
   '/pagamenti': typeof PagamentiRoute
+  '/prenotazioni': typeof PrenotazioniRoute
   '/presenze': typeof PresenzeRoute
   '/registro': typeof RegistroRoute
   '/studenti': typeof StudentiRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/insegnanti'
     | '/orari'
     | '/pagamenti'
+    | '/prenotazioni'
     | '/presenze'
     | '/registro'
     | '/studenti'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/insegnanti'
     | '/orari'
     | '/pagamenti'
+    | '/prenotazioni'
     | '/presenze'
     | '/registro'
     | '/studenti'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/insegnanti'
     | '/orari'
     | '/pagamenti'
+    | '/prenotazioni'
     | '/presenze'
     | '/registro'
     | '/studenti'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   InsegnantiRoute: typeof InsegnantiRoute
   OrariRoute: typeof OrariRoute
   PagamentiRoute: typeof PagamentiRoute
+  PrenotazioniRoute: typeof PrenotazioniRoute
   PresenzeRoute: typeof PresenzeRoute
   RegistroRoute: typeof RegistroRoute
   StudentiRoute: typeof StudentiRoute
@@ -201,6 +214,13 @@ declare module '@tanstack/react-router' {
       path: '/presenze'
       fullPath: '/presenze'
       preLoaderRoute: typeof PresenzeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prenotazioni': {
+      id: '/prenotazioni'
+      path: '/prenotazioni'
+      fullPath: '/prenotazioni'
+      preLoaderRoute: typeof PrenotazioniRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pagamenti': {
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   InsegnantiRoute: InsegnantiRoute,
   OrariRoute: OrariRoute,
   PagamentiRoute: PagamentiRoute,
+  PrenotazioniRoute: PrenotazioniRoute,
   PresenzeRoute: PresenzeRoute,
   RegistroRoute: RegistroRoute,
   StudentiRoute: StudentiRoute,

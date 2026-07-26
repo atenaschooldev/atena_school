@@ -79,7 +79,7 @@ export function useCheckoutSuccess() {
     });
   }, [verifying]);
 
-  const emailDisplay = bookingData?.student_email || emailParam || user?.email || "";
+  const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
   const isPaid = !!sessionId || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
 
@@ -111,7 +111,7 @@ export function useCheckoutSuccess() {
   }, [verifying, user, emailDisplay, isGmail, isPaid]);
 
   const handleSendMagicLink = async () => {
-    const emailToSend = bookingData?.student_email || emailParam || user?.email;
+    const emailToSend = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email;
     if (!emailToSend) {
       toast.error("Email non trovata per l'invio del link");
       return;
