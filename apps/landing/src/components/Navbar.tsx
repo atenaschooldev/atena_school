@@ -124,17 +124,17 @@ const Navbar = () => {
 
   return (
     <>
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-2 px-4 md:px-8 ${visible ? "translate-y-0" : "-translate-y-full"
+      <header className={`fixed top-0 w-full z-50 transition-all duration-300 py-1.5 md:py-2 px-3 md:px-8 ${visible ? "translate-y-0" : "-translate-y-full"
         } bg-white shadow-sm border-b border-slate-100`}>
-        <div className="mx-auto max-w-7xl flex items-center justify-between h-16 px-6">
+        <div className="mx-auto max-w-7xl flex items-center justify-between h-12 md:h-16 px-2 md:px-6">
           {/* Logo */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 md:gap-6">
             <Link
               href="/"
-              className="flex items-center gap-3"
+              className="flex items-center gap-2.5 md:gap-3"
               onClick={() => handleLinkClick("/")}
             >
-              <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-12 h-12">
+              <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-9 h-9 md:w-12 md:h-12">
                 <Image
                   src={logo}
                   alt="Atena School"
@@ -144,11 +144,11 @@ const Navbar = () => {
                 />
               </div>
               <div className="flex flex-col items-center leading-tight">
-                <span className="font-serif font-black text-base xs:text-lg md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
+                <span className="font-serif font-black text-sm xs:text-base md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
                   Atena <span style={{ color: '#FAA904' }}>School</span>
                 </span>
                 <span
-                  className="text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5"
+                  className="text-[8px] md:text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5"
                   style={{ color: isLightHeader ? 'rgba(255, 255, 255, 0.6)' : '#9FA2AC' }}
                 >
                   civitatis ornamento

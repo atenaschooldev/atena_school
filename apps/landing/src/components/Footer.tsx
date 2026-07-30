@@ -25,13 +25,13 @@ const Footer = () => {
     <footer className="w-full bg-[#043569] text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10">
       {/* Centered Content Container */}
       <div className="max-w-7xl mx-auto relative z-10">
-        
+
         {/* Ambient Light */}
         <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#F8861D]/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header Row */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-10 border-b border-white/10">
-          
+
           {/* Brand & Address */}
           <div className="space-y-3">
             <div className="flex items-center gap-3">
@@ -69,7 +69,7 @@ const Footer = () => {
 
         {/* Main Columns Grid */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 py-10">
-          
+
           {/* Column 1: Corsi di Lingua */}
           <div className="md:col-span-4 lg:col-span-4 space-y-4">
             <h4 className="text-sm font-bold text-white tracking-wide">
@@ -110,9 +110,6 @@ const Footer = () => {
                 <Link href="/corsi/b1-preliminary" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   B1 Preliminary
                 </Link>
-                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-[#F8861D]/20 text-[#F8861D] tracking-wider">
-                  POPULARE
-                </span>
               </li>
               <li>
                 <Link href="/corsi/b2-first" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
@@ -152,9 +149,6 @@ const Footer = () => {
                 <Link href="/corsi/eipass-7-moduli-user" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
                   EIPASS 7 Moduli User
                 </Link>
-                <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 tracking-wider">
-                  EIPASS
-                </span>
               </li>
               <li>
                 <Link href="/corsi/eipass-it-security" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
