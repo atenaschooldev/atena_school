@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AppHeader } from "@/components/app-header";
 import { useBookings } from "../hooks/use-bookings";
 import { BookingDetailDialog } from "./booking-detail-dialog";
 import {
@@ -53,12 +52,10 @@ export function BookingsView() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
-      <AppHeader searchPlaceholder="Cerca acquisti, ordini o lead..." />
-
       <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:px-12 xl:px-16 space-y-10 max-w-[1600px] mx-auto w-full">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1.5">
+          <div className="flex-1 space-y-6">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Ordini e Acquisizioni
             </h1>

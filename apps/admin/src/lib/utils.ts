@@ -6,6 +6,24 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function getAppUrl(path: string = ""): string {
+  return path;
+}
+
+export function assetUrl(path: string = ""): string {
+  return path;
+}
+
+export const GIORNI = [
+  "Lunedì",
+  "Martedì",
+  "Mercoledì",
+  "Giovedì",
+  "Venerdì",
+  "Sabato",
+  "Domenica",
+];
+
 export function formatDateSafe(
   dateVal: string | Date | undefined | null,
   formatStr: string = "dd.MM.yyyy",
@@ -19,23 +37,4 @@ export function formatDateSafe(
   } catch {
     return String(dateVal);
   }
-}
-
-export const GIORNI = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab"] as const;
-
-export const CONTRATTI = [
-  "Standard mensile",
-  "Standard annuale",
-  "Premium annuale",
-  "Trial gratuito",
-  "Corporate / Aziendale",
-] as const;
-
-export function calcolaEta(dataNascita: string): number {
-  const oggi = new Date();
-  const nascita = new Date(dataNascita);
-  let eta = oggi.getFullYear() - nascita.getFullYear();
-  const m = oggi.getMonth() - nascita.getMonth();
-  if (m < 0 || (m === 0 && oggi.getDate() < nascita.getDate())) eta--;
-  return eta;
 }

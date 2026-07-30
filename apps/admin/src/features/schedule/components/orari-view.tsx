@@ -1,5 +1,4 @@
-import { useMemo } from "react";
-import { AppHeader } from "@/components/app-header";
+import { useMemo, useState } from "react";
 import { teachers } from "@/lib/mock-data";
 import { GIORNI } from "@/lib/utils";
 import { levelColor, levelColorSolid, useCourses } from "@/features/courses";
@@ -14,7 +13,7 @@ import {
 import { LessonForm } from "./lesson-form";
 import type { Course } from "@/features/courses";
 import type { Lesson } from "../types";
-import { ChevronLeft, ChevronRight, CalendarDays, Sparkles, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays, Sparkles, Pencil, Trash2, Plus } from "lucide-react";
 import { format, isSameMonth } from "date-fns";
 import { it } from "date-fns/locale";
 import { useSchedule } from "../hooks/use-schedule";
@@ -388,52 +387,48 @@ export function OrariView() {
 
   return (
     <>
-      <AppHeader
-        searchPlaceholder="Cerca lezioni..."
-        onNew={() => setShowCreateDialog(true)}
-        newLabel="Lezione"
-      />
       <main className="flex-1 overflow-hidden p-6 flex flex-col min-h-0">
         <div className="rounded-xl border bg-card overflow-hidden flex-1 flex flex-col shadow-[0_4px_16px_rgba(0,0,0,0.02)] min-h-0">
-          {/* Header bar */}
-          <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2 shrink-0">
-            {/* Navigation */}
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={goPrev}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 rounded-full px-3 text-xs font-bold hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={() => setCurrentDate(new Date())}
-              >
-                Oggi
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={goNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+        {/* Header bar */}
+        <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2 shrink-0">
+          {/* Navigation */}
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={goPrev}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full px-3 text-xs font-bold hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => setCurrentDate(new Date())}
+            >
+              Oggi
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted/80 active:scale-95 transition-all cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={goNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
-            {/* Date label */}
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-primary/80" />
-              <span className="text-sm font-bold text-foreground tracking-wide">
-                {dateRangeStr}
-              </span>
-            </div>
+          {/* Date label */}
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary/80" />
+            <span className="text-sm font-bold text-foreground tracking-wide">
+              {dateRangeStr}
+            </span>
+          </div>
 
-            {/* Right side: view switcher only */}
+          {/* Right side: view switcher & create button */}
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-0.5 bg-muted/60 rounded-lg p-0.5">
               {VIEW_LABELS.map(({ key, label }) => (
                 <button
@@ -446,7 +441,16 @@ export function OrariView() {
                 </button>
               ))}
             </div>
+            <Button
+              size="sm"
+              onClick={() => setShowCreateDialog(true)}
+              className="h-8 gap-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground shadow hover:bg-primary/90 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Nuova Lezione
+            </Button>
           </div>
+        </div>
 
           {/* ── Mini-popover: created from column click ─────── */}
           {creatingLesson && (

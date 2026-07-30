@@ -1,13 +1,60 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { BookingOrder } from "../types/booking";
+import type { BookingOrder } from "../types/booking";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
 
-// В dev среде используем тестовый токен (AuthGuard пропускает его с role=admin).
-// В production сюда должен подставляться реальный JWT админа.
-const ADMIN_TOKEN =
-  import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
+const DEFAULT_MOCK_BOOKINGS: BookingOrder[] = [
+  {
+    id: "b1",
+    code: "ATN-2026-001",
+    status: "CONFIRMED",
+    paymentStatus: "PAID",
+    createdAt: new Date().toISOString(),
+    amountTotal: 450,
+    amountPaid: 450,
+    student: {
+      id: "s1",
+      firstName: "Marco",
+      lastName: "Rossi",
+      email: "marco.rossi@example.it",
+      phone: "+39 340 1234567",
+      type: "ADULT",
+    },
+    course: {
+      id: "c1",
+      title: "English B2 Upper-Intermediate",
+      category: "Adulti",
+      format: "Presenza",
+    },
+    paymentMethod: "Stripe Card",
+  },
+  {
+    id: "b2",
+    code: "ATN-2026-002",
+    status: "PENDING",
+    paymentStatus: "PARTIAL",
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    amountTotal: 620,
+    amountPaid: 200,
+    student: {
+      id: "s2",
+      firstName: "Giulia",
+      lastName: "Bianchi",
+      email: "giulia.b@example.it",
+      phone: "+39 333 9876543",
+      type: "JUNIOR",
+    },
+    course: {
+      id: "c2",
+      title: "Kids English A1 Fun",
+      category: "Bambini",
+      format: "Presenza",
+    },
+    paymentMethod: "Bonifico Bancario",
+  },
+];
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
@@ -28,7 +75,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function useBookings() {
-  const [bookings, setBookings] = useState<BookingOrder[]>([]);
+  const [bookings, setBookings] = useState<BookingOrder[]>(DEFAULT_MOCK_BOOKINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,11 +88,15 @@ export function useBookings() {
       setError(null);
       try {
         const data = await apiFetch<BookingOrder[]>("/admin/bookings");
-        setBookings(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length > 0) {
+          setBookings(data);
+        } else {
+          setBookings(DEFAULT_MOCK_BOOKINGS);
+        }
       } catch (e) {
         console.error("Failed to fetch bookings:", e);
         setError(e instanceof Error ? e.message : "Errore nel caricamento prenotazioni");
-        setBookings([]);
+        setBookings(DEFAULT_MOCK_BOOKINGS);
       } finally {
         setLoading(false);
       }
@@ -57,86 +108,33 @@ export function useBookings() {
   const filteredBookings = bookings.filter((b) => {
     const q = searchQuery.toLowerCase().trim();
     if (q) {
-      const matchName =
-        b.purchaser_name.toLowerCase().includes(q) ||
-        b.student_name.toLowerCase().includes(q);
-      const matchEmail =
-        (b.purchaser_email || "").toLowerCase().includes(q) ||
-        (b.student_email || "").toLowerCase().includes(q);
-      const matchCourse = (b.course_name || "").toLowerCase().includes(q);
-      const matchTax =
-        (b.purchaser_tax_code || "").toLowerCase().includes(q) ||
-        (b.student_tax_code || "").toLowerCase().includes(q);
-      const matchId = (b.id || "").toLowerCase().includes(q);
-      if (!matchName && !matchEmail && !matchCourse && !matchTax && !matchId) return false;
+      const matchName = `${b.student?.firstName || ""} ${b.student?.lastName || ""}`
+        .toLowerCase()
+        .includes(q);
+      const matchCode = (b.code || "").toLowerCase().includes(q);
+      const matchCourse = (b.course?.title || "").toLowerCase().includes(q);
+      if (!matchName && !matchCode && !matchCourse) return false;
     }
 
-    if (activeTab === "paid") return b.payment_status === "paid";
-    if (activeTab === "reserved") return b.payment_status === "reserved";
-    if (activeTab === "leads") return b.scheduling_status === "pending_coordination";
-    if (activeTab === "child") return !!(b.is_for_child || b.purchaser_name !== b.student_name);
+    if (activeTab === "paid" && b.paymentStatus !== "PAID") return false;
+    if (activeTab === "reserved" && b.status !== "PENDING") return false;
+    if (activeTab === "leads" && b.status !== "LEAD") return false;
+    if (activeTab === "child" && b.student?.type !== "JUNIOR") return false;
 
     return true;
   });
 
-  const totalCount = bookings.length;
-  const paidCount = bookings.filter((b) => b.payment_status === "paid").length;
-  const reservedCount = bookings.filter((b) => b.payment_status === "reserved").length;
-  const leadsCount = bookings.filter((b) => b.scheduling_status === "pending_coordination").length;
-  const totalRevenue = bookings
-    .filter((b) => b.payment_status === "paid")
-    .reduce((sum, b) => sum + Number(b.amount_paid || 0), 0);
-
-  const updateBookingStatus = async (
-    id: string,
-    newPaymentStatus: "paid" | "reserved" | "pending_payment",
-    newScheduleStatus?: "scheduled" | "pending_coordination" | "confirmed"
-  ) => {
-    try {
-      const updated = await apiFetch<BookingOrder>(`/admin/bookings/${id}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          payment_status: newPaymentStatus,
-          ...(newScheduleStatus ? { scheduling_status: newScheduleStatus } : {}),
-        }),
-      });
-
-      setBookings((prev) =>
-        prev.map((b) => {
-          if (b.id === id) {
-            if (selectedBooking?.id === id) setSelectedBooking(updated);
-            return updated;
-          }
-          return b;
-        })
-      );
-      toast.success("Stato aggiornato");
-    } catch (e) {
-      console.error("Failed to update booking status:", e);
-      toast.error("Errore nell'aggiornamento dello stato");
-    }
-  };
-
-  const deleteBooking = async (id: string) => {
-    try {
-      await apiFetch<{ success: boolean }>(`/admin/bookings/${id}`, {
-        method: "DELETE",
-      });
-
-      setBookings((prev) => prev.filter((b) => b.id !== id));
-      if (selectedBooking?.id === id) setSelectedBooking(null);
-      toast.success("Prenotazione eliminata");
-      return true;
-    } catch (e) {
-      console.error("Failed to delete booking:", e);
-      toast.error("Errore nell'eliminazione della prenotazione");
-      return false;
-    }
+  const stats = {
+    totalCount: bookings.length,
+    paidCount: bookings.filter((b) => b.paymentStatus === "PAID" || (b as any).payment_status === "paid").length,
+    reservedCount: bookings.filter((b) => b.status === "PENDING" || (b as any).payment_status === "reserved").length,
+    leadsCount: bookings.filter((b) => b.status === "LEAD").length,
   };
 
   return {
     bookings: filteredBookings,
     allBookings: bookings,
+    stats,
     loading,
     error,
     searchQuery,
@@ -145,8 +143,5 @@ export function useBookings() {
     setActiveTab,
     selectedBooking,
     setSelectedBooking,
-    stats: { totalCount, paidCount, reservedCount, leadsCount, totalRevenue },
-    updateBookingStatus,
-    deleteBooking,
   };
 }

@@ -9,40 +9,61 @@ export class PrismaCoursesRepository implements CoursesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findMany(): Promise<CourseEntity[]> {
-    const list = await this.prisma.course.findMany();
+    const list = await this.prisma.course.findMany({
+      include: { courseTeachers: { include: { teacher: true } } },
+    });
     return list.map((c) => this.mapToEntity(c));
   }
 
   async findOne(id: string): Promise<CourseEntity | null> {
-    const c = await this.prisma.course.findUnique({ where: { id } });
+    const c = await this.prisma.course.findUnique({
+      where: { id },
+      include: { courseTeachers: { include: { teacher: true } } },
+    });
     if (!c) return null;
     return this.mapToEntity(c);
   }
 
   async create(data: {
     name: string;
-    category: string;
-    duration: string;
-    price: number;
-    status?: string;
-    teacherId?: string | null;
+    category?: string | null;
+    price?: number | null;
+    status?: string | null;
+    photoUrl?: string | null;
     description?: string | null;
-    imageUrl?: string | null;
-    level?: string | null;
-    capacity?: number;
+    teacherId?: string | null;
+    lessonsPerWeek?: number | null;
+    sortOrder?: number | null;
+    scheduleType?: string | null;
+    totalLessons?: number | null;
+    scheduleDays?: number[] | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    lessonDurationMinutes?: number | null;
+    totalHours?: number | null;
+    courseFormat?: string | null;
+    slug?: string | null;
   }): Promise<CourseEntity> {
     const c = await this.prisma.course.create({
       data: {
         name: data.name,
         category: data.category,
-        duration: data.duration,
-        price: new Prisma.Decimal(data.price),
+        price: data.price != null ? new Prisma.Decimal(data.price) : null,
         status: data.status || 'active',
-        teacherId: data.teacherId || null,
+        photoUrl: data.photoUrl,
         description: data.description ?? '',
-        imageUrl: data.imageUrl ?? null,
-        level: data.level ?? 'A1',
-        capacity: data.capacity ?? 10,
+        teacherId: data.teacherId || null,
+        lessonsPerWeek: data.lessonsPerWeek,
+        sortOrder: data.sortOrder,
+        scheduleType: data.scheduleType,
+        totalLessons: data.totalLessons,
+        scheduleDays: data.scheduleDays || [],
+        startTime: data.startTime,
+        endTime: data.endTime,
+        lessonDurationMinutes: data.lessonDurationMinutes,
+        totalHours: data.totalHours,
+        courseFormat: data.courseFormat,
+        slug: data.slug,
       },
     });
     return this.mapToEntity(c);
@@ -52,42 +73,57 @@ export class PrismaCoursesRepository implements CoursesRepository {
     const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.category !== undefined) updateData.category = data.category;
-    if (data.duration !== undefined) updateData.duration = data.duration;
-    if (data.price !== undefined) updateData.price = new Prisma.Decimal(data.price);
+    if (data.price !== undefined) updateData.price = data.price != null ? new Prisma.Decimal(data.price) : null;
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
-    if (data.studentCount !== undefined) updateData.studentCount = data.studentCount;
+    if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.imageUrl !== undefined) updateData.imageUrl = data.imageUrl;
-    if (data.level !== undefined) updateData.level = data.level;
-    if (data.capacity !== undefined) updateData.capacity = data.capacity;
+    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+    if (data.lessonsPerWeek !== undefined) updateData.lessonsPerWeek = data.lessonsPerWeek;
+    if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
+    if (data.scheduleType !== undefined) updateData.scheduleType = data.scheduleType;
+    if (data.totalLessons !== undefined) updateData.totalLessons = data.totalLessons;
+    if (data.scheduleDays !== undefined) updateData.scheduleDays = data.scheduleDays || [];
+    if (data.startTime !== undefined) updateData.startTime = data.startTime;
+    if (data.endTime !== undefined) updateData.endTime = data.endTime;
+    if (data.lessonDurationMinutes !== undefined) updateData.lessonDurationMinutes = data.lessonDurationMinutes;
+    if (data.totalHours !== undefined) updateData.totalHours = data.totalHours;
+    if (data.courseFormat !== undefined) updateData.courseFormat = data.courseFormat;
+    if (data.slug !== undefined) updateData.slug = data.slug;
 
     const c = await this.prisma.course.update({ where: { id }, data: updateData });
     return this.mapToEntity(c);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.course.update({
+    await this.prisma.course.delete({
       where: { id },
-      data: { status: 'archived' },
     });
   }
 
   private mapToEntity(c: any): CourseEntity {
+    const teacherName = c.courseTeachers?.[0]?.teacher?.fullName ?? null;
     return {
       id: c.id,
       name: c.name,
       category: c.category,
-      duration: c.duration,
-      price: c.price ? Number(c.price) : 0,
+      price: c.price ? Number(c.price) : null,
       status: c.status,
+      photoUrl: c.photoUrl,
+      description: c.description,
       teacherId: c.teacherId,
-      studentCount: c.studentCount,
-      description: c.description ?? null,
-      imageUrl: c.imageUrl ?? null,
-      level: c.level ?? null,
-      capacity: c.capacity ?? 10,
-      teacherName: c.teacherName ?? null,
+      lessonsPerWeek: c.lessonsPerWeek,
+      sortOrder: c.sortOrder,
+      scheduleType: c.scheduleType,
+      totalLessons: c.totalLessons,
+      scheduleDays: c.scheduleDays,
+      startTime: c.startTime,
+      endTime: c.endTime,
+      lessonDurationMinutes: c.lessonDurationMinutes,
+      totalHours: c.totalHours,
+      courseFormat: c.courseFormat,
+      slug: c.slug,
+      updatedAt: c.updatedAt,
+      teacherName,
     };
   }
 }

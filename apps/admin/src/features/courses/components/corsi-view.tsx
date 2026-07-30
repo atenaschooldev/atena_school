@@ -1,156 +1,67 @@
-import { useMemo } from "react";
-import { AppHeader } from "@/components/app-header";
+"use client";
+
+import { useMemo, useState } from "react";
+import {
+  type ColumnDef,
+  type ColumnFiltersState,
+  type SortingState,
+  type VisibilityState,
+  type Row,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  Copy,
+  ChevronDown,
+  Download,
+  Eye,
+  EllipsisVertical,
+} from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { levelColor } from "../utils";
-import { DataTable } from "@/components/data-table";
-import type { TableCol } from "@/components/data-table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { CourseForm } from "./course-form";
 import type { Course } from "../types";
 import { useCourses } from "../hooks/use-courses";
-import { CourseCard } from "./course-card";
-
-const getCols = (): TableCol<Course>[] => [
-  {
-    key: "nome",
-    label: "Corso",
-    width: 220,
-    flexGrow: true,
-    maxWidth: 350,
-    render: (c) => (
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-14 rounded-lg overflow-hidden border border-border/40 bg-muted shrink-0 shadow-sm">
-          {c.foto ? (
-            <img src={c.foto} alt={c.nome} className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold">
-              {c.nome[0]}
-            </div>
-          )}
-        </div>
-        <span className="font-semibold text-sm whitespace-nowrap text-foreground">{c.nome}</span>
-      </div>
-    ),
-    copy: (c) => c.nome,
-    hasFilter: true,
-    hasSearch: true,
-    sortAscLabel: "A → Z",
-    sortDescLabel: "Z → A",
-    sortFn: (a, b) => a.nome.localeCompare(b.nome),
-  },
-  {
-    key: "categoria",
-    label: "Categoria",
-    width: 150,
-    render: (c) => (
-      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-        {c.categoria}
-      </span>
-    ),
-    copy: (c) => c.categoria,
-    hasFilter: true,
-    hasSearch: true,
-    directFilter: true,
-    filterOptions: (data) =>
-      Array.from(new Set(data.map((c) => c.categoria)))
-        .sort()
-        .map((cat) => ({ value: cat, label: cat })),
-    filterFn: (c, filter) => {
-      const selectMatch =
-        !filter.selected || filter.selected.length === 0 || filter.selected.includes(c.categoria);
-      return selectMatch;
-    },
-  },
-  {
-    key: "durata",
-    label: "Durata",
-    width: 120,
-    render: (c) => (
-      <span className="text-sm font-mono text-muted-foreground whitespace-nowrap">{c.durata}</span>
-    ),
-    copy: (c) => c.durata,
-    hasFilter: true,
-    hasSearch: true,
-  },
-  {
-    key: "prezzo",
-    label: "Prezzo",
-    width: 110,
-    align: "right",
-    render: (c) => (
-      <span className="text-sm font-mono font-medium text-foreground whitespace-nowrap">
-        € {c.prezzo.toFixed(2)}
-      </span>
-    ),
-    copy: (c) => `€ ${c.prezzo.toFixed(2)}`,
-    hasFilter: true,
-    hasSearch: true,
-    sortAscLabel: "Più economici",
-    sortDescLabel: "Più costosi",
-    sortFn: (a, b) => a.prezzo - b.prezzo,
-  },
-  {
-    key: "stato",
-    label: "Stato",
-    width: 140,
-    align: "center",
-    render: (c) => {
-      const label = { attivo: "Attivo", "in-programmazione": "Pianificato", concluso: "Concluso" }[
-        c.stato
-      ];
-      return (
-        <Badge
-          variant="outline"
-          className={`text-[11px] rounded-full gap-1.5 whitespace-nowrap ${c.stato === "attivo" ? "bg-success/10 text-success border-success/40" : c.stato === "in-programmazione" ? "bg-warning/15 text-warning-foreground border-warning/40" : "bg-muted text-muted-foreground border-border"}`}
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-current" />
-          {label}
-        </Badge>
-      );
-    },
-    copy: (c) => c.stato,
-    hasFilter: true,
-    hasSearch: true,
-    directFilter: true,
-    filterOptions: [
-      { value: "attivo", label: "Attivo" },
-      { value: "in-programmazione", label: "Pianificato" },
-      { value: "concluso", label: "Concluso" },
-    ],
-    filterFn: (c, filter) => {
-      const selectMatch =
-        !filter.selected || filter.selected.length === 0 || filter.selected.includes(c.stato);
-      return selectMatch;
-    },
-  },
-  {
-    key: "capienza",
-    label: "Capienza",
-    width: 110,
-    align: "center",
-    render: (c) => (
-      <span className="text-sm font-medium whitespace-nowrap">{c.capienza} pax</span>
-    ),
-    copy: (c) => `${c.capienza} pax`,
-    sortAscLabel: "Più piccoli",
-    sortDescLabel: "Più grandi",
-    sortFn: (a, b) => a.capienza - b.capienza,
-  },
-  {
-    key: "descrizione",
-    label: "Descrizione",
-    width: 260,
-    flexGrow: true,
-    render: (c) => (
-      <span className="text-sm text-muted-foreground whitespace-nowrap">{c.descrizione}</span>
-    ),
-    copy: (c) => c.descrizione,
-    hasFilter: true,
-    hasSearch: true,
-  },
-];
-
-const STORAGE_KEY = "atena-corsi-cols-v1";
+import { formatCategoryLabel, categoryColor, COURSE_CATEGORIES, formatCourseFormatLabel, COURSE_FORMAT_OPTIONS } from "../utils";
+import { useAppStore } from "@/stores/app-store";
 
 export function CorsiView() {
   const {
@@ -161,61 +72,486 @@ export function CorsiView() {
     handleNewClick,
     handleEditClick,
     handleDeleteClick,
-    handleDeleteSelected,
     handleFormSubmit,
     handleCloseDialog,
   } = useCourses();
 
-  const defaultCols = useMemo(() => getCols(), []);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+  const [pageSize, setPageSize] = useState("10");
+
+  const tableSearch = useAppStore((s) => s.tableSearch);
+  const setTableSearch = useAppStore((s) => s.setTableSearch);
+
+  const exactFilter = (row: Row<Course>, columnId: string, value: string) => {
+    if (!value) return true;
+    const rawVal = (row.getValue(columnId) as string) || "";
+    if (columnId === "categoria") {
+      if (value === "Certipass") return rawVal.toLowerCase().includes("certipass");
+      if (value === "languages") return rawVal.toLowerCase().includes("lang") || rawVal.toLowerCase().includes("lingu");
+      return rawVal === value;
+    }
+    if (columnId === "courseFormat") {
+      const formatted = formatCourseFormatLabel(rawVal);
+      const targetFormatted = formatCourseFormatLabel(value);
+      return formatted === targetFormatted || rawVal.toLowerCase() === value.toLowerCase();
+    }
+    return rawVal === value;
+  };
+
+  const columns: ColumnDef<Course>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center px-2">
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
+          />
+        </div>
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center px-2">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "nome",
+      header: "Corso",
+      cell: ({ row }) => {
+        const course = row.original;
+        const initials = course.nome.slice(0, 2).toUpperCase();
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 rounded-lg border border-border/50 shrink-0">
+              {course.foto ? <AvatarImage src={course.foto} alt={course.nome} className="object-cover" /> : null}
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-foreground truncate">{course.nome}</span>
+              <span className="text-xs text-muted-foreground truncate">{formatCategoryLabel(course.categoria)}</span>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "categoria",
+      header: "Categoria",
+      cell: ({ row }) => {
+        const rawCat = row.getValue("categoria") as string;
+        const cat = formatCategoryLabel(rawCat);
+        const colorClasses = categoryColor(rawCat);
+        return (
+          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border ${colorClasses}`}>
+            {cat}
+          </Badge>
+        );
+      },
+      filterFn: exactFilter,
+    },
+    {
+      accessorKey: "courseFormat",
+      header: "Formato",
+      cell: ({ row }) => (
+        <span className="text-sm font-medium text-foreground">
+          {formatCourseFormatLabel(row.getValue("courseFormat"))}
+        </span>
+      ),
+      filterFn: exactFilter,
+    },
+    {
+      accessorKey: "orari",
+      header: "Orari & Giorni",
+      cell: ({ row }) => {
+        const course = row.original;
+        return (
+          <div className="flex flex-col gap-1">
+            {course.scheduleDays && course.scheduleDays.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {course.scheduleDays.map((d) => (
+                  <Badge key={d} variant="outline" className="text-[10px] uppercase px-1.5 py-0 font-semibold bg-muted/40">
+                    {d}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            {course.startTime && (
+              <span className="text-xs font-mono text-muted-foreground">
+                {course.startTime} {course.endTime ? `- ${course.endTime}` : ""}
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "prezzo",
+      header: "Prezzo",
+      cell: ({ row }) => {
+        const val = parseFloat(row.getValue("prezzo") || "0");
+        const formatted = new Intl.NumberFormat("it-IT", {
+          style: "currency",
+          currency: "EUR",
+        }).format(val);
+        return <span className="text-sm font-semibold text-foreground">{formatted}</span>;
+      },
+    },
+    {
+      accessorKey: "stato",
+      header: "Stato",
+      cell: ({ row }) => {
+        const stato = (row.getValue("stato") as string) || "attivo";
+        let colorClass = "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20";
+        let label = "Attivo";
+
+        if (stato === "in-programmazione") {
+          colorClass = "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20";
+          label = "Pianificato";
+        } else if (stato === "concluso") {
+          colorClass = "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20";
+          label = "Concluso";
+        }
+
+        return (
+          <Badge variant="secondary" className={`text-xs font-medium border-none ${colorClass}`}>
+            {label}
+          </Badge>
+        );
+      },
+      filterFn: exactFilter,
+    },
+    {
+      accessorKey: "teacherName",
+      header: "Insegnante",
+      cell: ({ row }) => {
+        const name = row.getValue("teacherName") as string | null;
+        return (
+          <span className="text-sm text-foreground">
+            {name || <span className="text-muted-foreground">—</span>}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "lessonDurationMinutes",
+      header: "Durata Lezione",
+      cell: ({ row }) => {
+        const min = row.getValue("lessonDurationMinutes") as number | null;
+        if (!min) return <span className="text-muted-foreground text-sm">—</span>;
+        const h = Math.floor(min / 60);
+        const m = min % 60;
+        const label = h > 0 ? (m > 0 ? `${h}h ${m}min` : `${h}h`) : `${m}min`;
+        return <span className="text-sm font-medium text-foreground">{label}</span>;
+      },
+    },
+    {
+      id: "actions",
+      header: "Azioni",
+      cell: ({ row }) => {
+        const course = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => handleEditClick(course)}
+              title="Modifica"
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
+                  <EllipsisVertical className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(course)}>
+                  Modifica Dettagli
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(course.id)}>
+                  Copia ID Corso
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/30"
+                  onClick={() => handleDeleteClick(course)}
+                >
+                  <Trash2 className="mr-2 size-4" />
+                  Elimina Corso
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: coursesList,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setTableSearch,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+      globalFilter: tableSearch,
+    },
+  });
+
+  const categoryFilter = table.getColumn("categoria")?.getFilterValue() as string;
+  const formatFilter = table.getColumn("courseFormat")?.getFilterValue() as string;
+  const statusFilter = table.getColumn("stato")?.getFilterValue() as string;
 
   return (
-    <>
-      <AppHeader
-        searchPlaceholder="Cerca corsi..."
-        onNew={handleNewClick}
-        newLabel="Corso"
-        tableKey="corsi"
-      />
-      <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
-        <DataTable<Course>
-          data={coursesList}
-          defaultCols={defaultCols}
-          storageKey={STORAGE_KEY}
-          tableKey="corsi"
-          footerLabelSingular="corso"
-          footerLabelPlural="corsi"
-          onRowEdit={handleEditClick}
-          onRowDelete={handleDeleteClick}
-          onDeleteSelected={handleDeleteSelected}
-          renderCard={(c) => (
-            <CourseCard
-              course={c}
-              onEdit={handleEditClick}
-              onDelete={handleDeleteClick}
-            />
-          )}
-        />
-      </main>
+    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
+      {/* Search & Action Bar */}
+      <div className="w-full space-y-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 items-center space-x-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Cerca corsi..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" className="cursor-pointer">
+              <Download className="mr-2 size-4" />
+              Esporta
+            </Button>
+            <Button onClick={handleNewClick} className="cursor-pointer font-semibold gap-2">
+              <Plus className="size-4" />
+              Nuovo Corso
+            </Button>
+          </div>
+        </div>
 
-      <Dialog
-        open={open}
-        onOpenChange={(v) => {
-          if (!v) handleCloseDialog();
-        }}
-      >
-        <DialogContent className="sm:max-w-3xl p-6 rounded-2xl border border-border/50 shadow-xl bg-background/95 backdrop-blur-md">
-          <DialogHeader className="pb-2 border-b border-border/30 shrink-0">
-            <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground">
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              {editing ? "Modifica corso" : "Nuovo corso"}
-            </DialogTitle>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {editing
-                ? "Modifica le informazioni generali, il prezzo e la descrizione del corso."
-                : "Crea un nuovo corso inserendo tutti i dettagli professionali."}
-            </p>
-          </DialogHeader>
+        {/* 4-Column Select Filters */}
+        <div className="grid gap-2 sm:grid-cols-4 sm:gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="category-filter" className="text-sm font-medium">
+              Categoria
+            </Label>
+            <Select
+              value={categoryFilter || "all"}
+              onValueChange={(value) =>
+                table.getColumn("categoria")?.setFilterValue(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger className="cursor-pointer w-full" id="category-filter">
+                <SelectValue placeholder="Seleziona Categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte le Categorie</SelectItem>
+                {COURSE_CATEGORIES.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="format-filter" className="text-sm font-medium">
+              Formato
+            </Label>
+            <Select
+              value={formatFilter || "all"}
+              onValueChange={(value) =>
+                table.getColumn("courseFormat")?.setFilterValue(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger className="cursor-pointer w-full" id="format-filter">
+                <SelectValue placeholder="Seleziona Formato" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti i Formati</SelectItem>
+                {COURSE_FORMAT_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status-filter" className="text-sm font-medium">
+              Stato
+            </Label>
+            <Select
+              value={statusFilter || "all"}
+              onValueChange={(value) =>
+                table.getColumn("stato")?.setFilterValue(value === "all" ? "" : value)
+              }
+            >
+              <SelectTrigger className="cursor-pointer w-full" id="status-filter">
+                <SelectValue placeholder="Seleziona Stato" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti gli Stati</SelectItem>
+                <SelectItem value="attivo">Attivo</SelectItem>
+                <SelectItem value="in-programmazione">Pianificato</SelectItem>
+                <SelectItem value="concluso">Concluso</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="column-visibility" className="text-sm font-medium">
+              Visibilità Colonne
+            </Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild id="column-visibility">
+                <Button variant="outline" className="cursor-pointer w-full justify-between">
+                  Colonne <ChevronDown className="ml-2 size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="cursor-pointer capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="rounded-md border bg-card">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    Nessun corso trovato.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* Template Bottom Pagination Bar */}
+        <div className="flex items-center justify-between space-x-2 py-4">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <span>Mostra</span>
+            <Select value={pageSize} onValueChange={(val) => { setPageSize(val); table.setPageSize(Number(val)); }}>
+              <SelectTrigger className="h-8 w-[70px] cursor-pointer">
+                <SelectValue placeholder={pageSize} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+            <span>
+              {table.getFilteredSelectedRowModel().rows.length} di {table.getFilteredRowModel().rows.length} riga/e selezionata/e.
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-6 lg:space-x-8">
+            <div className="flex items-center justify-center text-sm font-medium text-muted-foreground">
+              Pagina {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Precedente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="cursor-pointer"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Successiva
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Course Form Sheet */}
+      <Sheet open={open} onOpenChange={(v) => !v && handleCloseDialog()}>
+        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto p-6">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="text-xl font-bold">
+              {editing ? "Modifica Corso" : "Nuovo Corso"}
+            </SheetTitle>
+          </SheetHeader>
           <CourseForm
             key={editing ? editing.id : "new"}
             initialValues={initialFormValues}
@@ -223,8 +559,8 @@ export function CorsiView() {
             onCancel={handleCloseDialog}
             submitLabel={editing ? "Salva Modifiche" : "Crea Corso"}
           />
-        </DialogContent>
-      </Dialog>
-    </>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 }

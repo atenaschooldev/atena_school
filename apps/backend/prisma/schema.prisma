@@ -23,23 +23,55 @@ model User {
 }
 
 model Course {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  category     String
-  duration     String
-  price        Decimal  @db.Decimal(10, 2)
-  status       String   @default("active")
-  teacherId    String?  @map("teacher_id") @db.Uuid
-  studentCount Int      @default(0) @map("student_count")
-  description  String?  @default("")
-  imageUrl     String?  @map("image_url") @db.Text
-  level        String?  @default("A1")
-  capacity     Int      @default(10)
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String
+  category                String?
+  price                   Decimal?  @db.Decimal(10, 2)
+  status                  String?   @default("active")
+  photoUrl                String?   @map("photo_url") @db.Text
+  description             String?   @default("")
+  teacherId               String?   @map("teacher_id") @db.Uuid
+  lessonsPerWeek          Int?      @map("lessons_per_week")
+  sortOrder               Int?      @map("sort_order")
+  scheduleType            String?   @map("schedule_type")
+  totalLessons            Int?      @map("total_lessons")
+  scheduleDays            Int[]     @map("schedule_days")
+  startTime               String?   @map("start_time")
+  endTime                 String?   @map("end_time")
+  lessonDurationMinutes   Int?      @map("lesson_duration_minutes")
+  totalHours              Int?      @map("total_hours")
+  courseFormat            String?   @map("course_format")
+  slug                    String?
+  updatedAt               DateTime? @map("updated_at") @db.Timestamptz
 
-  schedules Schedule[]
-  bookings  Booking[]
+  schedules      Schedule[]
+  bookings       Booking[]
+  courseTeachers CourseTeacher[]
 
   @@map("courses")
+}
+
+model Teacher {
+  teacherId      String    @id @map("teacher_id") @db.Uuid
+  fullName       String?   @map("full_name")
+  photoUrl       String?   @map("photo_url")
+  status         String?
+  updatedAt      DateTime? @map("updated_at") @db.Timestamptz
+
+  courseTeachers CourseTeacher[]
+
+  @@map("teachers")
+}
+
+model CourseTeacher {
+  courseId  String @map("course_id") @db.Uuid
+  teacherId String @map("teacher_id") @db.Uuid
+
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade)
+
+  @@id([courseId, teacherId])
+  @@map("course_teachers")
 }
 
 model Schedule {

@@ -1,13 +1,14 @@
+"use client";
+
 import * as React from "react";
-import { useState } from "react";
-import { LEVELS_UI } from "@/stores/app-store";
+import { useState, useEffect } from "react";
 import type { CourseFormValues } from "../types";
-import { levelColorSolid } from "../utils";
-import { X, Check, Euro } from "lucide-react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { COURSE_CATEGORIES, COURSE_FORMAT_OPTIONS } from "../utils";
 
 export interface CourseFormProps {
   initialValues: CourseFormValues;
@@ -23,295 +25,356 @@ export interface CourseFormProps {
   submitLabel: string;
 }
 
-const CATEGORIES = [
-  "General English",
-  "Business English",
-  "Preparazione Esami",
-  "Conversazione",
-  "Letteratura",
+const STATUS_OPTIONS = [
+  { value: "attivo", label: "Attivo" },
+  { value: "in-programmazione", label: "In Programmazione" },
+  { value: "concluso", label: "Concluso" },
+  { value: "archiviato", label: "Archiviato" },
 ];
 
-const COLORS = [
-  { value: "chart-1", label: "Rosso Atena", class: "bg-chart-1" },
-  { value: "chart-2", label: "Verde Smeraldo", class: "bg-chart-2" },
-  { value: "chart-3", label: "Blu Zaffiro", class: "bg-chart-3" },
-  { value: "chart-4", label: "Viola Ametista", class: "bg-chart-4" },
-  { value: "chart-5", label: "Arancione Ambra", class: "bg-chart-5" },
+const DAYS_OF_WEEK = [
+  "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica",
 ];
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
+
+interface Teacher { id: string; fullName: string; }
+
+function slugify(str: string): string {
+  return str.toLowerCase().trim()
+    .replace(/[àáâã]/g, "a").replace(/[èéêë]/g, "e")
+    .replace(/[ìíîï]/g, "i").replace(/[òóôõ]/g, "o")
+    .replace(/[ùúûü]/g, "u").replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-").replace(/-+/g, "-");
+}
+
+function calcEndTime(startTime: string, durationMin: number): string {
+  const [h, m] = startTime.split(":").map(Number);
+  if (isNaN(h) || isNaN(m)) return "";
+  const total = h * 60 + m + durationMin;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
 
 export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: CourseFormProps) {
   const [form, setForm] = useState<CourseFormValues>(initialValues);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [slugManual, setSlugManual] = useState(!!initialValues.slug);
+
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/v1/courses/teachers`, {
+      headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
+    })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: any[]) => {
+        if (Array.isArray(data)) {
+          setTeachers(data.map((t) => ({ id: t.teacherId, fullName: t.fullName })));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!slugManual && form.nome) {
+      setForm((f) => ({ ...f, slug: slugify(f.nome) }));
+    }
+  }, [form.nome, slugManual]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(form);
   };
 
+  const toggleDay = (day: string) => {
+    const limit = form.lessonsPerWeek;
+    setForm((f) => {
+      if (f.scheduleDays.includes(day)) {
+        return { ...f, scheduleDays: f.scheduleDays.filter((d) => d !== day) };
+      }
+      if (limit && f.scheduleDays.length >= limit) return f;
+      return { ...f, scheduleDays: [...f.scheduleDays, day] };
+    });
+  };
+
+  // ─── Derived flags ────────────────────────────────────────────────────────
+  const fmt = form.courseFormat || "group";
+  const isGroup = fmt === "group";
+  const isPrivate = fmt === "private";
+  const isCertification = fmt === "certification";
+  const isFixed = isGroup && form.scheduleType === "fixed";
+
+  function updateStartTime(start: string) {
+    const dur = form.lessonDurationMinutes;
+    const end = start && dur ? calcEndTime(start, dur) : form.endTime;
+    setForm((f) => ({ ...f, startTime: start, endTime: end }));
+  }
+
+  function updateDuration(min: number | null) {
+    const start = form.startTime;
+    const end = isFixed && start && min ? calcEndTime(start, min) : form.endTime;
+    setForm((f) => ({ ...f, lessonDurationMinutes: min, endTime: end }));
+  }
+
+  // ─── Styles ───────────────────────────────────────────────────────────────
+  const L = "text-xs font-bold text-foreground uppercase tracking-wider block mb-1.5";
+  const readOnly = "h-9 rounded-xl border border-input bg-muted/50 px-3 flex items-center text-xs font-medium text-foreground";
+
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4 min-h-0">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 max-h-[70vh] overflow-y-visible">
-        {/* Course Banner Photo */}
-        <div className="col-span-2 flex items-center gap-4 bg-muted/15 rounded-xl p-3 border border-border/20">
-          <div className="relative shrink-0 group h-14 w-20 rounded-lg overflow-hidden border border-border/40 bg-muted/30">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-4 pb-4">
+
+        {/* ── Photo ── */}
+        <div className="col-span-2 flex items-center gap-4 bg-muted/40 rounded-2xl p-3.5 border border-border/60">
+          <div className="relative shrink-0 h-14 w-20 rounded-xl overflow-hidden border border-border bg-card flex items-center justify-center">
             {form.foto ? (
-              <img
-                src={form.foto}
-                alt={form.nome}
-                className="h-full w-full object-cover transition-all duration-250 group-hover:scale-105"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
+              <>
+                <img src={form.foto} alt="" className="h-full w-full object-cover"
+                  onError={(e) => (e.currentTarget.style.display = "none")} />
+                <button type="button" onClick={() => setForm({ ...form, foto: "" })}
+                  className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer z-10">
+                  <X className="h-3 w-3 stroke-[2.5]" />
+                </button>
+              </>
             ) : (
-              <div className="h-full w-full flex items-center justify-center text-muted-foreground/60 text-xs font-semibold">
-                Nessuna
-              </div>
-            )}
-            {form.foto && (
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, foto: "" })}
-                className="absolute top-1 right-1 h-5 w-5 bg-destructive hover:bg-destructive/90 text-white rounded-full flex items-center justify-center shadow-md hover:scale-110 active:scale-90 transition-all cursor-pointer z-10"
-                title="Rimuovi foto"
-              >
-                <X className="h-3 w-3 stroke-[2.5]" />
-              </button>
+              <span className="text-[11px] font-semibold text-muted-foreground">Nessuna</span>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              URL Immagine Corso
-            </Label>
-            <Input
-              placeholder="https://images.unsplash.com/... (opzionale)"
-              value={form.foto}
+            <Label className={L}>Foto Copertina</Label>
+            <Input placeholder="URL Foto (https://...)" value={form.foto || ""}
               onChange={(e) => setForm({ ...form, foto: e.target.value })}
-              className="h-9 text-xs bg-background/50 mt-1 focus-visible:ring-1 focus-visible:ring-primary/45"
-            />
+              className="h-9 text-xs rounded-xl" />
           </div>
         </div>
 
-        {/* Course name */}
-        <div className="col-span-2">
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Nome Corso
-          </Label>
-          <Input
-            value={form.nome}
+        {/* ── Nome + Slug ── */}
+        <div>
+          <Label className={L}>Nome Corso *</Label>
+          <Input placeholder="Es. B2 First, Lezioni Private..." value={form.nome} required
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="h-9 text-xs mt-1.5 focus-visible:ring-1 focus-visible:ring-primary/45"
-            placeholder="Esempio: Business English Avanzato"
-            required
-          />
+            className="h-9 text-xs rounded-xl" />
+        </div>
+        <div>
+          <Label className={L}>Slug (URL)</Label>
+          <Input placeholder="b2-first" value={form.slug}
+            onChange={(e) => { setSlugManual(true); setForm({ ...form, slug: e.target.value }); }}
+            className="h-9 text-xs rounded-xl" />
         </div>
 
-        {/* Category & Level */}
+        {/* ── Categoria + Formato ── */}
         <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Categoria
-          </Label>
+          <Label className={L}>Categoria</Label>
           <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v })}>
-            <SelectTrigger className="h-9 text-xs mt-1.5 bg-background focus:ring-1 focus:ring-primary/45">
+            <SelectTrigger className="h-9 text-xs rounded-xl">
               <SelectValue placeholder="Seleziona categoria..." />
             </SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat} className="text-xs">
-                  {cat}
-                </SelectItem>
+              {COURSE_CATEGORIES.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className={L}>Formato *</Label>
+          <Select value={fmt}
+            onValueChange={(f) => {
+              setForm((prev) => ({
+                ...prev,
+                courseFormat: f,
+                scheduleType: f === "group" ? (prev.scheduleType || "fixed") : "flexible",
+                scheduleDays: f === "group" ? prev.scheduleDays : [],
+                startTime: f === "group" ? prev.startTime : "",
+                endTime: f === "group" ? prev.endTime : "",
+                lessonsPerWeek: f === "group" ? prev.lessonsPerWeek : null,
+                totalLessons: f === "private" ? prev.totalLessons : null,
+                totalHours: f === "certification" ? prev.totalHours : null,
+                lessonDurationMinutes: f === "certification" ? null : prev.lessonDurationMinutes,
+              }));
+            }}>
+            <SelectTrigger className="h-9 text-xs rounded-xl">
+              <SelectValue placeholder="Seleziona formato..." />
+            </SelectTrigger>
+            <SelectContent>
+              {COURSE_FORMAT_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* ── Stato + Prezzo ── */}
         <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Livello di Lingua
-          </Label>
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
-            {LEVELS_UI.map((l) => {
-              const isSelected = form.livello === l;
-              return (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => setForm({ ...form, livello: l })}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-150 cursor-pointer border select-none
-                    ${
-                      isSelected
-                        ? levelColorSolid(l)
-                        : "bg-muted/20 border-border/40 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:scale-[1.02] active:scale-98"
-                    }`}
-                >
-                  {l}
-                </button>
-              );
-            })}
+          <Label className={L}>Stato</Label>
+          <Select value={form.stato} onValueChange={(v) => setForm({ ...form, stato: v as any })}>
+            <SelectTrigger className="h-9 text-xs rounded-xl">
+              <SelectValue placeholder="Seleziona stato..." />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className={L}>Prezzo (€) *</Label>
+          <Input type="number" placeholder="0.00" step="0.01" min="0" required
+            value={form.prezzo?.toString() ?? ""}
+            onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
+            className="h-9 text-xs rounded-xl" />
+        </div>
+
+        {/* ── Insegnante ── */}
+        <div>
+          <Label className={L}>Insegnante</Label>
+          <Select
+            value={form.insegnanteIds[0] || "none"}
+            onValueChange={(v) => setForm({ ...form, insegnanteIds: v === "none" ? [] : [v] })}
+          >
+            <SelectTrigger className="h-9 text-xs rounded-xl">
+              <SelectValue placeholder="— Nessun insegnante —" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— Nessun insegnante —</SelectItem>
+              {teachers.length > 0
+                ? teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.fullName}</SelectItem>)
+                : <SelectItem value="loading" disabled>Caricamento...</SelectItem>}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* ══ GROUP ══════════════════════════════════════════════════════════ */}
+        {isGroup && (
+          <>
+            <div className="col-span-2">
+              <Label className={L}>Tipo Schedulazione</Label>
+              <Select
+                value={form.scheduleType || "fixed"}
+                onValueChange={(t) =>
+                  setForm((f) => ({
+                    ...f,
+                    scheduleType: t,
+                    scheduleDays: t === "flexible" ? [] : f.scheduleDays,
+                    startTime: t === "flexible" ? "" : f.startTime,
+                    endTime: t === "flexible" ? "" : f.endTime,
+                  }))
+                }
+              >
+                <SelectTrigger className="h-9 text-xs rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fixed">Fisso (orario definito)</SelectItem>
+                  <SelectItem value="flexible">Flessibile (da concordare)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className={L}>Durata Lezione (min)</Label>
+              <Input type="number" placeholder="75" min="15" step="5"
+                value={form.lessonDurationMinutes?.toString() ?? ""}
+                onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
+                className="h-9 text-xs rounded-xl" />
+            </div>
+            <div>
+              <Label className={L}>Lezioni a Settimana</Label>
+              <Input type="number" placeholder="2" min="1"
+                value={form.lessonsPerWeek?.toString() ?? ""}
+                onChange={(e) => setForm({ ...form, lessonsPerWeek: parseInt(e.target.value) || null })}
+                className="h-9 text-xs rounded-xl" />
+            </div>
+          </>
+        )}
+
+        {/* Fixed: giorni + start_time + end_time auto */}
+        {isFixed && (
+          <>
+            <div className="col-span-2 bg-muted/40 p-3.5 rounded-2xl border border-border/60 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className={L}>Giorni di Lezione</Label>
+                {form.lessonsPerWeek && (
+                  <span className="text-xs text-muted-foreground">
+                    {form.scheduleDays.length}/{form.lessonsPerWeek} selezionati
+                  </span>
+                )}
+              </div>
+              <div className="flex gap-4 flex-wrap pt-1">
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = form.scheduleDays.includes(day);
+                  const limitReached = !!form.lessonsPerWeek && form.scheduleDays.length >= form.lessonsPerWeek;
+                  const isDisabled = !isSelected && limitReached;
+                  return (
+                    <label key={day}
+                      className={`flex items-center gap-2 select-none text-xs font-medium ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+                      <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => toggleDay(day)} />
+                      <span>{day}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <Label className={L}>Orario Inizio</Label>
+              <Input type="time" value={form.startTime || ""}
+                onChange={(e) => updateStartTime(e.target.value)}
+                className="h-9 text-xs rounded-xl" />
+            </div>
+            <div>
+              <Label className={L}>
+                Orario Fine <span className="text-muted-foreground font-normal normal-case">(calcolato)</span>
+              </Label>
+              <div className={readOnly}>
+                {form.endTime || <span className="text-muted-foreground">Inserisci orario e durata</span>}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ══ PRIVATE ════════════════════════════════════════════════════════ */}
+        {isPrivate && (
+          <>
+            <div>
+              <Label className={L}>Durata Lezione (min)</Label>
+              <Input type="number" placeholder="60" min="15" step="5"
+                value={form.lessonDurationMinutes?.toString() ?? ""}
+                onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
+                className="h-9 text-xs rounded-xl" />
+            </div>
+            <div>
+              <Label className={L}>N° Lezioni nel Pacchetto</Label>
+              <Input type="number" placeholder="10" min="1"
+                value={form.totalLessons?.toString() ?? ""}
+                onChange={(e) => setForm({ ...form, totalLessons: parseInt(e.target.value) || null })}
+                className="h-9 text-xs rounded-xl" />
+            </div>
+          </>
+        )}
+
+        {/* ══ CERTIFICATION ══════════════════════════════════════════════════ */}
+        {isCertification && (
+          <div>
+            <Label className={L}>Totale Ore</Label>
+            <Input type="number" placeholder="30" min="0" step="0.5"
+              value={form.totalHours?.toString() ?? ""}
+              onChange={(e) => setForm({ ...form, totalHours: parseFloat(e.target.value) || null })}
+              className="h-9 text-xs rounded-xl" />
           </div>
-        </div>
+        )}
 
-        {/* Duration & Price */}
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Durata
-          </Label>
-          <Input
-            value={form.durata}
-            onChange={(e) => setForm({ ...form, durata: e.target.value })}
-            className="h-9 text-xs mt-1.5 focus-visible:ring-1 focus-visible:ring-primary/45"
-            placeholder="Esempio: 60 ore"
-            required
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Prezzo (€)
-          </Label>
-          <div className="relative mt-1.5">
-            <Euro className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/45" />
-            <Input
-              type="number"
-              value={form.prezzo || ""}
-              onChange={(e) => setForm({ ...form, prezzo: parseInt(e.target.value) || 0 })}
-              className="pl-9 h-9 text-xs focus-visible:ring-1 focus-visible:ring-primary/45"
-              placeholder="Esempio: 540"
-              min={0}
-              required
-            />
-          </div>
-        </div>
-
-        {/* Modules & Capacity */}
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Numero di Moduli
-          </Label>
-          <Input
-            type="number"
-            value={form.moduli || ""}
-            onChange={(e) => setForm({ ...form, moduli: parseInt(e.target.value) || 0 })}
-            className="h-9 text-xs mt-1.5 focus-visible:ring-1 focus-visible:ring-primary/45"
-            placeholder="Esempio: 8"
-            min={1}
-            required
-          />
-        </div>
-
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Capienza Massima
-          </Label>
-          <Input
-            type="number"
-            value={form.capienza || ""}
-            onChange={(e) => setForm({ ...form, capienza: parseInt(e.target.value) || 0 })}
-            className="h-9 text-xs mt-1.5 focus-visible:ring-1 focus-visible:ring-primary/45"
-            placeholder="Esempio: 15"
-            min={1}
-            required
-          />
-        </div>
-
-        {/* Status & Color theme */}
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Stato Corso
-          </Label>
-          <div className="flex gap-2 mt-1.5">
-            {[
-              {
-                value: "attivo",
-                label: "Attivo",
-                color: "bg-emerald-500 hover:bg-emerald-500/90 text-white border-transparent",
-              },
-              {
-                value: "in-programmazione",
-                label: "Pianificato",
-                color: "bg-amber-500 hover:bg-amber-500/90 text-white border-transparent",
-              },
-              {
-                value: "concluso",
-                label: "Concluso",
-                color: "bg-slate-500 hover:bg-slate-500/90 text-white border-transparent",
-              },
-            ].map((opt) => {
-              const isSelected = form.stato === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() =>
-                    setForm({
-                      ...form,
-                      stato: opt.value as "attivo" | "in-programmazione" | "concluso",
-                    })
-                  }
-                  className={`flex-1 py-2 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer border select-none text-center
-                    ${
-                      isSelected
-                        ? opt.color + " shadow-sm font-bold"
-                        : "bg-muted/20 border-border/40 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:scale-[1.02] active:scale-98"
-                    }`}
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider font-semibold">
-            Tema Colore
-          </Label>
-          <div className="flex gap-2 mt-1.5">
-            {COLORS.map((col) => {
-              const isSelected = form.colore === col.value;
-              return (
-                <button
-                  key={col.value}
-                  type="button"
-                  onClick={() => setForm({ ...form, colore: col.value })}
-                  className={`h-7 w-7 rounded-full transition-all duration-150 cursor-pointer border relative flex items-center justify-center hover:scale-105 active:scale-95
-                    ${col.class} ${isSelected ? "border-foreground ring-2 ring-primary/40" : "border-border/30"}`}
-                  title={col.label}
-                >
-                  {isSelected && <Check className="h-3 w-3 text-white stroke-[2.5]" />}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Description */}
+        {/* ── Descrizione ── */}
         <div className="col-span-2">
-          <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-            Descrizione
-          </Label>
-          <Textarea
+          <Label className={L}>Descrizione</Label>
+          <Textarea placeholder="Descrivi gli argomenti e gli obiettivi del corso..."
             value={form.descrizione}
             onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
-            className="text-xs mt-1.5 focus-visible:ring-1 focus-visible:ring-primary/45 bg-background resize-none h-20"
-            placeholder="Descrivi gli argomenti e gli obiettivi del corso..."
-            required
-          />
+            className="min-h-[80px] rounded-xl text-xs" />
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border/20 shrink-0">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onCancel}
-          className="text-xs h-8 hover:bg-muted/70 rounded-full px-4"
-        >
-          Annulla
-        </Button>
-        <Button
-          type="submit"
-          className="text-xs h-8 bg-primary hover:bg-primary/95 text-white font-semibold rounded-full px-5 shadow-sm hover:scale-[1.02] active:scale-98 transition-all"
-        >
-          {submitLabel}
-        </Button>
+      <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+        <Button type="button" variant="ghost" onClick={onCancel} className="font-semibold">Annulla</Button>
+        <Button type="submit" className="font-semibold rounded-xl">{submitLabel}</Button>
       </div>
     </form>
   );

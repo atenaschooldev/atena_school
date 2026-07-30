@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookingOrder } from "../types/booking";
+import type { BookingOrder } from "../types/booking";
 import {
   Dialog,
   DialogContent,

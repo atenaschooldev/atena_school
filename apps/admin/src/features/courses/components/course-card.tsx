@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { Euro, Pencil, Trash2 } from "lucide-react";
+import { Euro, Pencil, Trash2, Calendar, Clock } from "lucide-react";
 import { type Course } from "../types";
-import { levelColor } from "../utils";
 
 interface CourseCardProps {
   course: Course;
@@ -10,7 +9,7 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
-  const iscritti = 0;
+  const iscritti = 0; // We'll keep this 0 for now since we removed studentCount/capienza
   const statusLabel = {
     attivo: "Attivo",
     "in-programmazione": "Pianificato",
@@ -49,9 +48,9 @@ export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
         <div className="absolute top-3 left-3">
           <Badge
             variant="outline"
-            className={`text-xs font-bold rounded-full border-0 shadow-sm px-3 py-0.5 ${levelColor(course.livello)}`}
+            className="text-xs font-bold rounded-full border-0 shadow-sm px-3 py-0.5 bg-primary/20 text-primary"
           >
-            {course.livello}
+            {course.courseFormat || "In Sede"}
           </Badge>
         </div>
         <div className="absolute bottom-3 left-3 backdrop-blur-md bg-background/85 border border-white/20 px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1 shadow">
@@ -84,9 +83,9 @@ export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
       <div className="px-4 pt-3 pb-2 shrink-0">
         <div className="grid grid-cols-3 gap-2">
           {[
-            { label: "Iscritti", value: `${iscritti}/${course.capienza}` },
-            { label: "Durata", value: course.durata },
-            { label: "Moduli", value: String(course.moduli) },
+            { label: "Lez/Sett", value: course.lessonsPerWeek ? `${course.lessonsPerWeek}x` : "-" },
+            { label: "Ore Tot", value: course.totalHours ? `${course.totalHours}h` : "-" },
+            { label: "Lez Tot", value: course.totalLessons ? `${course.totalLessons}` : "-" },
           ].map(({ label, value }) => (
             <div
               key={label}
@@ -107,27 +106,24 @@ export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
           <h3 className="card-course-title font-extrabold text-foreground tracking-tight leading-snug group-hover:text-primary transition-colors line-clamp-1">
             {course.nome}
           </h3>
-          <p className="card-course-desc text-muted-foreground line-clamp-3 leading-relaxed">
+          <p className="card-course-desc text-muted-foreground line-clamp-3 leading-relaxed mt-1">
             {course.descrizione}
           </p>
         </div>
 
         <div className="flex-1" />
 
-        {/* Capacity bar */}
-        <div className="space-y-2 pt-2">
-          <div className="flex items-center justify-between card-progress-label font-bold text-muted-foreground">
-            <span>Riempimento</span>
-            <span className="font-mono text-foreground">
-              {Math.round((iscritti / Math.max(1, course.capienza)) * 100)}%
-            </span>
-          </div>
-          <div className="card-progress-bar bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-primary to-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, (iscritti / Math.max(1, course.capienza)) * 100)}%` }}
-            />
-          </div>
+        <div className="flex justify-between items-center mt-3 pt-3 border-t border-border/30 text-xs text-muted-foreground">
+           <div className="flex items-center gap-1">
+             <Calendar className="h-3.5 w-3.5" />
+             <span className="font-medium truncate max-w-[120px]">{course.scheduleDays.length > 0 ? course.scheduleDays.join(', ') : "Da definire"}</span>
+           </div>
+           {course.startTime && (
+             <div className="flex items-center gap-1 font-mono">
+               <Clock className="h-3.5 w-3.5" />
+               <span>{course.startTime}{course.endTime ? ` - ${course.endTime}` : ''}</span>
+             </div>
+           )}
         </div>
       </div>
     </div>

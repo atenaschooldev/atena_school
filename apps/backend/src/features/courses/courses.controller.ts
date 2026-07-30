@@ -22,6 +22,13 @@ export class CoursesController {
     return this.coursesService.listCourses();
   }
 
+  @Get('teachers')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить список преподавателей' })
+  async listTeachers() {
+    return this.coursesService.listTeachers();
+  }
+
   @Get(':id')
   @Roles('admin', 'teacher', 'student', 'parent')
   @ApiOperation({ summary: 'Получить детальную информацию о курсе' })

@@ -1,58 +1,80 @@
 export type Level = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 export const LEVELS: Level[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
-export type CourseStatus = "attivo" | "in-programmazione" | "concluso";
+export type CourseStatus = "attivo" | "in-programmazione" | "concluso" | "archiviato";
 
 export interface Course {
   id: string;
-  nome: string;
-  livello: Level;
-  insegnanteId: string;
-  insegnanteIds: string[];
-  moduli: number;
-  capienza: number;
-  colore: string;
-  descrizione: string;
-  foto?: string;
+  nome: string; // mapped to name
   categoria: string;
-  durata: string;
   prezzo: number;
   stato: CourseStatus;
-  studentCount?: number;
+  foto?: string; // mapped to photoUrl
+  descrizione: string;
+  insegnanteId: string;
+  insegnanteIds: string[];
   teacherName?: string | null;
+  
+  // New fields
+  lessonsPerWeek: number | null;
+  sortOrder: number | null;
+  scheduleType: string | null;
+  totalLessons: number | null;
+  scheduleDays: string[];
+  startTime: string | null;
+  endTime: string | null;
+  lessonDurationMinutes: number | null;
+  totalHours: number | null;
+  courseFormat: string | null;
+  slug: string | null;
 }
 
 export interface CourseFormValues {
   nome: string;
-  livello: Level;
-  insegnanteIds: string[];
-  moduli: number;
-  capienza: number;
-  colore: string;
-  descrizione: string;
-  foto: string;
   categoria: string;
-  durata: string;
   prezzo: number;
   stato: CourseStatus;
+  foto: string;
+  descrizione: string;
+  insegnanteIds: string[];
+  
+  // New fields
+  lessonsPerWeek: number | null;
+  sortOrder: number;
+  scheduleType: string;
+  totalLessons: number | null;
+  scheduleDays: string[];
+  startTime: string;
+  endTime: string;
+  lessonDurationMinutes: number | null;
+  totalHours: number | null;
+  courseFormat: string;
+  slug: string;
 }
 
 export interface CourseApiResponse {
   id: string;
   name: string;
   title: string;
-  category: string;
-  duration: string;
-  price: number;
-  status: string;
-  studentCount: number;
-  studentsCount: number;
+  category: string | null;
+  price: number | null;
+  status: string | null;
+  photoUrl: string | null;
+  description: string | null;
   teacherId: string | null;
   teacherName: string | null;
-  description: string | null;
-  imageUrl: string | null;
-  level: string | null;
-  capacity: number;
+  lessonsPerWeek: number | null;
+  sortOrder: number | null;
+  scheduleType: string | null;
+  totalLessons: number | null;
+  scheduleDays: string[] | null;
+  startTime: string | null;
+  endTime: string | null;
+  lessonDurationMinutes: number | null;
+  totalHours: number | null;
+  courseFormat: string | null;
+  slug: string | null;
+  updatedAt: string | null;
 }
 
 export function mapApiToCourse(api: CourseApiResponse): Course {
@@ -66,28 +88,36 @@ export function mapApiToCourse(api: CourseApiResponse): Course {
     completed: "concluso",
     ended: "concluso",
     concluded: "concluso",
+    archived: "archiviato",
     "in-programmazione": "in-programmazione",
     attivo: "attivo",
     concluso: "concluso",
+    archiviato: "archiviato",
   };
 
   return {
     id: api.id,
     nome: api.name || api.title || "",
-    livello: (api.level as Level) || "A1",
+    categoria: api.category || "",
+    prezzo: Number(api.price || 0),
+    stato: statusMap[api.status || "active"] || "attivo",
+    foto: api.photoUrl || undefined,
+    descrizione: api.description || "",
     insegnanteId: api.teacherId || "",
     insegnanteIds: api.teacherId ? [api.teacherId] : [],
-    moduli: 8,
-    capienza: api.capacity ?? 10,
-    colore: "chart-1",
-    descrizione: api.description || "",
-    foto: api.imageUrl || undefined,
-    categoria: api.category || "General English",
-    durata: api.duration || "60 ore",
-    prezzo: Number(api.price || 0),
-    stato: statusMap[api.status] || "attivo",
-    studentCount: api.studentCount || api.studentsCount || 0,
     teacherName: api.teacherName || null,
+    
+    lessonsPerWeek: api.lessonsPerWeek ?? null,
+    sortOrder: api.sortOrder ?? 0,
+    scheduleType: api.scheduleType ?? "",
+    totalLessons: api.totalLessons ?? null,
+    scheduleDays: api.scheduleDays ?? [],
+    startTime: api.startTime ?? "",
+    endTime: api.endTime ?? "",
+    lessonDurationMinutes: api.lessonDurationMinutes ?? null,
+    totalHours: api.totalHours ?? null,
+    courseFormat: api.courseFormat ?? "",
+    slug: api.slug ?? "",
   };
 }
 
@@ -97,7 +127,8 @@ export function mapCourseToApiPayload(
   const statusMap: Record<CourseStatus, string> = {
     attivo: "active",
     "in-programmazione": "draft",
-    concluso: "archived",
+    concluso: "concluded",
+    archiviato: "archived",
   };
 
   const primaryId = form.insegnanteIds[0] || "";
@@ -106,14 +137,22 @@ export function mapCourseToApiPayload(
     title: form.nome,
     name: form.nome,
     category: form.categoria,
-    duration: form.durata,
     price: Number(form.prezzo || 0),
     status: statusMap[form.stato],
     teacherId: primaryId || null,
     description: form.descrizione,
-    imageUrl: form.foto || null,
-    level: form.livello,
-    capacity: Number(form.capienza || 10),
-    studentCount: 0,
+    photoUrl: form.foto || null,
+    
+    lessonsPerWeek: form.lessonsPerWeek != null ? Number(form.lessonsPerWeek) : null,
+    sortOrder: Number(form.sortOrder || 0),
+    scheduleType: form.scheduleType || null,
+    totalLessons: form.totalLessons != null ? Number(form.totalLessons) : null,
+    scheduleDays: form.scheduleDays || [],
+    startTime: form.startTime || null,
+    endTime: form.endTime || null,
+    lessonDurationMinutes: form.lessonDurationMinutes != null ? Number(form.lessonDurationMinutes) : null,
+    totalHours: form.totalHours != null ? Number(form.totalHours) : null,
+    courseFormat: form.courseFormat || null,
+    slug: form.slug || null,
   };
 }

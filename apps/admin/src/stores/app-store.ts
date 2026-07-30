@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { type Course, type Level } from "@/features/courses";
+import { type Course, type Level } from "@/features/courses/types";
 import { courses as seedCourses } from "@/lib/mock-data";
 
 export type Role = "admin" | "insegnante" | "studente";

@@ -1,4 +1,4 @@
-import { AppHeader } from "@/components/app-header";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ShoppingBag, BookOpen, Calendar } from "lucide-react";
 import { courses, lessons } from "@/lib/mock-data";
@@ -22,9 +22,7 @@ export function DashboardView() {
   ];
 
   return (
-    <>
-      <AppHeader searchPlaceholder="Cerca qualsiasi cosa..." />
-      <main className="flex-1 overflow-auto p-6 space-y-6">
+    <main className="flex-1 overflow-auto p-6 space-y-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Buongiorno 👋</h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -80,6 +78,5 @@ export function DashboardView() {
           </div>
         </Card>
       </main>
-    </>
   );
 }

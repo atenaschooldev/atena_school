@@ -74,3 +74,16 @@ apps/landing/src/__tests__/ui_data_binding_matrix.ts
 apps/landing/src/__tests__/live_stripe_and_db_matrix.ts
 apps/landing/src/__tests__/test_user_case.mjs
 .vercel
+
+# Temporary / Test Scripts
+test-*.js
+test-*.ts
+apps/backend/test-*
+apps/admin-v2/
+*.tmp
+tmp/
+.tmp/
+.cache/
+.eslintcache/
+
+

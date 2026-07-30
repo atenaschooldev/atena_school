@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { type Course, type CourseFormValues, type CourseApiResponse, mapApiToCourse, mapCourseToApiPayload } from "../types";
+import { courses as mockCourses } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
@@ -21,7 +22,12 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(`Backend error ${res.status}: ${text}`);
   }
 
-  return res.json();
+  if (res.status === 204) {
+    return {} as T;
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
 export function useCourses() {
@@ -37,11 +43,15 @@ export function useCourses() {
       setError(null);
       try {
         const data = await apiFetch<CourseApiResponse[]>("/courses");
-        setAllCourses(Array.isArray(data) ? data.map(mapApiToCourse) : []);
+        if (Array.isArray(data)) {
+          setAllCourses(data.map(mapApiToCourse));
+        } else {
+          setAllCourses([]);
+        }
       } catch (e) {
         console.error("Failed to fetch courses:", e);
         setError(e instanceof Error ? e.message : "Errore nel caricamento corsi");
-        setAllCourses([]);
+        setAllCourses(mockCourses);
       } finally {
         setLoading(false);
       }
@@ -125,32 +135,44 @@ export function useCourses() {
     if (editing) {
       return {
         nome: editing.nome,
-        livello: editing.livello || "A1",
-        insegnanteIds: editing.insegnanteIds || [editing.insegnanteId].filter(Boolean) as string[],
-        moduli: editing.moduli || 8,
-        capienza: editing.capienza || 10,
-        colore: editing.colore || "chart-1",
+        insegnanteIds: editing.insegnanteIds || (editing.insegnanteId ? [editing.insegnanteId] : []),
         descrizione: editing.descrizione || "",
         foto: editing.foto || "",
-        categoria: editing.categoria || "General English",
-        durata: editing.durata || "60 ore",
+        categoria: editing.categoria || "",
         prezzo: editing.prezzo || 0,
         stato: editing.stato || "attivo",
+        lessonsPerWeek: editing.lessonsPerWeek ?? null,
+        sortOrder: editing.sortOrder ?? 0,
+        scheduleType: editing.scheduleType || "fixed",
+        totalLessons: editing.totalLessons ?? null,
+        scheduleDays: editing.scheduleDays || [],
+        startTime: editing.startTime || "",
+        endTime: editing.endTime || "",
+        lessonDurationMinutes: editing.lessonDurationMinutes ?? null,
+        totalHours: editing.totalHours ?? null,
+        courseFormat: editing.courseFormat || "group",
+        slug: editing.slug || "",
       };
     }
     return {
       nome: "",
-      livello: "A1",
       insegnanteIds: [],
-      moduli: 8,
-      capienza: 15,
-      colore: "chart-1",
       descrizione: "",
       foto: "",
-      categoria: "General English",
-      durata: "60 ore",
+      categoria: "",
       prezzo: 0,
       stato: "attivo",
+      lessonsPerWeek: null,
+      sortOrder: 0,
+      scheduleType: "fixed",
+      totalLessons: null,
+      scheduleDays: [],
+      startTime: "",
+      endTime: "",
+      lessonDurationMinutes: null,
+      totalHours: null,
+      courseFormat: "group",
+      slug: "",
     };
   }, [editing]);
 
