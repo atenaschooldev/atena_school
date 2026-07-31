@@ -85,5 +85,6 @@ tmp/
 .tmp/
 .cache/
 .eslintcache/
+prompt.md
 
 

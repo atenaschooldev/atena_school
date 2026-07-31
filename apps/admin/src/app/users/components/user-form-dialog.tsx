@@ -31,32 +31,18 @@ import { Plus } from "lucide-react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { UserFormValues } from "@/features/users/types"
 
 const userFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  role: z.string().min(1, {
-    message: "Please select a role.",
-  }),
-  plan: z.string().min(1, {
-    message: "Please select a plan.",
-  }),
-  billing: z.string().min(1, {
-    message: "Please select a billing method.",
-  }),
-  status: z.string().min(1, {
-    message: "Please select a status.",
-  }),
+  firstName: z.string().min(2, { message: "Nome richiesto (min 2 caract)." }),
+  lastName: z.string().min(2, { message: "Cognome richiesto (min 2 caract)." }),
+  email: z.string().email({ message: "Inserisci un email valida." }),
+  role: z.string().min(1, { message: "Seleziona un ruolo." }),
+  password: z.string().optional(),
 })
 
-type UserFormValues = z.infer<typeof userFormSchema>
-
 interface UserFormDialogProps {
-  onAddUser: (user: UserFormValues) => void
+  onAddUser: (user: UserFormValues) => Promise<unknown>
 }
 
 export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
@@ -65,19 +51,22 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
       email: "",
-      role: "",
-      plan: "",
-      billing: "",
-      status: "",
+      role: "student",
+      password: "",
     },
   })
 
-  function onSubmit(data: UserFormValues) {
-    onAddUser(data)
-    form.reset()
-    setOpen(false)
+  async function onSubmit(data: UserFormValues) {
+    try {
+      await onAddUser(data)
+      form.reset()
+      setOpen(false)
+    } catch {
+      // toast error handled in hook
+    }
   }
 
   return (
@@ -85,31 +74,46 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
       <DialogTrigger asChild>
         <Button className="cursor-pointer">
           <Plus className="mr-2 h-4 w-4" />
-          Add New User
+          Nuovo Utente
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New User</DialogTitle>
+          <DialogTitle>Aggiungi Nuovo Utente</DialogTitle>
           <DialogDescription>
-            Create a new user account. Click save when you're done.
+            Crea un nuovo profilo utente nel sistema.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cognome</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Cognome" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <FormField
               control={form.control}
               name="email"
@@ -117,110 +121,51 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter email address" {...field} />
+                    <Input placeholder="indirizzo@email.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Admin">Admin</SelectItem>
-                        <SelectItem value="Author">Author</SelectItem>
-                        <SelectItem value="Editor">Editor</SelectItem>
-                        <SelectItem value="Maintainer">Maintainer</SelectItem>
-                        <SelectItem value="Subscriber">Subscriber</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="plan"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select plan" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Basic">Basic</SelectItem>
-                        <SelectItem value="Professional">Professional</SelectItem>
-                        <SelectItem value="Enterprise">Enterprise</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="billing"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Billing</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select billing" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Auto Debit">Auto Debit</SelectItem>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="Paypal">Paypal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="cursor-pointer w-full">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Error">Error</SelectItem>
-                        <SelectItem value="Inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ruolo</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="cursor-pointer w-full">
+                        <SelectValue placeholder="Seleziona ruolo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="student">Studente</SelectItem>
+                      <SelectItem value="parent">Genitore</SelectItem>
+                      <SelectItem value="teacher">Insegnante</SelectItem>
+                      <SelectItem value="admin">Amministratore</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password (opzionale)</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Password (generata se vuota)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="submit" className="cursor-pointer">
-                Save User
+                Salva Utente
               </Button>
             </DialogFooter>
           </form>

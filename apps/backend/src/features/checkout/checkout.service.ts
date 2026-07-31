@@ -7,6 +7,8 @@ const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
 import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
 
+import { PrismaService } from '../../core/prisma/prisma.service';
+
 export interface CourseRecord {
   id: string;
   name?: string;
@@ -25,7 +27,10 @@ export class CheckoutService {
   private supabaseAdmin: SupabaseClient;
   private stripe: any;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     const stripeSecret = this.configService.get<string>('STRIPE_SECRET_KEY') || process.env.STRIPE_SECRET_KEY || 'sk_test_dummy_key_for_dev';
@@ -328,6 +333,25 @@ export class CheckoutService {
       }
     }
 
+    // Automatically generate and insert lessons into `lessons` table for Orari & Calendario
+    if (lessons && lessons.length > 0) {
+      try {
+        const teacherId = (course as any)?.teacher_id || (course as any)?.teacherId || 'e1180b01-2222-4000-8000-000000000002';
+        const lessonRows = lessons.map((l) => ({
+          booking_id: booking.id,
+          teacher_id: teacherId,
+          starts_at: l.startsAt,
+          ends_at: l.endsAt,
+          status: 'scheduled',
+          location_type: 'in_person',
+          teacher_notes: 'Aula 101',
+        }));
+        await this.supabaseAdmin.from('lessons').insert(lessonRows);
+      } catch (lErr) {
+        console.warn('Auto-create lessons error in checkout:', lErr);
+      }
+    }
+
     return { success: true, bookingId: booking.id, booking };
   }
 
@@ -562,6 +586,38 @@ export class CheckoutService {
   }
 
   // ─── Admin: Bookings Management ────────────────────────────────────────────
+
+  async createAdminBooking(dto: {
+    courseId?: string;
+    courseName: string;
+    purchaserName: string;
+    purchaserEmail: string;
+    purchaserPhone?: string;
+    studentName: string;
+    studentEmail?: string;
+    studentPhone?: string;
+    amountPaid?: number;
+    paymentStatus?: string;
+    paymentMethod?: string;
+  }) {
+    return this.prisma.booking.create({
+      data: {
+        courseId: dto.courseId || null,
+        courseName: dto.courseName,
+        purchaserName: dto.purchaserName,
+        purchaserEmail: dto.purchaserEmail,
+        purchaserPhone: dto.purchaserPhone || null,
+        studentName: dto.studentName || dto.purchaserName,
+        studentEmail: dto.studentEmail || dto.purchaserEmail,
+        studentPhone: dto.studentPhone || dto.purchaserPhone || null,
+        amountPaid: dto.amountPaid ?? 0,
+        paymentStatus: dto.paymentStatus || 'reserved',
+        paymentMethod: dto.paymentMethod || 'cash',
+        schedulingStatus: 'pending_coordination',
+      },
+    });
+  }
+
 
   async listAllBookings() {
     const { data, error } = await this.supabaseAdmin

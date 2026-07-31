@@ -4,15 +4,13 @@ import { Navigate } from 'react-router-dom'
 // Lazy load components for better performance
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
-const Dashboard2 = lazy(() => import('@/app/dashboard-2/page'))
-const Mail = lazy(() => import('@/app/mail/page'))
-const Tasks = lazy(() => import('@/app/tasks/page'))
-const Chat = lazy(() => import('@/app/chat/page'))
-const Calendar = lazy(() => import('@/app/calendar/page'))
 const Users = lazy(() => import('@/app/users/page'))
 const Corsi = lazy(() => import('@/app/corsi/page'))
 const Prenotazioni = lazy(() => import('@/app/prenotazioni/page'))
+const Pagamenti = lazy(() => import('@/app/pagamenti/page'))
 const Orari = lazy(() => import('@/app/orari/page'))
+const Iscrizioni = lazy(() => import('@/app/iscrizioni/page'))
+const Insegnanti = lazy(() => import('@/app/insegnanti/page'))
 const FAQs = lazy(() => import('@/app/faqs/page'))
 const Pricing = lazy(() => import('@/app/pricing/page'))
 
@@ -67,28 +65,7 @@ export const routes: RouteConfig[] = [
     path: "/dashboard",
     element: <Dashboard />
   },
-  {
-    path: "/dashboard-2",
-    element: <Dashboard2 />
-  },
 
-  // Application Routes
-  {
-    path: "/mail",
-    element: <Mail />
-  },
-  {
-    path: "/tasks",
-    element: <Tasks />
-  },
-  {
-    path: "/chat",
-    element: <Chat />
-  },
-  {
-    path: "/calendar",
-    element: <Calendar />
-  },
 
   // Content Pages
   {
@@ -98,6 +75,18 @@ export const routes: RouteConfig[] = [
   {
     path: "/prenotazioni",
     element: <Prenotazioni />
+  },
+  {
+    path: "/pagamenti",
+    element: <Pagamenti />
+  },
+  {
+    path: "/iscrizioni",
+    element: <Iscrizioni />
+  },
+  {
+    path: "/insegnanti",
+    element: <Insegnanti />
   },
   {
     path: "/orari",

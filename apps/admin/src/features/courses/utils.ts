@@ -1,36 +1,40 @@
 import type { Level } from "./types";
 
-export function levelColor(l: Level): string {
+export function levelColor(l: Level | string): string {
   switch (l) {
     case "A1":
-      return "bg-chart-2/15 text-chart-2 border-chart-2/30";
+      return "bg-emerald-100/90 text-emerald-900 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60";
     case "A2":
-      return "bg-chart-3/15 text-chart-3 border-chart-3/30";
+      return "bg-amber-100/90 text-amber-900 border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60";
     case "B1":
-      return "bg-chart-1/15 text-chart-1 border-chart-1/30";
+      return "bg-teal-100/90 text-teal-900 border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/60";
     case "B2":
-      return "bg-chart-5/15 text-chart-5 border-chart-5/30";
+      return "bg-purple-100/90 text-purple-900 border-purple-200/80 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800/60";
     case "C1":
-      return "bg-chart-4/15 text-chart-4 border-chart-4/30";
+      return "bg-rose-100/90 text-rose-900 border-rose-200/80 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60";
     case "C2":
-      return "bg-primary/15 text-primary border-primary/30";
+      return "bg-slate-200/80 text-slate-900 border-slate-300/80 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700/60";
+    default:
+      return "bg-indigo-100/90 text-indigo-900 border-indigo-200/80 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60";
   }
 }
 
-export function levelColorSolid(l: Level): string {
+export function levelColorSolid(l: Level | string): string {
   switch (l) {
     case "A1":
-      return "bg-chart-2 text-white border-chart-2 shadow-md";
+      return "bg-emerald-600 text-white border-emerald-600 shadow-md";
     case "A2":
-      return "bg-chart-3 text-white border-chart-3 shadow-md";
+      return "bg-amber-600 text-white border-amber-600 shadow-md";
     case "B1":
-      return "bg-chart-1 text-white border-chart-1 shadow-md";
+      return "bg-teal-600 text-white border-teal-600 shadow-md";
     case "B2":
-      return "bg-chart-5 text-white border-chart-5 shadow-md";
+      return "bg-purple-600 text-white border-purple-600 shadow-md";
     case "C1":
-      return "bg-chart-4 text-white border-chart-4 shadow-md";
+      return "bg-rose-600 text-white border-rose-600 shadow-md";
     case "C2":
-      return "bg-primary text-primary-foreground border-primary shadow-md";
+      return "bg-slate-700 text-white border-slate-700 shadow-md";
+    default:
+      return "bg-indigo-600 text-white border-indigo-600 shadow-md";
   }
 }
 

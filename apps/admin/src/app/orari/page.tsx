@@ -5,7 +5,7 @@ import { OrariView } from "@/features/schedule/components/orari-view";
 
 export default function OrariPage() {
   return (
-    <BaseLayout title="Orari & Calendario" description="Gestisci i giorni e le ore delle lezioni">
+    <BaseLayout title="Orari" description="Gestione orari e lezioni">
       <OrariView />
     </BaseLayout>
   );

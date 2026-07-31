@@ -4,9 +4,15 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { BookingsAdminController } from './bookings-admin.controller';
 import { CheckoutService } from './checkout.service';
 
+import { PrismaModule } from '../../core/prisma/prisma.module';
+
 @Module({
-  imports: [],
-  controllers: [CheckoutController, StripeWebhookController, BookingsAdminController],
+  imports: [PrismaModule],
+  controllers: [
+    CheckoutController,
+    StripeWebhookController,
+    BookingsAdminController,
+  ],
   providers: [CheckoutService],
   exports: [CheckoutService],
 })

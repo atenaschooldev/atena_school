@@ -11,7 +11,7 @@ import type { Teacher } from "@/features/teachers";
 
 interface CalendarLessonCardProps {
   lesson: Lesson;
-  course: Course;
+  course?: Course;
   teacher?: Teacher;
   isResizingActive: boolean;
   isDragged: boolean;
@@ -68,10 +68,9 @@ export function CalendarLessonCard({
   setDragOverMinutes,
   setCardContextMenu,
 }: CalendarLessonCardProps) {
-  const startH = parseInt(lesson.oraInizio.split(":")[0]);
-  const startM = parseInt(lesson.oraInizio.split(":")[1]);
-  const endH = parseInt(lesson.oraFine.split(":")[0]);
-  const endM = parseInt(lesson.oraFine.split(":")[1]);
+  const courseTitle = course?.nome || lesson.corsoName || "Corso";
+  const teacherTitle = teacher ? `${teacher.nome[0]}. ${teacher.cognome}` : lesson.insegnanteName || "";
+  const courseLevel = course?.livello || "B1";
 
   return (
     <Popover>
@@ -112,9 +111,9 @@ export function CalendarLessonCard({
           ${
             hasSearch
               ? matchesSearch
-                ? `${levelColorSolid(course.livello)} hover:shadow-lg scale-[1.01] z-10`
+                ? `${levelColorSolid(courseLevel)} hover:shadow-lg scale-[1.01] z-10`
                 : "bg-muted/30 border-border/20 text-muted-foreground/30 opacity-40"
-              : `${levelColor(course.livello)} hover:shadow-md`
+              : `${levelColor(courseLevel)} hover:shadow-md`
           }
           ${isDragged ? "opacity-30 scale-95" : ""}`}
           style={{
@@ -147,7 +146,7 @@ export function CalendarLessonCard({
             <div>
               <div className="text-[10px] font-bold opacity-85 flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  {course.livello}
+                  {courseLevel}
                   {lesson.isOnline && (
                     <Video className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400 shrink-0" />
                   )}
@@ -156,11 +155,11 @@ export function CalendarLessonCard({
                   {lesson.oraInizio} - {lesson.oraFine}
                 </span>
               </div>
-              <div className="text-xs font-bold truncate mt-1 leading-tight">{course.nome}</div>
+              <div className="text-xs font-bold truncate mt-1 leading-tight">{courseTitle}</div>
             </div>
             <div className="text-[10px] opacity-75 flex items-center justify-between mt-1">
               <span className="truncate max-w-[60%]">
-                {teacher ? `${teacher.nome[0]}. ${teacher.cognome}` : ""}
+                {teacherTitle}
               </span>
               <span className="shrink-0 flex items-center gap-0.5">
                 {lesson.isOnline ? (
@@ -198,18 +197,18 @@ export function CalendarLessonCard({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-4 rounded-xl border border-border shadow-lg bg-popover text-popover-foreground">
-        <Badge variant="outline" className={`text-[11px] ${levelColor(course.livello)}`}>
-          {course.livello}
+        <Badge variant="outline" className={`text-[11px] ${levelColor(courseLevel)}`}>
+          {courseLevel}
         </Badge>
-        <h4 className="font-semibold mt-2">{course.nome}</h4>
+        <h4 className="font-semibold mt-2">{courseTitle}</h4>
         <div className="text-xs text-muted-foreground mt-2 space-y-1">
           <div>
             ⏰ {lesson.oraInizio} – {lesson.oraFine}
           </div>
           <div>📍 {lesson.aula}</div>
-          {teacher && (
+          {teacherTitle && (
             <div>
-              👤 {teacher.nome} {teacher.cognome}
+              👤 {teacherTitle}
             </div>
           )}
           {lesson.isOnline && lesson.meetLink && (

@@ -24,6 +24,10 @@ import {
   Download,
   Eye,
   EllipsisVertical,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -57,6 +61,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CourseForm } from "./course-form";
 import type { Course } from "../types";
 import { useCourses } from "../hooks/use-courses";
@@ -81,6 +95,7 @@ export function CorsiView() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
   const [pageSize, setPageSize] = useState("10");
+  const [deletingCourse, setDeletingCourse] = useState<Course | null>(null);
 
   const tableSearch = useAppStore((s) => s.tableSearch);
   const setTableSearch = useAppStore((s) => s.setTableSearch);
@@ -180,9 +195,14 @@ export function CorsiView() {
       header: "Orari & Giorni",
       cell: ({ row }) => {
         const course = row.original;
+        const hasDays = course.scheduleDays && course.scheduleDays.length > 0;
+        const hasTime = !!course.startTime;
+        if (!hasDays && !hasTime) {
+          return <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium text-muted-foreground bg-muted/50">Da concordare</span>;
+        }
         return (
           <div className="flex flex-col gap-1">
-            {course.scheduleDays && course.scheduleDays.length > 0 && (
+            {hasDays && (
               <div className="flex flex-wrap gap-1">
                 {course.scheduleDays.map((d) => (
                   <Badge key={d} variant="outline" className="text-[10px] uppercase px-1.5 py-0 font-semibold bg-muted/40">
@@ -191,7 +211,7 @@ export function CorsiView() {
                 ))}
               </div>
             )}
-            {course.startTime && (
+            {hasTime && (
               <span className="text-xs font-mono text-muted-foreground">
                 {course.startTime} {course.endTime ? `- ${course.endTime}` : ""}
               </span>
@@ -252,7 +272,14 @@ export function CorsiView() {
       accessorKey: "lessonDurationMinutes",
       header: "Durata Lezione",
       cell: ({ row }) => {
-        const min = row.getValue("lessonDurationMinutes") as number | null;
+        const course = row.original;
+        const min = course.lessonDurationMinutes;
+        const totalHours = course.totalHours;
+
+        if (!min && totalHours) {
+          return <span className="text-sm font-medium text-foreground">{totalHours}h totali</span>;
+        }
+
         if (!min) return <span className="text-muted-foreground text-sm">—</span>;
         const h = Math.floor(min / 60);
         const m = min % 60;
@@ -263,42 +290,29 @@ export function CorsiView() {
     {
       id: "actions",
       header: "Azioni",
+      enableHiding: false,
       cell: ({ row }) => {
         const course = row.original;
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => handleEditClick(course)}
               title="Modifica"
             >
               <Pencil className="size-4" />
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                  <EllipsisVertical className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="cursor-pointer" onClick={() => handleEditClick(course)}>
-                  Modifica Dettagli
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer" onClick={() => navigator.clipboard.writeText(course.id)}>
-                  Copia ID Corso
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer text-rose-600 dark:text-rose-400 focus:bg-rose-50 dark:focus:bg-rose-950/30"
-                  onClick={() => handleDeleteClick(course)}
-                >
-                  <Trash2 className="mr-2 size-4" />
-                  Elimina Corso
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+              onClick={() => setDeletingCourse(course)}
+              title="Elimina"
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
         );
       },
@@ -444,16 +458,22 @@ export function CorsiView() {
                 {table
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="cursor-pointer capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                  .map((column) => {
+                    const label =
+                      typeof column.columnDef.header === "string"
+                        ? column.columnDef.header
+                        : column.id;
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        className="cursor-pointer"
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {label}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -497,12 +517,12 @@ export function CorsiView() {
           </Table>
         </div>
 
-        {/* Template Bottom Pagination Bar */}
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>Mostra</span>
+        {/* Pagination Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-1">
+          <div className="flex items-center gap-3 text-sm font-medium text-foreground">
+            <span>Rows per page</span>
             <Select value={pageSize} onValueChange={(val) => { setPageSize(val); table.setPageSize(Number(val)); }}>
-              <SelectTrigger className="h-8 w-[70px] cursor-pointer">
+              <SelectTrigger className="h-9 w-[70px] cursor-pointer rounded-lg border-border/60 bg-background px-3">
                 <SelectValue placeholder={pageSize} />
               </SelectTrigger>
               <SelectContent>
@@ -511,35 +531,56 @@ export function CorsiView() {
                 <SelectItem value="50">50</SelectItem>
               </SelectContent>
             </Select>
-            <span>
-              {table.getFilteredSelectedRowModel().rows.length} di {table.getFilteredRowModel().rows.length} riga/e selezionata/e.
-            </span>
           </div>
 
-          <div className="flex items-center space-x-6 lg:space-x-8">
-            <div className="flex items-center justify-center text-sm font-medium text-muted-foreground">
-              Pagina {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Precedente
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="cursor-pointer"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Successiva
-              </Button>
-            </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              title="First Page"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              title="Previous Page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <span className="text-sm font-medium text-foreground px-3">
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
+            </span>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              title="Next Page"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              title="Last Page"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -561,6 +602,34 @@ export function CorsiView() {
           />
         </SheetContent>
       </Sheet>
+
+      {/* Confirmation Dialog before Delete */}
+      <AlertDialog open={!!deletingCourse} onOpenChange={(v) => !v && setDeletingCourse(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-bold text-foreground">
+              Elimina Corso
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground mt-2">
+              Sei sicuro di voler eliminare il corso <strong className="text-foreground">{deletingCourse?.nome}</strong>? Questa azione è irreversibile.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4 gap-2 sm:gap-0">
+            <AlertDialogCancel className="cursor-pointer">Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700 text-white font-medium cursor-pointer"
+              onClick={async () => {
+                if (deletingCourse) {
+                  await handleDeleteClick(deletingCourse);
+                  setDeletingCourse(null);
+                }
+              }}
+            >
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

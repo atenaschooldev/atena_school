@@ -199,9 +199,14 @@ export class CoursesService {
   }
 
   async listTeachers() {
-    const rows = await this.prisma.$queryRaw<
-      { teacher_id: string; full_name: string | null }[]
-    >`SELECT teacher_id, full_name FROM teachers WHERE status = 'active' ORDER BY full_name ASC`;
-    return rows.map((r) => ({ teacherId: r.teacher_id, fullName: r.full_name ?? '' }));
+    const teachers = await this.prisma.teacher.findMany({
+      where: { status: 'active' },
+      select: { teacherId: true, fullName: true },
+      orderBy: { fullName: 'asc' },
+    });
+    return teachers.map((t) => ({
+      teacherId: t.teacherId,
+      fullName: t.fullName ?? '',
+    }));
   }
 }

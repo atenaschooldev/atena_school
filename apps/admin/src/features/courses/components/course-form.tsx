@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
 import type { CourseFormValues } from "../types";
+import type { Teacher } from "@/features/teachers";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,6 @@ const DAYS_OF_WEEK = [
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
 
-interface Teacher { id: string; fullName: string; }
 
 function slugify(str: string): string {
   return str.toLowerCase().trim()
@@ -62,13 +62,13 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
   const [slugManual, setSlugManual] = useState(!!initialValues.slug);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/courses/teachers`, {
+    fetch(`${BACKEND_URL}/api/v1/admin/teachers`, {
       headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
     })
       .then((r) => r.ok ? r.json() : [])
       .then((data: any[]) => {
         if (Array.isArray(data)) {
-          setTeachers(data.map((t) => ({ id: t.teacherId, fullName: t.fullName })));
+          setTeachers(data.map((t) => ({ ...t, id: t.teacherId || t.id, fullName: t.fullName })));
         }
       })
       .catch(() => {});

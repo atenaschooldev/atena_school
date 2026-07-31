@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { GIORNI } from "@/lib/utils";
 import type { Lesson, LessonFormValues } from "../types";
 import type { Course } from "@/features/courses";
+import type { Teacher } from "@/features/teachers";
 import type { TeacherMock } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ interface LessonFormProps {
   compact?: boolean;
   submitLabel?: string;
   courses?: Course[];
-  teachers?: TeacherMock[];
+  teachers?: (TeacherMock | Teacher)[];
   aulaSuggestions?: string[];
 }
 
@@ -281,7 +282,7 @@ export function LessonForm({
 
   const teacherOptions = teachers.map((t) => ({
     key: t.id,
-    label: `${t.nome} ${t.cognome}`,
+    label: ("fullName" in t && t.fullName) ? t.fullName : `${t.nome} ${t.cognome}`.trim(),
   }));
 
   const aulaOptions = aulaSuggestions.map((a) => ({ key: a, label: a }));

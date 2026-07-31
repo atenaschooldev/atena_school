@@ -13,31 +13,106 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     startDate?: Date;
     endDate?: Date;
   }): Promise<ScheduleEntity[]> {
-    const where: any = {};
-    if (filters?.courseId) where.courseId = filters.courseId;
-    if (filters?.teacherId) where.teacherId = filters.teacherId;
-    if (filters?.startDate || filters?.endDate) {
-      where.startDate = {};
-      if (filters.startDate) where.startDate.gte = filters.startDate;
-      if (filters.endDate) where.startDate.lte = filters.endDate;
-    }
+    // Fetch directly from `lessons` table in PostgreSQL database
+    const rawLessons = await this.prisma.lesson.findMany({
+      include: {
+        booking: {
+          include: {
+            course: true,
+          },
+        },
+        teacher: true,
+      },
+      orderBy: { startsAt: 'asc' },
+    });
 
-    const list = await this.prisma.schedule.findMany({
-      where,
+    const lessonEntities: ScheduleEntity[] = rawLessons.map((l) => ({
+      id: l.id,
+      courseId: l.booking?.courseId || 'd5e6f7a8-b9c0-1234-def0-567890123456',
+      teacherId: l.teacherId || '',
+      room: l.teacherNotes || (l.locationType === 'in_person' || l.locationType === 'offline' ? 'Aula 1' : null),
+      status: l.status || 'scheduled',
+      startDate: l.startsAt,
+      endDate: l.endsAt,
+      lessonType: l.locationType === 'online' ? 'online' : 'offline',
+      meetingUrl: l.meetingLink || (l.locationType === 'online' ? 'https://meet.google.com/eipass-coding-live' : null),
+      courseName: l.booking?.courseName || l.booking?.course?.name || 'EIPASS Coding',
+      teacherName: l.teacher?.fullName || undefined,
+    }));
+
+    // Also fetch from `schedules` table to combine if any exist
+    const rawSchedules = await this.prisma.schedule.findMany({
       include: { course: true },
       orderBy: { startDate: 'asc' },
     });
 
-    return list.map((s) => this.mapToEntity(s));
+    const teacherIds = rawSchedules.map((s) => s.teacherId).filter(Boolean);
+    const teachersList = teacherIds.length
+      ? await this.prisma.teacher.findMany({ where: { teacherId: { in: teacherIds } } })
+      : [];
+    const teacherMap = new Map(teachersList.map((t) => [t.teacherId, t.fullName]));
+
+    const scheduleEntities: ScheduleEntity[] = rawSchedules.map((s) => ({
+      id: s.id,
+      courseId: s.courseId,
+      teacherId: s.teacherId,
+      room: s.room,
+      status: s.status,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      lessonType: s.lessonType,
+      meetingUrl: s.meetingUrl,
+      courseName: s.course?.name || 'Corso',
+      teacherName: teacherMap.get(s.teacherId) || undefined,
+    }));
+
+    return [...lessonEntities, ...scheduleEntities];
   }
 
   async findOne(id: string): Promise<ScheduleEntity | null> {
+    const l = await this.prisma.lesson.findUnique({
+      where: { id },
+      include: {
+        booking: { include: { course: true } },
+        teacher: true,
+      },
+    });
+
+    if (l) {
+      return {
+        id: l.id,
+        courseId: l.booking?.courseId || '',
+        teacherId: l.teacherId || '',
+        room: l.teacherNotes || null,
+        status: l.status,
+        startDate: l.startsAt,
+        endDate: l.endsAt,
+        lessonType: l.locationType === 'online' ? 'online' : 'offline',
+        meetingUrl: l.meetingLink || null,
+        courseName: l.booking?.courseName || 'Corso',
+        teacherName: l.teacher?.fullName || undefined,
+      };
+    }
+
     const s = await this.prisma.schedule.findUnique({
       where: { id },
       include: { course: true },
     });
+
     if (!s) return null;
-    return this.mapToEntity(s);
+    return {
+      id: s.id,
+      courseId: s.courseId,
+      teacherId: s.teacherId,
+      room: s.room,
+      status: s.status,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      lessonType: s.lessonType,
+      meetingUrl: s.meetingUrl,
+      courseName: s.course?.name || 'Corso',
+      teacherName: undefined,
+    };
   }
 
   async create(data: {
@@ -50,20 +125,40 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     lessonType?: string;
     meetingUrl?: string | null;
   }): Promise<ScheduleEntity> {
-    const s = await this.prisma.schedule.create({
-      data: {
-        courseId: data.courseId,
-        teacherId: data.teacherId,
-        room: data.room || null,
-        status: data.status || 'scheduled',
-        startDate: data.startDate,
-        endDate: data.endDate,
-        lessonType: data.lessonType || 'offline',
-        meetingUrl: data.meetingUrl || null,
-      },
-      include: { course: true },
+    const booking = await this.prisma.booking.findFirst({
+      where: { courseId: data.courseId },
     });
-    return this.mapToEntity(s);
+
+    const l = await this.prisma.lesson.create({
+      data: {
+        bookingId: booking?.id || undefined,
+        teacherId: data.teacherId || null,
+        startsAt: data.startDate,
+        endsAt: data.endDate,
+        status: data.status || 'scheduled',
+        locationType: data.lessonType === 'online' ? 'online' : 'in_person',
+        meetingLink: data.meetingUrl || null,
+        teacherNotes: data.room ? `Aula ${data.room}` : null,
+      },
+      include: {
+        booking: true,
+        teacher: true,
+      },
+    });
+
+    return {
+      id: l.id,
+      courseId: data.courseId,
+      teacherId: data.teacherId,
+      room: data.room || null,
+      status: l.status,
+      startDate: l.startsAt,
+      endDate: l.endsAt,
+      lessonType: data.lessonType || 'offline',
+      meetingUrl: data.meetingUrl || null,
+      courseName: l.booking?.courseName || 'Corso',
+      teacherName: l.teacher?.fullName || undefined,
+    };
   }
 
   async createMany(data: {
@@ -76,27 +171,43 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     lessonType?: string;
     meetingUrl?: string | null;
   }[]): Promise<ScheduleEntity[]> {
-    const created = await Promise.all(
-      data.map((item) =>
-        this.prisma.schedule.create({
-          data: {
-            courseId: item.courseId,
-            teacherId: item.teacherId,
-            room: item.room || null,
-            status: item.status || 'scheduled',
-            startDate: item.startDate,
-            endDate: item.endDate,
-            lessonType: item.lessonType || 'offline',
-            meetingUrl: item.meetingUrl || null,
-          },
-          include: { course: true },
-        }),
-      ),
-    );
-    return created.map((s) => this.mapToEntity(s));
+    return Promise.all(data.map((item) => this.create(item)));
   }
 
   async update(id: string, data: Partial<ScheduleEntity>): Promise<ScheduleEntity> {
+    const existingLesson = await this.prisma.lesson.findUnique({ where: { id } });
+
+    if (existingLesson) {
+      const updateData: any = {};
+      if (data.startDate !== undefined) updateData.startsAt = data.startDate;
+      if (data.endDate !== undefined) updateData.endsAt = data.endDate;
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+      if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? 'online' : 'in_person';
+      if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
+      if (data.room !== undefined) updateData.teacherNotes = data.room ? `Aula ${data.room}` : null;
+
+      const l = await this.prisma.lesson.update({
+        where: { id },
+        data: updateData,
+        include: { booking: true, teacher: true },
+      });
+
+      return {
+        id: l.id,
+        courseId: l.booking?.courseId || '',
+        teacherId: l.teacherId || '',
+        room: l.teacherNotes || null,
+        status: l.status,
+        startDate: l.startsAt,
+        endDate: l.endsAt,
+        lessonType: l.locationType === 'online' ? 'online' : 'offline',
+        meetingUrl: l.meetingLink || null,
+        courseName: l.booking?.courseName || 'Corso',
+        teacherName: l.teacher?.fullName || undefined,
+      };
+    }
+
     const updateData: any = {};
     if (data.courseId !== undefined) updateData.courseId = data.courseId;
     if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
@@ -112,14 +223,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       data: updateData,
       include: { course: true },
     });
-    return this.mapToEntity(s);
-  }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.schedule.delete({ where: { id } });
-  }
-
-  private mapToEntity(s: any): ScheduleEntity {
     return {
       id: s.id,
       courseId: s.courseId,
@@ -130,8 +234,17 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       endDate: s.endDate,
       lessonType: s.lessonType,
       meetingUrl: s.meetingUrl,
-      courseName: s.course?.name || 'Unknown Course',
-      teacherName: s.teacherName || null,
+      courseName: s.course?.name || 'Corso',
+      teacherName: undefined,
     };
+  }
+
+  async delete(id: string): Promise<void> {
+    const existingLesson = await this.prisma.lesson.findUnique({ where: { id } });
+    if (existingLesson) {
+      await this.prisma.lesson.delete({ where: { id } });
+    } else {
+      await this.prisma.schedule.delete({ where: { id } });
+    }
   }
 }

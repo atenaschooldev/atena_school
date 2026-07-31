@@ -42,6 +42,7 @@ export function mapApiToLesson(api: ScheduleApiResponse): Lesson {
     corsoId: api.course_id,
     insegnanteId: api.teacher_id,
     giorno,
+    data: api.start_date,
     oraInizio: api.start_time || "09:00",
     oraFine: api.end_time || "10:30",
     aula: api.room || "Aula 1",

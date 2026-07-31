@@ -10,9 +10,10 @@ import { ModeToggle } from "@/components/mode-toggle"
 
 interface SiteHeaderProps {
   onOpenCustomizer?: () => void
+  title?: string
 }
 
-export function SiteHeader({ onOpenCustomizer }: SiteHeaderProps) {
+export function SiteHeader({ onOpenCustomizer, title }: SiteHeaderProps) {
   const [searchOpen, setSearchOpen] = React.useState(false)
 
   React.useEffect(() => {
@@ -36,10 +37,11 @@ export function SiteHeader({ onOpenCustomizer }: SiteHeaderProps) {
             orientation="vertical"
             className="mx-2 data-[orientation=vertical]:h-4"
           />
-          <div className="flex-1 max-w-sm">
-            <SearchTrigger onClick={() => setSearchOpen(true)} />
-          </div>
+          {title && (
+            <h1 className="text-sm font-semibold tracking-tight truncate">{title}</h1>
+          )}
           <div className="ml-auto flex items-center gap-2">
+            <SearchTrigger onClick={() => setSearchOpen(true)} />
             {onOpenCustomizer && (
               <Button
                 variant="ghost"

@@ -116,7 +116,7 @@ export function CourseCard({ course, onEdit, onDelete }: CourseCardProps) {
         <div className="flex justify-between items-center mt-3 pt-3 border-t border-border/30 text-xs text-muted-foreground">
            <div className="flex items-center gap-1">
              <Calendar className="h-3.5 w-3.5" />
-             <span className="font-medium truncate max-w-[120px]">{course.scheduleDays.length > 0 ? course.scheduleDays.join(', ') : "Da definire"}</span>
+             <span className="font-medium truncate max-w-[120px]">{course.scheduleDays && course.scheduleDays.length > 0 ? course.scheduleDays.join(', ') : "Da concordare"}</span>
            </div>
            {course.startTime && (
              <div className="flex items-center gap-1 font-mono">

@@ -128,14 +128,9 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
 
   const searchItems: SearchItem[] = [
     // Dashboards
-    { title: "Dashboard 1", url: "/dashboard", group: "Dashboards", icon: LayoutDashboard },
-    { title: "Dashboard 2", url: "/dashboard-2", group: "Dashboards", icon: LayoutPanelLeft },
+    { title: "Dashboard", url: "/dashboard", group: "Dashboards", icon: LayoutDashboard },
 
     // Apps
-    { title: "Mail", url: "/mail", group: "Apps", icon: Mail },
-    { title: "Tasks", url: "/tasks", group: "Apps", icon: CheckSquare },
-    { title: "Chat", url: "/chat", group: "Apps", icon: MessageCircle },
-    { title: "Calendar", url: "/calendar", group: "Apps", icon: Calendar },
 
     // Auth Pages
     { title: "Sign In 1", url: "/auth/sign-in", group: "Auth Pages", icon: Shield },
@@ -163,6 +158,8 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
     // Pages
     { title: "FAQs", url: "/faqs", group: "Pages", icon: HelpCircle },
     { title: "Pricing", url: "/pricing", group: "Pages", icon: CreditCard },
+    { title: "Prenotazioni & Ordini", url: "/prenotazioni", group: "Apps", icon: CreditCard },
+    { title: "Pagamenti", url: "/pagamenti", group: "Apps", icon: CreditCard },
   ]
 
   const groupedItems = searchItems.reduce((acc, item) => {

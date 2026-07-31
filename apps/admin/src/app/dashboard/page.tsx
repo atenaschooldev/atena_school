@@ -1,28 +1,46 @@
 import { BaseLayout } from "@/components/layouts/base-layout"
-import { ChartAreaInteractive } from "./components/chart-area-interactive"
-import { DataTable } from "./components/data-table"
-import { SectionCards } from "./components/section-cards"
+import { MetricsOverview } from "./components/metrics-overview"
+import { SalesChart } from "./components/sales-chart"
+import { RecentTransactions } from "./components/recent-transactions"
+import { TopProducts } from "./components/top-products"
+import { CustomerInsights } from "./components/customer-insights"
+import { QuickActions } from "./components/quick-actions"
+import { RevenueBreakdown } from "./components/revenue-breakdown"
 
-import data from "./data/data.json"
-import pastPerformanceData from "./data/past-performance-data.json"
-import keyPersonnelData from "./data/key-personnel-data.json"
-import focusDocumentsData from "./data/focus-documents-data.json"
-
-export default function Page() {
+export default function DashboardPage() {
   return (
-    <BaseLayout title="Dashboard" description="Welcome to your admin dashboard">
-        <div className="@container/main px-4 lg:px-6 space-y-6">
-          <SectionCards />
-          <ChartAreaInteractive />
+    <BaseLayout title="Dashboard">
+      <div className="flex-1 space-y-6 px-4 lg:px-6 pt-0">
+        <div className="flex md:flex-row flex-col md:items-center justify-between gap-4 md:gap-6">
+          <div className="flex flex-col gap-1">
+            <p className="text-muted-foreground text-sm">
+              Monitora le prestazioni e le metriche chiave della scuola in tempo reale
+            </p>
+          </div>
+          <QuickActions />
         </div>
-        <div className="@container/main">
-          <DataTable 
-            data={data} 
-            pastPerformanceData={pastPerformanceData}
-            keyPersonnelData={keyPersonnelData}
-            focusDocumentsData={focusDocumentsData}
-          />
+
+        {/* Main Dashboard Grid */}
+        <div className="@container/main space-y-6">
+          {/* Top Row - Key Metrics */}
+          <MetricsOverview />
+
+          {/* Second Row - Charts in 2 columns */}
+          <div className="grid gap-6 grid-cols-1 @5xl:grid-cols-2">
+            <SalesChart />
+            <RevenueBreakdown />
+          </div>
+
+          {/* Third Row - Two Column Layout */}
+          <div className="grid gap-6 grid-cols-1 @5xl:grid-cols-2">
+            <RecentTransactions />
+            <TopProducts />
+          </div>
+
+          {/* Fourth Row - Customer Insights */}
+          <CustomerInsights />
         </div>
+      </div>
     </BaseLayout>
   )
 }

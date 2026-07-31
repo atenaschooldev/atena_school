@@ -11,6 +11,10 @@ import { SchedulesModule } from './features/schedules/schedules.module';
 import { MailModule } from './features/mail/mail.module';
 import { CheckoutModule } from './features/checkout/checkout.module';
 import { PortalModule } from './features/portal/portal.module';
+import { UsersModule } from './features/users/users.module';
+import { PaymentsModule } from './features/payments/payments.module';
+import { MembershipsModule } from './features/memberships/memberships.module';
+import { TeachersModule } from './features/teachers/teachers.module';
 
 const businessModules = [
   AuthModule,
@@ -19,6 +23,10 @@ const businessModules = [
   MailModule,
   CheckoutModule,
   PortalModule,
+  UsersModule,
+  PaymentsModule,
+  MembershipsModule,
+  TeachersModule,
 ];
 
 @Module({

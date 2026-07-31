@@ -56,9 +56,15 @@ model Teacher {
   fullName       String?   @map("full_name")
   photoUrl       String?   @map("photo_url")
   status         String?
+  experience     String?
+  hireDate       DateTime? @map("hire_date") @db.Date
+  birthDate      DateTime? @map("birth_date") @db.Date
+  colorValue     BigInt?   @map("color_value")
+  contractId     String?   @map("contract_id") @db.Uuid
   updatedAt      DateTime? @map("updated_at") @db.Timestamptz
 
   courseTeachers CourseTeacher[]
+  lessons        Lesson[]
 
   @@map("teachers")
 }
@@ -95,8 +101,8 @@ model Booking {
   courseId              String?   @map("course_id") @db.Uuid
   userId                String?   @map("user_id") @db.Uuid
   courseName            String    @map("course_name")
-  purchaserName         String    @map("purchaser_name")
-  purchaserEmail        String    @map("purchaser_email")
+  purchaserName         String?   @map("purchaser_name")
+  purchaserEmail        String?   @map("purchaser_email")
   purchaserPhone        String?   @map("purchaser_phone")
   purchaserTaxCode      String?   @map("purchaser_tax_code")
   studentName           String    @map("student_name")
@@ -104,7 +110,6 @@ model Booking {
   studentPhone          String?   @map("student_phone")
   studentTaxCode        String?   @map("student_tax_code")
   studentBirthDate      DateTime? @map("student_birth_date") @db.Date
-  isForChild            Boolean   @default(false) @map("is_for_child")
   amountPaid            Decimal   @default(0) @map("amount_paid") @db.Decimal(10, 2)
   registrationFee       Decimal   @default(0) @map("registration_fee") @db.Decimal(10, 2)
   paymentStatus         String    @default("reserved") @map("payment_status")
@@ -122,8 +127,10 @@ model Booking {
   subscriptionEndsAt    DateTime? @map("subscription_ends_at") @db.Timestamptz
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
-  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  course Course?  @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  user   User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lessons Lesson[]
+  payments Payment[]
 
   @@index([userId])
   @@index([courseId])
@@ -131,4 +138,74 @@ model Booking {
   @@index([schedulingStatus])
   @@index([createdAt])
   @@map("bookings")
+}
+
+model Lesson {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId       String?   @map("booking_id") @db.Uuid
+  teacherId       String?   @map("teacher_id") @db.Uuid
+  startsAt        DateTime  @map("starts_at") @db.Timestamptz
+  endsAt          DateTime  @map("ends_at") @db.Timestamptz
+  status          String    @default("scheduled")
+  attendance      String?
+  homework        String?
+  teacherNotes    String?   @map("teacher_notes")
+  rescheduleCount Int?      @default(0) @map("reschedule_count")
+  rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz
+  locationType    String?   @default("offline") @map("location_type")
+  meetingLink     String?   @map("meeting_link")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime? @updatedAt @map("updated_at") @db.Timestamptz
+
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  teacher Teacher? @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([teacherId])
+  @@index([startsAt])
+  @@map("lessons")
+}
+
+model Payment {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId             String?   @map("booking_id") @db.Uuid
+  userId                String?   @map("user_id") @db.Uuid
+  amount                Decimal   @db.Decimal(10, 2)
+  currency              String    @default("EUR")
+  paymentMethod         String    @map("payment_method")
+  type                  String    @default("payment")
+  status                String    @default("succeeded")
+  provider              String    @default("manual")
+  providerTransactionId String?   @map("provider_transaction_id")
+  notes                 String?   @db.Text
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  paidAt                DateTime? @map("paid_at") @db.Timestamptz
+  updatedAt             DateTime? @updatedAt @map("updated_at") @db.Timestamptz
+
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
+  @@map("payments")
+}
+
+model AnnualMembership {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  taxCode      String?   @map("tax_code")
+  email        String?
+  phone        String?
+  academicYear String    @default("2026/2027") @map("academic_year")
+  status       String    @default("active")
+  studentId    String?   @map("student_id") @db.Uuid
+  userId       String?   @map("user_id") @db.Uuid
+  bookingId    String?   @unique @map("booking_id") @db.Uuid
+  paidAt       DateTime  @default(now()) @map("paid_at") @db.Timestamptz
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status])
+  @@index([academicYear])
+  @@index([studentId])
+  @@map("annual_memberships")
 }

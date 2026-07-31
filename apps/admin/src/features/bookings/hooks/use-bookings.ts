@@ -1,60 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import type { BookingOrder } from "../types/booking";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
 const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
-
-const DEFAULT_MOCK_BOOKINGS: BookingOrder[] = [
-  {
-    id: "b1",
-    code: "ATN-2026-001",
-    status: "CONFIRMED",
-    paymentStatus: "PAID",
-    createdAt: new Date().toISOString(),
-    amountTotal: 450,
-    amountPaid: 450,
-    student: {
-      id: "s1",
-      firstName: "Marco",
-      lastName: "Rossi",
-      email: "marco.rossi@example.it",
-      phone: "+39 340 1234567",
-      type: "ADULT",
-    },
-    course: {
-      id: "c1",
-      title: "English B2 Upper-Intermediate",
-      category: "Adulti",
-      format: "Presenza",
-    },
-    paymentMethod: "Stripe Card",
-  },
-  {
-    id: "b2",
-    code: "ATN-2026-002",
-    status: "PENDING",
-    paymentStatus: "PARTIAL",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    amountTotal: 620,
-    amountPaid: 200,
-    student: {
-      id: "s2",
-      firstName: "Giulia",
-      lastName: "Bianchi",
-      email: "giulia.b@example.it",
-      phone: "+39 333 9876543",
-      type: "JUNIOR",
-    },
-    course: {
-      id: "c2",
-      title: "Kids English A1 Fun",
-      category: "Bambini",
-      format: "Presenza",
-    },
-    paymentMethod: "Bonifico Bancario",
-  },
-];
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
@@ -71,77 +20,137 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(`Backend error ${res.status}: ${text}`);
   }
 
-  return res.json();
+  if (res.status === 204) {
+    return {} as T;
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
 export function useBookings() {
-  const [bookings, setBookings] = useState<BookingOrder[]>(DEFAULT_MOCK_BOOKINGS);
+  const [allBookings, setAllBookings] = useState<BookingOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "paid" | "reserved" | "leads" | "child">("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<BookingOrder | null>(null);
 
-  useEffect(() => {
-    async function fetchBookings() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await apiFetch<BookingOrder[]>("/admin/bookings");
-        if (Array.isArray(data) && data.length > 0) {
-          setBookings(data);
-        } else {
-          setBookings(DEFAULT_MOCK_BOOKINGS);
-        }
-      } catch (e) {
-        console.error("Failed to fetch bookings:", e);
-        setError(e instanceof Error ? e.message : "Errore nel caricamento prenotazioni");
-        setBookings(DEFAULT_MOCK_BOOKINGS);
-      } finally {
-        setLoading(false);
-      }
+  const fetchBookings = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiFetch<BookingOrder[]>("/admin/bookings");
+      setAllBookings(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("Failed to fetch bookings:", e);
+      setError(e instanceof Error ? e.message : "Errore nel caricamento prenotazioni");
+      setAllBookings([]);
+    } finally {
+      setLoading(false);
     }
-
-    fetchBookings();
   }, []);
 
-  const filteredBookings = bookings.filter((b) => {
-    const q = searchQuery.toLowerCase().trim();
-    if (q) {
-      const matchName = `${b.student?.firstName || ""} ${b.student?.lastName || ""}`
-        .toLowerCase()
-        .includes(q);
-      const matchCode = (b.code || "").toLowerCase().includes(q);
-      const matchCourse = (b.course?.title || "").toLowerCase().includes(q);
-      if (!matchName && !matchCode && !matchCourse) return false;
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
+
+  const updateBookingStatus = useCallback(
+    async (id: string, payment_status: string, scheduling_status?: string) => {
+      try {
+        const updated = await apiFetch<BookingOrder>(`/admin/bookings/${id}/status`, {
+          method: "PATCH",
+          body: JSON.stringify({ payment_status, scheduling_status }),
+        });
+        setAllBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
+        if (selectedBooking?.id === id) {
+          setSelectedBooking(updated);
+        }
+        toast.success("Stato prenotazione aggiornato");
+      } catch (e) {
+        console.error("Failed to update status:", e);
+        toast.error("Errore nell'aggiornamento dello stato");
+      }
+    },
+    [selectedBooking],
+  );
+
+  const deleteBooking = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        await apiFetch(`/admin/bookings/${id}`, { method: "DELETE" });
+        setAllBookings((prev) => prev.filter((b) => b.id !== id));
+        if (selectedBooking?.id === id) {
+          setSelectedBooking(null);
+        }
+        toast.success("Prenotazione eliminata");
+        return true;
+      } catch (e) {
+        console.error("Failed to delete booking:", e);
+        toast.error("Errore nell'eliminazione della prenotazione");
+        return false;
+      }
+    },
+    [selectedBooking],
+  );
+
+  const createManualBooking = useCallback(async (data: any) => {
+    try {
+      const created = await apiFetch<BookingOrder>("/admin/bookings", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      setAllBookings((prev) => [created, ...prev]);
+      toast.success("Prenotazione registrata con successo");
+      return created;
+    } catch (e) {
+      console.error("Failed to create manual booking:", e);
+      toast.error("Errore nella registrazione della prenotazione");
+      throw e;
     }
+  }, []);
 
-    if (activeTab === "paid" && b.paymentStatus !== "PAID") return false;
-    if (activeTab === "reserved" && b.status !== "PENDING") return false;
-    if (activeTab === "leads" && b.status !== "LEAD") return false;
-    if (activeTab === "child" && b.student?.type !== "JUNIOR") return false;
+  const filteredBookings = useMemo(() => {
+    return allBookings.filter((b) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const matchPurchaser = (b.purchaser_name || "").toLowerCase().includes(q);
+        const matchStudent = (b.student_name || "").toLowerCase().includes(q);
+        const matchEmail = (b.purchaser_email || "").toLowerCase().includes(q);
+        const matchCourse = (b.course_name || "").toLowerCase().includes(q);
+        if (!matchPurchaser && !matchStudent && !matchEmail && !matchCourse) return false;
+      }
 
-    return true;
-  });
+      if (statusFilter !== "all" && b.payment_status !== statusFilter) return false;
 
-  const stats = {
-    totalCount: bookings.length,
-    paidCount: bookings.filter((b) => b.paymentStatus === "PAID" || (b as any).payment_status === "paid").length,
-    reservedCount: bookings.filter((b) => b.status === "PENDING" || (b as any).payment_status === "reserved").length,
-    leadsCount: bookings.filter((b) => b.status === "LEAD").length,
-  };
+      return true;
+    });
+  }, [allBookings, searchQuery, statusFilter]);
+
+  const stats = useMemo(() => {
+    return {
+      totalCount: allBookings.length,
+      paidCount: allBookings.filter((b) => b.payment_status === "completed" || b.payment_status === "paid").length,
+      reservedCount: allBookings.filter((b) => b.payment_status === "reserved").length,
+      leadsCount: allBookings.filter((b) => b.scheduling_status === "pending_coordination").length,
+    };
+  }, [allBookings]);
 
   return {
     bookings: filteredBookings,
-    allBookings: bookings,
+    allBookings,
     stats,
     loading,
     error,
     searchQuery,
     setSearchQuery,
-    activeTab,
-    setActiveTab,
+    statusFilter,
+    setStatusFilter,
     selectedBooking,
     setSelectedBooking,
+    updateBookingStatus,
+    deleteBooking,
+    createManualBooking,
+    refresh: fetchBookings,
   };
 }

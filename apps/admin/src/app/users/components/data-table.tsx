@@ -6,7 +6,6 @@ import {
   type ColumnFiltersState,
   type SortingState,
   type VisibilityState,
-  type Row,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -17,11 +16,11 @@ import {
 import {
   ChevronDown,
   EllipsisVertical,
-  Eye,
   Pencil,
   Trash2,
-  Download,
   Search,
+  UserCheck,
+  UserX,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -54,77 +53,59 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { UserFormDialog } from "./user-form-dialog"
-
-interface User {
-  id: number
-  name: string
-  email: string
-  avatar: string
-  role: string
-  plan: string
-  billing: string
-  status: string
-  joinedDate: string
-  lastLogin: string
-}
-
-interface UserFormValues {
-  name: string
-  email: string
-  role: string
-  plan: string
-  billing: string
-  status: string
-}
+import type { User, UserFormValues } from "@/features/users/types"
 
 interface DataTableProps {
   users: User[]
-  onDeleteUser: (id: number) => void
-  onEditUser: (user: User) => void
-  onAddUser: (userData: UserFormValues) => void
+  selectedRole: string
+  onRoleFilterChange: (role: string) => void
+  onDeleteUser: (id: string) => Promise<void>
+  onToggleActive: (id: string, currentActive: boolean) => Promise<void>
+  onAddUser: (userData: UserFormValues) => Promise<unknown>
 }
 
-export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTableProps) {
+export function DataTable({
+  users,
+  selectedRole,
+  onRoleFilterChange,
+  onDeleteUser,
+  onToggleActive,
+  onAddUser,
+}: DataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20"
-      case "Pending":
-        return "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20"
-      case "Error":
-        return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20"
-      case "Inactive":
-        return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20"
-      default:
-        return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20"
-    }
-  }
-
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "Admin":
+      case "admin":
         return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/20"
-      case "Editor":
+      case "teacher":
         return "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20"
-      case "Author":
-        return "text-yellow-600 bg-yellow-50 dark:text-yellow-400 dark:bg-yellow-900/20"
-      case "Maintainer":
-        return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20"
-      case "Subscriber":
+      case "parent":
+        return "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20"
+      case "student":
         return "text-purple-600 bg-purple-50 dark:text-purple-400 dark:bg-purple-900/20"
       default:
         return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20"
     }
   }
 
-  const exactFilter = (row: Row<User>, columnId: string, value: string) => {
-    return row.getValue(columnId) === value
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin":
+        return "Amministratore"
+      case "teacher":
+        return "Insegnante"
+      case "parent":
+        return "Genitore"
+      case "student":
+        return "Studente"
+      default:
+        return role || "Studente"
+    }
   }
 
   const columns: ColumnDef<User>[] = [
@@ -138,7 +119,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
+            aria-label="Seleziona tutti"
           />
         </div>
       ),
@@ -147,7 +128,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
+            aria-label="Seleziona riga"
           />
         </div>
       ),
@@ -156,20 +137,22 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       size: 50,
     },
     {
-      accessorKey: "name",
-      header: "User",
+      accessorKey: "firstName",
+      header: "Utente",
       cell: ({ row }) => {
         const user = row.original
+        const fullName = `${user.firstName} ${user.lastName}`
+        const initials = `${user.firstName?.[0] || ""}${user.lastName?.[0] || ""}`.toUpperCase() || "U"
         return (
           <div className="flex items-center gap-3">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs font-medium">
-                {user.avatar}
+                {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="font-medium">{user.name}</span>
-              <span className="text-sm text-muted-foreground">{user.email}</span>
+              <span className="font-medium">{fullName}</span>
+              <span className="text-xs text-muted-foreground">{user.email}</span>
             </div>
           </div>
         )
@@ -177,83 +160,79 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
     },
     {
       accessorKey: "role",
-      header: "Role",
+      header: "Ruolo",
       cell: ({ row }) => {
         const role = row.getValue("role") as string
         return (
           <Badge variant="secondary" className={getRoleColor(role)}>
-            {role}
+            {getRoleLabel(role)}
           </Badge>
         )
       },
-      filterFn: exactFilter,
     },
     {
-      accessorKey: "plan",
-      header: "Plan",
+      accessorKey: "isActive",
+      header: "Stato",
       cell: ({ row }) => {
-        const plan = row.getValue("plan") as string
-        return <span className="font-medium">{plan}</span>
-      },
-      filterFn: exactFilter,
-    },
-    {
-      accessorKey: "billing",
-      header: "Billing",
-      cell: ({ row }) => {
-        const billing = row.getValue("billing") as string
-        return <span className="text-sm">{billing}</span>
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
-        const status = row.getValue("status") as string
+        const isActive = row.getValue("isActive") as boolean
         return (
-          <Badge variant="secondary" className={getStatusColor(status)}>
-            {status}
+          <Badge
+            variant="secondary"
+            className={
+              isActive
+                ? "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20"
+                : "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20"
+            }
+          >
+            {isActive ? "Attivo" : "Disattivato"}
           </Badge>
         )
       },
-      filterFn: exactFilter,
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Data Registrazione",
+      cell: ({ row }) => {
+        const dateStr = row.getValue("createdAt") as string
+        if (!dateStr) return "N/D"
+        const formatted = new Date(dateStr).toLocaleDateString("it-IT", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+        return <span className="text-xs text-muted-foreground">{formatted}</span>
+      },
     },
     {
       id: "actions",
-      header: "Actions",
+      header: "Azioni",
       cell: ({ row }) => {
         const user = row.original
         return (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-              <Eye className="size-4" />
-              <span className="sr-only">View user</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 cursor-pointer"
-              onClick={() => onEditUser(user)}
-            >
-              <Pencil className="size-4" />
-              <span className="sr-only">Edit user</span>
-            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
                   <EllipsisVertical className="size-4" />
-                  <span className="sr-only">More actions</span>
+                  <span className="sr-only">Opzioni</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem className="cursor-pointer">
-                  View Details
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  Send Email
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  Reset Password
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => onToggleActive(user.id, user.isActive)}
+                >
+                  {user.isActive ? (
+                    <>
+                      <UserX className="mr-2 size-4 text-orange-500" />
+                      Disattiva
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="mr-2 size-4 text-green-500" />
+                      Attiva
+                    </>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -262,7 +241,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
                   onClick={() => onDeleteUser(user.id)}
                 >
                   <Trash2 className="mr-2 size-4" />
-                  Delete User
+                  Elimina Utente
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -293,10 +272,6 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
     },
   })
 
-  const roleFilter = table.getColumn("role")?.getFilterValue() as string
-  const planFilter = table.getColumn("plan")?.getFilterValue() as string
-  const statusFilter = table.getColumn("status")?.getFilterValue() as string
-
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -304,7 +279,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search users..."
+              placeholder="Cerca per nome, cognome o email..."
               value={globalFilter ?? ""}
               onChange={(event) => setGlobalFilter(String(event.target.value))}
               className="pl-9"
@@ -312,90 +287,40 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" className="cursor-pointer">
-            <Download className="mr-2 size-4" />
-            Export
-          </Button>
           <UserFormDialog onAddUser={onAddUser} />
         </div>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-4 sm:gap-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
         <div className="space-y-2">
           <Label htmlFor="role-filter" className="text-sm font-medium">
-            Role
+            Filtra per Ruolo
           </Label>
           <Select
-            value={roleFilter || ""}
-            onValueChange={(value) =>
-              table.getColumn("role")?.setFilterValue(value === "all" ? "" : value)
-            }
+            value={selectedRole}
+            onValueChange={onRoleFilterChange}
           >
             <SelectTrigger className="cursor-pointer w-full" id="role-filter">
-              <SelectValue placeholder="Select Role" />
+              <SelectValue placeholder="Tutti i ruoli" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="Admin">Admin</SelectItem>
-              <SelectItem value="Author">Author</SelectItem>
-              <SelectItem value="Editor">Editor</SelectItem>
-              <SelectItem value="Maintainer">Maintainer</SelectItem>
-              <SelectItem value="Subscriber">Subscriber</SelectItem>
+              <SelectItem value="all">Tutti i ruoli</SelectItem>
+              <SelectItem value="student">Studenti</SelectItem>
+              <SelectItem value="parent">Genitori</SelectItem>
+              <SelectItem value="teacher">Insegnanti</SelectItem>
+              <SelectItem value="admin">Amministratori</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="plan-filter" className="text-sm font-medium">
-            Plan
-          </Label>
-          <Select
-            value={planFilter || ""}
-            onValueChange={(value) =>
-              table.getColumn("plan")?.setFilterValue(value === "all" ? "" : value)
-            }
-          >
-            <SelectTrigger className="cursor-pointer w-full" id="plan-filter">
-              <SelectValue placeholder="Select Plan" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Plans</SelectItem>
-              <SelectItem value="Basic">Basic</SelectItem>
-              <SelectItem value="Professional">Professional</SelectItem>
-              <SelectItem value="Enterprise">Enterprise</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status-filter" className="text-sm font-medium">
-            Status
-          </Label>
-          <Select
-            value={statusFilter || ""}
-            onValueChange={(value) =>
-              table.getColumn("status")?.setFilterValue(value === "all" ? "" : value)
-            }
-          >
-            <SelectTrigger className="cursor-pointer w-full" id="status-filter">
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Error">Error</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
 
+        <div className="space-y-2">
           <Label htmlFor="column-visibility" className="text-sm font-medium">
-            Column Visibility
+            Visibilità Colonne
           </Label>
           <DropdownMenu>
             <DropdownMenuTrigger asChild id="column-visibility">
               <Button variant="outline" className="cursor-pointer w-full">
-                Columns <ChevronDown className="ml-2 size-4" />
+                Colonne <ChevronDown className="ml-2 size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -462,9 +387,9 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-muted-foreground"
                 >
-                  No results.
+                  Nessun utente trovato.
                 </TableCell>
               </TableRow>
             )}
@@ -473,10 +398,9 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
       </div>
 
       <div className="flex items-center justify-between space-x-2 py-4">
-
         <div className="flex items-center space-x-2">
           <Label htmlFor="page-size" className="text-sm font-medium">
-            Show
+            Mostra
           </Label>
           <Select
             value={`${table.getState().pagination.pageSize}`}
@@ -488,7 +412,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
-              {[10, 20, 30, 40, 50].map((pageSize) => (
+              {[10, 20, 30, 50].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
                 </SelectItem>
@@ -497,17 +421,10 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
           </Select>
         </div>
         <div className="flex-1 text-sm text-muted-foreground hidden sm:block">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+          {table.getFilteredSelectedRowModel().rows.length} di{" "}
+          {table.getFilteredRowModel().rows.length} selezionati.
         </div>
         <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2 hidden sm:flex">
-            <p className="text-sm font-medium">Page</p>
-            <strong className="text-sm">
-              {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </strong>
-          </div>
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
@@ -516,7 +433,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
               disabled={!table.getCanPreviousPage()}
               className="cursor-pointer"
             >
-              Previous
+              Indietro
             </Button>
             <Button
               variant="outline"
@@ -525,7 +442,7 @@ export function DataTable({ users, onDeleteUser, onEditUser, onAddUser }: DataTa
               disabled={!table.getCanNextPage()}
               className="cursor-pointer"
             >
-              Next
+              Avanti
             </Button>
           </div>
         </div>

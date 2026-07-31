@@ -8,11 +8,47 @@ import { Prisma } from '@prisma/client';
 export class PrismaCoursesRepository implements CoursesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async getTeachersMap(teacherIds: string[]): Promise<Map<string, string>> {
+    const map = new Map<string, string>();
+    if (!teacherIds.length) return map;
+
+    try {
+      const teachers = await this.prisma.teacher.findMany({
+        where: { teacherId: { in: teacherIds } },
+        select: { teacherId: true, fullName: true },
+      });
+      for (const t of teachers) {
+        if (t.fullName) map.set(t.teacherId, t.fullName);
+      }
+    } catch {}
+    return map;
+  }
+
   async findMany(): Promise<CourseEntity[]> {
     const list = await this.prisma.course.findMany({
       include: { courseTeachers: { include: { teacher: true } } },
+      orderBy: { sortOrder: 'asc' },
     });
-    return list.map((c) => this.mapToEntity(c));
+    const entities = list.map((c) => this.mapToEntity(c));
+
+    const missingTeacherIds = Array.from(
+      new Set(
+        entities
+          .filter((e) => e.teacherId && !e.teacherName)
+          .map((e) => e.teacherId!),
+      ),
+    );
+
+    if (missingTeacherIds.length > 0) {
+      const teachersMap = await this.getTeachersMap(missingTeacherIds);
+      for (const entity of entities) {
+        if (entity.teacherId && !entity.teacherName) {
+          entity.teacherName = teachersMap.get(entity.teacherId) || null;
+        }
+      }
+    }
+
+    return entities;
   }
 
   async findOne(id: string): Promise<CourseEntity | null> {
@@ -21,7 +57,14 @@ export class PrismaCoursesRepository implements CoursesRepository {
       include: { courseTeachers: { include: { teacher: true } } },
     });
     if (!c) return null;
-    return this.mapToEntity(c);
+    const entity = this.mapToEntity(c);
+
+    if (entity.teacherId && !entity.teacherName) {
+      const teachersMap = await this.getTeachersMap([entity.teacherId]);
+      entity.teacherName = teachersMap.get(entity.teacherId) || null;
+    }
+
+    return entity;
   }
 
   async create(data: {
@@ -54,7 +97,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
         description: data.description ?? '',
         teacherId: data.teacherId || null,
         lessonsPerWeek: data.lessonsPerWeek,
-        sortOrder: data.sortOrder,
+        sortOrder: data.sortOrder ?? 0,
         scheduleType: data.scheduleType,
         totalLessons: data.totalLessons,
         scheduleDays: data.scheduleDays || [],

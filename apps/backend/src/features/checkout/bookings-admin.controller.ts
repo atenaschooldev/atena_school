@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -30,6 +30,13 @@ export class BookingsAdminController {
   @ApiOperation({ summary: 'Получить все бронирования (только для админа)' })
   async listAllBookings() {
     return this.checkoutService.listAllBookings();
+  }
+
+  @Post()
+  @Roles('admin')
+  @ApiOperation({ summary: 'Создать ручное бронирование (админ)' })
+  async createManualBooking(@Body() dto: any) {
+    return this.checkoutService.createAdminBooking(dto);
   }
 
   @Patch(':id/status')

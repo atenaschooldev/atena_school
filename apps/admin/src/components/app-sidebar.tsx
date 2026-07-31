@@ -15,6 +15,8 @@ import {
   CreditCard,
   LayoutTemplate,
   Users,
+  BadgeCheck,
+  GraduationCap,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -42,40 +44,15 @@ const data = {
       label: "Dashboards",
       items: [
         {
-          title: "Dashboard 1",
+          title: "Dashboard",
           url: "/dashboard",
           icon: LayoutDashboard,
-        },
-        {
-          title: "Dashboard 2",
-          url: "/dashboard-2",
-          icon: LayoutPanelLeft,
         },
       ],
     },
     {
       label: "Apps",
       items: [
-        {
-          title: "Mail",
-          url: "/mail",
-          icon: Mail,
-        },
-        {
-          title: "Tasks",
-          url: "/tasks",
-          icon: CheckSquare,
-        },
-        {
-          title: "Chat",
-          url: "/chat",
-          icon: MessageCircle,
-        },
-        {
-          title: "Calendar",
-          url: "/calendar",
-          icon: Calendar,
-        },
         {
           title: "Corsi",
           url: "/corsi",
@@ -84,7 +61,22 @@ const data = {
         {
           title: "Prenotazioni & Ordini",
           url: "/prenotazioni",
-          icon: Mail,
+          icon: CreditCard,
+        },
+        {
+          title: "Pagamenti",
+          url: "/pagamenti",
+          icon: CreditCard,
+        },
+        {
+          title: "Iscrizioni",
+          url: "/iscrizioni",
+          icon: BadgeCheck,
+        },
+        {
+          title: "Docenti",
+          url: "/insegnanti",
+          icon: GraduationCap,
         },
         {
           title: "Orari & Calendario",
