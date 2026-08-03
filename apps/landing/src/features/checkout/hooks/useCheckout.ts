@@ -123,7 +123,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const actionRef = useRef<SubmitAction>("book");
 
   const formMethods = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(checkoutSchema as any),
     defaultValues: {
       firstName: "",
       lastName: "",

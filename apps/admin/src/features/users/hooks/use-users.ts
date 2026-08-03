@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type User, type UserFormValues } from "../types";
 import { toast } from "sonner";
 
@@ -30,83 +31,79 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function useUsers() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [selectedRole, setSelectedRole] = useState<string>("all");
 
-  const loadUsers = useCallback(async () => {
-    setLoading(true);
-    try {
+  const {
+    data: users = [],
+    isLoading,
+    refetch,
+  } = useQuery<User[]>({
+    queryKey: ["users", selectedRole],
+    queryFn: async () => {
       const query = selectedRole !== "all" ? `?role=${selectedRole}` : "";
       const data = await apiFetch<User[]>(`/users${query}`);
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error("Failed to fetch users:", e);
-      toast.error("Errore nel caricamento utenti");
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedRole]);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
+  });
 
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
-
-  const addUser = async (values: UserFormValues) => {
-    try {
-      const newUser = await apiFetch<User>("/users", {
+  const addMutation = useMutation({
+    mutationFn: async (values: UserFormValues) => {
+      return apiFetch<User>("/users", {
         method: "POST",
         body: JSON.stringify(values),
       });
-      setUsers((prev) => [newUser, ...prev]);
+    },
+    onSuccess: () => {
       toast.success("Utente creato con successo");
-      return newUser;
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => {
       console.error("Failed to create user:", e);
       toast.error(e instanceof Error ? e.message : "Errore nella creazione dell'utente");
-      throw e;
-    }
-  };
+    },
+  });
 
-  const updateUser = async (id: string, values: Partial<User>) => {
-    try {
-      const updated = await apiFetch<User>(`/users/${id}`, {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: Partial<User> }) => {
+      return apiFetch<User>(`/users/${id}`, {
         method: "PATCH",
         body: JSON.stringify(values),
       });
-      setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
+    },
+    onSuccess: () => {
       toast.success("Utente aggiornato");
-      return updated;
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => {
       console.error("Failed to update user:", e);
       toast.error("Errore nell'aggiornamento dell'utente");
-      throw e;
-    }
-  };
+    },
+  });
 
-  const deleteUser = async (id: string) => {
-    try {
-      await apiFetch<{ success: boolean }>(`/users/${id}`, {
-        method: "DELETE",
-      });
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch<{ success: boolean }>(`/users/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
       toast.success("Utente eliminato");
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => {
       console.error("Failed to delete user:", e);
       toast.error("Errore nell'eliminazione dell'utente");
-      throw e;
-    }
-  };
+    },
+  });
 
   return {
     users,
-    loading,
+    loading: isLoading,
     selectedRole,
     setSelectedRole,
-    addUser,
-    updateUser,
-    deleteUser,
-    refresh: loadUsers,
+    addUser: addMutation.mutateAsync,
+    updateUser: (id: string, values: Partial<User>) => updateMutation.mutateAsync({ id, values }),
+    deleteUser: deleteMutation.mutateAsync,
+    refresh: refetch,
   };
 }

@@ -589,33 +589,273 @@ export class CheckoutService {
 
   async createAdminBooking(dto: {
     courseId?: string;
-    courseName: string;
+    courseName?: string;
     purchaserName: string;
     purchaserEmail: string;
     purchaserPhone?: string;
-    studentName: string;
+    purchaserTaxCode?: string;
+    studentName?: string;
     studentEmail?: string;
     studentPhone?: string;
+    studentTaxCode?: string;
+    studentBirthDate?: string;
     amountPaid?: number;
+    registrationFee?: number;
     paymentStatus?: string;
     paymentMethod?: string;
+    sdiCode?: string;
+    pecEmail?: string;
+    notes?: string;
+    startDate?: string;
   }) {
-    return this.prisma.booking.create({
+    let resolvedCourseId = dto.courseId;
+    let resolvedCourseName = dto.courseName || 'Corso';
+
+    if (!resolvedCourseId) {
+      const foundCourse = await this.prisma.course.findFirst({
+        where: dto.courseName ? { name: { contains: dto.courseName, mode: 'insensitive' } } : undefined,
+      });
+      if (foundCourse) {
+        resolvedCourseId = foundCourse.id;
+        resolvedCourseName = foundCourse.name;
+      } else {
+        const fallbackCourse = await this.prisma.course.findFirst();
+        if (fallbackCourse) {
+          resolvedCourseId = fallbackCourse.id;
+          resolvedCourseName = fallbackCourse.name;
+        }
+      }
+    }
+
+    if (!resolvedCourseId) {
+      throw new BadRequestException('No courses available in database');
+    }
+
+    const regFee = Number(dto.registrationFee || 0);
+    const isForChild = !!(dto.studentName && dto.studentName !== dto.purchaserName);
+
+    // Determine effective student identifiers
+    const sEmail = isForChild ? (dto.studentEmail || dto.purchaserEmail) : dto.purchaserEmail;
+    const sTaxCode = isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode || null) : (dto.purchaserTaxCode || null);
+    const sPhone = isForChild ? (dto.studentPhone || dto.purchaserPhone || null) : (dto.purchaserPhone || null);
+    const sName = dto.studentName || dto.purchaserName;
+
+    // ── 1. CREATE BOOKING ────────────────────────────────────────────────────
+    const booking = await this.prisma.booking.create({
       data: {
-        courseId: dto.courseId || null,
-        courseName: dto.courseName,
+        courseId: resolvedCourseId,
+        courseName: resolvedCourseName,
         purchaserName: dto.purchaserName,
         purchaserEmail: dto.purchaserEmail,
         purchaserPhone: dto.purchaserPhone || null,
-        studentName: dto.studentName || dto.purchaserName,
-        studentEmail: dto.studentEmail || dto.purchaserEmail,
-        studentPhone: dto.studentPhone || dto.purchaserPhone || null,
+        purchaserTaxCode: dto.purchaserTaxCode || null,
+        studentName: sName,
+        studentEmail: sEmail,
+        studentPhone: sPhone,
+        studentTaxCode: sTaxCode || null,
+        studentBirthDate: dto.studentBirthDate ? new Date(dto.studentBirthDate) : null,
         amountPaid: dto.amountPaid ?? 0,
+        registrationFee: regFee,
         paymentStatus: dto.paymentStatus || 'reserved',
         paymentMethod: dto.paymentMethod || 'cash',
+        sdiCode: dto.sdiCode || null,
+        pecEmail: dto.pecEmail || null,
+        notes: dto.notes || null,
+        startDate: dto.startDate ? new Date(dto.startDate) : null,
         schedulingStatus: 'pending_coordination',
       },
     });
+
+    // ── 2. CREATE/UPDATE STUDENT RECORD (parity with landing) ────────────────
+    let studentId: string | null = null;
+    try {
+      const orConditions: string[] = [];
+      if (sEmail) orConditions.push(`email.ilike.${sEmail}`);
+      if (sTaxCode) orConditions.push(`tax_code.ilike.${sTaxCode}`);
+
+      if (orConditions.length > 0) {
+        const { data: existingStudent } = await this.supabaseAdmin
+          .from('students')
+          .select('id')
+          .or(orConditions.join(','))
+          .maybeSingle();
+
+        if (existingStudent?.id) {
+          studentId = existingStudent.id;
+          await this.supabaseAdmin
+            .from('students')
+            .update({
+              full_name: sName || undefined,
+              phone: sPhone || undefined,
+              tax_code: sTaxCode || undefined,
+              birth_date: dto.studentBirthDate || undefined,
+              annual_fee_paid: regFee > 0 ? true : undefined,
+            })
+            .eq('id', existingStudent.id);
+        } else {
+          const { data: newStudent } = await this.supabaseAdmin
+            .from('students')
+            .insert({
+              full_name: sName || 'Studente',
+              email: sEmail || null,
+              phone: sPhone || null,
+              tax_code: sTaxCode || null,
+              birth_date: dto.studentBirthDate || null,
+              status: 'active',
+              annual_fee_paid: regFee > 0,
+            })
+            .select('id')
+            .single();
+          if (newStudent?.id) studentId = newStudent.id;
+        }
+
+        // If isForChild, create parent student record too
+        if (isForChild && (dto.purchaserEmail || dto.purchaserTaxCode)) {
+          const pOrConds: string[] = [];
+          if (dto.purchaserEmail) pOrConds.push(`email.ilike.${dto.purchaserEmail}`);
+          if (dto.purchaserTaxCode) pOrConds.push(`tax_code.ilike.${dto.purchaserTaxCode}`);
+
+          const { data: existingParent } = await this.supabaseAdmin
+            .from('students')
+            .select('id')
+            .or(pOrConds.join(','))
+            .maybeSingle();
+
+          if (!existingParent) {
+            await this.supabaseAdmin.from('students').insert({
+              full_name: dto.purchaserName || 'Genitore',
+              email: dto.purchaserEmail || null,
+              phone: dto.purchaserPhone || null,
+              tax_code: dto.purchaserTaxCode || null,
+              status: 'active',
+            });
+          }
+        }
+
+        // Link student_id to booking
+        if (studentId) {
+          await this.supabaseAdmin
+            .from('bookings')
+            .update({ student_id: studentId })
+            .eq('id', booking.id);
+        }
+      }
+    } catch (err) {
+      console.warn('Admin booking: student create/update error:', err);
+    }
+
+    // ── 3. CREATE ANNUAL MEMBERSHIP (with student identifiers) ────────────────
+    if (regFee > 0) {
+      try {
+        await this.supabaseAdmin.from('annual_memberships').upsert({
+          tax_code: sTaxCode || null,
+          email: sEmail || null,
+          phone: sPhone || null,
+          academic_year: '2026/2027',
+          status: 'active',
+          student_id: studentId || null,
+          user_id: null,
+          booking_id: booking.id,
+          paid_at: new Date().toISOString(),
+          expires_at: '2027-08-31T23:59:59Z',
+        }, { onConflict: 'booking_id' });
+      } catch (err) {
+        console.error('Admin booking: annual_membership create error:', err);
+      }
+    }
+
+    // ── 4. CREATE PAYMENT ENTRIES (split: corso + quota d'iscrizione) ─────────
+    const courseAmount = Number(dto.amountPaid || 0);
+    const paymentStatus = dto.paymentStatus === 'completed' ? 'succeeded' : 'pending';
+    const paymentMethod = dto.paymentMethod || 'cash';
+
+    try {
+      // 4a. Course payment — always created if amount > 0
+      if (courseAmount > 0) {
+        await this.prisma.payment.create({
+          data: {
+            bookingId: booking.id,
+            amount: courseAmount,
+            paymentMethod,
+            type: 'payment',
+            status: paymentStatus,
+            provider: 'manual',
+            notes: `Corso: ${resolvedCourseName}`,
+          },
+        });
+      }
+
+      // 4b. Registration fee — separate record when > 0
+      if (regFee > 0) {
+        await this.prisma.payment.create({
+          data: {
+            bookingId: booking.id,
+            amount: regFee,
+            paymentMethod,
+            type: 'registration_fee',
+            status: paymentStatus,
+            provider: 'manual',
+            notes: `Quota d'iscrizione A.A. 2026/2027`,
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Admin booking: payment create error:', err);
+    }
+
+    // ── 5. GENERATE LESSONS via calculateLessonDates (parity with landing) ────
+    if (dto.startDate && resolvedCourseId) {
+      try {
+        const course = await this.prisma.course.findUnique({
+          where: { id: resolvedCourseId },
+          include: { courseTeachers: true },
+        });
+
+        if (course) {
+          const teacherId = course.courseTeachers?.[0]?.teacherId || null;
+          const rawDays = (course.scheduleDays as any[]) || [];
+          const scheduleDays = rawDays.length > 0 ? rawDays.map(Number).filter((n) => !isNaN(n)) : [1, 3];
+          const startTime = course.startTime || '16:00';
+          const durationMinutes = course.lessonDurationMinutes || 60;
+
+          // Use the same shared calculateLessonDates as landing (100% parity)
+          const lessons = calculateLessonDates(
+            dto.startDate,
+            startTime,
+            (course as any).category || (course as any).categoria || '',
+            scheduleDays,
+            durationMinutes,
+            course.startTime || null,
+            course.endTime || null,
+            course.scheduleType || null,
+          );
+
+          if (lessons.length > 0) {
+            const lessonRows = lessons.map((l) => ({
+              bookingId: booking.id,
+              teacherId: teacherId,
+              startsAt: new Date(l.startsAt),
+              endsAt: new Date(l.endsAt),
+              status: 'scheduled',
+            }));
+
+            await this.prisma.lesson.createMany({ data: lessonRows });
+
+            await this.prisma.booking.update({
+              where: { id: booking.id },
+              data: {
+                schedulingStatus: 'scheduled',
+                totalLessonsCount: lessons.length,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Admin booking: lesson generation error:', err);
+      }
+    }
+
+    return booking;
   }
 
 
@@ -629,8 +869,9 @@ export class CheckoutService {
     return data ?? [];
   }
 
-  async updateBookingPaymentStatus(id: string, dto: { payment_status: string; scheduling_status?: string }) {
-    const update: Record<string, string> = { payment_status: dto.payment_status };
+  async updateBookingPaymentStatus(id: string, dto: { payment_status?: string; scheduling_status?: string }) {
+    const update: Record<string, string> = {};
+    if (dto.payment_status) update.payment_status = dto.payment_status;
     if (dto.scheduling_status) update.scheduling_status = dto.scheduling_status;
 
     const { data, error } = await this.supabaseAdmin
@@ -677,4 +918,60 @@ export class CheckoutService {
 
     return { success: true };
   }
+
+
+  async lookupClient(query: string) {
+    if (!query || !query.trim()) return { found: false };
+
+    const q = query.trim();
+    try {
+      // 1. Search students table
+      const { data: student } = await this.supabaseAdmin
+        .from('students')
+        .select('*')
+        .or(`email.ilike.${q},tax_code.ilike.${q},phone.ilike.${q},full_name.ilike.%${q}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (student) {
+        return {
+          found: true,
+          purchaserName: student.full_name || '',
+          purchaserEmail: student.email || '',
+          purchaserPhone: student.phone || '',
+          purchaserTaxCode: student.tax_code || '',
+        };
+      }
+
+      // 2. Search bookings table (using correct column names)
+      const { data: booking } = await this.supabaseAdmin
+        .from('bookings')
+        .select('*')
+        .or(`purchaser_email.ilike.${q},purchaser_tax_code.ilike.${q},purchaser_phone.ilike.${q},purchaser_name.ilike.%${q}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (booking) {
+        return {
+          found: true,
+          purchaserName: booking.purchaser_name || '',
+          purchaserEmail: booking.purchaser_email || '',
+          purchaserPhone: booking.purchaser_phone || '',
+          purchaserTaxCode: booking.purchaser_tax_code || '',
+          studentName: booking.student_name || '',
+          studentTaxCode: booking.student_tax_code || '',
+          studentPhone: booking.student_phone || '',
+          studentEmail: booking.student_email || '',
+          studentBirthDate: booking.student_birth_date || '',
+          isForChild: !!(booking.student_name && booking.student_name !== booking.purchaser_name),
+        };
+      }
+
+      return { found: false };
+    } catch (err) {
+      console.error('Client lookup error:', err);
+      return { found: false };
+    }
+  }
 }
+

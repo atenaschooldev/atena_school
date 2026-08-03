@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -345,82 +346,73 @@ export function MembershipsView() {
 
       {/* Table */}
       <div className="rounded-lg border bg-card">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="flex flex-col items-center gap-2 text-muted-foreground">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-              <span className="text-sm">Caricamento iscrizioni...</span>
-            </div>
-          </div>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id}>
-                    {hg.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((hg) => (
+              <TableRow key={hg.id}>
+                {hg.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-16 text-muted-foreground">
-                      <div className="flex flex-col items-center gap-2">
-                        <Users className="h-8 w-8 opacity-30" />
-                        <span>Nessuna iscrizione trovata</span>
-                      </div>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center py-16 text-muted-foreground">
+                  <div className="flex flex-col items-center gap-2">
+                    <Users className="h-8 w-8 opacity-30" />
+                    <span>Nessuna iscrizione trovata</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} className="hover:bg-muted/50">
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <span className="text-sm text-muted-foreground">
-                {table.getFilteredRowModel().rows.length} iscrizioni
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="cursor-pointer"
-                >
-                  Indietro
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount()}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="cursor-pointer"
-                >
-                  Avanti
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <span className="text-sm text-muted-foreground">
+            {table.getFilteredRowModel().rows.length} iscrizioni
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="cursor-pointer"
+            >
+              Indietro
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="cursor-pointer"
+            >
+              Avanti
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

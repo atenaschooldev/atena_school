@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -413,30 +414,27 @@ export function PaymentsView() {
         </div>
 
         {/* Table */}
-        {loading ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
-            Caricamento платежей in corso...
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
+        <div className="space-y-4">
+          <div className="rounded-md border bg-card">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
                       <TableRow
                         key={row.id}
                         className="cursor-pointer hover:bg-muted/50"
@@ -519,8 +517,7 @@ export function PaymentsView() {
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
       {/* Payment Detail Modal */}
       <PaymentDetailDialog

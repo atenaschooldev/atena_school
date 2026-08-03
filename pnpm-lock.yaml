@@ -24,6 +24,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@atena/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)

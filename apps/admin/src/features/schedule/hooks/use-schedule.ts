@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { GIORNI } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
-import type { Lesson, LessonFormValues, ScheduleApiResponse, mapApiToLesson as _mapApiToLesson, mapLessonToApiPayload } from "../types";
-import { mapApiToLesson } from "../types";
+import type { Lesson, LessonFormValues, ScheduleApiResponse } from "../types";
+import { mapApiToLesson, mapLessonToApiPayload } from "../types";
 import {
   startOfWeek,
   addWeeks,
@@ -49,9 +50,8 @@ const minToTime = (totalMin: number): string => {
 };
 
 export function useSchedule() {
+  const queryClient = useQueryClient();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [localLessons, setLocalLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeDragGiorno, setActiveDragGiorno] = useState<number | null>(null);
   const [draggedLessonId, setDraggedLessonId] = useState<string | null>(null);
   const [dragStartClickOffsetY, setDragStartClickOffsetY] = useState<number>(0);
@@ -87,22 +87,25 @@ export function useSchedule() {
     y: number;
   } | null>(null);
 
+  // TanStack React Query for schedule/lessons data
+  const { data: fetchedLessons = [], isLoading } = useQuery<Lesson[]>({
+    queryKey: ["schedules"],
+    queryFn: async () => {
+      const data = await apiFetch<ScheduleApiResponse[]>("/schedules");
+      return Array.isArray(data) ? data.map(mapApiToLesson) : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
+  });
+
+  // Local state for optimistic updates during drag/resize
+  const [localLessonsState, setLocalLessonsState] = useState<Lesson[]>([]);
+
   useEffect(() => {
-    async function loadSchedules() {
-      setLoading(true);
-      try {
-        const data = await apiFetch<ScheduleApiResponse[]>("/schedules");
-        const lessons = Array.isArray(data) ? data.map(mapApiToLesson) : [];
-        setLocalLessons(lessons);
-      } catch (e) {
-        console.error("Failed to fetch schedules:", e);
-        setLocalLessons([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadSchedules();
-  }, []);
+    setLocalLessonsState(fetchedLessons);
+  }, [fetchedLessons]);
+
+  const localLessons = localLessonsState;
+  const setLocalLessons = setLocalLessonsState;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -122,7 +125,7 @@ export function useSchedule() {
       const snappedMin = Math.round(totalMinFromEight / 30) * 30;
       const newAbsMin = 8 * 60 + snappedMin;
 
-      setLocalLessons((prev) =>
+      setLocalLessonsState((prev) =>
         prev.map((l) => {
           if (l.id !== lessonId) return l;
           const startAbsMin = timeToMin(l.oraInizio);
@@ -210,6 +213,59 @@ export function useSchedule() {
     return (endH - startH) * 60 + (endM - startM);
   }, [draggedLesson]);
 
+  const createMutation = useMutation({
+    mutationFn: async (values: LessonFormValues) => {
+      const payload = mapLessonToApiPayload(values);
+      return apiFetch<ScheduleApiResponse>("/schedules", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Lezione creata con successo!");
+      setCreatingLesson(null);
+      setShowCreateDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    },
+    onError: (e) => {
+      console.error("Failed to create lesson:", e);
+      toast.error("Errore nella creazione della lezione");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (lessonId: string) => {
+      return apiFetch(`/schedules/${lessonId}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Lezione eliminata.");
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    },
+    onError: (e) => {
+      console.error("Failed to delete lesson:", e);
+      toast.error("Errore nell'eliminazione della lezione");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: LessonFormValues }) => {
+      const payload = mapLessonToApiPayload(values);
+      return apiFetch<ScheduleApiResponse>(`/schedules/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Lezione aggiornata!");
+      setEditingLesson(null);
+      queryClient.invalidateQueries({ queryKey: ["schedules"] });
+    },
+    onError: (e) => {
+      console.error("Failed to update lesson:", e);
+      toast.error("Errore nell'aggiornamento della lezione");
+    },
+  });
+
   const handleDrop = (e: React.DragEvent, targetGiornoIdx: number) => {
     e.preventDefault();
     setActiveDragGiorno(null);
@@ -225,7 +281,7 @@ export function useSchedule() {
     const totalMinutesFromEight = Math.round(hourFraction * 60);
     const snappedMinutesFromEight = Math.round(totalMinutesFromEight / 30) * 30;
 
-    setLocalLessons((prev) =>
+    setLocalLessonsState((prev) =>
       prev.map((item) => {
         if (item.id !== lessonId) return item;
         const [startH, startM] = item.oraInizio.split(":").map(Number);
@@ -253,62 +309,21 @@ export function useSchedule() {
       }),
     );
 
-    const affectedLesson = localLessons.find((item) => item.id === lessonId);
     const giornoName = GIORNI[targetGiornoIdx];
-    toast.success(
-      `Lezione spostata a ${giornoName}!`,
-    );
+    toast.success(`Lezione spostata a ${giornoName}!`);
   };
 
   const handleCreateLesson = async (values: LessonFormValues) => {
-    try {
-      const payload = mapLessonToApiPayload(values);
-      const created = await apiFetch<ScheduleApiResponse>("/schedules", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
-      const newLesson = mapApiToLesson(created);
-      setLocalLessons((prev) => [...prev, newLesson]);
-      setCreatingLesson(null);
-      setShowCreateDialog(false);
-      toast.success(`Lezione creata con successo!`);
-    } catch (e) {
-      console.error("Failed to create lesson:", e);
-      toast.error("Errore nella creazione della lezione");
-    }
+    await createMutation.mutateAsync(values);
   };
 
   const handleDeleteLesson = async (lessonId: string) => {
-    try {
-      await apiFetch(`/schedules/${lessonId}`, {
-        method: "DELETE",
-      });
-      setLocalLessons((prev) => prev.filter((l) => l.id !== lessonId));
-      toast.success("Lezione eliminata.");
-    } catch (e) {
-      console.error("Failed to delete lesson:", e);
-      toast.error("Errore nell'eliminazione della lezione");
-    }
+    await deleteMutation.mutateAsync(lessonId);
   };
 
   const handleSaveEdit = async (values: LessonFormValues) => {
     if (!editingLesson) return;
-    try {
-      const payload = mapLessonToApiPayload(values);
-      const updated = await apiFetch<ScheduleApiResponse>(`/schedules/${editingLesson.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
-      const updatedLesson = mapApiToLesson(updated);
-      setLocalLessons((prev) =>
-        prev.map((l) => (l.id === editingLesson.id ? updatedLesson : l)),
-      );
-      setEditingLesson(null);
-      toast.success("Lezione aggiornata!");
-    } catch (e) {
-      console.error("Failed to update lesson:", e);
-      toast.error("Errore nell'aggiornamento della lezione");
-    }
+    await updateMutation.mutateAsync({ id: editingLesson.id, values });
   };
 
   return {
@@ -316,7 +331,7 @@ export function useSchedule() {
     setCurrentDate,
     localLessons,
     setLocalLessons,
-    loading,
+    loading: isLoading,
     activeDragGiorno,
     setActiveDragGiorno,
     draggedLessonId,

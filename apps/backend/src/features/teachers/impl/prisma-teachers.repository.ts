@@ -67,6 +67,9 @@ export class PrismaTeachersRepository extends TeachersRepository {
         ...(data.experience !== undefined && { experience: data.experience }),
       },
     });
-    return mapTeacher(t);
+    const lessonCount = await this.prisma.lesson.count({ where: { teacherId: id } });
+    const courseCount = await this.prisma.courseTeacher.count({ where: { teacherId: id } });
+
+    return mapTeacher(t, lessonCount, courseCount);
   }
 }

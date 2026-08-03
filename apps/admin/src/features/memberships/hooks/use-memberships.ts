@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Membership } from "../types";
 
@@ -27,48 +27,49 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function useMemberships(filters?: { status?: string; academicYear?: string }) {
-  const [memberships, setMemberships] = useState<Membership[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchMemberships = useCallback(async () => {
-    setLoading(true);
-    try {
+  const status = filters?.status;
+  const academicYear = filters?.academicYear;
+
+  const {
+    data: memberships = [],
+    isLoading,
+    refetch,
+  } = useQuery<Membership[]>({
+    queryKey: ["memberships", status, academicYear],
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (filters?.status && filters.status !== "all") params.set("status", filters.status);
-      if (filters?.academicYear && filters.academicYear !== "all")
-        params.set("academicYear", filters.academicYear);
+      if (status && status !== "all") params.set("status", status);
+      if (academicYear && academicYear !== "all") params.set("academicYear", academicYear);
 
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiFetch<Membership[]>(`/admin/memberships${query}`);
-      setMemberships(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error("Failed to fetch memberships:", e);
-      setMemberships([]);
-    } finally {
-      setLoading(false);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters?.status, filters?.academicYear]);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached rendering
+  });
 
-  useEffect(() => {
-    fetchMemberships();
-  }, [fetchMemberships]);
-
-  const updateStatus = async (id: string, status: string) => {
-    try {
-      const updated = await apiFetch<Membership>(`/admin/memberships/${id}/status`, {
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return apiFetch<Membership>(`/admin/memberships/${id}/status`, {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
-      setMemberships((prev) => prev.map((m) => (m.id === id ? updated : m)));
+    },
+    onSuccess: (_, { status }) => {
       toast.success(status === "revoked" ? "Iscrizione revocata" : "Iscrizione riattivata");
-      return updated;
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
+    },
+    onError: (e) => {
       console.error("Failed to update membership status:", e);
       toast.error("Errore nell'aggiornamento dello stato");
-      throw e;
-    }
+    },
+  });
+
+  const updateStatus = async (id: string, status: string) => {
+    return updateStatusMutation.mutateAsync({ id, status });
   };
 
-  return { memberships, loading, updateStatus, refresh: fetchMemberships };
+  return { memberships, loading: isLoading, updateStatus, refresh: refetch };
 }

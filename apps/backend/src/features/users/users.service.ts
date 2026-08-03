@@ -39,9 +39,14 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto): Promise<UserEntity> {
-    const existing = await this.usersRepository.findByEmail(dto.email);
+    const userEmail = (dto.email || (dto as any).email || '').trim();
+    if (!userEmail) {
+      throw new ConflictException(`Email is required`);
+    }
+
+    const existing = await this.usersRepository.findByEmail(userEmail);
     if (existing) {
-      throw new ConflictException(`User with email ${dto.email} already exists`);
+      throw new ConflictException(`User with email ${userEmail} already exists`);
     }
 
     let userId: string;
@@ -49,7 +54,7 @@ export class UsersService {
     // Check if user exists in Supabase Auth or create one
     const { data: authUsers } = await this.supabaseAdmin.auth.admin.listUsers();
     const foundAuth = authUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === dto.email.toLowerCase(),
+      (u) => u.email?.toLowerCase() === userEmail.toLowerCase(),
     );
 
     if (foundAuth) {

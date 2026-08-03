@@ -137,7 +137,8 @@ export class CoursesService {
       `;
     }
 
-    return this.toDto(c);
+    const fresh = await this.coursesRepository.findOne(c.id);
+    return this.toDto(fresh ?? c);
   }
 
   async updateCourse(id: string, dto: any): Promise<CourseResponseDto> {
@@ -190,7 +191,8 @@ export class CoursesService {
       }
     }
 
-    return this.toDto(c);
+    const fresh = await this.coursesRepository.findOne(c.id);
+    return this.toDto(fresh ?? c);
   }
 
   async deleteCourse(id: string) {

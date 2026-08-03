@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Payment, CreatePaymentFormValues } from "../types";
 
@@ -20,68 +20,65 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
     throw new Error(`Backend error ${res.status}: ${text}`);
   }
 
-  if (res.status === 204) {
-    return {} as T;
-  }
+  if (res.status === 204) return {} as T;
 
   const text = await res.text();
   return text ? JSON.parse(text) : ({} as T);
 }
 
 export function usePayments(bookingId?: string | null) {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchPayments = useCallback(async () => {
-    setLoading(true);
-    try {
+  const {
+    data: payments = [],
+    isLoading,
+    refetch,
+  } = useQuery<Payment[]>({
+    queryKey: ["payments", bookingId],
+    queryFn: async () => {
       const query = bookingId ? `?bookingId=${bookingId}` : "";
       const data = await apiFetch<Payment[]>(`/admin/payments${query}`);
-      setPayments(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error("Failed to fetch payments:", e);
-      setPayments([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [bookingId]);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for background revalidation
+  });
 
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
-
-  const createPayment = async (data: CreatePaymentFormValues) => {
-    try {
-      const created = await apiFetch<Payment>("/admin/payments", {
+  const createMutation = useMutation({
+    mutationFn: async (data: CreatePaymentFormValues) => {
+      return apiFetch<Payment>("/admin/payments", {
         method: "POST",
         body: JSON.stringify(data),
       });
-      setPayments((prev) => [created, ...prev]);
+    },
+    onSuccess: () => {
       toast.success("Pagamento registrato con successo");
-      return created;
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+    },
+    onError: (e) => {
       console.error("Failed to create payment:", e);
       toast.error("Errore nella registrazione del pagamento");
-      throw e;
-    }
-  };
+    },
+  });
 
-  const deletePayment = async (id: string) => {
-    try {
-      await apiFetch(`/admin/payments/${id}`, { method: "DELETE" });
-      setPayments((prev) => prev.filter((p) => p.id !== id));
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch(`/admin/payments/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
       toast.success("Pagamento eliminato");
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+    },
+    onError: (e) => {
       console.error("Failed to delete payment:", e);
       toast.error("Errore nell'eliminazione del pagamento");
-    }
-  };
+    },
+  });
 
   return {
     payments,
-    loading,
-    createPayment,
-    deletePayment,
-    refresh: fetchPayments,
+    loading: isLoading,
+    createPayment: createMutation.mutateAsync,
+    deletePayment: deleteMutation.mutateAsync,
+    refresh: refetch,
   };
 }

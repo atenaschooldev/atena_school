@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -9,8 +9,9 @@ import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { CheckoutService } from './checkout.service';
 
 class UpdateBookingStatusDto {
+  @IsOptional()
   @IsString()
-  payment_status: string;
+  payment_status?: string;
 
   @IsOptional()
   @IsString()
@@ -31,6 +32,21 @@ export class BookingsAdminController {
   async listAllBookings() {
     return this.checkoutService.listAllBookings();
   }
+
+  @Get('check-membership')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Проверить статус взноса по email / taxCode' })
+  async checkMembership(@Query('email') email?: string, @Query('taxCode') taxCode?: string) {
+    return this.checkoutService.checkFeeStatus({ email, taxCode });
+  }
+
+  @Get('lookup-client')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Найти клиента по email / taxCode / phone' })
+  async lookupClient(@Query('q') q: string) {
+    return this.checkoutService.lookupClient(q);
+  }
+
 
   @Post()
   @Roles('admin')

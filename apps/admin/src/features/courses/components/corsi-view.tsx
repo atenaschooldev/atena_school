@@ -52,6 +52,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -80,6 +81,7 @@ import { useAppStore } from "@/stores/app-store";
 export function CorsiView() {
   const {
     coursesList,
+    loading,
     open,
     editing,
     initialFormValues,
@@ -496,7 +498,9 @@ export function CorsiView() {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {loading ? (
+                <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                     {row.getVisibleCells().map((cell) => (

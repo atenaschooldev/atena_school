@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Teacher, UpdateTeacherFormValues } from "../types";
 
@@ -51,42 +51,42 @@ function parseTeacher(raw: any): Teacher {
 }
 
 export function useTeachers() {
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchTeachers = useCallback(async () => {
-    setLoading(true);
-    try {
+  const {
+    data: teachers = [],
+    isLoading,
+    refetch,
+  } = useQuery<Teacher[]>({
+    queryKey: ["teachers"],
+    queryFn: async () => {
       const data = await apiFetch<any[]>("/admin/teachers");
-      setTeachers(Array.isArray(data) ? data.map(parseTeacher) : []);
-    } catch (e) {
-      console.error("Failed to fetch teachers:", e);
-      setTeachers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return Array.isArray(data) ? data.map(parseTeacher) : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time
+  });
 
-  useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
-
-  const updateTeacher = async (id: string, values: UpdateTeacherFormValues) => {
-    try {
+  const updateTeacherMutation = useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: UpdateTeacherFormValues }) => {
       const updated = await apiFetch<any>(`/admin/teachers/${id}`, {
         method: "PATCH",
         body: JSON.stringify(values),
       });
-      const parsed = parseTeacher(updated);
-      setTeachers((prev) => prev.map((t) => (t.id === id ? parsed : t)));
+      return parseTeacher(updated);
+    },
+    onSuccess: () => {
       toast.success("Profilo docente aggiornato");
-      return parsed;
-    } catch (e) {
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    },
+    onError: (e) => {
       console.error("Failed to update teacher:", e);
       toast.error("Errore nell'aggiornamento del docente");
-      throw e;
-    }
+    },
+  });
+
+  const updateTeacher = async (id: string, values: UpdateTeacherFormValues) => {
+    return updateTeacherMutation.mutateAsync({ id, values });
   };
 
-  return { teachers, loading, updateTeacher, refresh: fetchTeachers };
+  return { teachers, loading: isLoading, updateTeacher, refresh: refetch };
 }

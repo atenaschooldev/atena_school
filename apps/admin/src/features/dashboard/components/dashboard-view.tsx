@@ -1,23 +1,17 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ShoppingBag, BookOpen, Calendar } from "lucide-react";
-import { courses, lessons } from "@/lib/mock-data";
 import { GIORNI } from "@/lib/utils";
-import { levelColor } from "@/features/courses";
 
 export function DashboardView() {
-  const oggi = new Date().getDay(); // 0=Dom
-  const oggiIndex = oggi === 0 ? 5 : oggi - 1;
-  const lezioniOggi = lessons.filter((l) => l.giorno === oggiIndex);
-
   const kpis = [
     { label: "Prenotazioni", value: 0, icon: ShoppingBag, trend: "da integrare API" },
-    { label: "Corsi attivi", value: courses.length, icon: BookOpen, trend: "8 livelli CEFR" },
+    { label: "Corsi attivi", value: 0, icon: BookOpen, trend: "8 livelli CEFR" },
     {
       label: "Lezioni oggi",
-      value: lezioniOggi.length,
+      value: 0,
       icon: Calendar,
-      trend: "prossima alle 09:00",
+      trend: "—",
     },
   ];
 

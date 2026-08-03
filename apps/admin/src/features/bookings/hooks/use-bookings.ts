@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { BookingOrder } from "../types/booking";
 
@@ -29,86 +30,112 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function useBookings() {
-  const [allBookings, setAllBookings] = useState<BookingOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<BookingOrder | null>(null);
 
-  const fetchBookings = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  const {
+    data: allBookings = [],
+    isLoading,
+    error: queryError,
+    refetch,
+  } = useQuery<BookingOrder[]>({
+    queryKey: ["bookings"],
+    queryFn: async () => {
       const data = await apiFetch<BookingOrder[]>("/admin/bookings");
-      setAllBookings(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error("Failed to fetch bookings:", e);
-      setError(e instanceof Error ? e.message : "Errore nel caricamento prenotazioni");
-      setAllBookings([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return Array.isArray(data) ? data : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
+  });
 
-  useEffect(() => {
-    fetchBookings();
-  }, [fetchBookings]);
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({
+      id,
+      payment_status,
+      scheduling_status,
+    }: {
+      id: string;
+      payment_status: string;
+      scheduling_status?: string;
+    }) => {
+      return apiFetch<BookingOrder>(`/admin/bookings/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ payment_status, scheduling_status }),
+      });
+    },
+    onSuccess: (updated, { id }) => {
+      toast.success("Stato prenotazione aggiornato");
+      if (selectedBooking?.id === id) {
+        setSelectedBooking(updated);
+      }
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+    onError: (e) => {
+      console.error("Failed to update status:", e);
+      toast.error("Errore nell'aggiornamento dello stato");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch(`/admin/bookings/${id}`, { method: "DELETE" });
+    },
+    onSuccess: (_, id) => {
+      toast.success("Prenotazione eliminata");
+      if (selectedBooking?.id === id) {
+        setSelectedBooking(null);
+      }
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+    onError: (e) => {
+      console.error("Failed to delete booking:", e);
+      toast.error("Errore nell'eliminazione della prenotazione");
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiFetch<BookingOrder>("/admin/bookings", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Prenotazione registrata con successo");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+    onError: (e) => {
+      console.error("Failed to create manual booking:", e);
+      toast.error("Errore nella registrazione della prenotazione");
+    },
+  });
 
   const updateBookingStatus = useCallback(
     async (id: string, payment_status: string, scheduling_status?: string) => {
-      try {
-        const updated = await apiFetch<BookingOrder>(`/admin/bookings/${id}/status`, {
-          method: "PATCH",
-          body: JSON.stringify({ payment_status, scheduling_status }),
-        });
-        setAllBookings((prev) => prev.map((b) => (b.id === id ? updated : b)));
-        if (selectedBooking?.id === id) {
-          setSelectedBooking(updated);
-        }
-        toast.success("Stato prenotazione aggiornato");
-      } catch (e) {
-        console.error("Failed to update status:", e);
-        toast.error("Errore nell'aggiornamento dello stato");
-      }
+      await updateStatusMutation.mutateAsync({ id, payment_status, scheduling_status });
     },
-    [selectedBooking],
+    [updateStatusMutation],
   );
 
   const deleteBooking = useCallback(
     async (id: string): Promise<boolean> => {
       try {
-        await apiFetch(`/admin/bookings/${id}`, { method: "DELETE" });
-        setAllBookings((prev) => prev.filter((b) => b.id !== id));
-        if (selectedBooking?.id === id) {
-          setSelectedBooking(null);
-        }
-        toast.success("Prenotazione eliminata");
+        await deleteMutation.mutateAsync(id);
         return true;
-      } catch (e) {
-        console.error("Failed to delete booking:", e);
-        toast.error("Errore nell'eliminazione della prenotazione");
+      } catch {
         return false;
       }
     },
-    [selectedBooking],
+    [deleteMutation],
   );
 
-  const createManualBooking = useCallback(async (data: any) => {
-    try {
-      const created = await apiFetch<BookingOrder>("/admin/bookings", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      setAllBookings((prev) => [created, ...prev]);
-      toast.success("Prenotazione registrata con successo");
-      return created;
-    } catch (e) {
-      console.error("Failed to create manual booking:", e);
-      toast.error("Errore nella registrazione della prenotazione");
-      throw e;
-    }
-  }, []);
+  const createManualBooking = useCallback(
+    async (data: any) => {
+      return createMutation.mutateAsync(data);
+    },
+    [createMutation],
+  );
 
   const filteredBookings = useMemo(() => {
     return allBookings.filter((b) => {
@@ -130,7 +157,7 @@ export function useBookings() {
   const stats = useMemo(() => {
     return {
       totalCount: allBookings.length,
-      paidCount: allBookings.filter((b) => b.payment_status === "completed" || b.payment_status === "paid").length,
+      paidCount: allBookings.filter((b) => b.payment_status === "completed" || b.payment_status === "paid" || b.payment_status === "succeeded").length,
       reservedCount: allBookings.filter((b) => b.payment_status === "reserved").length,
       leadsCount: allBookings.filter((b) => b.scheduling_status === "pending_coordination").length,
     };
@@ -140,8 +167,8 @@ export function useBookings() {
     bookings: filteredBookings,
     allBookings,
     stats,
-    loading,
-    error,
+    loading: isLoading,
+    error: queryError instanceof Error ? queryError.message : null,
     searchQuery,
     setSearchQuery,
     statusFilter,
@@ -151,6 +178,6 @@ export function useBookings() {
     updateBookingStatus,
     deleteBooking,
     createManualBooking,
-    refresh: fetchBookings,
+    refresh: refetch,
   };
 }

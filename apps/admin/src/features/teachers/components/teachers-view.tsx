@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -349,19 +350,7 @@ export function TeachersView() {
       </div>
 
       {/* Main Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <span className="text-sm">Caricamento docenti...</span>
-          </div>
-        </div>
-      ) : filteredTeachers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-lg border bg-card text-muted-foreground">
-          <GraduationCap className="h-10 w-10 opacity-30 mb-2" />
-          <p className="text-sm font-medium">Nessun docente trovato</p>
-        </div>
-      ) : viewMode === "table" ? (
+      {viewMode === "table" ? (
         /* Table View (Default) */
         <div className="rounded-lg border bg-card">
           <Table>
@@ -377,15 +366,25 @@ export function TeachersView() {
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+              {loading ? (
+                <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
+              ) : table.getRowModel().rows.length > 0 ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="hover:bg-muted/50">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                    Nessun docente trovato.
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
 
@@ -405,7 +404,7 @@ export function TeachersView() {
                 Indietro
               </Button>
               <span className="text-sm text-muted-foreground">
-                Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount()}
+                Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
               </span>
               <Button
                 variant="outline"
@@ -418,6 +417,17 @@ export function TeachersView() {
               </Button>
             </div>
           </div>
+        </div>
+      ) : loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="p-5 h-44 animate-pulse bg-muted/40" />
+          ))}
+        </div>
+      ) : filteredTeachers.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 rounded-lg border bg-card text-muted-foreground">
+          <GraduationCap className="h-10 w-10 opacity-30 mb-2" />
+          <p className="text-sm font-medium">Nessun docente trovato</p>
         </div>
       ) : (
         /* Cards View */

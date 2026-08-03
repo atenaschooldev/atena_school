@@ -20,6 +20,7 @@ export class PrismaUsersRepository implements UsersRepository {
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
+    if (!email) return null;
     return this.prisma.user.findUnique({
       where: { email },
     });
@@ -33,7 +34,7 @@ export class PrismaUsersRepository implements UsersRepository {
     role?: string;
     isActive?: boolean;
   }): Promise<UserEntity> {
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         id: data.id,
         email: data.email,
@@ -43,6 +44,24 @@ export class PrismaUsersRepository implements UsersRepository {
         isActive: data.isActive ?? true,
       },
     });
+
+    if (user.role === 'teacher') {
+      const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Docente';
+      await this.prisma.teacher.upsert({
+        where: { teacherId: user.id },
+        create: {
+          teacherId: user.id,
+          fullName,
+          status: user.isActive ? 'active' : 'inactive',
+        },
+        update: {
+          fullName,
+          status: user.isActive ? 'active' : 'inactive',
+        },
+      }).catch((e) => console.warn('Could not sync teacher:', e));
+    }
+
+    return user;
   }
 
   async update(
@@ -54,13 +73,32 @@ export class PrismaUsersRepository implements UsersRepository {
       isActive: boolean;
     }>,
   ): Promise<UserEntity> {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data,
     });
+
+    if (user.role === 'teacher') {
+      const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Docente';
+      await this.prisma.teacher.upsert({
+        where: { teacherId: user.id },
+        create: {
+          teacherId: user.id,
+          fullName,
+          status: user.isActive ? 'active' : 'inactive',
+        },
+        update: {
+          fullName,
+          status: user.isActive ? 'active' : 'inactive',
+        },
+      }).catch((e) => console.warn('Could not sync teacher update:', e));
+    }
+
+    return user;
   }
 
   async delete(id: string): Promise<void> {
+    await this.prisma.teacher.delete({ where: { teacherId: id } }).catch(() => {});
     await this.prisma.user.delete({
       where: { id },
     });

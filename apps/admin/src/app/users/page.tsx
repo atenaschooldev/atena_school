@@ -28,20 +28,15 @@ export default function UsersPage() {
         </div>
 
         <div className="@container/main px-4 lg:px-6 mt-4 lg:mt-6">
-          {loading ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              Caricamento utenti in corso...
-            </div>
-          ) : (
-            <DataTable
-              users={users}
-              selectedRole={selectedRole}
-              onRoleFilterChange={setSelectedRole}
-              onDeleteUser={deleteUser}
-              onToggleActive={handleToggleActive}
-              onAddUser={addUser}
-            />
-          )}
+          <DataTable
+            users={users}
+            loading={loading}
+            selectedRole={selectedRole}
+            onRoleFilterChange={setSelectedRole}
+            onDeleteUser={deleteUser}
+            onToggleActive={handleToggleActive}
+            onAddUser={addUser}
+          />
         </div>
       </div>
     </BaseLayout>

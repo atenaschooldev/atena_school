@@ -318,25 +318,39 @@ export class PortalService {
 
     const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
 
-    const calculated = calculateLessonDates(
-      bdate,
-      course?.start_time || '10:00',
-      course?.category || 'general',
-      course?.schedule_days || null,
-      course?.lesson_duration_minutes || 60,
-      course?.start_time || null,
-      course?.end_time || null,
-      course?.schedule_type || null
-    );
+    // ── Read real lessons from DB (source of truth) ──────────────────────────
+    const { data: dbLessons } = await this.supabaseAdmin
+      .from('lessons')
+      .select('*')
+      .eq('booking_id', bookingId)
+      .order('starts_at', { ascending: true });
 
-    const lessons = calculated.map((item, idx) => ({
-      id: `lesson-${booking.id}-${idx}`,
-      booking_id: booking.id,
-      starts_at: item.startsAt,
-      ends_at: item.endsAt,
-      status: idx === 0 ? 'scheduled' : 'upcoming',
-      created_at: booking.created_at,
-    }));
+    let lessons: any[];
+
+    if (dbLessons && dbLessons.length > 0) {
+      // Real lessons exist — use them directly (respects rescheduling from admin)
+      lessons = dbLessons;
+    } else {
+      // No lessons yet (flexible/unscheduled) — calculate for preview only
+      const calculated = calculateLessonDates(
+        bdate,
+        course?.start_time || '10:00',
+        course?.category || 'general',
+        course?.schedule_days || null,
+        course?.lesson_duration_minutes || 60,
+        course?.start_time || null,
+        course?.end_time || null,
+        course?.schedule_type || null
+      );
+      lessons = calculated.map((item, idx) => ({
+        id: `preview-${booking.id}-${idx}`,
+        booking_id: booking.id,
+        starts_at: item.startsAt,
+        ends_at: item.endsAt,
+        status: 'upcoming',
+        created_at: booking.created_at,
+      }));
+    }
 
     const isFixedSchedule = course?.schedule_type === 'fixed';
     const maxLessons = booking.total_lessons_count != null

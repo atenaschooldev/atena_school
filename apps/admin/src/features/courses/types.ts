@@ -84,7 +84,6 @@ export function mapApiToCourse(api: CourseApiResponse): Course {
     draft: "in-programmazione",
     scheduled: "in-programmazione",
     planned: "in-programmazione",
-    archived: "concluso",
     completed: "concluso",
     ended: "concluso",
     concluded: "concluso",

@@ -52,11 +52,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { TableSkeletonRows } from "@/components/ui/table-skeleton"
 import { UserFormDialog } from "./user-form-dialog"
 import type { User, UserFormValues } from "@/features/users/types"
 
 interface DataTableProps {
   users: User[]
+  loading?: boolean
   selectedRole: string
   onRoleFilterChange: (role: string) => void
   onDeleteUser: (id: string) => Promise<void>
@@ -66,6 +68,7 @@ interface DataTableProps {
 
 export function DataTable({
   users,
+  loading = false,
   selectedRole,
   onRoleFilterChange,
   onDeleteUser,
@@ -367,7 +370,9 @@ export function DataTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -389,7 +394,7 @@ export function DataTable({
                   colSpan={columns.length}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  Nessun utente trovato.
+                  Nessun risultato.
                 </TableCell>
               </TableRow>
             )}

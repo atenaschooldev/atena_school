@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -377,13 +378,9 @@ export function BookingsView() {
         </div>
 
         {/* Views */}
-        {loading ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">
-            Caricamento ordini in corso...
-          </div>
-        ) : viewMode === "table" ? (
+        {viewMode === "table" ? (
           <div className="space-y-4">
-            <div className="rounded-md border">
+            <div className="rounded-md border bg-card">
               <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
@@ -399,7 +396,9 @@ export function BookingsView() {
                   ))}
                 </TableHeader>
                 <TableBody>
-                  {table.getRowModel().rows?.length ? (
+                  {loading ? (
+                    <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                  ) : table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map((row) => {
                       const isTarget =
                         targetId &&
@@ -430,7 +429,6 @@ export function BookingsView() {
                       );
                     })
                   ) : (
-
                     <TableRow>
                       <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
                         Nessun ordine trovato.

@@ -125,20 +125,35 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     lessonType?: string;
     meetingUrl?: string | null;
   }): Promise<ScheduleEntity> {
-    const booking = await this.prisma.booking.findFirst({
+    let booking = await this.prisma.booking.findFirst({
       where: { courseId: data.courseId },
     });
+    if (!booking) {
+      booking = await this.prisma.booking.findFirst();
+    }
+    if (!booking) {
+      booking = await this.prisma.booking.create({
+        data: {
+          courseId: data.courseId,
+          courseName: 'Corso Sistema',
+          purchaserName: 'Sistema Atena',
+          studentName: 'Sistema Atena',
+          purchaserEmail: 'admin@atenaschool.it',
+          paymentStatus: 'succeeded',
+        },
+      });
+    }
 
     const l = await this.prisma.lesson.create({
       data: {
-        bookingId: booking?.id || undefined,
+        bookingId: booking.id,
         teacherId: data.teacherId || null,
         startsAt: data.startDate,
         endsAt: data.endDate,
         status: data.status || 'scheduled',
         locationType: data.lessonType === 'online' ? 'online' : 'in_person',
         meetingLink: data.meetingUrl || null,
-        teacherNotes: data.room ? `Aula ${data.room}` : null,
+        teacherNotes: data.room ? (data.room.startsWith('Aula') ? data.room : `Aula ${data.room}`) : null,
       },
       include: {
         booking: true,
@@ -185,7 +200,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
       if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? 'online' : 'in_person';
       if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
-      if (data.room !== undefined) updateData.teacherNotes = data.room ? `Aula ${data.room}` : null;
+      if (data.room !== undefined) updateData.teacherNotes = data.room ? (data.room.startsWith('Aula') ? data.room : `Aula ${data.room}`) : null;
 
       const l = await this.prisma.lesson.update({
         where: { id },

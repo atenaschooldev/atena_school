@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type Course, type CourseFormValues, type CourseApiResponse, mapApiToCourse, mapCourseToApiPayload } from "../types";
-import { courses as mockCourses } from "@/lib/mock-data";
 import { toast } from "sonner";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
@@ -31,33 +31,64 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export function useCourses() {
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Course | null>(null);
 
-  useEffect(() => {
-    async function loadCourses() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await apiFetch<CourseApiResponse[]>("/courses");
-        if (Array.isArray(data)) {
-          setAllCourses(data.map(mapApiToCourse));
-        } else {
-          setAllCourses([]);
-        }
-      } catch (e) {
-        console.error("Failed to fetch courses:", e);
-        setError(e instanceof Error ? e.message : "Errore nel caricamento corsi");
-        setAllCourses(mockCourses);
-      } finally {
-        setLoading(false);
+  const {
+    data: allCourses = [],
+    isLoading,
+    error: queryError,
+  } = useQuery<Course[]>({
+    queryKey: ["courses"],
+    queryFn: async () => {
+      const data = await apiFetch<CourseApiResponse[]>("/courses");
+      return Array.isArray(data) ? data.map(mapApiToCourse) : [];
+    },
+    staleTime: 1000 * 30, // 30s stale time for instant 0ms render
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch<{ success: boolean }>(`/courses/${id}`, { method: "DELETE" });
+    },
+    onSuccess: () => {
+      toast.success("Corso eliminato");
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+    onError: (e) => {
+      console.error("Failed to delete course:", e);
+      toast.error("Errore nell'eliminazione del corso");
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async ({ payload, editId }: { payload: any; editId?: string }) => {
+      if (editId) {
+        const updated = await apiFetch<CourseApiResponse>(`/courses/${editId}`, {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+        return mapApiToCourse(updated);
+      } else {
+        const created = await apiFetch<CourseApiResponse>("/courses", {
+          method: "POST",
+          body: JSON.stringify(payload),
+        });
+        return mapApiToCourse(created);
       }
-    }
-    loadCourses();
-  }, []);
+    },
+    onSuccess: (_, { editId }) => {
+      toast.success(editId ? "Corso aggiornato" : "Corso creato");
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      setOpen(false);
+      setEditing(null);
+    },
+    onError: (e) => {
+      console.error("Failed to save course:", e);
+      toast.error("Errore nel salvataggio del corso");
+    },
+  });
 
   const handleNewClick = () => {
     setEditing(null);
@@ -70,60 +101,22 @@ export function useCourses() {
   };
 
   const handleDeleteClick = async (course: Course) => {
-    try {
-      await apiFetch<{ success: boolean }>(`/courses/${course.id}`, {
-        method: "DELETE",
-      });
-      setAllCourses((prev) => prev.filter((c) => c.id !== course.id));
-      toast.success("Corso eliminato");
-    } catch (e) {
-      console.error("Failed to delete course:", e);
-      toast.error("Errore nell'eliminazione del corso");
-    }
+    await deleteMutation.mutateAsync(course.id);
   };
 
   const handleDeleteSelected = async (ids: string[]) => {
     for (const id of ids) {
       try {
-        await apiFetch<{ success: boolean }>(`/courses/${id}`, {
-          method: "DELETE",
-        });
+        await deleteMutation.mutateAsync(id);
       } catch (e) {
         console.warn(`Skip delete ${id}:`, e);
       }
     }
-    setAllCourses((prev) => prev.filter((c) => !ids.includes(c.id)));
-    toast.success("Corsi eliminati");
   };
 
   const handleFormSubmit = async (formData: CourseFormValues) => {
     const payload = mapCourseToApiPayload(formData);
-    try {
-      if (editing) {
-        const updated = await apiFetch<CourseApiResponse>(`/courses/${editing.id}`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-        const updatedCourse = mapApiToCourse(updated);
-        setAllCourses((prev) =>
-          prev.map((c) => (c.id === editing.id ? updatedCourse : c)),
-        );
-        toast.success("Corso aggiornato");
-      } else {
-        const created = await apiFetch<CourseApiResponse>("/courses", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        const newCourse = mapApiToCourse(created);
-        setAllCourses((prev) => [...prev, newCourse]);
-        toast.success("Corso creato");
-      }
-      setOpen(false);
-      setEditing(null);
-    } catch (e) {
-      console.error("Failed to save course:", e);
-      toast.error("Errore nel salvataggio del corso");
-    }
+    await saveMutation.mutateAsync({ payload, editId: editing?.id });
   };
 
   const handleCloseDialog = () => {
@@ -178,8 +171,8 @@ export function useCourses() {
 
   return {
     coursesList: allCourses,
-    loading,
-    error,
+    loading: isLoading,
+    error: queryError instanceof Error ? queryError.message : null,
     open,
     editing,
     initialFormValues,
