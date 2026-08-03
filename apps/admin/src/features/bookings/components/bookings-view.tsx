@@ -147,7 +147,7 @@ export function BookingsView() {
             className="cursor-pointer font-medium"
             onClick={(e) => {
               e.stopPropagation();
-              updateBookingStatus(b.id, "completed");
+              updateBookingStatus(b.id, "paid");
             }}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-500 mr-2" />
@@ -258,11 +258,6 @@ export function BookingsView() {
             {row.original.billing_scheme === 'per_lesson' && (
               <Badge variant="secondary" className="text-[10px] text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-900/20 border border-violet-500/30 gap-1 w-fit">
                 <Clock className="w-2.5 h-2.5" /> A Lezione
-              </Badge>
-            )}
-            {row.original.billing_scheme === 'installments' && (
-              <Badge variant="secondary" className="text-[10px] text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 border border-blue-500/30 gap-1 w-fit">
-                🧩 A Rate
               </Badge>
             )}
           </div>

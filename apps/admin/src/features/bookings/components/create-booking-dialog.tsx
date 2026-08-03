@@ -914,7 +914,6 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                             <SelectContent>
                               <SelectItem value="full">💳 Unica Soluzione</SelectItem>
                               <SelectItem value="per_lesson">⏰ A Lezione (Post-Lezione)</SelectItem>
-                              <SelectItem value="installments">🧩 A Rate (Acconti)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -929,7 +928,7 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="reserved">Da Saldare (Acconto / Riservato)</SelectItem>
-                              <SelectItem value="completed">Pagato (Saldo completo)</SelectItem>
+                              <SelectItem value="paid">Pagato (Saldo completo)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

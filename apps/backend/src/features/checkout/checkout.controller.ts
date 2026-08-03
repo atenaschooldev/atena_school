@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.service';
+import { BookingsAdminService } from './bookings-admin.service';
 import { IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class CheckFeeDto {
@@ -139,7 +140,10 @@ export class ContactFormDto {
 @ApiTags('Public Landing Checkout')
 @Controller('checkout')
 export class CheckoutController {
-  constructor(private readonly checkoutService: CheckoutService) {}
+  constructor(
+    private readonly checkoutService: CheckoutService,
+    private readonly bookingsAdminService: BookingsAdminService,
+  ) {}
 
   @Post('check-fee')
   @HttpCode(HttpStatus.OK)
@@ -206,13 +210,13 @@ export class CheckoutController {
     birthDate?: string;
     paymentMethod?: string;
   }) {
-    return this.checkoutService.createAdminMembershipFee(dto);
+    return this.bookingsAdminService.createAdminMembershipFee(dto);
   }
 
   @Patch('admin/bookings/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Обновление данных бронирования (клиент, статус, метод оплаты)' })
   async updateBooking(@Param('id') id: string, @Body() dto: any) {
-    return this.checkoutService.updateBooking(id, dto);
+    return this.bookingsAdminService.updateBooking(id, dto);
   }
 }

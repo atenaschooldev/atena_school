@@ -7,6 +7,7 @@ import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { CheckoutService } from './checkout.service';
+import { BookingsAdminService } from './bookings-admin.service';
 
 class UpdateBookingStatusDto {
   @IsOptional()
@@ -24,13 +25,16 @@ class UpdateBookingStatusDto {
 @UseInterceptors(AuditInterceptor)
 @Controller('admin/bookings')
 export class BookingsAdminController {
-  constructor(private readonly checkoutService: CheckoutService) {}
+  constructor(
+    private readonly checkoutService: CheckoutService,
+    private readonly bookingsAdminService: BookingsAdminService,
+  ) {}
 
   @Get()
   @Roles('admin')
   @ApiOperation({ summary: 'Получить все бронирования (только для админа)' })
   async listAllBookings() {
-    return this.checkoutService.listAllBookings();
+    return this.bookingsAdminService.listAllBookings();
   }
 
   @Get('check-membership')
@@ -44,29 +48,28 @@ export class BookingsAdminController {
   @Roles('admin')
   @ApiOperation({ summary: 'Найти клиента по email / taxCode / phone' })
   async lookupClient(@Query('q') q: string) {
-    return this.checkoutService.lookupClient(q);
+    return this.bookingsAdminService.lookupClient(q);
   }
-
 
   @Post()
   @Roles('admin')
   @ApiOperation({ summary: 'Создать ручное бронирование (админ)' })
   async createManualBooking(@Body() dto: any) {
-    return this.checkoutService.createAdminBooking(dto);
+    return this.bookingsAdminService.createAdminBooking(dto);
   }
 
   @Patch(':id/status')
   @Roles('admin')
   @ApiOperation({ summary: 'Обновить статус оплаты / расписания бронирования' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateBookingStatusDto) {
-    return this.checkoutService.updateBookingPaymentStatus(id, dto);
+    return this.bookingsAdminService.updateBookingPaymentStatus(id, dto);
   }
 
   @Get(':id/lessons')
   @Roles('admin')
   @ApiOperation({ summary: 'Получить уроки бронирования с финансовым статусом' })
   async getBookingLessons(@Param('id') id: string) {
-    return this.checkoutService.getBookingLessons(id);
+    return this.bookingsAdminService.getBookingLessons(id);
   }
 
   @Patch(':id/lessons/:lessonId/complete')
@@ -78,7 +81,7 @@ export class BookingsAdminController {
     @Param('lessonId') lessonId: string,
     @Body() dto: { payment_method?: string },
   ) {
-    return this.checkoutService.completeLesson(bookingId, lessonId, dto.payment_method);
+    return this.bookingsAdminService.completeLesson(bookingId, lessonId, dto.payment_method);
   }
 
   @Patch(':id/lessons/:lessonId/pay')
@@ -90,7 +93,7 @@ export class BookingsAdminController {
     @Param('lessonId') lessonId: string,
     @Body() dto: { payment_method?: string; amount?: number },
   ) {
-    return this.checkoutService.payLesson(bookingId, lessonId, dto.payment_method, dto.amount);
+    return this.bookingsAdminService.payLesson(bookingId, lessonId, dto.payment_method, dto.amount);
   }
 
   @Delete(':id')
@@ -99,6 +102,6 @@ export class BookingsAdminController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Удалить бронирование и связанные уроки / membership' })
   async deleteBooking(@Param('id') id: string) {
-    return this.checkoutService.deleteBooking(id);
+    return this.bookingsAdminService.deleteBooking(id);
   }
 }

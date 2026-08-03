@@ -3,6 +3,7 @@ import { CheckoutController } from './checkout.controller';
 import { StripeWebhookController } from './stripe-webhook.controller';
 import { BookingsAdminController } from './bookings-admin.controller';
 import { CheckoutService } from './checkout.service';
+import { BookingsAdminService } from './bookings-admin.service';
 
 import { PrismaModule } from '../../core/prisma/prisma.module';
 
@@ -13,7 +14,7 @@ import { PrismaModule } from '../../core/prisma/prisma.module';
     StripeWebhookController,
     BookingsAdminController,
   ],
-  providers: [CheckoutService],
-  exports: [CheckoutService],
+  providers: [CheckoutService, BookingsAdminService],
+  exports: [CheckoutService, BookingsAdminService],
 })
 export class CheckoutModule {}

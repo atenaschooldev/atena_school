@@ -122,7 +122,7 @@ export class PaymentsService {
 
         let newPaymentStatus = 'reserved';
         if (totalPaid >= totalTarget && totalTarget > 0) {
-          newPaymentStatus = 'completed';
+          newPaymentStatus = 'paid';
         } else if (totalPaid > 0) {
           newPaymentStatus = 'partially_paid';
         }

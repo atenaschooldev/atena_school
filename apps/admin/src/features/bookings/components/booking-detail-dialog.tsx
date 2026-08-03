@@ -183,7 +183,7 @@ export function BookingDetailDialog({
     setAddPaymentOpen(false);
     refreshPayments();
     if (onUpdateStatus) {
-      onUpdateStatus(booking.id, "completed");
+      onUpdateStatus(booking.id, "paid");
     }
   };
 
@@ -638,7 +638,7 @@ export function BookingDetailDialog({
                 variant={isCompleted ? "outline" : "default"}
                 className="font-medium text-xs cursor-pointer h-9"
                 onClick={() => {
-                  onUpdateStatus(booking.id, isCompleted ? "reserved" : "completed");
+                  onUpdateStatus(booking.id, isCompleted ? "reserved" : "paid");
                 }}
               >
                 {isCompleted ? (
