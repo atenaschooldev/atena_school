@@ -14,8 +14,9 @@ export interface BookingOrder {
   is_for_child?: boolean;
   amount_paid: number;
   registration_fee: number;
-  payment_status: 'paid' | 'reserved' | 'pending_payment';
+  payment_status: 'paid' | 'reserved' | 'pending_payment' | 'partially_paid' | 'overdue' | string;
   payment_method?: 'stripe' | 'cash' | 'card' | string;
+  billing_scheme?: 'full' | 'installments' | 'per_lesson' | string;
   scheduling_status: 'scheduled' | 'pending_coordination' | 'confirmed';
   schedule_days?: number[] | null;
   start_time?: string | null;

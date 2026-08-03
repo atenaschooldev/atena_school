@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Booking } from "../types/booking";
 import { usePayments } from "@/features/payments/hooks/use-payments";
+import { api } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +49,9 @@ import {
   AlertCircle,
   Plus,
   Receipt,
+  PlayCircle,
+  Coins,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -82,6 +87,12 @@ export function BookingDetailDialog({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
+  const [lessonActionLoading, setLessonActionLoading] = useState<string | null>(null);
+
+  // Per-lesson pay dialog state
+  const [payLessonDialog, setPayLessonDialog] = useState<{ lessonId: string; defaultAmount: number } | null>(null);
+  const [payLessonAmount, setPayLessonAmount] = useState("");
+  const [payLessonMethod, setPayLessonMethod] = useState("cash");
 
   // New Payment Form State
   const [newPaymentAmount, setNewPaymentAmount] = useState("");
@@ -89,9 +100,58 @@ export function BookingDetailDialog({
   const [newPaymentType, setNewPaymentType] = useState("payment");
   const [newPaymentNotes, setNewPaymentNotes] = useState("");
 
-  const { payments, loading: paymentsLoading, createPayment, refresh: refreshPayments } = usePayments(
+  const queryClient = useQueryClient();
+
+  const { payments, loading: paymentsLoading, createPayment, updatePayment, refresh: refreshPayments } = usePayments(
     booking?.id,
   );
+
+  // Fetch lessons for per-lesson billing
+  const isPerLesson = booking?.billing_scheme === 'per_lesson';
+  const { data: lessons = [], refetch: refetchLessons } = useQuery({
+    queryKey: ['booking-lessons', booking?.id],
+    queryFn: () => api.get<any[]>(`/admin/bookings/${booking!.id}/lessons`),
+    enabled: !!booking?.id && isPerLesson,
+  });
+
+  const handleCompleteLesson = async (lessonId: string) => {
+    if (!booking) return;
+    setLessonActionLoading(lessonId + '-complete');
+    try {
+      await api.patch(`/admin/bookings/${booking.id}/lessons/${lessonId}/complete`, { payment_method: 'cash' });
+      await refetchLessons();
+      await refreshPayments();
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    } finally {
+      setLessonActionLoading(null);
+    }
+  };
+
+  const openPayLessonDialog = (lessonId: string, defaultAmount: number) => {
+    setPayLessonDialog({ lessonId, defaultAmount });
+    setPayLessonAmount(defaultAmount.toFixed(2));
+    setPayLessonMethod("cash");
+  };
+
+  const handlePayLesson = async () => {
+    if (!booking || !payLessonDialog) return;
+    const { lessonId } = payLessonDialog;
+    const amount = Number(payLessonAmount);
+    if (!amount || amount <= 0) return;
+    setLessonActionLoading(lessonId + '-pay');
+    setPayLessonDialog(null);
+    try {
+      await api.patch(`/admin/bookings/${booking.id}/lessons/${lessonId}/pay`, {
+        payment_method: payLessonMethod,
+        amount,
+      });
+      await refetchLessons();
+      await refreshPayments();
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    } finally {
+      setLessonActionLoading(null);
+    }
+  };
 
   if (!booking) return null;
 
@@ -260,7 +320,61 @@ export function BookingDetailDialog({
             </div>
           </div>
 
-          {/* Section 2: Schedule */}
+          {/* Section 2: Financial Balance Summary */}
+          {(() => {
+            const paidSum = payments
+              .filter((p) => p.status === "succeeded")
+              .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+            const rawAmount = Number(booking.amount_paid || 0);
+            const regFee = Number(booking.registration_fee || 30);
+            const totalTarget = rawAmount > 0 ? rawAmount : regFee;
+            const remaining = Math.max(0, totalTarget - paidSum);
+
+            return (
+              <div className="rounded-lg border p-4 bg-card space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <CreditCard className="w-4 h-4 text-primary" />
+                    <span>Bilancio Finanziario Ordine</span>
+                  </div>
+                  {remaining > 0 ? (
+                    <Badge variant="secondary" className="bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 font-medium">
+                      Debito: €{remaining.toFixed(2)}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">
+                      ✓ Saldo Completo
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
+                  <div className="p-2.5 rounded-lg bg-muted/40 border space-y-1">
+                    <span className="text-[10px] text-muted-foreground block font-medium uppercase">Totale Ordine</span>
+                    <p className="font-bold text-sm font-mono text-foreground">€{totalTarget.toFixed(2)}</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-1">
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-medium uppercase">Già Pagato</span>
+                    <p className="font-bold text-sm font-mono text-emerald-600 dark:text-emerald-400">€{paidSum.toFixed(2)}</p>
+                  </div>
+                  <div className={`p-2.5 rounded-lg border space-y-1 ${remaining > 0 ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400" : "bg-muted/40 text-muted-foreground"}`}>
+                    <span className="text-[10px] block font-medium uppercase">Da Saldare</span>
+                    <p className="font-bold text-sm font-mono">€{remaining.toFixed(2)}</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase">Quota €30</span>
+                    <p className="font-bold text-sm font-mono text-amber-600 dark:text-amber-400">
+                      {payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded")
+                        ? "✓ Oplateno"
+                        : "⏳ В процессе"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Section 3: Schedule */}
           <div className="rounded-lg border p-4 bg-card space-y-3">
             <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <Clock className="w-4 h-4 text-primary" />
@@ -320,16 +434,36 @@ export function BookingDetailDialog({
                           <span className="font-semibold text-foreground">
                             {p.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso"}
                           </span>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              p.status === "succeeded"
-                                ? "bg-emerald-50 text-emerald-700 text-[10px]"
-                                : "bg-amber-50 text-amber-700 text-[10px]"
-                            }
+                          <Select
+                            value={p.status || "pending"}
+                            onValueChange={(newStatus) => updatePayment({ id: p.id, status: newStatus })}
                           >
-                            {p.status === "succeeded" ? "Completato" : p.status}
-                          </Badge>
+                            <SelectTrigger className="h-6 text-[11px] border-0 shadow-none bg-transparent hover:bg-muted/60 focus:ring-0 w-[115px] cursor-pointer px-1">
+                              <SelectValue>
+                                <Badge
+                                  variant="secondary"
+                                  className={
+                                    p.status === "succeeded"
+                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] cursor-pointer font-medium"
+                                      : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] cursor-pointer font-medium"
+                                  }
+                                >
+                                  {p.status === "succeeded" ? "✓ Completato" : p.status === "pending" ? "⏳ Sospeso" : p.status}
+                                </Badge>
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent side="bottom" align="start">
+                              <SelectItem value="succeeded" className="cursor-pointer text-xs">
+                                <span className="text-emerald-600 font-medium">✓ Completato</span>
+                              </SelectItem>
+                              <SelectItem value="pending" className="cursor-pointer text-xs">
+                                <span className="text-amber-600 font-medium">⏳ Sospeso</span>
+                              </SelectItem>
+                              <SelectItem value="failed" className="cursor-pointer text-xs">
+                                <span className="text-rose-600 font-medium">✕ Annullato</span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="text-[11px] text-muted-foreground flex items-center gap-2">
                           <span className="capitalize">{pMethod || "N/D"}</span>
@@ -381,7 +515,109 @@ export function BookingDetailDialog({
             )}
           </div>
 
-          {/* Section 4: Notes */}
+          {/* Section 4: Per-Lesson Billing Panel */}
+          {isPerLesson && (
+            <div className="rounded-lg border p-4 bg-card space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-primary" />
+                <span>Registro Lezioni — Saldatura Post-Lezione</span>
+              </div>
+
+              {/* Progress summary */}
+              {lessons.length > 0 && (() => {
+                const completedCount = lessons.filter((l: any) => l.status === 'completed').length;
+                const paidCount = lessons.filter((l: any) => l.payment_status === 'paid').length;
+                const pendingCount = lessons.filter((l: any) => l.payment_status === 'pending' && l.status === 'completed').length;
+                const paidPrice = lessons.filter((l: any) => l.payment_status === 'paid').reduce((s: number, l: any) => s + Number(l.price_per_lesson || 0), 0);
+                const pendingPrice = lessons.filter((l: any) => l.payment_status === 'pending' && l.status === 'completed').reduce((s: number, l: any) => s + Number(l.price_per_lesson || 0), 0);
+                const remainingLessons = lessons.filter((l: any) => l.status !== 'completed').length;
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2.5 rounded-lg bg-muted/40 border text-center space-y-0.5">
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase">Lezioni</p>
+                      <p className="font-bold text-sm">{completedCount} <span className="text-muted-foreground font-normal">/ {lessons.length}</span></p>
+                      <p className="text-[10px] text-muted-foreground">{remainingLessons} rimanenti</p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center space-y-0.5">
+                      <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium uppercase">Incassato</p>
+                      <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400 font-mono">€{paidPrice.toFixed(2)}</p>
+                      <p className="text-[10px] text-emerald-700/60 dark:text-emerald-500">{paidCount} lezioni</p>
+                    </div>
+                    <div className={`p-2.5 rounded-lg border text-center space-y-0.5 ${pendingPrice > 0 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-muted/40'}`}>
+                      <p className={`text-[10px] font-medium uppercase ${pendingPrice > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}`}>Da Incassare</p>
+                      <p className={`font-bold text-sm font-mono ${pendingPrice > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>€{pendingPrice.toFixed(2)}</p>
+                      <p className="text-[10px] text-muted-foreground">{pendingCount} lezioni</p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-center space-y-0.5">
+                      <p className="text-[10px] text-sky-700 dark:text-sky-400 font-medium uppercase">Ancora da Svolgere</p>
+                      <p className="font-bold text-sm text-sky-600 dark:text-sky-400">{remainingLessons}</p>
+                      <p className="text-[10px] text-sky-700/60 dark:text-sky-500">lezioni</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <div className="space-y-2 border-t pt-3">
+                {lessons.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-3">Nessuna lezione generata per questa prenotazione.</p>
+                ) : (
+                  lessons.map((lesson: any, idx: number) => {
+                    const lessonDate = new Date(lesson.starts_at).toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
+                    const lessonTime = new Date(lesson.starts_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                    const isPaid = lesson.payment_status === 'paid';
+                    const isCompleted = lesson.status === 'completed';
+                    const isPending = lesson.payment_status === 'pending' && isCompleted;
+                    const isCompletingThis = lessonActionLoading === lesson.id + '-complete';
+                    const isPayingThis = lessonActionLoading === lesson.id + '-pay';
+
+                    return (
+                      <div key={lesson.id} className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-xs ${isPaid ? 'bg-emerald-500/5 border-emerald-500/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-muted/20'}`}>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">#{idx + 1}</span>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-foreground truncate">{lessonDate} · {lessonTime}</p>
+                            <p className="text-muted-foreground font-mono">€{Number(lesson.price_per_lesson).toFixed(2)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {isPaid ? (
+                            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]">
+                              <CheckCircle2 className="w-3 h-3 mr-1" /> Pagato
+                            </Badge>
+                          ) : isPending ? (
+                            <Button
+                              size="sm"
+                              className="h-7 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                              disabled={!!lessonActionLoading}
+                              onClick={() => openPayLessonDialog(lesson.id, Number(lesson.price_per_lesson))}
+                            >
+                              {isPayingThis ? <Clock className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
+                              Incassa €{Number(lesson.price_per_lesson).toFixed(2)}
+                            </Button>
+                          ) : !isCompleted ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[11px] font-medium gap-1 cursor-pointer"
+                              disabled={!!lessonActionLoading}
+                              onClick={() => handleCompleteLesson(lesson.id)}
+                            >
+                              {isCompletingThis ? <Clock className="w-3 h-3 animate-spin" /> : <PlayCircle className="w-3 h-3" />}
+                              Lezione Svolta
+                            </Button>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px]">Completata</Badge>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Section 5: Notes */}
           {booking.notes && (
             <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30 p-3.5 text-xs space-y-1">
               <p className="font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
@@ -549,6 +785,72 @@ export function BookingDetailDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Pay Lesson Dialog — with manual amount input */}
+      <Dialog open={!!payLessonDialog} onOpenChange={(v) => !v && setPayLessonDialog(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold">Incassa Pagamento Lezione</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Verifica o modifica l'importo da incassare per questa lezione.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Amount */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Importo (€)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">€</span>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="pl-7 font-mono text-sm"
+                  value={payLessonAmount}
+                  onChange={(e) => setPayLessonAmount(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              {payLessonDialog && Number(payLessonAmount) !== payLessonDialog.defaultAmount && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                  ⚠ Importo modificato (default: €{payLessonDialog.defaultAmount.toFixed(2)})
+                </p>
+              )}
+            </div>
+
+            {/* Payment method */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Metodo di Pagamento</Label>
+              <Select value={payLessonMethod} onValueChange={setPayLessonMethod}>
+                <SelectTrigger className="h-9 cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">💵 Contanti</SelectItem>
+                  <SelectItem value="pos">💳 POS / Carta</SelectItem>
+                  <SelectItem value="transfer">🏦 Bonifico</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => setPayLessonDialog(null)}>
+              Annulla
+            </Button>
+            <Button
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer gap-1.5"
+              disabled={!payLessonAmount || Number(payLessonAmount) <= 0}
+              onClick={handlePayLesson}
+            >
+              <Coins className="w-3.5 h-3.5" />
+              Conferma Incasso €{Number(payLessonAmount || 0).toFixed(2)}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

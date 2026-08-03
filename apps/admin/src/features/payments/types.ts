@@ -4,6 +4,8 @@ export interface Payment {
   booking_id?: string | null;
   userId?: string | null;
   user_id?: string | null;
+  scheduleId?: string | null;
+  schedule_id?: string | null;
   amount: number | string;
   currency: string;
   paymentMethod?: string;

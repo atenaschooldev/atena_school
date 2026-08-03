@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { TeachersRepository, TeacherEntity } from '../domain/teachers.repository.interface';
 
@@ -54,6 +55,19 @@ export class PrismaTeachersRepository extends TeachersRepository {
     return mapTeacher(t);
   }
 
+  async create(data: { fullName: string; status?: string; experience?: string; photoUrl?: string }): Promise<TeacherEntity> {
+    const t = await this.prisma.teacher.create({
+      data: {
+        teacherId: randomUUID(),
+        fullName: data.fullName,
+        status: data.status || 'active',
+        experience: data.experience || null,
+        photoUrl: data.photoUrl || null,
+      },
+    });
+    return mapTeacher(t, 0, 0);
+  }
+
   async update(
     id: string,
     data: Partial<Pick<TeacherEntity, 'fullName' | 'status' | 'photoUrl' | 'experience'>>,
@@ -71,5 +85,10 @@ export class PrismaTeachersRepository extends TeachersRepository {
     const courseCount = await this.prisma.courseTeacher.count({ where: { teacherId: id } });
 
     return mapTeacher(t, lessonCount, courseCount);
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.courseTeacher.deleteMany({ where: { teacherId: id } });
+    await this.prisma.teacher.delete({ where: { teacherId: id } });
   }
 }

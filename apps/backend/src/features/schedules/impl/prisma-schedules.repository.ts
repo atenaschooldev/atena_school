@@ -40,33 +40,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       teacherName: l.teacher?.fullName || undefined,
     }));
 
-    // Also fetch from `schedules` table to combine if any exist
-    const rawSchedules = await this.prisma.schedule.findMany({
-      include: { course: true },
-      orderBy: { startDate: 'asc' },
-    });
-
-    const teacherIds = rawSchedules.map((s) => s.teacherId).filter(Boolean);
-    const teachersList = teacherIds.length
-      ? await this.prisma.teacher.findMany({ where: { teacherId: { in: teacherIds } } })
-      : [];
-    const teacherMap = new Map(teachersList.map((t) => [t.teacherId, t.fullName]));
-
-    const scheduleEntities: ScheduleEntity[] = rawSchedules.map((s) => ({
-      id: s.id,
-      courseId: s.courseId,
-      teacherId: s.teacherId,
-      room: s.room,
-      status: s.status,
-      startDate: s.startDate,
-      endDate: s.endDate,
-      lessonType: s.lessonType,
-      meetingUrl: s.meetingUrl,
-      courseName: s.course?.name || 'Corso',
-      teacherName: teacherMap.get(s.teacherId) || undefined,
-    }));
-
-    return [...lessonEntities, ...scheduleEntities];
+    return lessonEntities;
   }
 
   async findOne(id: string): Promise<ScheduleEntity | null> {
@@ -94,25 +68,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       };
     }
 
-    const s = await this.prisma.schedule.findUnique({
-      where: { id },
-      include: { course: true },
-    });
-
-    if (!s) return null;
-    return {
-      id: s.id,
-      courseId: s.courseId,
-      teacherId: s.teacherId,
-      room: s.room,
-      status: s.status,
-      startDate: s.startDate,
-      endDate: s.endDate,
-      lessonType: s.lessonType,
-      meetingUrl: s.meetingUrl,
-      courseName: s.course?.name || 'Corso',
-      teacherName: undefined,
-    };
+    return null;
   }
 
   async create(data: {
@@ -224,42 +180,39 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     }
 
     const updateData: any = {};
-    if (data.courseId !== undefined) updateData.courseId = data.courseId;
     if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
-    if (data.room !== undefined) updateData.room = data.room;
+    if (data.room !== undefined) updateData.teacherNotes = data.room;
     if (data.status !== undefined) updateData.status = data.status;
-    if (data.startDate !== undefined) updateData.startDate = data.startDate;
-    if (data.endDate !== undefined) updateData.endDate = data.endDate;
-    if (data.lessonType !== undefined) updateData.lessonType = data.lessonType;
-    if (data.meetingUrl !== undefined) updateData.meetingUrl = data.meetingUrl;
+    if (data.startDate !== undefined) updateData.startsAt = data.startDate;
+    if (data.endDate !== undefined) updateData.endsAt = data.endDate;
+    if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? 'online' : 'in_person';
+    if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
 
-    const s = await this.prisma.schedule.update({
+    const l = await this.prisma.lesson.update({
       where: { id },
       data: updateData,
-      include: { course: true },
+      include: {
+        booking: { include: { course: true } },
+        teacher: true,
+      },
     });
 
     return {
-      id: s.id,
-      courseId: s.courseId,
-      teacherId: s.teacherId,
-      room: s.room,
-      status: s.status,
-      startDate: s.startDate,
-      endDate: s.endDate,
-      lessonType: s.lessonType,
-      meetingUrl: s.meetingUrl,
-      courseName: s.course?.name || 'Corso',
-      teacherName: undefined,
+      id: l.id,
+      courseId: l.booking?.courseId || '',
+      teacherId: l.teacherId || '',
+      room: l.teacherNotes || null,
+      status: l.status,
+      startDate: l.startsAt,
+      endDate: l.endsAt,
+      lessonType: l.locationType === 'online' ? 'online' : 'offline',
+      meetingUrl: l.meetingLink || null,
+      courseName: l.booking?.courseName || 'Corso',
+      teacherName: l.teacher?.fullName || undefined,
     };
   }
 
   async delete(id: string): Promise<void> {
-    const existingLesson = await this.prisma.lesson.findUnique({ where: { id } });
-    if (existingLesson) {
-      await this.prisma.lesson.delete({ where: { id } });
-    } else {
-      await this.prisma.schedule.delete({ where: { id } });
-    }
+    await this.prisma.lesson.delete({ where: { id } });
   }
 }

@@ -74,10 +74,30 @@ export function usePayments(bookingId?: string | null) {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, ...data }: { id: string; status?: string; paymentMethod?: string; notes?: string }) => {
+      return apiFetch<Payment>(`/admin/payments/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Stato pagamento aggiornato");
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
+    },
+    onError: (e) => {
+      console.error("Failed to update payment:", e);
+      toast.error("Errore nell'aggiornamento del pagamento");
+    },
+  });
+
   return {
     payments,
     loading: isLoading,
     createPayment: createMutation.mutateAsync,
+    updatePayment: updateMutation.mutateAsync,
     deletePayment: deleteMutation.mutateAsync,
     refresh: refetch,
   };

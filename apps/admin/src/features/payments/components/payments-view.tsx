@@ -17,7 +17,13 @@ import {
   MoreVertical,
   ShoppingBag,
   ArrowRight,
+  Shield,
+  Calendar,
+  Banknote,
+  Building2,
 } from "lucide-react";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,14 +64,57 @@ import {
 } from "@tanstack/react-table";
 import type { Payment } from "../types";
 
+export function getPaymentMethodBadge(method?: string) {
+  const m = (method || "").toLowerCase();
+  if (m === "cash" || m === "contanti") {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25 text-[11px] font-medium shadow-2xs">
+        <Banknote className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+        <span>Contanti</span>
+      </div>
+    );
+  }
+  if (m === "pos" || m === "card" || m === "carta") {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/25 text-[11px] font-medium shadow-2xs">
+        <CreditCard className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+        <span>Carta (POS)</span>
+      </div>
+    );
+  }
+  if (m === "stripe" || m === "online") {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/25 text-[11px] font-medium shadow-2xs">
+        <CreditCard className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+        <span>Stripe</span>
+      </div>
+    );
+  }
+  if (m === "transfer" || m === "bonifico") {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25 text-[11px] font-medium shadow-2xs">
+        <Building2 className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        <span>Bonifico</span>
+      </div>
+    );
+  }
+  return (
+    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-muted-foreground border border-border/60 text-[11px] font-medium shadow-2xs">
+      <CreditCard className="w-3.5 h-3.5 shrink-0" />
+      <span className="capitalize">{method || "N/D"}</span>
+    </div>
+  );
+}
+
 export function PaymentsView() {
   const navigate = useNavigate();
-  const { payments, loading, createPayment, deletePayment } = usePayments();
+  const { payments, loading, createPayment, updatePayment, deletePayment } = usePayments();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -179,19 +228,41 @@ export function PaymentsView() {
       },
       {
         accessorKey: "bookingId",
-        header: "Ordine",
+        header: "Ordine / Riferimento",
         cell: ({ row }) => {
-          const bId = row.original.bookingId || row.original.booking_id;
-          if (!bId) return <span className="text-muted-foreground text-xs">—</span>;
+          const p = row.original;
+          const bId = p.bookingId || p.booking_id;
+          if (!bId) {
+            const memId = (p as any).membershipId || (p as any).membership_id || p.notes?.match(/\[membership_id:(.+?)\]/)?.[1];
+            const targetUrl = memId ? `/iscrizioni?highlight=${memId}` : `/iscrizioni`;
+
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2.5 text-[11px] font-mono gap-1.5 cursor-pointer hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400 border-amber-500/30 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(targetUrl);
+                }}
+                title="Vai al modulo Iscrizioni"
+              >
+                <Shield className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                <span>{memId ? `#${String(memId).slice(0, 8)}` : "Iscrizione Diretta"}</span>
+                <ArrowRight className="w-3 h-3 shrink-0 opacity-60 ml-0.5" />
+              </Button>
+            );
+          }
           return (
             <Button
               variant="outline"
               size="sm"
-              className="h-7 px-2 text-[11px] font-mono gap-1 cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
+              className="h-7 px-2.5 text-[11px] font-mono gap-1.5 cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/prenotazioni?id=${bId}`);
               }}
+              title={`Vedi Ordine #${bId.slice(0, 8)}`}
             >
               <ShoppingBag className="w-3.5 h-3.5 shrink-0 text-primary" />
               <span>#{bId.slice(0, 8)}</span>
@@ -212,11 +283,7 @@ export function PaymentsView() {
       {
         accessorKey: "paymentMethod",
         header: "Metodo",
-        cell: ({ row }) => (
-          <span className="text-xs font-medium capitalize text-foreground">
-            {row.original.paymentMethod || row.original.payment_method || "N/D"}
-          </span>
-        ),
+        cell: ({ row }) => getPaymentMethodBadge(row.original.paymentMethod || row.original.payment_method),
       },
       {
         accessorKey: "status",
@@ -237,74 +304,79 @@ export function PaymentsView() {
         header: "Data",
         cell: ({ row }) => {
           const dateVal = row.original.createdAt || row.original.created_at;
+          if (!dateVal) return <span className="text-xs text-muted-foreground">—</span>;
+          const d = new Date(dateVal);
+          const dateStr = d.toLocaleDateString("it-IT", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          });
+          const timeStr = d.toLocaleTimeString("it-IT", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
           return (
-            <span className="text-xs text-muted-foreground">
-              {dateVal
-                ? new Date(dateVal).toLocaleDateString("it-IT", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "N/D"}
-            </span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-foreground shadow-2xs">
+              <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span>{dateStr}</span>
+              <span className="text-muted-foreground/50">•</span>
+              <span className="text-primary font-semibold">{timeStr}</span>
+            </div>
           );
         },
       },
       {
         id: "actions",
         header: "Azioni",
+        enableHiding: false,
         cell: ({ row }) => {
           const p = row.original;
           const txId = p.providerTransactionId || p.provider_transaction_id;
           const bId = p.bookingId || p.booking_id;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem className="cursor-pointer" onClick={() => setSelectedPayment(p)}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Vedi Dettagli
-                </DropdownMenuItem>
-                {bId && (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/prenotazioni?id=${bId}`)}
-                  >
-                    <ShoppingBag className="mr-2 h-4 w-4 text-primary" />
-                    Vedi Ordine (#{bId.slice(0, 8)})
-                  </DropdownMenuItem>
-                )}
-                {txId && (
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() =>
-                      window.open(
-                        `https://dashboard.stripe.com/payments/${txId}`,
-                        "_blank",
-                      )
-                    }
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Stripe Dashboard
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onClick={() => deletePayment(p.id)}
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => setSelectedPayment(p)}
+                title="Vedi Dettagli"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              {bId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-primary"
+                  onClick={() => navigate(`/prenotazioni?id=${bId}`)}
+                  title={`Vedi Ordine #${bId.slice(0, 8)}`}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Elimina Transazione
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <ShoppingBag className="h-4 w-4" />
+                </Button>
+              )}
+              {txId && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-sky-600 dark:hover:text-sky-400"
+                  onClick={() => window.open(`https://dashboard.stripe.com/payments/${txId}`, "_blank")}
+                  title="Apri in Stripe"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+                onClick={() => setDeletingPaymentId(p.id)}
+                title="Elimina Transazione"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           );
         },
       },
@@ -435,95 +507,60 @@ export function PaymentsView() {
                   <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
                 ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => setSelectedPayment(row.original)}
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell
-                            key={cell.id}
-                            onClick={(e) => {
-                              if (cell.column.id === "actions" || cell.column.id === "select") {
-                                e.stopPropagation();
-                              }
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        Nessun pagamento trovato.
-                      </TableCell>
+                    <TableRow
+                      key={row.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedPayment(row.original)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          onClick={(e) => {
+                            if (cell.column.id === "actions" || cell.column.id === "select") {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Pagination Footer */}
-            <div className="flex items-center justify-between space-x-2 py-2">
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="page-size" className="text-sm font-medium">
-                  Mostra
-                </Label>
-                <Select
-                  value={`${table.getState().pagination.pageSize}`}
-                  onValueChange={(value) => {
-                    table.setPageSize(Number(value));
-                  }}
-                >
-                  <SelectTrigger className="w-20 cursor-pointer" id="page-size">
-                    <SelectValue placeholder={table.getState().pagination.pageSize} />
-                  </SelectTrigger>
-                  <SelectContent side="top">
-                    {[10, 20, 30, 50].map((pageSize) => (
-                      <SelectItem key={pageSize} value={`${pageSize}`}>
-                        {pageSize}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex-1 text-sm text-muted-foreground hidden sm:block">
-                {table.getFilteredSelectedRowModel().rows.length} di{" "}
-                {table.getFilteredRowModel().rows.length} selezionati.
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="cursor-pointer"
-                >
-                  Indietro
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="cursor-pointer"
-                >
-                  Avanti
-                </Button>
-              </div>
-            </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      Nessun pagamento trovato.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
+
+          {/* Pagination Footer */}
+          <DataTablePagination table={table} />
         </div>
+      </div>
 
       {/* Payment Detail Modal */}
       <PaymentDetailDialog
         payment={selectedPayment}
         isOpen={!!selectedPayment}
         onClose={() => setSelectedPayment(null)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={!!deletingPaymentId}
+        onOpenChange={(v) => !v && setDeletingPaymentId(null)}
+        title="Elimina Transazione"
+        description="Sei sicuro di voler eliminare questa transazione? L'operazione non può essere annullata."
+        onConfirm={async () => {
+          if (deletingPaymentId) {
+            await deletePayment(deletingPaymentId);
+            setDeletingPaymentId(null);
+          }
+        }}
       />
     </div>
   );

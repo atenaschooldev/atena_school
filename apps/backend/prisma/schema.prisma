@@ -44,7 +44,6 @@ model Course {
   slug                    String?
   updatedAt               DateTime? @map("updated_at") @db.Timestamptz
 
-  schedules      Schedule[]
   bookings       Booking[]
   courseTeachers CourseTeacher[]
 
@@ -80,22 +79,6 @@ model CourseTeacher {
   @@map("course_teachers")
 }
 
-model Schedule {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  courseId   String   @map("course_id") @db.Uuid
-  teacherId  String   @map("teacher_id") @db.Uuid
-  room       String?
-  status     String   @default("scheduled")
-  startDate  DateTime @map("start_date") @db.Timestamptz
-  endDate    DateTime @map("end_date") @db.Timestamptz
-  lessonType String   @default("offline") @map("lesson_type")
-  meetingUrl String?  @map("meeting_url")
-
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-  @@map("schedules")
-}
-
 model Booking {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   courseId              String?   @map("course_id") @db.Uuid
@@ -122,6 +105,7 @@ model Booking {
   sdiCode               String?   @map("sdi_code")
   pecEmail              String?   @map("pec_email")
   notes                 String?   @db.Text
+  billingScheme         String    @default("full") @map("billing_scheme")
   totalLessonsCount     Int?      @map("total_lessons_count")
   subscriptionStartsAt  DateTime? @map("subscription_starts_at") @db.Timestamptz
   subscriptionEndsAt    DateTime? @map("subscription_ends_at") @db.Timestamptz
@@ -147,6 +131,8 @@ model Lesson {
   startsAt        DateTime  @map("starts_at") @db.Timestamptz
   endsAt          DateTime  @map("ends_at") @db.Timestamptz
   status          String    @default("scheduled")
+  paymentStatus   String    @default("pending") @map("payment_status")
+  pricePerLesson  Decimal?   @map("price_per_lesson") @db.Decimal(10, 2)
   attendance      String?
   homework        String?
   teacherNotes    String?   @map("teacher_notes")
@@ -170,6 +156,7 @@ model Payment {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   bookingId             String?   @map("booking_id") @db.Uuid
   userId                String?   @map("user_id") @db.Uuid
+  scheduleId            String?   @map("schedule_id") @db.Uuid
   amount                Decimal   @db.Decimal(10, 2)
   currency              String    @default("EUR")
   paymentMethod         String    @map("payment_method")

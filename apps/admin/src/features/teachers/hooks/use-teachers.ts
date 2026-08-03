@@ -66,6 +66,24 @@ export function useTeachers() {
     staleTime: 1000 * 30, // 30s stale time
   });
 
+  const createTeacherMutation = useMutation({
+    mutationFn: async (values: { fullName: string; status?: string; experience?: string; photoUrl?: string }) => {
+      const created = await apiFetch<any>("/admin/teachers", {
+        method: "POST",
+        body: JSON.stringify(values),
+      });
+      return parseTeacher(created);
+    },
+    onSuccess: () => {
+      toast.success("Nuovo docente aggiunto");
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    },
+    onError: (e) => {
+      console.error("Failed to create teacher:", e);
+      toast.error("Errore nella creazione del docente");
+    },
+  });
+
   const updateTeacherMutation = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: UpdateTeacherFormValues }) => {
       const updated = await apiFetch<any>(`/admin/teachers/${id}`, {
@@ -84,9 +102,40 @@ export function useTeachers() {
     },
   });
 
+  const deleteTeacherMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiFetch<any>(`/admin/teachers/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Docente eliminato");
+      queryClient.invalidateQueries({ queryKey: ["teachers"] });
+    },
+    onError: (e) => {
+      console.error("Failed to delete teacher:", e);
+      toast.error("Errore nell'eliminazione del docente");
+    },
+  });
+
+  const createTeacher = async (values: { fullName: string; status?: string; experience?: string; photoUrl?: string }) => {
+    return createTeacherMutation.mutateAsync(values);
+  };
+
   const updateTeacher = async (id: string, values: UpdateTeacherFormValues) => {
     return updateTeacherMutation.mutateAsync({ id, values });
   };
 
-  return { teachers, loading: isLoading, updateTeacher, refresh: refetch };
+  const deleteTeacher = async (id: string) => {
+    return deleteTeacherMutation.mutateAsync(id);
+  };
+
+  return {
+    teachers,
+    loading: isLoading,
+    createTeacher,
+    updateTeacher,
+    deleteTeacher,
+    refresh: refetch,
+  };
 }

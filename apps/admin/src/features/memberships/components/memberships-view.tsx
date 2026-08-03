@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useMemberships } from "../hooks/use-memberships";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   BadgeCheck,
   XCircle,
@@ -13,8 +13,11 @@ import {
   Shield,
   ShieldOff,
   MoreVertical,
+  Calendar,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { CreateMembershipDialog } from "./create-membership-dialog";
 import {
   Table,
   TableBody,
@@ -95,12 +99,26 @@ export function MembershipsView() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  const { memberships, loading, updateStatus } = useMemberships({
+  const { memberships, loading, updateStatus, refresh } = useMemberships({
     status: statusFilter,
     academicYear: yearFilter,
   });
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight") || searchParams.get("id");
+
+  useEffect(() => {
+    if (highlightId && memberships.length > 0) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`membership-row-${highlightId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightId, memberships]);
 
   const stats = useMemo(() => {
     const total = memberships.length;
@@ -149,9 +167,15 @@ export function MembershipsView() {
     {
       id: "paidAt",
       header: "Pagata il",
-      cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">{formatDate(row.original.paidAt)}</span>
-      ),
+      cell: ({ row }) => {
+        if (!row.original.paidAt) return <span className="text-xs text-muted-foreground">—</span>;
+        return (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-foreground shadow-2xs">
+            <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+            <span>{formatDate(row.original.paidAt)}</span>
+          </div>
+        );
+      },
     },
     {
       id: "expiresAt",
@@ -159,9 +183,14 @@ export function MembershipsView() {
       cell: ({ row }) => {
         const isExpired = new Date(row.original.expiresAt) < new Date();
         return (
-          <span className={`text-sm ${isExpired ? "text-destructive font-medium" : "text-muted-foreground"}`}>
-            {formatDate(row.original.expiresAt)}
-          </span>
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono font-medium shadow-2xs ${
+            isExpired
+              ? "bg-destructive/10 text-destructive border-destructive/30"
+              : "bg-muted/60 dark:bg-muted/30 border-border/60 text-foreground"
+          }`}>
+            <Clock className="w-3 h-3 shrink-0 opacity-70" />
+            <span>{formatDate(row.original.expiresAt)}</span>
+          </div>
         );
       },
     },
@@ -170,7 +199,14 @@ export function MembershipsView() {
       header: "Prenotazione",
       cell: ({ row }) => {
         const m = row.original;
-        if (!m.bookingId) return <span className="text-muted-foreground text-sm">—</span>;
+        if (!m.bookingId) {
+          return (
+            <Badge variant="outline" className="text-[11px] font-medium text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40 border border-amber-500/25 gap-1.5 shadow-2xs">
+              <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>In Sede</span>
+            </Badge>
+          );
+        }
         return (
           <Button
             variant="ghost"
@@ -187,54 +223,43 @@ export function MembershipsView() {
         );
       },
     },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => {
-        const m = row.original;
-        const isActive = m.status === "active";
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+      {
+        id: "actions",
+        header: "Azioni",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const m = row.original;
+          const isActive = m.status === "active";
+          return (
+            <div className="flex items-center gap-1">
               {m.bookingId && (
-                <>
-                  <DropdownMenuItem
-                    className="cursor-pointer"
-                    onClick={() => navigate(`/prenotazioni?highlight=${m.bookingId}`)}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Vai alla prenotazione
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </>
-              )}
-              {isActive ? (
-                <DropdownMenuItem
-                  className="cursor-pointer text-destructive focus:text-destructive"
-                  onClick={() => updateStatus(m.id, "revoked")}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+                  onClick={() => navigate(`/prenotazioni?highlight=${m.bookingId}`)}
+                  title="Vai alla prenotazione"
                 >
-                  <ShieldOff className="h-4 w-4 mr-2" />
-                  Revoca iscrizione
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  className="cursor-pointer text-emerald-600 focus:text-emerald-600"
-                  onClick={() => updateStatus(m.id, "active")}
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Riattiva iscrizione
-                </DropdownMenuItem>
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 cursor-pointer ${
+                  isActive
+                    ? "text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+                    : "text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400"
+                }`}
+                onClick={() => updateStatus(m.id, isActive ? "revoked" : "active")}
+                title={isActive ? "Revoca iscrizione" : "Riattiva iscrizione"}
+              >
+                {isActive ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
+              </Button>
+            </div>
+          );
+        },
       },
-    },
   ];
 
   const table = useReactTable({
@@ -311,37 +336,43 @@ export function MembershipsView() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per email, codice fiscale..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9"
-          />
+      {/* Filters & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 w-full">
+          <div className="relative flex-1 max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Cerca per email, codice fiscale..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Stato" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti gli stati</SelectItem>
+              <SelectItem value="active">Attive</SelectItem>
+              <SelectItem value="revoked">Revocate</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Anno" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti gli anni</SelectItem>
+              <SelectItem value="2026/2027">2026/2027</SelectItem>
+              <SelectItem value="2025/2026">2025/2026</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Stato" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti gli stati</SelectItem>
-            <SelectItem value="active">Attive</SelectItem>
-            <SelectItem value="revoked">Revocate</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={yearFilter} onValueChange={setYearFilter}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Anno" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti gli anni</SelectItem>
-            <SelectItem value="2026/2027">2026/2027</SelectItem>
-            <SelectItem value="2025/2026">2025/2026</SelectItem>
-          </SelectContent>
-        </Select>
+
+        <div className="w-full sm:w-auto shrink-0 flex justify-end">
+          <CreateMembershipDialog onSuccess={refresh} />
+        </div>
       </div>
 
       {/* Table */}
@@ -371,49 +402,50 @@ export function MembershipsView() {
                 </TableCell>
               </TableRow>
             ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50">
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const m = row.original;
+                const isTarget = Boolean(
+                  highlightId &&
+                    (m.id === highlightId ||
+                      m.id.startsWith(highlightId) ||
+                      highlightId.startsWith(m.id) ||
+                      (highlightId.length >= 6 && m.id.toLowerCase().includes(highlightId.toLowerCase())) ||
+                      m.bookingId === highlightId)
+                );
+                return (
+                  <TableRow
+                    key={row.id}
+                    id={`membership-row-${m.id}`}
+                    className={
+                      isTarget
+                        ? "font-bold ring-2 ring-amber-500/70 shadow-lg transition-all duration-300"
+                        : "hover:bg-muted/50"
+                    }
+                  >
+                    {row.getVisibleCells().map((cell, idx) => (
+                      <TableCell
+                        key={cell.id}
+                        className={
+                          isTarget
+                            ? `bg-amber-500/25 dark:bg-amber-500/30 text-foreground font-bold ${
+                                idx === 0 ? "border-l-4 border-l-amber-500" : ""
+                              }`
+                            : undefined
+                        }
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
-
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t">
-          <span className="text-sm text-muted-foreground">
-            {table.getFilteredRowModel().rows.length} iscrizioni
-          </span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="cursor-pointer"
-            >
-              Indietro
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="cursor-pointer"
-            >
-              Avanti
-            </Button>
-          </div>
-        </div>
       </div>
+
+      {/* Pagination */}
+      <DataTablePagination table={table} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
@@ -26,10 +26,24 @@ export class TeachersController {
     return this.teachersService.findOne(id);
   }
 
+  @Post()
+  @Roles('admin')
+  @ApiOperation({ summary: 'Create a new teacher' })
+  create(@Body() dto: any) {
+    return this.teachersService.create(dto);
+  }
+
   @Patch(':id')
   @Roles('admin')
   @ApiOperation({ summary: 'Update teacher profile' })
   update(@Param('id') id: string, @Body() dto: any) {
     return this.teachersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Delete a teacher' })
+  remove(@Param('id') id: string) {
+    return this.teachersService.remove(id);
   }
 }

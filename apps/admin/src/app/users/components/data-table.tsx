@@ -19,11 +19,15 @@ import {
   Pencil,
   Trash2,
   Search,
+  Plus,
   UserCheck,
   UserX,
+  Calendar,
 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog"
+import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -80,6 +84,7 @@ export function DataTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState({})
   const [globalFilter, setGlobalFilter] = useState("")
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -197,57 +202,51 @@ export function DataTable({
       header: "Data Registrazione",
       cell: ({ row }) => {
         const dateStr = row.getValue("createdAt") as string
-        if (!dateStr) return "N/D"
-        const formatted = new Date(dateStr).toLocaleDateString("it-IT", {
+        if (!dateStr) return <span className="text-xs text-muted-foreground">—</span>
+        const d = new Date(dateStr)
+        const formatted = d.toLocaleDateString("it-IT", {
           day: "2-digit",
           month: "short",
           year: "numeric",
         })
-        return <span className="text-xs text-muted-foreground">{formatted}</span>
+        return (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-foreground shadow-2xs">
+            <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+            <span>{formatted}</span>
+          </div>
+        )
       },
     },
     {
       id: "actions",
       header: "Azioni",
+      enableHiding: false,
       cell: ({ row }) => {
         const user = row.original
         return (
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                  <EllipsisVertical className="size-4" />
-                  <span className="sr-only">Opzioni</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => onToggleActive(user.id, user.isActive)}
-                >
-                  {user.isActive ? (
-                    <>
-                      <UserX className="mr-2 size-4 text-orange-500" />
-                      Disattiva
-                    </>
-                  ) : (
-                    <>
-                      <UserCheck className="mr-2 size-4 text-green-500" />
-                      Attiva
-                    </>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  className="cursor-pointer"
-                  onClick={() => onDeleteUser(user.id)}
-                >
-                  <Trash2 className="mr-2 size-4" />
-                  Elimina Utente
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 cursor-pointer ${
+                user.isActive
+                  ? "text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400"
+                  : "text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400"
+              }`}
+              onClick={() => onToggleActive(user.id, user.isActive)}
+              title={user.isActive ? "Disattiva Utente" : "Attiva Utente"}
+            >
+              {user.isActive ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+              onClick={() => setDeletingUserId(user.id)}
+              title="Elimina Utente"
+            >
+              <Trash2 className="size-4" />
+            </Button>
           </div>
         )
       },
@@ -402,56 +401,21 @@ export function DataTable({
         </Table>
       </div>
 
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="flex items-center space-x-2">
-          <Label htmlFor="page-size" className="text-sm font-medium">
-            Mostra
-          </Label>
-          <Select
-            value={`${table.getState().pagination.pageSize}`}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value))
-            }}
-          >
-            <SelectTrigger className="w-20 cursor-pointer" id="page-size">
-              <SelectValue placeholder={table.getState().pagination.pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {[10, 20, 30, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 text-sm text-muted-foreground hidden sm:block">
-          {table.getFilteredSelectedRowModel().rows.length} di{" "}
-          {table.getFilteredRowModel().rows.length} selezionati.
-        </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              className="cursor-pointer"
-            >
-              Indietro
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              className="cursor-pointer"
-            >
-              Avanti
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DataTablePagination table={table} />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={!!deletingUserId}
+        onOpenChange={(v) => !v && setDeletingUserId(null)}
+        title="Elimina Utente"
+        description="Sei sicuro di voler eliminare questo utente? L'operazione non può essere annullata."
+        onConfirm={async () => {
+          if (deletingUserId) {
+            await onDeleteUser(deletingUserId);
+            setDeletingUserId(null);
+          }
+        }}
+      />
     </div>
   )
 }

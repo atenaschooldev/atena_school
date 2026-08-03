@@ -106,6 +106,7 @@ const createBookingSchema = z.object({
   pecEmail: z.string().optional(),
   amountPaid: z.coerce.number().min(0),
   registrationFee: z.coerce.number().min(0).default(0),
+  billingScheme: z.string().default("full"),
   paymentStatus: z.string().min(1),
   paymentMethod: z.string().min(1),
   notes: z.string().optional(),
@@ -299,6 +300,7 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
         studentBirthDate: data.studentBirthDate || undefined,
         amountPaid: Number(data.amountPaid),
         registrationFee: Number(data.registrationFee),
+        billingScheme: data.billingScheme || "full",
         paymentStatus: data.paymentStatus,
         paymentMethod: data.paymentMethod,
         sdiCode: data.needsCompanyInvoice ? data.sdiCode : undefined,
@@ -344,13 +346,13 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
           >
 
             {/* ── TOP HEADER ─────────────────────────────────────────── */}
-            <div className="flex items-center justify-between px-6 py-3.5 border-b border-border/60 bg-muted/30 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="flex items-center justify-between pl-6 pr-14 py-3 border-b border-border/60 bg-muted/30 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
                   <GraduationCap className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold leading-tight">Nuova Prenotazione in Sede</p>
+                  <p className="text-sm font-bold leading-tight">Nuova Prenotazione in Sede</p>
                   <p className="text-[11px] text-muted-foreground leading-tight">Reception Wizard · Atena School</p>
                 </div>
               </div>
@@ -366,19 +368,19 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                       <button
                         type="button"
                         onClick={() => setCurrentStep(s.id as any)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
                           isActive
-                            ? "bg-primary text-primary-foreground shadow-sm"
+                            ? "bg-primary text-primary-foreground shadow-xs"
                             : isDone
                             ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                         }`}
                       >
                         {isDone ? <CheckCheck className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
                         <span>{s.label}</span>
                       </button>
                       {idx < STEPS.length - 1 && (
-                        <div className={`w-5 h-px ${currentStep > s.id ? "bg-emerald-400" : "bg-border"}`} />
+                        <div className={`w-3 h-px ${currentStep > s.id ? "bg-emerald-400" : "bg-border"}`} />
                       )}
                     </div>
                   );
@@ -900,8 +902,24 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                       <span className="text-3xl font-black font-mono text-primary">€{totalAmount.toFixed(2)}</span>
                     </div>
 
-                    {/* Payment method & status */}
-                    <div className="grid grid-cols-2 gap-3">
+                    {/* Payment method, status & scheme */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <FormField control={form.control} name="billingScheme" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold">Modalità Pagamento</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value || "full"}>
+                            <FormControl>
+                              <SelectTrigger className="cursor-pointer h-9"><SelectValue /></SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="full">💳 Unica Soluzione</SelectItem>
+                              <SelectItem value="per_lesson">⏰ A Lezione (Post-Lezione)</SelectItem>
+                              <SelectItem value="installments">🧩 A Rate (Acconti)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
                       <FormField control={form.control} name="paymentStatus" render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs font-semibold">Stato Pagamento</FormLabel>

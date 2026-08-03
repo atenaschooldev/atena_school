@@ -62,6 +62,37 @@ export class BookingsAdminController {
     return this.checkoutService.updateBookingPaymentStatus(id, dto);
   }
 
+  @Get(':id/lessons')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить уроки бронирования с финансовым статусом' })
+  async getBookingLessons(@Param('id') id: string) {
+    return this.checkoutService.getBookingLessons(id);
+  }
+
+  @Patch(':id/lessons/:lessonId/complete')
+  @Roles('admin')
+  @Audit('lessons', 'complete')
+  @ApiOperation({ summary: 'Отметить урок как проведённый и создать начисление (поурочная оплата)' })
+  async completeLesson(
+    @Param('id') bookingId: string,
+    @Param('lessonId') lessonId: string,
+    @Body() dto: { payment_method?: string },
+  ) {
+    return this.checkoutService.completeLesson(bookingId, lessonId, dto.payment_method);
+  }
+
+  @Patch(':id/lessons/:lessonId/pay')
+  @Roles('admin')
+  @Audit('lessons', 'pay')
+  @ApiOperation({ summary: 'Принять оплату за проведённый урок' })
+  async payLesson(
+    @Param('id') bookingId: string,
+    @Param('lessonId') lessonId: string,
+    @Body() dto: { payment_method?: string; amount?: number },
+  ) {
+    return this.checkoutService.payLesson(bookingId, lessonId, dto.payment_method, dto.amount);
+  }
+
   @Delete(':id')
   @Roles('admin')
   @Audit('bookings', 'delete')

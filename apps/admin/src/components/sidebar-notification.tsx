@@ -23,27 +23,27 @@ export function SidebarNotification() {
           <X className="h-3 w-3" />
           <span className="sr-only">Close notification</span>
         </Button>
-        
+
         <div className="pr-6">
           <h3 className="flex items-center gap-3 font-semibold text-neutral-900 dark:text-neutral-100 mb-2 mt-1">
             <Logo size={42} className="-mt-1" />
             <div>
               Welcome to{" "}
-              <a 
-                href="https://shadcnstore.com" 
-                target="_blank" 
+              <a
+                href="https://shadcnstore.com"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
               >
-                ShadcnStore
+                Atena School
               </a>
             </div>
           </h3>
           <p className="text-sm text-muted-foreground dark:text-neutral-400 leading-relaxed">
             Explore our premium Shadcn UI{" "}
-            <a 
-              href="https://shadcnstore.com/blocks" 
-              target="_blank" 
+            <a
+              href="https://shadcnstore.com/blocks"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-primary underline"
             >

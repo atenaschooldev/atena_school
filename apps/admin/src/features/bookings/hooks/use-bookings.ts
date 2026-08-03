@@ -70,6 +70,8 @@ export function useBookings() {
         setSelectedBooking(updated);
       }
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
     onError: (e) => {
       console.error("Failed to update status:", e);
@@ -87,6 +89,8 @@ export function useBookings() {
         setSelectedBooking(null);
       }
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
     onError: (e) => {
       console.error("Failed to delete booking:", e);
@@ -104,6 +108,8 @@ export function useBookings() {
     onSuccess: () => {
       toast.success("Prenotazione registrata con successo");
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
     onError: (e) => {
       console.error("Failed to create manual booking:", e);

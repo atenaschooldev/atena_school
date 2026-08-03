@@ -28,11 +28,13 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Clock,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -200,7 +202,12 @@ export function CorsiView() {
         const hasDays = course.scheduleDays && course.scheduleDays.length > 0;
         const hasTime = !!course.startTime;
         if (!hasDays && !hasTime) {
-          return <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium text-muted-foreground bg-muted/50">Da concordare</span>;
+          return (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-muted-foreground shadow-2xs">
+              <Clock className="w-3 h-3 opacity-60 shrink-0" />
+              <span>Da concordare</span>
+            </div>
+          );
         }
         return (
           <div className="flex flex-col gap-1">
@@ -214,9 +221,10 @@ export function CorsiView() {
               </div>
             )}
             {hasTime && (
-              <span className="text-xs font-mono text-muted-foreground">
-                {course.startTime} {course.endTime ? `- ${course.endTime}` : ""}
-              </span>
+              <Badge variant="outline" className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 bg-muted/60 dark:bg-muted/30 border-border/60 text-foreground w-fit">
+                <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span>{course.startTime} {course.endTime ? `- ${course.endTime}` : ""}</span>
+              </Badge>
             )}
           </div>
         );
@@ -522,71 +530,7 @@ export function CorsiView() {
         </div>
 
         {/* Pagination Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-1">
-          <div className="flex items-center gap-3 text-sm font-medium text-foreground">
-            <span>Rows per page</span>
-            <Select value={pageSize} onValueChange={(val) => { setPageSize(val); table.setPageSize(Number(val)); }}>
-              <SelectTrigger className="h-9 w-[70px] cursor-pointer rounded-lg border-border/60 bg-background px-3">
-                <SelectValue placeholder={pageSize} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              title="First Page"
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              title="Previous Page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <span className="text-sm font-medium text-foreground px-3">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() || 1}
-            </span>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              title="Next Page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 rounded-lg border-border/60 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              title="Last Page"
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <DataTablePagination table={table} />
       </div>
 
       {/* Course Form Sheet */}

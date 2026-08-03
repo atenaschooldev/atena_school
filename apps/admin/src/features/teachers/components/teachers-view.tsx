@@ -10,17 +10,21 @@ import {
   Search,
   MoreVertical,
   Pencil,
+  Trash2,
   Calendar,
   Building2,
   Award,
   LayoutGrid,
   List,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import {
   Dialog,
   DialogContent,
@@ -83,19 +87,46 @@ function getInitials(name: string) {
 }
 
 export function TeachersView() {
-  const { teachers, loading, updateTeacher } = useTeachers();
+  const { teachers, loading, createTeacher, updateTeacher, deleteTeacher } = useTeachers();
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
+
+  // Create form state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createStatus, setCreateStatus] = useState("active");
+  const [createPhoto, setCreatePhoto] = useState("");
+  const [createExp, setCreateExp] = useState("");
 
   // Edit form state
+  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [editName, setEditName] = useState("");
   const [editStatus, setEditStatus] = useState("active");
   const [editPhoto, setEditPhoto] = useState("");
   const [editExp, setEditExp] = useState("");
+  const [deletingTeacherId, setDeletingTeacherId] = useState<string | null>(null);
+
+  const handleOpenCreate = () => {
+    setCreateName("");
+    setCreateStatus("active");
+    setCreatePhoto("");
+    setCreateExp("");
+    setIsCreateOpen(true);
+  };
+
+  const handleSaveCreate = async () => {
+    if (!createName.trim()) return;
+    await createTeacher({
+      fullName: createName.trim(),
+      status: createStatus,
+      photoUrl: createPhoto.trim() || undefined,
+      experience: createExp.trim() || undefined,
+    });
+    setIsCreateOpen(false);
+  };
 
   const handleOpenEdit = (teacher: Teacher) => {
     setEditingTeacher(teacher);
@@ -114,6 +145,12 @@ export function TeachersView() {
       experience: editExp || undefined,
     });
     setEditingTeacher(null);
+  };
+
+  const handleDeleteTeacher = async (id: string) => {
+    if (confirm("Sei sicuro di voler eliminare questo docente?")) {
+      await deleteTeacher(id);
+    }
   };
 
   const filteredTeachers = useMemo(() => {
@@ -196,34 +233,43 @@ export function TeachersView() {
       {
         id: "hireDate",
         header: "Data Assunzione",
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {formatDate(row.original.hireDate)}
-          </span>
-        ),
+        cell: ({ row }) => {
+          if (!row.original.hireDate) return <span className="text-xs text-muted-foreground">—</span>;
+          return (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-foreground shadow-2xs">
+              <Calendar className="w-3 h-3 text-muted-foreground shrink-0" />
+              <span>{formatDate(row.original.hireDate)}</span>
+            </div>
+          );
+        },
       },
       {
         id: "actions",
-        header: "",
+        header: "Azioni",
+        enableHiding: false,
         cell: ({ row }) => {
           const teacher = row.original;
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={() => handleOpenEdit(teacher)}
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Modifica Profilo
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => handleOpenEdit(teacher)}
+                title="Modifica Docente"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
+                onClick={() => setDeletingTeacherId(teacher.id)}
+                title="Elimina Docente"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           );
         },
       },
@@ -326,33 +372,43 @@ export function TeachersView() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per nome docente..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-9"
-          />
+      {/* Filters & Actions Toolbar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 w-full">
+          <div className="relative flex-1 max-w-sm w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Cerca per nome docente..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Stato" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti gli stati</SelectItem>
+              <SelectItem value="active">Attivo</SelectItem>
+              <SelectItem value="inactive">Inattivo</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Stato" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti gli stati</SelectItem>
-            <SelectItem value="active">Attivo</SelectItem>
-            <SelectItem value="inactive">Inattivo</SelectItem>
-          </SelectContent>
-        </Select>
+
+        <div className="w-full sm:w-auto shrink-0 flex justify-end">
+          <Button onClick={handleOpenCreate} className="cursor-pointer font-semibold gap-1.5 shadow-xs">
+            <Plus className="h-4 w-4" />
+            Nuovo Docente
+          </Button>
+        </div>
       </div>
 
       {/* Main Content */}
       {viewMode === "table" ? (
-        /* Table View (Default) */
-        <div className="rounded-lg border bg-card">
+        <>
+          {/* Table View (Default) */}
+          <div className="rounded-lg border bg-card">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
@@ -387,37 +443,11 @@ export function TeachersView() {
               )}
             </TableBody>
           </Table>
-
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t">
-            <span className="text-sm text-muted-foreground">
-              {table.getFilteredRowModel().rows.length} docenti
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="cursor-pointer"
-              >
-                Indietro
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Pag. {table.getState().pagination.pageIndex + 1} di {table.getPageCount() || 1}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="cursor-pointer"
-              >
-                Avanti
-              </Button>
-            </div>
-          </div>
         </div>
+
+        {/* Pagination */}
+        <DataTablePagination table={table} />
+      </>
       ) : loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -471,6 +501,13 @@ export function TeachersView() {
                       >
                         <Pencil className="h-4 w-4 mr-2" />
                         Modifica Profilo
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                        onClick={() => setDeletingTeacherId(teacher.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Elimina Docente
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -559,6 +596,78 @@ export function TeachersView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Teacher Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={(open) => !open && setIsCreateOpen(false)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Nuovo Docente</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="create-name">Nome e Cognome Completo *</Label>
+              <Input
+                id="create-name"
+                placeholder="Es. Mario Rossi"
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="create-status">Stato</Label>
+              <Select value={createStatus} onValueChange={setCreateStatus}>
+                <SelectTrigger id="create-status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Attivo</SelectItem>
+                  <SelectItem value="inactive">Inattivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="create-photo">URL Foto Profilo (opzionale)</Label>
+              <Input
+                id="create-photo"
+                placeholder="https://..."
+                value={createPhoto}
+                onChange={(e) => setCreatePhoto(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="create-exp">Esperienza / Bio (opzionale)</Label>
+              <Textarea
+                id="create-exp"
+                placeholder="Note su qualifica, esperienza, lingua..."
+                value={createExp}
+                onChange={(e) => setCreateExp(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
+              Annulla
+            </Button>
+            <Button onClick={handleSaveCreate} disabled={!createName.trim()}>
+              Crea Docente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={!!deletingTeacherId}
+        onOpenChange={(v) => !v && setDeletingTeacherId(null)}
+        title="Elimina Docente"
+        description="Sei sicuro di voler eliminare questo docente? L'operazione non può essere annullata."
+        onConfirm={async () => {
+          if (deletingTeacherId) {
+            await handleDeleteTeacher(deletingTeacherId);
+            setDeletingTeacherId(null);
+          }
+        }}
+      />
     </div>
   );
 }

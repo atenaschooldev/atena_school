@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.service';
 import { IsString, IsOptional, IsBoolean } from 'class-validator';
@@ -192,5 +192,27 @@ export class CheckoutController {
   @ApiOperation({ summary: 'Отправка формы обратной связи' })
   async submitContact(@Body() dto: ContactFormDto) {
     return this.checkoutService.submitContact(dto);
+  }
+
+  @Post('admin/memberships/pay-fee')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Прямая регистрация и оплата взноса €30 в Iscrizioni' })
+  async createAdminMembershipFee(@Body() dto: {
+    studentId?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    taxCode?: string;
+    birthDate?: string;
+    paymentMethod?: string;
+  }) {
+    return this.checkoutService.createAdminMembershipFee(dto);
+  }
+
+  @Patch('admin/bookings/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновление данных бронирования (клиент, статус, метод оплаты)' })
+  async updateBooking(@Param('id') id: string, @Body() dto: any) {
+    return this.checkoutService.updateBooking(id, dto);
   }
 }

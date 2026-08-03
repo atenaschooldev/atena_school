@@ -15,6 +15,15 @@ export class TeachersService {
     return teacher;
   }
 
+  async create(dto: any) {
+    return this.teachersRepository.create({
+      fullName: dto.fullName,
+      status: dto.status,
+      photoUrl: dto.photoUrl,
+      experience: dto.experience,
+    });
+  }
+
   async update(id: string, dto: any) {
     await this.findOne(id);
     return this.teachersRepository.update(id, {
@@ -23,5 +32,10 @@ export class TeachersService {
       photoUrl: dto.photoUrl,
       experience: dto.experience,
     });
+  }
+
+  async remove(id: string) {
+    await this.findOne(id);
+    return this.teachersRepository.delete(id);
   }
 }

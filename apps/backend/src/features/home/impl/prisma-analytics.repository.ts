@@ -11,8 +11,8 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
       where: { status: 'active' },
     });
 
-    const upcomingLessonsCount = await this.prisma.schedule.count({
-      where: { startDate: { gte: new Date() } },
+    const upcomingLessonsCount = await this.prisma.lesson.count({
+      where: { startsAt: { gte: new Date() } },
     });
 
     return {
