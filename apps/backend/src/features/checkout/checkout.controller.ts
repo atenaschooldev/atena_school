@@ -96,6 +96,14 @@ export class CreateReservationDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
 }
 
 export class VerifyPaymentDto {

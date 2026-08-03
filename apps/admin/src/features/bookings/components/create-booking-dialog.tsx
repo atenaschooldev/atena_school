@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, addMonths } from "date-fns";
 import { it as dateLocale } from "date-fns/locale";
 import {
   Plus,
@@ -188,38 +188,47 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
     if (!selectedDateState || isFlexibleSchedule) return [];
     const dateStr = format(selectedDateState, "yyyy-MM-dd");
     const timeStr = selectedCourse?.startTime || "16:00";
+    const customMax = selectedCourse?.totalLessons || (
+      selectedCourse?.totalHours && selectedCourse?.lessonDurationMinutes
+        ? Math.round((selectedCourse.totalHours * 60) / selectedCourse.lessonDurationMinutes)
+        : null
+    );
     return calculateLessonDates(
       dateStr,
       timeStr,
-      selectedCourse?.categoria || "",
+      selectedCourse?.nome || selectedCourse?.categoria || "",
       allowedDays,
       selectedCourse?.lessonDurationMinutes || 60,
       selectedCourse?.startTime,
       selectedCourse?.endTime,
-      selectedCourse?.scheduleType
+      selectedCourse?.scheduleType,
+      customMax
     );
   }, [selectedDateState, selectedCourse, allowedDays, isFlexibleSchedule]);
 
-  const endDatePreview = previewLessons.length > 0
-    ? new Date(previewLessons[previewLessons.length - 1].startsAt)
-    : null;
+  const endDatePreview = selectedDateState ? addMonths(selectedDateState, 1) : null;
 
   const formattedScheduleText = useMemo(() => {
     return formatCourseScheduleText(allowedDays, selectedCourse?.startTime, selectedCourse?.endTime);
   }, [allowedDays, selectedCourse]);
 
   useEffect(() => {
-    const emailToUse = isForChild ? (studentEmail || purchaserEmail) : purchaserEmail;
-    const taxToUse = isForChild && studentTaxCode ? studentTaxCode : purchaserTaxCode;
+    // When isForChild is true, fee check MUST depend strictly on student's identifiers.
+    // Do NOT check parent's email/CF for the child's annual membership fee!
+    const taxToUse = isForChild ? (studentTaxCode?.trim() || null) : (purchaserTaxCode?.trim() || null);
+    const emailToUse = isForChild ? (studentEmail?.trim() || null) : (purchaserEmail?.trim() || null);
+
     if (!emailToUse && !taxToUse) {
       setMembershipFeeStatus({ checked: false, paid: false });
+      form.setValue("registrationFee", 0);
       return;
     }
+
     const timer = setTimeout(async () => {
       try {
         const query = new URLSearchParams();
-        if (emailToUse) query.set("email", emailToUse);
         if (taxToUse) query.set("taxCode", taxToUse);
+        if (emailToUse) query.set("email", emailToUse);
         const res = await api.get<{ annualFeePaid?: boolean }>(`/admin/bookings/check-membership?${query.toString()}`);
         if (res?.annualFeePaid) {
           setMembershipFeeStatus({ checked: true, paid: true });
@@ -266,6 +275,9 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
   };
 
   async function onSubmit(data: CreateBookingValues) {
+    if (currentStep !== 3) {
+      return;
+    }
     try {
       let finalStudentName = data.purchaserName;
       if (data.isForChild && (data.studentFirstName || data.studentLastName)) {
@@ -279,6 +291,7 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
         purchaserEmail: data.purchaserEmail,
         purchaserPhone: data.purchaserPhone || undefined,
         purchaserTaxCode: data.purchaserTaxCode || undefined,
+        isForChild: data.isForChild,
         studentName: finalStudentName,
         studentEmail: data.studentEmail || data.purchaserEmail,
         studentPhone: data.studentPhone || data.purchaserPhone || undefined,
@@ -320,7 +333,15 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
         style={{ maxWidth: 920, width: "95vw", height: "min(680px, 95vh)", overflow: "hidden" }}
       >
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col min-h-0 flex-1">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+                e.preventDefault();
+              }
+            }}
+            className="flex flex-col min-h-0 flex-1"
+          >
 
             {/* ── TOP HEADER ─────────────────────────────────────────── */}
             <div className="flex items-center justify-between px-6 py-3.5 border-b border-border/60 bg-muted/30 shrink-0">
@@ -840,67 +861,32 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                 {/* ── STEP 3 ─────────────────────────────────────────── */}
                 {currentStep === 3 && (
                   <div className="p-6 space-y-4">
-                    {/* Membership card */}
-                    <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                          <ShieldCheck className="h-4 w-4 text-primary" />
-                          Quota d'Iscrizione A.A. 2026/2027
+                    {/* Membership Status Informational Card (Automated, no redundant select) */}
+                    <div className={`p-4 rounded-xl border flex items-center justify-between ${
+                      membershipFeeStatus.paid
+                        ? "bg-emerald-500/8 border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : "bg-amber-500/8 border-amber-500/20 text-amber-700 dark:text-amber-400"
+                    }`}>
+                      <div className="flex items-center gap-2.5">
+                        <ShieldCheck className="h-5 w-5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold leading-tight">
+                            Quota d'Iscrizione A.A. 2026/2027
+                          </p>
+                          <p className="text-[11px] opacity-80 mt-0.5">
+                            {membershipFeeStatus.paid
+                              ? "Quota annuale già saldata per questo studente."
+                              : "Quota annuale obbligatoria per nuovi iscritti (€30,00 inclusi nel totale)."}
+                          </p>
                         </div>
-                        {membershipFeeStatus.checked && (
-                          membershipFeeStatus.paid ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs gap-1.5">
-                              <CheckCircle2 className="w-3 h-3" /> GIÀ SALDATA
-                            </Badge>
-                          ) : (
-                            <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 text-xs gap-1.5">
-                              <AlertCircle className="w-3 h-3" /> NON SALDATA (+€30)
-                            </Badge>
-                          )
-                        )}
                       </div>
-                      <FormField control={form.control} name="registrationFee" render={({ field }) => (
-                        <FormItem>
-                          <Select value={String(field.value)} onValueChange={(val) => field.onChange(Number(val))}>
-                            <FormControl>
-                              <SelectTrigger className="cursor-pointer bg-background h-9"><SelectValue /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="30">Aggiungi Quota Iscrizione (€30,00)</SelectItem>
-                              <SelectItem value="0">Quota non richiesta (€0,00 · Già saldata)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                    </div>
-
-                    {/* Amount fields */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <FormField control={form.control} name="amountPaid" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-semibold">Importo Corso / Acconto (€)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input type="number" step="0.01" className="pl-8 h-9 font-mono" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
-                      <FormField control={form.control} name="registrationFee" render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-semibold">Quota Iscrizione (€)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Euro className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                              <Input type="number" step="0.01" className="pl-8 h-9 font-mono" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )} />
+                      <Badge className={`text-xs font-mono font-bold px-2.5 py-1 shrink-0 ${
+                        membershipFeeStatus.paid
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                          : "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                      }`}>
+                        {membershipFeeStatus.paid ? "GIÀ SALDATA (€0.00)" : "+€30.00 INCLUSA"}
+                      </Badge>
                     </div>
 
                     {/* Total highlight */}
@@ -1066,7 +1052,12 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 ) : (
-                  <Button type="submit" className="cursor-pointer font-bold gap-1.5" size="sm">
+                  <Button
+                    type="button"
+                    onClick={() => form.handleSubmit(onSubmit)()}
+                    className="cursor-pointer font-bold gap-1.5"
+                    size="sm"
+                  >
                     <CheckCheck className="w-4 h-4" />
                     Conferma e Registra (€{totalAmount.toFixed(2)})
                   </Button>

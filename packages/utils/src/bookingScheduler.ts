@@ -93,18 +93,6 @@ export function getDynamicMaxLessons(
     return 4;
   }
 
-  if (!startDateStr) return 8;
-
-  const baseDate = new Date(startDateStr);
-  const startDay = baseDate.getDay();
-
-  if (startDay === 1 || startDay === 3) {
-    return 9;
-  }
-  if (startDay === 2 || startDay === 4) {
-    return 10;
-  }
-
   return 8;
 }
 
