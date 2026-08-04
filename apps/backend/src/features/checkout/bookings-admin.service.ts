@@ -28,10 +28,47 @@ export class BookingsAdminService {
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
   }
 
+  private mapBookingToResponse(b: any) {
+    if (!b) return null;
+    return {
+      id: b.id,
+      user_id: b.userId ?? null,
+      course_id: b.courseId ?? null,
+      course_name: b.courseName,
+      purchaser_name: b.purchaserName,
+      purchaser_email: b.purchaserEmail,
+      purchaser_phone: b.purchaserPhone ?? null,
+      purchaser_tax_code: b.purchaserTaxCode ?? null,
+      student_name: b.studentName,
+      student_email: b.studentEmail ?? null,
+      student_phone: b.studentPhone ?? null,
+      student_tax_code: b.studentTaxCode ?? null,
+      student_birth_date: b.studentBirthDate ? (b.studentBirthDate instanceof Date ? b.studentBirthDate.toISOString().split('T')[0] : b.studentBirthDate) : null,
+      amount_paid: Number(b.amountPaid || 0),
+      registration_fee: Number(b.registrationFee || 0),
+      payment_status: b.paymentStatus,
+      payment_method: b.paymentMethod,
+      scheduling_status: b.schedulingStatus,
+      schedule_days: b.scheduleDays || [],
+      start_time: b.startTime ?? null,
+      end_time: b.endTime ?? null,
+      start_date: b.startDate ? (b.startDate instanceof Date ? b.startDate.toISOString() : b.startDate) : null,
+      sdi_code: b.sdiCode ?? null,
+      pec_email: b.pecEmail ?? null,
+      notes: b.notes ?? null,
+      billing_scheme: b.billingScheme || 'full',
+      total_lessons_count: b.totalLessonsCount ?? null,
+      subscription_starts_at: b.subscriptionStartsAt ? (b.subscriptionStartsAt instanceof Date ? b.subscriptionStartsAt.toISOString() : b.subscriptionStartsAt) : null,
+      subscription_ends_at: b.subscriptionEndsAt ? (b.subscriptionEndsAt instanceof Date ? b.subscriptionEndsAt.toISOString() : b.subscriptionEndsAt) : null,
+      created_at: b.createdAt ? (b.createdAt instanceof Date ? b.createdAt.toISOString() : b.createdAt) : new Date().toISOString(),
+    };
+  }
+
   async listAllBookings() {
-    return this.prisma.booking.findMany({
+    const bookings = await this.prisma.booking.findMany({
       orderBy: { createdAt: 'desc' },
     });
+    return bookings.map((b) => this.mapBookingToResponse(b));
   }
 
   async createAdminBooking(dto: {
@@ -394,7 +431,7 @@ export class BookingsAdminService {
       this.logger.warn('Sync payments error on booking update:', pErr);
     }
 
-    return updatedBooking;
+    return this.mapBookingToResponse(updatedBooking);
   }
 
   async createAdminMembershipFee(dto: {
