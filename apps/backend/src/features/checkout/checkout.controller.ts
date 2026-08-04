@@ -137,7 +137,37 @@ export class ContactFormDto {
   messaggio: string;
 }
 
-@ApiTags('Public Landing Checkout')
+export class AdminMembershipFeeDto {
+  @IsOptional()
+  @IsString()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  taxCode?: string;
+
+  @IsOptional()
+  @IsString()
+  birthDate?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+}
+
+@ApiTags('Landing — Checkout & Catalog')
 @Controller('checkout')
 export class CheckoutController {
   constructor(
@@ -201,15 +231,7 @@ export class CheckoutController {
   @Post('admin/memberships/pay-fee')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Прямая регистрация и оплата взноса €30 в Iscrizioni' })
-  async createAdminMembershipFee(@Body() dto: {
-    studentId?: string;
-    fullName?: string;
-    email?: string;
-    phone?: string;
-    taxCode?: string;
-    birthDate?: string;
-    paymentMethod?: string;
-  }) {
+  async createAdminMembershipFee(@Body() dto: AdminMembershipFeeDto) {
     return this.bookingsAdminService.createAdminMembershipFee(dto);
   }
 

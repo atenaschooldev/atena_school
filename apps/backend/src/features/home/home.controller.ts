@@ -5,7 +5,7 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { HomeService } from './home.service';
 
-@ApiTags('home')
+@ApiTags('Landing — Home')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('home/dashboard')

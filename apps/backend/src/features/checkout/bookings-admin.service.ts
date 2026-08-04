@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { CheckoutService } from './checkout.service';
-import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
+import { CheckoutCoreService } from './checkout-core.service';
+import { calculateLessonDates } from '@atena/utils';
 
 @Injectable()
 export class BookingsAdminService {
@@ -14,6 +15,7 @@ export class BookingsAdminService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private checkoutService: CheckoutService,
+    private checkoutCore: CheckoutCoreService,
   ) {
     const supabaseUrl =
       this.configService.get<string>('SUPABASE_URL') ||
@@ -64,8 +66,49 @@ export class BookingsAdminService {
     };
   }
 
-  async listAllBookings() {
+  async listAllBookings(params?: { page?: number; limit?: number; search?: string; status?: string }) {
+    const page = Math.max(1, Number(params?.page || 1));
+    const limit = params?.limit ? Math.min(100, Math.max(1, Number(params.limit))) : undefined;
+    const skip = limit ? (page - 1) * limit : undefined;
+    const search = params?.search ? params.search.trim() : undefined;
+    const status = params?.status ? params.status.trim() : undefined;
+
+    const where: any = {};
+    if (status) {
+      where.paymentStatus = status;
+    }
+    if (search) {
+      where.OR = [
+        { purchaserName: { contains: search, mode: 'insensitive' } },
+        { purchaserEmail: { contains: search, mode: 'insensitive' } },
+        { studentName: { contains: search, mode: 'insensitive' } },
+        { courseName: { contains: search, mode: 'insensitive' } },
+        { purchaserTaxCode: { contains: search, mode: 'insensitive' } },
+        { studentTaxCode: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (limit) {
+      const [total, bookings] = await Promise.all([
+        this.prisma.booking.count({ where }),
+        this.prisma.booking.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+        }),
+      ]);
+
+      return {
+        items: bookings.map((b) => this.mapBookingToResponse(b)),
+        total,
+        page,
+        limit,
+      };
+    }
+
     const bookings = await this.prisma.booking.findMany({
+      where,
       orderBy: { createdAt: 'desc' },
     });
     return bookings.map((b) => this.mapBookingToResponse(b));
@@ -407,6 +450,14 @@ export class BookingsAdminService {
       data: updateData,
     });
 
+    // Synchronize payments table when status becomes paid/succeeded
+    if (normalizedStatus === 'paid' || normalizedStatus === 'completed' || normalizedStatus === 'succeeded') {
+      await this.prisma.payment.updateMany({
+        where: { bookingId: id, status: 'pending' },
+        data: { status: 'succeeded' },
+      }).catch(() => null);
+    }
+
     const isNowPaid = updatedBooking.paymentStatus === 'paid';
     try {
       const updatePayload: Record<string, any> = {};
@@ -550,6 +601,7 @@ export class BookingsAdminService {
 
     const q = query.trim();
     try {
+      // 1. Search in students table
       const { data: student } = await this.supabaseAdmin
         .from('students')
         .select('*')
@@ -558,15 +610,46 @@ export class BookingsAdminService {
         .maybeSingle();
 
       if (student) {
+        const birthDateStr = student.birth_date
+          ? (student.birth_date instanceof Date
+              ? student.birth_date.toISOString().split('T')[0]
+              : String(student.birth_date).split('T')[0])
+          : '';
         return {
           found: true,
           purchaserName: student.full_name || '',
           purchaserEmail: student.email || '',
           purchaserPhone: student.phone || '',
           purchaserTaxCode: student.tax_code || '',
+          studentName: student.full_name || '',
+          studentEmail: student.email || '',
+          studentPhone: student.phone || '',
+          studentTaxCode: student.tax_code || '',
+          studentBirthDate: birthDateStr,
         };
       }
 
+      // 2. Search in annual_memberships table
+      const { data: membership } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .select('*')
+        .or(`email.ilike.${q},tax_code.ilike.${q},phone.ilike.${q}`)
+        .limit(1)
+        .maybeSingle();
+
+      if (membership) {
+        return {
+          found: true,
+          purchaserEmail: membership.email || '',
+          purchaserPhone: membership.phone || '',
+          purchaserTaxCode: membership.tax_code || '',
+          studentEmail: membership.email || '',
+          studentPhone: membership.phone || '',
+          studentTaxCode: membership.tax_code || '',
+        };
+      }
+
+      // 3. Search in bookings table (purchaser AND student fields)
       const booking = await this.prisma.booking.findFirst({
         where: {
           OR: [
@@ -574,6 +657,10 @@ export class BookingsAdminService {
             { purchaserTaxCode: { contains: q, mode: 'insensitive' } },
             { purchaserPhone: { contains: q, mode: 'insensitive' } },
             { purchaserName: { contains: q, mode: 'insensitive' } },
+            { studentEmail: { contains: q, mode: 'insensitive' } },
+            { studentTaxCode: { contains: q, mode: 'insensitive' } },
+            { studentPhone: { contains: q, mode: 'insensitive' } },
+            { studentName: { contains: q, mode: 'insensitive' } },
           ],
         },
       });
@@ -589,7 +676,7 @@ export class BookingsAdminService {
           studentTaxCode: booking.studentTaxCode || '',
           studentPhone: booking.studentPhone || '',
           studentEmail: booking.studentEmail || '',
-          studentBirthDate: booking.studentBirthDate ? booking.studentBirthDate.toISOString() : '',
+          studentBirthDate: booking.studentBirthDate ? booking.studentBirthDate.toISOString().split('T')[0] : '',
           isForChild: !!(booking.studentName && booking.studentName !== booking.purchaserName),
         };
       }

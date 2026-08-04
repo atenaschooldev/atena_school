@@ -15,6 +15,10 @@ import { UsersModule } from './features/users/users.module';
 import { PaymentsModule } from './features/payments/payments.module';
 import { MembershipsModule } from './features/memberships/memberships.module';
 import { TeachersModule } from './features/teachers/teachers.module';
+import { AttendanceModule } from './features/attendance/attendance.module';
+import { ReportsModule } from './features/reports/reports.module';
+import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
+import { StudentsModule } from './features/students/students.module';
 
 const businessModules = [
   AuthModule,
@@ -27,6 +31,10 @@ const businessModules = [
   PaymentsModule,
   MembershipsModule,
   TeachersModule,
+  AttendanceModule,
+  ReportsModule,
+  AuditLogsModule,
+  StudentsModule,
 ];
 
 @Module({

@@ -5,8 +5,25 @@ import { TeachersRepository } from './domain/teachers.repository.interface';
 export class TeachersService {
   constructor(private readonly teachersRepository: TeachersRepository) {}
 
-  findAll() {
-    return this.teachersRepository.findAll();
+  async findAll(filters?: { status?: string; search?: string }) {
+    const list = await this.teachersRepository.findAll();
+    let result = list;
+
+    if (filters?.status) {
+      const st = filters.status.toLowerCase().trim();
+      result = result.filter((t) => (t.status || '').toLowerCase() === st);
+    }
+    if (filters?.search) {
+      const s = filters.search.toLowerCase().trim();
+      result = result.filter(
+        (t) =>
+          (t.fullName || '').toLowerCase().includes(s) ||
+          ((t as any).email || '').toLowerCase().includes(s) ||
+          ((t as any).phone || '').toLowerCase().includes(s),
+      );
+    }
+
+    return result;
   }
 
   async findOne(id: string) {

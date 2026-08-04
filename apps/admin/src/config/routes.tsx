@@ -8,6 +8,7 @@ const Users = lazy(() => import('@/app/users/page'))
 const Corsi = lazy(() => import('@/app/corsi/page'))
 const Prenotazioni = lazy(() => import('@/app/prenotazioni/page'))
 const Pagamenti = lazy(() => import('@/app/pagamenti/page'))
+const Presenze = lazy(() => import('@/app/presenze/page'))
 const Orari = lazy(() => import('@/app/orari/page'))
 const Iscrizioni = lazy(() => import('@/app/iscrizioni/page'))
 const Insegnanti = lazy(() => import('@/app/insegnanti/page'))
@@ -79,6 +80,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/pagamenti",
     element: <Pagamenti />
+  },
+  {
+    path: "/presenze",
+    element: <Presenze />
   },
   {
     path: "/iscrizioni",

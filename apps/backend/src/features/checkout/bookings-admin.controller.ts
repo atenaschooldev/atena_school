@@ -33,8 +33,13 @@ export class BookingsAdminController {
   @Get()
   @Roles('admin')
   @ApiOperation({ summary: 'Получить все бронирования (только для админа)' })
-  async listAllBookings() {
-    return this.bookingsAdminService.listAllBookings();
+  async listAllBookings(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.bookingsAdminService.listAllBookings({ page, limit, search, status });
   }
 
   @Get('check-membership')
@@ -53,6 +58,7 @@ export class BookingsAdminController {
 
   @Post()
   @Roles('admin')
+  @Audit('bookings', 'create')
   @ApiOperation({ summary: 'Создать ручное бронирование (админ)' })
   async createManualBooking(@Body() dto: any) {
     return this.bookingsAdminService.createAdminBooking(dto);
@@ -60,6 +66,7 @@ export class BookingsAdminController {
 
   @Patch(':id/status')
   @Roles('admin')
+  @Audit('bookings', 'update_status')
   @ApiOperation({ summary: 'Обновить статус оплаты / расписания бронирования' })
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateBookingStatusDto) {
     return this.bookingsAdminService.updateBookingPaymentStatus(id, dto);

@@ -9,8 +9,21 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async findAll(bookingId?: string): Promise<any[]> {
-    const rawPayments = await this.paymentsRepository.findAll(bookingId);
+  async findAll(bookingId?: string, filters?: { status?: string; type?: string; method?: string }): Promise<any[]> {
+    let rawPayments = await this.paymentsRepository.findAll(bookingId);
+
+    if (filters?.status) {
+      const st = filters.status.toLowerCase().trim();
+      rawPayments = rawPayments.filter((p) => (p.status || '').toLowerCase() === st);
+    }
+    if (filters?.type) {
+      const tp = filters.type.toLowerCase().trim();
+      rawPayments = rawPayments.filter((p) => (p.type || '').toLowerCase() === tp);
+    }
+    if (filters?.method) {
+      const m = filters.method.toLowerCase().trim();
+      rawPayments = rawPayments.filter((p) => (p.paymentMethod || '').toLowerCase() === m);
+    }
 
     try {
       const memberships = await this.prisma.$queryRawUnsafe<any[]>(
@@ -165,8 +178,39 @@ export class PaymentsService {
   }
 
   async remove(id: string): Promise<{ success: boolean }> {
-    await this.findOne(id);
+    const existing = await this.findOne(id);
     await this.paymentsRepository.delete(id);
+
+    if (existing.bookingId) {
+      try {
+        const allPayments = await this.paymentsRepository.findAll(existing.bookingId);
+        const totalPaid = allPayments
+          .filter((p) => p.status === 'succeeded')
+          .reduce((sum, p) => sum + Number(p.amount), 0);
+
+        const booking = await this.prisma.booking.findUnique({ where: { id: existing.bookingId } });
+        if (booking) {
+          const targetAmount = Number(booking.amountPaid || 0);
+          let newStatus = 'reserved';
+          if (totalPaid >= targetAmount && targetAmount > 0) {
+            newStatus = 'paid';
+          } else if (totalPaid > 0) {
+            newStatus = 'partially_paid';
+          }
+
+          await this.prisma.booking.update({
+            where: { id: existing.bookingId },
+            data: {
+              amountPaid: totalPaid,
+              paymentStatus: newStatus,
+            },
+          }).catch(() => null);
+        }
+      } catch (err) {
+        console.warn('Recalculate booking payment error on payment delete:', err);
+      }
+    }
+
     return { success: true };
   }
 }

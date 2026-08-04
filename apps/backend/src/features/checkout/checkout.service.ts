@@ -5,9 +5,10 @@ import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
-import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
+import { calculateLessonDates } from '@atena/utils';
 
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { CheckoutCoreService } from './checkout-core.service';
 
 export interface CourseRecord {
   id: string;
@@ -31,6 +32,7 @@ export class CheckoutService {
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
+    private checkoutCore: CheckoutCoreService,
   ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -43,82 +45,47 @@ export class CheckoutService {
 
   async checkFeeStatus(dto: CheckFeeDto) {
     const cleanTax = dto.taxCode ? dto.taxCode.trim().toUpperCase() : null;
-    const cleanEmail = dto.email ? dto.email.trim().toLowerCase() : null;
-    const cleanPhone = dto.phone ? dto.phone.trim() : null;
 
-    if (!cleanTax && !cleanEmail && !cleanPhone) {
-      return { success: true, annualFeePaid: false, userFound: false };
+    // Strict rule: Registration fee (€30) check MUST be strictly by Codice Fiscale (taxCode)
+    if (!cleanTax) {
+      return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
     }
 
-    // 1. Check active annual memberships or student flag
-    if (cleanTax) {
-      const { data: mem } = await this.supabaseAdmin
-        .from('annual_memberships')
-        .select('id')
-        .ilike('tax_code', cleanTax)
-        .eq('academic_year', '2026/2027')
-        .eq('status', 'active')
-        .maybeSingle();
+    // 1. Check active annual memberships by Codice Fiscale
+    const { data: mem } = await this.supabaseAdmin
+      .from('annual_memberships')
+      .select('id')
+      .ilike('tax_code', cleanTax)
+      .eq('academic_year', '2026/2027')
+      .eq('status', 'active')
+      .maybeSingle();
 
-      if (mem) return { success: true, annualFeePaid: true, userFound: true };
+    if (mem) return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
 
-      const { data: st } = await this.supabaseAdmin
-        .from('students')
-        .select('id')
-        .ilike('tax_code', cleanTax)
-        .eq('annual_fee_paid', true)
-        .maybeSingle();
+    // 2. Check student record by Codice Fiscale
+    const { data: st } = await this.supabaseAdmin
+      .from('students')
+      .select('id')
+      .ilike('tax_code', cleanTax)
+      .eq('annual_fee_paid', true)
+      .maybeSingle();
 
-      if (st) return { success: true, annualFeePaid: true, userFound: true };
+    if (st) return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
+
+    // 3. Check if fee is ALREADY reserved in an existing booking by Codice Fiscale
+    const { data: pendingBooking } = await this.supabaseAdmin
+      .from('bookings')
+      .select('id')
+      .or(`student_tax_code.ilike.${cleanTax},purchaser_tax_code.ilike.${cleanTax}`)
+      .gt('registration_fee', 0)
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingBooking) {
+      return { success: true, annualFeePaid: true, userFound: true, feeReservedInBooking: true, requiresFee: false };
     }
 
-    if (cleanEmail) {
-      const { data: mem } = await this.supabaseAdmin
-        .from('annual_memberships')
-        .select('id')
-        .ilike('email', cleanEmail)
-        .eq('academic_year', '2026/2027')
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (mem) return { success: true, annualFeePaid: true, userFound: true };
-
-      const { data: st } = await this.supabaseAdmin
-        .from('students')
-        .select('id')
-        .ilike('email', cleanEmail)
-        .eq('annual_fee_paid', true)
-        .maybeSingle();
-
-      if (st) return { success: true, annualFeePaid: true, userFound: true };
-    }
-
-    // 2. Check if fee is ALREADY reserved in an existing booking to prevent fee accumulation
-    if (cleanTax) {
-      const { data: pendingBooking } = await this.supabaseAdmin
-        .from('bookings')
-        .select('id')
-        .or(`student_tax_code.ilike.${cleanTax},purchaser_tax_code.ilike.${cleanTax}`)
-        .gt('registration_fee', 0)
-        .limit(1)
-        .maybeSingle();
-
-      if (pendingBooking) return { success: true, annualFeePaid: true, userFound: true, feeReservedInBooking: true };
-    }
-
-    if (cleanEmail) {
-      const { data: pendingBooking } = await this.supabaseAdmin
-        .from('bookings')
-        .select('id')
-        .or(`student_email.ilike.${cleanEmail},purchaser_email.ilike.${cleanEmail}`)
-        .gt('registration_fee', 0)
-        .limit(1)
-        .maybeSingle();
-
-      if (pendingBooking) return { success: true, annualFeePaid: true, userFound: true, feeReservedInBooking: true };
-    }
-
-    return { success: true, annualFeePaid: false, userFound: false };
+    return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
   }
 
   private computeTotalLessonsCount(course: any, calculatedLessonsCount: number): number | null {
@@ -217,200 +184,28 @@ export class CheckoutService {
       throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
     }
 
-    const purchaserEmail = dto.email;
-    const purchaserTaxCode = dto.purchaserTaxCode || '';
-
-    // Auto-link User if purchaser email exists in public.users
-    let linkedUserId: string | null = null;
-    if (purchaserEmail) {
-      try {
-        const { data: pUser } = await this.supabaseAdmin
-          .from('users')
-          .select('id')
-          .ilike('email', purchaserEmail)
-          .maybeSingle();
-        if (pUser?.id) linkedUserId = pUser.id;
-      } catch (aErr) {
-        console.warn('Public user lookup error:', aErr);
-      }
-    }
-
-    if (linkedUserId) {
-      await this.supabaseAdmin.from('bookings').update({ user_id: linkedUserId }).eq('id', booking.id);
-      booking.user_id = linkedUserId;
-    }
-
-    // Create / Update Student Record (ONLY for the actual student, never parent)
-    const sEmail = dto.isForChild ? (dto.studentEmail || dto.email) : dto.email;
-    const sName = studentName || purchaserName || 'Studente';
-    const sTaxCode = dto.isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
-
-    if (sEmail || sTaxCode) {
-      try {
-        let existingStudent: { id: string } | null = null;
-        if (sTaxCode) {
-          const { data } = await this.supabaseAdmin
-            .from('students')
-            .select('id')
-            .ilike('tax_code', sTaxCode)
-            .maybeSingle();
-          if (data?.id) existingStudent = data;
-        }
-        if (!existingStudent && sEmail) {
-          const { data } = await this.supabaseAdmin
-            .from('students')
-            .select('id')
-            .ilike('email', sEmail)
-            .maybeSingle();
-          if (data?.id) existingStudent = data;
-        }
-
-        let studentAuthUserId: string | null = null;
-        if (sEmail) {
-          try {
-            const { data: sUser } = await this.supabaseAdmin
-              .from('users')
-              .select('id')
-              .ilike('email', sEmail)
-              .maybeSingle();
-            if (sUser?.id) studentAuthUserId = sUser.id;
-          } catch {}
-        }
-
-        let studentId: string | null = null;
-        const isPaid = dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
-        const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
-
-        if (!existingStudent) {
-          const sNameParts = (sName || '').trim().split(' ');
-          const { data: newStudent, error: sInsertErr } = await this.supabaseAdmin
-            .from('students')
-            .insert({
-              full_name: sName || 'Studente',
-              first_name: sNameParts[0] || 'Studente',
-              last_name: sNameParts.slice(1).join(' ') || '',
-              email: sEmail,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
-              tax_code: sTaxCode || null,
-              birth_date: dto.studentBirthDate || null,
-              parent_id: linkedUserId || null,
-              student_user_id: studentAuthUserId || null,
-              language_level: 'A1',
-              registration_date: new Date().toISOString().split('T')[0],
-              status: 'active',
-              annual_fee_paid: hasPaidMembership,
-              annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : null,
-            })
-            .select('id')
-            .single();
-
-          if (sInsertErr) {
-            console.error('Student insert error:', sInsertErr);
-            throw new BadRequestException(`Student insert error: ${sInsertErr.message || JSON.stringify(sInsertErr)}`);
-          }
-
-          studentId = newStudent?.id || null;
-        } else {
-          studentId = existingStudent.id;
-          await this.supabaseAdmin
-            .from('students')
-            .update({
-              full_name: sName || undefined,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
-              tax_code: sTaxCode || undefined,
-              birth_date: dto.studentBirthDate || undefined,
-              parent_id: linkedUserId || undefined,
-              student_user_id: studentAuthUserId || undefined,
-              annual_fee_paid: hasPaidMembership ? true : undefined,
-              annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : undefined,
-            })
-            .eq('id', existingStudent.id);
-        }
-
-        if (studentId) {
-          await this.supabaseAdmin.from('bookings').update({ student_id: studentId }).eq('id', booking.id);
-        }
-
-        if (hasPaidMembership) {
-          const { error: mErr } = await this.supabaseAdmin.from('annual_memberships').upsert({
-            tax_code: sTaxCode || null,
-            email: sEmail || null,
-            phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
-            academic_year: '2026/2027',
-            status: 'active',
-            student_id: studentId || null,
-            user_id: linkedUserId || studentAuthUserId || null,
-            booking_id: booking.id,
-            paid_at: new Date().toISOString(),
-            expires_at: '2027-08-31T23:59:59.000Z',
-          }, { onConflict: 'booking_id' });
-
-          if (mErr) {
-            console.error('Membership insert error:', mErr);
-            throw new BadRequestException(`Membership insert error: ${mErr.message || JSON.stringify(mErr)}`);
-          }
-        }
-      } catch (sErr: any) {
-        console.warn('Auto-create student error in backend checkout:', sErr);
-        if (sErr instanceof BadRequestException) throw sErr;
-      }
-    }
+    // Process Student resolution & profile link via core service
+    await this.checkoutCore.processStudentAndBookingLinks({
+      dto,
+      bookingId: booking.id,
+      feeStatus,
+      regFee,
+      purchaserName,
+      studentName,
+      supabaseAdmin: this.supabaseAdmin,
+    });
 
     // Automatically generate and insert lessons into `lessons` table for Orari & Calendario
-    if (lessons && lessons.length > 0) {
-      try {
-        const teacherId = (course as any)?.teacher_id || (course as any)?.teacherId || 'e1180b01-2222-4000-8000-000000000002';
-        if (lessons.length > 0) {
-            const lessonRows = lessons.map((l) => ({
-              bookingId: booking.id,
-              teacherId: teacherId,
-              startsAt: new Date(l.startsAt),
-              endsAt: new Date(l.endsAt),
-              status: 'scheduled',
-            }));
-
-            await this.prisma.lesson.createMany({ data: lessonRows });
-          }
-      } catch (lErr) {
-        console.warn('Auto-create lessons error in backend checkout:', lErr);
-      }
-    }
+    await this.checkoutCore.generateAndSaveLessons(booking.id, course, lessons);
 
     // Generate accounting ledger entries in payments table
-    const pStatus = (dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid') ? 'succeeded' : 'pending';
-    const pMethod = dto.paymentMethod || 'cash';
-    const courseAmount = coursePrice;
-
-    try {
-      if (courseAmount > 0) {
-        await this.prisma.payment.create({
-          data: {
-            bookingId: booking.id,
-            amount: courseAmount,
-            paymentMethod: pMethod,
-            type: 'payment',
-            status: pStatus,
-            provider: pMethod === 'stripe' ? 'stripe' : 'manual',
-            notes: `Corso: ${booking.course_name}`,
-          },
-        });
-      }
-      if (regFee > 0) {
-        await this.prisma.payment.create({
-          data: {
-            bookingId: booking.id,
-            amount: regFee,
-            paymentMethod: pMethod,
-            type: 'registration_fee',
-            status: pStatus,
-            provider: pMethod === 'stripe' ? 'stripe' : 'manual',
-            notes: `Quota d'iscrizione A.A. 2026/2027`,
-          },
-        });
-      }
-    } catch (payErr) {
-      console.warn('Payment entries creation error:', payErr);
-    }
+    await this.checkoutCore.recordPaymentLedger(
+      booking.id,
+      coursePrice,
+      regFee,
+      dto.paymentMethod || 'cash',
+      dto.paymentStatus || 'reserved'
+    );
 
     return { success: true, bookingId: booking.id, booking };
   }
@@ -541,7 +336,7 @@ export class CheckoutService {
     if (isUuid) {
       const { data } = await this.supabaseAdmin
         .from('courses')
-        .select('*, teachers!courses_teacher_id_fkey(full_name)')
+        .select('*')
         .eq('id', itemId)
         .maybeSingle();
       if (data) item = data;
@@ -550,14 +345,10 @@ export class CheckoutService {
     if (!item) {
       const { data } = await this.supabaseAdmin
         .from('courses')
-        .select('*, teachers!courses_teacher_id_fkey(full_name)')
+        .select('*')
         .eq('slug', itemId)
         .maybeSingle();
       if (data) item = data;
-    }
-
-    if (item && item.teachers?.full_name) {
-      item.teacher_name = item.teachers.full_name;
     }
 
     return { success: true, item, course: item };
@@ -613,17 +404,16 @@ export class CheckoutService {
   }
 
   async getPublicCourses() {
-    const { data } = await this.supabaseAdmin
+    const { data, error } = await this.supabaseAdmin
       .from('courses')
-      .select('*, teachers!courses_teacher_id_fkey(full_name)')
-      .in('status', ['active', 'published']);
+      .select('*');
 
-    const courses = (data || []).map((c: any) => ({
-      ...c,
-      teacher_name: c.teachers?.full_name || undefined,
-    }));
+    if (error || !data) {
+      console.error('getPublicCourses error:', error);
+      return { success: false, courses: [] };
+    }
 
-    return { success: true, courses };
+    return { success: true, courses: data };
   }
 
   async submitContact(dto: any) {

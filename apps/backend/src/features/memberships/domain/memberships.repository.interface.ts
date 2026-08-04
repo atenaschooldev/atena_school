@@ -14,7 +14,7 @@ export interface MembershipEntity {
 }
 
 export abstract class MembershipsRepository {
-  abstract findAll(filters?: { status?: string; academicYear?: string }): Promise<MembershipEntity[]>;
+  abstract findAll(filters?: { status?: string; academicYear?: string; search?: string }): Promise<MembershipEntity[]>;
   abstract findById(id: string): Promise<MembershipEntity | null>;
   abstract updateStatus(id: string, status: string): Promise<MembershipEntity>;
 }

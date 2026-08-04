@@ -1,12 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SchedulesRepository } from './domain/schedules.repository.interface';
+import { PrismaService } from '../../core/prisma/prisma.service';
 
 @Injectable()
 export class SchedulesService {
-  constructor(private readonly schedulesRepository: SchedulesRepository) {}
+  constructor(
+    private readonly schedulesRepository: SchedulesRepository,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async listSchedules() {
-    const list = await this.schedulesRepository.findMany();
+  async listSchedules(params?: { courseId?: string; teacherId?: string }) {
+    let list = await this.schedulesRepository.findMany();
+    if (params?.courseId) {
+      list = list.filter((s) => s.courseId === params.courseId);
+    }
+    if (params?.teacherId) {
+      list = list.filter((s) => s.teacherId === params.teacherId);
+    }
     return list.map((s) => this.mapResponse(s));
   }
 
@@ -169,6 +179,57 @@ export class SchedulesService {
       meeting_url: s.meetingUrl,
       status: s.status,
     }));
+  }
+
+  async cancelHolidayLessons(holidayDateStr: string, reason?: string) {
+    const targetDate = new Date(holidayDateStr);
+    const startOfDay = new Date(targetDate);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const updated = await this.prisma.lesson.updateMany({
+      where: {
+        startsAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+      data: {
+        status: 'cancelled',
+      },
+    });
+
+    return {
+      success: true,
+      holidayDate: holidayDateStr,
+      cancelledCount: updated.count,
+    };
+  }
+
+  async substituteTeacher(dto: { scheduleId?: string; courseId?: string; originalTeacherId?: string; substituteTeacherId: string; startDate: string; endDate: string }) {
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+
+    const where: any = {
+      startsAt: { gte: start, lte: end },
+    };
+    if (dto.originalTeacherId) where.teacherId = dto.originalTeacherId;
+    if (dto.courseId) where.booking = { courseId: dto.courseId };
+
+    const updated = await this.prisma.lesson.updateMany({
+      where,
+      data: {
+        teacherId: dto.substituteTeacherId,
+      },
+    });
+
+    return {
+      success: true,
+      substituteTeacherId: dto.substituteTeacherId,
+      affectedLessonsCount: updated.count,
+    };
   }
 
   private mapResponse(s: any) {

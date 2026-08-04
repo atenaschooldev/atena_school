@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CoursesRepository } from './domain/courses.repository.interface';
 import { CourseEntity } from './domain/course.entity';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { slugify } from '@atena/utils';
 
 export interface CourseResponseDto {
   id: string;
@@ -92,8 +93,24 @@ export class CoursesService {
     };
   }
 
-  async listCourses(): Promise<CourseResponseDto[]> {
-    const list = await this.coursesRepository.findMany();
+  async listCourses(params?: { category?: string; status?: string; search?: string }): Promise<CourseResponseDto[]> {
+    let list = await this.coursesRepository.findMany();
+
+    if (params?.category) {
+      const cat = params.category.toLowerCase().trim();
+      list = list.filter((c) => (c.category || '').toLowerCase().includes(cat));
+    }
+    if (params?.status) {
+      const st = params.status.toLowerCase().trim();
+      list = list.filter((c) => (c.status || '').toLowerCase() === st);
+    }
+    if (params?.search) {
+      const s = params.search.toLowerCase().trim();
+      list = list.filter(
+        (c) => (c.name || '').toLowerCase().includes(s) || (c.description || '').toLowerCase().includes(s),
+      );
+    }
+
     return list.map((c) => this.toDto(c));
   }
 
@@ -107,8 +124,11 @@ export class CoursesService {
 
   async createCourse(dto: any): Promise<CourseResponseDto> {
     const teacherId: string | null = dto.teacherId ?? dto.teacher_id ?? null;
+    const courseName = dto.title ?? dto.name ?? 'Nuovo Corso';
+    const autoSlug = dto.slug || slugify(courseName);
+
     const c = await this.coursesRepository.create({
-      name: dto.title ?? dto.name ?? 'Nuovo Corso',
+      name: courseName,
       category: dto.category ?? null,
       price: dto.price != null ? Number(dto.price) : null,
       status: dto.status ?? 'active',
@@ -125,7 +145,7 @@ export class CoursesService {
       lessonDurationMinutes: dto.lessonDurationMinutes != null ? Number(dto.lessonDurationMinutes) : null,
       totalHours: dto.totalHours != null ? Number(dto.totalHours) : null,
       courseFormat: dto.courseFormat ?? null,
-      slug: dto.slug ?? null,
+      slug: autoSlug,
     });
 
     // Sync course_teachers pivot table

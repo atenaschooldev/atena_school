@@ -17,6 +17,7 @@ import {
   Users,
   BadgeCheck,
   GraduationCap,
+  CheckCircle2,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -67,6 +68,11 @@ const data = {
           title: "Pagamenti",
           url: "/pagamenti",
           icon: CreditCard,
+        },
+        {
+          title: "Presenze & Registro",
+          url: "/presenze",
+          icon: CheckCircle2,
         },
         {
           title: "Iscrizioni",

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nest
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './portal.controller';
-import { calculateLessonDates } from '../../shared/utils/bookingScheduler';
+import { calculateLessonDates } from '@atena/utils';
 import { getDynamicMaxLessons } from '@atena/utils';
 
 export interface PortalUser {
