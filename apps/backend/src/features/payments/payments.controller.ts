@@ -100,6 +100,14 @@ export class PaymentsController {
     return this.paymentsService.findOne(id);
   }
 
+  @Post('pos-checkout')
+  @Roles('admin')
+  @Audit('payments', 'pos_checkout')
+  @ApiOperation({ summary: 'Универсальная кассовая регистрация оплаты (курс, взнос €30, урок)' })
+  async posCheckout(@Body() dto: any) {
+    return this.paymentsService.posCheckout(dto);
+  }
+
   @Post()
   @Roles('admin')
   @Audit('payments', 'create')

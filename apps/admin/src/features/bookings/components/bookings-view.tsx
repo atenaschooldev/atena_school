@@ -5,7 +5,6 @@ import { useSearchParams } from "react-router-dom";
 import { useBookings } from "../hooks/use-bookings";
 import { BookingDetailDialog } from "./booking-detail-dialog";
 import { BookingCard } from "./booking-card";
-import { CreateBookingDialog } from "./create-booking-dialog";
 import { EditBookingDialog } from "./edit-booking-dialog";
 import { getPaymentMethodBadge } from "@/features/payments/components/payments-view";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
@@ -448,8 +447,6 @@ export function BookingsView() {
                 <span>Griglia</span>
               </Button>
             </div>
-
-            <CreateBookingDialog onCreateBooking={createManualBooking} />
           </div>
         </div>
 

@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
-import { CreateMembershipDialog } from "./create-membership-dialog";
 import {
   Table,
   TableBody,
@@ -368,10 +367,6 @@ export function MembershipsView() {
               <SelectItem value="2025/2026">2025/2026</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="w-full sm:w-auto shrink-0 flex justify-end">
-          <CreateMembershipDialog onSuccess={refresh} />
         </div>
       </div>
 

@@ -330,13 +330,17 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
       setSearchQuery("");
       setClientFound(null);
       setMembershipFeeStatus({ checked: false, paid: false });
+      setIsFinalSubmitRequested(false);
     }, 200);
   };
 
+  const [isFinalSubmitRequested, setIsFinalSubmitRequested] = useState(false);
+
   async function onSubmit(data: CreateBookingValues) {
-    if (currentStep !== 3) {
+    if (currentStep !== 3 || !isFinalSubmitRequested) {
       return;
     }
+    setIsFinalSubmitRequested(false);
     try {
       const fullPurchaserName = `${data.purchaserFirstName || ""} ${data.purchaserLastName || ""}`.trim() || data.purchaserName || "Cliente";
       let finalStudentName = fullPurchaserName;
@@ -388,9 +392,14 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
       >
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (isFinalSubmitRequested) {
+                form.handleSubmit(onSubmit)(e);
+              }
+            }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
+              if (e.key === "Enter") {
                 e.preventDefault();
               }
             }}
@@ -1199,7 +1208,14 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                   <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" className="cursor-pointer text-xs font-bold bg-primary text-primary-foreground px-6">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsFinalSubmitRequested(true);
+                    form.handleSubmit(onSubmit)();
+                  }}
+                  className="cursor-pointer text-xs font-bold bg-primary text-primary-foreground px-6"
+                >
                   Conferma e Salva Prenotazione
                   <CheckCheck className="ml-1.5 h-4 w-4" />
                 </Button>

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { usePayments } from "../hooks/use-payments";
 import { PaymentFormDialog } from "./payment-form-dialog";
 import { PaymentDetailDialog } from "./payment-detail-dialog";
+import { UniversalPosCheckoutModal } from "./universal-pos-checkout-modal";
 import { useNavigate } from "react-router-dom";
 import {
   CreditCard,
@@ -115,6 +116,7 @@ export function PaymentsView() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+  const [posCheckoutOpen, setPosCheckoutOpen] = useState(false);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -481,7 +483,13 @@ export function PaymentsView() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <PaymentFormDialog onCreatePayment={createPayment} />
+            <Button
+              onClick={() => setPosCheckoutOpen(true)}
+              className="cursor-pointer font-bold text-xs bg-primary text-primary-foreground shadow-2xs"
+            >
+              <Receipt className="mr-1.5 h-4 w-4" />
+              Nuovo Incasso (Касса POS)
+            </Button>
           </div>
         </div>
 
@@ -561,6 +569,12 @@ export function PaymentsView() {
             setDeletingPaymentId(null);
           }
         }}
+      />
+
+      {/* Universal POS Cashier Modal */}
+      <UniversalPosCheckoutModal
+        open={posCheckoutOpen}
+        onOpenChange={setPosCheckoutOpen}
       />
     </div>
   );

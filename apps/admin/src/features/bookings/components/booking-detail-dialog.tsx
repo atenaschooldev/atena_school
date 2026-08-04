@@ -204,22 +204,35 @@ export function BookingDetailDialog({
               )}
             </div>
 
-            <Badge
-              variant="secondary"
-              className={
-                isCompleted
-                  ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-medium"
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge
+                variant="secondary"
+                className={
+                  isCompleted
+                    ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-medium text-xs px-2.5 py-0.5"
+                    : isReserved
+                      ? "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-medium text-xs px-2.5 py-0.5"
+                      : "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-900/20 font-medium text-xs px-2.5 py-0.5"
+                }
+              >
+                {isCompleted
+                  ? "Corso: Pagato"
                   : isReserved
-                    ? "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-medium"
-                    : "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-900/20 font-medium"
-              }
-            >
-              {isCompleted
-                ? "Pagato Online"
-                : isReserved
-                  ? "Da Saldare in Sede"
-                  : "In Coordinamento"}
-            </Badge>
+                    ? "Corso: Da Saldare in Sede"
+                    : "Corso: In Gestione"}
+              </Badge>
+
+              <Badge
+                variant="outline"
+                className={
+                  booking.registration_fee > 0
+                    ? "text-emerald-600 border-emerald-300 dark:text-emerald-400 font-medium text-xs px-2.5 py-0.5 shrink-0"
+                    : "text-slate-600 border-slate-300 dark:text-slate-400 font-medium text-xs px-2.5 py-0.5 shrink-0"
+                }
+              >
+                {booking.registration_fee > 0 ? "Quota €30: Inclusa" : "Quota €30: Già Pagata"}
+              </Badge>
+            </div>
           </div>
 
           <div>
@@ -362,11 +375,11 @@ export function BookingDetailDialog({
                     <p className="font-bold text-sm font-mono">€{remaining.toFixed(2)}</p>
                   </div>
                   <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
-                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase">Quota €30</span>
-                    <p className="font-bold text-sm font-mono text-amber-600 dark:text-amber-400">
-                      {payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded")
-                        ? "✓ Oplateno"
-                        : "⏳ В процессе"}
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">Quota €30</span>
+                    <p className="font-bold text-xs font-mono text-amber-600 dark:text-amber-400 truncate">
+                      {payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded") || Number(booking.registration_fee) > 0
+                        ? "✓ Pagata"
+                        : "In attesa"}
                     </p>
                   </div>
                 </div>

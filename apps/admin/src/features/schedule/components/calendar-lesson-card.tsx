@@ -2,7 +2,7 @@ import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Video, Copy } from "lucide-react";
+import { Video, Copy, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { levelColor, levelColorSolid } from "@/features/courses";
 import type { Lesson } from "../types";
@@ -234,6 +234,21 @@ export function CalendarLessonCard({
               </Button>
             </div>
           )}
+        </div>
+        <div className="mt-3 pt-2 border-t">
+          <Button
+            type="button"
+            size="sm"
+            className="w-full text-xs cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              window.location.href = `/presenze?lessonId=${lesson.id}`;
+            }}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+            Отметить посещаемость
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

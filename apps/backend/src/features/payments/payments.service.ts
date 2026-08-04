@@ -213,4 +213,50 @@ export class PaymentsService {
 
     return { success: true };
   }
+
+  async posCheckout(dto: {
+    bookingId?: string;
+    purchaserName?: string;
+    purchaserEmail?: string;
+    purchaserTaxCode?: string;
+    paymentMethod: string;
+    items: Array<{ type: string; amount: number; description?: string }>;
+    notes?: string;
+  }) {
+    const createdPayments = [];
+
+    for (const item of (dto.items || [])) {
+      const payment = await this.create({
+        bookingId: dto.bookingId,
+        amount: Number(item.amount),
+        paymentMethod: dto.paymentMethod,
+        type: item.type,
+        status: 'succeeded',
+        provider: 'manual_pos',
+        notes: dto.notes || item.description,
+      });
+      createdPayments.push(payment);
+
+      if (item.type === 'registration_fee' && (dto.purchaserTaxCode || dto.purchaserEmail)) {
+        const validUntil = new Date();
+        validUntil.setFullYear(validUntil.getFullYear() + 1);
+
+        try {
+          await this.prisma.$executeRawUnsafe(
+            `INSERT INTO annual_memberships (id, booking_id, purchaser_name, email, tax_code, is_active, valid_until, created_at, updated_at)
+             VALUES (gen_random_uuid(), $1, $2, $3, $4, true, $5, NOW(), NOW())`,
+            dto.bookingId || null,
+            dto.purchaserName || 'Cliente',
+            dto.purchaserEmail || '',
+            dto.purchaserTaxCode || '',
+            validUntil,
+          ).catch(() => null);
+        } catch {
+          // Non-blocking fallback
+        }
+      }
+    }
+
+    return { success: true, count: createdPayments.length, payments: createdPayments };
+  }
 }
