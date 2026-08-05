@@ -24,11 +24,13 @@ import type { Course } from "@/features/courses/types";
 import { api } from "@/lib/api";
 import { calculateLessonDates, formatCourseScheduleText } from "@atena/utils";
 
-import {
-  createBookingSchema,
+import type {
   CreateBookingValues,
   CreateBookingDialogProps,
   ClientItem,
+} from "./create-booking/types";
+import {
+  createBookingSchema,
   STEPS,
   normalizeScheduleDays,
   getFirstAvailableAllowedDate,
