@@ -26,6 +26,10 @@ export class CreatePaymentDto {
 
   @IsOptional()
   @IsString()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
   userId?: string;
 
   @IsNumber()
@@ -57,6 +61,10 @@ export class CreatePaymentDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  paidAt?: string;
 }
 
 export class UpdatePaymentDto {
@@ -71,6 +79,26 @@ export class UpdatePaymentDto {
   @IsOptional()
   @IsString()
   paymentMethod?: string;
+
+  @IsOptional()
+  @IsNumber()
+  amount?: number;
+
+  @IsOptional()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  studentId?: string;
+
+  @IsOptional()
+  @IsString()
+  bookingId?: string;
+
+  @IsOptional()
+  @IsString()
+  paidAt?: string;
 }
 
 @ApiTags('Admin — Payments')
@@ -86,11 +114,19 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Получить список транзакций / платежей' })
   async findAll(
     @Query('bookingId') bookingId?: string,
+    @Query('studentId') studentId?: string,
     @Query('status') status?: string,
     @Query('type') type?: string,
     @Query('method') method?: string,
   ) {
-    return this.paymentsService.findAll(bookingId, { status, type, method });
+    return this.paymentsService.findAll(bookingId, studentId, { status, type, method });
+  }
+
+  @Get('summary')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить сводку кассового аудита и финансовых показателей' })
+  async getSummary() {
+    return this.paymentsService.getSummary();
   }
 
   @Get(':id')

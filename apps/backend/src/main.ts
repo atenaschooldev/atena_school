@@ -7,10 +7,10 @@ import { AllExceptionsFilter } from './core/filters/all-exceptions.filter';
 import fastifyHelmet from '@fastify/helmet';
 
 async function bootstrap() {
-  // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB)
+  // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB) и подписью rawBody для Stripe
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ bodyLimit: 10485760 }),
+    new FastifyAdapter({ bodyLimit: 10485760, rawBody: true } as any),
   );
 
   // Безопасность (Helmet) - отключаем CSP, чтобы Swagger UI корректно отображался
@@ -19,7 +19,20 @@ async function bootstrap() {
   });
 
   // CORS и префикс путей
-  app.enableCors({ origin: '*' });
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173',
+        'http://localhost:8080',
+        'http://localhost:4000',
+      ];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+  });
   app.setGlobalPrefix('api/v1');
 
   // Глобальный фильтр ошибок (совместимость с FastAPI для Flutter-клиента)

@@ -1,10 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly logger = new Logger(AuthGuard.name);
   private supabaseAdmin: SupabaseClient;
 
   constructor(private configService: ConfigService) {
@@ -23,8 +23,9 @@ export class AuthGuard implements CanActivate {
 
     const token = authHeader.split(' ')[1];
 
-    // Allow test token strictly in non-production environments
+    // Allow test token in non-production environments for local development
     if (process.env.NODE_ENV !== 'production' && token === 'DEVELOPMENT_TEST_TOKEN') {
+      this.logger.warn('Development test token bypass used for request');
       request.user = {
         id: '00000000-0000-0000-0000-000000000000',
         role: 'admin',
@@ -61,7 +62,9 @@ export class AuthGuard implements CanActivate {
           last_name: lastName,
           full_name: fullName,
         }, { onConflict: 'id' });
-      } catch {}
+      } catch (err: any) {
+        this.logger.error(`Failed to sync user profile for ${user.id}: ${err?.message || err}`);
+      }
 
       return true;
     } catch (err) {

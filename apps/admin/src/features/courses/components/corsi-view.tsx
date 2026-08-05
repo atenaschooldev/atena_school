@@ -29,6 +29,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Clock,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -149,12 +152,28 @@ export function CorsiView() {
     },
     {
       accessorKey: "nome",
-      header: "Corso",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Corso</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const course = row.original;
         const initials = course.nome.slice(0, 2).toUpperCase();
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-[200px]">
             <Avatar className="h-9 w-9 rounded-lg border border-border/50 shrink-0">
               {course.foto ? <AvatarImage src={course.foto} alt={course.nome} className="object-cover" /> : null}
               <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
@@ -171,13 +190,29 @@ export function CorsiView() {
     },
     {
       accessorKey: "categoria",
-      header: "Categoria",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Categoria</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const rawCat = row.getValue("categoria") as string;
         const cat = formatCategoryLabel(rawCat);
         const colorClasses = categoryColor(rawCat);
         return (
-          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border ${colorClasses}`}>
+          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border w-fit ${colorClasses}`}>
             {cat}
           </Badge>
         );
@@ -186,7 +221,23 @@ export function CorsiView() {
     },
     {
       accessorKey: "courseFormat",
-      header: "Formato",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Formato</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => (
         <span className="text-sm font-medium text-foreground">
           {formatCourseFormatLabel(row.getValue("courseFormat"))}
@@ -203,18 +254,18 @@ export function CorsiView() {
         const hasTime = !!course.startTime;
         if (!hasDays && !hasTime) {
           return (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-muted-foreground shadow-2xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-muted-foreground shadow-2xs w-fit">
               <Clock className="w-3 h-3 opacity-60 shrink-0" />
               <span>Da concordare</span>
             </div>
           );
         }
         return (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 items-start">
             {hasDays && (
               <div className="flex flex-wrap gap-1">
                 {course.scheduleDays.map((d) => (
-                  <Badge key={d} variant="outline" className="text-[10px] uppercase px-1.5 py-0 font-semibold bg-muted/40">
+                  <Badge key={d} variant="outline" className="text-[10px] uppercase px-1.5 py-0 font-semibold bg-muted/40 w-fit">
                     {d}
                   </Badge>
                 ))}
@@ -232,34 +283,66 @@ export function CorsiView() {
     },
     {
       accessorKey: "prezzo",
-      header: "Prezzo",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Prezzo</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const val = parseFloat(row.getValue("prezzo") || "0");
         const formatted = new Intl.NumberFormat("it-IT", {
           style: "currency",
           currency: "EUR",
         }).format(val);
-        return <span className="text-sm font-semibold text-foreground">{formatted}</span>;
+        return <span className="text-sm font-semibold text-foreground font-mono">{formatted}</span>;
       },
     },
     {
       accessorKey: "stato",
-      header: "Stato",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Stato</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const stato = (row.getValue("stato") as string) || "attivo";
-        let colorClass = "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-900/20";
+        let colorClass = "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 border-emerald-500/30";
         let label = "Attivo";
 
         if (stato === "in-programmazione") {
-          colorClass = "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-900/20";
+          colorClass = "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-amber-500/30";
           label = "Pianificato";
         } else if (stato === "concluso") {
-          colorClass = "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-900/20";
+          colorClass = "text-muted-foreground bg-muted border-border";
           label = "Concluso";
         }
 
         return (
-          <Badge variant="secondary" className={`text-xs font-medium border-none ${colorClass}`}>
+          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border w-fit ${colorClass}`}>
             {label}
           </Badge>
         );
@@ -268,7 +351,23 @@ export function CorsiView() {
     },
     {
       accessorKey: "teacherName",
-      header: "Insegnante",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Insegnante</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const name = row.getValue("teacherName") as string | null;
         return (
@@ -280,7 +379,23 @@ export function CorsiView() {
     },
     {
       accessorKey: "lessonDurationMinutes",
-      header: "Durata Lezione",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Durata Lezione</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const course = row.original;
         const min = course.lessonDurationMinutes;

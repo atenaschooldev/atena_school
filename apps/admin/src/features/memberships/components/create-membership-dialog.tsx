@@ -1,13 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -17,290 +27,291 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  ShieldCheck,
-  Search,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  CheckCheck,
-} from "lucide-react";
+import { Plus, User, CreditCard, Shield, CheckCircle2, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+
+const schema = z.object({
+  firstName: z.string().min(1, "Il nome è obbligatorio"),
+  lastName: z.string().min(1, "Il cognome è obbligatorio"),
+  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  taxCode: z.string().optional().or(z.literal("")),
+  birthDate: z.string().optional().or(z.literal("")),
+  status: z.enum(["pending", "succeeded"]),
+  paymentMethod: z.string(),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 interface CreateMembershipDialogProps {
   onSuccess?: () => void;
 }
 
 export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProps) {
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchingClient, setIsSearchingClient] = useState(false);
-  const [clientFound, setClientFound] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  // Form state
-  const [studentId, setStudentId] = useState<string | undefined>(undefined);
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [taxCode, setTaxCode] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      taxCode: "",
+      birthDate: "",
+      status: "pending",
+      paymentMethod: "cash",
+    },
+  });
 
-  const resetForm = () => {
-    setSearchQuery("");
-    setClientFound(null);
-    setStudentId(undefined);
-    setFullName("");
-    setEmail("");
-    setPhone("");
-    setTaxCode("");
-    setBirthDate("");
-    setPaymentMethod("cash");
-  };
-
-  const handleClose = () => {
-    resetForm();
-    setOpen(false);
-  };
-
-  const handleLookup = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearchingClient(true);
-    setClientFound(null);
+  const onSubmit = async (values: FormValues) => {
+    setSubmitting(true);
     try {
-      const res = await api.get<{
-        found: boolean;
-        studentId?: string;
-        purchaserName?: string;
-        purchaserEmail?: string;
-        purchaserPhone?: string;
-        purchaserTaxCode?: string;
-        studentName?: string;
-        studentEmail?: string;
-        studentPhone?: string;
-        studentTaxCode?: string;
-        studentBirthDate?: string;
-      }>(`/admin/bookings/lookup-client?q=${encodeURIComponent(searchQuery.trim())}`);
+      const fullName = `${values.firstName} ${values.lastName}`.trim();
 
-      setClientFound(res.found);
-      if (res.found) {
-        setFullName(res.studentName || res.purchaserName || "");
-        setEmail(res.studentEmail || res.purchaserEmail || "");
-        setPhone(res.studentPhone || res.purchaserPhone || "");
-        setTaxCode(res.studentTaxCode || res.purchaserTaxCode || "");
-        setBirthDate(res.studentBirthDate || "");
-      } else {
-        if (searchQuery.includes("@")) setEmail(searchQuery);
-        else setTaxCode(searchQuery);
-      }
-    } catch (err) {
-      console.error("Client lookup error:", err);
-    } finally {
-      setIsSearchingClient(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() && !email.trim() && !taxCode.trim()) {
-      alert("Inserisci almeno il Nome, l'Email o il Codice Fiscale.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await api.post("/checkout/admin/memberships/pay-fee", {
-        studentId,
-        fullName: fullName.trim() || undefined,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        taxCode: taxCode.trim() || undefined,
-        birthDate: birthDate || undefined,
-        paymentMethod,
+      await api.post("/admin/memberships", {
+        fullName,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email || undefined,
+        phone: values.phone || undefined,
+        taxCode: values.taxCode?.toUpperCase() || undefined,
+        birthDate: values.birthDate || undefined,
+        status: values.status,
+        paymentMethod: values.paymentMethod,
       });
 
-      queryClient.invalidateQueries({ queryKey: ["memberships"] });
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-      handleClose();
-      if (onSuccess) onSuccess();
+      if (values.status === "succeeded") {
+        toast.success(`Quota Iscrizione (€30) saldata per ${fullName}`);
+      } else {
+        toast.success(`Quota Iscrizione registrata in attesa di pagamento per ${fullName}`);
+      }
+
+      form.reset();
+      setOpen(false);
+      onSuccess?.();
     } catch (err: any) {
-      alert(`Errore durante la registrazione della quota: ${err?.message || "Riprova."}`);
+      console.error("Failed to create membership:", err);
+      toast.error(err?.message || "Errore nella registrazione della quota");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer font-semibold gap-1.5 shadow-xs">
+        <Button className="cursor-pointer font-bold text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-2xs gap-1.5">
           <Plus className="h-4 w-4" />
-          Nuova Iscrizione Annuale (€30)
+          <span>+ Nuova Iscrizione (€30)</span>
         </Button>
       </DialogTrigger>
+      <DialogContent className="sm:max-w-[560px] p-6">
+        <DialogHeader className="pb-2 border-b border-border/50">
+          <DialogTitle className="text-xl font-bold flex items-center gap-2">
+            <Shield className="w-5 h-5 text-amber-500" />
+            <span>Nuova Iscrizione Annuale (€30.00)</span>
+          </DialogTitle>
+          <p className="text-xs text-muted-foreground">
+            Compila i dati anagrafici per registrare la quota associativa (A.A. 2026/2027).
+          </p>
+        </DialogHeader>
 
-      <DialogContent className="p-0 gap-0 border-border/60 flex flex-col sm:max-w-[540px] overflow-hidden">
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1">
-          {/* Header */}
-          <div className="flex items-center gap-3 pl-6 pr-14 py-4 border-b border-border/60 bg-muted/30">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-              <ShieldCheck className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-base font-bold leading-tight">Riscossione Quota Annuale</p>
-              <p className="text-xs text-muted-foreground leading-tight">Anno Accademico 2026/2027 · €30,00</p>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-            {/* Quick client search */}
-            <div className="p-3.5 bg-muted/30 rounded-xl border border-border/60 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-primary" />
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Cerca Studente Esistente</p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 pt-3">
+            {/* 1. Dati Anagrafici */}
+            <div className="p-4 bg-muted/20 rounded-2xl border border-border/60 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground">
+                <User className="w-4 h-4 text-primary" />
+                <span>1. Dati Anagrafici Cliente / Studente</span>
               </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Email, Codice Fiscale, Telefono o Nome..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleLookup();
-                    }
-                  }}
-                  className="text-xs bg-background h-9"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  disabled={isSearchingClient || !searchQuery.trim()}
-                  onClick={handleLookup}
-                  className="cursor-pointer text-xs shrink-0 h-9"
-                >
-                  {isSearchingClient ? (
-                    <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />Cerca...</>
-                  ) : (
-                    <><Search className="w-3.5 h-3.5 mr-1.5" />Cerca</>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Nome *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Mario" className="h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Cognome *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Rossi" className="h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="mario.rossi@email.com" className="h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Telefono</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+39 340 1234567" className="h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="taxCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Codice Fiscale</FormLabel>
+                      <FormControl>
+                        <Input placeholder="RSSMRA80A01H501Z" className="uppercase font-mono h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="birthDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-semibold">Data Nascita / Età</FormLabel>
+                      <FormControl>
+                        <Input type="date" className="h-10 text-sm bg-background" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              {clientFound === true && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  Studente trovato! I dati sono stati precompilati.
-                </p>
-              )}
-              {clientFound === false && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  Nessun record trovato. Inserisci i dati manualmente.
-                </p>
-              )}
             </div>
 
-            {/* Quota Badge highlight */}
-            <div className="p-3.5 bg-primary/8 border border-primary/20 rounded-xl flex items-center justify-between">
-              <div>
-                <p className="text-xs font-bold text-primary">Quota d'Iscrizione Associazione</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Valida fino al 31 Agosto 2027</p>
+            {/* 2. Stato e Metodo Pagamento */}
+            <div className="p-4 bg-amber-500/10 border border-amber-500/25 rounded-2xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                  <CreditCard className="w-4 h-4 text-amber-500" />
+                  <span>2. Stato e Modalità di Pagamento</span>
+                </div>
+                <Badge variant="outline" className="font-mono font-bold text-xs bg-amber-500/20 text-amber-900 dark:text-amber-200 border-amber-500/30 px-3 py-1">
+                  €30.00
+                </Badge>
               </div>
-              <Badge className="text-sm font-mono font-black px-3 py-1 bg-primary text-primary-foreground">
-                €30,00
-              </Badge>
-            </div>
 
-            {/* Student details */}
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold">Nome e Cognome Studente *</label>
-                <Input
-                  placeholder="Es. Marco Rossi"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="h-9 text-xs"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-xs font-semibold">Stato Iniziale *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-10 text-xs bg-background cursor-pointer w-full">
+                            <SelectValue placeholder="Seleziona stato" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pending" className="cursor-pointer text-xs font-medium">
+                            🟡 In attesa (Pending)
+                          </SelectItem>
+                          <SelectItem value="succeeded" className="cursor-pointer text-xs font-medium">
+                            🟢 Pagato subito (Saldato)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="paymentMethod"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-xs font-semibold">Metodo di Pagamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-10 text-xs bg-background cursor-pointer w-full">
+                            <SelectValue placeholder="Seleziona metodo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="cash" className="cursor-pointer text-xs">Contanti in Sede</SelectItem>
+                          <SelectItem value="card" className="cursor-pointer text-xs">Carta / POS in Sede</SelectItem>
+                          <SelectItem value="transfer" className="cursor-pointer text-xs">Bonifico Bancario</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">Codice Fiscale</label>
-                  <Input
-                    placeholder="RSSMRC95A01H501Z"
-                    value={taxCode}
-                    onChange={(e) => setTaxCode(e.target.value.toUpperCase())}
-                    className="h-9 text-xs font-mono uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">Data di Nascita</label>
-                  <Input
-                    type="date"
-                    value={birthDate}
-                    onChange={(e) => setBirthDate(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">Email</label>
-                  <Input
-                    type="email"
-                    placeholder="marco.rossi@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold">Telefono</label>
-                  <Input
-                    placeholder="+39 340 1234567"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="h-9 text-xs"
-                  />
-                </div>
-              </div>
+              <p className="text-[11px] text-muted-foreground/90 leading-tight pt-1 border-t border-amber-500/20 mt-1">
+                💡 Se in attesa, la tessera annuale si attiverà automaticamente al momento del saldo in cassa.
+              </p>
             </div>
 
-            {/* Payment Method */}
-            <div className="space-y-1 pt-1">
-              <label className="text-xs font-semibold">Metodo di Incasso *</label>
-              <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger className="cursor-pointer h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">💵 Contanti (In sede)</SelectItem>
-                  <SelectItem value="pos">💳 POS / Carta (In sede)</SelectItem>
-                  <SelectItem value="transfer">🏦 Bonifico Bancario</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border/50">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="cursor-pointer text-xs font-semibold h-10 px-4"
+              >
+                Annulla
+              </Button>
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="cursor-pointer text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white h-10 px-5 gap-1.5 shadow-xs"
+              >
+                {submitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Registra Quota (€30.00)</span>
+                  </>
+                )}
+              </Button>
             </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between px-6 py-3 border-t border-border/60 bg-muted/20">
-            <Button type="button" variant="ghost" size="sm" onClick={handleClose} className="cursor-pointer text-xs text-muted-foreground">
-              Annulla
-            </Button>
-            <Button type="submit" disabled={loading} size="sm" className="cursor-pointer font-bold text-xs gap-1.5">
-              {loading ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Registrazione...</>
-              ) : (
-                <><CheckCheck className="w-3.5 h-3.5" />Conferma e Registra Incasso (€30,00)</>
-              )}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

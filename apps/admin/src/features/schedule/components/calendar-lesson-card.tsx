@@ -247,7 +247,7 @@ export function CalendarLessonCard({
             }}
           >
             <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
-            Отметить посещаемость
+            Registra Presenze
           </Button>
         </div>
       </PopoverContent>

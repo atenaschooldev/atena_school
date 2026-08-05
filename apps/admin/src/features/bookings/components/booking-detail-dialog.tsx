@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import {
   User,
   Mail,
@@ -52,6 +53,9 @@ import {
   PlayCircle,
   Coins,
   BookOpen,
+  Copy,
+  Check,
+  Printer,
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -85,6 +89,15 @@ export function BookingDetailDialog({
   onDelete,
 }: BookingDetailDialogProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(text);
+    toast.success(`${label} copiato!`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
   const [deleting, setDeleting] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
   const [lessonActionLoading, setLessonActionLoading] = useState<string | null>(null);
@@ -192,7 +205,6 @@ export function BookingDetailDialog({
       <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
         {/* Header Bar */}
         <div className="p-6 pb-4 border-b bg-muted/20 space-y-3">
-          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="font-mono text-xs text-muted-foreground bg-background">
                 #{booking.id.slice(0, 8)}
@@ -203,37 +215,6 @@ export function BookingDetailDialog({
                 </Badge>
               )}
             </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              <Badge
-                variant="secondary"
-                className={
-                  isCompleted
-                    ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-medium text-xs px-2.5 py-0.5"
-                    : isReserved
-                      ? "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-medium text-xs px-2.5 py-0.5"
-                      : "text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-900/20 font-medium text-xs px-2.5 py-0.5"
-                }
-              >
-                {isCompleted
-                  ? "Corso: Pagato"
-                  : isReserved
-                    ? "Corso: Da Saldare in Sede"
-                    : "Corso: In Gestione"}
-              </Badge>
-
-              <Badge
-                variant="outline"
-                className={
-                  booking.registration_fee > 0
-                    ? "text-emerald-600 border-emerald-300 dark:text-emerald-400 font-medium text-xs px-2.5 py-0.5 shrink-0"
-                    : "text-slate-600 border-slate-300 dark:text-slate-400 font-medium text-xs px-2.5 py-0.5 shrink-0"
-                }
-              >
-                {booking.registration_fee > 0 ? "Quota €30: Inclusa" : "Quota €30: Già Pagata"}
-              </Badge>
-            </div>
-          </div>
 
           <div>
             <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
@@ -262,21 +243,72 @@ export function BookingDetailDialog({
                   <p className="font-semibold text-sm text-foreground">{booking.purchaser_name || "N/D"}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-1.5 pt-1 border-t">
-                  <p className="text-muted-foreground flex items-center gap-2">
-                    <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
-                    <span className="font-medium text-foreground">{booking.purchaser_email || "N/D"}</span>
-                  </p>
+                  {booking.purchaser_email && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(booking.purchaser_email!, "Email acquirente")}
+                      className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
+                      title="Clicca per copiare l'email"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
+                        {booking.purchaser_email}
+                      </span>
+                      {copiedField === booking.purchaser_email ? (
+                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                      )}
+                    </button>
+                  )}
                   {booking.purchaser_phone && (
-                    <p className="text-muted-foreground flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="font-medium text-foreground">{booking.purchaser_phone}</span>
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(booking.purchaser_phone!, "Telefono acquirente")}
+                        className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
+                        title="Clicca per copiare il telefono"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
+                          {booking.purchaser_phone}
+                        </span>
+                        {copiedField === booking.purchaser_phone ? (
+                          <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                        )}
+                      </button>
+                      <a
+                        href={`https://wa.me/${booking.purchaser_phone.replace(/[^\d]/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 gap-0.5 shrink-0"
+                        title="Apri chat WhatsApp"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>WA</span>
+                        <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                      </a>
+                    </div>
                   )}
                   {booking.purchaser_tax_code && (
-                    <p className="text-muted-foreground flex items-center gap-2 font-mono">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(booking.purchaser_tax_code!, "Codice fiscale")}
+                      className="text-muted-foreground hover:text-primary flex items-center gap-2 font-mono transition-colors cursor-pointer text-left w-fit"
+                      title="Clicca per copiare il CF"
+                    >
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>CF: <strong className="text-foreground">{booking.purchaser_tax_code}</strong></span>
-                    </p>
+                      <span>
+                        CF: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.purchaser_tax_code}</strong>
+                      </span>
+                      {copiedField === booking.purchaser_tax_code ? (
+                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
@@ -297,18 +329,53 @@ export function BookingDetailDialog({
                 </div>
                 <div className="grid grid-cols-1 gap-1.5 pt-1 border-t">
                   {(booking.student_email || booking.purchaser_email) && (
-                    <p className="text-muted-foreground flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy((booking.student_email || booking.purchaser_email)!, "Email studente")}
+                      className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
+                      title="Clicca per copiare l'email"
+                    >
                       <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="font-medium text-foreground">
+                      <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
                         {booking.student_email || booking.purchaser_email}
                       </span>
-                    </p>
+                      {copiedField === (booking.student_email || booking.purchaser_email) ? (
+                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                      )}
+                    </button>
                   )}
                   {booking.student_phone && (
-                    <p className="text-muted-foreground flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="font-medium text-foreground">{booking.student_phone}</span>
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(booking.student_phone!, "Telefono studente")}
+                        className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
+                        title="Clicca per copiare il telefono"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
+                        <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
+                          {booking.student_phone}
+                        </span>
+                        {copiedField === booking.student_phone ? (
+                          <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                        )}
+                      </button>
+                      <a
+                        href={`https://wa.me/${booking.student_phone.replace(/[^\d]/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 gap-0.5 shrink-0"
+                        title="Apri chat WhatsApp"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span>WA</span>
+                        <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                      </a>
+                    </div>
                   )}
                   {booking.student_birth_date && (
                     <p className="text-muted-foreground flex items-center gap-2">
@@ -323,10 +390,22 @@ export function BookingDetailDialog({
                     </p>
                   )}
                   {booking.student_tax_code && (
-                    <p className="text-muted-foreground flex items-center gap-2 font-mono">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(booking.student_tax_code!, "CF studente")}
+                      className="text-muted-foreground hover:text-primary flex items-center gap-2 font-mono transition-colors cursor-pointer text-left w-fit"
+                      title="Clicca per copiare il CF"
+                    >
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>CF: <strong className="text-foreground">{booking.student_tax_code}</strong></span>
-                    </p>
+                      <span>
+                        CF: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.student_tax_code}</strong>
+                      </span>
+                      {copiedField === booking.student_tax_code ? (
+                        <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Copy className="w-3 h-3 opacity-40 shrink-0" />
+                      )}
+                    </button>
                   )}
                 </div>
               </div>
@@ -378,20 +457,50 @@ export function BookingDetailDialog({
                     <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">Quota €30</span>
                     <p className="font-bold text-xs font-mono text-amber-600 dark:text-amber-400 truncate">
                       {payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded") || Number(booking.registration_fee) > 0
-                        ? "✓ Pagata"
-                        : "In attesa"}
+                        ? "€30.00 (✓ Pagata)"
+                        : "€30.00 (In attesa)"}
                     </p>
                   </div>
                 </div>
+
+                {remaining > 0 && (
+                  <div className="pt-2 flex justify-end border-t border-border/50">
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-1.5 cursor-pointer shadow-2xs"
+                      onClick={() => {
+                        setNewPaymentAmount(remaining.toFixed(2));
+                        setAddPaymentOpen(true);
+                      }}
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      <span>Registra Incasso €{remaining.toFixed(2)}</span>
+                    </Button>
+                  </div>
+                )}
               </div>
             );
           })()}
 
           {/* Section 3: Schedule */}
           <div className="rounded-lg border p-4 bg-card space-y-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              <Clock className="w-4 h-4 text-primary" />
-              <span>Orario e Calendario</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-primary" />
+                <span>Orario e Calendario</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1.5 cursor-pointer font-medium hover:bg-primary/10 hover:text-primary transition-colors border-primary/20"
+                onClick={() => {
+                  onClose();
+                  window.location.href = `/presenze?booking_id=${booking.id}`;
+                }}
+              >
+                <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span>Vedi Lezioni & Presenze</span>
+              </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="space-y-0.5">
@@ -419,11 +528,14 @@ export function BookingDetailDialog({
 
               <Button
                 size="sm"
-                variant="outline"
-                className="h-7 text-xs font-medium cursor-pointer gap-1"
-                onClick={() => setAddPaymentOpen(true)}
+                variant="ghost"
+                className="h-7 text-xs font-semibold text-primary hover:underline cursor-pointer gap-1"
+                onClick={() => {
+                  onClose();
+                  window.location.href = "/pagamenti";
+                }}
               >
-                <Plus className="w-3.5 h-3.5" /> Registra Pagamento
+                Gestisci in Pagamenti ↗
               </Button>
             </div>
 
@@ -435,6 +547,8 @@ export function BookingDetailDialog({
               <div className="space-y-2 border-t pt-3">
                 {payments.map((p) => {
                   const pMethod = p.paymentMethod || p.payment_method;
+                  const rawMethod = (pMethod || "").toLowerCase();
+                  const pMethodLabel = rawMethod === "cash" ? "Contanti" : rawMethod === "pos" ? "Carta (POS)" : rawMethod === "transfer" ? "Bonifico" : rawMethod === "stripe" ? "Stripe Online" : pMethod || "N/D";
                   const dateVal = p.createdAt || p.created_at;
                   const txId = p.providerTransactionId || p.provider_transaction_id;
                   return (
@@ -447,39 +561,19 @@ export function BookingDetailDialog({
                           <span className="font-semibold text-foreground">
                             {p.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso"}
                           </span>
-                          <Select
-                            value={p.status || "pending"}
-                            onValueChange={(newStatus) => updatePayment({ id: p.id, status: newStatus })}
+                          <Badge
+                            variant="secondary"
+                            className={
+                              p.status === "succeeded"
+                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-semibold"
+                                : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-semibold"
+                            }
                           >
-                            <SelectTrigger className="h-6 text-[11px] border-0 shadow-none bg-transparent hover:bg-muted/60 focus:ring-0 w-[115px] cursor-pointer px-1">
-                              <SelectValue>
-                                <Badge
-                                  variant="secondary"
-                                  className={
-                                    p.status === "succeeded"
-                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px] cursor-pointer font-medium"
-                                      : "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] cursor-pointer font-medium"
-                                  }
-                                >
-                                  {p.status === "succeeded" ? "✓ Completato" : p.status === "pending" ? "⏳ Sospeso" : p.status}
-                                </Badge>
-                              </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent side="bottom" align="start">
-                              <SelectItem value="succeeded" className="cursor-pointer text-xs">
-                                <span className="text-emerald-600 font-medium">✓ Completato</span>
-                              </SelectItem>
-                              <SelectItem value="pending" className="cursor-pointer text-xs">
-                                <span className="text-amber-600 font-medium">⏳ Sospeso</span>
-                              </SelectItem>
-                              <SelectItem value="failed" className="cursor-pointer text-xs">
-                                <span className="text-rose-600 font-medium">✕ Annullato</span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                            {p.status === "succeeded" ? "✓ Completato" : p.status === "pending" ? "⏳ Sospeso" : p.status}
+                          </Badge>
                         </div>
                         <div className="text-[11px] text-muted-foreground flex items-center gap-2">
-                          <span className="capitalize">{pMethod || "N/D"}</span>
+                          <span className="capitalize">{pMethodLabel}</span>
                           <span>•</span>
                           <span>
                             {dateVal
@@ -528,109 +622,7 @@ export function BookingDetailDialog({
             )}
           </div>
 
-          {/* Section 4: Per-Lesson Billing Panel */}
-          {isPerLesson && (
-            <div className="rounded-lg border p-4 bg-card space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                <BookOpen className="w-4 h-4 text-primary" />
-                <span>Registro Lezioni — Saldatura Post-Lezione</span>
-              </div>
-
-              {/* Progress summary */}
-              {lessons.length > 0 && (() => {
-                const completedCount = lessons.filter((l: any) => l.status === 'completed').length;
-                const paidCount = lessons.filter((l: any) => l.payment_status === 'paid').length;
-                const pendingCount = lessons.filter((l: any) => l.payment_status === 'pending' && l.status === 'completed').length;
-                const paidPrice = lessons.filter((l: any) => l.payment_status === 'paid').reduce((s: number, l: any) => s + Number(l.price_per_lesson || 0), 0);
-                const pendingPrice = lessons.filter((l: any) => l.payment_status === 'pending' && l.status === 'completed').reduce((s: number, l: any) => s + Number(l.price_per_lesson || 0), 0);
-                const remainingLessons = lessons.filter((l: any) => l.status !== 'completed').length;
-                return (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-muted/40 border text-center space-y-0.5">
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase">Lezioni</p>
-                      <p className="font-bold text-sm">{completedCount} <span className="text-muted-foreground font-normal">/ {lessons.length}</span></p>
-                      <p className="text-[10px] text-muted-foreground">{remainingLessons} rimanenti</p>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center space-y-0.5">
-                      <p className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium uppercase">Incassato</p>
-                      <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400 font-mono">€{paidPrice.toFixed(2)}</p>
-                      <p className="text-[10px] text-emerald-700/60 dark:text-emerald-500">{paidCount} lezioni</p>
-                    </div>
-                    <div className={`p-2.5 rounded-lg border text-center space-y-0.5 ${pendingPrice > 0 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-muted/40'}`}>
-                      <p className={`text-[10px] font-medium uppercase ${pendingPrice > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}`}>Da Incassare</p>
-                      <p className={`font-bold text-sm font-mono ${pendingPrice > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}`}>€{pendingPrice.toFixed(2)}</p>
-                      <p className="text-[10px] text-muted-foreground">{pendingCount} lezioni</p>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 text-center space-y-0.5">
-                      <p className="text-[10px] text-sky-700 dark:text-sky-400 font-medium uppercase">Ancora da Svolgere</p>
-                      <p className="font-bold text-sm text-sky-600 dark:text-sky-400">{remainingLessons}</p>
-                      <p className="text-[10px] text-sky-700/60 dark:text-sky-500">lezioni</p>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              <div className="space-y-2 border-t pt-3">
-                {lessons.length === 0 ? (
-                  <p className="text-center text-xs text-muted-foreground py-3">Nessuna lezione generata per questa prenotazione.</p>
-                ) : (
-                  lessons.map((lesson: any, idx: number) => {
-                    const lessonDate = new Date(lesson.starts_at).toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' });
-                    const lessonTime = new Date(lesson.starts_at).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-                    const isPaid = lesson.payment_status === 'paid';
-                    const isCompleted = lesson.status === 'completed';
-                    const isPending = lesson.payment_status === 'pending' && isCompleted;
-                    const isCompletingThis = lessonActionLoading === lesson.id + '-complete';
-                    const isPayingThis = lessonActionLoading === lesson.id + '-pay';
-
-                    return (
-                      <div key={lesson.id} className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border text-xs ${isPaid ? 'bg-emerald-500/5 border-emerald-500/20' : isPending ? 'bg-amber-500/5 border-amber-500/20' : 'bg-muted/20'}`}>
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">#{idx + 1}</span>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-foreground truncate">{lessonDate} · {lessonTime}</p>
-                            <p className="text-muted-foreground font-mono">€{Number(lesson.price_per_lesson).toFixed(2)}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isPaid ? (
-                            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-[10px]">
-                              <CheckCircle2 className="w-3 h-3 mr-1" /> Pagato
-                            </Badge>
-                          ) : isPending ? (
-                            <Button
-                              size="sm"
-                              className="h-7 text-[11px] font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
-                              disabled={!!lessonActionLoading}
-                              onClick={() => openPayLessonDialog(lesson.id, Number(lesson.price_per_lesson))}
-                            >
-                              {isPayingThis ? <Clock className="w-3 h-3 animate-spin" /> : <Coins className="w-3 h-3" />}
-                              Incassa €{Number(lesson.price_per_lesson).toFixed(2)}
-                            </Button>
-                          ) : !isCompleted ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-[11px] font-medium gap-1 cursor-pointer"
-                              disabled={!!lessonActionLoading}
-                              onClick={() => handleCompleteLesson(lesson.id)}
-                            >
-                              {isCompletingThis ? <Clock className="w-3 h-3 animate-spin" /> : <PlayCircle className="w-3 h-3" />}
-                              Lezione Svolta
-                            </Button>
-                          ) : (
-                            <Badge variant="secondary" className="text-[10px]">Completata</Badge>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Section 5: Notes */}
+          {/* Section 4: Notes */}
           {booking.notes && (
             <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30 p-3.5 text-xs space-y-1">
               <p className="font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
@@ -645,38 +637,30 @@ export function BookingDetailDialog({
         {/* Single Row Footer Bar */}
         <div className="p-4 bg-muted/20 border-t flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
-            {onUpdateStatus && (
+            {payments.some((p) => (p.paymentMethod || p.payment_method || p.provider) === "stripe" || !!(p.providerTransactionId || p.provider_transaction_id)) ? (
+              <a
+                href="https://dashboard.stripe.com/payments"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center"
+              >
+                <Button size="sm" variant="outline" className="font-medium text-xs cursor-pointer h-9 gap-1.5">
+                  Stripe Dashboard <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                </Button>
+              </a>
+            ) : (
               <Button
                 size="sm"
-                variant={isCompleted ? "outline" : "default"}
-                className="font-medium text-xs cursor-pointer h-9"
+                variant="outline"
+                className="font-medium text-xs cursor-pointer h-9 gap-1.5 border-border"
                 onClick={() => {
-                  onUpdateStatus(booking.id, isCompleted ? "reserved" : "paid");
+                  window.print();
                 }}
               >
-                {isCompleted ? (
-                  <>
-                    <AlertCircle className="w-4 h-4 mr-1.5 text-amber-500" />
-                    Segna Da Saldare
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500" />
-                    Segna Come Pagato
-                  </>
-                )}
+                <Printer className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>Stampa Ricevuta</span>
               </Button>
             )}
-            <a
-              href="https://dashboard.stripe.com/payments"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center"
-            >
-              <Button size="sm" variant="outline" className="font-medium text-xs cursor-pointer h-9 gap-1.5">
-                Stripe Dashboard <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-              </Button>
-            </a>
           </div>
 
           <div className="flex items-center gap-2 justify-end">

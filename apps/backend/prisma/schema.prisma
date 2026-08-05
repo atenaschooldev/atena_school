@@ -160,13 +160,14 @@ model Lesson {
 model Payment {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   bookingId             String?   @map("booking_id") @db.Uuid
+  studentId             String?   @map("student_id") @db.Uuid
   userId                String?   @map("user_id") @db.Uuid
   amount                Decimal   @db.Decimal(10, 2)
   currency              String    @default("EUR")
-  paymentMethod         String    @default("stripe") @map("payment_method")
+  paymentMethod         String    @default("cash") @map("payment_method")
   type                  String    @default("payment")
   status                String    @default("succeeded")
-  provider              String    @default("stripe")
+  provider              String    @default("manual")
   providerTransactionId String?   @map("provider_transaction_id")
   notes                 String?
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -174,9 +175,11 @@ model Payment {
   updatedAt             DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   scheduleId            String?   @map("schedule_id") @db.Uuid
 
-  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  student students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
 
   @@index([bookingId], map: "idx_payments_booking_id")
+  @@index([studentId], map: "idx_payments_student_id")
   @@index([userId], map: "idx_payments_user_id")
   @@map("payments")
 }
@@ -253,6 +256,8 @@ model students {
   tax_code           String?
   phone              String?
   updated_at         DateTime? @default(now()) @db.Timestamptz(6)
+
+  payments Payment[]
 }
 
 model AttendanceRecord {

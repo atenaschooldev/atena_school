@@ -23,25 +23,25 @@ export function RecentTransactions() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle>Последние транзакции</CardTitle>
-          <CardDescription>Платежи и взносы из базы данных</CardDescription>
+          <CardTitle>Ultime Transazioni</CardTitle>
+          <CardDescription>Pagamenti e quote registrate nel database</CardDescription>
         </div>
         <Badge variant="outline" className="text-xs">
-          Всего транзакций: {realList.length}
+          Totale transazioni: {realList.length}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Загрузка последних транзакций...</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">Caricamento ultime transazioni...</div>
         ) : realList.length === 0 ? (
           <div className="p-8 border border-dashed rounded-xl text-center space-y-2 bg-card/40">
             <FileX className="w-8 h-8 text-muted-foreground mx-auto" />
-            <p className="font-semibold text-sm">Транзакции отсутствуют</p>
-            <p className="text-xs text-muted-foreground">В базе данных пока нет зарегистрированных платежей.</p>
+            <p className="font-semibold text-sm">Nessuna transazione trovata</p>
+            <p className="text-xs text-muted-foreground">Nessun pagamento registrato a sistema.</p>
           </div>
         ) : (
           realList.slice(0, 5).map((transaction: any, idx: number) => {
-            const name = transaction.purchaserName || "Клиент Atena"
+            const name = transaction.purchaserName || "Cliente Atena"
             const email = transaction.purchaserEmail || transaction.paymentMethod || "Stripe"
             const amount = formatCurrency(transaction.amount ?? 0)
             const status = transaction.status === "succeeded" ? "completed" : (transaction.status || "completed")
@@ -79,7 +79,7 @@ export function RecentTransactions() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="cursor-pointer">Подробности</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">Dettagli</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

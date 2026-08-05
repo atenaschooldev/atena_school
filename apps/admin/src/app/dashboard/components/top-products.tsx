@@ -21,22 +21,22 @@ export function TopProducts() {
         <div>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-primary" />
-            Каталог активных курсов
+            Catalogo Corsi Attivi
           </CardTitle>
-          <CardDescription>Курсы витрины и их стоимость из базы данных</CardDescription>
+          <CardDescription>Corsi disponibili e relative tariffe dal database</CardDescription>
         </div>
         <Badge variant="outline" className="text-xs">
-          Всего курсов: {coursesList.length}
+          Totale corsi: {coursesList.length}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Загрузка каталога курсов...</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">Caricamento catalogo corsi...</div>
         ) : coursesList.length === 0 ? (
           <div className="p-8 border border-dashed rounded-xl text-center space-y-2 bg-card/40">
             <FileX className="w-8 h-8 text-muted-foreground mx-auto" />
-            <p className="font-semibold text-sm">Курсы не найдены</p>
-            <p className="text-xs text-muted-foreground">В каталоге пока нет публичных курсов.</p>
+            <p className="font-semibold text-sm">Nessun corso trovato</p>
+            <p className="text-xs text-muted-foreground">Nessun corso pubblico disponibile nel catalogo.</p>
           </div>
         ) : (
           coursesList.slice(0, 5).map((course: any, index: number) => (
@@ -47,9 +47,9 @@ export function TopProducts() {
               <div className="flex gap-2 items-center justify-between space-x-3 flex-1 flex-wrap">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <p className="text-sm font-medium truncate">{course.title_it || course.name || "Курс"}</p>
+                    <p className="text-sm font-medium truncate">{course.title_it || course.name || "Corso"}</p>
                     <Badge variant="outline" className="text-xs">
-                      {course.category || "Общий"}
+                      {course.category || "Generale"}
                     </Badge>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
@@ -58,7 +58,7 @@ export function TopProducts() {
                       <span className="text-xs text-muted-foreground">4.8</span>
                     </div>
                     <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground">Макс: {course.max_students || 20} мест</span>
+                    <span className="text-xs text-muted-foreground">Max: {course.max_students || 20} posti</span>
                   </div>
                 </div>
                 <div className="text-right space-y-1">

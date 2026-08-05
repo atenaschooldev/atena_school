@@ -4,9 +4,10 @@ import { MembershipsService } from './memberships.service';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaMembershipsRepository } from './impl/prisma-memberships.repository';
 import { PrismaModule } from '../../core/prisma/prisma.module';
+import { CheckoutModule } from '../checkout/checkout.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, CheckoutModule],
   controllers: [MembershipsController],
   providers: [
     MembershipsService,

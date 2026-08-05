@@ -23,11 +23,24 @@ export class MembershipsService {
     const existing = await this.findOne(id);
     const updated = await this.membershipsRepository.updateStatus(id, status);
 
-    // If revoked, synchronize student annual_fee_paid flag
-    if (status === 'revoked') {
-      const sId = existing.studentId || existing.userId;
-      const sTaxCode = existing.taxCode;
+    const sId = existing.studentId || existing.userId;
+    const sTaxCode = existing.taxCode;
 
+    if (status === 'active') {
+      if (sId) {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE id = '${sId}'::uuid`
+        ).catch(() => null);
+      } else if (sTaxCode) {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE LOWER(tax_code) = LOWER('${sTaxCode}')`
+        ).catch(() => null);
+      }
+
+      await this.prisma.$executeRawUnsafe(
+        `UPDATE payments SET status = 'succeeded', paid_at = NOW() WHERE notes LIKE '%[membership_id:${id}]%'`
+      ).catch(() => null);
+    } else if (status === 'revoked' || status === 'pending') {
       if (sId) {
         await this.prisma.$executeRawUnsafe(
           `UPDATE students SET annual_fee_paid = false WHERE id = '${sId}'::uuid`
@@ -35,6 +48,12 @@ export class MembershipsService {
       } else if (sTaxCode) {
         await this.prisma.$executeRawUnsafe(
           `UPDATE students SET annual_fee_paid = false WHERE LOWER(tax_code) = LOWER('${sTaxCode}')`
+        ).catch(() => null);
+      }
+
+      if (status === 'pending') {
+        await this.prisma.$executeRawUnsafe(
+          `UPDATE payments SET status = 'pending' WHERE notes LIKE '%[membership_id:${id}]%'`
         ).catch(() => null);
       }
     }

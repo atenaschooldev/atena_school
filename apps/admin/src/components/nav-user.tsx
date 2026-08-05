@@ -1,5 +1,5 @@
-"use client"
-
+import { useNavigate } from "react-router-dom"
+import { clearAdminToken } from "@/lib/api"
 import {
   CreditCard,
   EllipsisVertical,
@@ -36,6 +36,12 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    clearAdminToken()
+    navigate("/auth/sign-in")
+  }
 
   return (
     <SidebarMenu>
@@ -99,11 +105,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="cursor-pointer">
-              <Link to="/sign-in">
-                <LogOut />
-                Log out
-              </Link>
+            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onClick={handleLogout}>
+              <LogOut />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

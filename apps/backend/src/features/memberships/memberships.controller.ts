@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsIn, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -7,6 +7,7 @@ import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { MembershipsService } from './memberships.service';
+import { BookingsAdminService } from '../checkout/bookings-admin.service';
 
 export class UpdateMembershipStatusDto {
   @IsString()
@@ -20,7 +21,10 @@ export class UpdateMembershipStatusDto {
 @UseInterceptors(AuditInterceptor)
 @Controller('admin/memberships')
 export class MembershipsController {
-  constructor(private readonly membershipsService: MembershipsService) {}
+  constructor(
+    private readonly membershipsService: MembershipsService,
+    private readonly bookingsAdminService: BookingsAdminService,
+  ) {}
 
   @Get()
   @Roles('admin')
@@ -31,6 +35,14 @@ export class MembershipsController {
     @Query('search') search?: string,
   ) {
     return this.membershipsService.findAll(status, academicYear, search);
+  }
+
+  @Post()
+  @Roles('admin')
+  @Audit('memberships', 'create')
+  @ApiOperation({ summary: 'Зарегистрировать годовой взнос €30' })
+  createMembership(@Body() dto: any) {
+    return this.bookingsAdminService.createAdminMembershipFee(dto);
   }
 
   @Get(':id')

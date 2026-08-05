@@ -1,12 +1,32 @@
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
+
+export function getAdminToken(): string {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("admin_token");
+    if (stored) return stored;
+  }
+  return import.meta.env.VITE_ADMIN_TOKEN || "";
+}
+
+export function setAdminToken(token: string): void {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("admin_token", token);
+  }
+}
+
+export function clearAdminToken(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("admin_token");
+  }
+}
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAdminToken();
   const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${ADMIN_TOKEN}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });

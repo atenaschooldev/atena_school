@@ -450,36 +450,66 @@ export class BookingsAdminService {
       data: updateData,
     });
 
-    // Synchronize payments table when status becomes paid/succeeded
+    // Synchronize payments and annual_memberships table when status becomes paid/succeeded
     if (normalizedStatus === 'paid' || normalizedStatus === 'completed' || normalizedStatus === 'succeeded') {
-      await this.prisma.payment.updateMany({
-        where: { bookingId: id, status: 'pending' },
-        data: { status: 'succeeded' },
-      }).catch(() => null);
-    }
-
-    const isNowPaid = updatedBooking.paymentStatus === 'paid';
-    try {
-      const updatePayload: Record<string, any> = {};
-      if (isNowPaid) {
-        updatePayload.status = 'succeeded';
-        updatePayload.paidAt = new Date();
-      }
-      if (updatedBooking.paymentMethod) {
-        updatePayload.paymentMethod = updatedBooking.paymentMethod;
-      }
-
-      if (Object.keys(updatePayload).length > 0) {
+      try {
         await this.prisma.payment.updateMany({
-          where: {
-            bookingId: id,
-            ...(isNowPaid ? { status: { in: ['pending', 'reserved'] } } : {}),
-          },
-          data: updatePayload,
+          where: { bookingId: id },
+          data: { status: 'succeeded', paidAt: new Date() },
         });
+
+        // Activate or create membership in annual_memberships table
+        const { data: existingMem } = await this.supabaseAdmin
+          .from('annual_memberships')
+          .select('id')
+          .eq('booking_id', id)
+          .maybeSingle();
+
+        const sTaxCode = updatedBooking.studentTaxCode || updatedBooking.purchaserTaxCode || null;
+        const sEmail = updatedBooking.studentEmail || updatedBooking.purchaserEmail || null;
+        const sPhone = updatedBooking.studentPhone || updatedBooking.purchaserPhone || null;
+
+        if (existingMem?.id) {
+          await this.supabaseAdmin
+            .from('annual_memberships')
+            .update({
+              status: 'active',
+              paid_at: new Date().toISOString(),
+            })
+            .eq('id', existingMem.id);
+        } else {
+          await this.supabaseAdmin
+            .from('annual_memberships')
+            .insert({
+              booking_id: id,
+              tax_code: sTaxCode,
+              email: sEmail,
+              phone: sPhone,
+              academic_year: '2026/2027',
+              status: 'active',
+              paid_at: new Date().toISOString(),
+              expires_at: '2027-08-31T23:59:59.000Z',
+            });
+        }
+
+        // Update student annual_fee_paid status
+        if (sTaxCode || sEmail) {
+          let sQuery = this.supabaseAdmin
+            .from('students')
+            .update({
+              annual_fee_paid: true,
+              annual_fee_paid_at: new Date().toISOString(),
+            });
+          if (sTaxCode) {
+            sQuery = sQuery.ilike('tax_code', sTaxCode);
+          } else if (sEmail) {
+            sQuery = sQuery.ilike('email', sEmail);
+          }
+          await sQuery;
+        }
+      } catch (syncErr) {
+        this.logger.warn('Sync membership & payments error on booking status update:', syncErr);
       }
-    } catch (pErr) {
-      this.logger.warn('Sync payments error on booking update:', pErr);
     }
 
     return this.mapBookingToResponse(updatedBooking);
@@ -493,12 +523,14 @@ export class BookingsAdminService {
     taxCode?: string;
     birthDate?: string;
     paymentMethod?: string;
+    status?: string;
   }) {
     let studentId = dto.studentId;
     const sEmail = (dto.email || '').trim() || null;
     const sTaxCode = (dto.taxCode || '').trim() || null;
     const pMethod = dto.paymentMethod || 'cash';
     const sName = (dto.fullName || 'Studente').trim();
+    const isPaid = (dto.status || '').toLowerCase() === 'succeeded' || (dto.status || '').toLowerCase() === 'active' || (dto.status || '').toLowerCase() === 'paid';
 
     if (!studentId && (sEmail || sTaxCode)) {
       let existingStudent: { id: string } | null = null;
@@ -536,8 +568,8 @@ export class BookingsAdminService {
             language_level: 'A1',
             registration_date: new Date().toISOString().split('T')[0],
             status: 'active',
-            annual_fee_paid: true,
-            annual_fee_paid_at: new Date().toISOString(),
+            annual_fee_paid: isPaid,
+            annual_fee_paid_at: isPaid ? new Date().toISOString() : null,
           })
           .select('id')
           .single();
@@ -555,7 +587,7 @@ export class BookingsAdminService {
         email: sEmail,
         phone: dto.phone || null,
         academic_year: '2026/2027',
-        status: 'active',
+        status: isPaid ? 'active' : 'pending',
         paid_at: new Date().toISOString(),
         expires_at: '2027-08-31T23:59:59.000Z',
       })
@@ -568,12 +600,13 @@ export class BookingsAdminService {
       await this.prisma.payment.create({
         data: {
           bookingId: null,
+          studentId: studentId || null,
           amount: 30.0,
           paymentMethod: pMethod,
           type: 'registration_fee',
-          status: 'succeeded',
+          status: isPaid ? 'succeeded' : 'pending',
           provider: 'manual',
-          notes: `Quota d'iscrizione annuale A.A. 2026/2027 (Iscrizione Sede) [membership_id:${membership.id}]`,
+          notes: `Quota d'iscrizione annuale A.A. 2026/2027 (${sName}) [membership_id:${membership.id}]`,
         },
       });
     } catch (payErr) {
@@ -685,6 +718,127 @@ export class BookingsAdminService {
     } catch (err) {
       this.logger.error('Client lookup error:', err);
       return { found: false };
+    }
+  }
+
+  async listClients() {
+    try {
+      const clientMap = new Map<string, any>();
+
+      const makeKey = (taxCode?: string, email?: string, name?: string) => {
+        if (taxCode && taxCode.trim()) return taxCode.trim().toLowerCase();
+        if (email && email.trim()) return email.trim().toLowerCase();
+        if (name && name.trim()) return name.trim().toLowerCase();
+        return null;
+      };
+
+      // 1. From students table
+      const { data: students } = await this.supabaseAdmin
+        .from('students')
+        .select('*')
+        .order('full_name', { ascending: true });
+
+      if (students && Array.isArray(students)) {
+        for (const st of students) {
+          const key = makeKey(st.tax_code, st.email, st.full_name);
+          if (!key) continue;
+
+          const birthDateStr = st.birth_date
+            ? (st.birth_date instanceof Date ? st.birth_date.toISOString().split('T')[0] : String(st.birth_date).split('T')[0])
+            : '';
+
+          clientMap.set(key, {
+            id: st.id,
+            name: st.full_name || 'Cliente',
+            taxCode: st.tax_code || '',
+            email: st.email || '',
+            phone: st.phone || '',
+            birthDate: birthDateStr,
+            purchaserName: st.full_name || '',
+            purchaserEmail: st.email || '',
+            purchaserPhone: st.phone || '',
+            purchaserTaxCode: st.tax_code || '',
+            studentName: st.full_name || '',
+            studentEmail: st.email || '',
+            studentPhone: st.phone || '',
+            studentTaxCode: st.tax_code || '',
+            studentBirthDate: birthDateStr,
+            isForChild: false,
+          });
+        }
+      }
+
+      // 2. From bookings table
+      const bookings = await this.prisma.booking.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 300,
+      });
+
+      for (const b of bookings) {
+        const pName = (b.purchaserName || '').trim();
+        const sName = (b.studentName || '').trim();
+        const isChild = Boolean(sName && pName && sName.toLowerCase() !== pName.toLowerCase());
+
+        const pKey = makeKey(b.purchaserTaxCode || undefined, b.purchaserEmail || undefined, b.purchaserName || undefined);
+        const sKey = makeKey(b.studentTaxCode || undefined, b.studentEmail || undefined, b.studentName || undefined);
+
+        if (isChild) {
+          const existingStudent = sKey ? clientMap.get(sKey) : null;
+          const mergedRecord = {
+            id: b.id,
+            name: `${sName} (Genitore: ${pName})`,
+            taxCode: b.studentTaxCode || b.purchaserTaxCode || existingStudent?.taxCode || '',
+            email: b.purchaserEmail || b.studentEmail || existingStudent?.email || '',
+            phone: b.purchaserPhone || b.studentPhone || existingStudent?.phone || '',
+            purchaserName: pName,
+            purchaserEmail: b.purchaserEmail || '',
+            purchaserPhone: b.purchaserPhone || '',
+            purchaserTaxCode: b.purchaserTaxCode || '',
+            studentName: sName,
+            studentEmail: b.studentEmail || b.purchaserEmail || '',
+            studentPhone: b.studentPhone || b.purchaserPhone || '',
+            studentTaxCode: b.studentTaxCode || '',
+            studentBirthDate: b.studentBirthDate
+              ? b.studentBirthDate.toISOString().split('T')[0]
+              : existingStudent?.birthDate || '',
+            isForChild: true,
+          };
+
+          if (sKey) clientMap.set(sKey, mergedRecord);
+          if (pKey && pKey !== sKey) clientMap.set(pKey, mergedRecord);
+        } else if (pKey && !clientMap.has(pKey)) {
+          clientMap.set(pKey, {
+            id: b.id,
+            name: pName || 'Cliente',
+            taxCode: b.purchaserTaxCode || '',
+            email: b.purchaserEmail || '',
+            phone: b.purchaserPhone || '',
+            purchaserName: pName,
+            purchaserEmail: b.purchaserEmail || '',
+            purchaserPhone: b.purchaserPhone || '',
+            purchaserTaxCode: b.purchaserTaxCode || '',
+            studentName: pName,
+            studentEmail: b.purchaserEmail || '',
+            studentPhone: b.purchaserPhone || '',
+            studentTaxCode: b.purchaserTaxCode || '',
+            isForChild: false,
+          });
+        }
+      }
+
+      const uniqueRecords = Array.from(new Set(clientMap.values()));
+
+      return uniqueRecords.map((c) => {
+        const taxPart = c.taxCode ? ` — ${c.taxCode}` : '';
+        const emailPart = c.email ? ` (${c.email})` : '';
+        return {
+          ...c,
+          label: `${c.name}${taxPart}${emailPart}`,
+        };
+      });
+    } catch (err) {
+      this.logger.error('List clients error:', err);
+      return [];
     }
   }
 }

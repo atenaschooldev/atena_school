@@ -215,11 +215,11 @@ export function EditBookingDialog({
                 <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Stato & Metodo Pagamento</p>
                 <div className="h-px flex-1 bg-border/50" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                <div className="space-y-1 min-w-0">
                   <label className="font-semibold text-foreground">Stato Pagamento</label>
                   <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-                    <SelectTrigger className="cursor-pointer h-9 text-xs">
+                    <SelectTrigger className="cursor-pointer h-9 text-xs w-full min-w-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,10 +228,10 @@ export function EditBookingDialog({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 min-w-0">
                   <label className="font-semibold text-foreground">Metodo di Pagamento</label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <SelectTrigger className="cursor-pointer h-9 text-xs">
+                    <SelectTrigger className="cursor-pointer h-9 text-xs w-full min-w-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

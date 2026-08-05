@@ -112,6 +112,10 @@ export const routes: RouteConfig[] = [
 
   // Authentication Routes
   {
+    path: "/sign-in",
+    element: <SignIn />
+  },
+  {
     path: "/auth/sign-in",
     element: <SignIn />
   },

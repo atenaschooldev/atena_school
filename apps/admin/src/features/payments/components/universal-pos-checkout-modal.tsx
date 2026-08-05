@@ -34,6 +34,7 @@ import { formatCurrency } from "@atena/utils";
 interface UniversalPosCheckoutModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultFeeOnly?: boolean;
   preselectedBooking?: {
     id: string;
     purchaserName: string;
@@ -47,6 +48,7 @@ interface UniversalPosCheckoutModalProps {
 export function UniversalPosCheckoutModal({
   open,
   onOpenChange,
+  defaultFeeOnly = false,
   preselectedBooking,
 }: UniversalPosCheckoutModalProps) {
   const queryClient = useQueryClient();
@@ -59,6 +61,8 @@ export function UniversalPosCheckoutModal({
     email: string;
     taxCode?: string;
     phone?: string;
+    courseName?: string;
+    outstandingEstimate?: number;
   } | null>(
     preselectedBooking
       ? {
@@ -66,17 +70,19 @@ export function UniversalPosCheckoutModal({
           name: preselectedBooking.purchaserName,
           email: preselectedBooking.purchaserEmail,
           taxCode: preselectedBooking.purchaserTaxCode,
+          courseName: preselectedBooking.courseName,
+          outstandingEstimate: preselectedBooking.outstandingEstimate,
         }
       : null
   );
 
   // Checkbox states for atomic payment items
-  const [payCourse, setPayCourse] = useState(true);
+  const [payCourse, setPayCourse] = useState(!defaultFeeOnly);
   const [courseAmount, setCourseAmount] = useState<number>(
-    preselectedBooking?.outstandingEstimate || 150
+    preselectedBooking?.outstandingEstimate ?? 0
   );
 
-  const [payRegistrationFee, setPayRegistrationFee] = useState(false);
+  const [payRegistrationFee, setPayRegistrationFee] = useState(defaultFeeOnly);
   const [registrationFeeAmount] = useState<number>(30);
 
   const [payCustomLesson, setPayCustomLesson] = useState(false);
@@ -95,15 +101,23 @@ export function UniversalPosCheckoutModal({
         `/admin/bookings/lookup-client?q=${encodeURIComponent(searchQuery.trim())}`
       );
       if (res.found) {
+        const outstanding = Number(res.outstandingEstimate ?? res.totalPrice ?? 0);
         setSelectedClient({
+          bookingId: res.bookingId || res.id,
           name: res.studentName || res.purchaserName || "Cliente",
           email: res.studentEmail || res.purchaserEmail || "",
           taxCode: res.studentTaxCode || res.purchaserTaxCode || "",
           phone: res.studentPhone || res.purchaserPhone || "",
+          courseName: res.courseName || res.course_name,
+          outstandingEstimate: outstanding,
         });
+        if (outstanding > 0) {
+          setCourseAmount(outstanding);
+          setPayCourse(true);
+        }
         toast.success("Anagrafica cliente trovata!");
       } else {
-        toast.error("Nessun cliente trovato con این параметры.");
+        toast.error("Nessun cliente trovato con questi parametri.");
       }
     } catch {
       toast.error("Errore nella ricerca del cliente");
@@ -134,7 +148,9 @@ export function UniversalPosCheckoutModal({
         items.push({
           type: "payment",
           amount: courseAmount,
-          description: "Quota Corso",
+          description: selectedClient?.courseName
+            ? `Quota Corso: ${selectedClient.courseName}`
+            : "Quota Corso",
         });
       }
       if (payRegistrationFee) {
@@ -148,34 +164,32 @@ export function UniversalPosCheckoutModal({
         items.push({
           type: "lesson_fee",
           amount: customLessonAmount,
-          description: customLessonDescription,
+          description: customLessonDescription || "Lezione Singola / Materiale",
         });
       }
 
       await api.post("/admin/payments/pos-checkout", {
         bookingId: selectedClient?.bookingId,
-        purchaserName: selectedClient?.name || searchQuery.trim(),
+        purchaserName: selectedClient?.name || searchQuery,
         purchaserEmail: selectedClient?.email,
         purchaserTaxCode: selectedClient?.taxCode,
         paymentMethod,
         items,
-        notes: notes || undefined,
+        notes,
       });
 
-      toast.success("Transazione e incasso registrati con successo!");
+      toast.success("Incasso registrato con successo!");
       queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["payments-summary"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["reports"] });
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
 
       onOpenChange(false);
       setSelectedClient(null);
       setSearchQuery("");
       setNotes("");
-    } catch (err) {
-      console.error(err);
-      toast.error("Errore nella registrazione della transazione");
+    } catch (e: any) {
+      toast.error(e.message || "Errore nella registrazione dell'incasso");
     } finally {
       setSubmitting(false);
     }
@@ -190,9 +204,9 @@ export function UniversalPosCheckoutModal({
               <Receipt className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold">Универсальный приём оплаты (Касса POS)</DialogTitle>
+              <DialogTitle className="text-base font-bold">Registrazione Incasso in Sede</DialogTitle>
               <DialogDescription className="text-xs">
-                Регистрация взносов, курсов и уроков в едином чеке
+                Emissione scontrino e registrazione pagamenti per corsi, tessere e lezioni
               </DialogDescription>
             </div>
           </div>
@@ -212,6 +226,11 @@ export function UniversalPosCheckoutModal({
                   <p className="text-xs text-muted-foreground">
                     {selectedClient.email} {selectedClient.taxCode ? `• CF: ${selectedClient.taxCode}` : ""}
                   </p>
+                  {selectedClient.courseName && (
+                    <p className="text-[11px] text-primary font-medium mt-0.5">
+                      Corso: {selectedClient.courseName}
+                    </p>
+                  )}
                 </div>
                 <Button
                   type="button"
@@ -255,7 +274,7 @@ export function UniversalPosCheckoutModal({
           {/* STEP 2: ITEMS SELECTOR (CHECKBOXES) */}
           <div className="space-y-3">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-primary" /> 2. Voci del Чек (Позиции оплаты)
+              <FileText className="w-3.5 h-3.5 text-primary" /> 2. Voci dello Scontrino
             </Label>
 
             <div className="space-y-2 border rounded-xl p-3 bg-card/60">
@@ -268,7 +287,9 @@ export function UniversalPosCheckoutModal({
                     onCheckedChange={(v) => setPayCourse(Boolean(v))}
                   />
                   <label htmlFor="item-course" className="text-xs font-semibold cursor-pointer">
-                    Quota Corso / Доплата за курс
+                    {selectedClient?.courseName
+                      ? `Quota Corso: ${selectedClient.courseName}`
+                      : "Quota Corso"}
                   </label>
                 </div>
                 {payCourse && (
@@ -293,7 +314,7 @@ export function UniversalPosCheckoutModal({
                     onCheckedChange={(v) => setPayRegistrationFee(Boolean(v))}
                   />
                   <label htmlFor="item-fee" className="text-xs font-semibold cursor-pointer">
-                    Quota Annuale Iscrizione (Годовой взнос €30)
+                    Quota Annuale Iscrizione (€30.00)
                   </label>
                 </div>
                 <span className="font-bold font-mono text-xs text-emerald-600 dark:text-emerald-400">
@@ -310,7 +331,7 @@ export function UniversalPosCheckoutModal({
                     onCheckedChange={(v) => setPayCustomLesson(Boolean(v))}
                   />
                   <label htmlFor="item-custom" className="text-xs font-semibold cursor-pointer">
-                    Lezione Singola / Отдельный урок
+                    Lezione Singola / Materiale
                   </label>
                 </div>
                 {payCustomLesson && (

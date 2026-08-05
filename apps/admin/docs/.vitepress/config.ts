@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Shadcn Dashboard & Landing',
+  title: 'Atena School Admin Panel',
   description: 'Open-source admin dashboard & landing page template built with React, TypeScript, shadcn/ui v3, and Tailwind CSS v4. Developed by ShadcnStore.',
 
   // Theme configuration

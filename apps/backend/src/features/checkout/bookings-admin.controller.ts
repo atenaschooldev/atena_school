@@ -56,6 +56,13 @@ export class BookingsAdminController {
     return this.bookingsAdminService.lookupClient(q);
   }
 
+  @Get('clients-list')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить список всех клиентов из базы' })
+  async listClients() {
+    return this.bookingsAdminService.listClients();
+  }
+
   @Post()
   @Roles('admin')
   @Audit('bookings', 'create')

@@ -220,6 +220,7 @@ export class CheckoutCoreService {
     try {
       const pStatus = (paymentStatus === 'completed' || paymentStatus === 'paid') ? 'succeeded' : 'pending';
       const pMethod = paymentMethod || 'cash';
+      const provider = (pMethod === 'stripe' || pMethod === 'card_online') ? 'stripe' : 'manual';
 
       if (coursePrice > 0) {
         await this.prisma.payment.create({
@@ -230,6 +231,7 @@ export class CheckoutCoreService {
             status: pStatus,
             type: 'payment',
             paymentMethod: pMethod,
+            provider: provider,
           },
         });
       }
@@ -243,6 +245,7 @@ export class CheckoutCoreService {
             status: pStatus,
             type: 'registration_fee',
             paymentMethod: pMethod,
+            provider: provider,
           },
         });
       }

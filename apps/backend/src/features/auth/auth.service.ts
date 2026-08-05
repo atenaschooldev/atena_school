@@ -1,14 +1,33 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { LoginDto } from './dto/login.dto';
 import { UsersRepository } from './domain/users.repository.interface';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  private supabaseAdmin: SupabaseClient;
+
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly configService: ConfigService,
+  ) {
+    const supabaseUrl =
+      this.configService.get<string>('SUPABASE_URL') ||
+      this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') ||
+      process.env.SUPABASE_URL ||
+      process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      '';
+    const serviceKey =
+      this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') ||
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      '';
+    this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
+  }
 
   async login(dto: LoginDto) {
-    // Временный mock-логин для локальной разработки
-    if (dto.email === 'admin@atenaschool.it' && dto.password === 'password123') {
+    // 1. Временный/локальный тест-логин для разработки
+    if (process.env.NODE_ENV !== 'production' && dto.email === 'admin@atenaschool.it' && dto.password === 'password123') {
       let user = await this.usersRepository.findByEmail(dto.email);
       if (!user) {
         user = await this.usersRepository.create({
@@ -30,21 +49,35 @@ export class AuthService {
       };
     }
 
-    // В будущем здесь будет проверка токена / авторизация:
-    const user = await this.usersRepository.findByEmail(dto.email);
-    if (!user) {
-      throw new UnauthorizedException('Неверный логин или пароль');
+    // 2. Аутентификация через Supabase Auth
+    try {
+      const { data, error } = await this.supabaseAdmin.auth.signInWithPassword({
+        email: dto.email,
+        password: dto.password,
+      });
+
+      if (error || !data.session || !data.user) {
+        throw new UnauthorizedException('Неверный логин или пароль');
+      }
+
+      const user = data.user;
+      const meta = user.user_metadata || {};
+      const firstName = meta.first_name || meta.given_name || (user.email ? user.email.split('@')[0] : 'User');
+      const lastName = meta.last_name || meta.family_name || 'Admin';
+      const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
+
+      return {
+        access_token: data.session.access_token,
+        user: {
+          id: user.id,
+          role: user.role || 'admin',
+          full_name: fullName,
+          email: user.email,
+        },
+      };
+    } catch (err: any) {
+      if (err instanceof UnauthorizedException) throw err;
+      throw new UnauthorizedException('Ошибка авторизации. Проверьте правильность логина и пароля.');
     }
-    
-    // Тут выполняем верификацию пароля
-    return {
-      access_token: 'MOCK_TOKEN',
-      user: {
-        id: user.id,
-        role: user.role,
-        full_name: `${user.firstName} ${user.lastName}`,
-        email: user.email,
-      },
-    };
   }
 }

@@ -1,8 +1,57 @@
-import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.service';
 import { BookingsAdminService } from './bookings-admin.service';
 import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { AuthGuard } from '../../core/guards/auth.guard';
+import { RolesGuard } from '../../core/guards/roles.guard';
+import { Roles } from '../../core/decorators/roles.decorator';
+
+export class UpdateBookingDto {
+  @IsOptional()
+  @IsString()
+  purchaserName?: string;
+
+  @IsOptional()
+  @IsString()
+  purchaser_name?: string;
+
+  @IsOptional()
+  @IsString()
+  purchaserEmail?: string;
+
+  @IsOptional()
+  @IsString()
+  purchaser_email?: string;
+
+  @IsOptional()
+  @IsString()
+  purchaserPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  purchaser_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_status?: string;
+
+  @IsOptional()
+  @IsString()
+  paymentMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method?: string;
+
+  @IsOptional()
+  @IsString()
+  scheduling_status?: string;
+}
 
 export class CheckFeeDto {
   @IsOptional()
@@ -229,6 +278,9 @@ export class CheckoutController {
   }
 
   @Post('admin/memberships/pay-fee')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Прямая регистрация и оплата взноса €30 в Iscrizioni' })
   async createAdminMembershipFee(@Body() dto: AdminMembershipFeeDto) {
@@ -236,9 +288,12 @@ export class CheckoutController {
   }
 
   @Patch('admin/bookings/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Обновление данных бронирования (клиент, статус, метод оплаты)' })
-  async updateBooking(@Param('id') id: string, @Body() dto: any) {
+  async updateBooking(@Param('id') id: string, @Body() dto: UpdateBookingDto) {
     return this.bookingsAdminService.updateBooking(id, dto);
   }
 }

@@ -187,7 +187,7 @@ export function CreateAttendanceDialog({
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Note / Note Docente</Label>
             <Textarea
-              placeholder="Es. Lezione di recupero, опоздание на 15 минут..."
+              placeholder="Es. Lezione di recupero, ritardo di 15 minuti..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="text-xs resize-none h-20"

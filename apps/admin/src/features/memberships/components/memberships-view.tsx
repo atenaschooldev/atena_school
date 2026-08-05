@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useMemberships } from "../hooks/use-memberships";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   BadgeCheck,
   XCircle,
@@ -12,10 +13,17 @@ import {
   ExternalLink,
   Shield,
   ShieldOff,
-  MoreVertical,
   Calendar,
   Building2,
+  CreditCard,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Copy,
+  Check,
 } from "lucide-react";
+import { UniversalPosCheckoutModal } from "@/features/payments/components/universal-pos-checkout-modal";
+import { CreateMembershipDialog } from "./create-membership-dialog";
 import { Button } from "@/components/ui/button";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Input } from "@/components/ui/input";
@@ -58,26 +66,37 @@ import {
 import type { Membership } from "../types";
 
 function getStatusBadge(status: string, expiresAt: string) {
-  const isExpired = new Date(expiresAt) < new Date();
-  if (isExpired && status === "active") {
-    return (
-      <Badge variant="secondary" className="gap-1">
-        <Clock className="h-3 w-3" />
-        Scaduta
-      </Badge>
-    );
-  }
+  const isExpired = expiresAt ? new Date(expiresAt) < new Date() : false;
+
   if (status === "active") {
+    if (isExpired) {
+      return (
+        <Badge variant="secondary" className="gap-1.5 bg-muted text-muted-foreground border-border w-fit font-medium">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          Scaduta
+        </Badge>
+      );
+    }
     return (
-      <Badge className="gap-1 bg-emerald-500/15 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20">
-        <BadgeCheck className="h-3 w-3" />
+      <Badge className="gap-1.5 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20 font-semibold w-fit">
+        <BadgeCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
         Attiva
       </Badge>
     );
   }
+
+  if (status === "pending" || status === "in_attesa") {
+    return (
+      <Badge variant="secondary" className="gap-1.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold w-fit">
+        <Clock className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+        In attesa
+      </Badge>
+    );
+  }
+
   return (
-    <Badge variant="destructive" className="gap-1">
-      <XCircle className="h-3 w-3" />
+    <Badge variant="destructive" className="gap-1.5 font-semibold w-fit">
+      <XCircle className="h-3.5 w-3.5 shrink-0" />
       Revocata
     </Badge>
   );
@@ -95,8 +114,12 @@ export function MembershipsView() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
   const [globalFilter, setGlobalFilter] = useState("");
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "paidAt", desc: true },
+  ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [feeCheckoutOpen, setFeeCheckoutOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const { memberships, loading, updateStatus, refresh } = useMemberships({
     status: statusFilter,
@@ -119,6 +142,14 @@ export function MembershipsView() {
     }
   }, [highlightId, memberships]);
 
+  const handleCopyId = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(id);
+    setCopiedId(id);
+    toast.success("ID iscrizione copiato!");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   const stats = useMemo(() => {
     const total = memberships.length;
     const active = memberships.filter((m) => {
@@ -135,37 +166,123 @@ export function MembershipsView() {
 
   const columns: ColumnDef<Membership>[] = [
     {
-      id: "email",
-      header: "Email / Studente",
+      id: "taxCode",
+      accessorKey: "taxCode",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Codice Fiscale / Email</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         const m = row.original;
         return (
-          <div className="flex flex-col gap-0.5">
-            <span className="font-medium text-sm">{m.email || "—"}</span>
-            {m.taxCode && (
-              <span className="text-xs text-muted-foreground font-mono">{m.taxCode}</span>
-            )}
+          <div className="flex flex-col gap-0.5 min-w-[200px]">
+            <span className="font-bold text-sm text-foreground font-mono tracking-wide">
+              {m.taxCode || "NON SPECIFICATO"}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => handleCopyId(e, m.id)}
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground font-mono hover:text-primary transition-colors cursor-pointer shrink-0"
+                title="Clicca per copiare l'ID"
+              >
+                {copiedId === m.id ? (
+                  <Check className="w-3 h-3 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3 h-3 opacity-60" />
+                )}
+                <span>#{m.id.slice(0, 8)}</span>
+              </button>
+              {m.email && (
+                <span className="text-xs text-muted-foreground truncate max-w-[180px]">
+                  • {m.email}
+                </span>
+              )}
+            </div>
           </div>
         );
       },
     },
     {
       accessorKey: "academicYear",
-      header: "Anno",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Anno</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ getValue }) => (
-        <Badge variant="outline" className="font-mono text-xs">
+        <Badge variant="outline" className="font-mono text-xs w-fit">
           {getValue<string>()}
         </Badge>
       ),
     },
     {
       id: "status",
-      header: "Stato",
+      accessorKey: "status",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Stato</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => getStatusBadge(row.original.status, row.original.expiresAt),
     },
     {
       id: "paidAt",
-      header: "Pagata il",
+      accessorKey: "paidAt",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Pagata il</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
         if (!row.original.paidAt) return <span className="text-xs text-muted-foreground">—</span>;
         return (
@@ -178,17 +295,51 @@ export function MembershipsView() {
     },
     {
       id: "expiresAt",
-      header: "Scade il",
+      accessorKey: "expiresAt",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Scade il</span>
+          {column.getIsSorted() === "desc" ? (
+            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : column.getIsSorted() === "asc" ? (
+            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+          ) : (
+            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+          )}
+        </Button>
+      ),
       cell: ({ row }) => {
-        const isExpired = new Date(row.original.expiresAt) < new Date();
+        const expiresDate = new Date(row.original.expiresAt);
+        const now = new Date();
+        const isExpired = expiresDate < now;
+        const daysLeft = Math.ceil((expiresDate.getTime() - now.getTime()) / (1000 * 3600 * 24));
+        const isExpiringSoon = !isExpired && daysLeft <= 30;
+
+        if (isExpired) {
+          return (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono font-medium shadow-2xs bg-destructive/10 text-destructive border-destructive/30 w-fit">
+              <Clock className="w-3 h-3 shrink-0" />
+              <span>Scaduta ({formatDate(row.original.expiresAt)})</span>
+            </div>
+          );
+        }
+        if (isExpiringSoon) {
+          return (
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono font-medium shadow-2xs bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 w-fit">
+              <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>Scade il {formatDate(row.original.expiresAt)}</span>
+            </div>
+          );
+        }
         return (
-          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono font-medium shadow-2xs ${
-            isExpired
-              ? "bg-destructive/10 text-destructive border-destructive/30"
-              : "bg-muted/60 dark:bg-muted/30 border-border/60 text-foreground"
-          }`}>
-            <Clock className="w-3 h-3 shrink-0 opacity-70" />
-            <span>{formatDate(row.original.expiresAt)}</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-mono font-medium shadow-2xs bg-muted/60 dark:bg-muted/30 border-border/60 text-foreground w-fit">
+            <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
+            <span>Fino al {formatDate(row.original.expiresAt)}</span>
           </div>
         );
       },
@@ -200,65 +351,66 @@ export function MembershipsView() {
         const m = row.original;
         if (!m.bookingId) {
           return (
-            <Badge variant="outline" className="text-[11px] font-medium text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40 border border-amber-500/25 gap-1.5 shadow-2xs">
+            <Badge variant="outline" className="text-[11px] font-medium text-amber-700 bg-amber-50 dark:text-amber-300 dark:bg-amber-950/40 border border-amber-500/25 gap-1.5 shadow-2xs w-fit">
               <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
-              <span>In Sede</span>
+              <span>In Sede (Scuola)</span>
             </Badge>
           );
         }
         return (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-7 gap-1 text-xs cursor-pointer"
+            className="h-7 px-2.5 text-[11px] font-mono gap-1.5 cursor-pointer hover:bg-primary/10 hover:text-primary transition-colors border-primary/20"
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/prenotazioni?highlight=${m.bookingId}`);
             }}
+            title={`Vedi Prenotazione #${m.bookingId.slice(0, 8)}`}
           >
-            <ExternalLink className="h-3 w-3" />
-            Vai
+            <CreditCard className="w-3.5 h-3.5 text-primary shrink-0" />
+            <span>Online #{m.bookingId.slice(0, 8)}</span>
+            <ExternalLink className="w-3 h-3 shrink-0 opacity-60 ml-0.5" />
           </Button>
         );
       },
     },
-      {
-        id: "actions",
-        header: "Azioni",
-        enableHiding: false,
-        cell: ({ row }) => {
-          const m = row.original;
-          const isActive = m.status === "active";
-          return (
-            <div className="flex items-center gap-1">
-              {m.bookingId && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
-                  onClick={() => navigate(`/prenotazioni?highlight=${m.bookingId}`)}
-                  title="Vai alla prenotazione"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
+    {
+      id: "actions",
+      header: "Azioni",
+      enableHiding: false,
+      cell: ({ row }) => {
+        const m = row.original;
+        const isActive = m.status === "active";
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 px-2.5 text-xs font-medium cursor-pointer transition-colors gap-1.5 ${
+                isActive
+                  ? "text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 dark:hover:text-rose-400"
+                  : "text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 dark:hover:text-emerald-400"
+              }`}
+              onClick={() => updateStatus(m.id, isActive ? "revoked" : "active")}
+              title={isActive ? "Revoca iscrizione annuale" : "Riattiva iscrizione annuale"}
+            >
+              {isActive ? (
+                <>
+                  <ShieldOff className="h-3.5 w-3.5" />
+                  <span>Revoca</span>
+                </>
+              ) : (
+                <>
+                  <Shield className="h-3.5 w-3.5" />
+                  <span>Riattiva</span>
+                </>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 cursor-pointer ${
-                  isActive
-                    ? "text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
-                    : "text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400"
-                }`}
-                onClick={() => updateStatus(m.id, isActive ? "revoked" : "active")}
-                title={isActive ? "Revoca iscrizione" : "Riattiva iscrizione"}
-              >
-                {isActive ? <ShieldOff className="h-4 w-4" /> : <Shield className="h-4 w-4" />}
-              </Button>
-            </div>
-          );
-        },
+            </Button>
+          </div>
+        );
       },
+    },
   ];
 
   const table = useReactTable({
@@ -285,6 +437,7 @@ export function MembershipsView() {
             Gestione quote di iscrizione per anno accademico
           </p>
         </div>
+        <CreateMembershipDialog onSuccess={() => refresh()} />
       </div>
 
       {/* Stats */}
@@ -354,6 +507,7 @@ export function MembershipsView() {
             <SelectContent>
               <SelectItem value="all">Tutti gli stati</SelectItem>
               <SelectItem value="active">Attive</SelectItem>
+              <SelectItem value="pending">In attesa</SelectItem>
               <SelectItem value="revoked">Revocate</SelectItem>
             </SelectContent>
           </Select>
@@ -441,6 +595,16 @@ export function MembershipsView() {
 
       {/* Pagination */}
       <DataTablePagination table={table} />
+
+      {/* Standalone Fee Checkout Modal */}
+      <UniversalPosCheckoutModal
+        open={feeCheckoutOpen}
+        onOpenChange={setFeeCheckoutOpen}
+        defaultFeeOnly={true}
+        onSuccess={() => {
+          refresh();
+        }}
+      />
     </div>
   );
 }

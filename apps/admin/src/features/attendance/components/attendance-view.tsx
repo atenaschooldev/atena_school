@@ -213,10 +213,10 @@ export function AttendanceView() {
         {/* Live Daily Stats */}
         <div className="flex items-center gap-2 flex-wrap text-xs">
           <Badge variant="outline" className="px-2.5 py-1 bg-background">
-            Classi / Уроков: <span className="font-bold ml-1">{classSessionGroups.length}</span>
+            Classi / Lezioni: <span className="font-bold ml-1">{classSessionGroups.length}</span>
           </Badge>
           <Badge variant="outline" className="px-2.5 py-1 bg-background">
-            Студентов в ведомости: <span className="font-bold ml-1">{totalStudentsCount}</span>
+            Studenti a registro: <span className="font-bold ml-1">{totalStudentsCount}</span>
           </Badge>
           <Badge variant="secondary" className="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <UserCheck className="w-3.5 h-3.5 mr-1" />
@@ -267,20 +267,20 @@ export function AttendanceView() {
               size="sm"
               className="h-8 text-xs px-2.5 cursor-pointer"
               onClick={() => setViewMode("grouped")}
-              title="Групповой вид по классам"
+              title="Vista raggruppata per classe"
             >
               <LayoutGrid className="w-3.5 h-3.5 mr-1" />
-              По классам
+              Per Classi
             </Button>
             <Button
               variant={viewMode === "flat" ? "secondary" : "ghost"}
               size="sm"
               className="h-8 text-xs px-2.5 cursor-pointer"
               onClick={() => setViewMode("flat")}
-              title="Плоский список ведомости"
+              title="Elenco completo presenze"
             >
               <ListFilter className="w-3.5 h-3.5 mr-1" />
-              Плоский список
+              Elenco Fluido
             </Button>
           </div>
         </div>
@@ -297,7 +297,7 @@ export function AttendanceView() {
           <div className="space-y-1">
             <h3 className="font-bold text-base">Nessuna lezione in programma</h3>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Per la data <span className="font-semibold">{formatDateItalian(selectedDate)}</span> non ci sono lezioni сгенерированные в расписании.
+              Per la data <span className="font-semibold">{formatDateItalian(selectedDate)}</span> non ci sono lezioni programmate a calendario.
             </p>
           </div>
         </Card>
