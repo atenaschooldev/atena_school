@@ -6,38 +6,8 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { TeachersService } from './teachers.service';
-
-export class CreateTeacherDto {
-  @IsString()
-  fullName: string;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
-
-  @IsOptional()
-  @IsString()
-  photoUrl?: string;
-
-  @IsOptional()
-  @IsString()
-  experience?: string;
-
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @IsOptional()
-  @IsString()
-  bio?: string;
-}
-
-export class UpdateTeacherDto extends CreateTeacherDto {}
+import { TeachersService } from './teachers.admin.service';
+import { CreateTeacherDto, UpdateTeacherDto } from './dto/teacher.dto';
 
 @ApiTags('Admin — Teachers')
 @ApiBearerAuth('JWT-auth')

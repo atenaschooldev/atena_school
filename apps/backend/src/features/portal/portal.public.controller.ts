@@ -1,16 +1,8 @@
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
-import { PortalService } from './portal.service';
-import { IsString } from 'class-validator';
-
-export class UpdateProfileDto {
-  @IsString()
-  profileName: string;
-
-  @IsString()
-  profilePhone: string;
-}
+import { PortalService } from './portal.public.service';
+import { UpdateProfileDto } from './dto/portal.dto';
 
 @ApiTags('Student & Parent Portal (LK)')
 @ApiBearerAuth()

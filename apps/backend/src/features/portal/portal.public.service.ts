@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { UpdateProfileDto } from './portal.controller';
+import { UpdateProfileDto } from './dto/portal.dto';
 import { calculateLessonDates } from '@atena/utils';
 import { getDynamicMaxLessons } from '@atena/utils';
 

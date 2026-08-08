@@ -4,11 +4,11 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
-import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from './checkout.controller';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from '../dto/checkout.public.dto';
 import { calculateLessonDates } from '@atena/utils';
 
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { CheckoutCoreService } from './checkout-core.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
+import { CheckoutCoreService } from '../checkout-core.service';
 
 export interface CourseRecord {
   id: string;

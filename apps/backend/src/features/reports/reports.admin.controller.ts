@@ -4,7 +4,7 @@ import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { ReportsService } from './reports.service';
+import { ReportsService } from './reports.admin.service';
 
 @ApiTags('Admin — Reports / Analytics')
 @ApiBearerAuth('JWT-auth')

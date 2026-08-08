@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { PortalController } from './portal.controller';
-import { PortalService } from './portal.service';
+import { PortalController } from './portal.public.controller';
+import { PortalService } from './portal.public.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({

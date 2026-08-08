@@ -1,23 +1,13 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
-import { AuthGuard } from '../../core/guards/auth.guard';
-import { RolesGuard } from '../../core/guards/roles.guard';
-import { Roles } from '../../core/decorators/roles.decorator';
-import { Audit } from '../../core/decorators/audit.decorator';
-import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { CheckoutService } from './checkout.service';
-import { BookingsAdminService } from './bookings-admin.service';
-
-class UpdateBookingStatusDto {
-  @IsOptional()
-  @IsString()
-  payment_status?: string;
-
-  @IsOptional()
-  @IsString()
-  scheduling_status?: string;
-}
+import { AuthGuard } from '../../../core/guards/auth.guard';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { Audit } from '../../../core/decorators/audit.decorator';
+import { AuditInterceptor } from '../../../core/interceptors/audit.interceptor';
+import { CheckoutService } from '../public/checkout.public.service';
+import { BookingsAdminService } from './bookings.admin.service';
+import { UpdateBookingStatusDto } from '../dto/bookings.admin.dto';
 
 @ApiTags('Admin — Bookings')
 @ApiBearerAuth('JWT-auth')

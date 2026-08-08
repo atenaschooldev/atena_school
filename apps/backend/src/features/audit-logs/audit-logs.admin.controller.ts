@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
-import { AuditLogsService } from './audit-logs.service';
+import { AuditLogsService } from './audit-logs.admin.service';
 
 @ApiTags('Admin — Audit Logs')
 @ApiBearerAuth('JWT-auth')

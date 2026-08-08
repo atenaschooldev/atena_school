@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { CoursesService } from './courses.service';
-import { CoursesController } from './courses.controller';
+import { CoursesService } from './courses.admin.service';
+import { CoursesController } from './courses.admin.controller';
 import { CoursesRepository } from './domain/courses.repository.interface';
 import { PrismaCoursesRepository } from './impl/prisma-courses.repository';
 import { AuthModule } from '../auth/auth.module';

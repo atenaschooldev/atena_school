@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { MembershipsController } from './memberships.controller';
-import { MembershipsService } from './memberships.service';
+import { MembershipsController } from './memberships.admin.controller';
+import { MembershipsService } from './memberships.admin.service';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaMembershipsRepository } from './impl/prisma-memberships.repository';
 import { PrismaModule } from '../../core/prisma/prisma.module';

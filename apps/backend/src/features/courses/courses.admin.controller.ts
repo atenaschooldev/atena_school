@@ -6,87 +6,8 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { CoursesService } from './courses.service';
-
-export class CreateCourseDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  title?: string;
-
-  @IsOptional()
-  @IsString()
-  category?: string;
-
-  @IsOptional()
-  @IsNumber()
-  price?: number;
-
-  @IsOptional()
-  @IsString()
-  status?: string;
-
-  @IsOptional()
-  @IsString()
-  teacherId?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsString()
-  photoUrl?: string;
-
-  @IsOptional()
-  @IsNumber()
-  lessonsPerWeek?: number;
-
-  @IsOptional()
-  @IsNumber()
-  sortOrder?: number;
-
-  @IsOptional()
-  @IsString()
-  scheduleType?: string;
-
-  @IsOptional()
-  @IsNumber()
-  totalLessons?: number;
-
-  @IsOptional()
-  @IsArray()
-  scheduleDays?: any[];
-
-  @IsOptional()
-  @IsString()
-  startTime?: string;
-
-  @IsOptional()
-  @IsString()
-  endTime?: string;
-
-  @IsOptional()
-  @IsNumber()
-  lessonDurationMinutes?: number;
-
-  @IsOptional()
-  @IsNumber()
-  totalHours?: number;
-
-  @IsOptional()
-  @IsString()
-  courseFormat?: string;
-
-  @IsOptional()
-  @IsString()
-  slug?: string;
-}
-
-export class UpdateCourseDto extends CreateCourseDto {}
+import { CoursesService } from './courses.admin.service';
+import { CreateCourseDto, UpdateCourseDto } from './dto/course.dto';
 
 @ApiTags('Admin — Courses')
 @ApiBearerAuth('JWT-auth')

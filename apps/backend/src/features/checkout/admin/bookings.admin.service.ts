@@ -1,9 +1,9 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { PrismaService } from '../../core/prisma/prisma.service';
-import { CheckoutService } from './checkout.service';
-import { CheckoutCoreService } from './checkout-core.service';
+import { PrismaService } from '../../../core/prisma/prisma.service';
+import { CheckoutService } from '../public/checkout.public.service';
+import { CheckoutCoreService } from '../checkout-core.service';
 import { calculateLessonDates } from '@atena/utils';
 
 @Injectable()

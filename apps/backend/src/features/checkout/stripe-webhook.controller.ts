@@ -1,6 +1,6 @@
 import { Controller, Post, Req, Res, Headers, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { CheckoutService } from './checkout.service';
+import { CheckoutService } from './public/checkout.public.service';
 
 @ApiTags('Landing — Webhooks')
 @Controller('webhooks')

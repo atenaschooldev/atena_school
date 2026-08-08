@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TeachersController } from './teachers.controller';
-import { TeachersService } from './teachers.service';
+import { TeachersController } from './teachers.admin.controller';
+import { TeachersService } from './teachers.admin.service';
 import { TeachersRepository } from './domain/teachers.repository.interface';
 import { PrismaTeachersRepository } from './impl/prisma-teachers.repository';
 import { PrismaModule } from '../../core/prisma/prisma.module';

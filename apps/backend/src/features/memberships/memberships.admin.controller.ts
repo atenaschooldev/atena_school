@@ -6,14 +6,9 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { MembershipsService } from './memberships.service';
-import { BookingsAdminService } from '../checkout/bookings-admin.service';
-
-export class UpdateMembershipStatusDto {
-  @IsString()
-  @IsIn(['active', 'revoked', 'expired'])
-  status: string;
-}
+import { MembershipsService } from './memberships.admin.service';
+import { BookingsAdminService } from '../checkout/admin/bookings.admin.service';
+import { UpdateMembershipStatusDto } from './dto/membership.dto';
 
 @ApiTags('Admin — Memberships')
 @ApiBearerAuth('JWT-auth')

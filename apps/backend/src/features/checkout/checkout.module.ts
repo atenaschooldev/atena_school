@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CheckoutController } from './checkout.controller';
+import { CheckoutController } from './public/checkout.public.controller';
 import { StripeWebhookController } from './stripe-webhook.controller';
-import { BookingsAdminController } from './bookings-admin.controller';
-import { CheckoutService } from './checkout.service';
-import { BookingsAdminService } from './bookings-admin.service';
+import { BookingsAdminController } from './admin/bookings.admin.controller';
+import { CheckoutService } from './public/checkout.public.service';
+import { BookingsAdminService } from './admin/bookings.admin.service';
 import { CheckoutCoreService } from './checkout-core.service';
-
 import { PrismaModule } from '../../core/prisma/prisma.module';
 
 @Module({

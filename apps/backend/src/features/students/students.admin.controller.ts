@@ -1,50 +1,12 @@
 import { Controller, Get, Patch, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { StudentsService, UpdateStudentDto } from './students.service';
-
-export class UpdateStudentRequestDto implements UpdateStudentDto {
-  @IsOptional()
-  @IsString()
-  fullName?: string;
-
-  @IsOptional()
-  @IsString()
-  firstName?: string;
-
-  @IsOptional()
-  @IsString()
-  lastName?: string;
-
-  @IsOptional()
-  @IsString()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @IsOptional()
-  @IsString()
-  taxCode?: string;
-
-  @IsOptional()
-  @IsString()
-  birthDate?: string;
-
-  @IsOptional()
-  @IsString()
-  languageLevel?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  annualFeePaid?: boolean;
-}
+import { StudentsService } from './students.admin.service';
+import { UpdateStudentRequestDto } from './dto/student.dto';
 
 @ApiTags('Admin — Students')
 @ApiBearerAuth('JWT-auth')

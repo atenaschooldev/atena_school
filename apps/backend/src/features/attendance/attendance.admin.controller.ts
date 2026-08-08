@@ -6,60 +6,8 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
-import { AttendanceService } from './attendance.service';
-
-class MarkAttendanceDto {
-  @IsString()
-  lessonId: string;
-
-  @IsOptional()
-  @IsString()
-  bookingId?: string;
-
-  @IsOptional()
-  @IsString()
-  studentId?: string;
-
-  @IsString()
-  status: string; // present, absent, excused, late
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
-  @IsString()
-  markedBy?: string;
-}
-
-class PayLessonDto {
-  @IsOptional()
-  @IsString()
-  paymentMethod?: string;
-
-  @IsOptional()
-  @IsNumber()
-  amount?: number;
-}
-
-class CreateManualLessonDto {
-  @IsString()
-  bookingId: string;
-
-  @IsString()
-  startsAt: string;
-
-  @IsString()
-  status: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-
-  @IsOptional()
-  @IsNumber()
-  pricePerLesson?: number;
-}
+import { AttendanceService } from './attendance.admin.service';
+import { MarkAttendanceDto, PayLessonDto, CreateManualLessonDto } from './dto/attendance.dto';
 
 @ApiTags('Admin — Presenze / Attendance')
 @ApiBearerAuth('JWT-auth')
