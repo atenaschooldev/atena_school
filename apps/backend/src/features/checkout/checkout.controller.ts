@@ -276,24 +276,4 @@ export class CheckoutController {
   async submitContact(@Body() dto: ContactFormDto) {
     return this.checkoutService.submitContact(dto);
   }
-
-  @Post('admin/memberships/pay-fee')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth('JWT-auth')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Прямая регистрация и оплата взноса €30 в Iscrizioni' })
-  async createAdminMembershipFee(@Body() dto: AdminMembershipFeeDto) {
-    return this.bookingsAdminService.createAdminMembershipFee(dto);
-  }
-
-  @Patch('admin/bookings/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth('JWT-auth')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Обновление данных бронирования (клиент, статус, метод оплаты)' })
-  async updateBooking(@Param('id') id: string, @Body() dto: UpdateBookingDto) {
-    return this.bookingsAdminService.updateBooking(id, dto);
-  }
 }

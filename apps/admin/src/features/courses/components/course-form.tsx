@@ -37,9 +37,7 @@ const DAYS_OF_WEEK = [
   "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica",
 ];
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
-
+import { api } from "@/lib/api";
 
 function slugify(str: string): string {
   return str.toLowerCase().trim()
@@ -62,11 +60,8 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
   const [slugManual, setSlugManual] = useState(!!initialValues.slug);
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/api/v1/admin/teachers`, {
-      headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
-    })
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: any[]) => {
+    api.get<any[]>("/admin/teachers")
+      .then((data) => {
         if (Array.isArray(data)) {
           setTeachers(data.map((t) => ({ ...t, id: t.teacherId || t.id, fullName: t.fullName })));
         }

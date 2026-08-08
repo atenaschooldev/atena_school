@@ -31,9 +31,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     console.error(`[${request.method}] ${request.url} - Error:`, exception);
 
-    // Возвращаем формат ошибок FastAPI, который ожидает Flutter-клиент
+    const formattedMessage = Array.isArray(message) ? message.join(', ') : message;
+
     response.status(status).send({
-      detail: Array.isArray(message) ? message.join(', ') : message,
+      statusCode: status,
+      message: formattedMessage,
+      error: type,
+      detail: formattedMessage,
       code: code,
       type: type,
     });

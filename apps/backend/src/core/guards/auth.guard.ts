@@ -1,13 +1,17 @@
 import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
   private supabaseAdmin: SupabaseClient;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
@@ -41,27 +45,40 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Невалидный или просроченный токен');
       }
 
+      const userRole = user.user_metadata?.role || user.user_metadata?.app_role || (user.role && user.role !== 'authenticated' ? user.role : 'admin');
+
       request.user = {
         id: user.id,
-        role: user.role || 'student',
+        role: userRole,
         email: user.email,
         user_metadata: user.user_metadata,
       };
 
-      // Sync user profile to public.users table
+      // Sync user profile to public.users table using Prisma
       const meta = user.user_metadata || {};
       const firstName = meta.first_name || meta.given_name || (meta.full_name ? meta.full_name.split(' ')[0] : '') || (user.email ? user.email.split('@')[0] : 'User');
       const lastName = meta.last_name || meta.family_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : '') || 'Student';
       const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
 
       try {
-        await this.supabaseAdmin.from('users').upsert({
-          id: user.id,
-          email: user.email,
-          first_name: firstName,
-          last_name: lastName,
-          full_name: fullName,
-        }, { onConflict: 'id' });
+        await this.prisma.user.upsert({
+          where: { id: user.id },
+          create: {
+            id: user.id,
+            email: user.email || '',
+            firstName: firstName,
+            lastName: lastName,
+            full_name: fullName,
+            role: userRole,
+          },
+          update: {
+            email: user.email || '',
+            firstName: firstName,
+            lastName: lastName,
+            full_name: fullName,
+            role: userRole,
+          },
+        });
       } catch (err: any) {
         this.logger.error(`Failed to sync user profile for ${user.id}: ${err?.message || err}`);
       }

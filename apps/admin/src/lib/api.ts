@@ -33,7 +33,22 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Backend error ${res.status}: ${text}`);
+    let errorMessage = `Backend error ${res.status}`;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed) {
+        if (Array.isArray(parsed.message)) {
+          errorMessage = parsed.message.join(", ");
+        } else if (typeof parsed.message === "string") {
+          errorMessage = parsed.message;
+        } else if (parsed.error && typeof parsed.error === "string") {
+          errorMessage = parsed.error;
+        }
+      }
+    } catch {
+      if (text) errorMessage = text;
+    }
+    throw new Error(errorMessage);
   }
 
   if (res.status === 204) {

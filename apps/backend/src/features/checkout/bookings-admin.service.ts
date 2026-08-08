@@ -169,6 +169,14 @@ export class BookingsAdminService {
       sLastName = sParts.slice(1).join(' ') || pLastName;
     }
 
+    let finalRegFee = dto.registrationFee;
+    if (finalRegFee === undefined) {
+      const emailToCheck = isForChild ? (dto.studentEmail || dto.purchaserEmail) : dto.purchaserEmail;
+      const taxCodeToCheck = isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
+      const feeStatus = await this.checkoutService.checkFeeStatus({ email: emailToCheck, taxCode: taxCodeToCheck });
+      finalRegFee = feeStatus.annualFeePaid ? 0 : 30;
+    }
+
     const normalizedStatus = dto.paymentStatus === 'completed' ? 'paid' : (dto.paymentStatus || 'reserved');
 
     const reservation = await this.checkoutService.createReservation({
@@ -191,7 +199,7 @@ export class BookingsAdminService {
       needsCompanyInvoice: !!(dto.sdiCode || dto.pecEmail),
       sdiCode: dto.sdiCode || undefined,
       pecEmail: dto.pecEmail || undefined,
-      includeRegistrationFee: (dto.registrationFee ?? 30) > 0,
+      includeRegistrationFee: finalRegFee > 0,
       notes: dto.notes || '',
       paymentStatus: normalizedStatus,
       paymentMethod: dto.paymentMethod,

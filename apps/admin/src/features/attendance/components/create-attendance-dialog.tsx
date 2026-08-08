@@ -24,8 +24,7 @@ import {
 } from "@/components/ui/select";
 import { UserCheck, Calendar, Clock, BookOpen } from "lucide-react";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
+import { apiFetch } from "@/lib/api";
 
 interface ActiveBooking {
   id: string;
@@ -56,11 +55,12 @@ export function CreateAttendanceDialog({
   const { data: bookings = [] } = useQuery<ActiveBooking[]>({
     queryKey: ["attendance-active-bookings"],
     queryFn: async () => {
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/attendance/active-bookings`, {
-        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
-      });
-      if (!res.ok) return [];
-      return res.json();
+      try {
+        const res = await apiFetch<ActiveBooking[]>("/admin/attendance/active-bookings");
+        return Array.isArray(res) ? res : [];
+      } catch {
+        return [];
+      }
     },
     enabled: open,
   });
@@ -75,12 +75,8 @@ export function CreateAttendanceDialog({
     setSubmitting(true);
     try {
       const startsAt = new Date(`${dateStr}T${timeStr}:00`).toISOString();
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/attendance/manual`, {
+      await apiFetch("/admin/attendance/manual", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ADMIN_TOKEN}`,
-        },
         body: JSON.stringify({
           bookingId: selectedBookingId,
           startsAt,
@@ -88,10 +84,6 @@ export function CreateAttendanceDialog({
           notes: notes || undefined,
         }),
       });
-
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
 
       toast.success("Presenza registrata con successo!");
       onSuccess();

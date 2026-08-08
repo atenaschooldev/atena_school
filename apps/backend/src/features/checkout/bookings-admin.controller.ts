@@ -110,6 +110,15 @@ export class BookingsAdminController {
     return this.bookingsAdminService.payLesson(bookingId, lessonId, dto.payment_method, dto.amount);
   }
 
+  @Patch(':id')
+  @Roles('admin')
+  @Audit('bookings', 'update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновление данных бронирования (клиент, статус, метод оплаты)' })
+  async updateBooking(@Param('id') id: string, @Body() dto: any) {
+    return this.bookingsAdminService.updateBooking(id, dto);
+  }
+
   @Delete(':id')
   @Roles('admin')
   @Audit('bookings', 'delete')

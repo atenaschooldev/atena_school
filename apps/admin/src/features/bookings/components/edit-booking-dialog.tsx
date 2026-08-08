@@ -77,7 +77,7 @@ export function EditBookingDialog({
 
     setLoading(true);
     try {
-      await api.patch(`/checkout/admin/bookings/${booking.id}`, {
+      await api.patch(`/admin/bookings/${booking.id}`, {
         purchaser_name: purchaserName.trim(),
         purchaser_email: purchaserEmail.trim(),
         purchaser_phone: purchaserPhone.trim(),

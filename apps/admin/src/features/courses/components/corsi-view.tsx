@@ -1,62 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  type ColumnDef,
-  type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
-  type Row,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Search,
-  Plus,
-  Pencil,
-  Trash2,
-  Copy,
-  ChevronDown,
-  Download,
-  Eye,
-  EllipsisVertical,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Clock,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo } from "react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useCourses } from "../hooks/use-courses";
+import { CoursesMetrics } from "./courses-metrics";
+import { getCoursesTableColumns } from "./courses-table-columns";
+import { CourseCard } from "./course-card";
+import { CourseForm } from "./course-form";
+import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import {
   Table,
@@ -66,22 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { CourseForm } from "./course-form";
+  type SortingState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import type { Course } from "../types";
-import { useCourses } from "../hooks/use-courses";
-import { formatCategoryLabel, categoryColor, COURSE_CATEGORIES, formatCourseFormatLabel, COURSE_FORMAT_OPTIONS } from "../utils";
-import { useAppStore } from "@/stores/app-store";
 
 export function CorsiView() {
   const {
@@ -97,602 +46,184 @@ export function CorsiView() {
     handleCloseDialog,
   } = useCourses();
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
-  const [pageSize, setPageSize] = useState("10");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [formatFilter, setFormatFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [deletingCourse, setDeletingCourse] = useState<Course | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "nome", desc: false },
+  ]);
 
-  const tableSearch = useAppStore((s) => s.tableSearch);
-  const setTableSearch = useAppStore((s) => s.setTableSearch);
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    coursesList.forEach((c) => {
+      if (c.categoria) set.add(c.categoria);
+    });
+    return Array.from(set);
+  }, [coursesList]);
 
-  const exactFilter = (row: Row<Course>, columnId: string, value: string) => {
-    if (!value) return true;
-    const rawVal = (row.getValue(columnId) as string) || "";
-    if (columnId === "categoria") {
-      if (value === "Certipass") return rawVal.toLowerCase().includes("certipass");
-      if (value === "languages") return rawVal.toLowerCase().includes("lang") || rawVal.toLowerCase().includes("lingu");
-      return rawVal === value;
-    }
-    if (columnId === "courseFormat") {
-      const formatted = formatCourseFormatLabel(rawVal);
-      const targetFormatted = formatCourseFormatLabel(value);
-      return formatted === targetFormatted || rawVal.toLowerCase() === value.toLowerCase();
-    }
-    return rawVal === value;
-  };
+  const filteredCourses = useMemo(() => {
+    return coursesList.filter((c) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const matchName = (c.nome || "").toLowerCase().includes(q);
+        const matchCat = (c.categoria || "").toLowerCase().includes(q);
+        if (!matchName && !matchCat) return false;
+      }
+      if (categoryFilter !== "all" && c.categoria !== categoryFilter) return false;
+      if (statusFilter !== "all" && (c.stato || "attivo") !== statusFilter) return false;
+      if (formatFilter !== "all" && c.courseFormat !== formatFilter) return false;
+      return true;
+    });
+  }, [coursesList, searchQuery, categoryFilter, statusFilter, formatFilter]);
 
-  const columns: ColumnDef<Course>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <div className="flex items-center justify-center px-2">
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center px-2">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-    {
-      accessorKey: "nome",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Corso</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const course = row.original;
-        const initials = course.nome.slice(0, 2).toUpperCase();
-        return (
-          <div className="flex items-center gap-3 min-w-[200px]">
-            <Avatar className="h-9 w-9 rounded-lg border border-border/50 shrink-0">
-              {course.foto ? <AvatarImage src={course.foto} alt={course.nome} className="object-cover" /> : null}
-              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate">{course.nome}</span>
-              <span className="text-xs text-muted-foreground truncate">{formatCategoryLabel(course.categoria)}</span>
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "categoria",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Categoria</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const rawCat = row.getValue("categoria") as string;
-        const cat = formatCategoryLabel(rawCat);
-        const colorClasses = categoryColor(rawCat);
-        return (
-          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border w-fit ${colorClasses}`}>
-            {cat}
-          </Badge>
-        );
-      },
-      filterFn: exactFilter,
-    },
-    {
-      accessorKey: "courseFormat",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Formato</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => (
-        <span className="text-sm font-medium text-foreground">
-          {formatCourseFormatLabel(row.getValue("courseFormat"))}
-        </span>
-      ),
-      filterFn: exactFilter,
-    },
-    {
-      accessorKey: "orari",
-      header: "Orari & Giorni",
-      cell: ({ row }) => {
-        const course = row.original;
-        const hasDays = course.scheduleDays && course.scheduleDays.length > 0;
-        const hasTime = !!course.startTime;
-        if (!hasDays && !hasTime) {
-          return (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 dark:bg-muted/30 border border-border/60 text-[11px] font-mono font-medium text-muted-foreground shadow-2xs w-fit">
-              <Clock className="w-3 h-3 opacity-60 shrink-0" />
-              <span>Da concordare</span>
-            </div>
-          );
-        }
-        return (
-          <div className="flex flex-col gap-1 items-start">
-            {hasDays && (
-              <div className="flex flex-wrap gap-1">
-                {course.scheduleDays.map((d) => (
-                  <Badge key={d} variant="outline" className="text-[10px] uppercase px-1.5 py-0 font-semibold bg-muted/40 w-fit">
-                    {d}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {hasTime && (
-              <Badge variant="outline" className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 bg-muted/60 dark:bg-muted/30 border-border/60 text-foreground w-fit">
-                <Clock className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span>{course.startTime} {course.endTime ? `- ${course.endTime}` : ""}</span>
-              </Badge>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "prezzo",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Prezzo</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const val = parseFloat(row.getValue("prezzo") || "0");
-        const formatted = new Intl.NumberFormat("it-IT", {
-          style: "currency",
-          currency: "EUR",
-        }).format(val);
-        return <span className="text-sm font-semibold text-foreground font-mono">{formatted}</span>;
-      },
-    },
-    {
-      accessorKey: "stato",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Stato</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const stato = (row.getValue("stato") as string) || "attivo";
-        let colorClass = "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 border-emerald-500/30";
-        let label = "Attivo";
-
-        if (stato === "in-programmazione") {
-          colorClass = "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-amber-500/30";
-          label = "Pianificato";
-        } else if (stato === "concluso") {
-          colorClass = "text-muted-foreground bg-muted border-border";
-          label = "Concluso";
-        }
-
-        return (
-          <Badge variant="secondary" className={`text-xs font-semibold px-2.5 py-0.5 border w-fit ${colorClass}`}>
-            {label}
-          </Badge>
-        );
-      },
-      filterFn: exactFilter,
-    },
-    {
-      accessorKey: "teacherName",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Insegnante</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const name = row.getValue("teacherName") as string | null;
-        return (
-          <span className="text-sm text-foreground">
-            {name || <span className="text-muted-foreground">—</span>}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: "lessonDurationMinutes",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Durata Lezione</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const course = row.original;
-        const min = course.lessonDurationMinutes;
-        const totalHours = course.totalHours;
-
-        if (!min && totalHours) {
-          return <span className="text-sm font-medium text-foreground">{totalHours}h totali</span>;
-        }
-
-        if (!min) return <span className="text-muted-foreground text-sm">—</span>;
-        const h = Math.floor(min / 60);
-        const m = min % 60;
-        const label = h > 0 ? (m > 0 ? `${h}h ${m}min` : `${h}h`) : `${m}min`;
-        return <span className="text-sm font-medium text-foreground">{label}</span>;
-      },
-    },
-    {
-      id: "actions",
-      header: "Azioni",
-      enableHiding: false,
-      cell: ({ row }) => {
-        const course = row.original;
-        return (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
-              onClick={() => handleEditClick(course)}
-              title="Modifica"
-            >
-              <Pencil className="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400"
-              onClick={() => setDeletingCourse(course)}
-              title="Elimina"
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
+  const columns = useMemo(
+    () =>
+      getCoursesTableColumns({
+        onEdit: (c) => handleEditClick(c),
+        onDelete: (c) => setDeletingCourse(c),
+      }),
+    [handleEditClick]
+  );
 
   const table = useReactTable({
-    data: coursesList,
+    data: filteredCourses,
     columns,
+    state: { sorting },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
-    onGlobalFilterChange: setTableSearch,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      rowSelection,
-      globalFilter: tableSearch,
-    },
   });
 
-  const categoryFilter = table.getColumn("categoria")?.getFilterValue() as string;
-  const formatFilter = table.getColumn("courseFormat")?.getFilterValue() as string;
-  const statusFilter = table.getColumn("stato")?.getFilterValue() as string;
-
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
-      {/* Search & Action Bar */}
-      <div className="w-full space-y-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 items-center space-x-2">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Cerca corsi..."
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" className="cursor-pointer">
-              <Download className="mr-2 size-4" />
-              Esporta
+    <div className="flex flex-col gap-4">
+      <CoursesMetrics courses={coursesList} />
+
+      <div className="@container/main px-4 lg:px-6 space-y-4">
+        <DataViewToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Cerca corso, categoria..."
+          filters={[
+            {
+              value: categoryFilter,
+              onChange: setCategoryFilter,
+              placeholder: "Categoria",
+              options: [
+                { value: "all", label: "Tutte le categorie" },
+                ...categories.map((cat) => ({ value: cat, label: cat })),
+              ],
+            },
+            {
+              value: statusFilter,
+              onChange: setStatusFilter,
+              placeholder: "Stato",
+              options: [
+                { value: "all", label: "Tutti gli stati" },
+                { value: "attivo", label: "Attivo" },
+                { value: "in-programmazione", label: "In Programmazione" },
+                { value: "concluso", label: "Concluso" },
+              ],
+            },
+          ]}
+          actionElement={
+            <Button onClick={handleNewClick} className="font-medium cursor-pointer shadow-sm text-xs">
+              <Plus className="mr-1.5 h-4 w-4" /> Nuovo Corso
             </Button>
-            <Button onClick={handleNewClick} className="cursor-pointer font-semibold gap-2">
-              <Plus className="size-4" />
-              Nuovo Corso
-            </Button>
-          </div>
-        </div>
+          }
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
 
-        {/* 4-Column Select Filters */}
-        <div className="grid gap-2 sm:grid-cols-4 sm:gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="category-filter" className="text-sm font-medium">
-              Categoria
-            </Label>
-            <Select
-              value={categoryFilter || "all"}
-              onValueChange={(value) =>
-                table.getColumn("categoria")?.setFilterValue(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger className="cursor-pointer w-full" id="category-filter">
-                <SelectValue placeholder="Seleziona Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte le Categorie</SelectItem>
-                {COURSE_CATEGORIES.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="format-filter" className="text-sm font-medium">
-              Formato
-            </Label>
-            <Select
-              value={formatFilter || "all"}
-              onValueChange={(value) =>
-                table.getColumn("courseFormat")?.setFilterValue(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger className="cursor-pointer w-full" id="format-filter">
-                <SelectValue placeholder="Seleziona Formato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti i Formati</SelectItem>
-                {COURSE_FORMAT_OPTIONS.map(({ value, label }) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status-filter" className="text-sm font-medium">
-              Stato
-            </Label>
-            <Select
-              value={statusFilter || "all"}
-              onValueChange={(value) =>
-                table.getColumn("stato")?.setFilterValue(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger className="cursor-pointer w-full" id="status-filter">
-                <SelectValue placeholder="Seleziona Stato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli Stati</SelectItem>
-                <SelectItem value="attivo">Attivo</SelectItem>
-                <SelectItem value="in-programmazione">Pianificato</SelectItem>
-                <SelectItem value="concluso">Concluso</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="column-visibility" className="text-sm font-medium">
-              Visibilità Colonne
-            </Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild id="column-visibility">
-                <Button variant="outline" className="cursor-pointer w-full justify-between">
-                  Colonne <ChevronDown className="ml-2 size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    const label =
-                      typeof column.columnDef.header === "string"
-                        ? column.columnDef.header
-                        : column.id;
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="cursor-pointer"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {label}
-                      </DropdownMenuCheckboxItem>
-                    );
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="rounded-md border bg-card">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
+        {viewMode === "table" ? (
+          <div className="space-y-4">
+            <div className="rounded-md border bg-card">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
                   ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                  ) : table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                        Nessun corso trovato.
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    Nessun corso trovato.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-        {/* Pagination Bar */}
-        <DataTablePagination table={table} />
+            <DataTablePagination table={table} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+            {filteredCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                onEdit={handleEditClick}
+                onDelete={(c) => setDeletingCourse(c)}
+              />
+            ))}
+            {filteredCourses.length === 0 && (
+              <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
+                Nessun corso trovato.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Course Form Sheet */}
-      <Sheet open={open} onOpenChange={(v) => !v && handleCloseDialog()}>
-        <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto p-6">
-          <SheetHeader className="mb-4">
-            <SheetTitle className="text-xl font-bold">
-              {editing ? "Modifica Corso" : "Nuovo Corso"}
-            </SheetTitle>
-          </SheetHeader>
+      <Dialog open={open} onOpenChange={(v) => !v && handleCloseDialog()}>
+        <DialogContent className="sm:max-w-[650px] p-6 max-h-[90vh] overflow-y-auto">
           <CourseForm
-            key={editing ? editing.id : "new"}
             initialValues={initialFormValues}
             onSubmit={handleFormSubmit}
             onCancel={handleCloseDialog}
             submitLabel={editing ? "Salva Modifiche" : "Crea Corso"}
           />
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
-      {/* Confirmation Dialog before Delete */}
-      <AlertDialog open={!!deletingCourse} onOpenChange={(v) => !v && setDeletingCourse(null)}>
-        <AlertDialogContent className="sm:max-w-md">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg font-bold text-foreground">
-              Elimina Corso
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground mt-2">
-              Sei sicuro di voler eliminare il corso <strong className="text-foreground">{deletingCourse?.nome}</strong>? Questa azione è irreversibile.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4 gap-2 sm:gap-0">
-            <AlertDialogCancel className="cursor-pointer">Annulla</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-rose-600 hover:bg-rose-700 text-white font-medium cursor-pointer"
-              onClick={async () => {
-                if (deletingCourse) {
-                  await handleDeleteClick(deletingCourse);
-                  setDeletingCourse(null);
-                }
-              }}
-            >
-              Elimina
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmDialog
+        open={!!deletingCourse}
+        onOpenChange={(v) => !v && setDeletingCourse(null)}
+        title="Elimina Corso"
+        description={`Sei sicuro di voler eliminare il corso "${deletingCourse?.nome}"? Questa azione non può essere annullata.`}
+        onConfirm={async () => {
+          if (deletingCourse) {
+            await handleDeleteClick(deletingCourse);
+            setDeletingCourse(null);
+          }
+        }}
+      />
     </div>
   );
 }

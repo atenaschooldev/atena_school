@@ -14,8 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Award, CheckCircle2, XCircle, Clock, AlertCircle, GraduationCap, ShieldCheck } from "lucide-react";
 import type { BookingAttendanceStats } from "../types";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-const ADMIN_TOKEN = import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
+import { apiFetch } from "@/lib/api";
 
 interface AttendanceDetailDialogProps {
   bookingId: string | null;
@@ -32,15 +31,15 @@ export function AttendanceDetailDialog({
   open,
   onOpenChange,
 }: AttendanceDetailDialogProps) {
-  const { data: stats } = useQuery<BookingAttendanceStats>({
+  const { data: stats } = useQuery<BookingAttendanceStats | null>({
     queryKey: ["attendance-stats", bookingId],
     queryFn: async () => {
-      if (!bookingId) return null as any;
-      const res = await fetch(`${BACKEND_URL}/api/v1/admin/attendance/stats/${bookingId}`, {
-        headers: { Authorization: `Bearer ${ADMIN_TOKEN}` },
-      });
-      if (!res.ok) return null as any;
-      return res.json();
+      if (!bookingId) return null;
+      try {
+        return await apiFetch<BookingAttendanceStats>(`/admin/attendance/stats/${bookingId}`);
+      } catch {
+        return null;
+      }
     },
     enabled: open && Boolean(bookingId),
   });

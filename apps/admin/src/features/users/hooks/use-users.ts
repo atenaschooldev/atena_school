@@ -3,32 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type User, type UserFormValues } from "../types";
 import { toast } from "sonner";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-const ADMIN_TOKEN =
-  import.meta.env.VITE_ADMIN_TOKEN || "DEVELOPMENT_TEST_TOKEN";
-
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${ADMIN_TOKEN}`,
-      ...options?.headers,
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Backend error ${res.status}: ${text}`);
-  }
-
-  if (res.status === 204) {
-    return {} as T;
-  }
-
-  const text = await res.text();
-  return text ? JSON.parse(text) : ({} as T);
-}
+import { apiFetch } from "@/lib/api";
 
 export function useUsers() {
   const queryClient = useQueryClient();
