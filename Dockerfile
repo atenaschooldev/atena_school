@@ -1,5 +1,8 @@
 FROM node:22-alpine AS builder
 
+# Install system dependencies for Prisma engine
+RUN apk add --no-cache openssl libc6-compat
+
 # Enable Corepack & pnpm
 RUN corepack enable && corepack prepare pnpm@11.13.1 --activate
 
