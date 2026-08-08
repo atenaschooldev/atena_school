@@ -264,3 +264,64 @@ export function slugify(text: string): string {
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-');
 }
+
+export interface CourseFrequencyParams {
+  scheduleType?: string | null;
+  lessonsPerWeek?: number | null;
+  scheduleDays?: (string | number)[] | null;
+  startTime?: string | null;
+  endTime?: string | null;
+  totalLessons?: number | null;
+}
+
+export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
+  primary: string;
+  secondary: string;
+} {
+  const { scheduleType, lessonsPerWeek, scheduleDays, startTime, endTime, totalLessons } = params;
+
+  const dayNames: Record<number, string> = {
+    1: "Lunedì",
+    2: "Martedì",
+    3: "Mercoledì",
+    4: "Giovedì",
+    5: "Venerdì",
+    6: "Sabato",
+    0: "Domenica",
+    7: "Domenica",
+  };
+
+  const formattedDays =
+    scheduleDays && scheduleDays.length > 0
+      ? scheduleDays
+          .map((d) => (typeof d === "number" ? dayNames[d] || String(d) : d))
+          .filter(Boolean)
+          .join(", ")
+      : null;
+
+  const timeText = startTime ? `${startTime}${endTime ? ` - ${endTime}` : ""}` : null;
+  const freqText = lessonsPerWeek ? `${lessonsPerWeek}x / sett.` : totalLessons ? `${totalLessons} lez.` : null;
+
+  const primary =
+    formattedDays ||
+    freqText ||
+    (scheduleType === "flexible" ? "Flessibile" : scheduleType === "fixed" ? "Fissa" : "-");
+
+  const secondaryParts: string[] = [];
+  if (formattedDays) {
+    if (freqText) secondaryParts.push(freqText);
+    if (timeText) secondaryParts.push(timeText);
+  } else if (freqText) {
+    if (timeText) secondaryParts.push(timeText);
+    if (scheduleType === "flexible") secondaryParts.push("Flessibile");
+    else if (scheduleType === "fixed") secondaryParts.push("Fissa");
+  } else if (scheduleType) {
+    secondaryParts.push(scheduleType === "flexible" ? "Flessibile" : "Fissa");
+  }
+
+  return {
+    primary,
+    secondary: secondaryParts.join(" • "),
+  };
+}
+

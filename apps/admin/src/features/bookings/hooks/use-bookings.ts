@@ -1,8 +1,15 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { BookingOrder } from "../types/booking";
 import { apiFetch } from "@/lib/api";
+
+interface BookingStats {
+  totalCount: number;
+  paidCount: number;
+  reservedCount: number;
+  leadsCount: number;
+}
 
 export function useBookings() {
   const queryClient = useQueryClient();
@@ -10,18 +17,40 @@ export function useBookings() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<BookingOrder | null>(null);
 
+  // Debounced search value — we only send to server after user stops typing
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(q), 300);
+  }, []);
+
+  useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
+
   const {
-    data: allBookings = [],
+    data: bookings = [],
     isLoading,
     error: queryError,
     refetch,
   } = useQuery<BookingOrder[]>({
-    queryKey: ["bookings"],
+    queryKey: ["bookings", debouncedSearch, statusFilter],
     queryFn: async () => {
-      const data = await apiFetch<BookingOrder[]>("/admin/bookings");
+      const params = new URLSearchParams();
+      if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      const query = params.toString() ? `?${params.toString()}` : "";
+      const data = await apiFetch<BookingOrder[]>(`/admin/bookings${query}`);
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
+    staleTime: 1000 * 30,
+  });
+
+  const { data: stats } = useQuery<BookingStats>({
+    queryKey: ["bookings-stats"],
+    queryFn: () => apiFetch<BookingStats>("/admin/bookings/stats"),
+    staleTime: 1000 * 30,
   });
 
   const updateStatusMutation = useMutation({
@@ -45,6 +74,7 @@ export function useBookings() {
         setSelectedBooking(updated);
       }
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings-stats"] });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
@@ -64,6 +94,7 @@ export function useBookings() {
         setSelectedBooking(null);
       }
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings-stats"] });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
@@ -83,6 +114,7 @@ export function useBookings() {
     onSuccess: () => {
       toast.success("Prenotazione registrata con successo");
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bookings-stats"] });
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
     },
@@ -118,40 +150,13 @@ export function useBookings() {
     [createMutation],
   );
 
-  const filteredBookings = useMemo(() => {
-    return allBookings.filter((b) => {
-      const q = searchQuery.toLowerCase().trim();
-      if (q) {
-        const matchPurchaser = (b.purchaser_name || "").toLowerCase().includes(q);
-        const matchStudent = (b.student_name || "").toLowerCase().includes(q);
-        const matchEmail = (b.purchaser_email || "").toLowerCase().includes(q);
-        const matchCourse = (b.course_name || "").toLowerCase().includes(q);
-        if (!matchPurchaser && !matchStudent && !matchEmail && !matchCourse) return false;
-      }
-
-      if (statusFilter !== "all" && b.payment_status !== statusFilter) return false;
-
-      return true;
-    });
-  }, [allBookings, searchQuery, statusFilter]);
-
-  const stats = useMemo(() => {
-    return {
-      totalCount: allBookings.length,
-      paidCount: allBookings.filter((b) => b.payment_status === "completed" || b.payment_status === "paid" || b.payment_status === "succeeded").length,
-      reservedCount: allBookings.filter((b) => b.payment_status === "reserved").length,
-      leadsCount: allBookings.filter((b) => b.scheduling_status === "pending_coordination").length,
-    };
-  }, [allBookings]);
-
   return {
-    bookings: filteredBookings,
-    allBookings,
-    stats,
+    bookings,
+    stats: stats ?? { totalCount: 0, paidCount: 0, reservedCount: 0, leadsCount: 0 },
     loading: isLoading,
     error: queryError instanceof Error ? queryError.message : null,
     searchQuery,
-    setSearchQuery,
+    setSearchQuery: handleSearchChange,
     statusFilter,
     setStatusFilter,
     selectedBooking,

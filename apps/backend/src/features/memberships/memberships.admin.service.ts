@@ -9,8 +9,42 @@ export class MembershipsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  findAll(status?: string, academicYear?: string, search?: string) {
-    return this.membershipsRepository.findAll({ status, academicYear, search });
+  async findAll(status?: string, academicYear?: string, search?: string) {
+    const raw = await this.membershipsRepository.findAll({ status, academicYear, search });
+    return raw.map((m: any) => {
+      const studentName =
+        m.student?.full_name ||
+        (m.student?.first_name && m.student?.last_name ? `${m.student.first_name} ${m.student.last_name}` : null) ||
+        m.student?.first_name ||
+        m.booking?.studentName ||
+        m.booking?.purchaserName ||
+        m.email ||
+        'Socio';
+
+      const studentEmail =
+        m.student?.email ||
+        m.booking?.studentEmail ||
+        m.booking?.purchaserEmail ||
+        m.email ||
+        '';
+
+      const studentTaxCode =
+        m.student?.tax_code ||
+        m.booking?.studentTaxCode ||
+        m.booking?.purchaserTaxCode ||
+        m.taxCode ||
+        '';
+
+      return {
+        ...m,
+        studentName,
+        student_name: studentName,
+        studentEmail,
+        student_email: studentEmail,
+        studentTaxCode,
+        student_tax_code: studentTaxCode,
+      };
+    });
   }
 
   async findOne(id: string) {
@@ -59,5 +93,28 @@ export class MembershipsService {
     }
 
     return updated;
+  }
+
+  async toggleStatus(id: string) {
+    const existing = await this.findOne(id);
+    const currentStatus = (existing.status || 'active').toLowerCase();
+    const newStatus = currentStatus === 'revoked' ? 'active' : 'revoked';
+    return this.updateStatus(id, newStatus);
+  }
+
+  async getStats() {
+    const all = await this.prisma.$queryRawUnsafe<{ status: string; count: string }[]>(
+      `SELECT LOWER(status) as status, COUNT(*) as count FROM annual_memberships GROUP BY LOWER(status)`
+    ).catch(() => [] as { status: string; count: string }[]);
+
+    const byStatus = Object.fromEntries(all.map((r) => [r.status, Number(r.count)]));
+    const total = all.reduce((s, r) => s + Number(r.count), 0);
+
+    return {
+      total,
+      active: byStatus['active'] || 0,
+      pending: byStatus['pending'] || 0,
+      expiredOrRevoked: (byStatus['expired'] || 0) + (byStatus['revoked'] || 0),
+    };
   }
 }

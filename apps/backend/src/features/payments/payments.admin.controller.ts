@@ -36,8 +36,9 @@ export class PaymentsController {
     @Query('status') status?: string,
     @Query('type') type?: string,
     @Query('method') method?: string,
+    @Query('search') search?: string,
   ) {
-    return this.paymentsService.findAll(bookingId, studentId, { status, type, method });
+    return this.paymentsService.findAll(bookingId, studentId, { status, type, method, search });
   }
 
   @Get('summary')

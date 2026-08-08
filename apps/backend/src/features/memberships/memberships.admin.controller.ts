@@ -54,4 +54,19 @@ export class MembershipsController {
   updateStatus(@Param('id') id: string, @Body() dto: UpdateMembershipStatusDto) {
     return this.membershipsService.updateStatus(id, dto.status);
   }
+
+  @Patch(':id/toggle-status')
+  @Roles('admin')
+  @Audit('memberships', 'toggle_status')
+  @ApiOperation({ summary: 'Тоггл статуса (активный → отозван, отозван → активный)' })
+  toggleStatus(@Param('id') id: string) {
+    return this.membershipsService.toggleStatus(id);
+  }
+
+  @Get('stats')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Статистика по тессерам' })
+  getStats() {
+    return this.membershipsService.getStats();
+  }
 }

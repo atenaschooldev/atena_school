@@ -58,7 +58,7 @@ export function AttendanceView() {
     await markAttendance(item.id, status);
     if (
       (status === "present" || status === "late") &&
-      (item.payment_status !== "paid" || item.billing_scheme === "per_lesson")
+      ((item as any).requires_payment_on_attendance ?? (item.payment_status !== "paid" || item.billing_scheme === "per_lesson"))
     ) {
       setQuickPayItem(item);
     }

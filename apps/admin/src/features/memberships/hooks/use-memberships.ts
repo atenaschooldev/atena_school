@@ -4,28 +4,43 @@ import type { Membership } from "../types";
 
 import { apiFetch } from "@/lib/api";
 
-export function useMemberships(filters?: { status?: string; academicYear?: string }) {
+export interface MembershipStats {
+  total: number;
+  active: number;
+  pending: number;
+  expiredOrRevoked: number;
+}
+
+export function useMemberships(filters?: { status?: string; academicYear?: string; search?: string }) {
   const queryClient = useQueryClient();
 
   const status = filters?.status;
   const academicYear = filters?.academicYear;
+  const search = filters?.search;
 
   const {
     data: memberships = [],
     isLoading,
     refetch,
   } = useQuery<Membership[]>({
-    queryKey: ["memberships", status, academicYear],
+    queryKey: ["memberships", status, academicYear, search],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (status && status !== "all") params.set("status", status);
       if (academicYear && academicYear !== "all") params.set("academicYear", academicYear);
+      if (search && search.trim()) params.set("search", search.trim());
 
       const query = params.toString() ? `?${params.toString()}` : "";
       const data = await apiFetch<Membership[]>(`/admin/memberships${query}`);
       return Array.isArray(data) ? data : [];
     },
-    staleTime: 1000 * 30, // 30s stale time for instant 0ms cached rendering
+    staleTime: 1000 * 30,
+  });
+
+  const { data: stats } = useQuery<MembershipStats>({
+    queryKey: ["memberships-stats"],
+    queryFn: () => apiFetch<MembershipStats>("/admin/memberships/stats"),
+    staleTime: 1000 * 30,
   });
 
   const updateStatusMutation = useMutation({
@@ -38,9 +53,28 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     onSuccess: (_, { status }) => {
       toast.success(status === "revoked" ? "Iscrizione revocata" : "Iscrizione riattivata");
       queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships-stats"] });
     },
     onError: (e) => {
       console.error("Failed to update membership status:", e);
+      toast.error("Errore nell'aggiornamento dello stato");
+    },
+  });
+
+  // Toggle status is determined by the backend — no need to pass current status
+  const toggleStatusMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch<Membership>(`/admin/memberships/${id}/toggle-status`, {
+        method: "PATCH",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Stato tessera aggiornato");
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships-stats"] });
+    },
+    onError: (e) => {
+      console.error("Failed to toggle membership status:", e);
       toast.error("Errore nell'aggiornamento dello stato");
     },
   });
@@ -49,5 +83,16 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     return updateStatusMutation.mutateAsync({ id, status });
   };
 
-  return { memberships, loading: isLoading, updateStatus, refresh: refetch };
+  const toggleStatus = async (id: string) => {
+    return toggleStatusMutation.mutateAsync(id);
+  };
+
+  return {
+    memberships,
+    stats: stats ?? { total: 0, active: 0, pending: 0, expiredOrRevoked: 0 },
+    loading: isLoading,
+    updateStatus,
+    toggleStatus,
+    refresh: refetch,
+  };
 }

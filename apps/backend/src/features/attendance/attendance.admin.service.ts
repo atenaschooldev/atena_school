@@ -31,27 +31,41 @@ export class AttendanceService {
       orderBy: { startsAt: 'asc' },
     });
 
-    return lessons.map((l) => {
+    const lessonItems = lessons.map((l) => {
       const record = l.attendanceRecords[0] || null;
       const b = l.booking;
+      const billingScheme = b?.billingScheme || 'full';
+      const bookingPaymentStatus = b?.paymentStatus || 'reserved';
+      const lessonPaymentStatus = l.paymentStatus || 'pending';
+
+      // Business rule: show quick payment dialog when student attended but hasn't paid
+      const requiresPaymentOnAttendance =
+        billingScheme === 'per_lesson'
+          ? lessonPaymentStatus !== 'paid'
+          : bookingPaymentStatus !== 'completed' && bookingPaymentStatus !== 'paid';
+
       return {
         id: l.id,
         starts_at: l.startsAt,
         ends_at: l.endsAt,
         status: l.status,
-        payment_status: l.paymentStatus,
+        payment_status: lessonPaymentStatus,
         price_per_lesson: l.pricePerLesson ? Number(l.pricePerLesson) : null,
         location_type: l.locationType,
         teacher_id: l.teacherId,
-        teacher_name: l.teacher?.fullName || 'Non Задан',
+        teacher_name: l.teacher?.fullName || 'Docente',
         booking_id: l.bookingId,
-        course_name: b?.courseName || 'Индивидуальный курс',
-        student_name: b?.studentName || b?.purchaserName || 'Студент',
+        course_name: b?.courseName || 'Lezione individuale',
+        student_name: b?.studentName || b?.purchaserName || 'Studente',
         student_email: b?.studentEmail || b?.purchaserEmail || '',
         student_phone: b?.studentPhone || b?.purchaserPhone || '',
         purchaser_name: b?.purchaserName || '',
-        billing_scheme: b?.billingScheme || 'full',
-        booking_payment_status: b?.paymentStatus || 'reserved',
+        purchaser_email: b?.purchaserEmail || '',
+        payment_method: b?.paymentMethod || null,
+        amount_paid: b?.amountPaid ? Number(b.amountPaid) : 0,
+        billing_scheme: billingScheme,
+        booking_payment_status: bookingPaymentStatus,
+        requires_payment_on_attendance: requiresPaymentOnAttendance,
         attendance_record: record
           ? {
               id: record.id,
@@ -64,6 +78,23 @@ export class AttendanceService {
           : null,
       };
     });
+
+    const total = lessonItems.length;
+    const present = lessonItems.filter(
+      (l) => l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late',
+    ).length;
+    const absent = lessonItems.filter((l) => l.attendance_record?.status === 'absent').length;
+    const pending = lessonItems.filter((l) => !l.attendance_record).length;
+    const pendingPayment = lessonItems.filter(
+      (l) =>
+        (l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late') &&
+        l.requires_payment_on_attendance,
+    ).length;
+
+    return {
+      lessons: lessonItems,
+      stats: { total, present, absent, pending, pendingPayment },
+    };
   }
 
   async markAttendance(dto: {

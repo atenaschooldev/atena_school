@@ -10,18 +10,26 @@ import { PaymentMethodBadge } from "@/components/shared/payment-method-badge";
 import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import { CellCurrency } from "@/components/shared/cell-currency";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 import type { Payment } from "../types";
 
 export interface GetPaymentsTableColumnsProps {
   onViewDetail: (p: Payment) => void;
   onEdit: (p: Payment) => void;
   onDelete: (id: string) => void;
+  onStatusChange?: (id: string, status: string) => void;
 }
 
 export function getPaymentsTableColumns({
   onViewDetail,
   onEdit,
   onDelete,
+  onStatusChange,
 }: GetPaymentsTableColumnsProps): ColumnDef<Payment>[] {
   return [
     {
@@ -71,13 +79,17 @@ export function getPaymentsTableColumns({
       ),
       cell: ({ row }) => {
         const p = row.original;
-        const name = p.purchaser_name || p.student_name || "Cliente";
-        const email = p.purchaser_email || p.student_email || "";
+        const name = p.purchaser_name || p.purchaserName || p.student_name || "Cliente";
+        const email = p.purchaser_email || p.purchaserEmail || p.student_email || "";
+
+        const id = p.id;
         return (
-          <div className="flex flex-col min-w-[180px] gap-0.5">
-            <span className="font-medium text-sm text-foreground">{name}</span>
-            {email ? <span className="text-xs text-muted-foreground truncate max-w-[200px]">{email}</span> : null}
-            <CellCopyableId id={p.id} />
+          <div className="flex flex-col min-w-[200px] gap-0.5">
+            <span className="font-bold text-sm text-foreground">{name}</span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CellCopyableId id={id} />
+              {email && <span>• {email}</span>}
+            </div>
           </div>
         );
       },
@@ -133,7 +145,37 @@ export function getPaymentsTableColumns({
           )}
         </Button>
       ),
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      cell: ({ row }) => {
+        const payment = row.original;
+        const norm = (payment.status || "pending").toLowerCase().trim();
+        const currentVal = norm === "paid" || norm === "succeeded" ? "completed" : norm;
+
+        if (!onStatusChange) {
+          return <StatusBadge status={currentVal} />;
+        }
+
+        return (
+          <Select value={currentVal} onValueChange={(val) => onStatusChange(payment.id, val)}>
+            <SelectTrigger className="h-8 w-auto border-0 p-0 shadow-none bg-transparent hover:opacity-80 focus:ring-0 cursor-pointer">
+              <StatusBadge status={currentVal} />
+            </SelectTrigger>
+            <SelectContent side="bottom" align="start">
+              <SelectItem value="completed" className="text-xs cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
+                Pagato (Completato)
+              </SelectItem>
+              <SelectItem value="pending" className="text-xs cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400">
+                In Attesa
+              </SelectItem>
+              <SelectItem value="failed" className="text-xs cursor-pointer font-semibold text-rose-600 dark:text-rose-400">
+                Fallito / In Debito
+              </SelectItem>
+              <SelectItem value="refunded" className="text-xs cursor-pointer font-semibold text-slate-600 dark:text-slate-400">
+                Rimborsato
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      },
     },
     {
       accessorKey: "amount",

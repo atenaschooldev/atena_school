@@ -67,6 +67,15 @@ export class CoursesService {
   ) {}
 
   private toDto(c: CourseEntity): CourseResponseDto {
+    let computedTotalLessons = c.totalLessons ?? null;
+    if (!computedTotalLessons) {
+      if (c.lessonsPerWeek && c.lessonsPerWeek > 0) {
+        computedTotalLessons = c.lessonsPerWeek * 4;
+      } else if (c.totalHours && c.lessonDurationMinutes && c.lessonDurationMinutes > 0) {
+        computedTotalLessons = Math.round((c.totalHours * 60) / c.lessonDurationMinutes);
+      }
+    }
+
     return {
       id: c.id,
       name: c.name,
@@ -81,7 +90,7 @@ export class CoursesService {
       lessonsPerWeek: c.lessonsPerWeek ?? null,
       sortOrder: c.sortOrder ?? null,
       scheduleType: c.scheduleType ?? null,
-      totalLessons: c.totalLessons ?? null,
+      totalLessons: computedTotalLessons,
       scheduleDays: c.scheduleDays ? mapDaysToFrontend(c.scheduleDays) : null,
       startTime: c.startTime ?? null,
       endTime: c.endTime ?? null,

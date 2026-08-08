@@ -5,6 +5,17 @@ import type { LessonAttendanceItem } from "../types";
 
 import { apiFetch } from "@/lib/api";
 
+export interface AttendanceResponse {
+  lessons: LessonAttendanceItem[];
+  stats: {
+    total: number;
+    present: number;
+    absent: number;
+    pending: number;
+    pendingPayment: number;
+  };
+}
+
 export function useAttendance(selectedDateStr?: string) {
   const queryClient = useQueryClient();
   const dateStr = selectedDateStr || new Date().toISOString().split("T")[0];
@@ -13,16 +24,34 @@ export function useAttendance(selectedDateStr?: string) {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const {
-    data: lessons = [],
+    data,
     isLoading,
     refetch,
-  } = useQuery<LessonAttendanceItem[]>({
+  } = useQuery<AttendanceResponse>({
     queryKey: ["attendance", dateStr],
     queryFn: async () => {
-      return apiFetch<LessonAttendanceItem[]>(`/admin/attendance?date=${dateStr}`);
+      const res = await apiFetch<any>(`/admin/attendance?date=${dateStr}`);
+      if (res && Array.isArray(res.lessons)) {
+        return res as AttendanceResponse;
+      }
+      // Fallback for array response
+      const lessonsArr = Array.isArray(res) ? res : [];
+      return {
+        lessons: lessonsArr,
+        stats: {
+          total: lessonsArr.length,
+          present: lessonsArr.filter((l: any) => l.attendance_record?.status === "present" || l.attendance_record?.status === "late").length,
+          absent: lessonsArr.filter((l: any) => l.attendance_record?.status === "absent").length,
+          pending: lessonsArr.filter((l: any) => !l.attendance_record).length,
+          pendingPayment: 0,
+        },
+      };
     },
     staleTime: 1000 * 15,
   });
+
+  const lessons = data?.lessons || [];
+  const serverStats = data?.stats || { total: 0, present: 0, absent: 0, pending: 0, pendingPayment: 0 };
 
   const markMutation = useMutation({
     mutationFn: async ({
@@ -115,19 +144,12 @@ export function useAttendance(selectedDateStr?: string) {
   }, [lessons, searchQuery, statusFilter]);
 
   const stats = useMemo(() => {
-    const total = lessons.length;
-    const present = lessons.filter((l) => l.attendance_record?.status === "present" || l.attendance_record?.status === "late").length;
-    const absent = lessons.filter((l) => l.attendance_record?.status === "absent").length;
-    const pending = lessons.filter((l) => !l.attendance_record).length;
-
+    const rate = serverStats.total > 0 ? Math.round((serverStats.present / serverStats.total) * 100) : 0;
     return {
-      total,
-      present,
-      absent,
-      pending,
-      rate: total > 0 ? Math.round((present / total) * 100) : 0,
+      ...serverStats,
+      rate,
     };
-  }, [lessons]);
+  }, [serverStats]);
 
   const deleteMutation = useMutation({
     mutationFn: async (lessonId: string) => {

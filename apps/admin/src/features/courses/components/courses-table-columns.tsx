@@ -9,6 +9,9 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { CellCurrency } from "@/components/shared/cell-currency";
 import type { Course } from "../types";
 
+import { formatCourseFrequencyDetails } from "@atena/utils";
+import { formatCourseFormatLabel } from "../utils";
+
 export interface GetCoursesTableColumnsProps {
   onEdit: (c: Course) => void;
   onDelete: (c: Course) => void;
@@ -65,11 +68,24 @@ export function getCoursesTableColumns({
         </Button>
       ),
       cell: ({ row }) => (
-        <div className="flex flex-col min-w-[200px] gap-0.5">
-          <span className="font-bold text-sm text-foreground">{row.original.nome}</span>
-          {row.original.categoria && (
-            <span className="text-xs text-muted-foreground">{row.original.categoria}</span>
+        <div className="flex items-center gap-3 min-w-[220px]">
+          {row.original.foto ? (
+            <img
+              src={row.original.foto}
+              alt={row.original.nome}
+              className="h-9 w-9 rounded-lg object-cover shrink-0 border border-border/50"
+            />
+          ) : (
+            <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 uppercase border border-primary/20">
+              {row.original.nome ? row.original.nome.slice(0, 2) : "CO"}
+            </div>
           )}
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="font-bold text-sm text-foreground truncate">{row.original.nome}</span>
+            {row.original.categoria && (
+              <span className="text-xs text-muted-foreground truncate">{row.original.categoria}</span>
+            )}
+          </div>
         </div>
       ),
     },
@@ -77,10 +93,10 @@ export function getCoursesTableColumns({
       accessorKey: "courseFormat",
       header: "Formato",
       cell: ({ row }) => {
-        const fmt = row.original.courseFormat;
+        const label = formatCourseFormatLabel(row.original.courseFormat);
         return (
           <Badge variant="outline" className="text-xs font-medium">
-            {fmt === "individual" ? "Individuale" : fmt === "pairs" ? "Coppia" : "Gruppo"}
+            {label}
           </Badge>
         );
       },
@@ -113,13 +129,19 @@ export function getCoursesTableColumns({
     },
     {
       accessorKey: "scheduleType",
-      header: "Frequenza",
+      header: "Frequenza / Orario",
       cell: ({ row }) => {
-        const isFlex = row.original.scheduleType === "flexible";
+        const { primary, secondary } = formatCourseFrequencyDetails(row.original);
+
         return (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="w-3.5 h-3.5 text-primary/70 shrink-0" />
-            <span>{isFlex ? "Flessibile" : "Fissa"}</span>
+          <div className="flex items-start gap-2 text-xs">
+            <Clock className="w-3.5 h-3.5 text-primary/70 shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="font-medium text-foreground truncate">{primary}</span>
+              {secondary && secondary !== primary && (
+                <span className="text-[11px] text-muted-foreground truncate">{secondary}</span>
+              )}
+            </div>
           </div>
         );
       },

@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Plus, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePayments } from "../hooks/use-payments";
@@ -33,12 +31,28 @@ import {
 import type { Payment } from "../types";
 
 export function PaymentsView() {
-  const { payments, summary, loading, createPayment, updatePayment, deletePayment } = usePayments();
-
   const [searchQuery, setSearchQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(q), 300);
+  }, []);
+
+  useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
+
+  const { payments, summary, loading, createPayment, updatePayment, deletePayment } = usePayments({
+    search: debouncedSearch,
+    method: methodFilter,
+    status: statusFilter,
+    type: typeFilter,
+  });
 
   const [posCheckoutOpen, setPosCheckoutOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -49,34 +63,21 @@ export function PaymentsView() {
     { id: "created_at", desc: true },
   ]);
 
-  const filteredPayments = useMemo(() => {
-    return payments.filter((p) => {
-      const q = searchQuery.toLowerCase().trim();
-      if (q) {
-        const matchName = (p.purchaser_name || p.student_name || "").toLowerCase().includes(q);
-        const matchEmail = (p.purchaser_email || p.student_email || "").toLowerCase().includes(q);
-        const matchDesc = (p.description || "").toLowerCase().includes(q);
-        if (!matchName && !matchEmail && !matchDesc) return false;
-      }
-      if (methodFilter !== "all" && p.payment_method !== methodFilter) return false;
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
-      if (typeFilter !== "all" && p.type !== typeFilter) return false;
-      return true;
-    });
-  }, [payments, searchQuery, methodFilter, statusFilter, typeFilter]);
-
   const columns = useMemo(
     () =>
       getPaymentsTableColumns({
         onViewDetail: (p) => setSelectedPaymentDetail(p),
         onEdit: (p) => setEditingPayment(p),
         onDelete: (id) => setDeletingPaymentId(id),
+        onStatusChange: async (id, status) => {
+          await updatePayment({ id, status });
+        },
       }),
-    []
+    [updatePayment]
   );
 
   const table = useReactTable({
-    data: filteredPayments,
+    data: payments,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -93,7 +94,7 @@ export function PaymentsView() {
       <div className="@container/main px-4 lg:px-6 space-y-4">
         <DataViewToolbar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           searchPlaceholder="Cerca per cliente, email o descrizione..."
           filters={[
             {
@@ -120,21 +121,12 @@ export function PaymentsView() {
             },
           ]}
           actionElement={
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => setPosCheckoutOpen(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer shadow-sm text-xs"
-              >
-                <Receipt className="mr-1.5 h-4 w-4" /> Registra POS / Contanti
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setCreateDialogOpen(true)}
-                className="cursor-pointer text-xs font-semibold"
-              >
-                <Plus className="mr-1.5 h-4 w-4" /> Nuovo Incasso Manuale
-              </Button>
-            </div>
+            <Button
+              onClick={() => setPosCheckoutOpen(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer shadow-sm text-xs"
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Registra Nuovo Incasso
+            </Button>
           }
         />
 

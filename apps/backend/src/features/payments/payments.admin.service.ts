@@ -12,19 +12,19 @@ export class PaymentsService {
   async findAll(
     bookingId?: string,
     studentId?: string,
-    filters?: { status?: string; type?: string; method?: string },
+    filters?: { status?: string; type?: string; method?: string; search?: string },
   ): Promise<any[]> {
     let rawPayments = await this.paymentsRepository.findAll(bookingId, studentId);
 
-    if (filters?.status) {
+    if (filters?.status && filters.status !== 'all') {
       const st = filters.status.toLowerCase().trim();
       rawPayments = rawPayments.filter((p) => (p.status || '').toLowerCase() === st);
     }
-    if (filters?.type) {
+    if (filters?.type && filters.type !== 'all') {
       const tp = filters.type.toLowerCase().trim();
       rawPayments = rawPayments.filter((p) => (p.type || '').toLowerCase() === tp);
     }
-    if (filters?.method) {
+    if (filters?.method && filters.method !== 'all') {
       const m = filters.method.toLowerCase().trim();
       rawPayments = rawPayments.filter((p) => (p.paymentMethod || '').toLowerCase() === m);
     }
@@ -36,7 +36,7 @@ export class PaymentsService {
 
       const memList: any[] = Array.isArray(memberships) ? memberships : [];
 
-      return rawPayments.map((p) => {
+      let mapped = rawPayments.map((p) => {
         let mId: string | null = null;
 
         const noteMatch = p.notes?.match(/\[membership_id:(.+?)\]/);
@@ -54,12 +54,40 @@ export class PaymentsService {
           if (standalone) mId = standalone.id;
         }
 
+        const purchaserName =
+          (p as any).booking?.purchaserName ||
+          (p as any).student?.full_name ||
+          ((p as any).student?.first_name && (p as any).student?.last_name ? `${(p as any).student.first_name} ${(p as any).student.last_name}` : null) ||
+          (p as any).student?.first_name ||
+          'Cliente';
+
+        const purchaserEmail =
+          (p as any).booking?.purchaserEmail ||
+          (p as any).student?.email ||
+          '';
+
         return {
           ...p,
+          purchaserName,
+          purchaser_name: purchaserName,
+          purchaserEmail,
+          purchaser_email: purchaserEmail,
           membershipId: mId,
           membership_id: mId,
         };
       });
+
+      if (filters?.search && filters.search.trim()) {
+        const q = filters.search.toLowerCase().trim();
+        mapped = mapped.filter((p: any) => {
+          const matchName = (p.purchaser_name || p.student_name || '').toLowerCase().includes(q);
+          const matchEmail = (p.purchaser_email || p.student_email || '').toLowerCase().includes(q);
+          const matchNotes = (p.notes || '').toLowerCase().includes(q);
+          return matchName || matchEmail || matchNotes;
+        });
+      }
+
+      return mapped;
     } catch {
       return rawPayments;
     }
@@ -203,13 +231,17 @@ export class PaymentsService {
     const updated = await this.paymentsRepository.update(id, dto);
 
     const targetBookingId = dto.bookingId || existing.bookingId;
-    const isPaymentSucceeded = (updated.status || '').toLowerCase() === 'succeeded' || (updated.status || '').toLowerCase() === 'paid';
-    const isRegistrationFee = (dto.type || existing.type) === 'registration_fee' || Number(dto.amount || existing.amount) === 30;
+    const st = (updated.status || '').toLowerCase().trim();
+    const isPaymentSucceeded = st === 'succeeded' || st === 'paid' || st === 'completed';
+    const isRegistrationFee = (dto.type || existing.type) === 'registration_fee' || Number(dto.amount || existing.amount) === 30 || (existing.notes || '').toLowerCase().includes('iscrizione');
 
     if (targetBookingId) {
       const allPayments = await this.paymentsRepository.findAll(targetBookingId);
       const totalPaid = allPayments
-        .filter((p) => p.status === 'succeeded')
+        .filter((p) => {
+          const s = (p.status || '').toLowerCase().trim();
+          return s === 'succeeded' || s === 'paid' || s === 'completed';
+        })
         .reduce((sum, p) => sum + Number(p.amount), 0);
 
       const booking = await this.prisma.booking.findUnique({ where: { id: targetBookingId } });
@@ -257,6 +289,11 @@ export class PaymentsService {
             VALUES (gen_random_uuid(), NULL, NULL, NULL, '2026/2027', 'active', ${sId ? `'${sId}'::uuid` : 'NULL'}, '${targetBookingId}'::uuid, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
             ON CONFLICT (booking_id) DO UPDATE SET status = 'active', paid_at = NOW();
           `).catch(() => null);
+        } else if (sId) {
+          await this.prisma.$executeRawUnsafe(`
+            INSERT INTO annual_memberships (id, tax_code, email, phone, academic_year, status, student_id, booking_id, paid_at, expires_at)
+            VALUES (gen_random_uuid(), NULL, NULL, NULL, '2026/2027', 'active', '${sId}'::uuid, NULL, NOW(), '2027-08-31 23:59:59+00'::timestamptz);
+          `).catch(() => null);
         }
       } else {
         if (sId) {
@@ -288,7 +325,10 @@ export class PaymentsService {
       try {
         const allPayments = await this.paymentsRepository.findAll(existing.bookingId);
         const totalPaid = allPayments
-          .filter((p) => p.status === 'succeeded')
+          .filter((p) => {
+            const s = (p.status || '').toLowerCase().trim();
+            return s === 'succeeded' || s === 'paid' || s === 'completed';
+          })
           .reduce((sum, p) => sum + Number(p.amount), 0);
 
         const booking = await this.prisma.booking.findUnique({ where: { id: existing.bookingId } });
@@ -342,23 +382,34 @@ export class PaymentsService {
       });
       createdPayments.push(payment);
 
-      if (item.type === 'registration_fee' && (dto.purchaserTaxCode || dto.purchaserEmail || dto.studentId)) {
-        const validUntil = new Date();
-        validUntil.setFullYear(validUntil.getFullYear() + 1);
+      if ((item.type === 'registration_fee' || Number(item.amount) === 30) && (dto.purchaserTaxCode || dto.purchaserEmail || dto.studentId || dto.bookingId)) {
+        const expiresAt = new Date();
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
         try {
-          await this.prisma.$executeRawUnsafe(
-            `INSERT INTO annual_memberships (id, booking_id, student_id, purchaser_name, email, tax_code, is_active, valid_until, created_at, updated_at)
-             VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, true, $6, NOW(), NOW())`,
-            dto.bookingId || null,
-            dto.studentId || null,
-            dto.purchaserName || 'Cliente',
-            dto.purchaserEmail || '',
-            dto.purchaserTaxCode || '',
-            validUntil,
-          ).catch(() => null);
-        } catch {
-          // Non-blocking fallback
+          if (dto.bookingId) {
+            await this.prisma.$executeRawUnsafe(
+              `INSERT INTO annual_memberships (id, booking_id, student_id, email, tax_code, status, academic_year, paid_at, expires_at)
+               VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, 'active', '2026/2027', NOW(), $5::timestamptz)
+               ON CONFLICT (booking_id) DO UPDATE SET status = 'active', paid_at = NOW()`,
+              dto.bookingId,
+              dto.studentId || null,
+              dto.purchaserEmail || null,
+              dto.purchaserTaxCode || null,
+              expiresAt.toISOString(),
+            ).catch((e) => console.error("Error inserting annual_membership with bookingId:", e));
+          } else {
+            await this.prisma.$executeRawUnsafe(
+              `INSERT INTO annual_memberships (id, booking_id, student_id, email, tax_code, status, academic_year, paid_at, expires_at)
+               VALUES (gen_random_uuid(), NULL, $1::uuid, $2, $3, 'active', '2026/2027', NOW(), $4::timestamptz)`,
+              dto.studentId || null,
+              dto.purchaserEmail || null,
+              dto.purchaserTaxCode || null,
+              expiresAt.toISOString(),
+            ).catch((e) => console.error("Error inserting annual_membership standalone:", e));
+          }
+        } catch (err) {
+          console.error("Error in membership insertion logic:", err);
         }
       }
     }

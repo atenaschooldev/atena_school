@@ -11,7 +11,7 @@ import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import type { Membership } from "../types";
 
 export interface GetMembershipsTableColumnsProps {
-  onToggleStatus: (id: string, currentStatus: string) => void;
+  onToggleStatus: (id: string) => void;
 }
 
 export function getMembershipsTableColumns({
@@ -65,13 +65,13 @@ export function getMembershipsTableColumns({
       ),
       cell: ({ row }) => {
         const m = row.original;
-        const name = m.studentName || m.student_name || m.name || "Socio";
-        const email = m.studentEmail || m.student_email || m.email || "";
-        const taxCode = m.studentTaxCode || m.student_tax_code || m.taxCode || "";
+        const name = m.studentName || m.student_name || "Socio";
+        const email = m.studentEmail || m.student_email || "";
+        const taxCode = m.studentTaxCode || m.student_tax_code || "";
 
         return (
           <div className="flex flex-col min-w-[180px] gap-0.5">
-            <span className="font-medium text-sm text-foreground">{name}</span>
+            <span className="font-bold text-sm text-foreground">{name}</span>
             {email ? <span className="text-xs text-muted-foreground truncate max-w-[200px]">{email}</span> : null}
             {taxCode ? <span className="text-[11px] text-muted-foreground font-mono">CF: {taxCode}</span> : null}
             <CellCopyableId id={m.id} />
@@ -131,7 +131,7 @@ export function getMembershipsTableColumns({
                   ? "text-emerald-600 hover:text-emerald-700"
                   : "text-rose-600 hover:text-rose-700"
               }`}
-              onClick={() => onToggleStatus(m.id, m.status)}
+              onClick={() => onToggleStatus(m.id)}
               title={isRevoked ? "Riattiva Iscrizione" : "Revoca Iscrizione"}
             >
               {isRevoked ? (

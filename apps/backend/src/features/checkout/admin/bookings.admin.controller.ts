@@ -32,11 +32,25 @@ export class BookingsAdminController {
     return this.bookingsAdminService.listAllBookings({ page, limit, search, status });
   }
 
+  @Get('stats')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить агрегированную статистику по бронированиям' })
+  async getStats() {
+    return this.bookingsAdminService.getStats();
+  }
+
   @Get('check-membership')
   @Roles('admin')
   @ApiOperation({ summary: 'Проверить статус взноса по email / taxCode' })
   async checkMembership(@Query('email') email?: string, @Query('taxCode') taxCode?: string) {
     return this.checkoutService.checkFeeStatus({ email, taxCode });
+  }
+
+  @Get(':id')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Получить бронирование с финансовым резюме' })
+  async findOne(@Param('id') id: string) {
+    return this.bookingsAdminService.getBookingById(id);
   }
 
   @Get('lookup-client')

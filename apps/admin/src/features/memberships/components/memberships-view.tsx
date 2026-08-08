@@ -1,6 +1,4 @@
-"use client";
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemberships } from "../hooks/use-memberships";
@@ -34,41 +32,39 @@ export function MembershipsView() {
   const [academicYearFilter, setAcademicYearFilter] = useState("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  const { memberships, loading, updateStatus, refresh } = useMemberships({
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = useCallback((q: string) => {
+    setSearchQuery(q);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(q), 300);
+  }, []);
+
+  useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
+
+  const { memberships, stats, loading, toggleStatus, refresh } = useMemberships({
     status: statusFilter,
     academicYear: academicYearFilter,
+    search: debouncedSearch,
   });
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
 
-  const filteredMemberships = useMemo(() => {
-    return memberships.filter((m) => {
-      const q = searchQuery.toLowerCase().trim();
-      if (q) {
-        const name = (m.studentName || m.student_name || m.name || "").toLowerCase();
-        const email = (m.studentEmail || m.student_email || m.email || "").toLowerCase();
-        const tax = (m.studentTaxCode || m.student_tax_code || m.taxCode || "").toLowerCase();
-        if (!name.includes(q) && !email.includes(q) && !tax.includes(q)) return false;
-      }
-      return true;
-    });
-  }, [memberships, searchQuery]);
-
   const columns = useMemo(
     () =>
       getMembershipsTableColumns({
-        onToggleStatus: async (id, currentStatus) => {
-          const newStatus = currentStatus === "revoked" ? "active" : "revoked";
-          await updateStatus(id, newStatus);
+        onToggleStatus: async (id) => {
+          await toggleStatus(id);
         },
       }),
-    [updateStatus]
+    [toggleStatus]
   );
 
   const table = useReactTable({
-    data: filteredMemberships,
+    data: memberships,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -80,12 +76,12 @@ export function MembershipsView() {
 
   return (
     <div className="flex flex-col gap-4">
-      <MembershipsMetrics memberships={memberships} />
+      <MembershipsMetrics stats={stats} />
 
       <div className="@container/main px-4 lg:px-6 space-y-4">
         <DataViewToolbar
           searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+          onSearchChange={handleSearchChange}
           searchPlaceholder="Cerca socio per nome, email, CF..."
           filters={[
             {

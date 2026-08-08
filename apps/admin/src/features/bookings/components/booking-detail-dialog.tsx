@@ -414,13 +414,15 @@ export function BookingDetailDialog({
 
           {/* Section 2: Financial Balance Summary */}
           {(() => {
-            const paidSum = payments
+            // Values now come pre-computed from the backend via booking.financial_summary
+            const fs = (booking as any).financial_summary;
+            const paidSum = fs?.paid_sum ?? payments
               .filter((p) => p.status === "succeeded")
               .reduce((sum, p) => sum + Number(p.amount || 0), 0);
-            const rawAmount = Number(booking.amount_paid || 0);
-            const regFee = Number(booking.registration_fee || 30);
-            const totalTarget = rawAmount > 0 ? rawAmount : regFee;
-            const remaining = Math.max(0, totalTarget - paidSum);
+            const totalTarget = fs?.total_target ?? Number(booking.amount_paid || booking.registration_fee || 30);
+            const remaining = fs?.remaining ?? Math.max(0, totalTarget - paidSum);
+            const registrationFeePaid = fs?.registration_fee_paid ??
+              payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded");
 
             return (
               <div className="rounded-lg border p-4 bg-card space-y-3">
@@ -456,9 +458,7 @@ export function BookingDetailDialog({
                   <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
                     <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">Quota €30</span>
                     <p className="font-bold text-xs font-mono text-amber-600 dark:text-amber-400 truncate">
-                      {payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded") || Number(booking.registration_fee) > 0
-                        ? "€30.00 (✓ Pagata)"
-                        : "€30.00 (In attesa)"}
+                      {registrationFeePaid ? "€30.00 (✓ Pagata)" : "€30.00 (In attesa)"}
                     </p>
                   </div>
                 </div>

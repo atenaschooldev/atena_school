@@ -5,36 +5,37 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { Membership } from "../types";
 
 export interface MembershipsMetricsProps {
-  memberships: Membership[];
+  stats: {
+    total: number;
+    active: number;
+    pending: number;
+    expiredOrRevoked: number;
+  };
 }
 
-export function MembershipsMetrics({ memberships }: MembershipsMetricsProps) {
-  const activeCount = memberships.filter((m) => (m.status || "").toLowerCase() === "active").length;
-  const pendingCount = memberships.filter((m) => (m.status || "").toLowerCase() === "pending").length;
-  const expiredCount = memberships.filter((m) => (m.status || "").toLowerCase() === "expired" || (m.status || "").toLowerCase() === "revoked").length;
-
+export function MembershipsMetrics({ stats }: MembershipsMetricsProps) {
   const metrics = [
     {
       title: "Tessere Totali",
-      value: memberships.length,
+      value: stats.total,
       description: "Iscrizioni annuali registrate",
       icon: Award,
     },
     {
       title: "Tessere Attive",
-      value: activeCount,
+      value: stats.active,
       description: "Quota €30 saldata per l'anno",
       icon: CheckCircle2,
     },
     {
       title: "In Attesa",
-      value: pendingCount,
+      value: stats.pending,
       description: "In attesa di conferma",
       icon: Clock,
     },
     {
       title: "Scadute / Revocate",
-      value: expiredCount,
+      value: stats.expiredOrRevoked,
       description: "Da rinnovare per l'anno corrente",
       icon: AlertCircle,
     },

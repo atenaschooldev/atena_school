@@ -1,76 +1,87 @@
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { ShoppingBag, BookOpen, Calendar } from "lucide-react";
-import { GIORNI } from "@/lib/utils";
+import { ShoppingBag, BookOpen, Calendar, CreditCard } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+
+interface BookingStats {
+  totalCount: number;
+  paidCount: number;
+  reservedCount: number;
+  leadsCount: number;
+}
+
+interface PaymentsSummary {
+  todayTotalCash?: number;
+  todayTotalCount?: number;
+}
 
 export function DashboardView() {
+  const { data: bookingStats, isLoading: loadingBookings } = useQuery<BookingStats>({
+    queryKey: ["bookings-stats"],
+    queryFn: () => apiFetch<BookingStats>("/admin/bookings/stats"),
+    staleTime: 1000 * 30,
+  });
+
+  const { data: paymentsSummary, isLoading: loadingPayments } = useQuery<PaymentsSummary>({
+    queryKey: ["payments-summary"],
+    queryFn: () => apiFetch<PaymentsSummary>("/admin/payments/summary"),
+    staleTime: 1000 * 30,
+  });
+
   const kpis = [
-    { label: "Prenotazioni", value: 0, icon: ShoppingBag, trend: "da integrare API" },
-    { label: "Corsi attivi", value: 0, icon: BookOpen, trend: "8 livelli CEFR" },
     {
-      label: "Lezioni oggi",
-      value: 0,
+      label: "Totale Ordini",
+      value: loadingBookings ? "..." : bookingStats?.totalCount ?? 0,
+      icon: ShoppingBag,
+      trend: "Ordini a sistema",
+    },
+    {
+      label: "Ordini Saldati",
+      value: loadingBookings ? "..." : bookingStats?.paidCount ?? 0,
+      icon: BookOpen,
+      trend: "Pagamenti completati",
+    },
+    {
+      label: "In Attesa di Saldo",
+      value: loadingBookings ? "..." : bookingStats?.reservedCount ?? 0,
       icon: Calendar,
-      trend: "—",
+      trend: "Da saldare in sede",
+    },
+    {
+      label: "Incasso Cassa Oggi",
+      value: loadingPayments ? "..." : `€${Number(paymentsSummary?.todayTotalCash || 0).toFixed(2)}`,
+      icon: CreditCard,
+      trend: "Contanti registrati oggi",
     },
   ];
 
   return (
     <main className="flex-1 overflow-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Buongiorno 👋</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ecco la panoramica della tua scuola oggi.
-          </p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Buongiorno 👋</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Ecco la panoramica della tua scuola oggi.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {kpis.map((k) => (
-            <Card key={k.label} className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                    {k.label}
-                  </div>
-                  <div className="text-3xl font-semibold mt-2 tabular">{k.value}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{k.trend}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpis.map((k) => (
+          <Card key={k.label} className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  {k.label}
                 </div>
-                <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                  <k.icon className="h-5 w-5" />
-                </div>
+                <div className="text-3xl font-semibold mt-2 tabular">{k.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">{k.trend}</div>
               </div>
-            </Card>
-          ))}
-        </div>
-
-        <Card className="p-6">
-          <h2 className="font-semibold">Prossime lezioni</h2>
-          <p className="text-xs text-muted-foreground mb-4">Oggi — {GIORNI[oggiIndex]}</p>
-          <div className="space-y-3">
-            {lezioniOggi.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nessuna lezione oggi.</p>
-            )}
-            {lezioniOggi.map((l) => {
-              const c = courses.find((x) => x.id === l.corsoId);
-              if (!c) return null;
-              return (
-                <div key={l.id} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-                  <div
-                    className={`text-xs font-semibold px-2 py-1 rounded border ${levelColor(c.livello)}`}
-                  >
-                    {c.livello}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{c.nome}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {l.oraInizio}–{l.oraFine} · {l.aula}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </Card>
-      </main>
+              <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <k.icon className="h-5 w-5" />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </main>
   );
 }

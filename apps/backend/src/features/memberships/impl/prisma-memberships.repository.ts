@@ -25,11 +25,40 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
     return this.prisma.annualMembership.findMany({
       where,
       orderBy: { createdAt: 'desc' },
+      include: {
+        student: {
+          select: {
+            id: true,
+            full_name: true,
+            first_name: true,
+            last_name: true,
+            email: true,
+            tax_code: true,
+          },
+        },
+        booking: {
+          select: {
+            id: true,
+            studentName: true,
+            purchaserName: true,
+            studentEmail: true,
+            purchaserEmail: true,
+            studentTaxCode: true,
+            purchaserTaxCode: true,
+          },
+        },
+      },
     });
   }
 
   async findById(id: string): Promise<MembershipEntity | null> {
-    return this.prisma.annualMembership.findUnique({ where: { id } });
+    return this.prisma.annualMembership.findUnique({
+      where: { id },
+      include: {
+        student: true,
+        booking: true,
+      },
+    });
   }
 
   async updateStatus(id: string, status: string): Promise<MembershipEntity> {

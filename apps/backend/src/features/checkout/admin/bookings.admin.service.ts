@@ -30,9 +30,9 @@ export class BookingsAdminService {
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
   }
 
-  private mapBookingToResponse(b: any) {
+  private mapBookingToResponse(b: any, payments?: any[]) {
     if (!b) return null;
-    return {
+    const base = {
       id: b.id,
       user_id: b.userId ?? null,
       course_id: b.courseId ?? null,
@@ -64,6 +64,58 @@ export class BookingsAdminService {
       subscription_ends_at: b.subscriptionEndsAt ? (b.subscriptionEndsAt instanceof Date ? b.subscriptionEndsAt.toISOString() : b.subscriptionEndsAt) : null,
       created_at: b.createdAt ? (b.createdAt instanceof Date ? b.createdAt.toISOString() : b.createdAt) : new Date().toISOString(),
     };
+    if (payments !== undefined) {
+      (base as any).financial_summary = this.computeFinancialSummary(b, payments);
+    }
+    return base;
+  }
+
+  private computeFinancialSummary(b: any, payments: any[]) {
+    const paidSum = payments
+      .filter((p) => (p.status || '').toLowerCase() === 'succeeded')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const rawAmount = Number(b.amountPaid || 0);
+    const regFee = Number(b.registrationFee || 30);
+    const totalTarget = rawAmount > 0 ? rawAmount : regFee;
+    const remaining = Math.max(0, totalTarget - paidSum);
+
+    const registrationFeePaid = payments.some(
+      (p) =>
+        (p.type === 'registration_fee' || Number(p.amount) === 30) &&
+        (p.status || '').toLowerCase() === 'succeeded',
+    ) || Number(b.registrationFee) > 0;
+
+    return {
+      paid_sum: Number(paidSum.toFixed(2)),
+      total_target: Number(totalTarget.toFixed(2)),
+      remaining: Number(remaining.toFixed(2)),
+      registration_fee_paid: registrationFeePaid,
+    };
+  }
+
+  async getStats() {
+    const [totalCount, paidCount, reservedCount, leadsCount] = await Promise.all([
+      this.prisma.booking.count(),
+      this.prisma.booking.count({
+        where: { paymentStatus: { in: ['completed', 'paid', 'succeeded'] } },
+      }),
+      this.prisma.booking.count({ where: { paymentStatus: 'reserved' } }),
+      this.prisma.booking.count({ where: { schedulingStatus: 'pending_coordination' } }),
+    ]);
+    return { totalCount, paidCount, reservedCount, leadsCount };
+  }
+
+  async getBookingById(id: string) {
+    const booking = await this.prisma.booking.findUnique({ where: { id } });
+    if (!booking) throw new NotFoundException(`Booking ${id} not found`);
+
+    const payments = await this.prisma.payment.findMany({
+      where: { bookingId: id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return this.mapBookingToResponse(booking, payments);
   }
 
   async listAllBookings(params?: { page?: number; limit?: number; search?: string; status?: string }) {

@@ -131,15 +131,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const isFixedSchedule = !isFlexibleSchedule;
 
   const customMaxLessons = useMemo(() => {
-    if (!selectedCourse) return null;
-    if (selectedCourse.totalLessons) return selectedCourse.totalLessons;
-    if (selectedCourse.lessonsPerWeek && selectedCourse.lessonsPerWeek > 0) {
-      return selectedCourse.lessonsPerWeek * 4;
-    }
-    if (selectedCourse.totalHours && selectedCourse.lessonDurationMinutes) {
-      return Math.round((selectedCourse.totalHours * 60) / selectedCourse.lessonDurationMinutes);
-    }
-    return null;
+    return selectedCourse?.totalLessons ?? null;
   }, [selectedCourse]);
 
   const previewLessons = useMemo(() => {
