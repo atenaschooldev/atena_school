@@ -884,11 +884,7 @@ importers:
 
   packages/config: {}
 
-  packages/contracts: {}
-
   packages/design: {}
-
-  packages/types: {}
 
   packages/ui: {}
 
@@ -13263,7 +13259,7 @@ snapshots:
       config-file-ts: 0.2.8-rc1
       debug: 4.4.3
       dmg-builder: 25.1.8(electron-builder-squirrel-windows@25.1.8)
-      dotenv: 16.4.5
+      dotenv: 16.6.1
       dotenv-expand: 11.0.7
       ejs: 3.1.10
       electron-builder-squirrel-windows: 25.1.8(dmg-builder@25.1.8)
@@ -14273,7 +14269,7 @@ snapshots:
 
   dotenv-expand@11.0.7:
     dependencies:
-      dotenv: 16.4.5
+      dotenv: 16.6.1
 
   dotenv@16.4.5: {}
 
