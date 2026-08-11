@@ -168,28 +168,25 @@ export const getTeachers = unstable_cache(
   { tags: [CACHE_TAGS.TEACHERS], revalidate: CACHE_TTL }
 );
 
+import { getPublicCourses } from './server/checkout-service';
+
 export async function getCourses() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
   try {
-    const res = await fetch(`${backendUrl}/api/v1/checkout/courses`, { cache: 'no-store' });
-    if (res.ok) {
-      const bData = await res.json();
-      if (bData.success && bData.courses) {
-        return bData.courses.map((c: SupabaseCourseRow) => ({
-          ...c,
-          slug: (c.slug as string) || slugify(c.name || ''),
-          title_it: c.name || '',
-          title_en: c.name || '',
-          description_it: c.description || '',
-          description_en: c.description || '',
-          price: Number(c.price) || 0,
-          price_eur: Number(c.price) || 0,
-        }));
-      }
+    const res = await getPublicCourses();
+    if (res.success && res.courses) {
+      return res.courses.map((c: SupabaseCourseRow) => ({
+        ...c,
+        slug: (c.slug as string) || slugify(c.name || ''),
+        title_it: c.name || '',
+        title_en: c.name || '',
+        description_it: c.description || '',
+        description_en: c.description || '',
+        price: Number(c.price) || 0,
+        price_eur: Number(c.price) || 0,
+      }));
     }
   } catch (bErr) {
-    console.error("Backend getCourses error:", bErr);
+    console.error("getCourses error:", bErr);
   }
   return [];
 }
