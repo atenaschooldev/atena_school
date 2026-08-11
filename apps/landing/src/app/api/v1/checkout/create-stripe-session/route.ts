@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
     const result = await createStripeSession(body);
     return NextResponse.json(result);
   } catch (err: any) {
+    console.error('[create-stripe-session route error]:', err);
     return NextResponse.json(
       { success: false, error: err.message || 'Failed to create Stripe checkout session' },
       { status: 400 }

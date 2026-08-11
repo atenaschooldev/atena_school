@@ -503,9 +503,58 @@ export async function createReservation(dto: CreateReservationParams) {
 }
 
 export async function createStripeSession(dto: CreateReservationParams) {
-  const stripe = getStripe();
+  const supabase = getSupabaseAdmin();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
+  let resolvedItemId = dto.itemId;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
+  if (!isUuid) {
+    const { data: course } = await supabase.from('courses').select('id').eq('slug', dto.itemId).maybeSingle();
+    if (course?.id) {
+      resolvedItemId = course.id;
+    }
+  }
+
+  // 1. Try invoking Supabase Edge Function 'create-checkout-session' (matches NestJS backend implementation)
+  try {
+    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('create-checkout-session', {
+      body: {
+        itemType: dto.itemType || 'course',
+        itemId: resolvedItemId,
+        date: dto.date,
+        time: dto.time,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        customerEmail: dto.email,
+        phone: dto.phone,
+        notes: dto.notes,
+        studentFirstName: dto.studentFirstName,
+        studentLastName: dto.studentLastName,
+        studentEmail: dto.studentEmail,
+        studentPhone: dto.studentPhone,
+        purchaserTaxCode: dto.purchaserTaxCode,
+        taxCode: dto.studentTaxCode || dto.purchaserTaxCode,
+        studentBirthDate: dto.studentBirthDate,
+        needsCompanyInvoice: dto.needsCompanyInvoice,
+        sdiCode: dto.sdiCode,
+        pecEmail: dto.pecEmail,
+        includeRegistrationFee: dto.includeRegistrationFee,
+        isForChild: dto.isForChild,
+        origin: siteUrl,
+      },
+    });
+
+    if (!edgeErr && edgeData?.url) {
+      return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
+    }
+    if (edgeErr || edgeData?.error) {
+      console.warn('[Supabase Edge Function Warning]:', edgeErr?.message || edgeData?.error);
+    }
+  } catch (invokeErr: any) {
+    console.warn('[Supabase Functions Invoke Failed, fallback to Stripe SDK]:', invokeErr?.message || invokeErr);
+  }
+
+  // 2. Fallback: Direct Stripe SDK session creation
   const reservationRes = await createReservation({
     ...dto,
     paymentMethod: 'stripe',
@@ -516,6 +565,7 @@ export async function createStripeSession(dto: CreateReservationParams) {
   const coursePrice = Number(booking.amount_paid) - Number(booking.registration_fee || 0);
   const regFee = Number(booking.registration_fee || 0);
 
+  const stripe = getStripe();
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
       price_data: {
@@ -562,6 +612,20 @@ export async function createStripeSession(dto: CreateReservationParams) {
 export async function verifyPayment(params: VerifyPaymentParams) {
   const supabase = getSupabaseAdmin();
   const { sessionId, bookingId } = params;
+
+  try {
+    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('verify-payment', {
+      body: {
+        session_id: sessionId,
+        booking_id: bookingId,
+      },
+    });
+    if (!edgeErr && edgeData?.booking) {
+      return { success: true, booking: edgeData.booking };
+    }
+  } catch (edgeErr) {
+    console.warn('Supabase edge verify-payment warning:', edgeErr);
+  }
 
   if (sessionId) {
     try {
