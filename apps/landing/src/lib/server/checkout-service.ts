@@ -162,26 +162,29 @@ function computeTotalLessonsCount(course: SupabaseCourseRow | null, calculatedLe
 
 export async function getPublicCourses() {
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  let { data: coursesData, error } = await supabase
     .from('courses')
-    .select('*, teachers(teacher_id, full_name, photo_url)')
+    .select('*')
     .eq('status', 'active')
     .order('name');
 
-  if (error) {
-    const { data: fallbackData } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)');
-    const courses = (fallbackData || []).map((c: any) => ({
-      ...c,
-      teacher_name: c.teachers?.full_name || null,
-      teacher_photo_url: c.teachers?.photo_url || null,
-    }));
-    return { success: true, courses };
+  if (error || !coursesData) {
+    const { data: fallbackData } = await supabase.from('courses').select('*');
+    coursesData = fallbackData || [];
   }
-  const courses = (data || []).map((c: any) => ({
-    ...c,
-    teacher_name: c.teachers?.full_name || null,
-    teacher_photo_url: c.teachers?.photo_url || null,
-  }));
+
+  const { data: teachersData } = await supabase.from('teachers').select('teacher_id, full_name, photo_url');
+  const teacherMap = new Map((teachersData || []).map((t: any) => [t.teacher_id, t]));
+
+  const courses = (coursesData || []).map((c: any) => {
+    const teacher = c.teacher_id ? teacherMap.get(c.teacher_id) : null;
+    return {
+      ...c,
+      teacher_name: teacher?.full_name || null,
+      teacher_photo_url: teacher?.photo_url || null,
+    };
+  });
+
   return { success: true, courses };
 }
 
@@ -191,11 +194,11 @@ export async function getItem(id: string) {
 
   let courseData: any = null;
   if (isUuid) {
-    const { data } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)').eq('id', id).maybeSingle();
+    const { data } = await supabase.from('courses').select('*').eq('id', id).maybeSingle();
     courseData = data;
   }
   if (!courseData) {
-    const { data } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)').eq('slug', id).maybeSingle();
+    const { data } = await supabase.from('courses').select('*').eq('slug', id).maybeSingle();
     courseData = data;
   }
 
@@ -203,10 +206,24 @@ export async function getItem(id: string) {
     return { success: false, error: 'Item not found' };
   }
 
+  let teacherName = null;
+  let teacherPhotoUrl = null;
+  if (courseData.teacher_id) {
+    const { data: teacher } = await supabase
+      .from('teachers')
+      .select('full_name, photo_url')
+      .eq('teacher_id', courseData.teacher_id)
+      .maybeSingle();
+    if (teacher) {
+      teacherName = teacher.full_name;
+      teacherPhotoUrl = teacher.photo_url;
+    }
+  }
+
   const course = {
     ...courseData,
-    teacher_name: courseData.teachers?.full_name || null,
-    teacher_photo_url: courseData.teachers?.photo_url || null,
+    teacher_name: teacherName,
+    teacher_photo_url: teacherPhotoUrl,
   };
 
   return { success: true, item: course, course };
