@@ -203,25 +203,29 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const watchedEmail = formMethods.watch("email");
   const watchedPhone = formMethods.watch("phone");
   const watchedTaxCode = formMethods.watch("taxCode");
+  const watchedPurchaserTaxCode = formMethods.watch("purchaserTaxCode");
   const watchedStudentEmail = formMethods.watch("studentEmail");
   const watchedStudentPhone = formMethods.watch("studentPhone");
   const watchedIsForChild = formMethods.watch("isForChild");
 
+  // Sync taxCode when toggling isForChild
   useEffect(() => {
-    const targetTaxCode = watchedTaxCode;
-    const targetEmail = watchedIsForChild ? (watchedStudentEmail || "") : watchedEmail;
-    const targetPhone = watchedIsForChild ? (watchedStudentPhone || "") : watchedPhone;
+    if (!watchedIsForChild && watchedPurchaserTaxCode && !watchedTaxCode) {
+      formMethods.setValue("taxCode", watchedPurchaserTaxCode, { shouldValidate: true });
+    }
+  }, [watchedIsForChild, watchedPurchaserTaxCode, watchedTaxCode, formMethods]);
+
+  useEffect(() => {
+    const targetTaxCode = watchedIsForChild ? (watchedTaxCode || "") : (watchedTaxCode || watchedPurchaserTaxCode || "");
+    const targetEmail = watchedIsForChild ? (watchedStudentEmail || watchedEmail || "") : watchedEmail;
+    const targetPhone = watchedIsForChild ? (watchedStudentPhone || watchedPhone || "") : watchedPhone;
 
     const hasValidInput = (targetTaxCode && targetTaxCode.trim().length >= 11) ||
                           (targetEmail && targetEmail.includes("@")) ||
                           (targetPhone && targetPhone.trim().length >= 8);
 
     if (!hasValidInput) {
-      if (user && hasPaidAnnualFee) {
-        setFeeCheckStatus("paid");
-      } else {
-        setFeeCheckStatus("initial");
-      }
+      setFeeCheckStatus("initial");
       return;
     }
 
@@ -236,11 +240,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       } else {
         setHasPaidAnnualFee(false);
         setFeeCheckStatus("not_paid");
+        formMethods.setValue("includeRegistrationFee", true);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, user, hasPaidAnnualFee, formMethods]);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
