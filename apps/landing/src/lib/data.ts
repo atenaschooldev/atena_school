@@ -168,7 +168,7 @@ export const getTeachers = unstable_cache(
   { tags: [CACHE_TAGS.TEACHERS], revalidate: CACHE_TTL }
 );
 
-import { getPublicCourses } from './server/checkout-service';
+import { getPublicCourses, getItem } from './server/checkout-service';
 
 export async function getCourses() {
   try {
@@ -200,28 +200,23 @@ export const getBlogPosts = unstable_cache(
 );
 
 export async function getSingleCourse(id: string) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
   try {
-    const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`, { cache: 'no-store' });
-    if (res.ok) {
-      const bData = await res.json();
-      const c = bData.item || bData.course;
-      if (c) {
-        return {
-          ...c,
-          slug: (c.slug as string) || slugify(c.name || ''),
-          title_it: c.name || '',
-          title_en: c.name || '',
-          description_it: c.description || '',
-          description_en: c.description || '',
-          price: Number(c.price) || 0,
-          price_eur: Number(c.price) || 0,
-        };
-      }
+    const res = await getItem(id);
+    if (res.success && (res.item || res.course)) {
+      const c: any = res.item || res.course;
+      return {
+        ...c,
+        slug: (c.slug as string) || slugify(c.name || ''),
+        title_it: c.name || '',
+        title_en: c.name || '',
+        description_it: c.description || '',
+        description_en: c.description || '',
+        price: Number(c.price) || 0,
+        price_eur: Number(c.price) || 0,
+      };
     }
   } catch (bErr) {
-    console.error("Backend getSingleCourse error:", bErr);
+    console.error("getSingleCourse error:", bErr);
   }
   return null;
 }
