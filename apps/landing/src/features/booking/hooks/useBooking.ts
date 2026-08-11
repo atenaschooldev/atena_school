@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
-import { formatCourseDurationText } from "@/lib/utils/bookingScheduler";
+import { formatCourseDurationText, buildCheckoutUrl } from "@atena/utils";
 
 export function useBooking(
   typeOrId: string,
@@ -62,7 +62,8 @@ export function useBooking(
     }
     if (!selectedDate || !selectedTime) return;
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    router.push(`/checkout/${id}?date=${dateStr}&time=${selectedTime}`);
+    const targetUrl = buildCheckoutUrl(id, dateStr, selectedTime);
+    router.push(targetUrl as any);
   };
 
   return {

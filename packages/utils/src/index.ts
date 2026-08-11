@@ -100,18 +100,116 @@ export function formatCourseScheduleText(
   if (!scheduleDays || scheduleDays.length === 0 || !startTime) {
     return "Da concordare";
   }
-  const dayNames: Record<number, string> = {
-    1: "Lunedì",
-    2: "Martedì",
-    3: "Mercoledì",
-    4: "Giovedì",
-    5: "Venerdì",
-    6: "Sabato",
-    0: "Domenica",
+  const dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+  const daysText = scheduleDays.map((d) => dayNames[d % 7]).join(" e ");
+  const timeText = endTime ? `${startTime}-${endTime}` : startTime;
+  return `${daysText} ${timeText}`;
+}
+
+/**
+ * HMAC slot signature key for URL integrity check
+ */
+const SLOT_SECRET_SALT = "atena_slot_salt_2026";
+
+/**
+ * Generate 8-character HMAC signature for course slot parameters
+ */
+export function generateSlotSignature(itemSlugOrId: string, dateStr: string, daysSlug: string, timeSlug: string): string {
+  const payload = `${itemSlugOrId}:${dateStr}:${daysSlug}:${timeSlug}:${SLOT_SECRET_SALT}`;
+  let hash = 0;
+  for (let i = 0; i < payload.length; i++) {
+    const char = payload.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).padStart(8, '0').slice(0, 8);
+}
+
+/**
+ * Verify HMAC slot signature for URL integrity check
+ */
+export function verifySlotSignature(itemSlugOrId: string, dateStr?: string | null, daysSlug?: string | null, timeSlug?: string | null, sig?: string | null): boolean {
+  if (!dateStr || !daysSlug || !timeSlug || !sig) return false;
+  const expectedSig = generateSlotSignature(itemSlugOrId, dateStr, daysSlug, timeSlug);
+  return sig === expectedSig;
+}
+
+/**
+ * Convert raw Italian schedule string (e.g. "Martedì e Giovedì 16:00-16:50") to ASCII slugs
+ */
+export function encodeScheduleSlot(rawTimeText?: string | null): { daysSlug: string; timeSlug: string } {
+  if (!rawTimeText) return { daysSlug: 'lun-ven', timeSlug: '16:00' };
+
+  let text = rawTimeText.trim();
+  const timeMatch = text.match(/(\d{1,2}:\d{2})/);
+  const timeSlug = timeMatch ? timeMatch[1] : '16:00';
+
+  let daysSlug = 'lun-ven';
+  const lower = text.toLowerCase();
+
+  if (lower.includes('mar') && lower.includes('gio')) {
+    daysSlug = 'mar-gio';
+  } else if (lower.includes('lun') && lower.includes('mer')) {
+    daysSlug = 'lun-mer';
+  } else if (lower.includes('mar') && lower.includes('ven')) {
+    daysSlug = 'mar-ven';
+  } else if (lower.includes('lun') && lower.includes('ven')) {
+    daysSlug = 'lun-ven';
+  } else if (lower.includes('lun')) {
+    daysSlug = 'lun';
+  } else if (lower.includes('mar')) {
+    daysSlug = 'mar';
+  } else if (lower.includes('mer')) {
+    daysSlug = 'mer';
+  } else if (lower.includes('gio')) {
+    daysSlug = 'gio';
+  } else if (lower.includes('ven')) {
+    daysSlug = 'ven';
+  } else if (lower.includes('sab')) {
+    daysSlug = 'sab';
+  } else if (lower.includes('dom')) {
+    daysSlug = 'dom';
+  }
+
+  return { daysSlug, timeSlug };
+}
+
+/**
+ * Reconstruct Italian schedule string from ASCII slugs or fallback safely
+ */
+export function decodeScheduleSlot(daysSlug?: string | null, timeSlug?: string | null, rawTime?: string | null): string {
+  if (rawTime && (rawTime.includes('Martedì') || rawTime.includes('Lunedì') || rawTime.includes('Mercoledì') || rawTime.includes('Giovedì') || rawTime.includes('Venerdì'))) {
+    return rawTime;
+  }
+
+  const daysMap: Record<string, string> = {
+    'mar-gio': 'Martedì e Giovedì',
+    'lun-mer': 'Lunedì e Mercoledì',
+    'mar-ven': 'Martedì e Venerdì',
+    'lun-ven': 'Lunedì e Venerdì',
+    'lun': 'Lunedì',
+    'mar': 'Martedì',
+    'mer': 'Mercoledì',
+    'gio': 'Giovedì',
+    'ven': 'Venerdì',
+    'sab': 'Sabato',
+    'dom': 'Domenica',
   };
-  const daysStr = scheduleDays.map((d) => dayNames[d] || "").filter(Boolean).join(" e ");
-  const timeStr = endTime ? `${startTime}-${endTime}` : startTime;
-  return `${daysStr} ${timeStr}`.trim();
+
+  const dayText = (daysSlug && daysMap[daysSlug]) ? daysMap[daysSlug] : 'Martedì e Giovedì';
+  const timeText = timeSlug || '16:00';
+  return `${dayText} ${timeText}`;
+}
+
+/**
+ * Build clean Human-readable ASCII + HMAC Signed Checkout URL
+ */
+export function buildCheckoutUrl(courseSlugOrId: string, dateInput?: string | Date | null, timeText?: string | null): string {
+  if (!dateInput) return `/checkout/${courseSlugOrId}`;
+  const dateStr = typeof dateInput === 'string' ? dateInput : format(dateInput, 'yyyy-MM-dd');
+  const { daysSlug, timeSlug } = encodeScheduleSlot(timeText);
+  const sig = generateSlotSignature(courseSlugOrId, dateStr, daysSlug, timeSlug);
+  return `/checkout/${courseSlugOrId}?date=${dateStr}&days=${daysSlug}&time=${timeSlug}&sig=${sig}`;
 }
 
 export function getDynamicMaxLessons(

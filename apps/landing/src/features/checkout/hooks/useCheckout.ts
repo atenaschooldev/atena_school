@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
 import { getSessionId } from "@/lib/utils";
 import { MOCK_CHECKOUT_DATA } from "../constants/mockData";
 
@@ -112,7 +113,14 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const id = optionalId ? optionalId : typeOrId;
 
   const dateParam = searchParams.get("date");
-  const timeParam = searchParams.get("time");
+  const daysParam = searchParams.get("days");
+  const rawTimeParam = searchParams.get("time");
+  const sigParam = searchParams.get("sig");
+
+  const isSigValid = sigParam ? verifySlotSignature(id, dateParam, daysParam, rawTimeParam, sigParam) : true;
+  const timeParam = isSigValid
+    ? decodeScheduleSlot(daysParam, rawTimeParam, rawTimeParam)
+    : decodeScheduleSlot(null, null, null);
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
