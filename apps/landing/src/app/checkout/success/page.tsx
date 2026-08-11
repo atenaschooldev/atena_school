@@ -51,12 +51,8 @@ function SuccessContent() {
   const dateLocale = it;
   const courseName = bookingData?.item_name || bookingData?.course_name || bookingData?.name || bookingData?.title_it || bookingData?.title || "Corso Atena School";
   const regFee = Number(bookingData?.registration_fee || 0);
-  const rawTotalPaid = Number(bookingData?.amount_paid || 0);
-  const rawCoursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? (rawTotalPaid > 0 ? Math.max(0, rawTotalPaid - regFee) : 0));
-  const coursePrice = (rawTotalPaid > 0 && regFee > 0 && rawCoursePrice === rawTotalPaid)
-    ? Math.max(0, rawTotalPaid - regFee)
-    : rawCoursePrice;
-  const totalPaid = rawTotalPaid > 0 ? rawTotalPaid : (coursePrice + regFee);
+  const coursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? 0);
+  const totalPaid = Number(bookingData?.amount_paid || (coursePrice + regFee));
 
   const rawDate = bookingData?.starts_at || bookingData?.start_date || bookingData?.booking_date || bookingData?.date;
   const formattedDate = rawDate
