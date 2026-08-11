@@ -164,34 +164,51 @@ export async function getPublicCourses() {
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from('courses')
-    .select('*')
+    .select('*, teachers(teacher_id, full_name, photo_url)')
     .eq('status', 'active')
     .order('name');
 
   if (error) {
-    const { data: fallbackData } = await supabase.from('courses').select('*');
-    return { success: true, courses: (fallbackData || []) as SupabaseCourseRow[] };
+    const { data: fallbackData } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)');
+    const courses = (fallbackData || []).map((c: any) => ({
+      ...c,
+      teacher_name: c.teachers?.full_name || null,
+      teacher_photo_url: c.teachers?.photo_url || null,
+    }));
+    return { success: true, courses };
   }
-  return { success: true, courses: (data || []) as SupabaseCourseRow[] };
+  const courses = (data || []).map((c: any) => ({
+    ...c,
+    teacher_name: c.teachers?.full_name || null,
+    teacher_photo_url: c.teachers?.photo_url || null,
+  }));
+  return { success: true, courses };
 }
 
 export async function getItem(id: string) {
   const supabase = getSupabaseAdmin();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  let course: SupabaseCourseRow | null = null;
+  let courseData: any = null;
   if (isUuid) {
-    const { data } = await supabase.from('courses').select('*').eq('id', id).maybeSingle();
-    course = data;
+    const { data } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)').eq('id', id).maybeSingle();
+    courseData = data;
   }
-  if (!course) {
-    const { data } = await supabase.from('courses').select('*').eq('slug', id).maybeSingle();
-    course = data;
+  if (!courseData) {
+    const { data } = await supabase.from('courses').select('*, teachers(teacher_id, full_name, photo_url)').eq('slug', id).maybeSingle();
+    courseData = data;
   }
 
-  if (!course) {
+  if (!courseData) {
     return { success: false, error: 'Item not found' };
   }
+
+  const course = {
+    ...courseData,
+    teacher_name: courseData.teachers?.full_name || null,
+    teacher_photo_url: courseData.teachers?.photo_url || null,
+  };
+
   return { success: true, item: course, course };
 }
 

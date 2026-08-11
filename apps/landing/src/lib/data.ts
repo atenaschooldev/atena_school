@@ -155,13 +155,13 @@ export const getContactData = unstable_cache(
 export const getTeachers = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await supabase.from('profiles').select('*').eq('role', 'teacher').order('full_name').returns<TeacherProfileRow[]>();
+    const { data } = await supabase.from('teachers').select('*').order('full_name');
     return (data || []).map((t) => ({
       ...t,
       full_name: t.full_name || '',
-      bio_it: t.bio_it || '',
-      bio_en: t.bio_en || '',
-      avatar_url: t.avatar_url || '',
+      bio_it: t.experience || '',
+      bio_en: t.experience || '',
+      avatar_url: t.photo_url || '',
     }));
   },
   ['teachers-data'],
