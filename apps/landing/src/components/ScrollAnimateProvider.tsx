@@ -49,6 +49,14 @@ export default function ScrollAnimateProvider({
   }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      // Ensure all elements are 100% visible if animations are disabled
+      document.querySelectorAll("[data-gsap]").forEach((el) => {
+        gsap.set(el, { clearProps: "all" });
+      });
+      return;
+    }
+
     // Function to initialize GSAP animation for elements
     const initAnimations = () => {
       const elements = document.querySelectorAll("[data-gsap]");
