@@ -648,11 +648,16 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   onClick={() => {
                     actionRef.current = "pay";
                   }}
-                  disabled={!!submitting}
-                  className="w-full py-4 bg-[#F8861D] text-white hover:bg-[#043569] rounded-2xl text-xs font-black uppercase tracking-wider text-center transition-all duration-300 shadow-lg shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                  disabled={!!submitting || feeCheckStatus === "checking"}
+                  className="w-full py-4 bg-[#F8861D] text-white hover:bg-[#043569] rounded-2xl text-xs font-black uppercase tracking-wider text-center transition-all duration-300 shadow-lg shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting === "pay" ? (
                     <Spinner className="w-4 h-4 animate-spin text-white" />
+                  ) : feeCheckStatus === "checking" ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner className="w-4 h-4 animate-spin text-white" />
+                      Verifica quota in corso...
+                    </span>
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" weight="bold" />
@@ -666,11 +671,16 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   onClick={() => {
                     actionRef.current = "book";
                   }}
-                  disabled={!!submitting}
-                  className="w-full py-3.5 bg-white text-[#043569] border border-[#043569]/20 hover:border-[#043569] hover:bg-[#043569]/5 rounded-2xl text-xs font-bold uppercase tracking-wider text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                  disabled={!!submitting || feeCheckStatus === "checking"}
+                  className="w-full py-3.5 bg-white text-[#043569] border border-[#043569]/20 hover:border-[#043569] hover:bg-[#043569]/5 rounded-2xl text-xs font-bold uppercase tracking-wider text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting === "book" ? (
                     <Spinner className="w-4 h-4 animate-spin text-[#043569]" />
+                  ) : feeCheckStatus === "checking" ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner className="w-4 h-4 animate-spin text-[#043569]" />
+                      Verifica quota in corso...
+                    </span>
                   ) : (
                     <>
                       <Storefront className="w-4 h-4 text-[#043569]" weight="bold" />

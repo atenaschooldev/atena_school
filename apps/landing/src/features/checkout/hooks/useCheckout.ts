@@ -312,6 +312,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   };
 
   const onSubmit = (values: CheckoutFormValues) => {
+    if (feeCheckStatus === "checking") {
+      toast.info("Verifica quota in corso, attendere un istante...");
+      return;
+    }
     if (actionRef.current === "pay") {
       handlePay(values);
     } else {
