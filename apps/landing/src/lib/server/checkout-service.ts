@@ -111,7 +111,47 @@ export async function checkFeeStatus(params: CheckFeeParams) {
   return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
 }
 
-function computeTotalLessonsCount(course: any, calculatedLessonsCount: number): number | null {
+export interface SupabaseCourseRow {
+  id: string;
+  name?: string;
+  title_it?: string;
+  price?: number | string | null;
+  status?: string | null;
+  photo_url?: string | null;
+  description?: string | null;
+  teacher_id?: string | null;
+  lessons_per_week?: number | null;
+  sort_order?: number | null;
+  schedule_type?: string | null;
+  total_lessons?: number | null;
+  schedule_days?: number[] | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  lesson_duration_minutes?: number | null;
+  total_hours?: number | null;
+  course_format?: string | null;
+  category?: string | null;
+  slug?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SupabasePaymentRow {
+  id?: string;
+  booking_id?: string | null;
+  user_id?: string | null;
+  student_id?: string | null;
+  amount: number;
+  currency: string;
+  payment_method: string;
+  type: 'payment' | 'registration_fee' | string;
+  status: string;
+  provider: string;
+  provider_transaction_id?: string | null;
+  notes?: string | null;
+  created_at?: string;
+}
+
+function computeTotalLessonsCount(course: SupabaseCourseRow | null, calculatedLessonsCount: number): number | null {
   if (course?.total_lessons != null) return course.total_lessons;
   if (course?.total_hours != null) return null;
   if (course?.lessons_per_week != null && course?.schedule_type === 'flexible') {
@@ -130,16 +170,16 @@ export async function getPublicCourses() {
 
   if (error) {
     const { data: fallbackData } = await supabase.from('courses').select('*');
-    return { success: true, courses: fallbackData || [] };
+    return { success: true, courses: (fallbackData || []) as SupabaseCourseRow[] };
   }
-  return { success: true, courses: data || [] };
+  return { success: true, courses: (data || []) as SupabaseCourseRow[] };
 }
 
 export async function getItem(id: string) {
   const supabase = getSupabaseAdmin();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  let course = null;
+  let course: SupabaseCourseRow | null = null;
   if (isUuid) {
     const { data } = await supabase.from('courses').select('*').eq('id', id).maybeSingle();
     course = data;
@@ -172,7 +212,7 @@ export async function getBookingDetails(id: string) {
     .select('amount, type')
     .eq('booking_id', id);
 
-  const coursePayment = payments?.find((p: any) => p.type === 'payment');
+  const coursePayment = payments?.find((p: { amount: unknown; type: string }) => p.type === 'payment');
   const amountPaid = Number(booking.amount_paid || 0);
   const regFee = Number(booking.registration_fee || 0);
   const coursePrice = coursePayment
@@ -357,13 +397,13 @@ async function processStudentAndBookingLinks(params: {
 
 async function generateAndSaveLessons(
   bookingId: string,
-  course: any,
+  course: SupabaseCourseRow | null,
   lessons: Array<{ startsAt: string; endsAt: string }>,
   supabase: SupabaseClient
 ) {
   if (!lessons || lessons.length === 0) return;
   try {
-    const teacherId = course?.teacher_id || course?.teacherId || 'e1180b01-2222-4000-8000-000000000002';
+    const teacherId = course?.teacher_id || 'e1180b01-2222-4000-8000-000000000002';
     const lessonRows = lessons.map((l) => ({
       booking_id: bookingId,
       teacher_id: teacherId,
@@ -391,7 +431,7 @@ async function recordPaymentLedger(
     const pMethod = paymentMethod || 'cash';
     const provider = pMethod === 'stripe' || pMethod === 'card_online' ? 'stripe' : 'manual';
 
-    const paymentsToInsert: any[] = [];
+    const paymentsToInsert: SupabasePaymentRow[] = [];
     if (coursePrice > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
@@ -426,7 +466,7 @@ async function recordPaymentLedger(
 export async function createReservation(dto: CreateReservationParams) {
   const supabase = getSupabaseAdmin();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
-  let course: any = null;
+  let course: SupabaseCourseRow | null = null;
 
   if (isUuid) {
     const { data } = await supabase.from('courses').select('*').eq('id', dto.itemId).maybeSingle();

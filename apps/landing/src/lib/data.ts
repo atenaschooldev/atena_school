@@ -2,6 +2,7 @@ import { unstable_cache } from 'next/cache';
 import { createClient } from './supabase/server';
 import { CACHE_TAGS, CACHE_TTL } from './constants';
 import { slugify } from './utils';
+import type { SupabaseCourseRow } from './server/checkout-service';
 
 interface HeroRow {
   title_it?: string | null;
@@ -175,7 +176,7 @@ export async function getCourses() {
     if (res.ok) {
       const bData = await res.json();
       if (bData.success && bData.courses) {
-        return bData.courses.map((c: any) => ({
+        return bData.courses.map((c: SupabaseCourseRow) => ({
           ...c,
           slug: (c.slug as string) || slugify(c.name || ''),
           title_it: c.name || '',
