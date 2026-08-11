@@ -109,18 +109,8 @@ export default function ScrollAnimateProvider({
       ScrollTrigger.refresh();
     };
 
-    // Run initially after Next.js finishes DOM updates
-    const timer = setTimeout(initAnimations, 150);
-
-    // Watch for new elements being added to the DOM (e.g. during tab switching)
-    const observer = new MutationObserver(() => {
-      initAnimations();
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    // Run animation initialization once on route change
+    const timer = setTimeout(initAnimations, 100);
 
     const handlePageShow = (e: PageTransitionEvent) => {
       if (e.persisted) {
@@ -135,9 +125,7 @@ export default function ScrollAnimateProvider({
 
     return () => {
       clearTimeout(timer);
-      observer.disconnect();
       window.removeEventListener("pageshow", handlePageShow);
-      // Clean up previous triggers and clear inline styles so back navigation is never faded
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
       document.querySelectorAll("[data-gsap]").forEach((el) => {
         gsap.set(el, { clearProps: "all" });
