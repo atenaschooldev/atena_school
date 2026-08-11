@@ -51,10 +51,16 @@ export default function ScrollAnimateProvider({
   useEffect(() => {
     // Function to initialize GSAP animation for elements
     const initAnimations = () => {
-      const elements = document.querySelectorAll("[data-gsap]:not(.gsap-init)");
+      const elements = document.querySelectorAll("[data-gsap]");
       if (elements.length === 0) return;
 
       elements.forEach((el) => {
+        if (el.classList.contains("gsap-init")) {
+          // If already initialized (e.g. back navigation), ensure element is fully visible
+          gsap.set(el, { opacity: 1, y: 0 });
+          return;
+        }
+
         el.classList.add("gsap-init");
 
         const animationType = el.getAttribute("data-gsap") || "fade-up";
@@ -108,11 +114,27 @@ export default function ScrollAnimateProvider({
       subtree: true,
     });
 
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        document.querySelectorAll("[data-gsap]").forEach((el) => {
+          gsap.set(el, { clearProps: "all" });
+          el.classList.remove("gsap-init");
+        });
+        initAnimations();
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+
     return () => {
       clearTimeout(timer);
       observer.disconnect();
-      // Clean up previous triggers to avoid duplicates and leaks
+      window.removeEventListener("pageshow", handlePageShow);
+      // Clean up previous triggers and clear inline styles so back navigation is never faded
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      document.querySelectorAll("[data-gsap]").forEach((el) => {
+        gsap.set(el, { clearProps: "all" });
+        el.classList.remove("gsap-init");
+      });
     };
   }, [pathname, enabled]);
 
