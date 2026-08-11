@@ -9,7 +9,8 @@ export async function submitContactForm(formData: {
   messaggio: string;
 }) {
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
     const res = await fetch(`${backendUrl}/api/v1/checkout/contact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

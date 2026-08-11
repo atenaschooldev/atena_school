@@ -2,7 +2,11 @@
 
 import { createApiClient } from "@atena/api-client";
 
-const getApi = () => createApiClient();
+const getApi = () => {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
+  return createApiClient(backendUrl);
+};
 
 export async function fetchCheckoutItemAction(itemId: string) {
   try {

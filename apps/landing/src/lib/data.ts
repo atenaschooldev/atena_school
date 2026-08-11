@@ -168,7 +168,8 @@ export const getTeachers = unstable_cache(
 );
 
 export async function getCourses() {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
   try {
     const res = await fetch(`${backendUrl}/api/v1/checkout/courses`, { cache: 'no-store' });
     if (res.ok) {
@@ -201,7 +202,8 @@ export const getBlogPosts = unstable_cache(
 );
 
 export async function getSingleCourse(id: string) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;
   try {
     const res = await fetch(`${backendUrl}/api/v1/checkout/item/${id}`, { cache: 'no-store' });
     if (res.ok) {
