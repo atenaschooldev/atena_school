@@ -213,15 +213,6 @@ export class CheckoutService {
   async createStripeSession(dto: CreateReservationDto) {
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
-    // 1. Guaranteed pending booking creation in Supabase Postgres
-    const reservationRes = await this.createReservation({
-      ...dto,
-      paymentMethod: 'stripe',
-      paymentStatus: 'pending',
-    });
-
-    const booking = reservationRes.booking;
-
     let resolvedItemId = dto.itemId;
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
     if (!isUuid) {
@@ -233,7 +224,6 @@ export class CheckoutService {
 
     const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('create-checkout-session', {
       body: {
-        bookingId: booking.id,
         itemType: dto.itemType || 'course',
         itemId: resolvedItemId,
         date: dto.date,
@@ -270,7 +260,7 @@ export class CheckoutService {
       throw new BadRequestException(detailMessage);
     }
 
-    return { success: true, url: edgeData.url, bookingId: booking.id };
+    return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
   }
 
   async verifyPayment(dto: VerifyPaymentDto) {
