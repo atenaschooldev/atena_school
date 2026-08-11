@@ -166,7 +166,27 @@ export async function getBookingDetails(id: string) {
   if (error || !booking) {
     return { success: false, error: 'Booking not found' };
   }
-  return { success: true, booking };
+
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('amount, type')
+    .eq('booking_id', id);
+
+  const coursePayment = payments?.find((p: any) => p.type === 'payment');
+  const amountPaid = Number(booking.amount_paid || 0);
+  const regFee = Number(booking.registration_fee || 0);
+  const coursePrice = coursePayment
+    ? Number(coursePayment.amount)
+    : (amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid);
+
+  return {
+    success: true,
+    booking: {
+      ...booking,
+      course_price: coursePrice,
+      item_price: coursePrice,
+    },
+  };
 }
 
 async function processStudentAndBookingLinks(params: {

@@ -390,9 +390,17 @@ export class CheckoutService {
       }
     }
 
+    const { data: payments } = await this.supabaseAdmin
+      .from('payments')
+      .select('amount, type')
+      .eq('booking_id', bookingId);
+
+    const coursePayment = payments?.find((p: any) => p.type === 'payment');
     const amountPaid = Number(booking.amount_paid || 0);
     const regFee = Number(booking.registration_fee || 0);
-    const coursePrice = amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid;
+    const coursePrice = coursePayment
+      ? Number(coursePayment.amount)
+      : (amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid);
 
     return {
       success: true,
