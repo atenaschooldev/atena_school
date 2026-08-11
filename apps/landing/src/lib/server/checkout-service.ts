@@ -618,7 +618,7 @@ export async function createStripeSession(dto: CreateReservationParams) {
     line_items: lineItems,
     mode: 'payment',
     customer_email: dto.email,
-    success_url: `${siteUrl}/checkout/success?booking_id=${booking.id}&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${siteUrl}/checkout/success/${booking.id}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
     metadata: {
       booking_id: booking.id,

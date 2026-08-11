@@ -271,7 +271,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       const bookingId = res.bookingId || res.booking?.id || "";
       toast.success("Prenotazione completata con successo!");
-      router.push(`/checkout/success?booking_id=${bookingId}&email=${encodeURIComponent(values.email)}`);
+      router.push(`/checkout/success/${bookingId}`);
     } catch (err: any) {
       toast.error(err.message || "Errore imprevisto");
     } finally {

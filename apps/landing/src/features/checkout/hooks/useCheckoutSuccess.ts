@@ -10,12 +10,13 @@ import {
   confirmPaymentAction,
 } from "@/app/actions/booking";
 
-export function useCheckoutSuccess() {
+export function useCheckoutSuccess(overrideBookingId?: string) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const bookingId = searchParams.get("booking_id");
+  const queryBookingId = searchParams.get("booking_id");
   const emailParam = searchParams.get("email");
+  const bookingId = overrideBookingId || queryBookingId;
 
   const [verifying, setVerifying] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -57,6 +58,9 @@ export function useCheckoutSuccess() {
           setBookingData(fallback?.booking || fallback || { id: bookingId, payment_status: "paid" });
         } finally {
           setVerifying(false);
+          if (typeof window !== "undefined" && window.history && window.location.search) {
+            window.history.replaceState(null, "", window.location.pathname);
+          }
         }
       } else {
         const data = await getBookingDetailsServer(bookingId);
