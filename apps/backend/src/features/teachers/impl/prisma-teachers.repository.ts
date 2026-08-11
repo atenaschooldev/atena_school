@@ -38,7 +38,7 @@ export class PrismaTeachersRepository extends TeachersRepository {
     });
 
     const courseCounts = await this.prisma.$queryRaw<{ teacher_id: string; cnt: bigint }[]>`
-      SELECT teacher_id, COUNT(*) AS cnt FROM course_teachers GROUP BY teacher_id
+      SELECT teacher_id, COUNT(*) AS cnt FROM courses WHERE teacher_id IS NOT NULL GROUP BY teacher_id
     `;
 
     const lessonMap = new Map(lessonCounts.map((l) => [l.teacherId, l._count.id]));

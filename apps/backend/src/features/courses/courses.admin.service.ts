@@ -157,13 +157,15 @@ export class CoursesService {
       slug: autoSlug,
     });
 
-    // Sync course_teachers pivot table
+    // Optional sync to course_teachers pivot table
     if (teacherId) {
-      await this.prisma.$executeRaw`
-        INSERT INTO course_teachers (course_id, teacher_id)
-        VALUES (${c.id}::uuid, ${teacherId}::uuid)
-        ON CONFLICT DO NOTHING
-      `;
+      try {
+        await this.prisma.$executeRaw`
+          INSERT INTO course_teachers (course_id, teacher_id)
+          VALUES (${c.id}::uuid, ${teacherId}::uuid)
+          ON CONFLICT DO NOTHING
+        `;
+      } catch {}
     }
 
     const fresh = await this.coursesRepository.findOne(c.id);
