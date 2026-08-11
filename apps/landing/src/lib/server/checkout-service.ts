@@ -49,9 +49,10 @@ export interface ContactFormParams {
 
 function getSupabaseAdmin(): SupabaseClient {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
+
   if (!url || !serviceKey) {
-    throw new Error('Supabase configuration missing: URL or Service Role Key is missing');
+    throw new Error('Supabase configuration missing: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
   }
   return createClient(url, serviceKey);
 }
@@ -682,14 +683,34 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
     throw new Error(`Stripe webhook signature verification failed: ${err.message}`);
   }
 
+  const supabase = getSupabaseAdmin();
+
+  if (event && event.id) {
+    const { data: existingEvent } = await supabase
+      .from('stripe_webhook_events')
+      .select('id')
+      .eq('stripe_event_id', event.id)
+      .maybeSingle();
+
+    if (existingEvent) {
+      return { received: true, duplicate: true };
+    }
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const bookingId = session.metadata?.booking_id;
     if (bookingId) {
-      const supabase = getSupabaseAdmin();
       await supabase.from('bookings').update({ payment_status: 'completed', payment_method: 'card_online' }).eq('id', bookingId);
       await supabase.from('payments').update({ status: 'succeeded' }).eq('booking_id', bookingId);
     }
+  }
+
+  if (event && event.id) {
+    await supabase.from('stripe_webhook_events').insert({
+      stripe_event_id: event.id,
+      event_type: event.type,
+    });
   }
 
   return { received: true };
