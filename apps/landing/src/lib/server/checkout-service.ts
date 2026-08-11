@@ -506,6 +506,17 @@ export async function createStripeSession(dto: CreateReservationParams) {
   const supabase = getSupabaseAdmin();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
+  // 1. Guaranteed pending booking creation in Supabase Postgres
+  const reservationRes = await createReservation({
+    ...dto,
+    paymentMethod: 'stripe',
+    paymentStatus: 'pending',
+  });
+
+  const booking = reservationRes.booking;
+  const coursePrice = Number(booking.amount_paid) - Number(booking.registration_fee || 0);
+  const regFee = Number(booking.registration_fee || 0);
+
   let resolvedItemId = dto.itemId;
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
   if (!isUuid) {
@@ -515,10 +526,11 @@ export async function createStripeSession(dto: CreateReservationParams) {
     }
   }
 
-  // 1. Try invoking Supabase Edge Function 'create-checkout-session' (matches NestJS backend implementation)
+  // 2. Attempt invoking Supabase Edge Function 'create-checkout-session' passing existing bookingId
   try {
     const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('create-checkout-session', {
       body: {
+        bookingId: booking.id,
         itemType: dto.itemType || 'course',
         itemId: resolvedItemId,
         date: dto.date,
@@ -545,26 +557,16 @@ export async function createStripeSession(dto: CreateReservationParams) {
     });
 
     if (!edgeErr && edgeData?.url) {
-      return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
+      return { success: true, url: edgeData.url, bookingId: booking.id };
     }
     if (edgeErr || edgeData?.error) {
       console.warn('[Supabase Edge Function Warning]:', edgeErr?.message || edgeData?.error);
     }
   } catch (invokeErr: any) {
-    console.warn('[Supabase Functions Invoke Failed, fallback to Stripe SDK]:', invokeErr?.message || invokeErr);
+    console.warn('[Supabase Functions Invoke Failed, fallback to direct Stripe SDK]:', invokeErr?.message || invokeErr);
   }
 
-  // 2. Fallback: Direct Stripe SDK session creation
-  const reservationRes = await createReservation({
-    ...dto,
-    paymentMethod: 'stripe',
-    paymentStatus: 'pending',
-  });
-
-  const booking = reservationRes.booking;
-  const coursePrice = Number(booking.amount_paid) - Number(booking.registration_fee || 0);
-  const regFee = Number(booking.registration_fee || 0);
-
+  // 3. Fallback: Direct Stripe SDK session creation
   const stripe = getStripe();
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
     {
