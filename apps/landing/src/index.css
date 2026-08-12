@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@repo/design/theme.css";
+@import "lenis/dist/lenis.css";
 @source "../../../packages/ui";
 
 :root {

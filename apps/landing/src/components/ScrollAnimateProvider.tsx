@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ReactLenis } from "lenis/react";
+import type { LenisRef } from "lenis/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Ignore mobile address bar resize height triggers to eliminate layout thrashing
+// Ignore mobile address bar resize height triggers
 ScrollTrigger.config({ ignoreMobileResize: true });
 
 export default function ScrollAnimateProvider({
@@ -16,12 +17,12 @@ export default function ScrollAnimateProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const lenisRef = useRef<any>(null);
+  const lenisRef = useRef<LenisRef>(null);
   const pathname = usePathname();
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Enable smooth Lenis scrolling only on desktop devices with fine pointers
+    // Only enable Lenis smooth scrolling on desktop devices with fine pointers and motion enabled
     const isMobileDevice = window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -30,7 +31,7 @@ export default function ScrollAnimateProvider({
     }
   }, []);
 
-  // Sync Lenis smooth scroll ticker with GSAP
+  // Synchronize Lenis smooth scroll ticker with GSAP ticker & ScrollTrigger
   useEffect(() => {
     if (!enabled) return;
 
@@ -39,10 +40,16 @@ export default function ScrollAnimateProvider({
     }
 
     gsap.ticker.add(update);
-    ScrollTrigger.refresh();
+
+    // Sync ScrollTrigger updates with Lenis scroll events
+    const lenisInstance = lenisRef.current?.lenis;
+    if (lenisInstance) {
+      lenisInstance.on("scroll", ScrollTrigger.update);
+    }
 
     return () => {
       gsap.ticker.remove(update);
+      lenisInstance?.off("scroll", ScrollTrigger.update);
     };
   }, [enabled]);
 
@@ -141,8 +148,8 @@ export default function ScrollAnimateProvider({
         options={{
           lerp: 0.1,
           duration: 1.2,
-          syncTouch: false,
-          autoRaf: false,
+          smoothWheel: true,
+          autoRaf: false, // Driven via GSAP ticker
         }}
       >
         {children}
