@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, use, useState } from "react";
+import React, { Suspense, use, useState, useEffect } from "react";
 import Image from "next/image";
 import { format } from "date-fns";
 import { it as dateLocale } from "date-fns/locale";
@@ -48,6 +48,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
   const includeRegistrationFee = watch("includeRegistrationFee");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">("pay");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (loading) {
     return (
@@ -72,6 +77,15 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
     if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
     return cat;
+  };
+
+  const formattedDateString = (dStr?: string | null) => {
+    if (!dStr) return null;
+    try {
+      return format(new Date(dStr), "d MMMM yyyy", { locale: dateLocale });
+    } catch (e) {
+      return dStr;
+    }
   };
 
   return (
@@ -129,11 +143,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
           </div>
 
           {/* Date & Time Summary on Mobile */}
-          {dateParam && (
-            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+          {dateParam && mounted && (
+            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]" suppressHydrationWarning>
               <span className="font-semibold text-slate-600 flex items-center gap-1">
                 <CalendarIcon className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
-                Data inizio: <strong className="text-[#043569] uppercase">{format(new Date(dateParam), "d MMMM yyyy", { locale: dateLocale })}</strong>
+                Data inizio: <strong className="text-[#043569] uppercase">{formattedDateString(dateParam)}</strong>
               </span>
               {timeParam && (
                 <span className="font-semibold text-slate-600 flex items-center gap-1">
@@ -145,8 +159,8 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
           )}
         </div>
 
-        {/* Main Grid */}
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] gap-5 items-start">
+        {/* Main Form Grid — Mobile Sticky Bottom Bar MUST be inside form tag to submit reliably */}
+        <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] gap-5 items-start">
 
           {/* LEFT FORM CARD */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-4">
@@ -689,15 +703,15 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
 
               {/* Date & Schedule Selection Summary */}
-              {dateParam ? (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-xs">
+              {dateParam && mounted && (
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-xs" suppressHydrationWarning>
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-slate-500 flex items-center gap-1.5">
                       <CalendarIcon className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
                       Data inizio:
                     </span>
                     <span className="font-black text-[#043569] uppercase">
-                      {format(new Date(dateParam), "d MMMM yyyy", { locale: dateLocale })}
+                      {formattedDateString(dateParam)}
                     </span>
                   </div>
                   {timeParam && (
@@ -709,11 +723,6 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                       <span className="font-bold text-slate-800">{timeParam}</span>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-xs text-slate-500 leading-relaxed">
-                  <span className="font-bold text-[#043569] block mb-0.5">Orario flessibile / da concordare</span>
-                  I giorni e gli orari verranno definiti insieme alla segreteria dopo l'iscrizione.
                 </div>
               )}
 
@@ -754,6 +763,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               {/* Action Button — Dynamically matches selectedPaymentMode */}
               <div>
                 <button
+                  form="checkout-form"
                   type="submit"
                   onClick={() => {
                     actionRef.current = selectedPaymentMode;
@@ -801,47 +811,48 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
           </div>
 
-        </form>
+          {/* Mobile Sticky Bottom Bar — Inside form grid so it submits form id="checkout-form" */}
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-4 py-3 shadow-2xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale Corso"}
+                </p>
+                <p className="text-xl font-black text-[#F8861D] leading-none">{totalPrice.toFixed(2)}€</p>
+              </div>
 
-      </div>
-
-      {/* Mobile Sticky Bottom Bar — SINGLE DYNAMIC CTA BUTTON */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-4 py-3 shadow-2xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale Corso"}
-            </p>
-            <p className="text-xl font-black text-[#F8861D] leading-none">{totalPrice.toFixed(2)}€</p>
+              <button
+                form="checkout-form"
+                type="submit"
+                onClick={() => {
+                  actionRef.current = selectedPaymentMode;
+                }}
+                disabled={!!submitting || feeCheckStatus === "checking"}
+                className={`px-5 py-3 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm shadow-lg active:scale-95 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
+                  selectedPaymentMode === "pay"
+                    ? "bg-[#F8861D] text-white shadow-[#F8861D]/30"
+                    : "bg-[#043569] text-white shadow-[#043569]/30"
+                }`}
+              >
+                {submitting ? (
+                  <Spinner className="w-4 h-4 animate-spin text-white" />
+                ) : selectedPaymentMode === "pay" ? (
+                  <>
+                    Paga Online
+                    <ArrowRight className="w-4 h-4" weight="bold" />
+                  </>
+                ) : (
+                  <>
+                    Prenota in Sede
+                    <ArrowRight className="w-4 h-4" weight="bold" />
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            onClick={() => {
-              actionRef.current = selectedPaymentMode;
-            }}
-            disabled={!!submitting || feeCheckStatus === "checking"}
-            className={`px-5 py-3 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm shadow-lg active:scale-95 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
-              selectedPaymentMode === "pay"
-                ? "bg-[#F8861D] text-white shadow-[#F8861D]/30"
-                : "bg-[#043569] text-white shadow-[#043569]/30"
-            }`}
-          >
-            {submitting ? (
-              <Spinner className="w-4 h-4 animate-spin text-white" />
-            ) : selectedPaymentMode === "pay" ? (
-              <>
-                Paga Online
-                <ArrowRight className="w-4 h-4" weight="bold" />
-              </>
-            ) : (
-              <>
-                Prenota in Sede
-                <ArrowRight className="w-4 h-4" weight="bold" />
-              </>
-            )}
-          </button>
-        </div>
+        </form>
+
       </div>
     </main>
   );

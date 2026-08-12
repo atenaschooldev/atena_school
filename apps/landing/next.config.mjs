@@ -77,6 +77,15 @@ const nextConfig = {
     };
     return config;
   },
+  async redirects() {
+    return [
+      {
+        source: '/checkout/course/:id',
+        destination: '/checkout/:id',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 const config = withNextIntl(nextConfig);
