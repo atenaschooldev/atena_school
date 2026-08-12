@@ -11,8 +11,9 @@ const Footer = () => {
   const t = useTranslations("footer");
   const pathname = usePathname();
 
-  if (pathname && (pathname.includes("/test-inglese") || pathname.includes("/checkout") || pathname.includes("/book"))) {
+  if (pathname && (pathname.includes("/test-inglese") || pathname.includes("/checkout") || pathname.includes("/book") || /\/corsi\/.+/.test(pathname))) {
     return null;
+
   }
 
   const scrollToTop = () => {

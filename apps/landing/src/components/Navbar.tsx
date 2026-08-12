@@ -118,9 +118,12 @@ const Navbar = () => {
 
   const isLightHeader = false;
 
-  if (pathname && (pathname.includes("/checkout") || pathname.includes("/book"))) {
-    return null;
-  }
+  const isMinimalHeader =
+    /\/corsi\/.+/.test(pathname ?? "") ||
+    /\/checkout\/.+/.test(pathname ?? "") ||
+    /\/book\/.+/.test(pathname ?? "");
+
+  const isCoursePage = /\/corsi\/.+/.test(pathname ?? "");
 
   return (
     <>
@@ -157,108 +160,154 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-2">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href as any}
-                className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${isLightHeader
-                    ? "text-white hover:text-[#FAA904] hover:bg-white/10"
-                    : "text-gray-700 hover:text-primary hover:bg-primary/10"
-                  }`}
-                onClick={() => handleLinkClick(l.href)}
-              >
-                {l.label}
-              </Link>
-            ))}
-          </div>
+          {/* Desktop links — hidden on minimal header routes */}
+          {!isMinimalHeader && (
+            <div className="hidden md:flex items-center gap-2">
+              {navLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href as any}
+                  className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${isLightHeader
+                      ? "text-white hover:text-[#FAA904] hover:bg-white/10"
+                      : "text-gray-700 hover:text-primary hover:bg-primary/10"
+                    }`}
+                  onClick={() => handleLinkClick(l.href)}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
+          )}
 
           {/* Icons & Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/carrello" className="relative group">
-              <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
-                  ? "text-white hover:text-[#FAA904] hover:bg-white/10"
-                  : "text-gray-600 hover:text-primary hover:bg-primary/10"
-                }`}>
-                <ShoppingCart className="w-5 h-5 cursor-pointer" />
-              </div>
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-
-            <a
-              href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
-                  ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
-                  : "bg-[#043569] text-white hover:bg-[#F8861D]"
-                }`}
-            >
-              Area Personale
-            </a>
+            {isMinimalHeader ? (
+              /* Minimal course/checkout actions: back link (on course pages) + Area Personale */
+              <>
+                {isCoursePage && (
+                  <>
+                    <Link
+                      href="/corsi"
+                      className="text-sm font-bold text-slate-500 hover:text-[#043569] transition-colors duration-200 flex items-center gap-1.5 group"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:-translate-x-0.5">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      Tutti i corsi
+                    </Link>
+                    <div className="w-px h-5 bg-slate-200" />
+                  </>
+                )}
+                <a
+                  href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full bg-[#043569] text-white hover:bg-[#F8861D] transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
+                >
+                  Area Personale
+                </a>
+              </>
+            ) : (
+              /* Full actions */
+              <>
+                <Link href="/carrello" className="relative group">
+                  <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
+                      ? "text-white hover:text-[#FAA904] hover:bg-white/10"
+                      : "text-gray-600 hover:text-primary hover:bg-primary/10"
+                    }`}>
+                    <ShoppingCart className="w-5 h-5 cursor-pointer" />
+                  </div>
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+                <a
+                  href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
+                      ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
+                      : "bg-[#043569] text-white hover:bg-[#F8861D]"
+                    }`}
+                >
+                  Area Personale
+                </a>
+              </>
+            )}
           </div>
 
-          {/* Animated hamburger button */}
-          <button
-            aria-label={open ? "Chiudi menu" : "Apri menu"}
-            aria-expanded={open}
-            className={`md:hidden relative p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
-                ? "text-white hover:bg-white/10"
-                : "text-gray-700 hover:bg-primary/10"
+          {/* Mobile Right Actions: <- Corsi back link (if course page) + Hamburger Menu */}
+          <div className="flex items-center gap-2 md:hidden">
+            {isCoursePage && (
+              <Link
+                href="/corsi"
+                className="text-xs font-bold text-[#043569] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shrink-0"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Corsi
+              </Link>
+            )}
+
+            {/* Hamburger Button */}
+            <button
+              aria-label={open ? "Chiudi menu" : "Apri menu"}
+              aria-expanded={open}
+              className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${
+                isLightHeader ? "text-white hover:bg-white/10" : "text-gray-700 hover:bg-primary/10"
               }`}
-            onClick={() => setOpen(!open)}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="overflow-visible"
+              onClick={() => setOpen(!open)}
             >
-              {/* Top bar */}
-              <line
-                x1="3" y1="6" x2="21" y2="6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                style={{
-                  transformOrigin: "12px 6px",
-                  transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
-                  transform: open ? "rotate(45deg) translateY(6px)" : "rotate(0deg) translateY(0)",
-                }}
-              />
-              {/* Middle bar */}
-              <line
-                x1="3" y1="12" x2="21" y2="12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                style={{
-                  transformOrigin: "12px 12px",
-                  transition: "opacity 0.2s 0.05s, transform 0.2s",
-                  opacity: open ? 0 : 1,
-                  transform: open ? "scaleX(0)" : "scaleX(1)",
-                }}
-              />
-              {/* Bottom bar */}
-              <line
-                x1="3" y1="18" x2="21" y2="18"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                style={{
-                  transformOrigin: "12px 18px",
-                  transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
-                  transform: open ? "rotate(-45deg) translateY(-6px)" : "rotate(0deg) translateY(0)",
-                }}
-              />
-            </svg>
-          </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="overflow-visible"
+              >
+                {/* Top bar */}
+                <line
+                  x1="3" y1="6" x2="21" y2="6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  style={{
+                    transformOrigin: "12px 6px",
+                    transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
+                    transform: open ? "rotate(45deg) translateY(6px)" : "rotate(0deg) translateY(0)",
+                  }}
+                />
+                {/* Middle bar */}
+                <line
+                  x1="3" y1="12" x2="21" y2="12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  style={{
+                    transformOrigin: "12px 12px",
+                    transition: "opacity 0.2s 0.05s, transform 0.2s",
+                    opacity: open ? 0 : 1,
+                    transform: open ? "scaleX(0)" : "scaleX(1)",
+                  }}
+                />
+                {/* Bottom bar */}
+                <line
+                  x1="3" y1="18" x2="21" y2="18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  style={{
+                    transformOrigin: "12px 18px",
+                    transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s",
+                    transform: open ? "rotate(-45deg) translateY(-6px)" : "rotate(0deg) translateY(0)",
+                  }}
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 

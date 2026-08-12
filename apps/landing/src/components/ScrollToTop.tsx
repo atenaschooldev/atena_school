@@ -21,7 +21,12 @@ const ScrollToTop = () => {
     return () => window.removeEventListener("scroll", toggleVisibility);
   }, []);
 
-  if (pathname && (pathname.includes("/checkout") || pathname.includes("/book"))) {
+  if (
+    pathname &&
+    (pathname.includes("/checkout") ||
+      pathname.includes("/book") ||
+      /\/corsi\/.+/.test(pathname))
+  ) {
     return null;
   }
 
