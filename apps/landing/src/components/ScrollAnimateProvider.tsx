@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Optimize performance on mobile by ignoring address bar resizing triggers
+// Ignore mobile address bar resize height triggers to eliminate layout thrashing
 ScrollTrigger.config({ ignoreMobileResize: true });
 
 export default function ScrollAnimateProvider({
@@ -21,26 +21,24 @@ export default function ScrollAnimateProvider({
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    // Only enable smooth scrolling on desktop devices and if the user doesn't prefer reduced motion
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    // Enable smooth Lenis scrolling only on desktop devices with fine pointers
+    const isMobileDevice = window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (!isTouch && !prefersReducedMotion) {
+    if (!isMobileDevice && !prefersReducedMotion) {
       setEnabled(true);
     }
   }, []);
 
+  // Sync Lenis smooth scroll ticker with GSAP
   useEffect(() => {
     if (!enabled) return;
 
-    // Sync Lenis with GSAP ticker for perfect scroll animation synchronization
     function update(time: number) {
       lenisRef.current?.lenis?.raf(time * 1000);
     }
 
     gsap.ticker.add(update);
-
-    // Initial ScrollTrigger refresh after Lenis initialization
     ScrollTrigger.refresh();
 
     return () => {
@@ -48,91 +46,92 @@ export default function ScrollAnimateProvider({
     };
   }, [enabled]);
 
+  // GSAP Responsive MatchMedia & Context Setup
   useEffect(() => {
-    if (!enabled) {
-      // Ensure all elements are 100% visible if animations are disabled
-      document.querySelectorAll("[data-gsap]").forEach((el) => {
-        gsap.set(el, { clearProps: "all" });
-      });
-      return;
-    }
+    const ctx = gsap.context(() => {
+      const mm = gsap.matchMedia();
 
-    // Function to initialize GSAP animation for elements
-    const initAnimations = () => {
-      const elements = document.querySelectorAll("[data-gsap]");
-      if (elements.length === 0) return;
+      mm.add(
+        {
+          isDesktop: "(min-width: 1024px) and (pointer: fine)",
+          isMobile: "(max-width: 1023px), (pointer: coarse)",
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+        },
+        (context) => {
+          const { isDesktop, isMobile, reduceMotion } = context.conditions as any;
 
-      elements.forEach((el) => {
-        if (el.classList.contains("gsap-init")) {
-          // If already initialized (e.g. back navigation), ensure element is fully visible
-          gsap.set(el, { opacity: 1, y: 0 });
-          return;
+          // 1. Reduced motion preference -> clear all inline styles immediately
+          if (reduceMotion) {
+            gsap.set("[data-gsap]", { clearProps: "all", opacity: 1, y: 0 });
+            return;
+          }
+
+          // 2. Mobile devices: Snappy, lightweight fade-in without heavy shifts or jank
+          if (isMobile) {
+            const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
+            elements.forEach((el) => {
+              gsap.fromTo(
+                el,
+                { autoAlpha: 0, y: 10 },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+                  duration: 0.35,
+                  ease: "power2.out",
+                  scrollTrigger: {
+                    trigger: el,
+                    start: "top 95%",
+                    once: true,
+                  },
+                }
+              );
+            });
+          }
+
+          // 3. Desktop: Smooth premium animations with custom delays
+          if (isDesktop) {
+            const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
+            elements.forEach((el) => {
+              const animationType = el.getAttribute("data-gsap") || "fade-up";
+              const delayStr = el.getAttribute("data-gsap-delay") || "0";
+              const delay = parseFloat(delayStr) / 1000;
+              const durationStr = el.getAttribute("data-gsap-duration") || "500";
+              const duration = parseFloat(durationStr) / 1000;
+
+              const initialY = animationType === "fade-up" ? 20 : 0;
+
+              gsap.fromTo(
+                el,
+                { autoAlpha: 0, y: initialY },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+                  duration,
+                  delay,
+                  ease: "power2.out",
+                  scrollTrigger: {
+                    trigger: el,
+                    start: "top 90%",
+                    once: true,
+                  },
+                }
+              );
+            });
+          }
         }
+      );
+    });
 
-        el.classList.add("gsap-init");
-
-        const animationType = el.getAttribute("data-gsap") || "fade-up";
-        const delayStr = el.getAttribute("data-gsap-delay") || "0";
-        const delay = parseFloat(delayStr) / 1000;
-        
-        // Default duration is 500ms for snappier entry animations
-        const durationStr = el.getAttribute("data-gsap-duration") || "500";
-        const duration = parseFloat(durationStr) / 1000;
-
-        const initialVars: gsap.TweenVars = {
-          opacity: 0,
-        };
-        const animVars: gsap.TweenVars = {
-          opacity: 1,
-          duration: duration,
-          delay: delay,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 95%", // Trigger earlier when element enters near the bottom of screen (95% from top)
-            toggleActions: "play none none none",
-          },
-        };
-
-        if (animationType === "fade-up") {
-          initialVars.y = 20; // Reduced shift distance for a faster, tighter feel
-          animVars.y = 0;
-        } else if (animationType === "fade-in") {
-          // Just opacity
-        }
-
-        // Set initial states and create tween
-        gsap.set(el, initialVars);
-        gsap.to(el, animVars);
-      });
-
+    // Refresh ScrollTrigger after DOM renders
+    const timer = setTimeout(() => {
       ScrollTrigger.refresh();
-    };
-
-    // Run animation initialization once on route change
-    const timer = setTimeout(initAnimations, 100);
-
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        document.querySelectorAll("[data-gsap]").forEach((el) => {
-          gsap.set(el, { clearProps: "all" });
-          el.classList.remove("gsap-init");
-        });
-        initAnimations();
-      }
-    };
-    window.addEventListener("pageshow", handlePageShow);
+    }, 100);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("pageshow", handlePageShow);
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-      document.querySelectorAll("[data-gsap]").forEach((el) => {
-        gsap.set(el, { clearProps: "all" });
-        el.classList.remove("gsap-init");
-      });
+      ctx.revert(); // GSAP Context Revert cleanly cleans up all matchMedia and ScrollTrigger instances
     };
-  }, [pathname, enabled]);
+  }, [pathname]);
 
   if (enabled) {
     return (
@@ -142,8 +141,8 @@ export default function ScrollAnimateProvider({
         options={{
           lerp: 0.1,
           duration: 1.2,
-          syncTouch: false, // Use native touch scrolling on mobile to keep high performance and standard inertial scroll feel
-          autoRaf: false, // Drive it via GSAP ticker
+          syncTouch: false,
+          autoRaf: false,
         }}
       >
         {children}
