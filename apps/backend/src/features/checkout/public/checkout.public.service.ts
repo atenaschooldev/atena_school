@@ -224,7 +224,7 @@ export class CheckoutService {
       const studentName = dto.isForChild
         ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
         : purchaserName;
-      const adminEmail = this.configService.get<string>('SCHOOL_ADMIN_EMAIL') || this.configService.get<string>('ADMIN_EMAIL') || 'info@atenaschool.it';
+      const adminEmail = this.configService.get<string>('SCHOOL_ADMIN_EMAIL') || this.configService.get<string>('ADMIN_EMAIL') || 'info@atenaschool.com';
       const isPaidOnline = booking.payment_status === 'paid' || booking.payment_status === 'completed';
       const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
       const totalEur = Number(booking.amount_paid || 0).toFixed(2);
@@ -250,7 +250,7 @@ export class CheckoutService {
               ${Number(regFeeEur) > 0 ? `<p style="margin: 4px 0;"><strong>Quota iscrizione annuale:</strong> €${regFeeEur}</p>` : ''}
               <p style="margin: 8px 0 0 0; font-size: 16px; color: #f8861d;"><strong>Totale: €${totalEur}</strong></p>
             </div>
-            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px;">Atena School — Via Matteotti 11, 89022 Cittanova (RC)<br>info@atenaschool.it</p>
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px;">Atena School — Via Matteotti 11, 89022 Cittanova (RC)<br>info@atenaschool.com</p>
           </div>
         </div>
       `;

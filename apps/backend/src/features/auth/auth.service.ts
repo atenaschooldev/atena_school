@@ -27,7 +27,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     // 1. Временный/локальный тест-логин для разработки
-    if (process.env.NODE_ENV !== 'production' && dto.email === 'admin@atenaschool.it' && dto.password === 'password123') {
+    if (process.env.NODE_ENV !== 'production' && dto.email === 'admin@atenaschool.com' && dto.password === 'password123') {
       let user = await this.usersRepository.findByEmail(dto.email);
       if (!user) {
         user = await this.usersRepository.create({

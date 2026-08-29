@@ -28,7 +28,7 @@ export class MailService implements OnModuleInit {
   }
 
   async sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
-    const from = this.configService.get<string>('SMTP_FROM') || 'Atena School <noreply@atenaschool.it>';
+    const from = this.configService.get<string>('SMTP_FROM') || 'Atena School <noreply@atenaschool.com>';
 
     if (this.transporter) {
       await this.transporter.sendMail({

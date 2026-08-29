@@ -43,7 +43,7 @@ export function LoginForm1({
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "admin@atenaschool.it",
+      email: "admin@atenaschool.com",
       password: "password123",
     },
   })
@@ -90,7 +90,7 @@ export function LoginForm1({
                         <FormControl>
                           <Input
                             type="email"
-                            placeholder="admin@atenaschool.it"
+                            placeholder="admin@atenaschool.com"
                             {...field}
                           />
                         </FormControl>

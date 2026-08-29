@@ -513,9 +513,9 @@ export async function sendBookingNotificationEmails(params: {
   const studentName = dto.isForChild
     ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
     : purchaserName;
-  const adminEmail = process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.it';
+  const adminEmail = process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
   const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <prenotazioni@atenaschool.it>';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <prenotazioni@atenaschool.com>';
 
   const isPaidOnline = booking.payment_status === 'paid' || booking.payment_status === 'completed';
   const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
@@ -566,7 +566,7 @@ export async function sendBookingNotificationEmails(params: {
           
           <div class="footer">
             Atena School — Via Matteotti 11, 89022 Cittanova (RC)<br>
-            Per qualsiasi informazione o supporto: info@atenaschool.it
+            Per qualsiasi informazione o supporto: info@atenaschool.com
           </div>
         </div>
       </body>

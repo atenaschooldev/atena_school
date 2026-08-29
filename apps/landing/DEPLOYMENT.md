@@ -25,7 +25,7 @@ You **must** add the following environment variables in the **Settings > Environ
 | :--- | :--- | :--- |
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL | `https://xxxxxx.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase public anonymous API key | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
-| `NEXT_PUBLIC_SITE_URL` | The production URL of your deployment | `https://atenaschool.it` (or your Vercel domain) |
+| `NEXT_PUBLIC_SITE_URL` | The production URL of your deployment | `https://atenaschool.com` (or your Vercel domain) |
 | `NEXT_PUBLIC_GA_ID` | *(Optional)* Google Analytics ID | `G-XXXXXXXXXX` |
 
 ---

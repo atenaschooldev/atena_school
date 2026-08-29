@@ -34,7 +34,7 @@ export class AuthGuard implements CanActivate {
         id: '00000000-0000-0000-0000-000000000000',
         role: 'admin',
         full_name: 'Marco Rossi (Test)',
-        email: 'test@atenaschool.it',
+        email: 'test@atenaschool.com',
       };
       return true;
     }

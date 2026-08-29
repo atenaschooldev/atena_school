@@ -49,6 +49,6 @@ SMTP_HOST="smtp.example.com"
 SMTP_PORT=587
 SMTP_USER="your-username"
 SMTP_PASSWORD="your-password"
-SMTP_FROM="Atena School <noreply@atenaschool.it>"
+SMTP_FROM="Atena School <noreply@atenaschool.com>"
 ```
 Если данные переменные отсутствуют, служба работает в режиме имитации (Mock Mode), отображая письма в системном логе.

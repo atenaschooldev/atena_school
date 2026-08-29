@@ -94,7 +94,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
           courseName: 'Corso Sistema',
           purchaserName: 'Sistema Atena',
           studentName: 'Sistema Atena',
-          purchaserEmail: 'admin@atenaschool.it',
+          purchaserEmail: 'admin@atenaschool.com',
           paymentStatus: 'succeeded',
         },
       });
