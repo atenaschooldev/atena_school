@@ -6,6 +6,8 @@ import { z } from "zod"
 import { BaseLayout } from "@/components/layouts/base-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import {
   Form,
   FormControl,
@@ -15,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
+import { useTranslation } from "@/i18n/context"
 
 const accountFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -29,6 +32,7 @@ const accountFormSchema = z.object({
 type AccountFormValues = z.infer<typeof accountFormSchema>
 
 export default function AccountSettings() {
+  const { t } = useTranslation();
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
     defaultValues: {
@@ -48,12 +52,12 @@ export default function AccountSettings() {
   }
 
   return (
-    <BaseLayout>
+    <BaseLayout title={t("nav.accountSettings")} description={t("settings.subtitle")}>
       <div className="space-y-6 px-4 lg:px-6">
         <div>
-          <h1 className="text-3xl font-bold">Account Settings</h1>
+          <h1 className="text-3xl font-bold">{t("settings.title")}</h1>
           <p className="text-muted-foreground">
-            Manage your account settings, preferences and payment gateways.
+            {t("settings.subtitle")}
           </p>
         </div>
 
@@ -64,9 +68,9 @@ export default function AccountSettings() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Personal Information</CardTitle>
+                <CardTitle>{t("settings.personalInfo")}</CardTitle>
                 <CardDescription>
-                  Update your personal information that will be displayed on your profile.
+                  {t("settings.subtitle")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -201,8 +205,8 @@ export default function AccountSettings() {
             </Card>
 
             <div className="flex space-x-2">
-              <Button type="submit" className="cursor-pointer">Save Changes</Button>
-              <Button variant="outline" type="reset" className="cursor-pointer">Cancel</Button>
+              <Button type="submit" className="cursor-pointer">{t("common.save")}</Button>
+              <Button variant="outline" type="reset" className="cursor-pointer">{t("common.cancel")}</Button>
             </div>
           </form>
         </Form>
