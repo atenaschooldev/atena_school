@@ -7,6 +7,7 @@ import { initGTM } from '@/utils/analytics'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { LanguageProvider } from '@/i18n/context'
+import { ThemeCustomizerProvider } from '@/contexts/theme-customizer-context'
 
 // Get basename from environment (for deployment) or use empty string for development
 const basename = import.meta.env.VITE_BASENAME || ''
@@ -30,13 +31,15 @@ function App() {
     <div className="font-sans antialiased" style={{ fontFamily: 'var(--font-inter)' }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
-          <LanguageProvider>
-            <SidebarConfigProvider>
-              <Router basename={basename}>
-                <AppRouter />
-              </Router>
-            </SidebarConfigProvider>
-          </LanguageProvider>
+          <ThemeCustomizerProvider>
+            <LanguageProvider>
+              <SidebarConfigProvider>
+                <Router basename={basename}>
+                  <AppRouter />
+                </Router>
+              </SidebarConfigProvider>
+            </LanguageProvider>
+          </ThemeCustomizerProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </div>
