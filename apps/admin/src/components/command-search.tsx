@@ -127,39 +127,22 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
   const commandRef = React.useRef<HTMLDivElement>(null)
 
   const searchItems: SearchItem[] = [
-    // Dashboards
-    { title: "Dashboard", url: "/dashboard", group: "Dashboards", icon: LayoutDashboard },
+    // Panoramica
+    { title: "Dashboard", url: "/dashboard", group: "Panoramica", icon: LayoutDashboard },
 
-    // Apps
+    // Gestione Scuola
+    { title: "Corsi", url: "/corsi", group: "Gestione Scuola", icon: CheckSquare },
+    { title: "Prenotazioni & Ordini", url: "/prenotazioni", group: "Gestione Scuola", icon: CreditCard },
+    { title: "Pagamenti", url: "/pagamenti", group: "Gestione Scuola", icon: CreditCard },
+    { title: "Presenze & Registro", url: "/presenze", group: "Gestione Scuola", icon: CheckSquare },
+    { title: "Iscrizioni Annuali", url: "/iscrizioni", group: "Gestione Scuola", icon: CreditCard },
+    { title: "Docenti", url: "/insegnanti", group: "Gestione Scuola", icon: User },
+    { title: "Orari & Calendario", url: "/orari", group: "Gestione Scuola", icon: Calendar },
+    { title: "Utenti & Studenti", url: "/users", group: "Gestione Scuola", icon: User },
 
-    // Auth Pages
-    { title: "Sign In 1", url: "/auth/sign-in", group: "Auth Pages", icon: Shield },
-    { title: "Sign In 2", url: "/auth/sign-in-2", group: "Auth Pages", icon: Shield },
-    { title: "Sign Up 1", url: "/auth/sign-up", group: "Auth Pages", icon: Shield },
-    { title: "Sign Up 2", url: "/auth/sign-up-2", group: "Auth Pages", icon: Shield },
-    { title: "Forgot Password 1", url: "/auth/forgot-password", group: "Auth Pages", icon: Shield },
-    { title: "Forgot Password 2", url: "/auth/forgot-password-2", group: "Auth Pages", icon: Shield },
-
-    // Errors
-    { title: "Unauthorized", url: "/errors/unauthorized", group: "Errors", icon: AlertTriangle },
-    { title: "Forbidden", url: "/errors/forbidden", group: "Errors", icon: AlertTriangle },
-    { title: "Not Found", url: "/errors/not-found", group: "Errors", icon: AlertTriangle },
-    { title: "Internal Server Error", url: "/errors/internal-server-error", group: "Errors", icon: AlertTriangle },
-    { title: "Under Maintenance", url: "/errors/under-maintenance", group: "Errors", icon: AlertTriangle },
-
-    // Settings
-    { title: "User Settings", url: "/settings/user", group: "Settings", icon: User },
-    { title: "Account Settings", url: "/settings/account", group: "Settings", icon: Settings },
-    { title: "Plans & Billing", url: "/settings/billing", group: "Settings", icon: CreditCard },
-    { title: "Appearance", url: "/settings/appearance", group: "Settings", icon: Palette },
-    { title: "Notifications", url: "/settings/notifications", group: "Settings", icon: Bell },
-    { title: "Connections", url: "/settings/connections", group: "Settings", icon: Link2 },
-
-    // Pages
-    { title: "FAQs", url: "/faqs", group: "Pages", icon: HelpCircle },
-    { title: "Pricing", url: "/pricing", group: "Pages", icon: CreditCard },
-    { title: "Prenotazioni & Ordini", url: "/prenotazioni", group: "Apps", icon: CreditCard },
-    { title: "Pagamenti", url: "/pagamenti", group: "Apps", icon: CreditCard },
+    // Impostazioni
+    { title: "Impostazioni Account", url: "/settings/account", group: "Impostazioni", icon: Settings },
+    { title: "Aspetto & Tema", url: "/settings/appearance", group: "Impostazioni", icon: Palette },
   ]
 
   const groupedItems = searchItems.reduce((acc, item) => {

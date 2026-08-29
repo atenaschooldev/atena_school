@@ -2,18 +2,11 @@
 
 import * as React from "react"
 import {
-  LayoutPanelLeft,
   LayoutDashboard,
-  Mail,
   CheckSquare,
-  MessageCircle,
   Calendar,
-  Shield,
-  AlertTriangle,
   Settings,
-  HelpCircle,
   CreditCard,
-  LayoutTemplate,
   Users,
   BadgeCheck,
   GraduationCap,
@@ -42,7 +35,7 @@ const data = {
   },
   navGroups: [
     {
-      label: "Dashboards",
+      label: "Panoramica",
       items: [
         {
           title: "Dashboard",
@@ -52,7 +45,7 @@ const data = {
       ],
     },
     {
-      label: "Apps",
+      label: "Gestione Scuola",
       items: [
         {
           title: "Corsi",
@@ -75,7 +68,7 @@ const data = {
           icon: CheckCircle2,
         },
         {
-          title: "Iscrizioni",
+          title: "Iscrizioni Annuali",
           url: "/iscrizioni",
           icon: BadgeCheck,
         },
@@ -90,131 +83,24 @@ const data = {
           icon: Calendar,
         },
         {
-          title: "Users",
+          title: "Utenti & Studenti",
           url: "/users",
           icon: Users,
         },
       ],
     },
     {
-      label: "Pages",
+      label: "Impostazioni",
       items: [
         {
-          title: "Landing",
-          url: "/landing",
-          target: "_blank",
-          icon: LayoutTemplate,
-        },
-        {
-          title: "Auth Pages",
-          url: "#",
-          icon: Shield,
-          items: [
-            {
-              title: "Sign In 1",
-              url: "/auth/sign-in",
-            },
-            {
-              title: "Sign In 2",
-              url: "/auth/sign-in-2",
-            },
-            {
-              title: "Sign In 3",
-              url: "/auth/sign-in-3",
-            },
-            {
-              title: "Sign Up 1",
-              url: "/auth/sign-up",
-            },
-            {
-              title: "Sign Up 2",
-              url: "/auth/sign-up-2",
-            },
-            {
-              title: "Sign Up 3",
-              url: "/auth/sign-up-3",
-            },
-            {
-              title: "Forgot Password 1",
-              url: "/auth/forgot-password",
-            },
-            {
-              title: "Forgot Password 2",
-              url: "/auth/forgot-password-2",
-            },
-            {
-              title: "Forgot Password 3",
-              url: "/auth/forgot-password-3",
-            }
-          ],
-        },
-        {
-          title: "Errors",
-          url: "#",
-          icon: AlertTriangle,
-          items: [
-            {
-              title: "Unauthorized",
-              url: "/errors/unauthorized",
-            },
-            {
-              title: "Forbidden",
-              url: "/errors/forbidden",
-            },
-            {
-              title: "Not Found",
-              url: "/errors/not-found",
-            },
-            {
-              title: "Internal Server Error",
-              url: "/errors/internal-server-error",
-            },
-            {
-              title: "Under Maintenance",
-              url: "/errors/under-maintenance",
-            },
-          ],
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Profilo & Account",
+          url: "/settings/account",
           icon: Settings,
-          items: [
-            {
-              title: "User Settings",
-              url: "/settings/user",
-            },
-            {
-              title: "Account Settings",
-              url: "/settings/account",
-            },
-            {
-              title: "Plans & Billing",
-              url: "/settings/billing",
-            },
-            {
-              title: "Appearance",
-              url: "/settings/appearance",
-            },
-            {
-              title: "Notifications",
-              url: "/settings/notifications",
-            },
-            {
-              title: "Connections",
-              url: "/settings/connections",
-            },
-          ],
         },
         {
-          title: "FAQs",
-          url: "/faqs",
-          icon: HelpCircle,
-        },
-        {
-          title: "Pricing",
-          url: "/pricing",
-          icon: CreditCard,
+          title: "Aspetto & Tema",
+          url: "/settings/appearance",
+          icon: Settings,
         },
       ],
     },

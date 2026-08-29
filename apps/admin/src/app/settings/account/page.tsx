@@ -14,8 +14,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
 
 const accountFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -54,9 +53,12 @@ export default function AccountSettings() {
         <div>
           <h1 className="text-3xl font-bold">Account Settings</h1>
           <p className="text-muted-foreground">
-            Manage your account settings and preferences.
+            Manage your account settings, preferences and payment gateways.
           </p>
         </div>
+
+        {/* Master Stripe Toggle */}
+        <StripeSettingsCard />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -13,7 +13,6 @@ const Orari = lazy(() => import('@/app/orari/page'))
 const Iscrizioni = lazy(() => import('@/app/iscrizioni/page'))
 const Insegnanti = lazy(() => import('@/app/insegnanti/page'))
 const FAQs = lazy(() => import('@/app/faqs/page'))
-const Pricing = lazy(() => import('@/app/pricing/page'))
 
 // Auth pages
 const SignIn = lazy(() => import('@/app/auth/sign-in/page'))
@@ -36,7 +35,6 @@ const UnderMaintenance = lazy(() => import('@/app/errors/under-maintenance/page'
 // Settings pages
 const UserSettings = lazy(() => import('@/app/settings/user/page'))
 const AccountSettings = lazy(() => import('@/app/settings/account/page'))
-const BillingSettings = lazy(() => import('@/app/settings/billing/page'))
 const AppearanceSettings = lazy(() => import('@/app/settings/appearance/page'))
 const NotificationSettings = lazy(() => import('@/app/settings/notifications/page'))
 const ConnectionSettings = lazy(() => import('@/app/settings/connections/page'))
@@ -100,14 +98,6 @@ export const routes: RouteConfig[] = [
   {
     path: "/users",
     element: <Users />
-  },
-  {
-    path: "/faqs",
-    element: <FAQs />
-  },
-  {
-    path: "/pricing",
-    element: <Pricing />
   },
 
   // Authentication Routes
@@ -182,10 +172,6 @@ export const routes: RouteConfig[] = [
   {
     path: "/settings/account",
     element: <AccountSettings />
-  },
-  {
-    path: "/settings/billing",
-    element: <BillingSettings />
   },
   {
     path: "/settings/appearance",
