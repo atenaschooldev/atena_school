@@ -10,6 +10,7 @@ import {
   CircleDashed,
   UserCheck,
 } from "lucide-react";
+import { useTranslation } from "@/i18n/context";
 
 export interface StatusBadgeProps {
   status: string;
@@ -17,6 +18,7 @@ export interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const { t } = useTranslation();
   const normalized = (status || "").toLowerCase().trim();
 
   switch (normalized) {
@@ -31,7 +33,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
           className={`text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-semibold gap-1.5 border border-emerald-500/30 shadow-2xs ${className || ""}`}
         >
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-          {normalized === "attivo" || normalized === "active" ? "Attivo" : "Pagato"}
+          {normalized === "attivo" || normalized === "active" ? t("common.active") : t("common.paid")}
         </Badge>
       );
 
@@ -43,7 +45,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
           className={`text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-semibold gap-1.5 border border-amber-500/30 shadow-2xs ${className || ""}`}
         >
           <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          {normalized === "in-programmazione" ? "In Programmazione" : "Parziale"}
+          {normalized === "in-programmazione" ? t("common.pending") : t("common.pending")}
         </Badge>
       );
 
@@ -57,44 +59,44 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
           className={`text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20 font-semibold gap-1.5 border border-rose-500/30 shadow-2xs ${className || ""}`}
         >
           <AlertCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-          {normalized === "expired" ? "Scaduta" : "In Debito"}
-        </Badge>
-      );
-
-    case "revoked":
-    case "concluso":
-    case "archiviato":
-      return (
-        <Badge
-          variant="secondary"
-          className={`text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800/40 font-semibold gap-1.5 border border-slate-500/30 shadow-2xs ${className || ""}`}
-        >
-          <Ban className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-          {normalized === "revoked" ? "Revocata" : normalized === "concluso" ? "Concluso" : "Archiviato"}
-        </Badge>
-      );
-
-    case "pending_coordination":
-    case "pending":
-      return (
-        <Badge
-          variant="secondary"
-          className={`text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/20 font-semibold gap-1.5 border border-indigo-500/30 shadow-2xs ${className || ""}`}
-        >
-          <CircleDashed className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-          In Attesa
+          {normalized === "expired" || normalized === "scaduto" ? t("memberships.membershipExpired") : t("common.failed")}
         </Badge>
       );
 
     case "reserved":
-    default:
+    case "prenotato":
       return (
         <Badge
           variant="secondary"
-          className={`text-sky-600 bg-sky-50 dark:text-sky-400 dark:bg-sky-900/20 font-semibold gap-1.5 border border-sky-500/30 shadow-2xs ${className || ""}`}
+          className={`text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 font-semibold gap-1.5 border border-blue-500/30 shadow-2xs ${className || ""}`}
         >
-          <AlertCircle className="w-3.5 h-3.5 text-sky-500 shrink-0" />
-          Da Saldare
+          <Clock className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+          {t("common.reserved")}
+        </Badge>
+      );
+
+    case "cancelled":
+    case "annullato":
+      return (
+        <Badge
+          variant="secondary"
+          className={`text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800 font-semibold gap-1.5 border border-slate-300 shadow-2xs ${className || ""}`}
+        >
+          <Ban className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+          {t("common.cancelled")}
+        </Badge>
+      );
+
+    case "pending":
+    case "in-attesa":
+    default:
+      return (
+        <Badge
+          variant="outline"
+          className={`text-muted-foreground border-border bg-muted/30 font-medium gap-1 text-xs ${className || ""}`}
+        >
+          <CircleDashed className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          <span>{status ? t(`common.${status}`) || status : t("common.pending")}</span>
         </Badge>
       );
   }

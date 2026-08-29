@@ -2,10 +2,12 @@
 
 import { BaseLayout } from "@/components/layouts/base-layout";
 import { AttendanceView } from "@/features/attendance/components/attendance-view";
+import { useTranslation } from "@/i18n/context";
 
 export default function PresenzePage() {
+  const { t } = useTranslation();
   return (
-    <BaseLayout title="Presenze & Registro" description="Registro quotidiano delle presenze e incasso post-lezione">
+    <BaseLayout title={t("attendance.title")} description={t("attendance.subtitle")}>
       <AttendanceView />
     </BaseLayout>
   );

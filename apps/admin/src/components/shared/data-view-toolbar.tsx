@@ -35,23 +35,27 @@ export interface DataViewToolbarProps {
   className?: string;
 }
 
+import { useTranslation } from "@/i18n/context";
+
 export function DataViewToolbar({
   searchQuery,
   onSearchChange,
-  searchPlaceholder = "Cerca...",
+  searchPlaceholder,
   filters = [],
   actionElement,
   viewMode,
   onViewModeChange,
   className,
 }: DataViewToolbarProps) {
+  const { t } = useTranslation();
+  const effectivePlaceholder = searchPlaceholder || t("common.search");
   return (
     <div className={`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${className || ""}`}>
       <div className="flex flex-1 items-center space-x-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={searchPlaceholder}
+            placeholder={effectivePlaceholder}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9"

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
 
+import { useTranslation } from "@/i18n/context";
+
 interface DeleteConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,11 +24,15 @@ interface DeleteConfirmDialogProps {
 export function DeleteConfirmDialog({
   open,
   onOpenChange,
-  title = "Conferma eliminazione",
-  description = "Sei sicuro di voler eliminare questo elemento? Questa azione non può essere annullata.",
+  title,
+  description,
   onConfirm,
   loading = false,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation();
+  const effectiveTitle = title || t("courses.deleteConfirmTitle");
+  const effectiveDesc = description || t("courses.deleteConfirmDesc");
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="max-w-md">
@@ -36,16 +42,16 @@ export function DeleteConfirmDialog({
               <AlertTriangle className="h-5 w-5" />
             </div>
             <div className="space-y-1">
-              <AlertDialogTitle className="text-base font-semibold">{title}</AlertDialogTitle>
+              <AlertDialogTitle className="text-base font-semibold">{effectiveTitle}</AlertDialogTitle>
               <AlertDialogDescription className="text-xs text-muted-foreground leading-relaxed">
-                {description}
+                {effectiveDesc}
               </AlertDialogDescription>
             </div>
           </div>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
           <AlertDialogCancel disabled={loading} className="cursor-pointer text-xs">
-            Annulla
+            {t("common.cancel")}
           </AlertDialogCancel>
           <AlertDialogAction
             disabled={loading}
@@ -55,7 +61,7 @@ export function DeleteConfirmDialog({
             }}
             className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-semibold cursor-pointer text-xs"
           >
-            {loading ? "Eliminazione..." : "Elimina"}
+            {loading ? t("common.saving") : t("common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

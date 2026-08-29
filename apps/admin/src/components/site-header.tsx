@@ -7,6 +7,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { CommandSearch, SearchTrigger } from "@/components/command-search"
 import { Palette } from "lucide-react"
 import { ModeToggle } from "@/components/mode-toggle"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import { useTranslation } from "@/i18n/context"
 
 interface SiteHeaderProps {
   onOpenCustomizer?: () => void
@@ -14,6 +16,7 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ onOpenCustomizer, title }: SiteHeaderProps) {
+  const { t } = useTranslation()
   const [searchOpen, setSearchOpen] = React.useState(false)
 
   React.useEffect(() => {
@@ -42,16 +45,17 @@ export function SiteHeader({ onOpenCustomizer, title }: SiteHeaderProps) {
           )}
           <div className="ml-auto flex items-center gap-2">
             <SearchTrigger onClick={() => setSearchOpen(true)} />
+            <LanguageSwitcher />
             {onOpenCustomizer && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onOpenCustomizer}
-                title="Personalizza Tema"
+                title={t("header.customizeTheme")}
                 className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <Palette className="h-4 w-4" />
-                <span className="sr-only">Personalizza Tema</span>
+                <span className="sr-only">{t("header.customizeTheme")}</span>
               </Button>
             )}
             <ModeToggle />

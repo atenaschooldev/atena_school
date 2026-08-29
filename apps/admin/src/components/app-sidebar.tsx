@@ -18,6 +18,7 @@ import { Logo } from "@/components/logo"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { useTranslation } from "@/i18n/context"
 import {
   Sidebar,
   SidebarContent,
@@ -28,92 +29,93 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { t } = useTranslation()
+
+  const user = {
     name: "Atena School",
-    email: "store@example.com",
+    email: "admin@atenaschool.com",
     avatar: "",
-  },
-  navGroups: [
+  }
+
+  const navGroups = [
     {
-      label: "Panoramica",
+      label: t("nav.overview"),
       items: [
         {
-          title: "Dashboard",
+          title: t("nav.dashboard"),
           url: "/dashboard",
           icon: LayoutDashboard,
         },
         {
-          title: "Sito Web (Landing)",
+          title: t("nav.website"),
           url: "https://atena-school-landing-three.vercel.app/",
           icon: Globe,
         },
       ],
     },
     {
-      label: "Gestione Scuola",
+      label: t("nav.schoolManagement"),
       items: [
         {
-          title: "Corsi",
+          title: t("nav.courses"),
           url: "/corsi",
           icon: CheckSquare,
         },
         {
-          title: "Prenotazioni & Ordini",
+          title: t("nav.bookings"),
           url: "/prenotazioni",
           icon: CreditCard,
         },
         {
-          title: "Pagamenti",
+          title: t("nav.payments"),
           url: "/pagamenti",
           icon: CreditCard,
         },
         {
-          title: "Presenze & Registro",
+          title: t("nav.attendance"),
           url: "/presenze",
           icon: CheckCircle2,
         },
         {
-          title: "Iscrizioni Annuali",
+          title: t("nav.annualMemberships"),
           url: "/iscrizioni",
           icon: BadgeCheck,
         },
         {
-          title: "Docenti",
+          title: t("nav.teachers"),
           url: "/insegnanti",
           icon: GraduationCap,
         },
         {
-          title: "Orari & Calendario",
+          title: t("nav.schedule"),
           url: "/orari",
           icon: Calendar,
         },
         {
-          title: "Utenti & Studenti",
+          title: t("nav.users"),
           url: "/users",
           icon: Users,
         },
       ],
     },
     {
-      label: "Impostazioni",
+      label: t("nav.settings"),
       items: [
         {
-          title: "Profilo & Account",
+          title: t("nav.accountSettings"),
           url: "/settings/account",
           icon: Settings,
         },
         {
-          title: "Aspetto & Tema",
+          title: t("nav.appearance"),
           url: "/settings/appearance",
           icon: Settings,
         },
       ],
     },
-  ],
-}
+  ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -126,7 +128,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Atena School</span>
-                  <span className="truncate text-xs">Admin Dashboard</span>
+                  <span className="truncate text-xs">{t("nav.adminDashboard")}</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -134,12 +136,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        {data.navGroups.map((group) => (
+        {navGroups.map((group) => (
           <NavMain key={group.label} label={group.label} items={group.items} />
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )

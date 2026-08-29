@@ -117,32 +117,35 @@ interface SearchItem {
   icon?: LucideIcon
 }
 
+import { useTranslation } from "@/i18n/context"
+
 interface CommandSearchProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const commandRef = React.useRef<HTMLDivElement>(null)
 
   const searchItems: SearchItem[] = [
-    // Panoramica
-    { title: "Dashboard", url: "/dashboard", group: "Panoramica", icon: LayoutDashboard },
+    // Overview
+    { title: t("nav.dashboard"), url: "/dashboard", group: t("nav.overview"), icon: LayoutDashboard },
 
-    // Gestione Scuola
-    { title: "Corsi", url: "/corsi", group: "Gestione Scuola", icon: CheckSquare },
-    { title: "Prenotazioni & Ordini", url: "/prenotazioni", group: "Gestione Scuola", icon: CreditCard },
-    { title: "Pagamenti", url: "/pagamenti", group: "Gestione Scuola", icon: CreditCard },
-    { title: "Presenze & Registro", url: "/presenze", group: "Gestione Scuola", icon: CheckSquare },
-    { title: "Iscrizioni Annuali", url: "/iscrizioni", group: "Gestione Scuola", icon: CreditCard },
-    { title: "Docenti", url: "/insegnanti", group: "Gestione Scuola", icon: User },
-    { title: "Orari & Calendario", url: "/orari", group: "Gestione Scuola", icon: Calendar },
-    { title: "Utenti & Studenti", url: "/users", group: "Gestione Scuola", icon: User },
+    // School Management
+    { title: t("nav.courses"), url: "/corsi", group: t("nav.schoolManagement"), icon: CheckSquare },
+    { title: t("nav.bookings"), url: "/prenotazioni", group: t("nav.schoolManagement"), icon: CreditCard },
+    { title: t("nav.payments"), url: "/pagamenti", group: t("nav.schoolManagement"), icon: CreditCard },
+    { title: t("nav.attendance"), url: "/presenze", group: t("nav.schoolManagement"), icon: CheckSquare },
+    { title: t("nav.annualMemberships"), url: "/iscrizioni", group: t("nav.schoolManagement"), icon: CreditCard },
+    { title: t("nav.teachers"), url: "/insegnanti", group: t("nav.schoolManagement"), icon: User },
+    { title: t("nav.schedule"), url: "/orari", group: t("nav.schoolManagement"), icon: Calendar },
+    { title: t("nav.users"), url: "/users", group: t("nav.schoolManagement"), icon: User },
 
-    // Impostazioni
-    { title: "Impostazioni Account", url: "/settings/account", group: "Impostazioni", icon: Settings },
-    { title: "Aspetto & Tema", url: "/settings/appearance", group: "Impostazioni", icon: Palette },
+    // Settings
+    { title: t("nav.accountSettings"), url: "/settings/account", group: t("nav.settings"), icon: Settings },
+    { title: t("nav.appearance"), url: "/settings/appearance", group: t("nav.settings"), icon: Palette },
   ]
 
   const groupedItems = searchItems.reduce((acc, item) => {

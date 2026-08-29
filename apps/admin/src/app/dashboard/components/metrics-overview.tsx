@@ -11,7 +11,10 @@ import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { formatCurrency } from "@atena/utils"
 
+import { useTranslation } from "@/i18n/context"
+
 export function MetricsOverview() {
+  const { t } = useTranslation()
   const { data: revenueData } = useQuery({
     queryKey: ["reports", "revenue"],
     queryFn: () => api.get<any>("/admin/reports/revenue"),
@@ -38,36 +41,36 @@ export function MetricsOverview() {
 
   const metrics = [
     {
-      title: "Ricavi Totali",
+      title: t("dashboard.totalRevenue"),
       value: formatCurrency(realRevenue),
-      description: "Totale incassi registrati",
+      description: t("payments.totalIncome"),
       icon: DollarSign,
-      footer: `Corsi: ${formatCurrency(realCourseRev)}`,
-      subfooter: `Quote €30: ${formatCurrency(realFeeRev)}`,
+      footer: `${t("payments.courseTuitions")}: ${formatCurrency(realCourseRev)}`,
+      subfooter: `${t("payments.membershipFees")}: ${formatCurrency(realFeeRev)}`,
     },
     {
-      title: "Studenti Attivi",
+      title: t("dashboard.activeStudents"),
       value: realStudentsCount.toLocaleString(),
-      description: "Studenti iscritti a sistema",
+      description: t("users.studentProfile"),
       icon: Users,
-      footer: "Profili registrati",
-      subfooter: "Database CRM",
+      footer: t("users.title"),
+      subfooter: "Atena CRM",
     },
     {
-      title: "Transazioni Riuscite",
+      title: t("dashboard.totalBookings"),
       value: realTransactionsCount.toLocaleString(),
-      description: "Numero di pagamenti confermati",
+      description: t("bookings.title"),
       icon: ShoppingCart,
-      footer: "Pagamenti elaborati",
-      subfooter: "Stripe e Contanti/POS",
+      footer: t("payments.title"),
+      subfooter: "Stripe / Cash / POS",
     },
     {
-      title: "Tasso di Presenza",
+      title: t("attendance.title"),
       value: `${realAttendanceRate}%`,
-      description: "Media presenze alle lezioni",
+      description: t("attendance.subtitle"),
       icon: BarChart3,
-      footer: `Lezioni totali: ${attendanceData?.summary?.totalLessons ?? 0}`,
-      subfooter: `Presenti: ${attendanceData?.summary?.presentCount ?? 0}`,
+      footer: `${t("attendance.todayLessons")}: ${attendanceData?.summary?.totalLessons ?? 0}`,
+      subfooter: `${t("attendance.present")}: ${attendanceData?.summary?.presentCount ?? 0}`,
     },
   ]
 
