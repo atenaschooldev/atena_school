@@ -56,7 +56,12 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   }
 
   const text = await res.text();
-  return text ? JSON.parse(text) : ({} as T);
+  if (!text) return {} as T;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text as unknown as T;
+  }
 }
 
 export const api = {
