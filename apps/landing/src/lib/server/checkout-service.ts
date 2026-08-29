@@ -651,7 +651,7 @@ export async function createReservation(dto: CreateReservationParams) {
     phone: dto.isForChild ? dto.studentPhone : dto.phone,
   });
 
-  const isFeeRequired = feeStatus.annualFeePaid === false && dto.includeRegistrationFee !== false;
+  const isFeeRequired = feeStatus.annualFeePaid === false;
   const regFee = isFeeRequired ? 30 : 0;
   const totalPaidAmount = coursePrice + regFee;
 

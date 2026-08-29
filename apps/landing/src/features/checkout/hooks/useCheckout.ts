@@ -249,12 +249,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       } else {
         setHasPaidAnnualFee(false);
         setFeeCheckStatus("not_paid");
-        formMethods.setValue("includeRegistrationFee", stripeEnabled);
+        formMethods.setValue("includeRegistrationFee", true);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, stripeEnabled, formMethods]);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
