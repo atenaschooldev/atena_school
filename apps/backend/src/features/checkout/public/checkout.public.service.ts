@@ -9,6 +9,7 @@ import { calculateLessonDates } from '@atena/utils';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutCoreService } from '../checkout-core.service';
+import { MailService } from '../../mail/mail.service';
 
 export interface CourseRecord {
   id: string;
@@ -33,6 +34,7 @@ export class CheckoutService {
     private configService: ConfigService,
     private prisma: PrismaService,
     private checkoutCore: CheckoutCoreService,
+    private mailService: MailService,
   ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -207,7 +209,75 @@ export class CheckoutService {
       dto.paymentStatus || 'reserved'
     );
 
+    // Send transactional email notifications
+    this.sendBookingNotificationEmails(booking, course, dto).catch((err) => {
+      this.logger.warn(`Async email send error: ${err.message}`);
+    });
+
     return { success: true, bookingId: booking.id, booking };
+  }
+
+  private async sendBookingNotificationEmails(booking: any, course: any, dto: CreateReservationDto) {
+    try {
+      const courseName = course?.name || course?.title_it || 'Corso Atena School';
+      const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
+      const studentName = dto.isForChild
+        ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
+        : purchaserName;
+      const adminEmail = this.configService.get<string>('SCHOOL_ADMIN_EMAIL') || this.configService.get<string>('ADMIN_EMAIL') || 'info@atenaschool.it';
+      const isPaidOnline = booking.payment_status === 'paid' || booking.payment_status === 'completed';
+      const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
+      const totalEur = Number(booking.amount_paid || 0).toFixed(2);
+      const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
+
+      const clientSubject = isPaidOnline
+        ? `Conferma Pagamento e Iscrizione: ${courseName} - Atena School`
+        : `Conferma Prenotazione: ${courseName} - Atena School`;
+
+      const clientHtml = `
+        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; color: #1e293b; padding: 24px;">
+          <div style="max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 32px;">
+            <div style="text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 24px;">
+              <h1 style="font-size: 22px; font-weight: 900; color: #043569; margin: 0;">ATENA SCHOOL</h1>
+              <span style="display: inline-block; padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: ${isPaidOnline ? '#ecfdf5; color: #047857;' : '#fffbeb; color: #b45309;'}; margin-top: 10px;">${paymentStatusText}</span>
+            </div>
+            <h2 style="color: #043569; font-size: 18px; margin-bottom: 8px;">Grazie per la tua prenotazione, ${purchaserName}!</h2>
+            <p style="font-size: 14px; color: #475569;">La tua richiesta per il corso <strong>${courseName}</strong> è stata registrata con successo.</p>
+            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin: 20px 0; font-size: 14px;">
+              <p style="margin: 4px 0;"><strong>Studente:</strong> ${studentName}</p>
+              <p style="margin: 4px 0;"><strong>Data inizio:</strong> ${dto.date || 'Da concordare'}</p>
+              <p style="margin: 4px 0;"><strong>Orario:</strong> ${dto.time || '16:00'}</p>
+              ${Number(regFeeEur) > 0 ? `<p style="margin: 4px 0;"><strong>Quota iscrizione annuale:</strong> €${regFeeEur}</p>` : ''}
+              <p style="margin: 8px 0 0 0; font-size: 16px; color: #f8861d;"><strong>Totale: €${totalEur}</strong></p>
+            </div>
+            <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px;">Atena School — Via Matteotti 11, 89022 Cittanova (RC)<br>info@atenaschool.it</p>
+          </div>
+        </div>
+      `;
+
+      const adminSubject = `[Nuova Prenotazione] ${courseName} - ${studentName} (${paymentStatusText})`;
+      const adminHtml = `
+        <div style="font-family: sans-serif; padding: 20px;">
+          <h2 style="color: #043569;">Nuova prenotazione ricevuta dal sito web</h2>
+          <p><strong>Corso:</strong> ${courseName}</p>
+          <p><strong>Acquirente:</strong> ${purchaserName} (${dto.email}, tel: ${dto.phone || 'N/D'})</p>
+          <p><strong>Codice Fiscale Acquirente:</strong> ${dto.purchaserTaxCode || 'N/D'}</p>
+          ${dto.isForChild ? `<p><strong>Studente (Figlio):</strong> ${studentName} (CF: ${dto.studentTaxCode || 'N/D'}, Nascita: ${dto.studentBirthDate || 'N/D'})</p>` : ''}
+          <p><strong>Importo:</strong> €${totalEur} (Quota annuale: €${regFeeEur})</p>
+          <p><strong>Modalità di pagamento:</strong> ${paymentStatusText}</p>
+          <p><strong>Data/Orario richiesto:</strong> ${dto.date || 'Da concordare'} ore ${dto.time || 'N/D'}</p>
+          ${dto.notes ? `<p><strong>Note cliente:</strong> ${dto.notes}</p>` : ''}
+          <p><strong>ID Prenotazione:</strong> ${booking.id}</p>
+        </div>
+      `;
+
+      // 1. Send to client
+      await this.mailService.sendEmail(dto.email, clientSubject, `Conferma prenotazione ${courseName}`, clientHtml);
+      // 2. Send to school admin
+      await this.mailService.sendEmail(adminEmail, adminSubject, `Nuova prenotazione ${courseName} - ${studentName}`, adminHtml);
+    } catch (e: any) {
+      this.logger.error(`Error sending booking notification emails: ${e.message}`);
+    }
   }
 
   async getSettings() {

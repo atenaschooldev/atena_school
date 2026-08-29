@@ -6,9 +6,10 @@ import { CheckoutService } from './public/checkout.public.service';
 import { BookingsAdminService } from './admin/bookings.admin.service';
 import { CheckoutCoreService } from './checkout-core.service';
 import { PrismaModule } from '../../core/prisma/prisma.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, MailModule],
   controllers: [
     CheckoutController,
     StripeWebhookController,

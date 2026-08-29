@@ -198,7 +198,7 @@ export class CheckoutCoreService {
     if (!lessons || lessons.length === 0) return;
 
     try {
-      const teacherId = (course as any)?.teacher_id || (course as any)?.teacherId || 'e1180b01-2222-4000-8000-000000000002';
+      const teacherId = (course as any)?.teacher_id || (course as any)?.teacherId || null;
       const lessonRows = lessons.map((l) => ({
         bookingId: bookingId,
         teacherId: teacherId,
