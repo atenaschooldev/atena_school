@@ -156,6 +156,26 @@ export interface SupabasePaymentRow {
   created_at?: string;
 }
 
+function extractCleanTime(timeStr?: string | null): string | null {
+  if (!timeStr) return null;
+  const match = timeStr.match(/(\d{1,2}:\d{2})/);
+  return match ? match[1] : timeStr.trim();
+}
+
+function computeEndTime(startTime?: string | null, durationMinutes: number = 60): string | null {
+  if (!startTime) return null;
+  const clean = extractCleanTime(startTime);
+  if (!clean || !clean.includes(':')) return null;
+  const [hStr, mStr] = clean.split(':');
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  const totalMin = h * 60 + m + durationMinutes;
+  const endH = Math.floor(totalMin / 60) % 24;
+  const endM = totalMin % 60;
+  return `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+}
+
 function computeTotalLessonsCount(course: SupabaseCourseRow | null, calculatedLessonsCount: number): number | null {
   if (course?.total_lessons != null) return course.total_lessons;
   if (course?.total_hours != null) return null;
@@ -692,8 +712,8 @@ export async function createReservation(dto: CreateReservationParams) {
       student_birth_date: dto.studentBirthDate || null,
       start_date: dto.date || new Date().toISOString(),
       schedule_days: course?.schedule_days || null,
-      start_time: course?.start_time || dto.time || null,
-      end_time: course?.end_time || null,
+      start_time: course?.start_time || extractCleanTime(dto.time) || null,
+      end_time: course?.end_time || computeEndTime(dto.time, course?.lesson_duration_minutes || 60),
       payment_status: dto.paymentStatus || 'reserved',
       payment_method: dto.paymentMethod || 'cash',
       amount_paid: totalPaidAmount,

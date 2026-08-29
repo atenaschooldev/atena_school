@@ -534,6 +534,11 @@ export class BookingsAdminService {
             .from('annual_memberships')
             .update({
               status: 'active',
+              tax_code: sTaxCode,
+              email: sEmail,
+              phone: sPhone,
+              student_id: (updatedBooking as any).student_id || null,
+              user_id: updatedBooking.userId || null,
               paid_at: new Date().toISOString(),
             })
             .eq('id', existingMem.id);
@@ -542,6 +547,8 @@ export class BookingsAdminService {
             .from('annual_memberships')
             .insert({
               booking_id: id,
+              student_id: (updatedBooking as any).student_id || null,
+              user_id: updatedBooking.userId || null,
               tax_code: sTaxCode,
               email: sEmail,
               phone: sPhone,
