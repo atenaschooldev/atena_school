@@ -210,7 +210,50 @@ export class CheckoutService {
     return { success: true, bookingId: booking.id, booking };
   }
 
+  async getSettings() {
+    try {
+      const { data, error } = await this.supabaseAdmin
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'stripe_enabled')
+        .maybeSingle();
+
+      if (!error && data?.value !== undefined && data?.value !== null) {
+        if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
+        if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
+        if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
+          return { stripeEnabled: Boolean((data.value as any).enabled) };
+        }
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to fetch app_settings: ${err}`);
+    }
+
+    const envEnabled = this.configService.get<string>('ENABLE_STRIPE') === 'true' || process.env.ENABLE_STRIPE === 'true';
+    return { stripeEnabled: envEnabled };
+  }
+
+  async updateSettings(dto: { stripeEnabled: boolean }) {
+    try {
+      await this.supabaseAdmin.from('app_settings').upsert({
+        key: 'stripe_enabled',
+        value: dto.stripeEnabled,
+        description: 'Enable or disable Stripe online payment gateway on checkout',
+        updated_at: new Date().toISOString(),
+      });
+    } catch (err) {
+      this.logger.error(`Failed to update app_settings: ${err}`);
+      throw new BadRequestException('Errore durante il salvataggio delle impostazioni');
+    }
+    return { stripeEnabled: dto.stripeEnabled };
+  }
+
   async createStripeSession(dto: CreateReservationDto) {
+    const settings = await this.getSettings();
+    if (!settings.stripeEnabled) {
+      throw new BadRequestException('I pagamenti online sono temporaneamente disabilitati. Si prega di selezionare la prenotazione in sede.');
+    }
+
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
     let resolvedItemId = dto.itemId;

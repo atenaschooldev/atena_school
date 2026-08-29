@@ -90,6 +90,20 @@ export function createApiClient(baseUrl?: string) {
         });
         return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
       },
+
+      async getSettings(): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+        const res = await fetch(`${apiBase}/api/v1/checkout/settings`);
+        return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      },
+
+      async updateSettings(data: { stripeEnabled: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+        const res = await fetch(`${apiBase}/api/v1/checkout/settings`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      },
     },
 
     portal: {

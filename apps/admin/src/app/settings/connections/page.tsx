@@ -8,6 +8,8 @@ import { Github, Slack, Twitter, Zap, Globe, Database, Apple, Chrome, Facebook, 
 import { useState } from "react"
 
 
+import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
+
 export default function ConnectionSettings() {
   // Controlled state for switches
   const [appleConnected, setAppleConnected] = useState(true)
@@ -22,11 +24,14 @@ export default function ConnectionSettings() {
     <BaseLayout>
       <div className="space-y-6 px-4 lg:px-6">
         <div>
-          <h1 className="text-3xl font-bold">Connections</h1>
+          <h1 className="text-3xl font-bold">Connections & Integrations</h1>
           <p className="text-muted-foreground">
-            Connect your account with third-party services and integrations.
+            Gestisci le integrazioni esterne, gateway di pagamento e servizi connessi.
           </p>
         </div>
+
+        {/* Stripe Gateway Controller */}
+        <StripeSettingsCard />
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           <Card>

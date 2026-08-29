@@ -49,10 +49,15 @@ export interface ContactFormParams {
 
 function getSupabaseAdmin(): SupabaseClient {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || '';
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    '';
 
   if (!url || !serviceKey) {
-    throw new Error('Supabase configuration missing: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
+    throw new Error('Supabase configuration missing: SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
   }
   return createClient(url, serviceKey);
 }
@@ -597,7 +602,53 @@ export async function createReservation(dto: CreateReservationParams) {
   return { success: true, bookingId: booking.id, booking };
 }
 
+export async function getSystemSettings(): Promise<{ stripeEnabled: boolean }> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'stripe_enabled')
+      .maybeSingle();
+
+    if (!error && data?.value !== undefined && data?.value !== null) {
+      if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
+      if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
+      if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
+        return { stripeEnabled: Boolean((data.value as any).enabled) };
+      }
+    }
+  } catch (err) {
+    console.warn('[getSystemSettings fallback]:', err);
+  }
+
+  // Default fallback (disabled for MVP unless explicitly enabled in env)
+  const envEnabled = process.env.NEXT_PUBLIC_ENABLE_STRIPE === 'true' || process.env.ENABLE_STRIPE === 'true';
+  return { stripeEnabled: envEnabled };
+}
+
+export async function updateSystemSettings(settings: { stripeEnabled: boolean }): Promise<{ stripeEnabled: boolean }> {
+  const supabase = getSupabaseAdmin();
+  try {
+    await supabase.from('app_settings').upsert({
+      key: 'stripe_enabled',
+      value: settings.stripeEnabled,
+      description: 'Enable or disable Stripe online payment gateway on checkout',
+      updated_at: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('[updateSystemSettings error]:', err);
+    throw err;
+  }
+  return { stripeEnabled: settings.stripeEnabled };
+}
+
 export async function createStripeSession(dto: CreateReservationParams) {
+  const settings = await getSystemSettings();
+  if (!settings.stripeEnabled) {
+    throw new Error('I pagamenti online sono temporaneamente disabilitati. Si prega di selezionare la prenotazione con saldo in sede.');
+  }
+
   const supabase = getSupabaseAdmin();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 

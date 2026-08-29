@@ -10,6 +10,8 @@ import { BillingHistoryCard } from "./components/billing-history-card"
 import currentPlanData from "./data/current-plan.json"
 import billingHistoryData from "./data/billing-history.json"
 
+import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
+
 export default function BillingSettings() {
   const handlePlanSelect = (planId: string) => {
     console.log('Plan selected:', planId)
@@ -22,9 +24,12 @@ export default function BillingSettings() {
         <div>
           <h1 className="text-3xl font-bold">Plans & Billing</h1>
           <p className="text-muted-foreground">
-            Manage your subscription and billing information.
+            Manage payment gateways, subscription and billing information.
           </p>
         </div>
+
+        {/* Stripe Gateway Controller */}
+        <StripeSettingsCard />
 
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
           <CurrentPlanCard plan={currentPlanData} />

@@ -27,6 +27,7 @@ export async function fetchCourseAction(courseId: string) {
   return fetchCheckoutItemAction(courseId);
 }
 
+
 export async function checkRegistrationFeeStatusAction(params: {
   taxCode?: string;
   email?: string;
@@ -46,6 +47,29 @@ export async function checkRegistrationFeeStatusAction(params: {
     return { success: false, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true, error: err.message || "Errore di connessione" };
   }
 }
+
+export async function fetchSystemSettingsAction() {
+  try {
+    const api = getApi();
+    const res = await api.checkout.getSettings();
+    return { success: true, stripeEnabled: res?.settings?.stripeEnabled ?? false };
+  } catch (err: any) {
+    console.error("fetchSystemSettingsAction error:", err);
+    return { success: false, stripeEnabled: false };
+  }
+}
+
+export async function updateSystemSettingsAction(stripeEnabled: boolean) {
+  try {
+    const api = getApi();
+    const res = await api.checkout.updateSettings({ stripeEnabled });
+    return { success: true, stripeEnabled: res?.settings?.stripeEnabled ?? stripeEnabled };
+  } catch (err: any) {
+    console.error("updateSystemSettingsAction error:", err);
+    return { success: false, error: err.message || "Failed to update settings" };
+  }
+}
+
 
 function normalizeReservationPayload(payload: Record<string, unknown> | any) {
   if (!payload) return {} as CreateReservationParams;
@@ -198,40 +222,26 @@ export async function fetchCartItemsAction(sessionId?: string | null) {
 
 export async function getCurrentUserAction() {
   try {
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    
-    // Find Supabase JWT token from cookies
-    const allCookies = cookieStore.getAll();
-    let token = "";
-    for (const c of allCookies) {
-      if (c.name.includes("auth-token") || c.name.includes("access-token")) {
-        try {
-          const parsed = JSON.parse(c.value);
-          token = parsed.access_token || parsed[0]?.access_token || c.value;
-          if (token) break;
-        } catch {
-          token = c.value;
-        }
-      }
-    }
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (!token) {
+    if (error || !user) {
       return { success: false, user: null, annualFeePaid: false };
     }
 
-    const api = getApi();
-    const res = (await api.portal.getDashboard(token)) as any;
+    const feeRes = await checkRegistrationFeeStatusAction({
+      email: user.email,
+      phone: user.phone || user.user_metadata?.phone,
+      taxCode: user.user_metadata?.tax_code,
+    });
 
-    if (res?.success && res?.user) {
-      return {
-        success: true,
-        user: res.user,
-        annualFeePaid: Boolean(res.user?.annualFeePaid || res.annualFeePaid),
-      };
-    }
-    return { success: false, user: null, annualFeePaid: false };
+    return {
+      success: true,
+      user,
+      annualFeePaid: Boolean(feeRes.annualFeePaid),
+    };
   } catch (err: any) {
-    return { success: false, user: null, error: err.message, annualFeePaid: false };
+    return { success: false, user: null, annualFeePaid: false };
   }
 }

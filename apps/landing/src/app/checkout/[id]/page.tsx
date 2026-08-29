@@ -35,6 +35,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     formMethods,
     item,
     loading,
+    stripeEnabled,
     submitting,
     feeCheckStatus,
     user,
@@ -47,14 +48,24 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
   const includeRegistrationFee = watch("includeRegistrationFee");
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">("pay");
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">("book");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    if (!stripeEnabled) {
+      setSelectedPaymentMode("book");
+      setValue("includeRegistrationFee", false);
+    } else {
+      setSelectedPaymentMode("pay");
+      setValue("includeRegistrationFee", true);
+    }
+  }, [stripeEnabled, setValue]);
+
+  if (!mounted || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 font-sans">
         <div className="flex flex-col items-center gap-3">
@@ -66,8 +77,8 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   }
 
   const coursePrice = Number(item?.price || 0);
-  const isFeeAddedToOnlineTotal = feeCheckStatus === "not_paid" && includeRegistrationFee !== false;
-  const totalPrice = coursePrice + (isFeeAddedToOnlineTotal ? ANNUAL_REGISTRATION_FEE_EUR : 0);
+  const isRegistrationFeeDue = feeCheckStatus === "not_paid";
+  const totalPrice = coursePrice + (isRegistrationFeeDue ? ANNUAL_REGISTRATION_FEE_EUR : 0);
   const title = item?.title_it || item?.name || "Corso Atena School";
 
   const formatCategoryName = (cat?: string): string => {
@@ -123,6 +134,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   src={item.photo_url}
                   alt={title}
                   fill
+                  sizes="64px"
                   className="object-cover"
                 />
               </div>
@@ -188,13 +200,16 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   </a>
                 )}
 
-                <button
-                  type="button"
-                  onClick={fillTestData}
-                  className="px-2 py-1 text-[10px] font-extrabold text-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 border border-[#F8861D]/30 rounded-lg transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer shrink-0"
-                >
-                  🧪 Auto-Fill
-                </button>
+                {/* Auto-Fill (hidden for production/clean UI, function preserved) */}
+                {false && (
+                  <button
+                    type="button"
+                    onClick={fillTestData}
+                    className="px-2 py-1 text-[10px] font-extrabold text-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 border border-[#F8861D]/30 rounded-lg transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer shrink-0"
+                  >
+                    🧪 Auto-Fill
+                  </button>
+                )}
               </div>
             </div>
 
@@ -515,8 +530,8 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
             )}
 
-            {/* Registration Fee Card: Render ONLY when feeCheckStatus is 'not_paid' */}
-            {feeCheckStatus === "not_paid" && (
+            {/* Registration Fee Card: Render ONLY when Stripe is enabled and feeCheckStatus is 'not_paid' */}
+            {stripeEnabled && feeCheckStatus === "not_paid" && (
               <div className="bg-[#FFFBEB] rounded-xl p-3 sm:p-3.5 border border-[#FDE68A] space-y-2">
                 <div className="space-y-0.5">
                   <span className="bg-[#FEF3C7] text-[#92400E] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-block">
@@ -588,65 +603,67 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
             )}
 
-            {/* Payment Method Selector */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Modalità di Pagamento</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {/* Option 1: Online */}
-                <div
-                  onClick={() => setSelectedPaymentMode("pay")}
-                  className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
-                    selectedPaymentMode === "pay"
-                      ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
-                      : "border-slate-200 hover:border-slate-300 opacity-75"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMode"
-                    checked={selectedPaymentMode === "pay"}
-                    onChange={() => setSelectedPaymentMode("pay")}
-                    className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
-                  />
-                  <div className="space-y-0.5">
-                    <span className="text-[11px] font-black text-[#043569] flex items-center gap-1">
-                      <CreditCard className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
-                      Paga subito online
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-medium leading-tight block">
-                      Carta, Apple Pay o Google Pay.
-                    </span>
+            {/* Payment Method Selector: Render ONLY when Stripe is enabled */}
+            {stripeEnabled && (
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400">Modalità di Pagamento</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Option 1: Online */}
+                  <div
+                    onClick={() => setSelectedPaymentMode("pay")}
+                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
+                      selectedPaymentMode === "pay"
+                        ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+                        : "border-slate-200 hover:border-slate-300 opacity-75"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMode"
+                      checked={selectedPaymentMode === "pay"}
+                      onChange={() => setSelectedPaymentMode("pay")}
+                      className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
+                    />
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-black text-[#043569] flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                        Paga subito online
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium leading-tight block">
+                        Carta, Apple Pay o Google Pay.
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Option 2: In Sede */}
-                <div
-                  onClick={() => setSelectedPaymentMode("book")}
-                  className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
-                    selectedPaymentMode === "book"
-                      ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
-                      : "border-slate-200 hover:border-slate-300 opacity-75"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="paymentMode"
-                    checked={selectedPaymentMode === "book"}
-                    onChange={() => setSelectedPaymentMode("book")}
-                    className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
-                  />
-                  <div className="space-y-0.5">
-                    <span className="text-[11px] font-black text-slate-800 flex items-center gap-1">
-                      <Storefront className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
-                      Prenota e paga in sede
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-medium leading-tight block">
-                      Blocca il posto e saldi a scuola.
-                    </span>
+                  {/* Option 2: In Sede */}
+                  <div
+                    onClick={() => setSelectedPaymentMode("book")}
+                    className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
+                      selectedPaymentMode === "book"
+                        ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+                        : "border-slate-200 hover:border-slate-300 opacity-75"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMode"
+                      checked={selectedPaymentMode === "book"}
+                      onChange={() => setSelectedPaymentMode("book")}
+                      className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
+                    />
+                    <div className="space-y-0.5">
+                      <span className="text-[11px] font-black text-slate-800 flex items-center gap-1">
+                        <Storefront className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+                        Prenota e paga in sede
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-medium leading-tight block">
+                        Blocca il posto e saldi a scuola.
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Additional Notes */}
             <div className="pt-1">
@@ -679,6 +696,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                       src={item.photo_url}
                       alt={title}
                       fill
+                      sizes="(max-width: 1024px) 100vw, 360px"
                       className="object-cover"
                     />
                   </div>
@@ -736,15 +754,9 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                 {feeCheckStatus === "not_paid" && (
                   <div className="flex items-center justify-between text-xs py-0.5">
                     <span className="text-slate-600 font-medium">Quota iscrizione annuale</span>
-                    {includeRegistrationFee !== false ? (
-                      <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                        +{ANNUAL_REGISTRATION_FEE_EUR.toFixed(2)}€
-                      </span>
-                    ) : (
-                      <span className="font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md text-[10px]">
-                        Da saldare in sede (30,00€)
-                      </span>
-                    )}
+                    <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                      +{ANNUAL_REGISTRATION_FEE_EUR.toFixed(2)}€
+                    </span>
                   </div>
                 )}
               </div>
@@ -790,7 +802,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   ) : (
                     <>
                       <Storefront className="w-4 h-4 text-white" weight="bold" />
-                      Prenota e Paga in Sede
+                      Prenota e Paga in Sede ({totalPrice.toFixed(2)}€)
                     </>
                   )}
                 </button>
@@ -800,7 +812,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-semibold">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" weight="fill" />
-                  Stripe 256-bit SSL
+                  {stripeEnabled ? "Stripe 256-bit SSL" : "Prenotazione Protetta"}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Headset className="w-3.5 h-3.5 text-[#043569]" weight="fill" />
@@ -816,7 +828,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
             <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale Corso"}
+                  {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale da Saldare"}
                 </p>
                 <p className="text-xl font-black text-[#F8861D] leading-none">{totalPrice.toFixed(2)}€</p>
               </div>

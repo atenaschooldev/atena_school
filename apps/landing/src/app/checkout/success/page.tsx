@@ -12,7 +12,10 @@ import {
   Confetti,
   GoogleLogo,
   Sparkle,
+  House,
+  GraduationCap,
 } from "@phosphor-icons/react";
+import { Link } from "@/i18n/routing";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
 
@@ -208,12 +211,22 @@ function SuccessContent() {
             </button>
           )}
 
-          <button
-            onClick={() => router.push("/corsi")}
-            className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-[#043569] transition-colors cursor-pointer"
-          >
-            Torna ai corsi
-          </button>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
+            <Link
+              href="/corsi"
+              className="w-full sm:w-1/2 py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-[#043569] font-bold text-xs border border-slate-200 shadow-xs hover:shadow transition-all flex items-center justify-center gap-1.5"
+            >
+              <GraduationCap className="w-4 h-4 text-[#F8861D]" weight="bold" />
+              <span>Esplora altri Corsi</span>
+            </Link>
+            <Link
+              href="/"
+              className="w-full sm:w-1/2 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+            >
+              <House className="w-4 h-4 text-slate-500" weight="bold" />
+              <span>Torna alla Home</span>
+            </Link>
+          </div>
         </div>
       </div>
     </main>

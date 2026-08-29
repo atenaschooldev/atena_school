@@ -112,7 +112,6 @@ const Navbar = () => {
     { label: t("about"), href: "/#chi-siamo", icon: Users },
     { label: t("courses"), href: "/corsi", icon: GraduationCap },
     { label: t("test"), href: "/test-inglese", icon: Sparkle },
-    { label: t("blog"), href: "/blog", icon: Newspaper },
     { label: t("contact"), href: "/#contatti", icon: EnvelopeSimple },
   ];
 
@@ -136,6 +135,7 @@ const Navbar = () => {
               href="/"
               className="flex items-center gap-2.5 md:gap-3"
               onClick={() => handleLinkClick("/")}
+              translate="no"
             >
               <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-9 h-9 md:w-12 md:h-12">
                 <Image
@@ -146,7 +146,7 @@ const Navbar = () => {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div className="flex flex-col items-center leading-tight">
+              <div className="flex flex-col items-center leading-tight" translate="no">
                 <span className="font-serif font-black text-sm xs:text-base md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
                   Atena <span style={{ color: '#FAA904' }}>School</span>
                 </span>

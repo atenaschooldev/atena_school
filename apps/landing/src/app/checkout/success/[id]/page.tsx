@@ -12,7 +12,10 @@ import {
   Confetti,
   GoogleLogo,
   Sparkle,
+  House,
+  GraduationCap,
 } from "@phosphor-icons/react";
+import { Link } from "@/i18n/routing";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
 
@@ -51,8 +54,12 @@ function SuccessContentWithId({ id }: { id: string }) {
   const dateLocale = it;
   const courseName = bookingData?.item_name || bookingData?.course_name || bookingData?.name || bookingData?.title_it || bookingData?.title || "Corso Atena School";
   const regFee = Number(bookingData?.registration_fee || 0);
-  const coursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? 0);
-  const totalPaid = Number(bookingData?.amount_paid || (coursePrice + regFee));
+  const totalAmount = Number(bookingData?.amount_paid || 0);
+  const coursePrice = Number(
+    bookingData?.course_price ??
+    (totalAmount > 0 ? (totalAmount >= regFee ? totalAmount - regFee : totalAmount) : (bookingData?.item_price ?? 0))
+  );
+  const finalTotal = totalAmount > 0 ? totalAmount : (coursePrice + regFee);
 
   const rawDate = bookingData?.starts_at || bookingData?.start_date || bookingData?.booking_date || bookingData?.date;
   const formattedDate = rawDate
@@ -67,14 +74,14 @@ function SuccessContentWithId({ id }: { id: string }) {
   const formattedTime = rawTime || "16:00";
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans pb-16">
+    <main className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans pb-16 pt-20 sm:pt-24">
       <div className="border-b border-slate-200/80 bg-white shadow-xs">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <CheckoutStepper currentStep={3} />
         </div>
       </div>
 
-      <div className="max-w-xl mx-auto px-4 sm:px-6 pt-10 w-full flex-1">
+      <div className="max-w-xl mx-auto px-4 sm:px-6 pt-8 sm:pt-10 w-full flex-1">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mb-4 shadow-xs animate-bounce-short">
             <CheckCircle className="w-10 h-10" weight="fill" />
@@ -109,7 +116,7 @@ function SuccessContentWithId({ id }: { id: string }) {
             </div>
 
             <div className="flex justify-between items-center text-slate-600">
-              <span>Orario standart</span>
+              <span>Orario standard</span>
               <span className="font-semibold text-slate-800 text-right">{formattedTime}</span>
             </div>
 
@@ -128,7 +135,7 @@ function SuccessContentWithId({ id }: { id: string }) {
 
           <div className="border-t border-slate-200 pt-4 flex justify-between items-center text-base sm:text-lg font-bold text-slate-900">
             <span>Totale</span>
-            <span className="text-[#043569] text-xl font-extrabold">€{totalPaid.toFixed(2)}</span>
+            <span className="text-[#043569] text-xl font-extrabold">€{finalTotal.toFixed(2)}</span>
           </div>
         </div>
 
@@ -207,6 +214,24 @@ function SuccessContentWithId({ id }: { id: string }) {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Return to Home / Explore Courses Buttons */}
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/corsi"
+            className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 text-[#043569] font-bold text-xs sm:text-sm border border-slate-200 shadow-sm hover:shadow transition-all flex items-center justify-center gap-2"
+          >
+            <GraduationCap className="w-4 h-4 text-[#F8861D]" weight="bold" />
+            <span>Esplora altri Corsi</span>
+          </Link>
+          <Link
+            href="/"
+            className="w-full sm:w-1/2 py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2"
+          >
+            <House className="w-4 h-4 text-slate-500" weight="bold" />
+            <span>Torna alla Home</span>
+          </Link>
         </div>
       </div>
     </main>

@@ -47,6 +47,7 @@ import {
   initiateStripePaymentAction,
   getCurrentUserAction,
   checkRegistrationFeeStatusAction,
+  fetchSystemSettingsAction,
 } from "@/app/actions/booking";
 
 export const checkoutSchema = z.object({
@@ -126,6 +127,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stripeEnabled, setStripeEnabled] = useState(false);
   const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
   const [user, setUser] = useState<any>(null);
   const actionRef = useRef<SubmitAction>("book");
@@ -158,9 +160,17 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   useEffect(() => {
     async function initCheckout() {
       try {
-        const itemRes = await fetchCheckoutItemAction(id);
+        const [itemRes, settingsRes] = await Promise.all([
+          fetchCheckoutItemAction(id),
+          fetchSystemSettingsAction(),
+        ]);
+
         if (itemRes.success && itemRes.item) {
           setItem(itemRes.item);
+        }
+
+        if (settingsRes?.success) {
+          setStripeEnabled(Boolean(settingsRes.stripeEnabled));
         }
 
         const userRes = await getCurrentUserAction();
@@ -240,12 +250,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       } else {
         setHasPaidAnnualFee(false);
         setFeeCheckStatus("not_paid");
-        formMethods.setValue("includeRegistrationFee", true);
+        formMethods.setValue("includeRegistrationFee", stripeEnabled);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
+  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, stripeEnabled, formMethods]);
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
@@ -361,6 +371,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     formMethods,
     item,
     loading,
+    stripeEnabled,
     submitting,
     hasPaidAnnualFee,
     feeCheckStatus,

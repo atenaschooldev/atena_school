@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } from '../dto/checkout.public.dto';
@@ -7,6 +7,21 @@ import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } f
 @Controller('checkout')
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
+
+  @Get('settings')
+  @ApiOperation({ summary: 'Получить настройки чекаута (Stripe enabled/disabled)' })
+  async getSettings() {
+    const settings = await this.checkoutService.getSettings();
+    return { success: true, settings };
+  }
+
+  @Patch('settings')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновить настройки чекаута' })
+  async updateSettings(@Body() body: { stripeEnabled: boolean }) {
+    const settings = await this.checkoutService.updateSettings(body);
+    return { success: true, settings };
+  }
 
   @Post('check-fee')
   @HttpCode(HttpStatus.OK)
@@ -61,3 +76,4 @@ export class CheckoutController {
     return this.checkoutService.submitContact(dto);
   }
 }
+
