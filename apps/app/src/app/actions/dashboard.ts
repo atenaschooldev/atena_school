@@ -120,7 +120,8 @@ export async function getDashboardDataAction() {
       const c = coursesMap.get(cid);
       const title = c?.name || b.course_name || "Corso Atena School";
       const coursePrice = c?.price ? Number(c.price) : Number(b.amount_paid || 0);
-      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || "Atena School" : "Atena School";
+      const totalAmount = Number(b.amount_paid || coursePrice || 0);
+      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || "Atena School" : "Elisabetta Sorrenti";
 
       const bdateStr = b.start_date || b.created_at;
       let isFuture = true;
@@ -134,11 +135,16 @@ export async function getDashboardDataAction() {
       return {
         ...b,
         item_id: cid,
+        item_type: "course",
+        item_title: title,
         title,
         course_name: title,
+        price: totalAmount,
+        amount_paid: totalAmount,
         course_price: coursePrice,
         teacher_name: teacherName,
         is_future: isFuture,
+        status: b.payment_status || b.status || "reserved",
       };
     });
 

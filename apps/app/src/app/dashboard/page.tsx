@@ -148,17 +148,17 @@ export default function DashboardPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-primary/10 text-primary">
-                          {b.item_type === "course" ? "Corso" : "Servizio"}
+                          {b.item_type === "service" ? "Servizio" : "Corso"}
                         </span>
                         <h3 className="font-bold text-foreground text-lg mt-2">
-                          {b.item_title}
+                          {b.item_title || b.course_name || "Corso di Lingua"}
                         </h3>
                         <p className="text-xs text-foreground/60 font-medium">
-                          Docente: {b.teacher_name}
+                          Docente: {b.teacher_name || "Elisabetta Sorrenti"}
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-black text-primary">€{Number(b.price || 0).toFixed(2)}</span>
+                        <span className="text-lg font-black text-primary">€{Number(b.price || b.amount_paid || b.course_price || 0).toFixed(2)}</span>
                         <span
                           className={`block text-[10px] font-bold uppercase tracking-wider mt-1 px-2.5 py-1 rounded-full text-center ${
                             (b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
