@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { ChevronRight, ExternalLink, type LucideIcon } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 
 import {
@@ -83,6 +83,14 @@ export function NavMain({
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </>
+              ) : item.url.startsWith("http") ? (
+                <SidebarMenuButton asChild tooltip={item.title} className="cursor-pointer">
+                  <a href={item.url} target="_blank" rel="noopener noreferrer">
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                    <ExternalLink className="ml-auto w-3.5 h-3.5 opacity-60" />
+                  </a>
+                </SidebarMenuButton>
               ) : (
                 <SidebarMenuButton asChild tooltip={item.title} className="cursor-pointer" isActive={location.pathname === item.url}>
                   <Link to={item.url}>

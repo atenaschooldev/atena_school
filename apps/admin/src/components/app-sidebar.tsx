@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   GraduationCap,
   CheckCircle2,
+  Globe,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -41,6 +42,11 @@ const data = {
           title: "Dashboard",
           url: "/dashboard",
           icon: LayoutDashboard,
+        },
+        {
+          title: "Sito Web (Landing)",
+          url: "https://atena-school-landing-three.vercel.app/",
+          icon: Globe,
         },
       ],
     },
