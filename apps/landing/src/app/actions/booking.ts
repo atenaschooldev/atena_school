@@ -80,7 +80,10 @@ function normalizeReservationPayload(payload: Record<string, unknown> | any) {
   const lastName = String(v.lastName || payload.lastName || "");
   const email = String(v.email || payload.email || "");
   const phone = String(v.phone || payload.phone || "");
-  const purchaserTaxCode = String(v.purchaserTaxCode || payload.purchaserTaxCode || "");
+  const purchaserTaxCode = String(v.purchaserTaxCode || v.taxCode || payload.purchaserTaxCode || payload.taxCode || "");
+  const studentTaxCode = isForChild 
+    ? String(v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "") 
+    : purchaserTaxCode;
 
   return {
     itemId: String(payload.itemId || payload.id || v.itemId || v.id || ""),
@@ -97,7 +100,7 @@ function normalizeReservationPayload(payload: Record<string, unknown> | any) {
     studentLastName: isForChild ? String(v.studentLastName || payload.studentLastName || "") : lastName,
     studentEmail: isForChild ? String(v.studentEmail || payload.studentEmail || "") : email,
     studentPhone: isForChild ? String(v.studentPhone || payload.studentPhone || "") : phone,
-    studentTaxCode: isForChild ? String(v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "") : purchaserTaxCode,
+    studentTaxCode,
     studentBirthDate: (v.studentBirthDate || payload.studentBirthDate) ? String(v.studentBirthDate || payload.studentBirthDate) : undefined,
     needsCompanyInvoice: Boolean(v.needsCompanyInvoice ?? payload.needsCompanyInvoice),
     sdiCode: (v.sdiCode || payload.sdiCode) ? String(v.sdiCode || payload.sdiCode) : undefined,
