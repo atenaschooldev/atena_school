@@ -32,7 +32,10 @@ import {
 } from "@tanstack/react-table";
 import type { Course } from "../types";
 
+import { useTranslation } from "@/i18n/context";
+
 export function CorsiView() {
+  const { t } = useTranslation();
   const {
     coursesList,
     loading,
@@ -84,8 +87,9 @@ export function CorsiView() {
       getCoursesTableColumns({
         onEdit: (c) => handleEditClick(c),
         onDelete: (c) => setDeletingCourse(c),
+        t,
       }),
-    [handleEditClick]
+    [handleEditClick, t]
   );
 
   const table = useReactTable({
@@ -107,32 +111,32 @@ export function CorsiView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca corso, categoria..."
+          searchPlaceholder={t("courses.searchPlaceholder") || t("common.search")}
           filters={[
             {
               value: categoryFilter,
               onChange: setCategoryFilter,
-              placeholder: "Categoria",
+              placeholder: t("courses.language"),
               options: [
-                { value: "all", label: "Tutte le categorie" },
+                { value: "all", label: t("courses.allCategories") },
                 ...categories.map((cat) => ({ value: cat, label: cat })),
               ],
             },
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato",
+              placeholder: t("common.status"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "attivo", label: "Attivo" },
-                { value: "in-programmazione", label: "In Programmazione" },
-                { value: "concluso", label: "Concluso" },
+                { value: "all", label: t("courses.allStatuses") },
+                { value: "attivo", label: t("common.active") },
+                { value: "in-programmazione", label: t("courses.inPlanning") },
+                { value: "concluso", label: t("common.completed") },
               ],
             },
           ]}
           actionElement={
             <Button onClick={handleNewClick} className="font-medium cursor-pointer shadow-sm text-xs">
-              <Plus className="mr-1.5 h-4 w-4" /> Nuovo Corso
+              <Plus className="mr-1.5 h-4 w-4" /> {t("courses.addCourse")}
             </Button>
           }
           viewMode={viewMode}

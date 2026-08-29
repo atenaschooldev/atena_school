@@ -15,11 +15,13 @@ import { formatCourseFormatLabel } from "../utils";
 export interface GetCoursesTableColumnsProps {
   onEdit: (c: Course) => void;
   onDelete: (c: Course) => void;
+  t: (k: string) => string;
 }
 
 export function getCoursesTableColumns({
   onEdit,
   onDelete,
+  t,
 }: GetCoursesTableColumnsProps): ColumnDef<Course>[] {
   return [
     {
@@ -32,7 +34,7 @@ export function getCoursesTableColumns({
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleziona tutti"
+            aria-label={t("common.selectAll")}
           />
         </div>
       ),
@@ -41,7 +43,7 @@ export function getCoursesTableColumns({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Seleziona riga"
+            aria-label={t("common.selectRow")}
           />
         </div>
       ),
@@ -57,7 +59,7 @@ export function getCoursesTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Corso</span>
+          <span>{t("courses.courseName")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -91,7 +93,7 @@ export function getCoursesTableColumns({
     },
     {
       accessorKey: "courseFormat",
-      header: "Formato",
+      header: t("courses.format"),
       cell: ({ row }) => {
         const label = formatCourseFormatLabel(row.original.courseFormat);
         return (
@@ -103,7 +105,7 @@ export function getCoursesTableColumns({
     },
     {
       accessorKey: "stato",
-      header: "Stato",
+      header: t("common.status"),
       cell: ({ row }) => <StatusBadge status={row.original.stato || "attivo"} />,
     },
     {
@@ -115,7 +117,7 @@ export function getCoursesTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Prezzo</span>
+          <span>{t("courses.price")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -129,7 +131,7 @@ export function getCoursesTableColumns({
     },
     {
       accessorKey: "scheduleType",
-      header: "Frequenza / Orario",
+      header: t("courses.schedule"),
       cell: ({ row }) => {
         const { primary, secondary } = formatCourseFrequencyDetails(row.original);
 
@@ -148,7 +150,7 @@ export function getCoursesTableColumns({
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       enableHiding: false,
       cell: ({ row }) => {
         const c = row.original;
@@ -159,7 +161,7 @@ export function getCoursesTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(c)}
-              title="Modifica Corso"
+              title={t("courses.editCourse")}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -168,7 +170,7 @@ export function getCoursesTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
               onClick={() => onDelete(c)}
-              title="Elimina Corso"
+              title={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

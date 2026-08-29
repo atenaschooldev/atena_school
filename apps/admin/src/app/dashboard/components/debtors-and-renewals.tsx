@@ -10,7 +10,10 @@ import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { formatCurrency } from "@atena/utils"
 
+import { useTranslation } from "@/i18n/context"
+
 export function DebtorsAndRenewals() {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState("debtors")
   const [sendingId, setSendingId] = useState<string | null>(null)
 
@@ -40,12 +43,12 @@ export function DebtorsAndRenewals() {
           <div>
             <CardTitle className="text-xl font-bold flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-amber-500" />
-              Registro Operativo Scadenze & Debiti
+              {t("dashboard.debtorsTitle")}
             </CardTitle>
-            <CardDescription>Studenti con pagamenti in sospeso per i corsi</CardDescription>
+            <CardDescription>{t("dashboard.debtorsSubtitle")}</CardDescription>
           </div>
           <Badge variant={totalOutstanding > 0 ? "destructive" : "secondary"} className="text-xs px-2.5 py-1">
-            Totale insoluto: {formatCurrency(totalOutstanding)}
+            {t("dashboard.totalOutstanding")}: {formatCurrency(totalOutstanding)}
           </Badge>
         </div>
       </CardHeader>
@@ -55,30 +58,30 @@ export function DebtorsAndRenewals() {
           <TabsList className="w-full max-w-xs">
             <TabsTrigger value="debtors" className="w-full">
               <AlertCircle className="w-4 h-4 mr-2 text-rose-500" />
-              Insoluti ({debtorsList.length})
+              {t("dashboard.debtorsTab")} ({debtorsList.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="debtors" className="space-y-3">
             {isLoading ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">Caricamento scadenze in corso...</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
             ) : debtorsList.length === 0 ? (
               <div className="p-8 border border-dashed rounded-xl text-center space-y-2 bg-card/40">
                 <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto" />
-                <p className="font-semibold text-sm">Nessun pagamento in sospeso</p>
-                <p className="text-xs text-muted-foreground">Tutte le prenotazioni e i corsi risultano saldati.</p>
+                <p className="font-semibold text-sm">{t("common.noData")}</p>
+                <p className="text-xs text-muted-foreground">{t("bookings.subtitle")}</p>
               </div>
             ) : (
               debtorsList.map((d: any) => (
                 <div key={d.bookingId} className="p-3.5 rounded-xl border bg-card/60 backdrop-blur-xs flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/30 transition-colors">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm">{d.purchaserName || "Acquirente"}</span>
+                      <span className="font-semibold text-sm">{d.purchaserName || t("common.purchaser")}</span>
                       <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
                         {d.paymentStatus}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{d.courseName || "Corso"}</p>
+                    <p className="text-xs text-muted-foreground">{d.courseName || t("common.course")}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
                       {d.purchaserEmail && <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {d.purchaserEmail}</span>}
                       {d.purchaserPhone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {d.purchaserPhone}</span>}
@@ -87,7 +90,7 @@ export function DebtorsAndRenewals() {
 
                   <div className="flex items-center gap-3 self-end md:self-center">
                     <div className="text-right">
-                      <p className="text-xs text-muted-foreground">Rimanente</p>
+                      <p className="text-xs text-muted-foreground">{t("common.amount")}</p>
                       <p className="text-base font-bold text-rose-600 dark:text-rose-400">
                         {formatCurrency(d.outstandingEstimate ?? 0)}
                       </p>
@@ -101,7 +104,7 @@ export function DebtorsAndRenewals() {
                       onClick={() => handleSendReminder(d.bookingId)}
                     >
                       <Send className="w-3.5 h-3.5 mr-1 text-primary" />
-                      {sendingId === d.bookingId ? "Invio..." : "Invia Sollecito"}
+                      {sendingId === d.bookingId ? t("common.saving") : t("dashboard.sendReminder")}
                     </Button>
                   </div>
                 </div>

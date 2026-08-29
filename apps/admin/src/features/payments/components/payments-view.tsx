@@ -30,7 +30,10 @@ import {
 } from "@tanstack/react-table";
 import type { Payment } from "../types";
 
+import { useTranslation } from "@/i18n/context";
+
 export function PaymentsView() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -72,8 +75,9 @@ export function PaymentsView() {
         onStatusChange: async (id, status) => {
           await updatePayment({ id, status });
         },
+        t,
       }),
-    [updatePayment]
+    [updatePayment, t]
   );
 
   const table = useReactTable({
@@ -95,38 +99,41 @@ export function PaymentsView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
-          searchPlaceholder="Cerca per cliente, email o descrizione..."
+          searchPlaceholder={t("common.search")}
           filters={[
             {
               value: methodFilter,
               onChange: setMethodFilter,
-              placeholder: "Metodo Pagamento",
+              placeholder: t("payments.filterMethod"),
               options: [
-                { value: "all", label: "Tutti i metodi" },
-                { value: "cash", label: "Contanti" },
-                { value: "pos", label: "Carta / POS" },
+                { value: "all", label: t("common.all") },
+                { value: "cash", label: t("common.cash") },
+                { value: "pos", label: t("common.card") },
                 { value: "stripe", label: "Stripe Online" },
-                { value: "bank_transfer", label: "Bonifico" },
+                { value: "bank_transfer", label: t("common.transfer") },
               ],
             },
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato Incasso",
+              placeholder: t("common.status"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "completed", label: "Completato" },
-                { value: "pending", label: "In attesa" },
+                { value: "all", label: t("common.all") },
+                { value: "completed", label: t("common.paid") },
+                { value: "pending", label: t("common.pending") },
               ],
             },
           ]}
           actionElement={
-            <Button
-              onClick={() => setPosCheckoutOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold cursor-pointer shadow-sm text-xs"
-            >
-              <Plus className="mr-1.5 h-4 w-4" /> Registra Nuovo Incasso
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setPosCheckoutOpen(true)}
+                className="cursor-pointer font-medium text-xs border-primary/30 text-primary hover:bg-primary/5"
+              >
+                <Plus className="mr-1.5 h-4 w-4" /> {t("payments.recordPayment")}
+              </Button>
+            </div>
           }
         />
 

@@ -1,38 +1,39 @@
-"use client";
-
 import { DollarSign, Banknote, CreditCard, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@atena/utils";
 import type { PaymentsSummary } from "../types";
+import { useTranslation } from "@/i18n/context";
 
 export interface PaymentsMetricsProps {
   summary?: PaymentsSummary;
 }
 
 export function PaymentsMetrics({ summary }: PaymentsMetricsProps) {
+  const { t } = useTranslation();
+
   const metrics = [
     {
-      title: "Totale Incassato",
+      title: t("payments.totalIncome"),
       value: formatCurrency(summary?.totalRevenue ?? 0),
-      description: "Totale entrate confermate",
+      description: t("payments.tuitionRevenue"),
       icon: DollarSign,
     },
     {
-      title: "Incassato in Contanti",
+      title: t("common.cash"),
       value: formatCurrency(summary?.cashRevenue ?? 0),
-      description: "Scontrini e contanti in sede",
+      description: t("common.cash"),
       icon: Banknote,
     },
     {
-      title: "Carta / POS / Stripe",
+      title: `${t("common.card")} / Stripe`,
       value: formatCurrency((summary?.posRevenue ?? 0) + (summary?.stripeRevenue ?? 0)),
-      description: "Pagamenti digitali e POS",
+      description: t("common.card"),
       icon: CreditCard,
     },
     {
-      title: "In Attesa di Saldo",
+      title: t("payments.pendingAmount"),
       value: formatCurrency(summary?.pendingAmount ?? 0),
-      description: "Prenotazioni da saldare",
+      description: t("common.pending"),
       icon: Clock,
     },
   ];

@@ -32,7 +32,10 @@ import {
 } from "@tanstack/react-table";
 import type { Booking } from "../types/booking";
 
+import { useTranslation } from "@/i18n/context";
+
 export function BookingsView() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const targetId = searchParams.get("id");
 
@@ -76,8 +79,9 @@ export function BookingsView() {
         onViewDetail: (b) => setSelectedBooking(b),
         onEdit: (b) => setEditingBooking(b),
         onDelete: (id) => setDeletingBookingId(id),
+        t,
       }),
-    [setSelectedBooking]
+    [setSelectedBooking, t]
   );
 
   const table = useReactTable({
@@ -101,16 +105,16 @@ export function BookingsView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca cliente, studente, corso, email..."
+          searchPlaceholder={t("bookings.searchPlaceholder")}
           filters={[
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato Pagamento",
+              placeholder: t("common.status"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "completed", label: "Pagati Online" },
-                { value: "reserved", label: "Da Saldare in Sede" },
+                { value: "all", label: t("common.all") },
+                { value: "completed", label: t("bookings.confirmedBookings") },
+                { value: "reserved", label: t("common.reserved") },
               ],
             },
           ]}

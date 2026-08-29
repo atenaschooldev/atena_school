@@ -1,7 +1,6 @@
-"use client";
-
 import { ShoppingBag, CheckCircle2, Store, CircleDashed } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n/context";
 
 export interface BookingsMetricsProps {
   stats: {
@@ -13,29 +12,31 @@ export interface BookingsMetricsProps {
 }
 
 export function BookingsMetrics({ stats }: BookingsMetricsProps) {
+  const { t } = useTranslation();
+
   const metrics = [
     {
-      title: "Totale Ordini",
+      title: t("bookings.totalBookings"),
       value: stats.totalCount,
-      description: "Ordini registrati a sistema",
+      description: t("bookings.title"),
       icon: ShoppingBag,
     },
     {
-      title: "Pagati Online",
+      title: t("bookings.confirmedBookings"),
       value: stats.paidCount,
-      description: "Pagamenti completati via Stripe",
+      description: t("common.paid"),
       icon: CheckCircle2,
     },
     {
-      title: "Da Saldare in Sede",
+      title: t("common.reserved"),
       value: stats.reservedCount,
-      description: "Prenotazioni da saldare alla scuola",
+      description: t("common.cash"),
       icon: Store,
     },
     {
-      title: "In Coordinamento",
+      title: t("common.pending"),
       value: stats.leadsCount,
-      description: "Richieste in attesa di orario",
+      description: t("courses.inPlanning"),
       icon: CircleDashed,
     },
   ];

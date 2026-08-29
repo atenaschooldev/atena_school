@@ -1,8 +1,7 @@
-"use client";
-
 import { Award, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Membership } from "../types";
+import { useTranslation } from "@/i18n/context";
 
 export interface MembershipsMetricsProps {
   stats: {
@@ -14,29 +13,31 @@ export interface MembershipsMetricsProps {
 }
 
 export function MembershipsMetrics({ stats }: MembershipsMetricsProps) {
+  const { t } = useTranslation();
+
   const metrics = [
     {
-      title: "Tessere Totali",
+      title: t("memberships.membersRegister"),
       value: stats.total,
-      description: "Iscrizioni annuali registrate",
+      description: t("memberships.title"),
       icon: Award,
     },
     {
-      title: "Tessere Attive",
+      title: t("memberships.activeMembers"),
       value: stats.active,
-      description: "Quota €30 saldata per l'anno",
+      description: t("memberships.membershipFee"),
       icon: CheckCircle2,
     },
     {
-      title: "In Attesa",
+      title: t("common.pending"),
       value: stats.pending,
-      description: "In attesa di conferma",
+      description: t("common.pending"),
       icon: Clock,
     },
     {
-      title: "Scadute / Revocate",
+      title: t("memberships.membershipExpired"),
       value: stats.expiredOrRevoked,
-      description: "Da rinnovare per l'anno corrente",
+      description: t("memberships.academicYear"),
       icon: AlertCircle,
     },
   ];

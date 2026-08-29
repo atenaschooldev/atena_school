@@ -1,41 +1,41 @@
-"use client";
-
 import { GraduationCap, CheckCircle2, Clock, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Course } from "../types";
+import { useTranslation } from "@/i18n/context";
 
 export interface CoursesMetricsProps {
   courses: Course[];
 }
 
 export function CoursesMetrics({ courses }: CoursesMetricsProps) {
+  const { t } = useTranslation();
   const activeCount = courses.filter((c) => (c.stato || "").toLowerCase() === "attivo").length;
   const inProgCount = courses.filter((c) => (c.stato || "").toLowerCase() === "in-programmazione").length;
   const totalLessonsCount = courses.reduce((acc, c) => acc + (c.totalLessons || 0), 0);
 
   const metrics = [
     {
-      title: "Totale Corsi",
+      title: t("courses.totalCourses"),
       value: courses.length,
-      description: "Corsi a catalogo",
+      description: t("courses.coursesInCatalog"),
       icon: GraduationCap,
     },
     {
-      title: "Corsi Attivi",
+      title: t("courses.activeCourses"),
       value: activeCount,
-      description: "In corso di svolgimento",
+      description: t("courses.ongoing"),
       icon: CheckCircle2,
     },
     {
-      title: "In Programmazione",
+      title: t("courses.inPlanning"),
       value: inProgCount,
-      description: "In partenza a breve",
+      description: t("courses.startingSoon"),
       icon: Clock,
     },
     {
-      title: "Totale Lezioni Stimate",
+      title: t("courses.totalLessonsEst"),
       value: totalLessonsCount,
-      description: "Lezioni a calendario",
+      description: t("courses.calendarLessons"),
       icon: Calendar,
     },
   ];

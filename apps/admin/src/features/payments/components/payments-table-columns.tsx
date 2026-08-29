@@ -23,6 +23,7 @@ export interface GetPaymentsTableColumnsProps {
   onEdit: (p: Payment) => void;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: string) => void;
+  t: (k: string) => string;
 }
 
 export function getPaymentsTableColumns({
@@ -30,6 +31,7 @@ export function getPaymentsTableColumns({
   onEdit,
   onDelete,
   onStatusChange,
+  t,
 }: GetPaymentsTableColumnsProps): ColumnDef<Payment>[] {
   return [
     {
@@ -42,7 +44,7 @@ export function getPaymentsTableColumns({
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleziona tutti"
+            aria-label={t("common.selectAll")}
           />
         </div>
       ),
@@ -51,7 +53,7 @@ export function getPaymentsTableColumns({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Seleziona riga"
+            aria-label={t("common.selectRow")}
           />
         </div>
       ),
@@ -67,7 +69,7 @@ export function getPaymentsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Cliente / Studente</span>
+          <span>{t("common.purchaser")} / {t("common.student")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -79,7 +81,7 @@ export function getPaymentsTableColumns({
       ),
       cell: ({ row }) => {
         const p = row.original;
-        const name = p.purchaser_name || p.purchaserName || p.student_name || "Cliente";
+        const name = p.purchaser_name || p.purchaserName || p.student_name || t("common.purchaser");
         const email = p.purchaser_email || p.purchaserEmail || p.student_email || "";
 
         const id = p.id;
@@ -96,34 +98,34 @@ export function getPaymentsTableColumns({
     },
     {
       accessorKey: "type",
-      header: "Causale",
+      header: t("payments.paymentType"),
       cell: ({ row }) => {
         const type = row.original.type;
         const desc = row.original.description;
         if (type === "registration_fee") {
           return (
             <Badge variant="outline" className="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30">
-              Quota Iscrizione €30
+              {t("payments.typeMembership")}
             </Badge>
           );
         }
         if (type === "lesson_fee") {
           return (
             <Badge variant="outline" className="text-purple-600 bg-purple-50 dark:bg-purple-950/20 border-purple-500/30">
-              Lezione Singola
+              {t("courses.individual")}
             </Badge>
           );
         }
         return (
           <div className="flex flex-col text-xs">
-            <span className="font-medium text-foreground">{desc || "Quota Corso"}</span>
+            <span className="font-medium text-foreground">{desc || t("payments.typeTuition")}</span>
           </div>
         );
       },
     },
     {
       accessorKey: "payment_method",
-      header: "Metodo",
+      header: t("payments.filterMethod"),
       cell: ({ row }) => <PaymentMethodBadge method={row.original.payment_method} />,
     },
     {
@@ -135,7 +137,7 @@ export function getPaymentsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Stato</span>
+          <span>{t("common.status")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -161,16 +163,16 @@ export function getPaymentsTableColumns({
             </SelectTrigger>
             <SelectContent side="bottom" align="start">
               <SelectItem value="completed" className="text-xs cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
-                Pagato (Completato)
+                {t("common.paid")}
               </SelectItem>
               <SelectItem value="pending" className="text-xs cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400">
-                In Attesa
+                {t("common.pending")}
               </SelectItem>
               <SelectItem value="failed" className="text-xs cursor-pointer font-semibold text-rose-600 dark:text-rose-400">
-                Fallito / In Debito
+                {t("common.failed")}
               </SelectItem>
               <SelectItem value="refunded" className="text-xs cursor-pointer font-semibold text-slate-600 dark:text-slate-400">
-                Rimborsato
+                {t("common.refunded")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -186,7 +188,7 @@ export function getPaymentsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Importo</span>
+          <span>{t("common.amount")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -207,7 +209,7 @@ export function getPaymentsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Data Incasso</span>
+          <span>{t("common.date")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -221,7 +223,7 @@ export function getPaymentsTableColumns({
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       enableHiding: false,
       cell: ({ row }) => {
         const p = row.original;
@@ -232,7 +234,7 @@ export function getPaymentsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onViewDetail(p)}
-              title="Vedi Dettagli"
+              title={t("common.details")}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -241,7 +243,7 @@ export function getPaymentsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(p)}
-              title="Modifica Pagamento"
+              title={t("common.edit")}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -250,7 +252,7 @@ export function getPaymentsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
               onClick={() => onDelete(p.id)}
-              title="Elimina Pagamento"
+              title={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

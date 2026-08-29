@@ -67,13 +67,22 @@ export const en = {
     error: "Error",
     cash: "Cash (in school)",
     card: "Credit / Debit Card",
-    stripe: "Stripe",
+    stripe: "Stripe Online",
     pos: "POS Terminal",
     transfer: "Bank Transfer",
     export: "Export CSV",
     import: "Import",
     refresh: "Refresh",
     total: "Total",
+    selectRow: "Select row",
+    selectAll: "Select all",
+    itemsPerPage: "Items per page",
+    page: "Page",
+    of: "of",
+    previous: "Previous",
+    next: "Next",
+    firstPage: "First page",
+    lastPage: "Last page",
   },
 
   // Header & Search
@@ -87,8 +96,8 @@ export const en = {
 
   // Dashboard Page
   dashboard: {
-    title: "Dashboard Overview",
-    subtitle: "Welcome back! Here is what's happening in Atena School today.",
+    title: "School Management Center",
+    subtitle: "Real-time overview of revenue, deadlines, attendance, and today's schedule.",
     totalRevenue: "Total Revenue",
     activeStudents: "Active Students",
     totalBookings: "Total Bookings",
@@ -104,12 +113,26 @@ export const en = {
     revenueAnalytics: "Revenue Analytics",
     monthlyEarnings: "Monthly Earnings",
     registrationFeesCollected: "Registration Fees (€30)",
+    debtorsTitle: "Outstanding Balances & Overdue Payments",
+    debtorsSubtitle: "Students with pending payments for courses",
+    totalOutstanding: "Total Outstanding",
+    debtorsTab: "Overdue",
+    renewalsTab: "Expiring Memberships",
+    sendReminder: "Send Reminder",
+    reminderSent: "Payment reminder sent",
+    noLessonsToday: "No lessons scheduled for today.",
+    calendarNotice: "Live timetable and classrooms from database",
+    topCoursesTitle: "Most Enrolled Courses",
+    recentTransactionsTitle: "Recent Transactions",
+    customerInsightsTitle: "Student Demographics & Age Groups",
+    revenueBreakdownTitle: "Revenue Breakdown",
+    attendanceRate: "Attendance Rate",
   },
 
   // Courses Page
   courses: {
     title: "Courses Management",
-    subtitle: "Manage languages, levels, prices, schedules and assigned teachers.",
+    subtitle: "Manage languages, levels, prices, schedules, and assigned teachers.",
     addCourse: "New Course",
     editCourse: "Edit Course",
     courseName: "Course Name",
@@ -130,6 +153,28 @@ export const en = {
     courseDeletedSuccess: "Course deleted successfully",
     deleteConfirmTitle: "Delete Course?",
     deleteConfirmDesc: "Are you sure you want to delete this course? This action cannot be undone.",
+    totalCourses: "Total Courses",
+    activeCourses: "Active Courses",
+    inPlanning: "In Planning",
+    totalLessonsEst: "Estimated Lessons",
+    coursesInCatalog: "Courses in catalog",
+    ongoing: "Currently running",
+    startingSoon: "Starting soon",
+    calendarLessons: "Scheduled lessons",
+    format: "Format",
+    online: "Online",
+    inPerson: "In Person",
+    hybrid: "Hybrid",
+    group: "Group Course",
+    individual: "Individual / Flexible",
+    frequency: "Frequency",
+    duration: "Duration",
+    minutes: "minutes",
+    hours: "hours",
+    enrolledStudents: "Enrolled",
+    allCategories: "All Categories",
+    allFormats: "All Formats",
+    allStatuses: "All Statuses",
   },
 
   // Bookings Page
@@ -153,6 +198,20 @@ export const en = {
     lessonsGeneratedCount: "Lessons Scheduled",
     noLessonsFound: "No lessons scheduled for this booking yet.",
     bookingStatusUpdated: "Booking status updated successfully",
+    totalBookings: "Total Bookings",
+    confirmedBookings: "Confirmed & Paid",
+    pendingBookings: "Pending / Reserved",
+    totalLessonsBooked: "Total Lessons Booked",
+    customerDetails: "Customer & Parent Details",
+    studentDetails: "Student Details",
+    billingDetails: "Billing & Payments",
+    electronicInvoice: "Electronic Invoice (SDI/PEC)",
+    lessonsBreakdown: "Scheduled Lessons Breakdown",
+    registrationFeeIncluded: "Includes €30 Annual Fee",
+    registrationFeeExempt: "Annual Fee already active (€0)",
+    billingScheme: "Billing Scheme",
+    fullPayment: "Full Payment",
+    monthlySubscription: "Monthly Subscription",
   },
 
   // Payments Page
@@ -171,6 +230,14 @@ export const en = {
     receiptNumber: "Receipt / Order #",
     recordPayment: "Record Manual Payment",
     recordPaymentSuccess: "Payment recorded successfully",
+    tuitionRevenue: "Course Tuition",
+    membershipRevenue: "Registration Fees (€30)",
+    pendingAmount: "Pending Unpaid",
+    filterType: "Filter by type",
+    filterMethod: "Filter by method",
+    receipt: "Receipt #",
+    payer: "Payer",
+    forStudent: "For Student",
   },
 
   // Attendance Page
@@ -187,6 +254,11 @@ export const en = {
     attendanceSaved: "Attendance saved successfully",
     todayLessons: "Lessons for selected date",
     noLessonsToday: "No lessons scheduled for this date.",
+    classRegister: "Class Register",
+    lessonDate: "Lesson Date",
+    rate: "Attendance Rate",
+    saveRegister: "Save Register",
+    studentList: "Enrolled Students",
   },
 
   // Annual Memberships Page
@@ -203,6 +275,9 @@ export const en = {
     searchMember: "Search by student name, CF, or email...",
     membershipActive: "Active Member",
     membershipExpired: "Expired",
+    membersRegister: "Annual Members Register",
+    expiresOn: "Expires On",
+    cardStatus: "Membership Status",
   },
 
   // Teachers Page
@@ -216,6 +291,9 @@ export const en = {
     activeClasses: "Active Classes",
     ratePerHour: "Rate / Hour",
     teacherCreatedSuccess: "Teacher profile created",
+    faculty: "Faculty & Teachers",
+    hourlyRate: "Hourly Rate",
+    contact: "Contact",
   },
 
   // Schedule Page
@@ -227,6 +305,8 @@ export const en = {
     dayView: "Day View",
     allTeachers: "All Teachers",
     allClassrooms: "All Classrooms",
+    allCourses: "All Courses",
+    calendar: "Timetable & Calendar",
   },
 
   // Users Page
@@ -239,6 +319,12 @@ export const en = {
     languageLevel: "Language Level",
     registeredDate: "Registered On",
     linkedBookings: "Bookings History",
+    userDirectory: "User Accounts & Profiles",
+    role: "Role",
+    admin: "Administrator",
+    teacher: "Teacher",
+    student: "Student",
+    parent: "Parent",
   },
 
   // Settings & Stripe
@@ -254,6 +340,10 @@ export const en = {
     stripeDisabledDesc: "Checkout creates reservations with 'Pay at school' (Cash/POS) without requiring credit cards.",
     toggleStripe: "Toggle Payment Gateway",
     settingsSaved: "Settings saved successfully",
+    theme: "Theme & Appearance",
+    light: "Light",
+    dark: "Dark",
+    system: "System Default",
   },
 } as const;
 

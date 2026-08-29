@@ -25,8 +25,10 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useTranslation } from "@/i18n/context";
 
 export function MembershipsView() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [academicYearFilter, setAcademicYearFilter] = useState("all");
@@ -59,8 +61,9 @@ export function MembershipsView() {
         onToggleStatus: async (id) => {
           await toggleStatus(id);
         },
+        t,
       }),
-    [toggleStatus]
+    [toggleStatus, t]
   );
 
   const table = useReactTable({
@@ -82,34 +85,36 @@ export function MembershipsView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
-          searchPlaceholder="Cerca socio per nome, email, CF..."
+          searchPlaceholder={t("memberships.searchMember")}
           filters={[
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato Tessera",
+              placeholder: t("memberships.cardStatus"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "active", label: "Attiva" },
-                { value: "pending", label: "In Attesa" },
-                { value: "expired", label: "Scaduta" },
-                { value: "revoked", label: "Revocata" },
+                { value: "all", label: t("common.all") },
+                { value: "active", label: t("common.active") },
+                { value: "pending", label: t("common.pending") },
+                { value: "expired", label: t("memberships.membershipExpired") },
               ],
             },
             {
               value: academicYearFilter,
               onChange: setAcademicYearFilter,
-              placeholder: "Anno Accademico",
+              placeholder: t("memberships.academicYear"),
               options: [
-                { value: "all", label: "Tutti gli anni" },
+                { value: "all", label: t("common.all") },
+                { value: "2026/2027", label: "2026/2027" },
                 { value: "2025/2026", label: "2025/2026" },
-                { value: "2024/2025", label: "2024/2025" },
               ],
             },
           ]}
           actionElement={
-            <Button onClick={() => setCreateDialogOpen(true)} className="font-medium cursor-pointer shadow-sm text-xs">
-              <Plus className="mr-1.5 h-4 w-4" /> Registra Nuova Tessera €30
+            <Button
+              onClick={() => setCreateDialogOpen(true)}
+              className="cursor-pointer font-medium text-xs shadow-sm"
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> {t("memberships.addMembership")}
             </Button>
           }
         />

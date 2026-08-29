@@ -1,12 +1,12 @@
-"use client"
-
 import { Calendar, Clock, MapPin, Video, CheckCircle2, FileX } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
+import { useTranslation } from "@/i18n/context"
 
 export function TodayLessons() {
+  const { t } = useTranslation()
   const { data: schedulesData, isLoading } = useQuery({
     queryKey: ["schedules", "list"],
     queryFn: () => api.get<any[]>("/schedules"),
@@ -20,22 +20,22 @@ export function TodayLessons() {
         <div>
           <CardTitle className="text-xl font-bold flex items-center gap-2">
             <Calendar className="w-5 h-5 text-primary" />
-            Prossime Lezioni
+            {t("dashboard.upcomingLessons")}
           </CardTitle>
-          <CardDescription>Calendario lezioni ed aule dal database</CardDescription>
+          <CardDescription>{t("dashboard.calendarNotice")}</CardDescription>
         </div>
         <Badge variant="outline" className="text-xs">
-          Totale lezioni: {lessonsList.length}
+          {t("common.total")}: {lessonsList.length}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Caricamento calendario lezioni...</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
         ) : lessonsList.length === 0 ? (
           <div className="p-8 border border-dashed rounded-xl text-center space-y-2 bg-card/40">
             <FileX className="w-8 h-8 text-muted-foreground mx-auto" />
-            <p className="font-semibold text-sm">Nessuna lezione in programma</p>
-            <p className="text-xs text-muted-foreground">Non ci sono lezioni programmate a calendario.</p>
+            <p className="font-semibold text-sm">{t("dashboard.noLessonsToday")}</p>
+            <p className="text-xs text-muted-foreground">{t("schedule.subtitle")}</p>
           </div>
         ) : (
           lessonsList.slice(0, 5).map((lesson: any, idx: number) => (
@@ -48,25 +48,25 @@ export function TodayLessons() {
 
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{lesson.courseName || `Corso #${idx + 1}`}</span>
+                    <span className="font-semibold text-sm">{lesson.courseName || `${t("common.course")} #${idx + 1}`}</span>
                     {lesson.format === 'online' ? (
                       <Badge variant="secondary" className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                        <Video className="w-3 h-3 mr-1" /> Online
+                        <Video className="w-3 h-3 mr-1" /> {t("courses.online")}
                       </Badge>
                     ) : (
                       <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <MapPin className="w-3 h-3 mr-1" /> In Sede
+                        <MapPin className="w-3 h-3 mr-1" /> {t("courses.inPerson")}
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{lesson.teacherName || "Docente non assegnato"} • {lesson.room || "Aula"}</p>
+                  <p className="text-xs text-muted-foreground">{lesson.teacherName || t("common.teacher")} • {lesson.room || t("common.classroom")}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 self-end sm:self-center">
                 <Badge variant="outline" className="text-xs px-2.5 py-1">
                   <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" />
-                  {lesson.status === 'scheduled' || !lesson.status ? 'Programmata' : lesson.status}
+                  {t("common.active")}
                 </Badge>
               </div>
             </div>

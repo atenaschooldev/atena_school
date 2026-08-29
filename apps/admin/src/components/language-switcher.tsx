@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useTranslation, Locale } from "@/i18n/context";
+import { useTranslation, type Locale } from "@/i18n/context";
 import {
   DropdownMenu,
   DropdownMenuContent,

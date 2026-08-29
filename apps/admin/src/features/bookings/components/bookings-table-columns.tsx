@@ -16,12 +16,14 @@ export interface GetBookingsTableColumnsProps {
   onViewDetail: (b: Booking) => void;
   onEdit: (b: Booking) => void;
   onDelete: (id: string) => void;
+  t: (k: string) => string;
 }
 
 export function getBookingsTableColumns({
   onViewDetail,
   onEdit,
   onDelete,
+  t,
 }: GetBookingsTableColumnsProps): ColumnDef<Booking>[] {
   return [
     {
@@ -34,7 +36,7 @@ export function getBookingsTableColumns({
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleziona tutti"
+            aria-label={t("common.selectAll")}
           />
         </div>
       ),
@@ -43,7 +45,7 @@ export function getBookingsTableColumns({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Seleziona riga"
+            aria-label={t("common.selectRow")}
           />
         </div>
       ),
@@ -59,7 +61,7 @@ export function getBookingsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Corso / Servizio</span>
+          <span>{t("common.course")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -85,7 +87,7 @@ export function getBookingsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Cliente / Studente</span>
+          <span>{t("common.purchaser")} / {t("common.student")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -104,7 +106,7 @@ export function getBookingsTableColumns({
             {diffStudent ? (
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <User className="w-3 h-3 text-primary/70 shrink-0" />
-                Studente: <strong className="font-semibold text-foreground/80">{b.student_name}</strong>
+                {t("common.student")}: <strong className="font-semibold text-foreground/80">{b.student_name}</strong>
               </span>
             ) : (
               <span className="text-xs text-muted-foreground truncate max-w-[200px]">{b.purchaser_email}</span>
@@ -122,7 +124,7 @@ export function getBookingsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Stato Pagamento</span>
+          <span>{t("common.status")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -136,13 +138,13 @@ export function getBookingsTableColumns({
     },
     {
       accessorKey: "payment_method",
-      header: "Metodo",
+      header: t("payments.filterMethod"),
       cell: ({ row }) => (
         <div className="flex flex-col items-start gap-1">
           <PaymentMethodBadge method={row.original.payment_method} />
           {row.original.billing_scheme === "per_lesson" && (
             <Badge variant="secondary" className="text-[10px] text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-900/20 border border-violet-500/30 gap-1 w-fit">
-              <Clock className="w-2.5 h-2.5" /> A Lezione
+              <Clock className="w-2.5 h-2.5" /> {t("courses.individual")}
             </Badge>
           )}
         </div>
@@ -157,7 +159,7 @@ export function getBookingsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Importo</span>
+          <span>{t("common.amount")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -178,7 +180,7 @@ export function getBookingsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Data Ordine</span>
+          <span>{t("common.date")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -192,7 +194,7 @@ export function getBookingsTableColumns({
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       enableHiding: false,
       cell: ({ row }) => {
         const b = row.original;
@@ -203,7 +205,7 @@ export function getBookingsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onViewDetail(b)}
-              title="Vedi Dettagli"
+              title={t("common.details")}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -212,7 +214,7 @@ export function getBookingsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(b)}
-              title="Modifica Ordine"
+              title={t("common.edit")}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -221,7 +223,7 @@ export function getBookingsTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
               onClick={() => onDelete(b.id)}
-              title="Elimina Ordine"
+              title={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

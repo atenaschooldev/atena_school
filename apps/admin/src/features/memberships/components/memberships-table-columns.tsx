@@ -12,10 +12,12 @@ import type { Membership } from "../types";
 
 export interface GetMembershipsTableColumnsProps {
   onToggleStatus: (id: string) => void;
+  t: (k: string) => string;
 }
 
 export function getMembershipsTableColumns({
   onToggleStatus,
+  t,
 }: GetMembershipsTableColumnsProps): ColumnDef<Membership>[] {
   return [
     {
@@ -28,7 +30,7 @@ export function getMembershipsTableColumns({
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleziona tutti"
+            aria-label={t("common.selectAll")}
           />
         </div>
       ),
@@ -37,7 +39,7 @@ export function getMembershipsTableColumns({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Seleziona riga"
+            aria-label={t("common.selectRow")}
           />
         </div>
       ),
@@ -53,7 +55,7 @@ export function getMembershipsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Studente / Socio</span>
+          <span>{t("common.student")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -65,7 +67,7 @@ export function getMembershipsTableColumns({
       ),
       cell: ({ row }) => {
         const m = row.original;
-        const name = m.studentName || m.student_name || "Socio";
+        const name = m.studentName || m.student_name || t("common.student");
         const email = m.studentEmail || m.student_email || "";
         const taxCode = m.studentTaxCode || m.student_tax_code || "";
 
@@ -81,16 +83,16 @@ export function getMembershipsTableColumns({
     },
     {
       accessorKey: "academicYear",
-      header: "Anno Accademico",
+      header: t("memberships.academicYear"),
       cell: ({ row }) => (
         <Badge variant="outline" className="font-mono text-xs">
-          {row.original.academicYear || "2025/2026"}
+          {row.original.academicYear || "2026/2027"}
         </Badge>
       ),
     },
     {
       accessorKey: "status",
-      header: "Stato Tessera",
+      header: t("memberships.cardStatus"),
       cell: ({ row }) => <StatusBadge status={row.original.status || "active"} />,
     },
     {
@@ -102,7 +104,7 @@ export function getMembershipsTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Data Registrazione</span>
+          <span>{t("common.date")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -116,7 +118,7 @@ export function getMembershipsTableColumns({
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       enableHiding: false,
       cell: ({ row }) => {
         const m = row.original;
@@ -132,15 +134,15 @@ export function getMembershipsTableColumns({
                   : "text-rose-600 hover:text-rose-700"
               }`}
               onClick={() => onToggleStatus(m.id)}
-              title={isRevoked ? "Riattiva Iscrizione" : "Revoca Iscrizione"}
+              title={isRevoked ? t("common.confirm") : t("common.cancel")}
             >
               {isRevoked ? (
                 <>
-                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> Riattiva
+                  <RotateCcw className="w-3.5 h-3.5 mr-1" /> {t("common.confirm")}
                 </>
               ) : (
                 <>
-                  <Ban className="w-3.5 h-3.5 mr-1" /> Revoca
+                  <Ban className="w-3.5 h-3.5 mr-1" /> {t("common.cancel")}
                 </>
               )}
             </Button>
