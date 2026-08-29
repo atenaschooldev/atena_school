@@ -43,7 +43,6 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     timeParam,
     actionRef,
     onSubmit,
-    fillTestData,
   } = useCheckout(id);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
@@ -198,17 +197,6 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                     <SignIn className="w-3.5 h-3.5" />
                     Accedi
                   </a>
-                )}
-
-                {/* Auto-Fill (hidden for production/clean UI, function preserved) */}
-                {false && (
-                  <button
-                    type="button"
-                    onClick={fillTestData}
-                    className="px-2 py-1 text-[10px] font-extrabold text-[#F8861D] bg-[#F8861D]/10 hover:bg-[#F8861D]/20 border border-[#F8861D]/30 rounded-lg transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer shrink-0"
-                  >
-                    🧪 Auto-Fill
-                  </button>
                 )}
               </div>
             </div>

@@ -26,30 +26,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    // 1. Временный/локальный тест-логин для разработки
-    if (process.env.NODE_ENV !== 'production' && dto.email === 'admin@atenaschool.com' && dto.password === 'password123') {
-      let user = await this.usersRepository.findByEmail(dto.email);
-      if (!user) {
-        user = await this.usersRepository.create({
-          id: '00000000-0000-0000-0000-000000000000',
-          email: dto.email,
-          firstName: 'Marco',
-          lastName: 'Rossi (Test)',
-          role: 'admin',
-        });
-      }
-      return {
-        access_token: 'DEVELOPMENT_TEST_TOKEN',
-        user: {
-          id: user.id,
-          role: user.role,
-          full_name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-        },
-      };
-    }
-
-    // 2. Аутентификация через Supabase Auth
+    // Аутентификация через Supabase Auth
     try {
       const { data, error } = await this.supabaseAdmin.auth.signInWithPassword({
         email: dto.email,

@@ -43,8 +43,8 @@ export function LoginForm1({
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "admin@atenaschool.com",
-      password: "password123",
+      email: "",
+      password: "",
     },
   })
 

@@ -7,7 +7,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
 import { getSessionId } from "@/lib/utils";
-import { MOCK_CHECKOUT_DATA } from "../constants/mockData";
 
 export interface CheckoutFormValues {
   firstName: string;
@@ -338,35 +337,6 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   };
 
-  const fillTestData = () => {
-    const isChild = formMethods.getValues("isForChild");
-    const { purchaser, student } = MOCK_CHECKOUT_DATA;
-
-    const pEmail = purchaser.emailPrefix.includes("@") 
-      ? purchaser.emailPrefix 
-      : `${purchaser.emailPrefix}@${purchaser.emailDomain}`;
-
-    const sEmail = student.studentEmailPrefix.includes("@") 
-      ? student.studentEmailPrefix 
-      : `${student.studentEmailPrefix}@${student.studentEmailDomain}`;
-
-    formMethods.setValue("firstName", purchaser.firstName, { shouldValidate: true });
-    formMethods.setValue("lastName", purchaser.lastName, { shouldValidate: true });
-    formMethods.setValue("email", pEmail, { shouldValidate: true });
-    formMethods.setValue("phone", purchaser.phone, { shouldValidate: true });
-    formMethods.setValue("purchaserTaxCode", purchaser.purchaserTaxCode, { shouldValidate: true });
-    formMethods.setValue("notes", MOCK_CHECKOUT_DATA.notes || "", { shouldValidate: true });
-
-    if (isChild) {
-      formMethods.setValue("studentFirstName", student.studentFirstName, { shouldValidate: true });
-      formMethods.setValue("studentLastName", student.studentLastName, { shouldValidate: true });
-      formMethods.setValue("studentEmail", sEmail, { shouldValidate: true });
-      formMethods.setValue("studentPhone", student.studentPhone, { shouldValidate: true });
-      formMethods.setValue("taxCode", student.taxCode, { shouldValidate: true });
-      formMethods.setValue("studentBirthDate", student.studentBirthDate, { shouldValidate: true });
-    }
-  };
-
   return {
     formMethods,
     item,
@@ -380,6 +350,5 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     timeParam,
     actionRef,
     onSubmit,
-    fillTestData,
   };
 }

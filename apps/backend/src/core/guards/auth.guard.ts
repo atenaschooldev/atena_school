@@ -27,18 +27,6 @@ export class AuthGuard implements CanActivate {
 
     const token = authHeader.split(' ')[1];
 
-    // Allow test token in non-production environments for local development
-    if (process.env.NODE_ENV !== 'production' && token === 'DEVELOPMENT_TEST_TOKEN') {
-      this.logger.warn('Development test token bypass used for request');
-      request.user = {
-        id: '00000000-0000-0000-0000-000000000000',
-        role: 'admin',
-        full_name: 'Marco Rossi (Test)',
-        email: 'test@atenaschool.com',
-      };
-      return true;
-    }
-
     try {
       const { data: { user }, error } = await this.supabaseAdmin.auth.getUser(token);
       if (error || !user) {

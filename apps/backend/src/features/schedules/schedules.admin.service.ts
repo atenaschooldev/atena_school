@@ -54,7 +54,7 @@ export class SchedulesService {
       startDate,
       endDate,
       lessonType: dto.format || dto.lessonType || 'offline',
-      meetingUrl: (dto.format || dto.lessonType) === 'online' ? (dto.meeting_url || 'https://meet.google.com/mock-meet') : null,
+      meetingUrl: (dto.format || dto.lessonType) === 'online' ? (dto.meeting_url || dto.meetingUrl || null) : null,
     });
 
     return this.mapResponse(s);
@@ -101,7 +101,7 @@ export class SchedulesService {
       endDate,
       lessonType: (dto.format !== undefined ? dto.format : dto.lessonType !== undefined ? dto.lessonType : existing.lessonType),
       meetingUrl: ((dto.format !== undefined ? dto.format : dto.lessonType) === 'online' 
-        ? (dto.meeting_url || existing.meetingUrl || 'https://meet.google.com/mock-meet')
+        ? (dto.meeting_url || dto.meetingUrl || existing.meetingUrl || null)
         : ((dto.format !== undefined ? dto.format : dto.lessonType) === 'offline' ? null : existing.meetingUrl)),
     });
 
@@ -154,7 +154,7 @@ export class SchedulesService {
         startDate: lessonStart,
         endDate: lessonEnd,
         lessonType: template.lessonType,
-        meetingUrl: template.lessonType === 'online' ? 'https://meet.google.com/mock-meet' : null,
+        meetingUrl: template.lessonType === 'online' ? (template.meetingUrl || null) : null,
       });
       
       // Переходим на следующую неделю

@@ -3,7 +3,6 @@ import { GIORNI } from "@/lib/utils";
 import type { Lesson, LessonFormValues } from "../types";
 import type { Course } from "@/features/courses";
 import type { Teacher } from "@/features/teachers";
-import type { TeacherMock } from "@/lib/mock-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +24,7 @@ interface LessonFormProps {
   compact?: boolean;
   submitLabel?: string;
   courses?: Course[];
-  teachers?: (TeacherMock | Teacher)[];
+  teachers?: Teacher[];
   aulaSuggestions?: string[];
 }
 

@@ -66,7 +66,7 @@ export function mapLessonToApiPayload(
     start_time: lesson.oraInizio,
     end_time: lesson.oraFine,
     format: lesson.isOnline ? "online" : "offline",
-    meeting_url: lesson.meetLink || (lesson.isOnline ? "https://meet.google.com/mock-meet" : null),
+    meeting_url: lesson.meetLink || null,
     start_date: lesson.data || new Date().toISOString(),
   };
 }
