@@ -31,6 +31,9 @@ export async function generateMetadata() {
     alternates: {
       canonical: siteUrl,
     },
+    other: {
+      google: 'notranslate',
+    },
     icons: {
       icon: [
         { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
@@ -80,8 +83,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" suppressHydrationWarning className={nunito.variable} data-scroll-behavior="smooth">
+    <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`} data-scroll-behavior="smooth">
       <head>
+        <meta name="google" content="notranslate" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://www.clarity.ms" />

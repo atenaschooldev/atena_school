@@ -24,6 +24,9 @@ export const metadata = {
       follow: false,
     },
   },
+  other: {
+    google: 'notranslate',
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" suppressHydrationWarning className={nunito.variable}>
+    <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`}>
       <body className="antialiased bg-[#f8f9fa] min-h-screen flex flex-col" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
           <div className="flex flex-col min-h-screen">
