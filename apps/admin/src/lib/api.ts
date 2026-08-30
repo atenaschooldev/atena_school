@@ -32,6 +32,13 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   });
 
   if (!res.ok) {
+    if (res.status === 401 && !path.startsWith("/auth/")) {
+      clearAdminToken();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth/")) {
+        window.location.href = "/auth/sign-in";
+      }
+    }
+
     const text = await res.text();
     let errorMessage = `Backend error ${res.status}`;
     try {
