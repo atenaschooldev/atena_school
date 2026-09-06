@@ -6,10 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
 import { checkoutFormSchema } from "@atena/validators";
-import type { CheckoutFormValues } from "@atena/validators";
+import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
 
-export type { CheckoutFormValues } from "@atena/validators";
+export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 
 export interface BookingItem {
   id: string;
@@ -56,6 +56,19 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
+  const [studentsList, setStudentsList] = useState<Array<{
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    taxCode: string;
+    birthDate?: string;
+  }>>([
+    { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
+  ]);
+  const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
+    0: "initial",
+  });
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [stripeEnabled, setStripeEnabled] = useState(false);
@@ -72,6 +85,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       phone: "",
       purchaserTaxCode: "",
       isForChild: false,
+      students: [
+        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
+      ],
       studentFirstName: "",
       studentLastName: "",
       studentEmail: "",
@@ -152,15 +168,79 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   }, [watchedIsForChild, watchedPurchaserTaxCode, watchedTaxCode, formMethods]);
 
-  // Проверка взноса €30 — только по Codice Fiscale студента
+  // Keep form's `students` field in sync with studentsList
   useEffect(() => {
-    // CF студента: при isForChild — taxCode (ребёнок), иначе — taxCode (сам покупатель)
-    const targetTaxCode = watchedIsForChild
-      ? (watchedTaxCode || "")
-      : (watchedTaxCode || watchedPurchaserTaxCode || "");
+    if (watchedIsForChild) {
+      formMethods.setValue("students", studentsList as any, { shouldValidate: false });
+      if (studentsList.length > 0) {
+        formMethods.setValue("studentFirstName", studentsList[0].firstName);
+        formMethods.setValue("studentLastName", studentsList[0].lastName);
+        formMethods.setValue("taxCode", studentsList[0].taxCode);
+        formMethods.setValue("studentEmail", studentsList[0].email);
+        formMethods.setValue("studentPhone", studentsList[0].phone);
+        formMethods.setValue("studentBirthDate", studentsList[0].birthDate);
+      }
+    }
+  }, [studentsList, watchedIsForChild, formMethods]);
 
-    // Ждём пока CF не будет минимум 11 символов
-    if (!targetTaxCode || targetTaxCode.trim().length < 11) {
+  const addStudent = () => {
+    setStudentsList((prev) => [
+      ...prev,
+      { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
+    ]);
+  };
+
+  const removeStudent = (index: number) => {
+    if (studentsList.length <= 1) return;
+    setStudentsList((prev) => prev.filter((_, i) => i !== index));
+    setStudentFeeStatuses((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  };
+
+  const updateStudent = (index: number, field: keyof StudentItemInput, value: string) => {
+    setStudentsList((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  // Check fee status for each student in studentsList
+  useEffect(() => {
+    if (!watchedIsForChild) return;
+
+    studentsList.forEach((s, idx) => {
+      const tax = (s.taxCode || "").trim().toUpperCase();
+      if (tax.length < 11) {
+        setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "initial" }));
+        return;
+      }
+
+      setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "checking" }));
+
+      const timer = setTimeout(async () => {
+        const res = await checkRegistrationFeeStatusAction({ taxCode: tax });
+        if (res.success && res.annualFeePaid) {
+          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "paid" }));
+        } else {
+          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
+        }
+      }, 500);
+
+      return () => clearTimeout(timer);
+    });
+  }, [studentsList, watchedIsForChild]);
+
+  // Single purchaser fee check (when isForChild is false)
+  useEffect(() => {
+    if (watchedIsForChild) return;
+
+    const targetTaxCode = (watchedTaxCode || watchedPurchaserTaxCode || "").trim();
+
+    if (!targetTaxCode || targetTaxCode.length < 11) {
       setFeeCheckStatus("initial");
       return;
     }
@@ -168,7 +248,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setFeeCheckStatus("checking");
 
     const timer = setTimeout(async () => {
-      const res = await checkRegistrationFeeStatusAction({ taxCode: targetTaxCode.trim() });
+      const res = await checkRegistrationFeeStatusAction({ taxCode: targetTaxCode });
       if (res.success && res.annualFeePaid) {
         setHasPaidAnnualFee(true);
         setFeeCheckStatus("paid");
@@ -182,6 +262,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     return () => clearTimeout(timer);
   }, [watchedTaxCode, watchedPurchaserTaxCode, watchedIsForChild, formMethods]);
+
+  const isAnyFeeChecking = watchedIsForChild
+    ? Object.values(studentFeeStatuses).some((status) => status === "checking")
+    : feeCheckStatus === "checking";
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
@@ -273,8 +357,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   };
 
   const onSubmit = (values: CheckoutFormValues) => {
-    if (feeCheckStatus === "checking") {
-      toast.info("Verifica quota in corso, attendere un istante...");
+    if (feeCheckStatus === "checking" || isAnyFeeChecking) {
+      toast.info("Verifica della quota associativa in corso, attendere un istante...");
       return;
     }
     if (actionRef.current === "pay") {
@@ -292,6 +376,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     submitting,
     hasPaidAnnualFee,
     feeCheckStatus,
+    isAnyFeeChecking,
+    studentsList,
+    studentFeeStatuses,
+    addStudent,
+    removeStudent,
+    updateStudent,
     user,
     dateParam,
     timeParam,

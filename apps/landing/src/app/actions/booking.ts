@@ -98,6 +98,17 @@ function normalizeReservationPayload(payload: Record<string, unknown> | any) {
     ? String(v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "").trim().toUpperCase() 
     : purchaserTaxCode;
 
+  const students = Array.isArray(v.students || payload.students)
+    ? (v.students || payload.students).map((s: any) => ({
+        firstName: String(s.firstName || "").trim(),
+        lastName: String(s.lastName || "").trim(),
+        email: s.email ? String(s.email).trim().toLowerCase() : undefined,
+        phone: s.phone ? String(s.phone).trim() : undefined,
+        taxCode: String(s.taxCode || s.studentTaxCode || "").trim().toUpperCase(),
+        birthDate: s.birthDate ? String(s.birthDate).trim() : undefined,
+      }))
+    : undefined;
+
   return {
     itemId: String(payload.itemId || payload.id || v.itemId || v.id || "").trim(),
     itemType: String(payload.itemType || payload.type || v.itemType || v.type || "course").trim(),
@@ -109,6 +120,7 @@ function normalizeReservationPayload(payload: Record<string, unknown> | any) {
     phone,
     isForChild,
     purchaserTaxCode,
+    students,
     studentFirstName: isForChild ? String(v.studentFirstName || payload.studentFirstName || "").trim() : firstName,
     studentLastName: isForChild ? String(v.studentLastName || payload.studentLastName || "").trim() : lastName,
     studentEmail: isForChild ? String(v.studentEmail || payload.studentEmail || "").trim().toLowerCase() : email,

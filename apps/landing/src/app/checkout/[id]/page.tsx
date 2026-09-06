@@ -26,6 +26,8 @@ import {
   Sparkle,
   WhatsappLogo,
   Lock,
+  Plus,
+  Trash,
 } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
 import { useCheckout } from "@/features/checkout/hooks/useCheckout";
@@ -40,6 +42,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     stripeEnabled,
     submitting,
     feeCheckStatus,
+    studentsList,
+    studentFeeStatuses,
+    addStudent,
+    removeStudent,
+    updateStudent,
     user,
     dateParam,
     timeParam,
@@ -48,6 +55,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   } = useCheckout(id);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
+  const isForChild = watch("isForChild");
   const includeRegistrationFee = watch("includeRegistrationFee");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">("book");
   const [mounted, setMounted] = useState(false);
@@ -78,8 +86,24 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   }
 
   const coursePrice = Number(item?.price || 0);
-  const isRegistrationFeeDue = feeCheckStatus === "not_paid";
-  const totalPrice = coursePrice + (isRegistrationFeeDue ? ANNUAL_REGISTRATION_FEE_EUR : 0);
+  const studentCount = isForChild ? Math.max(1, studentsList.length) : 1;
+  const totalCoursePrice = coursePrice * studentCount;
+
+  // Calculate unpaid fees count
+  const unpaidFeesCount = isForChild
+    ? studentsList.reduce((acc, _, idx) => acc + (studentFeeStatuses[idx] === "not_paid" ? 1 : 0), 0)
+    : (feeCheckStatus === "not_paid" ? 1 : 0);
+
+  const hasAnyFeeDue = unpaidFeesCount > 0;
+  const isAnyFeeChecking = isForChild
+    ? studentsList.some((s, idx) => (s.taxCode?.trim().length || 0) >= 11 && (studentFeeStatuses[idx] === "checking" || studentFeeStatuses[idx] === "initial")) || Object.values(studentFeeStatuses).some((status) => status === "checking")
+    : ((watch("taxCode")?.trim().length || 0) >= 11 && (feeCheckStatus === "checking" || feeCheckStatus === "initial")) || feeCheckStatus === "checking";
+
+  const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false)
+    ? unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR
+    : 0;
+
+  const totalPrice = totalCoursePrice + totalRegistrationFees;
   const title = item?.title_it || item?.name || "Corso Atena School";
 
   const formatCategoryName = (cat?: string): string => {
@@ -412,123 +436,220 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               </div>
             </div>
 
-            {/* Student Details (If child) */}
+            {/* Student Details (If child or multiple students) */}
             {watch("isForChild") && (
-              <div className="space-y-3 pt-3 border-t border-slate-100 bg-[#043569]/[0.02] p-3 rounded-xl border border-[#043569]/10">
-                <h3 className="text-[10px] font-black uppercase tracking-wider text-[#043569]">Dati dello Studente (Figlio)</h3>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Nome Figlio/a *</label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        {...register("studentFirstName")}
-                        placeholder="Luca"
-                        className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                      />
-                    </div>
-                    {errors.studentFirstName && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentFirstName.message}</p>
-                    )}
+              <div className="space-y-4 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-[#043569]" weight="bold" />
+                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight text-[#043569]">
+                      Dati degli Studenti ({studentsList.length})
+                    </h3>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Cognome Figlio/a *</label>
-                    <div className="relative">
-                      <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        {...register("studentLastName")}
-                        placeholder="Rossi"
-                        className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                      />
-                    </div>
-                    {errors.studentLastName && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentLastName.message}</p>
-                    )}
-                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                    {studentsList.length} {studentsList.length === 1 ? "Studente" : "Studenti"}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Email Studente (opzionale)</label>
-                    <div className="relative">
-                      <Envelope className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="email"
-                        {...register("studentEmail")}
-                        placeholder="luca.rossi@gmail.com"
-                        className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                      />
-                    </div>
-                    {errors.studentEmail && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentEmail.message}</p>
-                    )}
-                  </div>
+                <div className="space-y-3">
+                  {studentsList.map((student, idx) => {
+                    const studentFee = studentFeeStatuses[idx];
+                    const studentErrors = (errors.students as any)?.[idx];
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Telefono Studente (opzionale)</label>
-                    <div className="relative">
-                      <Phone className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="tel"
-                        {...register("studentPhone")}
-                        placeholder="+39 340 9876543"
-                        className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                      />
-                    </div>
-                    {errors.studentPhone && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentPhone.message}</p>
-                    )}
-                  </div>
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-[#043569]/[0.02] border border-[#043569]/15 rounded-xl p-3.5 space-y-3 relative transition-all"
+                      >
+                        {/* Student Card Header */}
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-[#043569] text-white text-[10px] font-black flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <span className="text-xs font-black text-[#043569] uppercase tracking-wider">
+                              Studente #{idx + 1} {student.firstName ? `— ${student.firstName} ${student.lastName}` : ""}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            {/* Individual Fee Status Badge */}
+                            {studentFee === "checking" && (
+                              <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+                                <Spinner className="w-3 h-3 animate-spin text-[#043569]" />
+                                Verifica quota...
+                              </span>
+                            )}
+                            {studentFee === "paid" && (
+                              <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
+                                <CheckCircle className="w-3 h-3 text-emerald-600" weight="fill" />
+                                Quota 2026/2027 saldata (0€)
+                              </span>
+                            )}
+                            {studentFee === "not_paid" && (
+                              <span className="flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
+                                <Info className="w-3 h-3 text-amber-600" weight="bold" />
+                                Quota annuale (+30€)
+                              </span>
+                            )}
+
+                            {/* Remove button if multiple students */}
+                            {studentsList.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeStudent(idx)}
+                                className="text-slate-400 hover:text-red-600 p-1 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                                title="Rimuovi studente"
+                              >
+                                <Trash className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Student Name / Surname */}
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Nome Studente *</label>
+                            <div className="relative">
+                              <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="text"
+                                value={student.firstName || ""}
+                                onChange={(e) => updateStudent(idx, "firstName", e.target.value)}
+                                placeholder="Luca"
+                                className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                              />
+                            </div>
+                            {(studentErrors?.firstName || (idx === 0 && errors.studentFirstName)) && (
+                              <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                                {studentErrors?.firstName?.message || (idx === 0 && errors.studentFirstName?.message)}
+                              </p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Cognome Studente *</label>
+                            <div className="relative">
+                              <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="text"
+                                value={student.lastName || ""}
+                                onChange={(e) => updateStudent(idx, "lastName", e.target.value)}
+                                placeholder="Rossi"
+                                className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                              />
+                            </div>
+                            {(studentErrors?.lastName || (idx === 0 && errors.studentLastName)) && (
+                              <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                                {studentErrors?.lastName?.message || (idx === 0 && errors.studentLastName?.message)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Student Tax Code */}
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Codice Fiscale Studente *
+                          </label>
+                          <div className="relative">
+                            <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              type="text"
+                              value={student.taxCode || ""}
+                              onChange={(e) => updateStudent(idx, "taxCode", e.target.value.toUpperCase())}
+                              placeholder="RSSLCU10A01H501Z"
+                              className="w-full pl-8 pr-2.5 py-2 text-xs uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium tracking-wider transition-all"
+                            />
+                          </div>
+                          {(studentErrors?.taxCode || (idx === 0 && errors.taxCode)) && (
+                            <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                              {studentErrors?.taxCode?.message || (idx === 0 && errors.taxCode?.message)}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Student Additional Info: Birth date, Email, Phone */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita</label>
+                            <div className="relative">
+                              <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="date"
+                                value={student.birthDate || ""}
+                                onChange={(e) => updateStudent(idx, "birthDate", e.target.value)}
+                                className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                              />
+                            </div>
+                            {studentErrors?.birthDate && (
+                              <p className="text-[10px] text-red-500 mt-1 font-semibold">{studentErrors.birthDate.message}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Email (opzionale)</label>
+                            <div className="relative">
+                              <Envelope className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="email"
+                                value={student.email || ""}
+                                onChange={(e) => updateStudent(idx, "email", e.target.value)}
+                                placeholder="studente@email.com"
+                                className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                              />
+                            </div>
+                            {studentErrors?.email && (
+                              <p className="text-[10px] text-red-500 mt-1 font-semibold">{studentErrors.email.message}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-slate-700 mb-1">Telefono (opzionale)</label>
+                            <div className="relative">
+                              <Phone className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <input
+                                type="tel"
+                                value={student.phone || ""}
+                                onChange={(e) => updateStudent(idx, "phone", e.target.value)}
+                                placeholder="+39 340 0000000"
+                                className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                              />
+                            </div>
+                            {studentErrors?.phone && (
+                              <p className="text-[10px] text-red-500 mt-1 font-semibold">{studentErrors.phone.message}</p>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita Studente (opzionale)</label>
-                    <div className="relative">
-                      <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="date"
-                        {...register("studentBirthDate")}
-                        className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                      />
-                    </div>
-                    {errors.studentBirthDate && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentBirthDate.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale Studente *</label>
-                    <div className="relative">
-                      <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        {...register("taxCode")}
-                        placeholder="RSSLCU10A01H501Z"
-                        className="w-full pl-8 pr-2.5 py-2 text-xs uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium tracking-wider transition-all"
-                      />
-                    </div>
-                    {errors.taxCode && (
-                      <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.taxCode.message}</p>
-                    )}
-                  </div>
-                </div>
+                {/* Add Another Student Button */}
+                <button
+                  type="button"
+                  onClick={addStudent}
+                  disabled={studentsList.length >= 10}
+                  className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-[#043569]/30 hover:border-[#043569] text-[#043569] hover:bg-[#043569]/5 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4" weight="bold" />
+                  Aggiungi un altro studente (+{coursePrice.toFixed(2)}€)
+                </button>
               </div>
             )}
 
-            {/* Registration Fee Card: Render ONLY when Stripe is enabled and feeCheckStatus is 'not_paid' */}
-            {stripeEnabled && feeCheckStatus === "not_paid" && (
+            {/* Registration Fee Card: Render ONLY when Stripe is enabled and any fee is due */}
+            {stripeEnabled && hasAnyFeeDue && (
               <div className="bg-[#FFFBEB] rounded-xl p-3 sm:p-3.5 border border-[#FDE68A] space-y-2">
                 <div className="space-y-0.5">
                   <span className="bg-[#FEF3C7] text-[#92400E] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-block">
                     Anno Accademico 2026/2027
                   </span>
                   <h3 className="text-xs font-black text-[#78350F]">
-                    Quota d'iscrizione annuale (30,00 €)
+                    Quota d'iscrizione annuale (30,00 €{unpaidFeesCount > 1 ? ` × ${unpaidFeesCount} = ${(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} €` : ""})
                   </h3>
                   <p className="text-[11px] text-[#92400E] font-medium leading-tight">
                     La quota associativa è obbligatoria per tutti i nuovi corsisti. Scegli come preferisci saldarla:
@@ -558,7 +679,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                         <span>Paga ora online</span>
                       </div>
                       <p className="text-[10px] text-slate-500 font-medium leading-tight">
-                        Aggiungi 30,00 € al totale del pagamento.
+                        Aggiungi +{(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} € al totale.
                       </p>
                     </div>
                   </div>
@@ -585,7 +706,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                         <span>Paga in sede alla prima lezione</span>
                       </div>
                       <p className="text-[10px] text-slate-500 font-medium leading-tight">
-                        Salderai 30,00 € direttamente a scuola.
+                        Salderai {(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} € a scuola.
                       </p>
                     </div>
                   </div>
@@ -775,15 +896,19 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               {/* Price Breakdown */}
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600 font-medium">Prezzo Corso</span>
-                  <span className="font-bold text-slate-800">{coursePrice.toFixed(2)}€</span>
+                  <span className="text-slate-600 font-medium">
+                    Prezzo Corso {studentCount > 1 ? `(${studentCount}x ${coursePrice.toFixed(2)}€)` : ""}
+                  </span>
+                  <span className="font-bold text-slate-800">{totalCoursePrice.toFixed(2)}€</span>
                 </div>
 
-                {feeCheckStatus === "not_paid" && (
+                {hasAnyFeeDue && includeRegistrationFee !== false && (
                   <div className="flex items-center justify-between text-xs py-0.5">
-                    <span className="text-slate-600 font-medium">Quota iscrizione annuale</span>
+                    <span className="text-slate-600 font-medium">
+                      Quota iscrizione annuale {unpaidFeesCount > 1 ? `(${unpaidFeesCount}x 30€)` : ""}
+                    </span>
                     <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                      +{ANNUAL_REGISTRATION_FEE_EUR.toFixed(2)}€
+                      +{totalRegistrationFees.toFixed(2)}€
                     </span>
                   </div>
                 )}
@@ -808,7 +933,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                   onClick={() => {
                     actionRef.current = selectedPaymentMode;
                   }}
-                  disabled={!!submitting || feeCheckStatus === "checking"}
+                  disabled={!!submitting || isAnyFeeChecking}
                   className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${
                     selectedPaymentMode === "pay"
                       ? "bg-[#F8861D] text-white hover:bg-[#e8741a] shadow-[#F8861D]/20"
@@ -817,7 +942,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                 >
                   {submitting ? (
                     <Spinner className="w-4 h-4 animate-spin text-white" />
-                  ) : feeCheckStatus === "checking" ? (
+                  ) : isAnyFeeChecking ? (
                     <span className="flex items-center gap-2">
                       <Spinner className="w-4 h-4 animate-spin text-white" />
                       Verifica quota in corso...
@@ -867,7 +992,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
                 onClick={() => {
                   actionRef.current = selectedPaymentMode;
                 }}
-                disabled={!!submitting || feeCheckStatus === "checking"}
+                disabled={!!submitting || isAnyFeeChecking}
                 className={`px-5 py-3 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm shadow-lg active:scale-95 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
                   selectedPaymentMode === "pay"
                     ? "bg-[#F8861D] text-white shadow-[#F8861D]/30"

@@ -116,6 +116,42 @@ export const checkFeeSchema = z.object({
 export type CheckFeeInput = z.infer<typeof checkFeeSchema>;
 
 // ---------------------------------------------------------------------------
+// StudentItem schema — отдельный профиль студента для мульти-бронирования
+// ---------------------------------------------------------------------------
+
+export const studentItemSchema = z.object({
+  firstName: z
+    .string()
+    .min(2, "Il nome dello studente deve avere almeno 2 caratteri")
+    .max(50, "Il nome è troppo lungo"),
+  lastName: z
+    .string()
+    .min(2, "Il cognome dello studente deve avere almeno 2 caratteri")
+    .max(50, "Il cognome è troppo lungo"),
+  email: z
+    .string()
+    .email("Email dello studente non valida")
+    .optional()
+    .or(z.literal("")),
+  phone: optionalPhone("Numero di telefono dello studente non valido"),
+  taxCode: z
+    .string()
+    .min(11, "Il Codice Fiscale dello studente è obbligatorio")
+    .refine(
+      (v) => CODICE_FISCALE_RE.test(v.trim()),
+      "Codice Fiscale dello studente non valido (es. RSSLCU10A01H501Z)"
+    ),
+  birthDate: z
+    .string()
+    .optional()
+    .refine(isValidBirthDate, {
+      message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
+    }),
+});
+
+export type StudentItemInput = z.infer<typeof studentItemSchema>;
+
+// ---------------------------------------------------------------------------
 // CreateReservation schema — полная схема брони для API
 // ---------------------------------------------------------------------------
 
@@ -141,7 +177,10 @@ const reservationBaseObject = z.object({
     "Codice Fiscale del genitore/acquirente non valido"
   ),
 
-  // Студент
+  // Мульти-студенты (N детей/учеников)
+  students: z.array(studentItemSchema).optional(),
+
+  // Одиночный студент (обратная совместимость)
   isForChild: z.boolean().optional(),
   studentFirstName: z.string().max(50).optional(),
   studentLastName: z.string().max(50).optional(),
@@ -190,6 +229,7 @@ const reservationBaseObject = z.object({
  */
 function applyReservationRefinements<T extends {
   isForChild?: boolean;
+  students?: Array<StudentItemInput>;
   studentFirstName?: string;
   studentLastName?: string;
   purchaserTaxCode?: string;
@@ -198,19 +238,22 @@ function applyReservationRefinements<T extends {
   pecEmail?: string;
 }>(data: T, ctx: z.RefinementCtx) {
   if (data.isForChild) {
-    if (!data.studentFirstName || data.studentFirstName.trim().length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["studentFirstName"],
-        message: "Il nome dello studente è obbligatorio (min. 2 caratteri)",
-      });
-    }
-    if (!data.studentLastName || data.studentLastName.trim().length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["studentLastName"],
-        message: "Il cognome dello studente è obbligatorio (min. 2 caratteri)",
-      });
+    const hasMultipleStudents = data.students && data.students.length > 0;
+    if (!hasMultipleStudents) {
+      if (!data.studentFirstName || data.studentFirstName.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["studentFirstName"],
+          message: "Il nome dello studente è obbligatorio (min. 2 caratteri)",
+        });
+      }
+      if (!data.studentLastName || data.studentLastName.trim().length < 2) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["studentLastName"],
+          message: "Il cognome dello studente è obbligatorio (min. 2 caratteri)",
+        });
+      }
     }
     if (
       !data.purchaserTaxCode ||

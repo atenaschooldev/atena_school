@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsEmail,
@@ -9,7 +10,10 @@ import {
   Matches,
   ValidateIf,
   Length,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 /**
  * Codice Fiscale — физлицо (16 символов) или Partita IVA (11 цифр).
@@ -30,146 +34,223 @@ const SDI_PATTERN = /^[A-Z0-9]{7}$/i;
 // ---------------------------------------------------------------------------
 
 export class CheckFeeDto {
+  @ApiProperty({
+    description: 'Налоговый код (Codice Fiscale) для проверки статуса ежегодного членского взноса (€30)',
+    example: 'RSSLCU10A01H501Z',
+  })
   @IsOptional()
   @IsString()
-  @MinLength(11, { message: 'Il Codice Fiscale è obbligatorio' })
+  @MinLength(11, { message: 'Codice Fiscale обязателен (минимум 11 символов)' })
   @Matches(CF_PATTERN, {
-    message: 'Codice Fiscale non valido (es. RSSMRA80A01H501T)',
+    message: 'Некорректный формат Codice Fiscale (напр. RSSMRA80A01H501T или 11 цифр P.IVA)',
   })
   taxCode?: string;
 }
 
 // ---------------------------------------------------------------------------
 
-export class CreateReservationDto {
+export class StudentItemDto {
+  @ApiProperty({ description: 'Имя студента', example: 'Luca' })
   @IsString()
-  @IsNotEmpty({ message: "itemId è obbligatorio" })
+  @MinLength(2, { message: 'Имя студента должно содержать минимум 2 символа' })
+  @MaxLength(50, { message: 'Имя студента слишком длинное (макс. 50 символов)' })
+  firstName: string;
+
+  @ApiProperty({ description: 'Фамилия студента', example: 'Rossi' })
+  @IsString()
+  @MinLength(2, { message: 'Фамилия студента должна содержать минимум 2 символа' })
+  @MaxLength(50, { message: 'Фамилия студента слишком длинная (макс. 50 символов)' })
+  lastName: string;
+
+  @ApiPropertyOptional({ description: 'Личный email студента (опционально)', example: 'luca.rossi@gmail.com' })
+  @IsOptional()
+  @IsEmail({}, { message: 'Некорректный адрес электронной почты студента' })
+  email?: string;
+
+  @ApiPropertyOptional({ description: 'Личный телефон студента (опционально)', example: '+39 340 1234567' })
+  @IsOptional()
+  @IsString()
+  @ValidateIf((o) => !!o.phone && o.phone.trim() !== '')
+  @Matches(PHONE_IT_PATTERN, {
+    message: 'Некорректный формат номера телефона студента',
+  })
+  phone?: string;
+
+  @ApiProperty({ description: 'Налоговый код (Codice Fiscale) студента', example: 'RSSLCU10A01H501Z' })
+  @IsString()
+  @MinLength(11, { message: 'Codice Fiscale студента обязателен' })
+  @Matches(CF_PATTERN, {
+    message: 'Некорректный формат Codice Fiscale студента (напр. RSSLCU10A01H501Z)',
+  })
+  taxCode: string;
+
+  @ApiPropertyOptional({ description: 'Дата рождения студента (ГГГГ-ММ-ДД)', example: '2012-05-15' })
+  @IsOptional()
+  @IsString()
+  birthDate?: string;
+}
+
+// ---------------------------------------------------------------------------
+
+export class CreateReservationDto {
+  @ApiProperty({ description: 'ID или slug выбранного курса', example: 'b1-preliminary' })
+  @IsString()
+  @IsNotEmpty({ message: 'itemId обязателен для создания бронирования' })
   itemId: string;
 
+  @ApiPropertyOptional({ description: 'Тип элемента (course / exam)', default: 'course' })
   @IsOptional()
   @IsString()
   itemType?: string;
 
+  @ApiPropertyOptional({ description: 'Выбранная дата начала занятий (ГГГГ-ММ-ДД)', example: '2026-10-01' })
   @IsOptional()
   @IsString()
   date?: string;
 
+  @ApiPropertyOptional({ description: 'Выбранное время проведения занятий', example: '16:00' })
   @IsOptional()
   @IsString()
   time?: string;
 
   // --- Покупатель / Genitore ---
 
+  @ApiProperty({ description: 'Имя покупателя / родителя', example: 'Mario' })
   @IsString()
-  @MinLength(2, { message: 'Il nome deve avere almeno 2 caratteri' })
-  @MaxLength(50, { message: 'Il nome è troppo lungo' })
+  @MinLength(2, { message: 'Имя должно содержать как минимум 2 символа' })
+  @MaxLength(50, { message: 'Имя слишком длинное (макс. 50 символов)' })
   firstName: string;
 
+  @ApiProperty({ description: 'Фамилия покупателя / родителя', example: 'Rossi' })
   @IsString()
-  @MinLength(2, { message: 'Il cognome deve avere almeno 2 caratteri' })
-  @MaxLength(50, { message: 'Il cognome è troppo lungo' })
+  @MinLength(2, { message: 'Фамилия должна содержать как минимум 2 символа' })
+  @MaxLength(50, { message: 'Фамилия слишком длинная (макс. 50 символов)' })
   lastName: string;
 
-  @IsEmail({}, { message: 'Inserisci un indirizzo email valido' })
+  @ApiProperty({ description: 'Email покупателя / родителя', example: 'mario.rossi@gmail.com' })
+  @IsEmail({}, { message: 'Введите корректный адрес электронной почты' })
   email: string;
 
+  @ApiProperty({ description: 'Телефон покупателя / родителя (WhatsApp)', example: '+39 375 605 2362' })
   @IsString()
   @Matches(PHONE_IT_PATTERN, {
-    message: 'Numero di telefono non valido (es. +39 333 1234567)',
+    message: 'Некорректный номер телефона (напр. +39 333 1234567)',
   })
   phone: string;
 
-  // CF покупателя — обязателен только если isForChild=true (проверяется в сервисе)
+  @ApiPropertyOptional({ description: 'Codice Fiscale покупателя / родителя (для фискального чека)', example: 'RSSMRA80A01H501T' })
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.purchaserTaxCode && o.purchaserTaxCode.trim() !== '')
   @Matches(CF_PATTERN, {
-    message: 'Codice Fiscale del genitore/acquirente non valido (es. RSSMRA80A01H501T)',
+    message: 'Некорректный Codice Fiscale покупателя / родителя (напр. RSSMRA80A01H501T)',
   })
   purchaserTaxCode?: string;
 
-  // --- Студент ---
+  // --- Мульти-студенты (N детей/учеников) ---
 
+  @ApiPropertyOptional({ description: 'Список студентов/детей для групповой записи на курс', type: [StudentItemDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => StudentItemDto)
+  students?: StudentItemDto[];
+
+  // --- Одиночный студент (обратная совместимость) ---
+
+  @ApiPropertyOptional({ description: 'Флаг: покупка оформляется родителем для несовершеннолетнего ребенка' })
   @IsOptional()
   @IsBoolean()
   isForChild?: boolean;
 
+  @ApiPropertyOptional({ description: 'Имя студента (для одиночной записи)', example: 'Luca' })
   @IsOptional()
-  @ValidateIf((o) => o.isForChild === true)
+  @ValidateIf((o) => o.isForChild === true && (!o.students || o.students.length === 0))
   @IsString()
-  @MinLength(2, { message: 'Il nome dello studente è obbligatorio (min. 2 caratteri)' })
-  @MaxLength(50)
+  @MinLength(2, { message: 'Имя студента обязательно (минимум 2 символа)' })
+  @MaxLength(50, { message: 'Имя студента слишком длинное' })
   studentFirstName?: string;
 
+  @ApiPropertyOptional({ description: 'Фамилия студента (для одиночной записи)', example: 'Rossi' })
   @IsOptional()
-  @ValidateIf((o) => o.isForChild === true)
+  @ValidateIf((o) => o.isForChild === true && (!o.students || o.students.length === 0))
   @IsString()
-  @MinLength(2, { message: 'Il cognome dello studente è obbligatorio (min. 2 caratteri)' })
-  @MaxLength(50)
+  @MinLength(2, { message: 'Фамилия студента обязательна (минимум 2 символа)' })
+  @MaxLength(50, { message: 'Фамилия студента слишком длинная' })
   studentLastName?: string;
 
+  @ApiPropertyOptional({ description: 'Email студента (для одиночной записи)' })
   @IsOptional()
-  @IsEmail({}, { message: 'Email dello studente non valida' })
+  @IsEmail({}, { message: 'Некорректный адрес электронной почты студента' })
   studentEmail?: string;
 
+  @ApiPropertyOptional({ description: 'Телефон студента (для одиночной записи)' })
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.studentPhone && o.studentPhone.trim() !== '')
   @Matches(PHONE_IT_PATTERN, {
-    message: 'Numero di telefono dello studente non valido',
+    message: 'Некорректный номер телефона студента',
   })
   studentPhone?: string;
 
-  // CF студента
+  @ApiPropertyOptional({ description: 'Codice Fiscale студента (для одиночной записи)', example: 'RSSLCU10A01H501Z' })
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.studentTaxCode && o.studentTaxCode.trim() !== '')
   @Matches(CF_PATTERN, {
-    message: 'Codice Fiscale dello studente non valido (es. RSSMRA80A01H501T)',
+    message: 'Некорректный Codice Fiscale студента (напр. RSSMRA80A01H501T)',
   })
   studentTaxCode?: string;
 
+  @ApiPropertyOptional({ description: 'Дата рождения студента (для одиночной записи)', example: '2012-05-15' })
   @IsOptional()
   @IsString()
   studentBirthDate?: string;
 
   // --- Fattura aziendale ---
 
+  @ApiPropertyOptional({ description: 'Запрос на электронную фактуру для юридического лица / P.IVA (B2B)' })
   @IsOptional()
   @IsBoolean()
   needsCompanyInvoice?: boolean;
 
+  @ApiPropertyOptional({ description: 'Код получателя SDI для электронной фактуры (7 символов)', example: 'SUBM70N' })
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.sdiCode && o.sdiCode.trim() !== '')
   @Length(7, 7, {
-    message: 'Il Codice SDI deve avere esattamente 7 caratteri',
+    message: 'Код SDI должен содержать ровно 7 символов',
   })
   @Matches(SDI_PATTERN, {
-    message: 'Codice SDI non valido (solo lettere e numeri)',
+    message: 'Некорректный формат кода SDI (допустимы только буквы и цифры)',
   })
   sdiCode?: string;
 
+  @ApiPropertyOptional({ description: 'Email PEC компании для отправки электронной фактуры', example: 'azienda@pec.it' })
   @IsOptional()
   @ValidateIf((o) => !!o.pecEmail && o.pecEmail.trim() !== '')
-  @IsEmail({}, { message: 'Inserisci un indirizzo email PEC valido' })
+  @IsEmail({}, { message: 'Введите корректный адрес электронной почты PEC' })
   pecEmail?: string;
 
   // --- Прочее ---
 
+  @ApiPropertyOptional({ description: 'Включить ежегодный членский взнос (€30) в сумму заказа', default: true })
   @IsOptional()
   @IsBoolean()
   includeRegistrationFee?: boolean;
 
+  @ApiPropertyOptional({ description: 'Примечания или пожелания для секретариата школы' })
   @IsOptional()
   @IsString()
-  @MaxLength(500, { message: 'Le note non possono superare i 500 caratteri' })
+  @MaxLength(500, { message: 'Длина примечания не может превышать 500 символов' })
   notes?: string;
 
+  @ApiPropertyOptional({ description: 'Статус платежа (reserved / pending / paid)', default: 'reserved' })
   @IsOptional()
   @IsString()
   paymentStatus?: string;
 
+  @ApiPropertyOptional({ description: 'Способ оплаты (cash / pos / stripe)', default: 'cash' })
   @IsOptional()
   @IsString()
   paymentMethod?: string;
@@ -178,52 +259,61 @@ export class CreateReservationDto {
 // ---------------------------------------------------------------------------
 
 export class VerifyPaymentDto {
+  @ApiProperty({ description: 'Идентификатор Stripe Checkout сессии (sessionId)', example: 'cs_test_a1b2c3' })
   @IsString()
-  @IsNotEmpty({ message: 'sessionId è obbligatorio' })
+  @IsNotEmpty({ message: 'sessionId обязателен' })
   sessionId: string;
 
+  @ApiProperty({ description: 'Идентификатор бронирования в базе данных (bookingId)', example: '550e8400-e29b-41d4-a716-446655440000' })
   @IsString()
-  @IsNotEmpty({ message: 'bookingId è obbligatorio' })
+  @IsNotEmpty({ message: 'bookingId обязателен' })
   bookingId: string;
 }
 
 // ---------------------------------------------------------------------------
 
 export class ContactFormDto {
-  @IsString({ message: 'Il nome deve essere una stringa' })
-  @IsNotEmpty({ message: 'Il nome è obbligatorio' })
-  @MinLength(2, { message: 'Il nome deve contenere almeno 2 caratteri' })
-  @MaxLength(50, { message: 'Il nome non può superare i 50 caratteri' })
+  @ApiProperty({ description: 'Имя отправителя', example: 'Mario' })
+  @IsString({ message: 'Имя должно быть строкой' })
+  @IsNotEmpty({ message: 'Имя обязательно для заполнения' })
+  @MinLength(2, { message: 'Имя должно содержать как минимум 2 символа' })
+  @MaxLength(50, { message: 'Имя не должно превышать 50 символов' })
   nome: string;
 
-  @IsString({ message: 'Il cognome deve essere una stringa' })
-  @IsNotEmpty({ message: 'Il cognome è obbligatorio' })
-  @MinLength(2, { message: 'Il cognome deve contenere almeno 2 caratteri' })
-  @MaxLength(50, { message: 'Il cognome non può superare i 50 caratteri' })
+  @ApiProperty({ description: 'Фамилия отправителя', example: 'Rossi' })
+  @IsString({ message: 'Фамилия должна быть строкой' })
+  @IsNotEmpty({ message: 'Фамилия обязательна для заполнения' })
+  @MinLength(2, { message: 'Фамилия должна содержать как минимум 2 символа' })
+  @MaxLength(50, { message: 'Фамилия не должна превышать 50 символов' })
   cognome: string;
 
-  @IsEmail({}, { message: 'Inserisci un indirizzo email valido' })
-  @MaxLength(100, { message: "L'email non può superare i 100 caratteri" })
+  @ApiProperty({ description: 'Email отправителя', example: 'mario.rossi@gmail.com' })
+  @IsEmail({}, { message: 'Введите корректный адрес электронной почты' })
+  @MaxLength(100, { message: 'Email не должен превышать 100 символов' })
   email: string;
 
+  @ApiPropertyOptional({ description: 'Телефон отправителя', example: '+39 340 1234567' })
   @IsOptional()
   @ValidateIf((o) => !!o.telefono && o.telefono.trim() !== '')
   @Matches(PHONE_IT_PATTERN, {
-    message: 'Numero di telefono non valido (es. +39 340 1234567 o 340 1234567)',
+    message: 'Некорректный номер телефона (напр. +39 340 1234567)',
   })
   telefono?: string;
 
+  @ApiPropertyOptional({ description: 'Интересующее направление или курс', example: 'Corsi di Inglese' })
   @IsOptional()
   @IsString()
-  @MaxLength(100, { message: "L'interesse non può superare i 100 caratteri" })
+  @MaxLength(100, { message: 'Поле интерес не должно превышать 100 символов' })
   interesse?: string;
 
-  @IsString({ message: 'Il messaggio deve essere una stringa' })
-  @IsNotEmpty({ message: 'Il messaggio è obbligatorio' })
-  @MinLength(10, { message: 'Il messaggio deve contenere almeno 10 caratteri' })
-  @MaxLength(2000, { message: 'Il messaggio non può superare i 2000 caratteri' })
+  @ApiProperty({ description: 'Текст сообщения', example: 'Vorrei informazioni sui corsi...' })
+  @IsString({ message: 'Сообщение должно быть строкой' })
+  @IsNotEmpty({ message: 'Сообщение обязательно для заполнения' })
+  @MinLength(10, { message: 'Сообщение должно содержать как минимум 10 символов' })
+  @MaxLength(2000, { message: 'Сообщение не должно превышать 2000 символов' })
   messaggio: string;
 
+  @ApiPropertyOptional({ description: 'Согласие с политикой конфиденциальности GDPR', default: true })
   @IsOptional()
   @IsBoolean()
   privacy?: boolean;

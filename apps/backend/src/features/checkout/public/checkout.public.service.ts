@@ -118,19 +118,21 @@ export class CheckoutService {
 
     const courseId = course?.id || dto.itemId;
     const coursePrice = course ? Number(course.price) : 73.20;
-
-    const feeStatus = await this.checkFeeStatus({
-      taxCode: dto.isForChild ? dto.studentTaxCode : dto.purchaserTaxCode,
-    });
-
-    const isFeeRequired = feeStatus.annualFeePaid === false;
-    const regFee = isFeeRequired ? 30 : 0;
-    const totalPaidAmount = coursePrice + regFee;
-
     const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
-    const studentName = dto.isForChild
-      ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
-      : purchaserName;
+
+    // Determine target students list (multi-student or single)
+    const rawStudents = dto.students && dto.students.length > 0
+      ? dto.students
+      : [
+          {
+            firstName: dto.isForChild ? (dto.studentFirstName || dto.firstName) : dto.firstName,
+            lastName: dto.isForChild ? (dto.studentLastName || dto.lastName) : dto.lastName,
+            email: dto.isForChild ? (dto.studentEmail || dto.email) : dto.email,
+            phone: dto.isForChild ? (dto.studentPhone || dto.phone) : dto.phone,
+            taxCode: (dto.isForChild ? dto.studentTaxCode : (dto.purchaserTaxCode || dto.studentTaxCode)) || '',
+            birthDate: dto.studentBirthDate,
+          },
+        ];
 
     const lessons = calculateLessonDates(
       dto.date || new Date().toISOString(),
@@ -148,71 +150,109 @@ export class CheckoutService {
     subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
     const subEndsAt = subEndsAtDate.toISOString();
 
-    const { data: booking, error } = await this.supabaseAdmin
-      .from('bookings')
-      .insert({
-        course_id: courseId,
-        course_name: course?.name || course?.title_it || 'Corso Atena School',
-        purchaser_name: purchaserName,
-        purchaser_email: dto.email,
-        purchaser_phone: dto.phone,
-        purchaser_tax_code: dto.purchaserTaxCode || dto.studentTaxCode || '',
-        student_name: studentName,
-        student_email: dto.isForChild ? (dto.studentEmail || dto.email) : dto.email,
-        student_phone: dto.isForChild ? (dto.studentPhone || dto.phone) : dto.phone,
-        student_tax_code: dto.isForChild ? (dto.studentTaxCode || '') : (dto.purchaserTaxCode || dto.studentTaxCode || ''),
-        student_birth_date: dto.studentBirthDate || null,
-        start_date: dto.date || new Date().toISOString(),
-        schedule_days: course?.schedule_days || null,
-        start_time: course?.start_time || (dto.time ? (dto.time.match(/(\d{1,2}:\d{2})/) ? dto.time.match(/(\d{1,2}:\d{2})/)![1] : dto.time) : null),
-        end_time: course?.end_time || null,
-        payment_status: dto.paymentStatus || 'reserved',
-        payment_method: dto.paymentMethod || 'cash',
-        amount_paid: totalPaidAmount,
-        registration_fee: regFee,
-        total_lessons_count: this.computeTotalLessonsCount(course, lessons.length),
-        subscription_starts_at: subStartsAt,
-        subscription_ends_at: subEndsAt,
-        notes: dto.notes || '',
-        sdi_code: dto.sdiCode || null,
-        pec_email: dto.pecEmail || null,
-      })
-      .select('*')
-      .single();
+    const createdBookings: any[] = [];
+    const bookingIds: string[] = [];
 
-    if (error || !booking) {
-      throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
+    for (const student of rawStudents) {
+      const studentName = `${student.firstName} ${student.lastName}`.trim();
+      const studentTaxCode = student.taxCode ? student.taxCode.trim().toUpperCase() : '';
+
+      const feeStatus = await this.checkFeeStatus({
+        taxCode: studentTaxCode,
+      });
+
+      const isFeeRequired = feeStatus.annualFeePaid === false;
+      const regFee = isFeeRequired ? 30 : 0;
+      const totalPaidAmount = coursePrice + regFee;
+
+      const { data: booking, error } = await this.supabaseAdmin
+        .from('bookings')
+        .insert({
+          course_id: courseId,
+          course_name: course?.name || course?.title_it || 'Corso Atena School',
+          purchaser_name: purchaserName,
+          purchaser_email: dto.email,
+          purchaser_phone: dto.phone,
+          purchaser_tax_code: dto.purchaserTaxCode || studentTaxCode || '',
+          student_name: studentName,
+          student_email: student.email || dto.email,
+          student_phone: student.phone || dto.phone,
+          student_tax_code: studentTaxCode,
+          student_birth_date: student.birthDate || null,
+          start_date: dto.date || new Date().toISOString(),
+          schedule_days: course?.schedule_days || null,
+          start_time: course?.start_time || (dto.time ? (dto.time.match(/(\d{1,2}:\d{2})/) ? dto.time.match(/(\d{1,2}:\d{2})/)![1] : dto.time) : null),
+          end_time: course?.end_time || null,
+          payment_status: dto.paymentStatus || 'reserved',
+          payment_method: dto.paymentMethod || 'cash',
+          amount_paid: totalPaidAmount,
+          registration_fee: regFee,
+          total_lessons_count: this.computeTotalLessonsCount(course, lessons.length),
+          subscription_starts_at: subStartsAt,
+          subscription_ends_at: subEndsAt,
+          notes: dto.notes || '',
+          sdi_code: dto.sdiCode || null,
+          pec_email: dto.pecEmail || null,
+        })
+        .select('*')
+        .single();
+
+      if (error || !booking) {
+        throw new BadRequestException(error?.message || 'Не удалось создать бронирование');
+      }
+
+      createdBookings.push(booking);
+      bookingIds.push(booking.id);
+
+      // Process Student resolution & profile link via core service
+      const studentDto = {
+        ...dto,
+        isForChild: true,
+        studentFirstName: student.firstName,
+        studentLastName: student.lastName,
+        studentEmail: student.email,
+        studentPhone: student.phone,
+        studentTaxCode: studentTaxCode,
+        studentBirthDate: student.birthDate,
+      };
+
+      await this.checkoutCore.processStudentAndBookingLinks({
+        dto: studentDto,
+        bookingId: booking.id,
+        feeStatus,
+        regFee,
+        purchaserName,
+        studentName,
+        supabaseAdmin: this.supabaseAdmin,
+      });
+
+      // Automatically generate and insert lessons into `lessons` table for Orari & Calendario
+      await this.checkoutCore.generateAndSaveLessons(booking.id, course, lessons);
+
+      // Generate accounting ledger entries in payments table
+      await this.checkoutCore.recordPaymentLedger(
+        booking.id,
+        coursePrice,
+        regFee,
+        dto.paymentMethod || 'cash',
+        dto.paymentStatus || 'reserved'
+      );
     }
 
-    // Process Student resolution & profile link via core service
-    await this.checkoutCore.processStudentAndBookingLinks({
-      dto,
-      bookingId: booking.id,
-      feeStatus,
-      regFee,
-      purchaserName,
-      studentName,
-      supabaseAdmin: this.supabaseAdmin,
-    });
-
-    // Automatically generate and insert lessons into `lessons` table for Orari & Calendario
-    await this.checkoutCore.generateAndSaveLessons(booking.id, course, lessons);
-
-    // Generate accounting ledger entries in payments table
-    await this.checkoutCore.recordPaymentLedger(
-      booking.id,
-      coursePrice,
-      regFee,
-      dto.paymentMethod || 'cash',
-      dto.paymentStatus || 'reserved'
-    );
+    const primaryBooking = createdBookings[0];
 
     // Send transactional email notifications
-    this.sendBookingNotificationEmails(booking, course, dto).catch((err) => {
+    this.sendBookingNotificationEmails(primaryBooking, course, dto).catch((err) => {
       this.logger.warn(`Async email send error: ${err.message}`);
     });
 
-    return { success: true, bookingId: booking.id, booking };
+    return {
+      success: true,
+      bookingId: primaryBooking.id,
+      bookingIds,
+      booking: primaryBooking,
+      bookings: createdBookings,
+    };
   }
 
   private async sendBookingNotificationEmails(booking: any, course: any, dto: CreateReservationDto) {
@@ -311,7 +351,7 @@ export class CheckoutService {
       });
     } catch (err) {
       this.logger.error(`Failed to update app_settings: ${err}`);
-      throw new BadRequestException('Errore durante il salvataggio delle impostazioni');
+      throw new BadRequestException('Ошибка при сохранении настроек приложения');
     }
     return { stripeEnabled: dto.stripeEnabled };
   }
@@ -319,7 +359,7 @@ export class CheckoutService {
   async createStripeSession(dto: CreateReservationDto) {
     const settings = await this.getSettings();
     if (!settings.stripeEnabled) {
-      throw new BadRequestException('I pagamenti online sono temporaneamente disabilitati. Si prega di selezionare la prenotazione in sede.');
+      throw new BadRequestException('Онлайн-оплата временно отключена. Пожалуйста, выберите бронирование с оплатой в школе.');
     }
 
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -331,6 +371,66 @@ export class CheckoutService {
       if (course?.id) {
         resolvedItemId = course.id;
       }
+    }
+
+    // If multi-student payload is provided, create direct Stripe Session with all student line items
+    if (dto.students && dto.students.length > 0) {
+      const reservationRes = await this.createReservation({
+        ...dto,
+        paymentMethod: 'stripe',
+        paymentStatus: 'pending',
+      });
+
+      const { data: course } = await this.supabaseAdmin.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
+      const courseName = course?.name || course?.title_it || 'Corso Atena School';
+      const coursePrice = course ? Number(course.price) : 73.20;
+
+      const lineItems: any[] = [];
+      let totalFeeCount = 0;
+
+      for (const b of reservationRes.bookings) {
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `${courseName} — ${b.student_name}`,
+            },
+            unit_amount: Math.round(coursePrice * 100),
+          },
+          quantity: 1,
+        });
+
+        const regFee = Number(b.registration_fee || 0);
+        if (regFee > 0) {
+          totalFeeCount += 1;
+          lineItems.push({
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `Quota Iscrizione Annuale 2026/2027 — ${b.student_name}`,
+              },
+              unit_amount: Math.round(regFee * 100),
+            },
+            quantity: 1,
+          });
+        }
+      }
+
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        customer_email: dto.email,
+        success_url: `${siteUrl}/checkout/success/${reservationRes.bookingId}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
+        metadata: {
+          booking_id: reservationRes.bookingId,
+          booking_ids: reservationRes.bookingIds.join(','),
+          purchaser_tax_code: dto.purchaserTaxCode || '',
+        },
+      });
+
+      return { success: true, url: session.url, bookingId: reservationRes.bookingId };
     }
 
     const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('create-checkout-session', {
@@ -361,14 +461,58 @@ export class CheckoutService {
     });
 
     if (edgeErr || !edgeData?.url) {
-      let detailMessage = edgeErr?.message || edgeData?.error || 'Ошибка создания сессии оплаты в Edge Function';
-      if (edgeErr && (edgeErr as any).context) {
-        try {
-          const body = await (edgeErr as any).context.json();
-          if (body?.error) detailMessage = body.error;
-        } catch {}
+      // Fallback to direct Stripe SDK session
+      const reservationRes = await this.createReservation({
+        ...dto,
+        paymentMethod: 'stripe',
+        paymentStatus: 'pending',
+      });
+
+      const booking = reservationRes.booking;
+      const coursePrice = Number(booking.amount_paid) - Number(booking.registration_fee || 0);
+      const regFee = Number(booking.registration_fee || 0);
+
+      const lineItems: any[] = [
+        {
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: booking.course_name || 'Corso Atena School',
+            },
+            unit_amount: Math.round(coursePrice * 100),
+          },
+          quantity: 1,
+        },
+      ];
+
+      if (regFee > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: 'Quota Associativa / Iscrizione Annuale (2026/2027)',
+            },
+            unit_amount: Math.round(regFee * 100),
+          },
+          quantity: 1,
+        });
       }
-      throw new BadRequestException(detailMessage);
+
+      const session = await this.stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: lineItems,
+        mode: 'payment',
+        customer_email: dto.email,
+        success_url: `${siteUrl}/checkout/success/${booking.id}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
+        metadata: {
+          booking_id: booking.id,
+          purchaser_tax_code: dto.purchaserTaxCode || '',
+          student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
+        },
+      });
+
+      return { success: true, url: session.url, bookingId: booking.id };
     }
 
     return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
@@ -403,7 +547,7 @@ export class CheckoutService {
     try {
       event = this.stripe.webhooks.constructEvent(body, signature, webhookSecret || '');
     } catch (err: any) {
-      throw new BadRequestException(`Webhook signature verification failed: ${err.message}`);
+      throw new BadRequestException(`Ошибка проверки подписи вебхука Stripe: ${err.message}`);
     }
 
     if (event && event.id) {
@@ -420,13 +564,28 @@ export class CheckoutService {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const bookingId = session.metadata?.booking_id;
+      const bookingIdsStr = session.metadata?.booking_ids || session.metadata?.booking_id;
 
-      if (bookingId) {
-        await this.supabaseAdmin
-          .from('bookings')
-          .update({ payment_status: 'paid' })
-          .eq('id', bookingId);
+      if (bookingIdsStr) {
+        const ids = bookingIdsStr.split(',').map((s) => s.trim()).filter(Boolean);
+        for (const bId of ids) {
+          const { data: updatedBooking } = await this.supabaseAdmin
+            .from('bookings')
+            .update({ payment_status: 'paid', payment_method: 'card_online' })
+            .eq('id', bId)
+            .select('student_id')
+            .maybeSingle();
+
+          await this.supabaseAdmin.from('payments').update({ status: 'succeeded' }).eq('booking_id', bId);
+
+          if (updatedBooking?.student_id) {
+            await this.supabaseAdmin.from('students').update({
+              status: 'active',
+              annual_fee_paid: true,
+              annual_fee_paid_at: new Date().toISOString(),
+            }).eq('id', updatedBooking.student_id);
+          }
+        }
       }
     }
 
@@ -462,6 +621,10 @@ export class CheckoutService {
       if (data) item = data;
     }
 
+    if (!item) {
+      return { success: false, error: 'Курс не найден' };
+    }
+
     return { success: true, item, course: item };
   }
 
@@ -473,7 +636,7 @@ export class CheckoutService {
       .maybeSingle();
 
     if (error || !booking) {
-      return { success: false, error: 'Booking not found' };
+      return { success: false, error: 'Бронирование не найдено' };
     }
 
     const cid = booking.course_id || booking.item_id;
