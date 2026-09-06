@@ -89,6 +89,41 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://www.clarity.ms" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "EducationalOrganization",
+              "name": "Atena School",
+              "url": siteUrl,
+              "logo": `${siteUrl}/logo-192.png`,
+              "image": `${siteUrl}/og-default.webp`,
+              "description": "Corsi di lingua inglese, recupero scolastico e certificazioni EIPASS e Cambridge a Cittanova, Calabria.",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Via Matteotti 11",
+                "addressLocality": "Cittanova",
+                "addressRegion": "RC",
+                "postalCode": "89022",
+                "addressCountry": "IT",
+              },
+              "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": 38.3541,
+                "longitude": 16.0805,
+              },
+              "telephone": ["+393756052362", "+390966447052"],
+              "email": "atenaschool20@gmail.com",
+              "priceRange": "€€",
+              "sameAs": [
+                "https://www.facebook.com/CSAtena7",
+                "https://www.instagram.com/atenaschool_srls/",
+                "https://www.linkedin.com/company/atena-school-srls/",
+              ],
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
