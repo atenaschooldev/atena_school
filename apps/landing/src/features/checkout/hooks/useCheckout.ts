@@ -3,30 +3,13 @@ import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
+import { checkoutFormSchema } from "@atena/validators";
+import type { CheckoutFormValues } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
 
-export interface CheckoutFormValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  purchaserTaxCode?: string;
-  isForChild?: boolean;
-  studentFirstName?: string;
-  studentLastName?: string;
-  studentEmail?: string;
-  studentPhone?: string;
-  studentBirthDate?: string;
-  taxCode: string;
-  needsCompanyInvoice?: boolean;
-  sdiCode?: string;
-  pecEmail?: string;
-  includeRegistrationFee?: boolean;
-  notes?: string;
-}
+export type { CheckoutFormValues } from "@atena/validators";
 
 export interface BookingItem {
   id: string;
@@ -49,58 +32,7 @@ import {
   fetchSystemSettingsAction,
 } from "@/app/actions/booking";
 
-export const checkoutSchema = z.object({
-  firstName: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
-  lastName: z.string().min(2, "Il cognome deve avere almeno 2 caratteri"),
-  email: z.string().email("Inserisci un indirizzo email valido"),
-  phone: z.string().min(6, "Inserisci un numero di telefono valido"),
-  purchaserTaxCode: z.string().optional(),
-  isForChild: z.boolean().optional(),
-  studentFirstName: z.string().optional(),
-  studentLastName: z.string().optional(),
-  studentEmail: z.string().email("Inserisci un indirizzo email valido per lo studente").optional().or(z.literal("")),
-  studentPhone: z.string().optional(),
-  studentBirthDate: z.string().optional(),
-  taxCode: z.string().min(11, "Il Codice Fiscale dello studente è obbligatorio (almeno 11 caratteri)"),
-  needsCompanyInvoice: z.boolean().optional(),
-  sdiCode: z.string().optional(),
-  pecEmail: z.string().email("Inserisci un indirizzo email PEC valido").optional().or(z.literal("")),
-  includeRegistrationFee: z.boolean().optional(),
-  notes: z.string().optional(),
-}).superRefine((data, ctx) => {
-  if (data.isForChild) {
-    if (!data.studentFirstName || data.studentFirstName.trim().length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["studentFirstName"],
-        message: "Il nome dello studente è obbligatorio",
-      });
-    }
-    if (!data.studentLastName || data.studentLastName.trim().length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["studentLastName"],
-        message: "Il cognome dello studente è obbligatorio",
-      });
-    }
-    if (!data.purchaserTaxCode || data.purchaserTaxCode.trim().length < 11) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["purchaserTaxCode"],
-        message: "Il Codice Fiscale del genitore/acquirente è obbligatorio per la fattura",
-      });
-    }
-  }
-  if (data.needsCompanyInvoice) {
-    if (!data.sdiCode && !data.pecEmail) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["sdiCode"],
-        message: "Inserisci il Codice SDI (7 caratteri) o l'email PEC per la fatturazione elettronica",
-      });
-    }
-  }
-});
+export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
 
 export type SubmitAction = "book" | "pay";
 export type FeeCheckStatus = "initial" | "checking" | "paid" | "not_paid";
@@ -132,7 +64,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const actionRef = useRef<SubmitAction>("book");
 
   const formMethods = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutSchema as any),
+    resolver: zodResolver(checkoutFormSchema as any),
     defaultValues: {
       firstName: "",
       lastName: "",
