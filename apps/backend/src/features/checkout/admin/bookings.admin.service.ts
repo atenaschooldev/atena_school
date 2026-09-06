@@ -558,11 +558,22 @@ export class BookingsAdminService {
             });
         }
 
-        // Update student annual_fee_paid status
-        if (sTaxCode || sEmail) {
+        // Update student annual_fee_paid status and activate profile
+        const targetStudentId = (updatedBooking as any).student_id || (updatedBooking as any).studentId;
+        if (targetStudentId) {
+          await this.supabaseAdmin
+            .from('students')
+            .update({
+              status: 'active',
+              annual_fee_paid: true,
+              annual_fee_paid_at: new Date().toISOString(),
+            })
+            .eq('id', targetStudentId);
+        } else if (sTaxCode || sEmail) {
           let sQuery = this.supabaseAdmin
             .from('students')
             .update({
+              status: 'active',
               annual_fee_paid: true,
               annual_fee_paid_at: new Date().toISOString(),
             });

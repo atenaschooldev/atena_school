@@ -377,7 +377,7 @@ async function processStudentAndBookingLinks(params: {
             student_user_id: studentAuthUserId || null,
             language_level: 'A1',
             registration_date: new Date().toISOString().split('T')[0],
-            status: 'active',
+            status: hasPaidMembership ? 'active' : 'pending',
             annual_fee_paid: hasPaidMembership,
             annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : null,
           })
@@ -398,6 +398,7 @@ async function processStudentAndBookingLinks(params: {
             birth_date: dto.studentBirthDate || undefined,
             parent_id: linkedUserId || undefined,
             student_user_id: studentAuthUserId || undefined,
+            status: hasPaidMembership ? 'active' : undefined,
             annual_fee_paid: hasPaidMembership ? true : undefined,
             annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : undefined,
           })
