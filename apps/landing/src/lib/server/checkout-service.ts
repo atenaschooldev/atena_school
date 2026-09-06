@@ -317,9 +317,12 @@ async function processStudentAndBookingLinks(params: {
     await supabase.from('bookings').update({ user_id: linkedUserId }).eq('id', bookingId);
   }
 
-  const sEmail = dto.isForChild ? (dto.studentEmail || dto.email) : dto.email;
-  const sName = studentName || purchaserName || 'Studente';
-  const sTaxCode = dto.isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
+  const sEmail = dto.isForChild ? (dto.studentEmail || null) : (dto.email || null);
+  const sName = (studentName || purchaserName || 'Studente').trim();
+  const sTaxCode = dto.isForChild ? (dto.studentTaxCode || null) : (dto.purchaserTaxCode || null);
+  const sNameParts = sName.split(' ');
+  const sFirstName = sNameParts[0] || 'Studente';
+  const sLastName = sNameParts.slice(1).join(' ') || '';
 
   let studentId: string | null = null;
 
@@ -334,6 +337,7 @@ async function processStudentAndBookingLinks(params: {
           .maybeSingle();
         if (data?.id) existingStudent = data;
       }
+      // For child bookings, do NOT lookup by parent email (only by dedicated studentEmail if provided)
       if (!existingStudent && sEmail) {
         const { data } = await supabase
           .from('students')
@@ -359,13 +363,12 @@ async function processStudentAndBookingLinks(params: {
       const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
       if (!existingStudent) {
-        const sNameParts = (sName || '').trim().split(' ');
         const { data: newStudent } = await supabase
           .from('students')
           .insert({
             full_name: sName || 'Studente',
-            first_name: sNameParts[0] || 'Studente',
-            last_name: sNameParts.slice(1).join(' ') || '',
+            first_name: sFirstName,
+            last_name: sLastName,
             email: sEmail,
             phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
             tax_code: sTaxCode || null,
@@ -388,6 +391,8 @@ async function processStudentAndBookingLinks(params: {
           .from('students')
           .update({
             full_name: sName || undefined,
+            first_name: sFirstName || undefined,
+            last_name: sLastName || undefined,
             phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
             tax_code: sTaxCode || undefined,
             birth_date: dto.studentBirthDate || undefined,
@@ -405,7 +410,15 @@ async function processStudentAndBookingLinks(params: {
 
       if (hasPaidMembership) {
         let existingMem: { id: string } | null = null;
-        if (studentId) {
+        if (sTaxCode) {
+          const { data: mData } = await supabase
+            .from('annual_memberships')
+            .select('id')
+            .ilike('tax_code', sTaxCode)
+            .eq('academic_year', '2026/2027')
+            .maybeSingle();
+          if (mData) existingMem = mData;
+        } else if (studentId) {
           const { data: mData } = await supabase
             .from('annual_memberships')
             .select('id')
@@ -415,6 +428,9 @@ async function processStudentAndBookingLinks(params: {
           if (mData) existingMem = mData;
         }
 
+        const memEmail = dto.isForChild ? (dto.studentEmail || dto.email || null) : (dto.email || null);
+        const memPhone = (dto.isForChild ? dto.studentPhone : dto.phone) || null;
+
         if (existingMem) {
           await supabase
             .from('annual_memberships')
@@ -422,18 +438,19 @@ async function processStudentAndBookingLinks(params: {
               status: 'active',
               paid_at: new Date().toISOString(),
               booking_id: bookingId,
+              student_id: studentId || undefined,
               user_id: linkedUserId || studentAuthUserId || undefined,
               tax_code: sTaxCode || undefined,
-              email: sEmail || undefined,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
+              email: memEmail || undefined,
+              phone: memPhone || undefined,
             })
             .eq('id', existingMem.id);
         } else {
           await supabase.from('annual_memberships').upsert(
             {
               tax_code: sTaxCode || null,
-              email: sEmail || null,
-              phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
+              email: memEmail,
+              phone: memPhone,
               academic_year: '2026/2027',
               status: 'active',
               student_id: studentId || null,
