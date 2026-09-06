@@ -287,7 +287,6 @@ export class BookingsAdminService {
       starts_at: l.startsAt,
       ends_at: l.endsAt,
       status: l.status,
-      payment_status: l.paymentStatus,
       attendance: l.attendance,
       teacher_notes: l.teacherNotes,
       location_type: (l as any).locationType,

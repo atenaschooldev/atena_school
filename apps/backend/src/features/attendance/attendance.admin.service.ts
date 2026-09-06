@@ -34,9 +34,7 @@ export class AttendanceService {
     const lessonItems = lessons.map((l) => {
       const record = l.attendanceRecords[0] || null;
       const b = l.booking;
-      const billingScheme = b?.billingScheme || 'full';
       const bookingPaymentStatus = b?.paymentStatus || 'reserved';
-      const lessonPaymentStatus = l.paymentStatus || 'pending';
 
       // Business rule: show quick payment dialog when student attended but hasn't paid
       const requiresPaymentOnAttendance = bookingPaymentStatus !== 'completed' && bookingPaymentStatus !== 'paid';
@@ -59,7 +57,7 @@ export class AttendanceService {
         purchaser_email: b?.purchaserEmail || '',
         payment_method: b?.paymentMethod || null,
         amount_paid: b?.amountPaid ? Number(b.amountPaid) : 0,
-        billing_scheme: billingScheme,
+        billing_scheme: b?.billingScheme || 'full',
         booking_payment_status: bookingPaymentStatus,
         requires_payment_on_attendance: requiresPaymentOnAttendance,
         attendance_record: record
@@ -210,7 +208,6 @@ export class AttendanceService {
         endsAt,
         status: 'completed',
         attendance: dto.status,
-        paymentStatus: booking.paymentStatus || 'pending',
       },
     });
 
