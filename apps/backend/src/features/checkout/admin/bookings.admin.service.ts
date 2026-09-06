@@ -223,9 +223,8 @@ export class BookingsAdminService {
 
     let finalRegFee = dto.registrationFee;
     if (finalRegFee === undefined) {
-      const emailToCheck = isForChild ? (dto.studentEmail || dto.purchaserEmail) : dto.purchaserEmail;
       const taxCodeToCheck = isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
-      const feeStatus = await this.checkoutService.checkFeeStatus({ email: emailToCheck, taxCode: taxCodeToCheck });
+      const feeStatus = await this.checkoutService.checkFeeStatus({ taxCode: taxCodeToCheck });
       finalRegFee = feeStatus.annualFeePaid ? 0 : 30;
     }
 

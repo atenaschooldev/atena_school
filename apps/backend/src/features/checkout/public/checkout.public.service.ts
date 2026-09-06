@@ -121,8 +121,6 @@ export class CheckoutService {
 
     const feeStatus = await this.checkFeeStatus({
       taxCode: dto.isForChild ? dto.studentTaxCode : dto.purchaserTaxCode,
-      email: dto.isForChild ? dto.studentEmail : dto.email,
-      phone: dto.isForChild ? dto.studentPhone : dto.phone
     });
 
     const isFeeRequired = feeStatus.annualFeePaid === false;

@@ -41,9 +41,9 @@ export class BookingsAdminController {
 
   @Get('check-membership')
   @Roles('admin')
-  @ApiOperation({ summary: 'Проверить статус взноса по email / taxCode' })
-  async checkMembership(@Query('email') email?: string, @Query('taxCode') taxCode?: string) {
-    return this.checkoutService.checkFeeStatus({ email, taxCode });
+  @ApiOperation({ summary: 'Проверить статус взноса по Codice Fiscale' })
+  async checkMembership(@Query('taxCode') taxCode?: string) {
+    return this.checkoutService.checkFeeStatus({ taxCode });
   }
 
   @Get(':id')
