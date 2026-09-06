@@ -43,7 +43,7 @@ const FaqSidebar = () => {
     <div className="px-4 pt-4 pb-28 flex flex-col flex-1 min-h-0 bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema).replace(/</g, '\\u003c') }}
       />
 
       <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-6 flex flex-col flex-1 min-h-0 overflow-hidden">

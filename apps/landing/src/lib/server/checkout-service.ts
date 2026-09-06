@@ -65,6 +65,11 @@ function getSupabaseAdmin(): SupabaseClient {
   if (!url || !serviceKey) {
     throw new Error('Supabase configuration missing: SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
   }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_KEY) {
+    console.warn('Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to anon key. Some admin operations may be restricted by RLS.');
+  }
+
   return createClient(url, serviceKey);
 }
 
@@ -75,7 +80,9 @@ function getStripe(): Stripe {
 
 export async function checkFeeStatus(params: CheckFeeParams) {
   const supabase = getSupabaseAdmin();
-  const cleanTax = params.taxCode ? params.taxCode.trim().toUpperCase() : null;
+  const rawTax = params.taxCode ? params.taxCode.trim().toUpperCase() : null;
+  // Strict sanitization to prevent PostgREST filter injection in .or() query
+  const cleanTax = rawTax ? rawTax.replace(/[^A-Z0-9]/gi, '') : null;
 
   if (!cleanTax) {
     return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
@@ -955,8 +962,22 @@ export async function verifyPayment(params: VerifyPaymentParams) {
       if (session.payment_status === 'paid') {
         const targetBookingId = bookingId || (session.metadata?.booking_id as string);
         if (targetBookingId) {
-          await supabase.from('bookings').update({ payment_status: 'completed', payment_method: 'card_online' }).eq('id', targetBookingId);
+          const { data: updatedBooking } = await supabase
+            .from('bookings')
+            .update({ payment_status: 'completed', payment_method: 'card_online' })
+            .eq('id', targetBookingId)
+            .select('student_id, student_tax_code')
+            .maybeSingle();
+
           await supabase.from('payments').update({ status: 'succeeded' }).eq('booking_id', targetBookingId);
+
+          if (updatedBooking?.student_id) {
+            await supabase.from('students').update({
+              status: 'active',
+              annual_fee_paid: true,
+              annual_fee_paid_at: new Date().toISOString(),
+            }).eq('id', updatedBooking.student_id);
+          }
         }
       }
     } catch (err) {
@@ -1028,8 +1049,22 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
     const session = event.data.object as Stripe.Checkout.Session;
     const bookingId = session.metadata?.booking_id;
     if (bookingId) {
-      await supabase.from('bookings').update({ payment_status: 'completed', payment_method: 'card_online' }).eq('id', bookingId);
+      const { data: updatedBooking } = await supabase
+        .from('bookings')
+        .update({ payment_status: 'completed', payment_method: 'card_online' })
+        .eq('id', bookingId)
+        .select('student_id, student_tax_code')
+        .maybeSingle();
+
       await supabase.from('payments').update({ status: 'succeeded' }).eq('booking_id', bookingId);
+
+      if (updatedBooking?.student_id) {
+        await supabase.from('students').update({
+          status: 'active',
+          annual_fee_paid: true,
+          annual_fee_paid_at: new Date().toISOString(),
+        }).eq('id', updatedBooking.student_id);
+      }
     }
   }
 
