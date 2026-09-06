@@ -196,7 +196,6 @@ export class AttendanceService {
     startsAt: string;
     status: string;
     notes?: string;
-    pricePerLesson?: number;
   }) {
     const booking = await this.prisma.booking.findUnique({ where: { id: dto.bookingId } });
     if (!booking) throw new NotFoundException(`Booking ${dto.bookingId} not found`);
@@ -211,8 +210,7 @@ export class AttendanceService {
         endsAt,
         status: 'completed',
         attendance: dto.status,
-        pricePerLesson: dto.pricePerLesson ?? 25,
-        paymentStatus: 'pending',
+        paymentStatus: booking.paymentStatus || 'pending',
       },
     });
 

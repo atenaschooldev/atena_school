@@ -79,45 +79,11 @@ export function useAttendance(selectedDateStr?: string) {
     },
   });
 
-  const payLessonMutation = useMutation({
-    mutationFn: async ({
-      lessonId,
-      paymentMethod,
-      amount,
-    }: {
-      lessonId: string;
-      paymentMethod?: string;
-      amount?: number;
-    }) => {
-      return apiFetch(`/admin/attendance/${lessonId}/pay-lesson`, {
-        method: "POST",
-        body: JSON.stringify({ paymentMethod, amount }),
-      });
-    },
-    onSuccess: () => {
-      toast.success("Pagamento lezione registrato con successo!");
-      queryClient.invalidateQueries({ queryKey: ["attendance"] });
-      queryClient.invalidateQueries({ queryKey: ["bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["payments"] });
-    },
-    onError: (err) => {
-      console.error(err);
-      toast.error("Errore nel pagamento della lezione");
-    },
-  });
-
   const markAttendance = useCallback(
     (lessonId: string, status: string, notes?: string) => {
       return markMutation.mutateAsync({ lessonId, status, notes });
     },
     [markMutation]
-  );
-
-  const payLesson = useCallback(
-    (lessonId: string, paymentMethod?: string, amount?: number) => {
-      return payLessonMutation.mutateAsync({ lessonId, paymentMethod, amount });
-    },
-    [payLessonMutation]
   );
 
   const filteredLessons = useMemo(() => {
@@ -183,7 +149,6 @@ export function useAttendance(selectedDateStr?: string) {
     statusFilter,
     setStatusFilter,
     markAttendance,
-    payLesson,
     deleteAttendance,
     refresh: refetch,
   };

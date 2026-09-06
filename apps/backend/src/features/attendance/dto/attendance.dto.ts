@@ -24,16 +24,6 @@ export class MarkAttendanceDto {
   markedBy?: string;
 }
 
-export class PayLessonDto {
-  @IsOptional()
-  @IsString()
-  paymentMethod?: string;
-
-  @IsOptional()
-  @IsNumber()
-  amount?: number;
-}
-
 export class CreateManualLessonDto {
   @IsString()
   bookingId: string;

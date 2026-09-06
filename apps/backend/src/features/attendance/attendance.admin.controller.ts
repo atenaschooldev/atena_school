@@ -7,7 +7,7 @@ import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { AttendanceService } from './attendance.admin.service';
-import { MarkAttendanceDto, PayLessonDto, CreateManualLessonDto } from './dto/attendance.dto';
+import { MarkAttendanceDto, CreateManualLessonDto } from './dto/attendance.dto';
 
 @ApiTags('Admin — Presenze / Attendance')
 @ApiBearerAuth('JWT-auth')
