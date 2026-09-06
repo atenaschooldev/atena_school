@@ -18,9 +18,10 @@ export async function fetchCheckoutItemAction(itemId: string) {
       return { success: true, item: res.item, course: res.item };
     }
     return { success: false, error: "Item not found" };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to fetch checkout item";
     console.error("fetchCheckoutItemAction error:", err);
-    return { success: false, error: err.message || "Failed to fetch checkout item" };
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -52,9 +53,10 @@ export async function checkRegistrationFeeStatusAction(params: {
       academicYear: res.academicYear,
       requiresFee: res.requiresFee,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Errore di connessione";
     console.error("checkRegistrationFeeStatusAction error:", err);
-    return { success: false, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true, error: err.message || "Errore di connessione" };
+    return { success: false, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true, error: errorMsg };
   }
 }
 
@@ -63,7 +65,7 @@ export async function fetchSystemSettingsAction() {
     const api = getApi();
     const res = await api.checkout.getSettings();
     return { success: true, stripeEnabled: res?.settings?.stripeEnabled ?? false };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("fetchSystemSettingsAction error:", err);
     return { success: false, stripeEnabled: false };
   }
@@ -74,9 +76,10 @@ export async function updateSystemSettingsAction(stripeEnabled: boolean) {
     const api = getApi();
     const res = await api.checkout.updateSettings({ stripeEnabled });
     return { success: true, stripeEnabled: res?.settings?.stripeEnabled ?? stripeEnabled };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to update settings";
     console.error("updateSystemSettingsAction error:", err);
-    return { success: false, error: err.message || "Failed to update settings" };
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -189,8 +192,9 @@ export async function getBookingDetailsServer(bookingId: string) {
       };
     }
     return { success: false, error: "Booking not found" };
-  } catch (err: any) {
-    return { success: false, error: err.message || "Failed to fetch booking details" };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to fetch booking details";
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -211,9 +215,10 @@ export async function dispatchMagicLinkAction(email: string) {
       return { success: false, error: error.message };
     }
     return { success: true, error: null };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to send magic link";
     console.error("dispatchMagicLinkAction exception:", err);
-    return { success: false, error: err.message || "Failed to send magic link" };
+    return { success: false, error: errorMsg };
   }
 }
 
@@ -225,29 +230,30 @@ export async function confirmPaymentAction(bookingId: string, sessionId?: string
       return { success: res.success, booking: res.booking, error: null };
     }
     return { success: true, booking: { id: bookingId }, error: null };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Payment confirmation failed";
     console.error("confirmPaymentAction error:", err);
-    return { success: false, booking: { id: bookingId }, error: err.message };
+    return { success: false, booking: { id: bookingId }, error: errorMsg };
   }
 }
 
-export async function mergeGuestBookingsAction(sessionId?: string | null, userId?: string) {
+export async function mergeGuestBookingsAction(_sessionId?: string | null, _userId?: string) {
   return { success: true };
 }
 
-export async function deleteBookingServerAction(bookingId: string, secondParam?: any) {
+export async function deleteBookingServerAction(_bookingId: string, _secondParam?: unknown) {
   return { success: true, error: null };
 }
 
-export async function checkoutCartServerAction(sessionId?: string | null) {
+export async function checkoutCartServerAction(_sessionId?: string | null) {
   return { success: true, error: null };
 }
 
-export async function getCartCountAction(sessionId?: string | null) {
+export async function getCartCountAction(_sessionId?: string | null) {
   return { success: true, count: 0 };
 }
 
-export async function fetchCartItemsAction(sessionId?: string | null) {
+export async function fetchCartItemsAction(_sessionId?: string | null) {
   return { success: true, bookings: [], error: null };
 }
 
@@ -271,7 +277,7 @@ export async function getCurrentUserAction() {
       user,
       annualFeePaid: Boolean(feeRes.annualFeePaid),
     };
-  } catch (err: any) {
+  } catch {
     return { success: false, user: null, annualFeePaid: false };
   }
 }

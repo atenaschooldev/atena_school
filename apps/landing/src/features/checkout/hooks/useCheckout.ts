@@ -206,6 +206,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       });
 
       if (!res.success) {
+        if (res.details && typeof res.details === "object") {
+          Object.entries(res.details).forEach(([field, msgs]) => {
+            if (Array.isArray(msgs) && msgs.length > 0) {
+              formMethods.setError(field as keyof CheckoutFormValues, {
+                type: "server",
+                message: msgs[0],
+              });
+            }
+          });
+        }
         toast.error(res.error || "Errore durante la prenotazione");
         return;
       }
@@ -240,6 +250,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       });
 
       if (!res.success || !res.url) {
+        if (res.details && typeof res.details === "object") {
+          Object.entries(res.details).forEach(([field, msgs]) => {
+            if (Array.isArray(msgs) && msgs.length > 0) {
+              formMethods.setError(field as keyof CheckoutFormValues, {
+                type: "server",
+                message: msgs[0],
+              });
+            }
+          });
+        }
         toast.error(res.error || "Impossibile avviare il pagamento con Stripe");
         return;
       }
