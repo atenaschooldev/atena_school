@@ -104,9 +104,13 @@ const optionalPhone = (message = "Numero di telefono non valido") =>
 // ---------------------------------------------------------------------------
 
 export const checkFeeSchema = z.object({
-  taxCode: z.string().optional(),
-  email: z.string().email("Email non valida").optional().or(z.literal("")),
-  phone: z.string().optional(),
+  taxCode: z
+    .string()
+    .min(11, "Il Codice Fiscale è obbligatorio")
+    .refine(
+      (v) => CODICE_FISCALE_RE.test(v.trim()),
+      "Codice Fiscale non valido (es. RSSMRA80A01H501T)"
+    ),
 });
 
 export type CheckFeeInput = z.infer<typeof checkFeeSchema>;

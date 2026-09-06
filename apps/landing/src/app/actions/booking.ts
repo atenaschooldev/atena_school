@@ -29,9 +29,7 @@ export async function fetchCourseAction(courseId: string) {
 
 
 export async function checkRegistrationFeeStatusAction(params: {
-  taxCode?: string;
-  email?: string;
-  phone?: string;
+  taxCode: string;
 }) {
   try {
     const api = getApi();
@@ -233,11 +231,10 @@ export async function getCurrentUserAction() {
       return { success: false, user: null, annualFeePaid: false };
     }
 
-    const feeRes = await checkRegistrationFeeStatusAction({
-      email: user.email,
-      phone: user.phone || user.user_metadata?.phone,
-      taxCode: user.user_metadata?.tax_code,
-    });
+    const taxCode = user.user_metadata?.tax_code;
+    const feeRes = taxCode
+      ? await checkRegistrationFeeStatusAction({ taxCode })
+      : { success: false, annualFeePaid: false };
 
     return {
       success: true,

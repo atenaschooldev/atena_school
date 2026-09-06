@@ -30,17 +30,13 @@ const SDI_PATTERN = /^[A-Z0-9]{7}$/i;
 // ---------------------------------------------------------------------------
 
 export class CheckFeeDto {
-  @IsOptional()
   @IsString()
-  taxCode?: string;
-
-  @IsOptional()
-  @IsEmail({}, { message: 'Email non valida' })
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
+  @IsNotEmpty({ message: 'Il Codice Fiscale è obbligatorio' })
+  @MinLength(11, { message: 'Il Codice Fiscale è obbligatorio' })
+  @Matches(CF_PATTERN, {
+    message: 'Codice Fiscale non valido (es. RSSMRA80A01H501T)',
+  })
+  taxCode: string;
 }
 
 // ---------------------------------------------------------------------------

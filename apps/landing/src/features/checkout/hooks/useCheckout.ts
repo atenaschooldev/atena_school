@@ -141,12 +141,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     initCheckout();
   }, [id, type, reset]);
 
-  const watchedEmail = formMethods.watch("email");
-  const watchedPhone = formMethods.watch("phone");
   const watchedTaxCode = formMethods.watch("taxCode");
   const watchedPurchaserTaxCode = formMethods.watch("purchaserTaxCode");
-  const watchedStudentEmail = formMethods.watch("studentEmail");
-  const watchedStudentPhone = formMethods.watch("studentPhone");
   const watchedIsForChild = formMethods.watch("isForChild");
 
   // Sync taxCode when toggling isForChild
@@ -156,16 +152,15 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   }, [watchedIsForChild, watchedPurchaserTaxCode, watchedTaxCode, formMethods]);
 
+  // Проверка взноса €30 — только по Codice Fiscale студента
   useEffect(() => {
-    const targetTaxCode = watchedIsForChild ? (watchedTaxCode || "") : (watchedTaxCode || watchedPurchaserTaxCode || "");
-    const targetEmail = watchedIsForChild ? (watchedStudentEmail || watchedEmail || "") : watchedEmail;
-    const targetPhone = watchedIsForChild ? (watchedStudentPhone || watchedPhone || "") : watchedPhone;
+    // CF студента: при isForChild — taxCode (ребёнок), иначе — taxCode (сам покупатель)
+    const targetTaxCode = watchedIsForChild
+      ? (watchedTaxCode || "")
+      : (watchedTaxCode || watchedPurchaserTaxCode || "");
 
-    const hasValidInput = (targetTaxCode && targetTaxCode.trim().length >= 11) ||
-                          (targetEmail && targetEmail.includes("@")) ||
-                          (targetPhone && targetPhone.trim().length >= 8);
-
-    if (!hasValidInput) {
+    // Ждём пока CF не будет минимум 11 символов
+    if (!targetTaxCode || targetTaxCode.trim().length < 11) {
       setFeeCheckStatus("initial");
       return;
     }
@@ -173,7 +168,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setFeeCheckStatus("checking");
 
     const timer = setTimeout(async () => {
-      const res = await checkRegistrationFeeStatusAction({ email: targetEmail, phone: targetPhone, taxCode: targetTaxCode });
+      const res = await checkRegistrationFeeStatusAction({ taxCode: targetTaxCode.trim() });
       if (res.success && res.annualFeePaid) {
         setHasPaidAnnualFee(true);
         setFeeCheckStatus("paid");
@@ -186,7 +181,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [watchedEmail, watchedPhone, watchedTaxCode, watchedPurchaserTaxCode, watchedStudentEmail, watchedStudentPhone, watchedIsForChild, formMethods]);
+  }, [watchedTaxCode, watchedPurchaserTaxCode, watchedIsForChild, formMethods]);
 
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
