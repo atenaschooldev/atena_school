@@ -140,14 +140,7 @@ export function getBookingsTableColumns({
       accessorKey: "payment_method",
       header: t("payments.filterMethod"),
       cell: ({ row }) => (
-        <div className="flex flex-col items-start gap-1">
-          <PaymentMethodBadge method={row.original.payment_method} />
-          {row.original.billing_scheme === "per_lesson" && (
-            <Badge variant="secondary" className="text-[10px] text-violet-600 bg-violet-50 dark:text-violet-400 dark:bg-violet-900/20 border border-violet-500/30 gap-1 w-fit">
-              <Clock className="w-2.5 h-2.5" /> {t("courses.individual")}
-            </Badge>
-          )}
-        </div>
+        <PaymentMethodBadge method={row.original.payment_method} />
       ),
     },
     {

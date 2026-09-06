@@ -4,7 +4,6 @@ export interface AttendanceRecord {
   marked_at: string;
   marked_by?: string;
   notes?: string;
-  payment_id?: string;
 }
 
 export interface LessonAttendanceItem {
@@ -13,7 +12,6 @@ export interface LessonAttendanceItem {
   ends_at: string;
   status: string;
   payment_status: string;
-  price_per_lesson: number | null;
   location_type?: string;
   teacher_id?: string;
   teacher_name: string;

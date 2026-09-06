@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { useAttendance } from "../hooks/use-attendance";
-import { QuickLessonPaymentDialog } from "./quick-lesson-payment-dialog";
 import { BookingDetailDialog } from "@/features/bookings/components/booking-detail-dialog";
 import { AttendanceMetrics } from "./attendance-metrics";
 import { getAttendanceTableColumns } from "./attendance-table-columns";
@@ -37,7 +36,6 @@ export function AttendanceView() {
   );
   const [courseFilter, setCourseFilter] = useState<string>("all");
   const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<Booking | null>(null);
-  const [quickPayItem, setQuickPayItem] = useState<LessonAttendanceItem | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const {
@@ -56,12 +54,6 @@ export function AttendanceView() {
 
   const handleMarkAttendance = async (item: LessonAttendanceItem, status: string) => {
     await markAttendance(item.id, status);
-    if (
-      (status === "present" || status === "late") &&
-      ((item as any).requires_payment_on_attendance ?? (item.payment_status !== "paid" || item.billing_scheme === "per_lesson"))
-    ) {
-      setQuickPayItem(item);
-    }
   };
 
   const filteredLessons = useMemo(() => {
@@ -97,7 +89,6 @@ export function AttendanceView() {
     () =>
       getAttendanceTableColumns({
         onMarkAttendance: handleMarkAttendance,
-        onQuickPay: (item) => setQuickPayItem(item),
         onViewBookingDetail: (item) => {
           setSelectedBookingForDetail({
             id: item.booking_id,
@@ -128,52 +119,90 @@ export function AttendanceView() {
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="space-y-6">
       <AttendanceMetrics
-        totalCount={totalCount}
-        presentCount={presentCount}
-        absentCount={absentCount}
-        pendingPaymentCount={pendingPaymentCount}
+        total={totalCount}
+        present={presentCount}
+        absent={absentCount}
+        pendingPayment={pendingPaymentCount}
       />
 
-      <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca studente, corso, docente..."
-          filters={[
-            {
-              value: courseFilter,
-              onChange: setCourseFilter,
-              placeholder: "Tutti i corsi",
-              options: [
-                { value: "all", label: "Tutti i corsi" },
-                ...courseOptions.map((c) => ({ value: c, label: c })),
-              ],
-            },
-          ]}
-          actionElement={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleDateChange(-1)} className="h-9 px-2.5 cursor-pointer">
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border bg-background text-xs font-bold font-mono">
-                <CalendarIcon className="w-3.5 h-3.5 text-primary" />
-                <span>{selectedDate}</span>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => handleDateChange(1)} className="h-9 px-2.5 cursor-pointer">
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          }
-        />
+      <div className="space-y-4">
+        {/* Date Filter & Selector Bar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-4 rounded-xl border">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => handleDateChange(-1)}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
 
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border text-xs font-semibold">
+              <CalendarIcon className="w-4 h-4 text-primary" />
+              <span>
+                {new Date(selectedDate).toLocaleDateString("it-IT", {
+                  weekday: "short",
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 cursor-pointer"
+              onClick={() => handleDateChange(1)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs cursor-pointer"
+              onClick={() => setSelectedDate(new Date().toISOString().split("T")[0])}
+            >
+              Oggi
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {courseOptions.length > 0 && (
+              <select
+                aria-label="Filtra per corso"
+                value={courseFilter}
+                onChange={(e) => setCourseFilter(e.target.value)}
+                className="h-8 text-xs rounded-lg border bg-background px-2.5 font-medium cursor-pointer"
+              >
+                <option value="all">Tutti i Corsi ({courseOptions.length})</option>
+                {courseOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+
+        {/* Data Table */}
         <div className="space-y-4">
-          <div className="rounded-md border bg-card">
+          <DataViewToolbar
+            searchPlaceholder="Cerca per studente, corso o docente..."
+            searchValue={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+
+          <div className="rounded-md border bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
+                  <TableRow key={headerGroup.id} className="bg-muted/30">
                     {headerGroup.headers.map((header) => (
                       <TableHead key={header.id}>
                         {header.isPlaceholder
@@ -186,7 +215,7 @@ export function AttendanceView() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                  <TableSkeletonRows columnCount={columns.length} rowCount={5} />
                 ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
@@ -211,15 +240,6 @@ export function AttendanceView() {
           <DataTablePagination table={table} />
         </div>
       </div>
-
-      <QuickLessonPaymentDialog
-        item={quickPayItem}
-        open={!!quickPayItem}
-        onOpenChange={(v) => !v && setQuickPayItem(null)}
-        onSuccess={() => {
-          setQuickPayItem(null);
-        }}
-      />
 
       <BookingDetailDialog
         booking={selectedBookingForDetail}

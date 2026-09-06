@@ -1,22 +1,19 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, XCircle, Clock, Banknote, Eye } from "lucide-react";
+import { CheckCircle2, XCircle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import type { LessonAttendanceItem } from "../types";
 
 export interface GetAttendanceTableColumnsProps {
   onMarkAttendance: (item: LessonAttendanceItem, status: string) => void;
-  onQuickPay: (item: LessonAttendanceItem) => void;
   onViewBookingDetail: (item: LessonAttendanceItem) => void;
 }
 
 export function getAttendanceTableColumns({
   onMarkAttendance,
-  onQuickPay,
   onViewBookingDetail,
 }: GetAttendanceTableColumnsProps): ColumnDef<LessonAttendanceItem>[] {
   return [
@@ -77,32 +74,11 @@ export function getAttendanceTableColumns({
     },
     {
       accessorKey: "payment_status",
-      header: "Stato Pagamento",
+      header: "Stato Pagamento Corso",
       cell: ({ row }) => {
         const item = row.original;
-        const isPaid = item.payment_status === "paid" || item.booking_payment_status === "completed";
-
-        if (isPaid) {
-          return <StatusBadge status="paid" />;
-        }
-
-        return (
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-amber-600 border-amber-500/30 bg-amber-50/50">
-              <Clock className="w-3 h-3 mr-1" /> Da Saldare
-            </Badge>
-
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => onQuickPay(item)}
-              className="h-7 px-2 text-xs font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 cursor-pointer border border-emerald-500/30"
-            >
-              <Banknote className="w-3.5 h-3.5 mr-1" /> Incassa
-            </Button>
-          </div>
-        );
+        const bookingStatus = item.booking_payment_status || item.payment_status || "pending";
+        return <StatusBadge status={bookingStatus} />;
       },
     },
     {

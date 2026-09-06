@@ -16,7 +16,7 @@ export interface BookingOrder {
   registration_fee: number;
   payment_status: 'paid' | 'reserved' | 'pending_payment' | 'partially_paid' | 'overdue' | string;
   payment_method?: 'stripe' | 'cash' | 'card' | string;
-  billing_scheme?: 'full' | 'installments' | 'per_lesson' | string;
+  billing_scheme?: 'full' | string;
   scheduling_status: 'scheduled' | 'pending_coordination' | 'confirmed';
   schedule_days?: number[] | null;
   start_time?: string | null;

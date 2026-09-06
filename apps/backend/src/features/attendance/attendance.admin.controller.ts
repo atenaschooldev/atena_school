@@ -35,21 +35,6 @@ export class AttendanceController {
     return this.attendanceService.markAttendance(dto);
   }
 
-  @Post(':lessonId/pay-lesson')
-  @Roles('admin')
-  @Audit('attendance', 'pay')
-  @ApiOperation({ summary: 'Быстрая оплата урока после посещения (поурочная оплата)' })
-  async payLesson(
-    @Param('lessonId') lessonId: string,
-    @Body() dto: PayLessonDto,
-  ) {
-    return this.attendanceService.payLesson({
-      lessonId,
-      paymentMethod: dto.paymentMethod,
-      amount: dto.amount,
-    });
-  }
-
   @Get('active-bookings')
   @Roles('admin', 'teacher')
   @ApiOperation({ summary: 'Получить список активных бронирований для выбора студента' })

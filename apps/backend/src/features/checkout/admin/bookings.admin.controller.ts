@@ -93,25 +93,12 @@ export class BookingsAdminController {
   @Patch(':id/lessons/:lessonId/complete')
   @Roles('admin')
   @Audit('lessons', 'complete')
-  @ApiOperation({ summary: 'Отметить урок как проведённый и создать начисление (поурочная оплата)' })
+  @ApiOperation({ summary: 'Отметить урок как проведённый' })
   async completeLesson(
     @Param('id') bookingId: string,
     @Param('lessonId') lessonId: string,
-    @Body() dto: { payment_method?: string },
   ) {
-    return this.bookingsAdminService.completeLesson(bookingId, lessonId, dto.payment_method);
-  }
-
-  @Patch(':id/lessons/:lessonId/pay')
-  @Roles('admin')
-  @Audit('lessons', 'pay')
-  @ApiOperation({ summary: 'Принять оплату за проведённый урок' })
-  async payLesson(
-    @Param('id') bookingId: string,
-    @Param('lessonId') lessonId: string,
-    @Body() dto: { payment_method?: string; amount?: number },
-  ) {
-    return this.bookingsAdminService.payLesson(bookingId, lessonId, dto.payment_method, dto.amount);
+    return this.bookingsAdminService.completeLesson(bookingId, lessonId);
   }
 
   @Patch(':id')

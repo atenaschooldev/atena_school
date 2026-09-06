@@ -100,12 +100,6 @@ export function BookingDetailDialog({
   };
   const [deleting, setDeleting] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
-  const [lessonActionLoading, setLessonActionLoading] = useState<string | null>(null);
-
-  // Per-lesson pay dialog state
-  const [payLessonDialog, setPayLessonDialog] = useState<{ lessonId: string; defaultAmount: number } | null>(null);
-  const [payLessonAmount, setPayLessonAmount] = useState("");
-  const [payLessonMethod, setPayLessonMethod] = useState("cash");
 
   // New Payment Form State
   const [newPaymentAmount, setNewPaymentAmount] = useState("");
@@ -118,53 +112,6 @@ export function BookingDetailDialog({
   const { payments, loading: paymentsLoading, createPayment, updatePayment, refresh: refreshPayments } = usePayments(
     booking?.id,
   );
-
-  // Fetch lessons for per-lesson billing
-  const isPerLesson = booking?.billing_scheme === 'per_lesson';
-  const { data: lessons = [], refetch: refetchLessons } = useQuery({
-    queryKey: ['booking-lessons', booking?.id],
-    queryFn: () => api.get<any[]>(`/admin/bookings/${booking!.id}/lessons`),
-    enabled: !!booking?.id && isPerLesson,
-  });
-
-  const handleCompleteLesson = async (lessonId: string) => {
-    if (!booking) return;
-    setLessonActionLoading(lessonId + '-complete');
-    try {
-      await api.patch(`/admin/bookings/${booking.id}/lessons/${lessonId}/complete`, { payment_method: 'cash' });
-      await refetchLessons();
-      await refreshPayments();
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    } finally {
-      setLessonActionLoading(null);
-    }
-  };
-
-  const openPayLessonDialog = (lessonId: string, defaultAmount: number) => {
-    setPayLessonDialog({ lessonId, defaultAmount });
-    setPayLessonAmount(defaultAmount.toFixed(2));
-    setPayLessonMethod("cash");
-  };
-
-  const handlePayLesson = async () => {
-    if (!booking || !payLessonDialog) return;
-    const { lessonId } = payLessonDialog;
-    const amount = Number(payLessonAmount);
-    if (!amount || amount <= 0) return;
-    setLessonActionLoading(lessonId + '-pay');
-    setPayLessonDialog(null);
-    try {
-      await api.patch(`/admin/bookings/${booking.id}/lessons/${lessonId}/pay`, {
-        payment_method: payLessonMethod,
-        amount,
-      });
-      await refetchLessons();
-      await refreshPayments();
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    } finally {
-      setLessonActionLoading(null);
-    }
-  };
 
   if (!booking) return null;
 
@@ -782,72 +729,6 @@ export function BookingDetailDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Pay Lesson Dialog — with manual amount input */}
-      <Dialog open={!!payLessonDialog} onOpenChange={(v) => !v && setPayLessonDialog(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold">Incassa Pagamento Lezione</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
-              Verifica o modifica l'importo da incassare per questa lezione.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            {/* Amount */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Importo (€)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-mono">€</span>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="pl-7 font-mono text-sm"
-                  value={payLessonAmount}
-                  onChange={(e) => setPayLessonAmount(e.target.value)}
-                  placeholder="0.00"
-                />
-              </div>
-              {payLessonDialog && Number(payLessonAmount) !== payLessonDialog.defaultAmount && (
-                <p className="text-[11px] text-amber-600 dark:text-amber-400">
-                  ⚠ Importo modificato (default: €{payLessonDialog.defaultAmount.toFixed(2)})
-                </p>
-              )}
-            </div>
-
-            {/* Payment method */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Metodo di Pagamento</Label>
-              <Select value={payLessonMethod} onValueChange={setPayLessonMethod}>
-                <SelectTrigger className="h-9 cursor-pointer">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">💵 Contanti</SelectItem>
-                  <SelectItem value="pos">💳 POS / Carta</SelectItem>
-                  <SelectItem value="transfer">🏦 Bonifico</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => setPayLessonDialog(null)}>
-              Annulla
-            </Button>
-            <Button
-              size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer gap-1.5"
-              disabled={!payLessonAmount || Number(payLessonAmount) <= 0}
-              onClick={handlePayLesson}
-            >
-              <Coins className="w-3.5 h-3.5" />
-              Conferma Incasso €{Number(payLessonAmount || 0).toFixed(2)}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Dialog>
   );
 }

@@ -39,18 +39,14 @@ export class AttendanceService {
       const lessonPaymentStatus = l.paymentStatus || 'pending';
 
       // Business rule: show quick payment dialog when student attended but hasn't paid
-      const requiresPaymentOnAttendance =
-        billingScheme === 'per_lesson'
-          ? lessonPaymentStatus !== 'paid'
-          : bookingPaymentStatus !== 'completed' && bookingPaymentStatus !== 'paid';
+      const requiresPaymentOnAttendance = bookingPaymentStatus !== 'completed' && bookingPaymentStatus !== 'paid';
 
       return {
         id: l.id,
         starts_at: l.startsAt,
         ends_at: l.endsAt,
         status: l.status,
-        payment_status: lessonPaymentStatus,
-        price_per_lesson: l.pricePerLesson ? Number(l.pricePerLesson) : null,
+        payment_status: bookingPaymentStatus,
         location_type: l.locationType,
         teacher_id: l.teacherId,
         teacher_name: l.teacher?.fullName || 'Docente',
@@ -73,7 +69,6 @@ export class AttendanceService {
               marked_at: record.markedAt,
               marked_by: record.markedBy,
               notes: record.notes,
-              payment_id: record.paymentId,
             }
           : null,
       };
@@ -101,7 +96,7 @@ export class AttendanceService {
     lessonId: string;
     bookingId?: string;
     studentId?: string;
-    status: 'present' | 'absent' | 'excused' | 'late' | string;
+    status: string;
     notes?: string;
     markedBy?: string;
   }) {
@@ -109,20 +104,26 @@ export class AttendanceService {
       where: { id: dto.lessonId },
       include: { booking: true },
     });
-    if (!lesson) throw new NotFoundException(`Lesson ${dto.lessonId} not found`);
+
+    if (!lesson) {
+      throw new NotFoundException(`Lesson ${dto.lessonId} not found`);
+    }
 
     const bookingId = dto.bookingId || lesson.bookingId;
-    const existingRecord = await this.prisma.attendanceRecord.findFirst({
+    const studentId = dto.studentId || (lesson.booking as any)?.student_id || (lesson.booking as any)?.studentId;
+
+    // Create or update attendance record
+    const existing = await this.prisma.attendanceRecord.findFirst({
       where: { lessonId: dto.lessonId },
     });
 
     let record;
-    if (existingRecord) {
+    if (existing) {
       record = await this.prisma.attendanceRecord.update({
-        where: { id: existingRecord.id },
+        where: { id: existing.id },
         data: {
           status: dto.status,
-          notes: dto.notes ?? existingRecord.notes,
+          notes: dto.notes !== undefined ? dto.notes : existing.notes,
           markedBy: dto.markedBy || 'admin',
           markedAt: new Date(),
         },
@@ -132,10 +133,11 @@ export class AttendanceService {
         data: {
           lessonId: dto.lessonId,
           bookingId: bookingId || null,
-          studentId: dto.studentId || lesson.booking?.userId || null,
+          studentId: studentId || null,
           status: dto.status,
-          notes: dto.notes || null,
+          notes: dto.notes,
           markedBy: dto.markedBy || 'admin',
+          markedAt: new Date(),
         },
       });
     }
@@ -150,134 +152,7 @@ export class AttendanceService {
       },
     });
 
-    // If booking is per_lesson, create pending payment notice if not already present
-    if (bookingId && lesson.booking?.billingScheme === 'per_lesson' && (dto.status === 'present' || dto.status === 'late')) {
-      const existingPayment = await this.prisma.payment.findFirst({
-        where: { bookingId, scheduleId: dto.lessonId },
-      });
-
-      if (!existingPayment) {
-        const price = Number(lesson.pricePerLesson || 0);
-        const newPayment = await this.prisma.payment.create({
-          data: {
-            bookingId,
-            scheduleId: dto.lessonId,
-            amount: price,
-            currency: 'EUR',
-            paymentMethod: lesson.booking.paymentMethod || 'cash',
-            type: 'lesson_payment',
-            status: 'pending',
-            provider: 'manual',
-            notes: `Presenza lezione del ${new Date(lesson.startsAt).toLocaleDateString('it-IT')}`,
-          },
-        });
-
-        await this.prisma.attendanceRecord.update({
-          where: { id: record.id },
-          data: { paymentId: newPayment.id },
-        });
-      }
-    }
-
     return record;
-  }
-
-  async payLesson(dto: {
-    lessonId: string;
-    paymentMethod?: string;
-    amount?: number;
-  }) {
-    const lesson = await this.prisma.lesson.findUnique({
-      where: { id: dto.lessonId },
-      include: { booking: true },
-    });
-
-    if (!lesson) throw new NotFoundException(`Lesson ${dto.lessonId} not found`);
-    if (!lesson.bookingId) throw new BadRequestException(`Lesson ${dto.lessonId} has no associated booking`);
-
-    const bookingId = lesson.bookingId;
-    const finalAmount = dto.amount ?? Number(lesson.pricePerLesson ?? 0);
-    const method = dto.paymentMethod || lesson.booking?.paymentMethod || 'cash';
-
-    const existingPayment = await this.prisma.payment.findFirst({
-      where: { bookingId, scheduleId: dto.lessonId },
-    });
-
-    let payment;
-    if (existingPayment) {
-      payment = await this.prisma.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          status: 'succeeded',
-          paymentMethod: method,
-          paidAt: new Date(),
-          amount: finalAmount,
-        },
-      });
-    } else {
-      payment = await this.prisma.payment.create({
-        data: {
-          bookingId,
-          userId: lesson.booking?.userId || null,
-          scheduleId: dto.lessonId,
-          amount: finalAmount,
-          currency: 'EUR',
-          paymentMethod: method,
-          type: 'lesson_payment',
-          status: 'succeeded',
-          provider: 'manual',
-          paidAt: new Date(),
-        },
-      });
-    }
-
-    await this.prisma.lesson.update({
-      where: { id: dto.lessonId },
-      data: { paymentStatus: 'paid' },
-    });
-
-    const record = await this.prisma.attendanceRecord.findFirst({
-      where: { lessonId: dto.lessonId },
-    });
-
-    if (record) {
-      await this.prisma.attendanceRecord.update({
-        where: { id: record.id },
-        data: { paymentId: payment.id },
-      });
-    }
-
-    // Recalculate Booking total amount paid and payment status
-    const allPayments = await this.prisma.payment.findMany({
-      where: { bookingId, status: 'succeeded' },
-    });
-    const totalPaid = allPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-
-    const allLessons = await this.prisma.lesson.findMany({ where: { bookingId } });
-    const paidLessons = allLessons.filter((l) => l.paymentStatus === 'paid');
-
-    let newStatus = lesson.booking?.paymentStatus || 'partially_paid';
-    if (paidLessons.length === allLessons.length && allLessons.length > 0) {
-      newStatus = 'paid';
-    } else if (paidLessons.length > 0) {
-      newStatus = 'partially_paid';
-    }
-
-    await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        amountPaid: totalPaid,
-        paymentStatus: newStatus,
-      },
-    });
-
-    return {
-      success: true,
-      lesson_id: dto.lessonId,
-      payment_id: payment.id,
-      amount: finalAmount,
-      booking_payment_status: newStatus,
-    };
   }
 
   async getBookingStats(bookingId: string) {

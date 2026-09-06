@@ -85,10 +85,6 @@ export function UniversalPosCheckoutModal({
   const [payRegistrationFee, setPayRegistrationFee] = useState(defaultFeeOnly);
   const [registrationFeeAmount] = useState<number>(30);
 
-  const [payCustomLesson, setPayCustomLesson] = useState(false);
-  const [customLessonDescription, setCustomLessonDescription] = useState("Lezione Singola");
-  const [customLessonAmount, setCustomLessonAmount] = useState<number>(25);
-
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "pos" | "bank_transfer">("cash");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -119,8 +115,8 @@ export function UniversalPosCheckoutModal({
       } else {
         toast.error("Nessun cliente trovato con questi parametri.");
       }
-    } catch {
-      toast.error("Errore nella ricerca del cliente");
+    } catch (e: any) {
+      toast.error(e.message || "Errore durante la ricerca");
     } finally {
       setSearching(false);
     }
@@ -128,8 +124,7 @@ export function UniversalPosCheckoutModal({
 
   const totalPayable =
     (payCourse ? courseAmount : 0) +
-    (payRegistrationFee ? registrationFeeAmount : 0) +
-    (payCustomLesson ? customLessonAmount : 0);
+    (payRegistrationFee ? registrationFeeAmount : 0);
 
   const handleSubmitCheckout = async () => {
     if (!selectedClient && !searchQuery.trim()) {
@@ -158,13 +153,6 @@ export function UniversalPosCheckoutModal({
           type: "registration_fee",
           amount: registrationFeeAmount,
           description: "Quota Iscrizione Annuale €30",
-        });
-      }
-      if (payCustomLesson && customLessonAmount > 0) {
-        items.push({
-          type: "lesson_fee",
-          amount: customLessonAmount,
-          description: customLessonDescription || "Lezione Singola / Materiale",
         });
       }
 
@@ -320,31 +308,6 @@ export function UniversalPosCheckoutModal({
                 <span className="font-bold font-mono text-xs text-emerald-600 dark:text-emerald-400">
                   €30.00
                 </span>
-              </div>
-
-              {/* Option C: Single Lesson or Custom Item */}
-              <div className="flex items-center justify-between p-2 rounded-lg border bg-background">
-                <div className="flex items-center space-x-2.5">
-                  <Checkbox
-                    id="item-custom"
-                    checked={payCustomLesson}
-                    onCheckedChange={(v) => setPayCustomLesson(Boolean(v))}
-                  />
-                  <label htmlFor="item-custom" className="text-xs font-semibold cursor-pointer">
-                    Lezione Singola / Materiale
-                  </label>
-                </div>
-                {payCustomLesson && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">€</span>
-                    <Input
-                      type="number"
-                      value={customLessonAmount}
-                      onChange={(e) => setCustomLessonAmount(Number(e.target.value))}
-                      className="w-20 h-7 text-xs font-mono font-bold text-right"
-                    />
-                  </div>
-                )}
               </div>
             </div>
           </div>

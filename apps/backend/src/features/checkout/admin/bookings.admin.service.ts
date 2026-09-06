@@ -263,55 +263,10 @@ export class BookingsAdminService {
       await this.prisma.booking.update({
         where: { id: bookingId },
         data: {
-          billingScheme,
+          billingScheme: 'full',
           paymentStatus: normalizedStatus,
         },
       });
-
-      if (billingScheme === 'per_lesson') {
-        try {
-          const course = await this.prisma.course.findUnique({ where: { id: resolvedCourseId } });
-          const courseTotalLessons = (course as any)?.totalLessons || (course as any)?.total_lessons || 10;
-          const coursePrice = Number((course as any)?.price || dto.amountPaid || 0);
-          const pricePerLesson = courseTotalLessons > 0 ? Number((coursePrice / courseTotalLessons).toFixed(2)) : 0;
-
-          const startDate = dto.startDate || new Date().toISOString();
-          const lessonDates = calculateLessonDates(
-            startDate,
-            '',
-            '',
-            (course as any)?.scheduleDays || (course as any)?.schedule_days || null,
-            (course as any)?.durationMinutes || (course as any)?.lesson_duration_minutes || 60,
-            (course as any)?.startTime || (course as any)?.start_time || '10:00',
-            (course as any)?.endTime || (course as any)?.end_time || null,
-            null,
-          );
-
-          const lessonsToCreate =
-            lessonDates.length > 0
-              ? lessonDates.map((ld) => ({
-                  bookingId,
-                  startsAt: new Date(ld.startsAt),
-                  endsAt: new Date(ld.endsAt),
-                  status: 'scheduled',
-                  paymentStatus: 'pending',
-                  pricePerLesson,
-                }))
-              : Array.from({ length: courseTotalLessons }, (_, i) => ({
-                  bookingId,
-                  startsAt: new Date(new Date(startDate).getTime() + i * 7 * 24 * 60 * 60 * 1000),
-                  endsAt: new Date(new Date(startDate).getTime() + i * 7 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
-                  status: 'scheduled',
-                  paymentStatus: 'pending',
-                  pricePerLesson,
-                }));
-
-          await this.prisma.lesson.createMany({ data: lessonsToCreate });
-          this.logger.log(`Created ${lessonsToCreate.length} lessons for per_lesson booking ${bookingId}`);
-        } catch (err) {
-          this.logger.warn('Failed to auto-create lessons for per_lesson booking:', err);
-        }
-      }
     }
 
     return reservation.booking;
@@ -326,10 +281,6 @@ export class BookingsAdminService {
       orderBy: { startsAt: 'asc' },
     });
 
-    const totalAmount = Number(booking.amountPaid || 0);
-    const totalLessons = booking.totalLessonsCount || lessons.length || 1;
-    const pricePerLesson = totalLessons > 0 ? Number((totalAmount / totalLessons).toFixed(2)) : 0;
-
     return lessons.map((l) => ({
       id: l.id,
       booking_id: l.bookingId,
@@ -337,129 +288,27 @@ export class BookingsAdminService {
       ends_at: l.endsAt,
       status: l.status,
       payment_status: l.paymentStatus,
-      price_per_lesson: Number(l.pricePerLesson ?? pricePerLesson),
       attendance: l.attendance,
       teacher_notes: l.teacherNotes,
       location_type: (l as any).locationType,
     }));
   }
 
-  async completeLesson(bookingId: string, lessonId: string, paymentMethod?: string) {
+  async completeLesson(bookingId: string, lessonId: string) {
     const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
     if (!booking) throw new NotFoundException(`Booking ${bookingId} not found`);
 
     const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
     if (!lesson || lesson.bookingId !== bookingId) throw new NotFoundException(`Lesson ${lessonId} not found`);
-
-    const totalAmount = Number(booking.amountPaid || 0);
-    const totalLessons = booking.totalLessonsCount || 1;
-    const pricePerLesson = Number(lesson.pricePerLesson ?? (totalAmount / totalLessons).toFixed(2));
-
-    const updated = await this.prisma.lesson.update({
-      where: { id: lessonId },
-      data: {
-        status: 'completed',
-        paymentStatus: 'pending',
-        pricePerLesson,
-      },
-    });
-
-    if (booking.billingScheme === 'per_lesson' && pricePerLesson > 0) {
-      await this.prisma.payment.create({
-        data: {
-          bookingId,
-          userId: booking.userId ?? null,
-          scheduleId: lessonId,
-          amount: pricePerLesson,
-          currency: 'EUR',
-          paymentMethod: paymentMethod || 'cash',
-          type: 'lesson_payment',
-          status: 'pending',
-          provider: 'manual',
-          notes: `Lezione del ${updated.startsAt.toLocaleDateString('it-IT')}`,
-        },
-      });
-
-      if (booking.paymentStatus === 'reserved') {
-        await this.prisma.booking.update({
-          where: { id: bookingId },
-          data: { paymentStatus: 'partially_paid' },
-        });
-      }
-    }
-
-    return { success: true, lesson_id: lessonId, price_per_lesson: pricePerLesson };
-  }
-
-  async payLesson(bookingId: string, lessonId: string, paymentMethod?: string, amount?: number) {
-    const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
-    if (!booking) throw new NotFoundException(`Booking ${bookingId} not found`);
-
-    const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
-    if (!lesson || lesson.bookingId !== bookingId) throw new NotFoundException(`Lesson ${lessonId} not found`);
-
-    const finalAmount = amount ?? Number(lesson.pricePerLesson ?? 0);
-
-    if (amount !== undefined && amount !== Number(lesson.pricePerLesson)) {
-      await this.prisma.lesson.update({
-        where: { id: lessonId },
-        data: { pricePerLesson: finalAmount },
-      });
-    }
-
-    const existingPayment = await this.prisma.payment.findFirst({
-      where: { bookingId, scheduleId: lessonId, status: 'pending' },
-    });
-
-    if (existingPayment) {
-      await this.prisma.payment.update({
-        where: { id: existingPayment.id },
-        data: {
-          status: 'succeeded',
-          paymentMethod: paymentMethod || 'cash',
-          paidAt: new Date(),
-          amount: finalAmount,
-        },
-      });
-    } else {
-      await this.prisma.payment.create({
-        data: {
-          bookingId,
-          userId: booking.userId ?? null,
-          scheduleId: lessonId,
-          amount: finalAmount,
-          currency: 'EUR',
-          paymentMethod: paymentMethod || 'cash',
-          type: 'lesson_payment',
-          status: 'succeeded',
-          provider: 'manual',
-          paidAt: new Date(),
-        },
-      });
-    }
 
     await this.prisma.lesson.update({
       where: { id: lessonId },
-      data: { paymentStatus: 'paid' },
+      data: {
+        status: 'completed',
+      },
     });
 
-    const allLessons = await this.prisma.lesson.findMany({ where: { bookingId } });
-    const completedLessons = allLessons.filter((l) => l.status === 'completed');
-    const paidLessons = allLessons.filter((l) => l.paymentStatus === 'paid');
-
-    let newStatus = booking.paymentStatus;
-    if (paidLessons.length === completedLessons.length && completedLessons.length === allLessons.length) {
-      newStatus = 'paid';
-    } else if (paidLessons.length > 0) {
-      newStatus = 'partially_paid';
-    }
-
-    await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: { paymentStatus: newStatus },
-    });
-
-    return { success: true, lesson_id: lessonId, amount: finalAmount, new_booking_status: newStatus };
+    return { success: true, lesson_id: lessonId };
   }
 
   async updateBookingPaymentStatus(id: string, dto: { payment_status?: string; scheduling_status?: string }) {
