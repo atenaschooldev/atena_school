@@ -9,7 +9,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const result = await getItem(id);
+    const cleanId = (id || '').trim();
+    if (!cleanId || cleanId.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'ID elemento non valido' },
+        { status: 400 }
+      );
+    }
+    const result = await getItem(cleanId);
     if (!result.success) {
       return NextResponse.json(result, { status: 404 });
     }

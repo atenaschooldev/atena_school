@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
 import { submitContactForm } from "@/app/actions/contact";
+import { contactFormSchema } from "@atena/validators";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -98,6 +99,8 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
     };
   }, [isOpen]);
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   if (!isOpen) return null;
 
   const handleChange = (
@@ -105,20 +108,59 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({ ...prev, privacy: e.target.checked }));
+    if (fieldErrors.privacy) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.privacy;
+        return next;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFieldErrors({});
+    setError(null);
+
     if (!formData.privacy) {
-      alert("Devi accettare l'informativa sulla privacy per procedere.");
+      setFieldErrors({ privacy: "Devi accettare l'informativa sulla privacy per procedere." });
       return;
     }
+
+    const validationResult = contactFormSchema.safeParse({
+      nome: formData.nome,
+      cognome: formData.cognome,
+      email: formData.email,
+      telefono: formData.telefono ? formData.telefono.trim() : undefined,
+      interesse: formData.interesse ? formData.interesse.trim() : undefined,
+      messaggio: formData.messaggio,
+      privacy: formData.privacy,
+    });
+
+    if (!validationResult.success) {
+      const flattened = validationResult.error.flatten().fieldErrors;
+      const errorsMap: Record<string, string> = {};
+      for (const [key, msgs] of Object.entries(flattened)) {
+        if (msgs && msgs.length > 0) {
+          errorsMap[key] = msgs[0];
+        }
+      }
+      setFieldErrors(errorsMap);
+      return;
+    }
+
     setLoading(true);
-    setError(null);
     try {
       const res = await submitContactForm(formData);
       if (res.success) {
@@ -134,12 +176,22 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
             messaggio: "",
             privacy: false,
           });
+          setFieldErrors({});
           onClose();
         }, 2000);
       } else {
+        if (res.details) {
+          const errorsMap: Record<string, string> = {};
+          for (const [key, msgs] of Object.entries(res.details)) {
+            if (Array.isArray(msgs) && msgs.length > 0) {
+              errorsMap[key] = msgs[0] as string;
+            }
+          }
+          setFieldErrors(errorsMap);
+        }
         setError(res.error || "Qualcosa è andato storto. Riprova più tardi.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setError("Errore di rete. Riprova più tardi.");
     } finally {
@@ -324,55 +376,83 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
 
                 {/* Inputs Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      name="nome"
-                      value={formData.nome}
-                      onChange={handleChange}
-                      placeholder="Nome *"
-                      required
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
-                    />
+                  <div>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        name="nome"
+                        value={formData.nome}
+                        onChange={handleChange}
+                        placeholder="Nome *"
+                        required
+                        className={`w-full bg-gray-50 border ${
+                          fieldErrors.nome ? "border-red-500 bg-red-50/20" : "border-gray-200"
+                        } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                      />
+                    </div>
+                    {fieldErrors.nome && (
+                      <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.nome}</p>
+                    )}
                   </div>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      name="cognome"
-                      value={formData.cognome}
-                      onChange={handleChange}
-                      placeholder="Cognome *"
-                      required
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
-                    />
+                  <div>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        name="cognome"
+                        value={formData.cognome}
+                        onChange={handleChange}
+                        placeholder="Cognome *"
+                        required
+                        className={`w-full bg-gray-50 border ${
+                          fieldErrors.cognome ? "border-red-500 bg-red-50/20" : "border-gray-200"
+                        } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                      />
+                    </div>
+                    {fieldErrors.cognome && (
+                      <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.cognome}</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="relative">
-                  <Envelope className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Email *"
-                    required
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
-                  />
+                <div>
+                  <div className="relative">
+                    <Envelope className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Email *"
+                      required
+                      className={`w-full bg-gray-50 border ${
+                        fieldErrors.email ? "border-red-500 bg-red-50/20" : "border-gray-200"
+                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                    />
+                  </div>
+                  {fieldErrors.email && (
+                    <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.email}</p>
+                  )}
                 </div>
 
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-                  <input
-                    type="tel"
-                    name="telefono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                    placeholder="Telefono"
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900"
-                  />
+                <div>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="tel"
+                      name="telefono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      placeholder="Telefono (es. +39 340 1234567)"
+                      className={`w-full bg-gray-50 border ${
+                        fieldErrors.telefono ? "border-red-500 bg-red-50/20" : "border-gray-200"
+                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                    />
+                  </div>
+                  {fieldErrors.telefono && (
+                    <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.telefono}</p>
+                  )}
                 </div>
 
                 <div className="relative">
@@ -381,7 +461,6 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     name="interesse"
                     value={formData.interesse}
                     onChange={handleChange}
-                    required
                     className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-10 text-base md:text-xs text-gray-700 placeholder-gray-400 outline-none appearance-none transition-all duration-300"
                   >
                     <option value="" disabled hidden>
@@ -395,41 +474,53 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                   <CaretDown className="absolute right-3.5 top-4 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
                 </div>
 
-                <div className="relative">
-                  <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
-                  <textarea
-                    name="messaggio"
-                    value={formData.messaggio}
-                    onChange={handleChange}
-                    placeholder="Messaggio"
-                    maxLength={500}
-                    rows={8}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[200px]"
-                  />
-                  <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400">
-                    {formData.messaggio.length} / 500
-                  </span>
+                <div>
+                  <div className="relative">
+                    <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400" />
+                    <textarea
+                      name="messaggio"
+                      value={formData.messaggio}
+                      onChange={handleChange}
+                      placeholder="Messaggio *"
+                      maxLength={2000}
+                      rows={8}
+                      className={`w-full bg-gray-50 border ${
+                        fieldErrors.messaggio ? "border-red-500 bg-red-50/20" : "border-gray-200"
+                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px]`}
+                    />
+                    <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400">
+                      {formData.messaggio.length} / 2000
+                    </span>
+                  </div>
+                  {fieldErrors.messaggio && (
+                    <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.messaggio}</p>
+                  )}
                 </div>
 
                 {/* Checkbox */}
-                <label className="flex items-start gap-2.5 cursor-pointer group pt-1 select-none">
-                  <input
-                    type="checkbox"
-                    checked={formData.privacy}
-                    onChange={handleCheckboxChange}
-                    className="rounded border-gray-300 bg-gray-50 text-[#F8861D] focus:ring-offset-0 focus:ring-0 mt-0.5"
-                  />
-                  <span className="text-[10px] text-gray-500 text-left leading-normal">
-                    Accetto l'
-                    <a
-                      href="/privacy"
-                      target="_blank"
-                      className="text-[#F8861D] hover:underline underline-offset-2 ml-1"
-                    >
-                      Informativa sulla Privacy *
-                    </a>
-                  </span>
-                </label>
+                <div>
+                  <label className="flex items-start gap-2.5 cursor-pointer group pt-1 select-none">
+                    <input
+                      type="checkbox"
+                      checked={formData.privacy}
+                      onChange={handleCheckboxChange}
+                      className="rounded border-gray-300 bg-gray-50 text-[#F8861D] focus:ring-offset-0 focus:ring-0 mt-0.5"
+                    />
+                    <span className="text-[10px] text-gray-500 text-left leading-normal">
+                      Accetto l'
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        className="text-[#F8861D] hover:underline underline-offset-2 ml-1"
+                      >
+                        Informativa sulla Privacy *
+                      </a>
+                    </span>
+                  </label>
+                  {fieldErrors.privacy && (
+                    <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.privacy}</p>
+                  )}
+                </div>
               </div>
 
               {/* Error Display */}

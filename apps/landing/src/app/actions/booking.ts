@@ -1,6 +1,7 @@
 "use server";
 
 import { createApiClient } from "@atena/api-client";
+import { checkFeeSchema, createReservationSchema } from "@atena/validators";
 import type { CreateReservationParams } from "@/lib/server/checkout-service";
 
 const getApi = () => {
@@ -31,9 +32,20 @@ export async function fetchCourseAction(courseId: string) {
 export async function checkRegistrationFeeStatusAction(params: {
   taxCode: string;
 }) {
+  const parsed = checkFeeSchema.safeParse(params);
+  if (!parsed.success) {
+    return {
+      success: false,
+      annualFeePaid: false,
+      academicYear: "2026/2027",
+      requiresFee: true,
+      error: "Codice Fiscale non valido",
+    };
+  }
+
   try {
     const api = getApi();
-    const res = await api.checkout.checkFeeStatus(params);
+    const res = await api.checkout.checkFeeStatus(parsed.data);
     return {
       success: true,
       annualFeePaid: res.annualFeePaid,
@@ -74,45 +86,54 @@ function normalizeReservationPayload(payload: Record<string, unknown> | any) {
   const v = (payload.values || payload) as Record<string, unknown>;
   const isForChild = Boolean(v.isForChild ?? payload.isForChild);
 
-  const firstName = String(v.firstName || payload.firstName || "");
-  const lastName = String(v.lastName || payload.lastName || "");
-  const email = String(v.email || payload.email || "");
-  const phone = String(v.phone || payload.phone || "");
-  const purchaserTaxCode = String(v.purchaserTaxCode || v.taxCode || payload.purchaserTaxCode || payload.taxCode || "");
+  const firstName = String(v.firstName || payload.firstName || "").trim();
+  const lastName = String(v.lastName || payload.lastName || "").trim();
+  const email = String(v.email || payload.email || "").trim().toLowerCase();
+  const phone = String(v.phone || payload.phone || "").trim();
+  const purchaserTaxCode = String(v.purchaserTaxCode || v.taxCode || payload.purchaserTaxCode || payload.taxCode || "").trim().toUpperCase();
   const studentTaxCode = isForChild 
-    ? String(v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "") 
+    ? String(v.taxCode || v.studentTaxCode || payload.taxCode || payload.studentTaxCode || "").trim().toUpperCase() 
     : purchaserTaxCode;
 
   return {
-    itemId: String(payload.itemId || payload.id || v.itemId || v.id || ""),
-    itemType: String(payload.itemType || payload.type || v.itemType || v.type || "course"),
-    date: String(payload.date || payload.dateParam || v.date || v.dateParam || ""),
-    time: String(payload.time || payload.timeParam || v.time || v.timeParam || ""),
+    itemId: String(payload.itemId || payload.id || v.itemId || v.id || "").trim(),
+    itemType: String(payload.itemType || payload.type || v.itemType || v.type || "course").trim(),
+    date: String(payload.date || payload.dateParam || v.date || v.dateParam || "").trim(),
+    time: String(payload.time || payload.timeParam || v.time || v.timeParam || "").trim(),
     firstName,
     lastName,
     email,
     phone,
     isForChild,
     purchaserTaxCode,
-    studentFirstName: isForChild ? String(v.studentFirstName || payload.studentFirstName || "") : firstName,
-    studentLastName: isForChild ? String(v.studentLastName || payload.studentLastName || "") : lastName,
-    studentEmail: isForChild ? String(v.studentEmail || payload.studentEmail || "") : email,
-    studentPhone: isForChild ? String(v.studentPhone || payload.studentPhone || "") : phone,
+    studentFirstName: isForChild ? String(v.studentFirstName || payload.studentFirstName || "").trim() : firstName,
+    studentLastName: isForChild ? String(v.studentLastName || payload.studentLastName || "").trim() : lastName,
+    studentEmail: isForChild ? String(v.studentEmail || payload.studentEmail || "").trim().toLowerCase() : email,
+    studentPhone: isForChild ? String(v.studentPhone || payload.studentPhone || "").trim() : phone,
     studentTaxCode,
-    studentBirthDate: (v.studentBirthDate || payload.studentBirthDate) ? String(v.studentBirthDate || payload.studentBirthDate) : undefined,
+    studentBirthDate: (v.studentBirthDate || payload.studentBirthDate) ? String(v.studentBirthDate || payload.studentBirthDate).trim() : undefined,
     needsCompanyInvoice: Boolean(v.needsCompanyInvoice ?? payload.needsCompanyInvoice),
-    sdiCode: (v.sdiCode || payload.sdiCode) ? String(v.sdiCode || payload.sdiCode) : undefined,
-    pecEmail: (v.pecEmail || payload.pecEmail) ? String(v.pecEmail || payload.pecEmail) : undefined,
+    sdiCode: (v.sdiCode || payload.sdiCode) ? String(v.sdiCode || payload.sdiCode).trim().toUpperCase() : undefined,
+    pecEmail: (v.pecEmail || payload.pecEmail) ? String(v.pecEmail || payload.pecEmail).trim().toLowerCase() : undefined,
     includeRegistrationFee: (v.includeRegistrationFee ?? payload.includeRegistrationFee) !== undefined ? Boolean(v.includeRegistrationFee ?? payload.includeRegistrationFee) : undefined,
-    notes: String(v.notes || payload.notes || ""),
+    notes: String(v.notes || payload.notes || "").trim(),
   } as CreateReservationParams;
 }
 
 export async function createOrUpdateReservationServerAction(payload: Record<string, unknown> | any) {
   try {
-    const api = getApi();
     const dto = normalizeReservationPayload(payload);
-    const res = await api.checkout.createReservation(dto);
+    const parsed = createReservationSchema.safeParse(dto);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: "Dati di prenotazione non validi",
+        details: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    const api = getApi();
+    const res = await api.checkout.createReservation(parsed.data as any);
     if (res.success && res.booking) {
       return {
         success: true,
@@ -120,7 +141,7 @@ export async function createOrUpdateReservationServerAction(payload: Record<stri
         booking: res.booking,
       };
     }
-    return { success: false, error: "Failed to create reservation" };
+    return { success: false, error: (res as any).error || "Failed to create reservation" };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to create reservation";
     console.error("createOrUpdateReservationServerAction error:", err);
@@ -130,15 +151,24 @@ export async function createOrUpdateReservationServerAction(payload: Record<stri
 
 export async function initiateStripePaymentAction(payload: Record<string, unknown> | any) {
   try {
-    const api = getApi();
     const dto = normalizeReservationPayload(payload);
-    const res = await api.checkout.createStripeSession(dto);
+    const parsed = createReservationSchema.safeParse(dto);
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: "Dati di prenotazione non validi",
+        details: parsed.error.flatten().fieldErrors,
+      };
+    }
+
+    const api = getApi();
+    const res = await api.checkout.createStripeSession(parsed.data as any);
     if (res.success && res.url) {
       return { success: true, url: res.url, bookingId: res.bookingId };
     }
-    return { success: false, error: "Failed to create Stripe session" };
+    return { success: false, error: (res as any).error || "Failed to create Stripe session" };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : "Failed to initiate Stripe payment";
+    const errorMsg = err instanceof Error ? err.message : "Failed to create Stripe session";
     console.error("initiateStripePaymentAction error:", err);
     return { success: false, error: errorMsg };
   }

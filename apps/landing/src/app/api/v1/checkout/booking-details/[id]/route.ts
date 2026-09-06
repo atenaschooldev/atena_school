@@ -9,7 +9,14 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const result = await getBookingDetails(id);
+    const cleanId = (id || '').trim();
+    if (!cleanId || cleanId.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'ID prenotazione non valido' },
+        { status: 400 }
+      );
+    }
+    const result = await getBookingDetails(cleanId);
     if (!result.success) {
       return NextResponse.json(result, { status: 404 });
     }

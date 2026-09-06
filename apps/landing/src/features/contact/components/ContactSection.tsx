@@ -39,6 +39,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
     submitted,
     loading,
     error,
+    fieldErrors,
     handleChange,
     handleCheckboxChange,
     handleSubmit,
@@ -204,109 +205,153 @@ const ContactSection = ({ data }: ContactSectionProps) => {
 
               {/* Inputs Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="relative group/field flex items-center">
-                  <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                  <input
-                    type="text"
-                    name="nome"
-                    value={formData.nome}
-                    onChange={handleChange}
-                    placeholder="Nome *"
-                    required
-                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]"
-                  />
+                <div>
+                  <div className="relative group/field flex items-center">
+                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <input
+                      type="text"
+                      name="nome"
+                      value={formData.nome}
+                      onChange={handleChange}
+                      placeholder="Nome *"
+                      required
+                      className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
+                        fieldErrors?.nome ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
+                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                    />
+                  </div>
+                  {fieldErrors?.nome && (
+                    <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.nome}</p>
+                  )}
                 </div>
-                <div className="relative group/field flex items-center">
-                  <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                  <input
-                    type="text"
-                    name="cognome"
-                    value={formData.cognome}
-                    onChange={handleChange}
-                    placeholder="Cognome *"
-                    required
-                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]"
-                  />
+
+                <div>
+                  <div className="relative group/field flex items-center">
+                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <input
+                      type="text"
+                      name="cognome"
+                      value={formData.cognome}
+                      onChange={handleChange}
+                      placeholder="Cognome *"
+                      required
+                      className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
+                        fieldErrors?.cognome ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
+                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                    />
+                  </div>
+                  {fieldErrors?.cognome && (
+                    <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.cognome}</p>
+                  )}
                 </div>
-                <div className="relative group/field flex items-center">
-                  <Envelope className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="Email *"
-                    required
-                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]"
-                  />
+
+                <div>
+                  <div className="relative group/field flex items-center">
+                    <Envelope className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Email *"
+                      required
+                      className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
+                        fieldErrors?.email ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
+                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                    />
+                  </div>
+                  {fieldErrors?.email && (
+                    <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.email}</p>
+                  )}
                 </div>
-                <div className="relative group/field flex items-center">
-                  <Phone className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                  <input
-                    type="tel"
-                    name="telefono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                    placeholder="Telefono"
-                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]"
-                  />
+
+                <div>
+                  <div className="relative group/field flex items-center">
+                    <Phone className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <input
+                      type="tel"
+                      name="telefono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      placeholder="Telefono (es. +39 340 1234567)"
+                      className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
+                        fieldErrors?.telefono ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
+                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                    />
+                  </div>
+                  {fieldErrors?.telefono && (
+                    <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.telefono}</p>
+                  )}
                 </div>
               </div>
 
-              <div className="relative group/field flex items-center">
-                <GraduationCap className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                <select
-                  name="interesse"
-                  value={formData.interesse}
-                  onChange={handleChange}
-                  required
-                  className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400/85 outline-none appearance-none transition-all duration-300 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)] cursor-pointer"
-                >
-                  <option value="" disabled hidden>
-                    Sono interessato a...
-                  </option>
-                  <option value="inglese" className="bg-white text-gray-900">Corsi di Inglese</option>
-                  <option value="digitale" className="bg-white text-gray-900">Certificazioni Informatiche</option>
-                  <option value="doposcuola" className="bg-white text-gray-900">Doposcuola & Recupero materie</option>
-                  <option value="altro" className="bg-white text-gray-900">Altro</option>
-                </select>
-                <CaretDown className="absolute right-3.5 w-3.5 h-3.5 text-gray-400 pointer-events-none group-focus-within/field:text-[#00328F] group-focus-within/field:rotate-180 transition-all duration-300" />
+              <div>
+                <div className="relative group/field flex items-center">
+                  <GraduationCap className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                  <select
+                    name="interesse"
+                    value={formData.interesse}
+                    onChange={handleChange}
+                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400/85 outline-none appearance-none transition-all duration-300 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)] cursor-pointer"
+                  >
+                    <option value="" disabled hidden>
+                      Sono interessato a...
+                    </option>
+                    <option value="inglese" className="bg-white text-gray-900">Corsi di Inglese</option>
+                    <option value="digitale" className="bg-white text-gray-900">Certificazioni Informatiche</option>
+                    <option value="doposcuola" className="bg-white text-gray-900">Doposcuola & Recupero materie</option>
+                    <option value="altro" className="bg-white text-gray-900">Altro</option>
+                  </select>
+                  <CaretDown className="absolute right-3.5 w-3.5 h-3.5 text-gray-400 pointer-events-none group-focus-within/field:text-[#00328F] group-focus-within/field:rotate-180 transition-all duration-300" />
+                </div>
               </div>
 
-              <div className="relative flex flex-col group/field">
-                <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
-                <textarea
-                  name="messaggio"
-                  value={formData.messaggio}
-                  onChange={handleChange}
-                  placeholder="Messaggio"
-                  maxLength={500}
-                  className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px] focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]"
-                />
-                <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400 font-bold bg-white/80 px-1.5 py-0.5 rounded-md backdrop-blur-sm border border-gray-100">
-                  {formData.messaggio.length} / 500
-                </span>
+              <div>
+                <div className="relative flex flex-col group/field">
+                  <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                  <textarea
+                    name="messaggio"
+                    value={formData.messaggio}
+                    onChange={handleChange}
+                    placeholder="Messaggio *"
+                    maxLength={2000}
+                    className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
+                      fieldErrors?.messaggio ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
+                    } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px] focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                  />
+                  <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400 font-bold bg-white/80 px-1.5 py-0.5 rounded-md backdrop-blur-sm border border-gray-100">
+                    {formData.messaggio.length} / 2000
+                  </span>
+                </div>
+                {fieldErrors?.messaggio && (
+                  <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.messaggio}</p>
+                )}
               </div>
 
               {/* Checkbox */}
-              <label className="flex items-start gap-2.5 cursor-pointer group pt-1 select-none">
-                <input
-                  type="checkbox"
-                  checked={formData.privacy}
-                  onChange={handleCheckboxChange}
-                  className="rounded border-gray-300 text-[#00328F] focus:ring-[#00328F]/20 focus:ring-offset-0 focus:ring-2 w-4 h-4 mt-0.5 transition-all cursor-pointer"
-                />
-                <span className="text-[10px] text-gray-500 text-left leading-normal">
-                  Accetto l'
-                  <a
-                    href="/privacy"
-                    target="_blank"
-                    className="text-[#00328F] hover:underline underline-offset-2 ml-1 font-bold"
-                  >
-                    Informativa sulla Privacy *
-                  </a>
-                </span>
-              </label>
+              <div>
+                <label className="flex items-start gap-2.5 cursor-pointer group pt-1 select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.privacy}
+                    onChange={handleCheckboxChange}
+                    className="rounded border-gray-300 text-[#00328F] focus:ring-[#00328F]/20 focus:ring-offset-0 focus:ring-2 w-4 h-4 mt-0.5 transition-all cursor-pointer"
+                  />
+                  <span className="text-[10px] text-gray-500 text-left leading-normal">
+                    Accetto l'
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      className="text-[#00328F] hover:underline underline-offset-2 ml-1 font-bold"
+                    >
+                      Informativa sulla Privacy *
+                    </a>
+                  </span>
+                </label>
+                {fieldErrors?.privacy && (
+                  <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.privacy}</p>
+                )}
+              </div>
 
               {/* Error Display */}
               {error && (

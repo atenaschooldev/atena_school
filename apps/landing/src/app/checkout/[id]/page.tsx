@@ -658,10 +658,14 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               <label className="block text-xs font-bold text-slate-700 mb-1">Note o richieste per la segreteria (opzionale)</label>
               <textarea
                 rows={2}
+                maxLength={500}
                 {...register("notes")}
                 placeholder="Es. preferenze orarie, segnalazioni didattiche..."
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white resize-none font-medium transition-all"
               />
+              {errors.notes && (
+                <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.notes.message}</p>
+              )}
             </div>
           </div>
 
