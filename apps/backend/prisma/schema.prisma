@@ -149,8 +149,6 @@ model Lesson {
   locationType    String    @default("in_person") @map("location_type")
   meetingLink     String?   @map("meeting_link")
   updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  paymentStatus   String    @default("pending") @map("payment_status")
-  pricePerLesson  Decimal?  @map("price_per_lesson") @db.Decimal(10, 2)
 
   booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   teacher           Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
@@ -275,7 +273,6 @@ model AttendanceRecord {
   markedBy  String?  @map("marked_by")
   markedAt  DateTime @default(now()) @map("marked_at") @db.Timestamptz
   notes     String?  @db.Text
-  paymentId String?  @map("payment_id") @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   lesson  Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
