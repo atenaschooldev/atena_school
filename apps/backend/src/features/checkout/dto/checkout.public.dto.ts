@@ -190,28 +190,42 @@ export class VerifyPaymentDto {
 // ---------------------------------------------------------------------------
 
 export class ContactFormDto {
-  @IsString()
-  @MinLength(2, { message: 'Il nome è obbligatorio' })
+  @IsString({ message: 'Il nome deve essere una stringa' })
+  @IsNotEmpty({ message: 'Il nome è obbligatorio' })
+  @MinLength(2, { message: 'Il nome deve contenere almeno 2 caratteri' })
+  @MaxLength(50, { message: 'Il nome non può superare i 50 caratteri' })
   nome: string;
 
-  @IsString()
-  @MinLength(2, { message: 'Il cognome è obbligatorio' })
+  @IsString({ message: 'Il cognome deve essere una stringa' })
+  @IsNotEmpty({ message: 'Il cognome è obbligatorio' })
+  @MinLength(2, { message: 'Il cognome deve contenere almeno 2 caratteri' })
+  @MaxLength(50, { message: 'Il cognome non può superare i 50 caratteri' })
   cognome: string;
 
-  @IsEmail({}, { message: 'Email non valida' })
+  @IsEmail({}, { message: 'Inserisci un indirizzo email valido' })
+  @MaxLength(100, { message: "L'email non può superare i 100 caratteri" })
   email: string;
 
   @IsOptional()
-  @IsString()
+  @ValidateIf((o) => !!o.telefono && o.telefono.trim() !== '')
+  @Matches(PHONE_IT_PATTERN, {
+    message: 'Numero di telefono non valido (es. +39 340 1234567 o 340 1234567)',
+  })
   telefono?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100, { message: "L'interesse non può superare i 100 caratteri" })
   interesse?: string;
 
-  @IsString()
-  @MinLength(10, { message: 'Il messaggio è obbligatorio (min. 10 caratteri)' })
+  @IsString({ message: 'Il messaggio deve essere una stringa' })
+  @IsNotEmpty({ message: 'Il messaggio è obbligatorio' })
+  @MinLength(10, { message: 'Il messaggio deve contenere almeno 10 caratteri' })
   @MaxLength(2000, { message: 'Il messaggio non può superare i 2000 caratteri' })
   messaggio: string;
+
+  @IsOptional()
+  @IsBoolean()
+  privacy?: boolean;
 }
 

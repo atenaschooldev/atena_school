@@ -283,25 +283,37 @@ export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
 
 export const contactFormSchema = z.object({
   nome: z
-    .string()
-    .min(2, "Il nome è obbligatorio (min. 2 caratteri)")
-    .max(50, "Il nome è troppo lungo"),
+    .string({ required_error: "Il nome è obbligatorio" })
+    .trim()
+    .min(2, "Il nome deve contenere almeno 2 caratteri")
+    .max(50, "Il nome non può superare i 50 caratteri"),
   cognome: z
-    .string()
-    .min(2, "Il cognome è obbligatorio (min. 2 caratteri)")
-    .max(50, "Il cognome è troppo lungo"),
-  email: z.string().email("Inserisci un indirizzo email valido"),
+    .string({ required_error: "Il cognome è obbligatorio" })
+    .trim()
+    .min(2, "Il cognome deve contenere almeno 2 caratteri")
+    .max(50, "Il cognome non può superare i 50 caratteri"),
+  email: z
+    .string({ required_error: "L'email è obbligatoria" })
+    .trim()
+    .email("Inserisci un indirizzo email valido")
+    .max(100, "L'email non può superare i 100 caratteri"),
   telefono: z
     .string()
     .optional()
     .refine((v) => !v || v.trim() === "" || isValidPhoneIT(v), {
-      message: "Numero di telefono non valido",
+      message: "Numero di telefono non valido (es. +39 340 1234567 o 340 1234567)",
     }),
-  interesse: z.string().optional(),
-  messaggio: z
+  interesse: z
     .string()
-    .min(10, "Il messaggio è obbligatorio (min. 10 caratteri)")
+    .max(100, "L'interesse non può superare i 100 caratteri")
+    .optional()
+    .nullable(),
+  messaggio: z
+    .string({ required_error: "Il messaggio è obbligatorio" })
+    .trim()
+    .min(10, "Il messaggio deve contenere almeno 10 caratteri")
     .max(2000, "Il messaggio non può superare i 2000 caratteri"),
+  privacy: z.boolean().optional(),
 });
 
 export type ContactFormInput = z.infer<typeof contactFormSchema>;

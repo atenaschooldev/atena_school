@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
-import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from '../dto/checkout.public.dto';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } from '../dto/checkout.public.dto';
 import { calculateLessonDates } from '@atena/utils';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -535,23 +535,31 @@ export class CheckoutService {
     return { success: true, courses: data };
   }
 
-  async submitContact(dto: any) {
+  async submitContact(dto: ContactFormDto) {
+    const firstName = (dto.nome || (dto as any).first_name || '').trim();
+    const lastName = (dto.cognome || (dto as any).last_name || '').trim();
+    const email = (dto.email || '').trim().toLowerCase();
+    const phone = (dto.telefono || (dto as any).phone || '').trim() || null;
+    const interest = (dto.interesse || (dto as any).interest || '').trim() || null;
+    const message = (dto.messaggio || (dto as any).message || '').trim();
+
     const { error } = await this.supabaseAdmin
       .from('contact_messages')
       .insert({
-        first_name: dto.nome,
-        last_name: dto.cognome,
-        email: dto.email,
-        phone: dto.telefono || null,
-        interest: dto.interesse || null,
-        message: dto.messaggio,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        phone: phone,
+        interest: interest,
+        message: message,
+        status: 'new',
       });
 
     if (error) {
       throw new BadRequestException(error.message);
     }
 
-    return { success: true };
+    return { success: true, message: 'Messaggio inviato con successo' };
   }
 }
 
