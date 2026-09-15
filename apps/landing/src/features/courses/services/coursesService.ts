@@ -4,12 +4,14 @@ import { slugify } from "@/lib/utils";
 
 
 
+import type { CourseItem } from "@atena/api-types";
+
 export interface ResolvedCourse {
   id: string;
   slug?: string;
   title: string;
   description: string;
-  image: any;
+  image?: string;
   price?: string;
   type: string;
   teacher_name?: string;
@@ -17,10 +19,11 @@ export interface ResolvedCourse {
   lesson_duration_minutes?: number | null;
   total_hours?: number | null;
   total_lessons?: number | null;
-  course_format?: string | null;
-  schedule_days?: number[] | null;
+  course_format?: string | number | null;
+  schedule_days?: number[] | string[] | null;
   start_time?: string | null;
   end_time?: string | null;
+  sort_order?: number;
 }
 
 export interface ResolvedSection {
@@ -35,16 +38,16 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
   // Fetch courses from Supabase
   const supabaseCourses = await getCourses();
 
-  let courseSections: Array<{ id: string; title: string; courses: any[] }> = [];
+  let courseSections: Array<{ id: string; title: string; courses: CourseItem[] }> = [];
 
   if (supabaseCourses && supabaseCourses.length > 0) {
-    const categoriesMap: Record<string, any[]> = {};
-    supabaseCourses.forEach((course: any) => {
+    const categoriesMap: Record<string, CourseItem[]> = {};
+    supabaseCourses.forEach((course) => {
       const cat = course.category || "Other";
       if (!categoriesMap[cat]) {
         categoriesMap[cat] = [];
       }
-      categoriesMap[cat].push(course);
+      categoriesMap[cat].push(course as unknown as CourseItem);
     });
 
     courseSections = Object.entries(categoriesMap).map(([catName, courses]) => {
@@ -69,7 +72,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
 
   // Resolve all sections into clean structures
   const resolvedSections = courseSections.map((section) => {
-    const resolvedCourses = section.courses.map((course: any) => {
+    const resolvedCourses = section.courses.map((course: CourseItem & { sort_order?: number; lessons_per_week?: number | null; total_hours?: number | null; total_lessons?: number | null; type?: string }) => {
       const itemTitle = course.title_it || course.name;
       const itemDesc = course.description_it || course.description || "";
       let itemPrice: string | undefined = undefined;

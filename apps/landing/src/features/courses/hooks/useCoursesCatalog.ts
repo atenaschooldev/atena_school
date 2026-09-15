@@ -5,16 +5,16 @@ export interface CleanCourse {
   slug?: string;
   title: string;
   description: string;
-  image: any;
+  image?: string;
   price?: string;
-  type: "course" | "shop";
+  type: "course" | "shop" | string;
   teacher_name?: string;
   lessons_per_week?: number | null;
   lesson_duration_minutes?: number | null;
   total_hours?: number | null;
   total_lessons?: number | null;
-  course_format?: string | null;
-  schedule_days?: number[] | null;
+  course_format?: string | number | null;
+  schedule_days?: number[] | string[] | null;
   start_time?: string | null;
   end_time?: string | null;
 }

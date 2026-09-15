@@ -17,6 +17,13 @@ const FALLBACK_AVATARS = [
   "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
 ];
 
+interface RawTranslationTestimonial {
+  quote_it?: string;
+  quote?: string;
+  author?: string;
+  role_it?: string;
+}
+
 const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const t = useTranslations("testimonials");
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40, slidesToScroll: 1 });
@@ -24,7 +31,8 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   const [activeTestimonial, setActiveTestimonial] = useState<Testimonial | null>(null);
 
   // Fallback to translations if no data provided
-  const testimonials: Testimonial[] = data && data.length > 0 ? data : (t.raw("list") as any[]).map((item: any, i: number) => ({
+  const rawList = (t.raw("list") || []) as RawTranslationTestimonial[];
+  const testimonials: Testimonial[] = data && data.length > 0 ? data : rawList.map((item, i: number) => ({
     id: String(i),
     quote: item.quote_it || item.quote || "",
     author: item.author || "",

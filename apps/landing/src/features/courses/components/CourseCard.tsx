@@ -11,10 +11,10 @@ interface CourseCardProps {
   slug?: string;
   title: string;
   description: string;
-  image?: any;
+  image?: string;
   category?: string;
   price?: string;
-  type?: "course" | "shop";
+  type?: "course" | "shop" | string;
   teacher_name?: string;
   onCtaClick?: () => void;
   priority?: boolean;
@@ -22,8 +22,8 @@ interface CourseCardProps {
   lesson_duration_minutes?: number | null;
   total_hours?: number | null;
   total_lessons?: number | null;
-  course_format?: string | null;
-  schedule_days?: number[] | null;
+  course_format?: string | number | null;
+  schedule_days?: number[] | string[] | null;
   start_time?: string | null;
   end_time?: string | null;
 }
@@ -52,7 +52,10 @@ const CourseCard = ({
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const courseSlug = slug || id;
 
-  const formattedSchedule = formatCourseScheduleText(schedule_days, start_time, end_time);
+  const normalizedDays = Array.isArray(schedule_days)
+    ? schedule_days.map((d) => (typeof d === "number" ? d : parseInt(String(d), 10))).filter((n) => !isNaN(n))
+    : null;
+  const formattedSchedule = formatCourseScheduleText(normalizedDays, start_time, end_time);
   const showSchedule = formattedSchedule && formattedSchedule !== "Da concordare";
   const formattedDuration = formatCourseDurationText(lesson_duration_minutes, total_hours, total_lessons);
 

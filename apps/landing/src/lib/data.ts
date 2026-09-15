@@ -3,6 +3,7 @@ import { createClient } from './supabase/server';
 import { CACHE_TAGS, CACHE_TTL } from './constants';
 import { slugify } from './utils';
 import type { SupabaseCourseRow } from './server/checkout-service';
+import type { CourseItem } from '@atena/api-types';
 
 interface HeroRow {
   title_it?: string | null;
@@ -67,17 +68,22 @@ interface CourseRow {
   [key: string]: unknown;
 }
 
-interface BlogPostRow {
+export interface BlogPostRow {
   id: string;
   title_it?: string | null;
   title_en?: string | null;
+  title?: string | null;
   excerpt_it?: string | null;
   excerpt_en?: string | null;
+  excerpt?: string | null;
   content_it?: string | null;
   content_en?: string | null;
+  content?: string | null;
   image_placeholder?: string | null;
+  main_image?: string | null;
   is_active?: boolean;
   slug?: string;
+  published_at?: string | null;
   [key: string]: unknown;
 }
 
@@ -203,7 +209,7 @@ export async function getSingleCourse(id: string) {
   try {
     const res = await getItem(id);
     if (res.success && (res.item || res.course)) {
-      const c: any = res.item || res.course;
+      const c = (res.item || res.course) as unknown as CourseItem;
       return {
         ...c,
         slug: (c.slug as string) || slugify(c.name || ''),

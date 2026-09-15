@@ -9,20 +9,12 @@ import { checkoutFormSchema } from "@atena/validators";
 import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
 
+import type { User } from "@supabase/supabase-js";
+import type { CourseItem, UserProfile } from "@atena/api-types";
+
 export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 
-export interface BookingItem {
-  id: string;
-  slug?: string;
-  name?: string;
-  title_it?: string;
-  price: string | number;
-  description_it?: string;
-  image_url?: string;
-  photo_url?: string;
-  category?: string;
-  teacher_name?: string;
-}
+export type BookingItem = CourseItem;
 import {
   fetchCheckoutItemAction,
   createOrUpdateReservationServerAction,
@@ -73,11 +65,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const [loading, setLoading] = useState(true);
   const [stripeEnabled, setStripeEnabled] = useState(false);
   const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | UserProfile | null>(null);
   const actionRef = useRef<SubmitAction>("book");
 
   const formMethods = useForm<CheckoutFormValues>({
-    resolver: zodResolver(checkoutFormSchema as any),
+    resolver: zodResolver(checkoutFormSchema as never),
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -113,7 +105,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         ]);
 
         if (itemRes.success && itemRes.item) {
-          setItem(itemRes.item);
+          setItem(itemRes.item as unknown as BookingItem);
         }
 
         if (settingsRes?.success) {
@@ -121,8 +113,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         }
 
         const userRes = await getCurrentUserAction();
-        if (userRes.success && (userRes as any).user) {
-          const currentUser = (userRes as any).user;
+        if (userRes.success && userRes.user) {
+          const currentUser = userRes.user;
           setUser(currentUser);
           const meta = currentUser.user_metadata || {};
           const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
@@ -279,7 +271,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setSubmitting("book");
     try {
       const sid = getSessionId();
-      const res: any = await createOrUpdateReservationServerAction({
+      const res = await createOrUpdateReservationServerAction({
         type,
         id,
         dateParam: effectiveDate || "",
@@ -290,7 +282,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       });
 
       if (!res.success) {
-        if (res.details && typeof res.details === "object") {
+        if ("details" in res && res.details && typeof res.details === "object") {
           Object.entries(res.details).forEach(([field, msgs]) => {
             if (Array.isArray(msgs) && msgs.length > 0) {
               formMethods.setError(field as keyof CheckoutFormValues, {
@@ -304,11 +296,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         return;
       }
 
-      const bookingId = res.bookingId || res.booking?.id || "";
+      const bookingId = ("bookingId" in res && res.bookingId) || ("booking" in res && (res.booking as { id?: string })?.id) || "";
       toast.success("Prenotazione completata con successo!");
       router.push(`/checkout/success/${bookingId}`);
-    } catch (err: any) {
-      toast.error(err.message || "Errore imprevisto");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Errore imprevisto";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -349,8 +342,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       }
 
       window.location.href = res.url;
-    } catch (err: any) {
-      toast.error(err.message || "Errore durante l'avvio del pagamento");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Errore durante l'avvio del pagamento";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

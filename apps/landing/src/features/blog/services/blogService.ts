@@ -1,4 +1,4 @@
-import { getBlogPosts, getSingleBlogPost } from "@/lib/data";
+import { getBlogPosts, getSingleBlogPost, type BlogPostRow } from "@/lib/data";
 
 export interface BlogPostSummary {
   slug: string;
@@ -22,19 +22,19 @@ export interface BlogPostFull {
 
 export async function getBlogPostList(): Promise<BlogPostSummary[]> {
   const posts = await getBlogPosts();
-  return (posts || []).map((post: any) => ({
+  return (posts || []).map((post: BlogPostRow) => ({
     slug: post.slug || "",
     title: post.title_it || post.title || "",
     excerpt: post.excerpt_it || post.excerpt || "",
-    mainImage: post.main_image || null,
+    mainImage: post.main_image || post.image_placeholder || null,
     publishedAt: post.published_at
-      ? new Date(post.published_at).toLocaleDateString("it")
+      ? new Date(String(post.published_at)).toLocaleDateString("it")
       : "",
   }));
 }
 
 export async function getBlogPostDetail(slug: string): Promise<BlogPostFull | null> {
-  const post: any = await getSingleBlogPost(slug);
+  const post = await getSingleBlogPost(slug) as BlogPostRow | null;
   if (!post) return null;
 
   return {
@@ -42,9 +42,9 @@ export async function getBlogPostDetail(slug: string): Promise<BlogPostFull | nu
     title: post.title_it || post.title || "",
     content: post.content_it || post.content || "",
     excerpt: post.excerpt_it || post.excerpt || "",
-    mainImage: post.main_image || null,
+    mainImage: post.main_image || post.image_placeholder || null,
     publishedAt: post.published_at
-      ? new Date(post.published_at).toLocaleDateString("it", {
+      ? new Date(String(post.published_at)).toLocaleDateString("it", {
           day: "numeric",
           month: "long",
           year: "numeric",
@@ -52,11 +52,11 @@ export async function getBlogPostDetail(slug: string): Promise<BlogPostFull | nu
       : "",
     metaTitle: post.title_it || post.title || "Articolo",
     metaDescription: post.excerpt_it || post.excerpt || "Leggi questo articolo sul blog di Atena School.",
-    metaImage: post.main_image || "",
+    metaImage: post.main_image || post.image_placeholder || "",
   };
 }
 
 export async function getBlogStaticParams(): Promise<{ slug: string }[]> {
   const posts = await getBlogPosts();
-  return (posts || []).map((post: any) => ({ slug: post.slug || "" }));
+  return (posts || []).map((post: BlogPostRow) => ({ slug: post.slug || "" }));
 }
