@@ -675,14 +675,7 @@ export function renderDictionaryHtml(data: any): string {
       border: 1px solid var(--border);
     }
 
-    .enum-card-desc {
-      padding: 12px 20px;
-      font-size: 13.5px;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border-subtle);
-    }
+
 
     .table-container {
       width: 100%;
@@ -1694,7 +1687,6 @@ export function renderDictionaryHtml(data: any): string {
                   <span class="db-type-badge">\${colData.dbType}</span>
                 </div>
               </div>
-              <div class="enum-card-desc">\${colDesc}</div>
 
               <div class="table-container">
                 <table class="dict-table">
