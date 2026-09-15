@@ -57,8 +57,8 @@ const CourseCard = ({
   const formattedDuration = formatCourseDurationText(lesson_duration_minutes, total_hours, total_lessons);
 
   const getLessonsPerWeekText = (titleStr: string, scheduleStr?: string): string | null => {
-    const lowerTitle = titleStr.toLowerCase();
-    const lowerSchedule = (scheduleStr || "").toLowerCase();
+    const lowerTitle = String(titleStr || "").toLowerCase();
+    const lowerSchedule = String(scheduleStr || "").toLowerCase();
     
     if (lowerTitle.includes("c2") || lowerSchedule.includes("c2")) {
       return "3 lezioni a settimana";
@@ -90,11 +90,11 @@ const CourseCard = ({
 
   const formatCategoryName = (cat?: string): string => {
     if (!cat) return "";
-    const lower = cat.toLowerCase();
+    const lower = String(cat).toLowerCase();
     if (lower === "languages" || lower === "language") return "Corsi di Lingua";
     if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
     if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
-    return cat;
+    return String(cat);
   };
 
   const cardContent = (

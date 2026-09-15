@@ -108,11 +108,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
   const formatCategoryName = (cat?: string): string => {
     if (!cat) return "";
-    const lower = cat.toLowerCase();
+    const lower = String(cat).toLowerCase();
     if (lower === "languages" || lower === "language") return "Corsi di Lingua";
     if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
     if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
-    return cat;
+    return String(cat);
   };
 
   const formattedDateString = (dStr?: string | null) => {

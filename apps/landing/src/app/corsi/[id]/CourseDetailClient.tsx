@@ -65,21 +65,21 @@ export default function CourseDetailClient({
 
   const formatCategoryName = (cat?: string): string => {
     if (!cat) return "";
-    const lower = cat.toLowerCase();
+    const lower = String(cat).toLowerCase();
     if (lower === "languages" || lower === "language") return "Corsi di Lingua";
     if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
     if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
-    return cat;
+    return String(cat);
   };
 
   const getCourseFormatDetails = (
-    formatStr?: string | null,
+    formatStr?: any,
     titleStr?: string,
     categoryStr?: string
   ): { label: string; icon: any } => {
-    const lowerFormat = (formatStr || "").toLowerCase();
-    const lowerTitle = (titleStr || "").toLowerCase();
-    const lowerCat = (categoryStr || "").toLowerCase();
+    const lowerFormat = String(formatStr || "").toLowerCase();
+    const lowerTitle = String(titleStr || "").toLowerCase();
+    const lowerCat = String(categoryStr || "").toLowerCase();
 
     if (lowerCat.includes("certipass") || lowerCat.includes("eipass") || lowerTitle.includes("eipass") || lowerFormat.includes("certif")) {
       return { label: "Certificazione", icon: Certificate };
@@ -94,8 +94,8 @@ export default function CourseDetailClient({
   const FormatIcon = courseFormat.icon;
 
   const getLessonsPerWeekText = (titleStr: string, scheduleStr?: string): string | null => {
-    const lowerTitle = titleStr.toLowerCase();
-    const lowerSchedule = (scheduleStr || "").toLowerCase();
+    const lowerTitle = String(titleStr || "").toLowerCase();
+    const lowerSchedule = String(scheduleStr || "").toLowerCase();
     if (lowerTitle.includes("c2") || lowerSchedule.includes("c2")) return "3 lezioni a settimana";
     if (lowerTitle.includes("c1") || lowerSchedule.includes("c1")) return "2 lezioni a settimana";
     let count = 0;
