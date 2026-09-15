@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { submitContactForm } from "@/app/actions/contact";
 import { contactFormSchema } from "@atena/validators";
+import { getStoredUtmParams } from "@/lib/utm";
+import { trackEvent } from "@/lib/analytics";
 
 export interface ContactFormData {
   nome: string;
@@ -10,6 +12,7 @@ export interface ContactFormData {
   interesse: string;
   messaggio: string;
   privacy: boolean;
+  website_url?: string; // Honeypot field
 }
 
 export type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
@@ -23,6 +26,7 @@ export function useContactForm() {
     interesse: "",
     messaggio: "",
     privacy: false,
+    website_url: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -47,10 +51,32 @@ export function useContactForm() {
     }
   };
 
+  const resetForm = () => {
+    setSubmitted(false);
+    setFormData({
+      nome: "",
+      cognome: "",
+      email: "",
+      telefono: "",
+      interesse: "",
+      messaggio: "",
+      privacy: false,
+      website_url: "",
+    });
+    setFieldErrors({});
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFieldErrors({});
     setError(null);
+
+    // Bot detection via Honeypot
+    if (formData.website_url && formData.website_url.trim().length > 0) {
+      setSubmitted(true);
+      return;
+    }
 
     if (!formData.privacy) {
       setFieldErrors((prev) => ({
@@ -84,22 +110,25 @@ export function useContactForm() {
 
     setLoading(true);
     try {
-      const res = await submitContactForm(formData);
+      const utm = getStoredUtmParams();
+      const res = await submitContactForm({
+        ...formData,
+        honeypot: formData.website_url,
+        utm,
+      });
+
       if (res.success) {
         setSubmitted(true);
+        trackEvent("generate_lead", {
+          lead_type: "contact_form",
+          interesse: formData.interesse || "generico",
+          utm_source: utm?.utm_source,
+          utm_campaign: utm?.utm_campaign,
+        });
+
         setTimeout(() => {
-          setSubmitted(false);
-          setFormData({
-            nome: "",
-            cognome: "",
-            email: "",
-            telefono: "",
-            interesse: "",
-            messaggio: "",
-            privacy: false,
-          });
-          setFieldErrors({});
-        }, 3000);
+          resetForm();
+        }, 8000);
       } else {
         if (res.details) {
           const errorsMap: FieldErrors = {};
@@ -129,5 +158,6 @@ export function useContactForm() {
     handleChange,
     handleCheckboxChange,
     handleSubmit,
+    resetForm,
   };
 }

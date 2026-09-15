@@ -43,6 +43,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
     handleChange,
     handleCheckboxChange,
     handleSubmit,
+    resetForm,
   } = useContactForm();
 
   const address = data?.address || "Via Matteotti 11, Cittanova (RC) 89022";
@@ -67,6 +68,13 @@ const ContactSection = ({ data }: ContactSectionProps) => {
             <p className="text-gray-600 max-w-sm text-sm">
               La tua richiesta è stata inviata con successo. Ti ricontatteremo al più presto.
             </p>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="mt-4 text-xs font-bold text-[#00328F] hover:underline cursor-pointer"
+            >
+              ← Invia un altro messaggio
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 2xl:gap-12">
@@ -194,6 +202,17 @@ const ContactSection = ({ data }: ContactSectionProps) => {
 
             {/* Column 2 - Inquiry Form (Center) */}
             <form onSubmit={handleSubmit} className="col-span-1 md:col-span-8 lg:col-span-5 flex flex-col space-y-5">
+              {/* Invisible Honeypot field for bot protection */}
+              <input
+                type="text"
+                name="website_url"
+                value={formData.website_url || ""}
+                onChange={handleChange}
+                tabIndex={-1}
+                autoComplete="off"
+                className="opacity-0 absolute -z-50 pointer-events-none h-0 w-0"
+                aria-hidden="true"
+              />
               <div className="text-left space-y-1">
                 <h4 className="text-sm font-bold text-gray-900">
                   Richiedi informazioni o prenota una consulenza

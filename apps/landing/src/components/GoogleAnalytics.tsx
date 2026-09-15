@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { env } from "@/config/env";
+import { captureUtmParams } from "@/lib/utm";
 
 /**
  * High-Performance, SEO-friendly Google Tag Manager, Google Analytics 4 & Microsoft Clarity Loader.
@@ -26,6 +27,10 @@ export default function GoogleAnalytics() {
   const GA_ID = env.NEXT_PUBLIC_GA_ID;
   const GTM_ID = env.NEXT_PUBLIC_GTM_ID;
   const CLARITY_ID = env.NEXT_PUBLIC_CLARITY_ID;
+
+  useEffect(() => {
+    captureUtmParams();
+  }, []);
 
   useEffect(() => {
     if (!GA_ID && !GTM_ID && !CLARITY_ID) {

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
@@ -149,9 +149,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     initCheckout();
   }, [id, type, reset]);
 
-  const watchedTaxCode = formMethods.watch("taxCode");
-  const watchedPurchaserTaxCode = formMethods.watch("purchaserTaxCode");
-  const watchedIsForChild = formMethods.watch("isForChild");
+  const watchedTaxCode = useWatch({ control: formMethods.control, name: "taxCode" });
+  const watchedPurchaserTaxCode = useWatch({ control: formMethods.control, name: "purchaserTaxCode" });
+  const watchedIsForChild = useWatch({ control: formMethods.control, name: "isForChild" });
 
   // Sync taxCode when toggling isForChild
   useEffect(() => {

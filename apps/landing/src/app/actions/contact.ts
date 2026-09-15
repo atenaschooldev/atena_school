@@ -7,7 +7,13 @@ export async function submitContactForm(formData: {
   telefono?: string;
   interesse?: string;
   messaggio: string;
+  honeypot?: string;
+  utm?: Record<string, any> | null;
 }) {
+  if (formData.honeypot) {
+    // Bot submission caught by honeypot
+    return { success: true };
+  }
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || siteUrl;

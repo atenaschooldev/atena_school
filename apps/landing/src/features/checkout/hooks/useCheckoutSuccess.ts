@@ -10,6 +10,7 @@ import {
   confirmPaymentAction,
 } from "@/app/actions/booking";
 import { BookingPaymentStatus } from "@atena/api-types";
+import { trackEvent } from "@/lib/analytics";
 
 export function useCheckoutSuccess(overrideBookingId?: string) {
   const router = useRouter();
@@ -73,6 +74,12 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     initReceipt();
   }, [bookingId, sessionId]);
 
+  const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
+  const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
+  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
+
+  const purchaseTrackedRef = useRef(false);
+
   useEffect(() => {
     if (verifying) return;
 
@@ -82,11 +89,24 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       origin: { y: 0.6 },
       colors: ["#F8861D", "#043569", "#FFFFFF"],
     });
-  }, [verifying]);
 
-  const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
-  const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
+    if (isPaid && bookingId && !purchaseTrackedRef.current) {
+      purchaseTrackedRef.current = true;
+      trackEvent("purchase", {
+        transaction_id: bookingId,
+        value: bookingData?.total_amount || bookingData?.amount || 0,
+        currency: "EUR",
+        items: [
+          {
+            item_id: bookingData?.course_id || bookingId,
+            item_name: bookingData?.course_name || "Corso Atena School",
+            price: bookingData?.total_amount || bookingData?.amount || 0,
+            quantity: 1,
+          },
+        ],
+      });
+    }
+  }, [verifying, isPaid, bookingId, bookingData]);
 
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {

@@ -9,7 +9,7 @@
     "dev:turbo": "next dev -p 3000 --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src",
     "test": "npx tsx --test src/tests/*.test.ts"
   },
   "dependencies": {
@@ -86,7 +86,7 @@
     "@types/node": "^22.16.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "eslint": "^10.7.0",
+    "eslint": "^9.22.0",
     "eslint-config-next": "^16.2.10",
     "postcss": "^8.5.17",
     "tailwindcss": "^4.3.2",

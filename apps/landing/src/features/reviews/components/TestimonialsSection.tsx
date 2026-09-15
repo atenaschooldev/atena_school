@@ -145,8 +145,18 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                 return (
                   <div key={item.id || index} className="flex-[0_0_88%] md:flex-[0_0_46%] lg:flex-[0_0_31%] xl:flex-[0_0_24%] min-w-0 pl-4 relative">
                     <div
-                      className="relative w-full"
+                      role="button"
+                      tabIndex={0}
+                      aria-haspopup="dialog"
+                      aria-label={`Leggi recensione di ${item.author}`}
+                      className="relative w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#043569] rounded-3xl"
                       onClick={() => setActiveTestimonial({ ...item, avatarUrl: avatar })}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setActiveTestimonial({ ...item, avatarUrl: avatar });
+                        }
+                      }}
                     >
                       {/* Non-expanded Card */}
                       <div className="bg-white border border-gray-100 rounded-3xl p-4 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-col justify-between h-[148px] w-full relative transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] cursor-pointer select-none">

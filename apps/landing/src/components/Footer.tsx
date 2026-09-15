@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
-import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, CaretUp, Phone, EnvelopeSimple, MapPin } from "@phosphor-icons/react";
+import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, Phone, EnvelopeSimple, MapPin } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 
 const Footer = () => {
@@ -15,12 +15,6 @@ const Footer = () => {
     return null;
 
   }
-
-  const scrollToTop = () => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
 
   return (
     <footer className="w-full bg-[#043569] text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10">
@@ -312,16 +306,6 @@ const Footer = () => {
         </div>
 
       </div>
-
-      {/* Floating Scroll-to-Top Button */}
-      <button
-        onClick={scrollToTop}
-        className="fixed bottom-6 right-6 w-11 h-11 bg-white hover:bg-slate-100 text-slate-900 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 z-50 transform hover:-translate-y-1 active:translate-y-0 cursor-pointer"
-        title="Torna su"
-        aria-label="Torna su"
-      >
-        <CaretUp size={18} weight="bold" />
-      </button>
     </footer>
   );
 };
