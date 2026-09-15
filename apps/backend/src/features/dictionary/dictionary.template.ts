@@ -12,83 +12,93 @@ export function renderDictionaryHtml(data: any): string {
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-page: #FFFFFF;
-      --bg-sidebar: #F7F7F5;
+      --bg-page: #F9FAFB;
+      --bg-sidebar: #FFFFFF;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #FAFAF9;
-      --bg-table-head: #F4F4F2;
-      --bg-subtle: #F1F1EF;
-      --bg-code: #F7F6F3;
-      --border: #E8E8E6;
-      --border-subtle: #F0F0EE;
-      --border-focus: #2563EB;
-      --text-main: #191918;
-      --text-secondary: #605F5B;
-      --text-tertiary: #9B9A97;
-      --accent: #043569;
-      --accent-light: #E9F2FA;
-      --accent-hover: #032852;
+      --bg-card-hover: #F8FAFC;
+      --bg-table-head: #F8FAFC;
+      --bg-subtle: #F1F5F9;
+      --bg-code: #F8FAFC;
+      --border: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --border-focus: #3B82F6;
       
+      --text-main: #0F172A;
+      --text-secondary: #475569;
+      --text-tertiary: #94A3B8;
+      
+      --accent: #2563EB;
+      --accent-light: #EFF6FF;
+      --accent-hover: #1D4ED8;
+      --accent-border: #BFDBFE;
+
       /* Notion-style semantic tag colors */
-      --tag-gray-bg: #F1F1EF;
-      --tag-gray-text: #5A5A58;
-      --tag-blue-bg: #E7F3F8;
-      --tag-blue-text: #1D5D84;
-      --tag-green-bg: #EDF5EE;
-      --tag-green-text: #2E6B45;
-      --tag-yellow-bg: #FDF6E2;
-      --tag-yellow-text: #96650E;
-      --tag-orange-bg: #FBECDD;
-      --tag-orange-text: #A84E00;
-      --tag-red-bg: #FDE8E8;
-      --tag-red-text: #B82C2C;
-      --tag-purple-bg: #F4EEF8;
-      --tag-purple-text: #6A3E8E;
+      --tag-gray-bg: #F1F5F9;
+      --tag-gray-text: #475569;
+      --tag-blue-bg: #EFF6FF;
+      --tag-blue-text: #1D4ED8;
+      --tag-green-bg: #F0FDF4;
+      --tag-green-text: #15803D;
+      --tag-yellow-bg: #FEFCE8;
+      --tag-yellow-text: #A16207;
+      --tag-orange-bg: #FFF7ED;
+      --tag-orange-text: #C2410C;
+      --tag-red-bg: #FEF2F2;
+      --tag-red-text: #B91C1C;
+      --tag-purple-bg: #FAF5FF;
+      --tag-purple-text: #7E22CE;
 
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 12px 32px rgba(0,0,0,0.12);
-      --sidebar-width: 270px;
+      
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+      
+      --sidebar-width: 280px;
     }
 
     [data-theme="dark"] {
-      --bg-page: #191919;
-      --bg-sidebar: #131313;
-      --bg-card: #202020;
-      --bg-card-hover: #262626;
-      --bg-table-head: #1C1C1C;
-      --bg-subtle: #2A2A2A;
-      --bg-code: #121212;
-      --border: #2E2E2E;
-      --border-subtle: #242424;
-      --border-focus: #3B82F6;
-      --text-main: #ECECEC;
-      --text-secondary: #A0A0A0;
-      --text-tertiary: #6E6E6E;
+      --bg-page: #0B0F19;
+      --bg-sidebar: #111827;
+      --bg-card: #111827;
+      --bg-card-hover: #1E293B;
+      --bg-table-head: #161F30;
+      --bg-subtle: #1F2937;
+      --bg-code: #0B0F19;
+      --border: #1F2937;
+      --border-subtle: #1A2234;
+      --border-focus: #60A5FA;
+      
+      --text-main: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-tertiary: #64748B;
+      
       --accent: #3B82F6;
       --accent-light: #1E293B;
       --accent-hover: #60A5FA;
+      --accent-border: #1D4ED8;
 
-      --tag-gray-bg: #2B2B2B;
-      --tag-gray-text: #B4B4B4;
-      --tag-blue-bg: #192D3E;
-      --tag-blue-text: #70B4E0;
-      --tag-green-bg: #1B2E20;
-      --tag-green-text: #73C991;
-      --tag-yellow-bg: #352D18;
-      --tag-yellow-text: #E5B84B;
-      --tag-orange-bg: #362416;
-      --tag-orange-text: #F38B42;
-      --tag-red-bg: #381D1E;
-      --tag-red-text: #E86B6B;
-      --tag-purple-bg: #2B1D38;
-      --tag-purple-text: #C18CE6;
+      --tag-gray-bg: #1F2937;
+      --tag-gray-text: #CBD5E1;
+      --tag-blue-bg: #172554;
+      --tag-blue-text: #93C5FD;
+      --tag-green-bg: #052E16;
+      --tag-green-text: #86EFAC;
+      --tag-yellow-bg: #422006;
+      --tag-yellow-text: #FDE047;
+      --tag-orange-bg: #431407;
+      --tag-orange-text: #FDBA74;
+      --tag-red-bg: #450A0A;
+      --tag-red-text: #FCA5A5;
+      --tag-purple-bg: #3B0764;
+      --tag-purple-text: #D8B4FE;
 
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
     }
 
     * {
@@ -105,6 +115,7 @@ export function renderDictionaryHtml(data: any): string {
       min-height: 100vh;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     /* ============================================================ */
@@ -132,16 +143,16 @@ export function renderDictionaryHtml(data: any): string {
     .brand-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
       text-decoration: none;
       color: var(--text-main);
     }
 
     .brand-logo {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
-      background: linear-gradient(135deg, #043569 0%, #0A60B6 100%);
+      background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
       color: #FFF;
       display: flex;
       align-items: center;
@@ -164,14 +175,14 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .brand-subtitle {
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 500;
       color: var(--text-tertiary);
     }
 
     .search-trigger {
       margin: 14px 16px 8px;
-      padding: 8px 12px;
+      padding: 9px 12px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -182,23 +193,24 @@ export function renderDictionaryHtml(data: any): string {
       justify-content: space-between;
       cursor: pointer;
       transition: all 0.15s ease;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-xs);
     }
 
     .search-trigger:hover {
-      border-color: var(--text-tertiary);
+      border-color: var(--accent);
       color: var(--text-main);
+      box-shadow: var(--shadow-sm);
     }
 
     .search-trigger kbd {
       background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-radius: 4px;
+      border-radius: 5px;
       padding: 2px 6px;
-      font-size: 10px;
+      font-size: 11px;
       font-family: var(--font-mono);
       font-weight: 600;
-      color: var(--text-tertiary);
+      color: var(--text-secondary);
     }
 
     .sidebar-nav {
@@ -211,24 +223,25 @@ export function renderDictionaryHtml(data: any): string {
       font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: var(--text-tertiary);
-      padding: 12px 10px 6px;
+      padding: 14px 10px 6px;
     }
 
     .nav-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13.5px;
       font-weight: 500;
       color: var(--text-secondary);
       text-decoration: none;
       cursor: pointer;
       transition: all 0.12s ease;
       margin-bottom: 2px;
+      border: 1px solid transparent;
     }
 
     .nav-item:hover {
@@ -240,16 +253,13 @@ export function renderDictionaryHtml(data: any): string {
       background-color: var(--accent-light);
       color: var(--accent);
       font-weight: 600;
-    }
-
-    [data-theme="dark"] .nav-item.active {
-      color: #93C5FD;
+      border-color: var(--accent-border);
     }
 
     .nav-item-icon {
       font-size: 16px;
       line-height: 1;
-      width: 18px;
+      width: 20px;
       text-align: center;
     }
 
@@ -264,6 +274,16 @@ export function renderDictionaryHtml(data: any): string {
       border: 1px solid var(--border);
     }
 
+    .nav-item.active .nav-item-badge {
+      border-color: var(--accent-border);
+      color: var(--accent);
+      background: #FFF;
+    }
+
+    [data-theme="dark"] .nav-item.active .nav-item-badge {
+      background: var(--bg-card);
+    }
+
     .sidebar-footer {
       padding: 14px 16px;
       border-top: 1px solid var(--border-subtle);
@@ -271,16 +291,17 @@ export function renderDictionaryHtml(data: any): string {
       align-items: center;
       justify-content: space-between;
       font-size: 12px;
+      background: var(--bg-sidebar);
     }
 
     .theme-toggle-btn {
-      background: transparent;
+      background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: 6px 10px;
+      padding: 6px 12px;
       color: var(--text-secondary);
       cursor: pointer;
-      font-size: 12px;
+      font-size: 12.5px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -290,6 +311,7 @@ export function renderDictionaryHtml(data: any): string {
     .theme-toggle-btn:hover {
       background: var(--bg-subtle);
       color: var(--text-main);
+      border-color: var(--text-tertiary);
     }
 
     /* ============================================================ */
@@ -304,24 +326,30 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .top-header {
-      height: 52px;
+      height: 56px;
       border-bottom: 1px solid var(--border);
-      background: var(--bg-page);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 30;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 32px;
+      padding: 0 40px;
+    }
+
+    [data-theme="dark"] .top-header {
+      background: rgba(17, 24, 39, 0.85);
     }
 
     .breadcrumbs {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: var(--text-secondary);
+      font-size: 13.5px;
+      color: var(--text-tertiary);
     }
 
     .breadcrumb-active {
@@ -339,26 +367,29 @@ export function renderDictionaryHtml(data: any): string {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 12.5px;
+      font-weight: 600;
       color: var(--text-secondary);
       text-decoration: none;
-      padding: 5px 10px;
+      padding: 6px 12px;
       border-radius: 6px;
       border: 1px solid var(--border);
+      background: var(--bg-card);
       transition: all 0.15s ease;
+      box-shadow: var(--shadow-xs);
     }
 
     .header-link-btn:hover {
       background: var(--bg-subtle);
       color: var(--text-main);
+      border-color: var(--accent);
     }
 
     .page-content {
-      max-width: 1080px;
+      max-width: 1160px;
       width: 100%;
       margin: 0 auto;
-      padding: 36px 32px 80px;
+      padding: 36px 40px 100px;
     }
 
     /* ============================================================ */
@@ -370,46 +401,68 @@ export function renderDictionaryHtml(data: any): string {
 
     .view-container.active {
       display: block;
-      animation: fadeIn 0.18s ease forwards;
+      animation: fadeIn 0.15s ease forwards;
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
+      from { opacity: 0; transform: translateY(3px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Hero Header Block */
     .hero-header {
       margin-bottom: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow-xs);
     }
 
-    .hero-icon {
-      font-size: 42px;
-      line-height: 1;
+    .hero-header-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
       margin-bottom: 12px;
-      display: inline-block;
+    }
+
+    .hero-icon-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .hero-header-text {
+      flex: 1;
     }
 
     .hero-title {
-      font-size: 30px;
+      font-size: 24px;
       font-weight: 800;
-      letter-spacing: -0.025em;
+      letter-spacing: -0.02em;
       color: var(--text-main);
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .hero-desc {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--text-secondary);
       line-height: 1.6;
-      max-width: 800px;
+      margin-top: 8px;
     }
 
-    /* Meta Badges Grid */
     .meta-badges {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 14px;
+      margin-top: 12px;
     }
 
     .meta-pill {
@@ -419,7 +472,7 @@ export function renderDictionaryHtml(data: any): string {
       border-radius: 6px;
       background: var(--bg-subtle);
       color: var(--text-secondary);
-      border: 1px solid var(--border-subtle);
+      border: 1px solid var(--border);
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -427,17 +480,48 @@ export function renderDictionaryHtml(data: any): string {
 
     .meta-pill code {
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 11.5px;
       font-weight: 600;
       color: var(--text-main);
+    }
+
+    /* Architecture Callout */
+    .callout {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 10px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      box-shadow: var(--shadow-xs);
+    }
+
+    .callout-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .callout-content {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
     }
 
     /* Overview Cards Grid */
     .overview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 16px;
-      margin-top: 24px;
+      margin-top: 20px;
       margin-bottom: 40px;
     }
 
@@ -452,7 +536,7 @@ export function renderDictionaryHtml(data: any): string {
       transition: all 0.16s ease;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-xs);
     }
 
     .overview-card:hover {
@@ -464,12 +548,20 @@ export function renderDictionaryHtml(data: any): string {
     .overview-card-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
     .overview-card-icon {
       font-size: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--bg-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-subtle);
     }
 
     .overview-card-title {
@@ -496,126 +588,104 @@ export function renderDictionaryHtml(data: any): string {
       color: var(--text-tertiary);
     }
 
-    /* Architecture Callout */
-    .callout {
-      background: var(--bg-subtle);
+    /* ============================================================ */
+    /* ENUM CARD & TABLE CONTAINER                                  */
+    /* ============================================================ */
+    .enum-card {
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px 20px;
-      margin-bottom: 28px;
-      display: flex;
-      gap: 14px;
-      align-items: flex-start;
+      border-radius: 14px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-xs);
+      overflow: hidden;
+      transition: border-color 0.15s ease;
     }
 
-    .callout-icon {
-      font-size: 22px;
-      line-height: 1;
+    .enum-card:hover {
+      border-color: #CBD5E1;
     }
 
-    .callout-content {
-      font-size: 13.5px;
-      line-height: 1.6;
-      color: var(--text-main);
+    [data-theme="dark"] .enum-card:hover {
+      border-color: #334155;
     }
 
-    .callout-title {
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    /* ============================================================ */
-    /* ENUM SECTION & INTERACTIVE TABLE                             */
-    /* ============================================================ */
-    .enum-block {
-      margin-bottom: 48px;
-    }
-
-    .enum-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 14px;
-      padding-bottom: 10px;
+    .enum-card-header {
+      padding: 16px 20px;
+      background: var(--bg-table-head);
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
-    .enum-title-group {
+    .enum-card-header-left {
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .enum-title {
-      font-size: 18px;
+    .column-name-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-main);
+    }
+
+    .column-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .column-name-badge code {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      background: var(--bg-subtle);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
     }
 
     .enum-type-badge {
       font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
       background: var(--tag-blue-bg);
       color: var(--tag-blue-text);
-      border: 1px solid rgba(0,0,0,0.05);
+      border: 1px solid rgba(37, 99, 235, 0.15);
     }
 
-    .enum-desc {
+    .db-type-badge {
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: var(--text-tertiary);
+      background: var(--bg-card);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .enum-card-desc {
+      padding: 12px 20px;
       font-size: 13.5px;
       color: var(--text-secondary);
-      margin-bottom: 14px;
-    }
-
-    /* Tabs Header */
-    .tabs-header {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 4px;
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      padding: 6px 12px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.12s ease;
-    }
-
-    .tab-btn:hover {
-      background: var(--bg-subtle);
-      color: var(--text-main);
-    }
-
-    .tab-btn.active {
+      line-height: 1.5;
       background: var(--bg-card);
-      color: var(--accent);
-      font-weight: 600;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-subtle);
     }
 
-    [data-theme="dark"] .tab-btn.active {
-      color: #93C5FD;
-    }
-
-    /* Table Component */
-    .table-responsive {
+    .table-container {
       width: 100%;
       overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--bg-card);
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 16px;
     }
 
     .dict-table {
@@ -629,18 +699,19 @@ export function renderDictionaryHtml(data: any): string {
       background: var(--bg-table-head);
       color: var(--text-secondary);
       font-weight: 600;
-      padding: 10px 14px;
+      padding: 10px 18px;
       border-bottom: 1px solid var(--border);
       font-size: 11.5px;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
     }
 
     .dict-table td {
-      padding: 12px 14px;
+      padding: 12px 18px;
       border-bottom: 1px solid var(--border-subtle);
       color: var(--text-main);
-      vertical-align: top;
+      vertical-align: middle;
     }
 
     .dict-table tr:last-child td {
@@ -651,93 +722,74 @@ export function renderDictionaryHtml(data: any): string {
       background-color: var(--bg-card-hover);
     }
 
-    /* Badges in table */
+    /* Badges */
     .id-badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      min-width: 26px;
+      height: 26px;
+      padding: 0 6px;
       border-radius: 6px;
-      background: var(--accent-light);
-      color: var(--accent);
+      background: var(--tag-blue-bg);
+      color: var(--tag-blue-text);
       font-family: var(--font-mono);
       font-weight: 700;
       font-size: 12px;
       cursor: pointer;
-      transition: transform 0.1s ease;
-    }
-
-    [data-theme="dark"] .id-badge {
-      color: #93C5FD;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      transition: all 0.12s ease;
     }
 
     .id-badge:hover {
-      transform: scale(1.15);
+      transform: scale(1.1);
+      background: var(--accent);
+      color: #FFF;
     }
 
     .code-badge {
       font-family: var(--font-mono);
       font-size: 12px;
       font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
       background: var(--tag-gray-bg);
       color: var(--tag-gray-text);
+      border: 1px solid var(--border);
       cursor: pointer;
       display: inline-block;
+      transition: all 0.12s ease;
     }
 
     .code-badge:hover {
       background: var(--accent-light);
       color: var(--accent);
+      border-color: var(--accent-border);
     }
 
     .lang-flag {
-      font-size: 13px;
-      margin-right: 4px;
+      font-size: 14px;
+      margin-right: 6px;
+      vertical-align: -1px;
     }
 
     .lang-item {
       margin-bottom: 3px;
       line-height: 1.4;
+      font-size: 12.5px;
     }
 
     .lang-item:last-child {
       margin-bottom: 0;
     }
 
-    /* Code Snippet Box */
-    .code-box {
-      background: var(--bg-code);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px;
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      line-height: 1.6;
+    .lang-item.main {
+      font-weight: 600;
       color: var(--text-main);
-      position: relative;
-      overflow-x: auto;
     }
 
-    .copy-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 4px 8px;
-      font-size: 11px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
+    .lang-item.sub {
       color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.12s ease;
-    }
-
-    .copy-btn:hover {
-      color: var(--text-main);
-      border-color: var(--text-tertiary);
     }
 
     /* ============================================================ */
@@ -749,8 +801,9 @@ export function renderDictionaryHtml(data: any): string {
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(2px);
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       z-index: 100;
       display: none;
       align-items: flex-start;
@@ -764,10 +817,10 @@ export function renderDictionaryHtml(data: any): string {
 
     .search-modal {
       width: 100%;
-      max-width: 620px;
+      max-width: 640px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       box-shadow: var(--shadow-lg);
       overflow: hidden;
       animation: modalSlide 0.15s ease forwards;
@@ -779,11 +832,12 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .search-input-wrapper {
-      padding: 14px 16px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       gap: 12px;
+      background: var(--bg-card);
     }
 
     .search-icon {
@@ -802,19 +856,19 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .search-results {
-      max-height: 380px;
+      max-height: 400px;
       overflow-y: auto;
       padding: 8px;
     }
 
     .search-item {
-      padding: 10px 12px;
+      padding: 10px 14px;
       border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
       transition: background 0.1s ease;
     }
 
@@ -825,7 +879,7 @@ export function renderDictionaryHtml(data: any): string {
     .search-item-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .search-item-info {
@@ -859,23 +913,24 @@ export function renderDictionaryHtml(data: any): string {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #191918;
+      background: #0F172A;
       color: #FFF;
-      padding: 10px 16px;
+      padding: 10px 18px;
       border-radius: 8px;
       font-size: 13px;
-      font-weight: 500;
-      box-shadow: var(--shadow-md);
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
       z-index: 200;
       display: none;
       align-items: center;
       gap: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
       animation: toastIn 0.15s ease forwards;
     }
 
     [data-theme="dark"] .toast {
-      background: #E5E5E5;
-      color: #111;
+      background: #F8FAFC;
+      color: #0F172A;
     }
 
     .toast.show {
@@ -965,7 +1020,7 @@ export function renderDictionaryHtml(data: any): string {
 
   <!-- ============================================================ -->
   <!-- MAIN WORKSPACE                                               -->
-  <!-- ============================================================ */
+  <!-- ============================================================ -->
   <div class="main-wrapper">
     <header class="top-header">
       <div class="breadcrumbs">
@@ -990,17 +1045,21 @@ export function renderDictionaryHtml(data: any): string {
       <!-- ======================================================== -->
       <div id="view-overview" class="view-container active">
         <div class="hero-header">
-          <div class="hero-icon">🏛️</div>
-          <h1 class="hero-title">Словарь данных и перечислений Atena School</h1>
+          <div class="hero-header-top">
+            <div class="hero-icon-badge">🏛️</div>
+            <div class="hero-header-text">
+              <h1 class="hero-title">Словарь данных и перечислений Atena School</h1>
+              <div class="meta-badges">
+                <span class="meta-pill">💾 Тип хранения: <code>SMALLINT (2 Bytes)</code></span>
+                <span class="meta-pill">🛡️ Пакет типов: <code>@atena/api-types</code></span>
+                <span class="meta-pill">🌐 Языки: <code>IT, EN, RU</code></span>
+                <span class="meta-pill">⚡ Таблиц в схеме: <code>7</code></span>
+              </div>
+            </div>
+          </div>
           <p class="hero-desc">
             Единый архитектурный стандарт числовых перечислений (SmallInt Enums) и системных сущностей платформы Atena School. Все перечисления строго типизированы в TypeScript, оптимизированы в PostgreSQL (2 байта на значение) и поддерживают мультиязычные переводы (IT / EN / RU).
           </p>
-          <div class="meta-badges">
-            <span class="meta-pill">💾 Тип хранения: <code>SMALLINT (2 Bytes)</code></span>
-            <span class="meta-pill">🛡️ Пакет типов: <code>@atena/api-types</code></span>
-            <span class="meta-pill">🌐 Языки: <code>IT, EN, RU</code></span>
-            <span class="meta-pill">⚡ Всего таблиц: <code>7</code></span>
-          </div>
         </div>
 
         <div class="callout">
@@ -1011,7 +1070,7 @@ export function renderDictionaryHtml(data: any): string {
           </div>
         </div>
 
-        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Реестр таблиц базы данных</h2>
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">Реестр таблиц базы данных</h2>
         <div class="overview-grid">
           <a class="overview-card" onclick="switchTab('bookings')">
             <div class="overview-card-header">
@@ -1042,7 +1101,7 @@ export function renderDictionaryHtml(data: any): string {
               <span class="overview-card-icon">🎓</span>
               <span class="overview-card-title">Courses</span>
             </div>
-            <p class="overview-card-desc">Каталог программ школы: групповые, индивидуальные, онлайн и сертификации.</p>
+            <p class="overview-card-desc">Каталог программ школы: уровни A1..C2, индивидуальные/групповые форматы, статусы.</p>
             <div class="overview-card-footer">
               <span>Таблица: <code>courses</code></span>
               <span>3 колонки</span>
@@ -1054,7 +1113,7 @@ export function renderDictionaryHtml(data: any): string {
               <span class="overview-card-icon">👥</span>
               <span class="overview-card-title">Students</span>
             </div>
-            <p class="overview-card-desc">Реестр студентов: статус обучения, уровень владения языком по шкале CEFR (A1..C2).</p>
+            <p class="overview-card-desc">Реестр студентов: статус обучения (ACTIVE..ARCHIVED), уровень владения языком CEFR (A1..C2).</p>
             <div class="overview-card-footer">
               <span>Таблица: <code>students</code></span>
               <span>2 колонки</span>
@@ -1150,37 +1209,46 @@ export function renderDictionaryHtml(data: any): string {
         html += \`
           <div id="view-\${tableKey}" class="view-container">
             <div class="hero-header">
-              <div class="hero-icon">\${icon}</div>
-              <h1 class="hero-title">\${tableData.title}</h1>
-              <p class="hero-desc">\${tableData.description}</p>
-              <div class="meta-badges">
-                <span class="meta-pill">Таблица в PostgreSQL: <code>public.\${tableData.table}</code></span>
-                <span class="meta-pill">Колонок в справочнике: <code>\${Object.keys(tableData.columns).length}</code></span>
+              <div class="hero-header-top">
+                <div class="hero-icon-badge">\${icon}</div>
+                <div class="hero-header-text">
+                  <h1 class="hero-title">\${tableData.title}</h1>
+                  <div class="meta-badges">
+                    <span class="meta-pill">🐘 PostgreSQL: <code>public.\${tableData.table}</code></span>
+                    <span class="meta-pill">📊 Колонок со справочниками: <code>\${Object.keys(tableData.columns).length}</code></span>
+                  </div>
+                </div>
               </div>
+              <p class="hero-desc">\${tableData.description}</p>
             </div>
         \`;
 
-        // Render each enum column in this table
+        // Render each enum column in this table as a structured Card
         for (const [colKey, colData] of Object.entries(tableData.columns)) {
           html += \`
-            <div class="enum-block">
-              <div class="enum-header">
-                <div class="enum-title-group">
-                  <span class="enum-title">Колонка: <code>\${colData.column}</code></span>
+            <div class="enum-card">
+              <div class="enum-card-header">
+                <div class="enum-card-header-left">
+                  <span class="column-name-badge">
+                    <span class="column-dot"></span>
+                    Колонка: <code>\${colData.column}</code>
+                  </span>
                   <span class="enum-type-badge">\${colData.name}</span>
                 </div>
-                <span style="font-size: 12px; font-family: var(--font-mono); color: var(--text-tertiary);">\${colData.dbType}</span>
+                <div>
+                  <span class="db-type-badge">\${colData.dbType}</span>
+                </div>
               </div>
-              <p class="enum-desc">\${colData.description}</p>
+              <div class="enum-card-desc">\${colData.description}</div>
 
-              <div class="table-responsive">
+              <div class="table-container">
                 <table class="dict-table">
                   <thead>
                     <tr>
-                      <th style="width: 60px;">ID</th>
+                      <th style="width: 50px; text-align: center;">ID</th>
                       <th style="width: 170px;">TypeScript Code</th>
-                      <th style="width: 280px;">Переводы (IT / EN / RU)</th>
-                      <th>Бизнес-описание</th>
+                      <th style="width: 260px;">Переводы (IT / EN / RU)</th>
+                      <th>Бизнес-назначение и контекст</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1189,18 +1257,18 @@ export function renderDictionaryHtml(data: any): string {
           for (const [valKey, valData] of Object.entries(colData.values)) {
             html += \`
               <tr>
-                <td>
-                  <span class="id-badge" onclick="copyText('\${valData.id}', 'ID \${valData.id}')" title="Нажмите, чтобы скопировать ID">\${valData.id}</span>
+                <td style="text-align: center;">
+                  <span class="id-badge" onclick="copyText('\${valData.id}', 'ID \${valData.id}')" title="Нажмите, чтобы скопировать ID \${valData.id}">\${valData.id}</span>
                 </td>
                 <td>
-                  <span class="code-badge" onclick="copyText('\${colData.name}.\${valData.code}', '\${colData.name}.\${valData.code}')" title="Скопировать код">\${valData.code}</span>
+                  <span class="code-badge" onclick="copyText('\${colData.name}.\${valData.code}', '\${colData.name}.\${valData.code}')" title="Нажмите, чтобы скопировать \${colData.name}.\${valData.code}">\${valData.code}</span>
                 </td>
                 <td>
-                  <div class="lang-item"><span class="lang-flag">🇮🇹</span> <strong>\${valData.label_it || '—'}</strong></div>
-                  <div class="lang-item" style="color: var(--text-secondary);"><span class="lang-flag">🇬🇧</span> \${valData.label_en || '—'}</div>
-                  <div class="lang-item" style="color: var(--text-secondary);"><span class="lang-flag">🇷🇺</span> \${valData.label_ru || '—'}</div>
+                  <div class="lang-item main"><span class="lang-flag">🇮🇹</span> \${valData.label_it || '—'}</div>
+                  <div class="lang-item sub"><span class="lang-flag">🇬🇧</span> \${valData.label_en || '—'}</div>
+                  <div class="lang-item sub"><span class="lang-flag">🇷🇺</span> \${valData.label_ru || '—'}</div>
                 </td>
-                <td style="color: var(--text-secondary); line-height: 1.5;">
+                <td style="color: var(--text-secondary); line-height: 1.55; font-size: 13px;">
                   \${valData.description || '—'}
                 </td>
               </tr>
@@ -1341,7 +1409,7 @@ export function renderDictionaryHtml(data: any): string {
       }
 
       if (results.length === 0) {
-        resultsContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-tertiary); font-size: 13px;">Ничего не найдено</div>';
+        resultsContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13.5px;">Ничего не найдено</div>';
         return;
       }
 
@@ -1366,7 +1434,7 @@ export function renderDictionaryHtml(data: any): string {
 
     // Keyboard Hotkey Listener for Cmd+K and Esc
     window.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         openSearch();
       }
