@@ -32,21 +32,10 @@ export function renderDictionaryHtml(data: any): string {
       --accent-hover: #1D4ED8;
       --accent-border: #BFDBFE;
 
-      /* Notion-style semantic tag colors */
       --tag-gray-bg: #F1F5F9;
       --tag-gray-text: #475569;
       --tag-blue-bg: #EFF6FF;
       --tag-blue-text: #1D4ED8;
-      --tag-green-bg: #F0FDF4;
-      --tag-green-text: #15803D;
-      --tag-yellow-bg: #FEFCE8;
-      --tag-yellow-text: #A16207;
-      --tag-orange-bg: #FFF7ED;
-      --tag-orange-text: #C2410C;
-      --tag-red-bg: #FEF2F2;
-      --tag-red-text: #B91C1C;
-      --tag-purple-bg: #FAF5FF;
-      --tag-purple-text: #7E22CE;
 
       --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
@@ -84,16 +73,6 @@ export function renderDictionaryHtml(data: any): string {
       --tag-gray-text: #CBD5E1;
       --tag-blue-bg: #172554;
       --tag-blue-text: #93C5FD;
-      --tag-green-bg: #052E16;
-      --tag-green-text: #86EFAC;
-      --tag-yellow-bg: #422006;
-      --tag-yellow-text: #FDE047;
-      --tag-orange-bg: #431407;
-      --tag-orange-text: #FDBA74;
-      --tag-red-bg: #450A0A;
-      --tag-red-text: #FCA5A5;
-      --tag-purple-bg: #3B0764;
-      --tag-purple-text: #D8B4FE;
 
       --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
@@ -118,9 +97,7 @@ export function renderDictionaryHtml(data: any): string {
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* ============================================================ */
-    /* SIDEBAR NAVIGATION                                           */
-    /* ============================================================ */
+    /* SIDEBAR */
     .sidebar {
       width: var(--sidebar-width);
       min-width: var(--sidebar-width);
@@ -314,9 +291,7 @@ export function renderDictionaryHtml(data: any): string {
       border-color: var(--text-tertiary);
     }
 
-    /* ============================================================ */
-    /* MAIN CONTENT AREA                                            */
-    /* ============================================================ */
+    /* MAIN CONTENT */
     .main-wrapper {
       flex: 1;
       display: flex;
@@ -363,7 +338,6 @@ export function renderDictionaryHtml(data: any): string {
       gap: 12px;
     }
 
-    /* Segmented Language Switcher */
     .lang-switcher {
       display: flex;
       align-items: center;
@@ -428,9 +402,6 @@ export function renderDictionaryHtml(data: any): string {
       padding: 36px 40px 100px;
     }
 
-    /* ============================================================ */
-    /* VIEWS: OVERVIEW & TABLE DETAIL                               */
-    /* ============================================================ */
     .view-container {
       display: none;
     }
@@ -445,7 +416,6 @@ export function renderDictionaryHtml(data: any): string {
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Hero Header Block */
     .hero-header {
       margin-bottom: 32px;
       background: var(--bg-card);
@@ -521,7 +491,6 @@ export function renderDictionaryHtml(data: any): string {
       color: var(--text-main);
     }
 
-    /* Architecture Callout */
     .callout {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -552,7 +521,6 @@ export function renderDictionaryHtml(data: any): string {
       margin-bottom: 4px;
     }
 
-    /* Overview Cards Grid */
     .overview-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -624,9 +592,6 @@ export function renderDictionaryHtml(data: any): string {
       color: var(--text-tertiary);
     }
 
-    /* ============================================================ */
-    /* ENUM CARD & TABLE CONTAINER                                  */
-    /* ============================================================ */
     .enum-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -758,7 +723,6 @@ export function renderDictionaryHtml(data: any): string {
       background-color: var(--bg-card-hover);
     }
 
-    /* Badges */
     .id-badge {
       display: inline-flex;
       align-items: center;
@@ -817,9 +781,6 @@ export function renderDictionaryHtml(data: any): string {
       color: var(--text-main);
     }
 
-    /* ============================================================ */
-    /* SEARCH MODAL (CMD + K)                                       */
-    /* ============================================================ */
     .modal-backdrop {
       position: fixed;
       top: 0;
@@ -933,7 +894,6 @@ export function renderDictionaryHtml(data: any): string {
       border-radius: 4px;
     }
 
-    /* Toast Notification */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -970,9 +930,7 @@ export function renderDictionaryHtml(data: any): string {
 </head>
 <body data-theme="light">
 
-  <!-- ============================================================ -->
-  <!-- SIDEBAR NAVIGATION                                           -->
-  <!-- ============================================================ -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <a href="#overview" class="brand-row" onclick="switchTab('overview')">
@@ -999,37 +957,37 @@ export function renderDictionaryHtml(data: any): string {
       <div class="nav-section-title" id="nav-title-tables">Таблицы базы данных</div>
       <a class="nav-item" data-tab="bookings" onclick="switchTab('bookings')">
         <span class="nav-item-icon">📦</span>
-        <span>Bookings</span>
+        <span id="nav-item-bookings">Bookings</span>
         <span class="nav-item-badge">5 enums</span>
       </a>
       <a class="nav-item" data-tab="payments" onclick="switchTab('payments')">
         <span class="nav-item-icon">💳</span>
-        <span>Payments</span>
+        <span id="nav-item-payments">Payments</span>
         <span class="nav-item-badge">5 enums</span>
       </a>
       <a class="nav-item" data-tab="courses" onclick="switchTab('courses')">
         <span class="nav-item-icon">🎓</span>
-        <span>Courses</span>
+        <span id="nav-item-courses">Courses</span>
         <span class="nav-item-badge">3 enums</span>
       </a>
       <a class="nav-item" data-tab="students" onclick="switchTab('students')">
         <span class="nav-item-icon">👥</span>
-        <span>Students</span>
+        <span id="nav-item-students">Students</span>
         <span class="nav-item-badge">2 enums</span>
       </a>
       <a class="nav-item" data-tab="lessons" onclick="switchTab('lessons')">
         <span class="nav-item-icon">🗓️</span>
-        <span>Lessons</span>
+        <span id="nav-item-lessons">Lessons</span>
         <span class="nav-item-badge">3 enums</span>
       </a>
       <a class="nav-item" data-tab="annual_memberships" onclick="switchTab('annual_memberships')">
         <span class="nav-item-icon">🪪</span>
-        <span>Annual Memberships</span>
+        <span id="nav-item-annual_memberships">Annual Memberships</span>
         <span class="nav-item-badge">1 enum</span>
       </a>
       <a class="nav-item" data-tab="app_settings" onclick="switchTab('app_settings')">
         <span class="nav-item-icon">⚙️</span>
-        <span>App Settings</span>
+        <span id="nav-item-app_settings">App Settings</span>
         <span class="nav-item-badge">JSONB</span>
       </a>
     </nav>
@@ -1043,9 +1001,7 @@ export function renderDictionaryHtml(data: any): string {
     </div>
   </aside>
 
-  <!-- ============================================================ -->
-  <!-- MAIN WORKSPACE                                               -->
-  <!-- ============================================================ -->
+  <!-- MAIN WORKSPACE -->
   <div class="main-wrapper">
     <header class="top-header">
       <div class="breadcrumbs">
@@ -1057,7 +1013,7 @@ export function renderDictionaryHtml(data: any): string {
       </div>
 
       <div class="header-actions">
-        <!-- 3-Language Switcher -->
+        <!-- 3-Way Language Switcher -->
         <div class="lang-switcher">
           <button class="lang-btn" id="lang-btn-it" onclick="setLanguage('it')" title="Italiano">
             <span class="lang-flag">🇮🇹</span> IT
@@ -1078,9 +1034,7 @@ export function renderDictionaryHtml(data: any): string {
 
     <main class="page-content">
 
-      <!-- ======================================================== -->
-      <!-- VIEW: OVERVIEW                                           -->
-      <!-- ======================================================== -->
+      <!-- VIEW: OVERVIEW -->
       <div id="view-overview" class="view-container active">
         <div class="hero-header">
           <div class="hero-header-top">
@@ -1109,109 +1063,23 @@ export function renderDictionaryHtml(data: any): string {
         </div>
 
         <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);" id="registry-title-text">Реестр таблиц базы данных</h2>
-        <div class="overview-grid">
-          <a class="overview-card" onclick="switchTab('bookings')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">📦</span>
-              <span class="overview-card-title">Bookings</span>
-            </div>
-            <p class="overview-card-desc">Заказы и бронирования курсов клиентами. Статусы оплаты, жизненного цикла, схемы оплат.</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>bookings</code></span>
-              <span>5 колонок</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('payments')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">💳</span>
-              <span class="overview-card-title">Payments</span>
-            </div>
-            <p class="overview-card-desc">Бухгалтерские проводки: оплата курса (type=1) и членский взнос €30 (type=2).</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>payments</code></span>
-              <span>5 колонок</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('courses')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">🎓</span>
-              <span class="overview-card-title">Courses</span>
-            </div>
-            <p class="overview-card-desc">Каталог программ школы: уровни A1..C2, индивидуальные/групповые форматы, статусы.</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>courses</code></span>
-              <span>3 колонки</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('students')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">👥</span>
-              <span class="overview-card-title">Students</span>
-            </div>
-            <p class="overview-card-desc">Реестр студентов: статус обучения (ACTIVE..ARCHIVED), уровень владения языком CEFR (A1..C2).</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>students</code></span>
-              <span>2 колонки</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('lessons')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">🗓️</span>
-              <span class="overview-card-title">Lessons</span>
-            </div>
-            <p class="overview-card-desc">Уроки в расписании: статус проведения, отметки о посещаемости (present/absent), форматы.</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>lessons</code></span>
-              <span>3 колонки</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('annual_memberships')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">🪪</span>
-              <span class="overview-card-title">Annual Memberships</span>
-            </div>
-            <p class="overview-card-desc">Годовые членские карты ассоциации (€30 за учебный год): ACTIVE, PENDING, EXPIRED.</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>annual_memberships</code></span>
-              <span>1 колонка</span>
-            </div>
-          </a>
-
-          <a class="overview-card" onclick="switchTab('app_settings')">
-            <div class="overview-card-header">
-              <span class="overview-card-icon">⚙️</span>
-              <span class="overview-card-title">App Settings</span>
-            </div>
-            <p class="overview-card-desc">Глобальные динамические системные конфигурации (JSONB Key-Value).</p>
-            <div class="overview-card-footer">
-              <span>Таблица: <code>app_settings</code></span>
-              <span>Key-Value</span>
-            </div>
-          </a>
+        <div class="overview-grid" id="overview-cards-container">
+          <!-- Dynamically populated per language -->
         </div>
       </div>
 
-      <!-- ======================================================== -->
-      <!-- VIEW: TABLE DETAILS (DYNAMICALLY RENDERED)               -->
-      <!-- ======================================================== -->
+      <!-- VIEW: TABLE DETAILS (DYNAMICALLY RENDERED) -->
       <div id="dynamic-table-views"></div>
 
     </main>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- SEARCH SPOTLIGHT MODAL (CMD + K)                             -->
-  <!-- ============================================================ -->
+  <!-- SEARCH SPOTLIGHT MODAL -->
   <div id="search-modal" class="modal-backdrop" onclick="closeSearch(event)">
     <div class="search-modal" onclick="event.stopPropagation()">
       <div class="search-input-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" class="search-input" placeholder="Поиск по статусам, кодам (например, PAID, A1, STRIPE)..." oninput="handleSearch(this.value)">
+        <input type="text" id="search-input" class="search-input" placeholder="Поиск по статусам, кодам..." oninput="handleSearch(this.value)">
       </div>
       <div id="search-results" class="search-results"></div>
     </div>
@@ -1236,7 +1104,7 @@ export function renderDictionaryHtml(data: any): string {
       app_settings: '⚙️',
     };
 
-    // UI Localizations (IT / EN / RU)
+    // Full 3-Way i18n Dictionary
     const I18N = {
       ru: {
         searchPlaceholder: 'Поиск по статусам, кодам (например, PAID, A1, STRIPE)...',
@@ -1244,6 +1112,13 @@ export function renderDictionaryHtml(data: any): string {
         navMain: 'Главная',
         navOverview: 'Архитектура & Стандарты',
         navTables: 'Таблицы базы данных',
+        navBookings: 'Bookings (Бронирования)',
+        navPayments: 'Payments (Платежи)',
+        navCourses: 'Courses (Курсы)',
+        navStudents: 'Students (Студенты)',
+        navLessons: 'Lessons (Уроки)',
+        navMemberships: 'Annual Memberships (Взносы €30)',
+        navSettings: 'App Settings (Настройки)',
         themeDark: 'Темная тема',
         themeLight: 'Светлая тема',
         toastCopied: 'Скопировано',
@@ -1255,13 +1130,103 @@ export function renderDictionaryHtml(data: any): string {
         tableInPg: 'Таблица в PostgreSQL:',
         enumsCount: 'Колонок со справочниками:',
         notFound: 'Ничего не найдено',
+        overviewTitle: 'Словарь данных и перечислений Atena School',
+        overviewDesc: 'Единый архитектурный стандарт числовых перечислений (SmallInt Enums) и системных сущностей платформы Atena School. Все перечисления строго типизированы в TypeScript, оптимизированы в PostgreSQL (2 байта на значение) и поддерживают мультиязычные переводы (IT / EN / RU).',
+        metaStorage: 'Тип хранения:',
+        metaPkg: 'Пакет типов:',
+        metaLang: 'Языки:',
+        metaTables: 'Таблиц в схеме:',
+        calloutTitle: 'Принцип единого источника правды (Single Source of Truth)',
+        calloutDesc: 'Все числовые коды объявляются через <code>const ... as const</code> в пакете <code>packages/api-types</code>. База данных PostgreSQL использует строгие <code>SMALLINT DEFAULT 1</code>, исключая человеческие ошибки при вставках и обеспечивая ультра-быстрые индексы.',
+        registryTitle: 'Реестр таблиц базы данных',
+        cardTableLabel: 'Таблица:',
+        cardColumnsLabel: 'колонок',
+        tables: {
+          bookings: {
+            title: 'Бронирования и заявки на курсы',
+            desc: 'Основная таблица заказов и бронирований. Содержит данные плательщика, студента, выбранный курс, сумму, скидки и статусы.',
+            cardDesc: 'Заказы и бронирования курсов клиентами. Статусы оплаты, жизненного цикла, схемы оплат.',
+            columns: {
+              payment_status: 'Статус онлайн/офлайн оплаты бронирования (1=PENDING..7=CANCELLED)',
+              booking_status: 'Общий жизненный статус брони (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
+              scheduling_status: 'Статус согласования расписания занятий (1=SCHEDULED, 2=PENDING_COORDINATION)',
+              payment_method: 'Выбранный клиентом способ оплаты курса (1=STRIPE..4=BANK_TRANSFER)',
+              billing_scheme: 'Схема оплаты курса (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
+            }
+          },
+          payments: {
+            title: 'Платежи и транзакции',
+            desc: 'Финансовая таблица бухгалтерских записей и проводок по бронированиям и студентам. Каждый курс генерирует 2 записи: оплату курса (type=1) и членский взнос €30 (type=2).',
+            cardDesc: 'Бухгалтерские проводки: оплата курса (type=1) и членский взнос €30 (type=2).',
+            columns: {
+              currency: 'Валюта платежной транзакции (1=EUR, 2=USD, 3=GBP)',
+              payment_method: 'Фактический платежный инструмент (1=STRIPE..4=BANK_TRANSFER)',
+              type: 'Бухгалтерский тип платежа (1=COURSE_PAYMENT, 2=REGISTRATION_FEE (€30)..8=OTHER)',
+              status: 'Статус финансовой транзакции (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
+              provider: 'Платежный провайдер / шлюз (1=STRIPE, 2=MANUAL, 3=POS, 4=BANK)',
+            }
+          },
+          courses: {
+            title: 'Каталог курсов',
+            desc: 'Академический каталог программ школы (итальянский, английский, русский и др.). Уровни CEFR A1..C2, индивидуальные/групповые форматы и статусы публикации.',
+            cardDesc: 'Каталог программ школы: уровни A1..C2, индивидуальные/групповые форматы, статусы.',
+            columns: {
+              status: 'Статус публикации и доступности курса в каталоге (1=ACTIVE, 2=ARCHIVED)',
+              schedule_type: 'Тип графика проведения занятий (1=FIXED_DAYS, 2=FLEXIBLE)',
+              course_format: 'Формат проведения занятий (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          students: {
+            title: 'Реестр студентов',
+            desc: 'Основная таблица студентов языковой школы Atena. Хранит персональные данные, уровень CEFR, статус обучения и статус оплаты годового взноса.',
+            cardDesc: 'Реестр студентов: статус обучения (ACTIVE..ARCHIVED), уровень владения языком CEFR (A1..C2).',
+            columns: {
+              status: 'Статус студента в реестре школы (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
+              language_level: 'Уровень владения языком по европейской шкале CEFR (1=A1..6=C2)',
+            }
+          },
+          lessons: {
+            title: 'Уроки и расписание',
+            desc: 'Журнал индивидуальных и групповых уроков в расписании. Отслеживает проведение занятий, посещаемость (присутствовал, отсутствовал, опоздал) и формат (очно/онлайн).',
+            cardDesc: 'Уроки в расписании: статус проведения, отметки о посещаемости (present/absent), форматы.',
+            columns: {
+              status: 'Статус проведения урока в расписании (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
+              attendance: 'Отметка о посещаемости студента на уроке (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
+              location_type: 'Место проведения занятия (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          annual_memberships: {
+            title: 'Годовые членские взносы (€30)',
+            desc: 'Обязательный ежегодный ассоциативный взнос €30 на каждого студента. Действует в рамках учебного года (1 сентября — 31 августа).',
+            cardDesc: 'Годовые членские карты ассоциации (€30 за учебный год): ACTIVE, PENDING, EXPIRED.',
+            columns: {
+              status: 'Статус действия годового членского взноса (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
+            }
+          },
+          app_settings: {
+            title: 'Системные настройки приложения',
+            desc: 'Глобальные параметры конфигурации в формате JSONB (включение/отключение сбора взноса, текущий учебный год, базовая ставка €30).',
+            cardDesc: 'Глобальные динамические системные конфигурации (JSONB Key-Value).',
+            columns: {
+              registration_fee_status: 'Статус обязательности членского взноса €30 при чекауте (1=ACTIVE, 2=INACTIVE)',
+            }
+          },
+        }
       },
+
       it: {
         searchPlaceholder: 'Cerca per stati, codici (es. PAID, A1, STRIPE)...',
         searchTrigger: '🔍 Cerca codici e campi...',
         navMain: 'Principale',
         navOverview: 'Architettura & Standard',
         navTables: 'Tabelle del Database',
+        navBookings: 'Bookings (Prenotazioni)',
+        navPayments: 'Payments (Pagamenti)',
+        navCourses: 'Courses (Corsi)',
+        navStudents: 'Students (Studenti)',
+        navLessons: 'Lessons (Lezioni)',
+        navMemberships: 'Annual Memberships (Quote €30)',
+        navSettings: 'App Settings (Impostazioni)',
         themeDark: 'Tema scuro',
         themeLight: 'Tema chiaro',
         toastCopied: 'Copiato',
@@ -1273,13 +1238,103 @@ export function renderDictionaryHtml(data: any): string {
         tableInPg: 'Tabella in PostgreSQL:',
         enumsCount: 'Colonne con dizionari:',
         notFound: 'Nessun risultato trovato',
+        overviewTitle: 'Dizionario Dati e Codici Numerici Atena School',
+        overviewDesc: 'Standard architetturale unificato per le enumerazioni numeriche (SmallInt Enums) e le entità di sistema della piattaforma Atena School. Tutte le enumerazioni sono rigorosamente tipizzate in TypeScript, ottimizzate in PostgreSQL (2 byte per valore) e supportano traduzioni multilingue (IT / EN / RU).',
+        metaStorage: 'Tipo di memorizzazione:',
+        metaPkg: 'Pacchetto tipi:',
+        metaLang: 'Lingue:',
+        metaTables: 'Tabelle nello schema:',
+        calloutTitle: 'Principio della Singola Fonte di Verità (Single Source of Truth)',
+        calloutDesc: 'Tutti i codici numerici sono definiti tramite <code>const ... as const</code> nel pacchetto <code>packages/api-types</code>. Il database PostgreSQL utilizza rigorosamente <code>SMALLINT DEFAULT 1</code>, eliminando gli errori umani negli inserimenti e garantendo indici ultra-veloci.',
+        registryTitle: 'Registro Tabelle del Database',
+        cardTableLabel: 'Tabella:',
+        cardColumnsLabel: 'colonne',
+        tables: {
+          bookings: {
+            title: 'Prenotazioni e Richieste Corsi',
+            desc: "Tabella principale di ordini e prenotazioni. Contiene i dati del contraente, dello studente, il corso selezionato, l'importo, gli sconti e gli stati operativi.",
+            cardDesc: 'Ordini e prenotazioni dei corsi. Stati di pagamento, ciclo di vita e piani tariffari.',
+            columns: {
+              payment_status: 'Stato del pagamento online/offline della prenotazione (1=PENDING..7=CANCELLED)',
+              booking_status: 'Stato generale del ciclo di vita della prenotazione (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
+              scheduling_status: 'Stato di coordinamento e inserimento a calendario (1=SCHEDULED, 2=PENDING_COORDINATION)',
+              payment_method: 'Metodo di pagamento selezionato dal cliente (1=STRIPE..4=BANK_TRANSFER)',
+              billing_scheme: 'Piano di fatturazione e rateizzazione (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
+            }
+          },
+          payments: {
+            title: 'Pagamenti e Transazioni',
+            desc: 'Tabella contabile delle registrazioni finanziarie per prenotazioni e studenti. Ogni corso genera 2 registrazioni: la quota del corso (type=1) e la quota associativa di €30 (type=2).',
+            cardDesc: 'Registrazioni contabili: pagamento del corso (tipo=1) e quota associativa annuale €30 (tipo=2).',
+            columns: {
+              currency: 'Valuta della transazione finanziaria (1=EUR, 2=USD, 3=GBP)',
+              payment_method: 'Strumento effettivo di pagamento utilizzato (1=STRIPE..4=BANK_TRANSFER)',
+              type: 'Tipologia contabile del pagamento (1=CORSO, 2=QUOTA_ISCRIZIONE_30€..8=ALTRO)',
+              status: 'Stato della transazione finanziaria (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
+              provider: 'Fornitore di pagamento / gateway (1=STRIPE, 2=MANUALE, 3=POS, 4=BONIFICO)',
+            }
+          },
+          courses: {
+            title: 'Catalogo Corsi',
+            desc: 'Catalogo accademico dei corsi di lingua (Italiano, Inglese, Russo, ecc.). Livelli CEFR A1..C2, formati individuali/di gruppo e stati di pubblicazione.',
+            cardDesc: 'Catalogo programmi scolastici: livelli CEFR A1..C2, formati individuali/di gruppo, stati.',
+            columns: {
+              status: 'Stato di visibilità e disponibilità del corso a catalogo (1=ACTIVE, 2=ARCHIVED)',
+              schedule_type: 'Tipologia di programmazione oraria (1=FIXED_DAYS, 2=FLEXIBLE)',
+              course_format: 'Modalità di svolgimento del corso (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          students: {
+            title: 'Registro Studenti',
+            desc: 'Tabella degli studenti della scuola Atena. Memorizza dati anagrafici, livello CEFR, stato accademico e stato del tesseramento annuale.',
+            cardDesc: 'Registro studenti: stato accademico (ACTIVE..ARCHIVED), livello linguistico CEFR (A1..C2).',
+            columns: {
+              status: 'Stato dello studente nel registro scolastico (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
+              language_level: 'Livello di competenza linguistica quadro QCER / CEFR (1=A1..6=C2)',
+            }
+          },
+          lessons: {
+            title: 'Lezioni e Presenze',
+            desc: "Registro delle singole lezioni a calendario. Gestisce lo svolgimento dell'ora di lezione, il registro presenze (presente, assente, ritardo) e la modalità (in presenza/online).",
+            cardDesc: 'Lezioni a calendario: stato di svolgimento, presenze (presente/assente), formati aula/online.',
+            columns: {
+              status: 'Stato di svolgimento della lezione a calendario (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
+              attendance: "Registro presenze dello studente per l'ora di lezione (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)",
+              location_type: 'Luogo e modalità di svolgimento della lezione (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          annual_memberships: {
+            title: 'Quote Associative Annuali (€30)',
+            desc: "Tesseramento obbligatorio annuale di €30 per studente. Valido per l'anno scolastico in corso (1 settembre – 31 agosto).",
+            cardDesc: 'Tessere associative annuali (€30 per anno accademico): ACTIVE, PENDING, EXPIRED.',
+            columns: {
+              status: 'Stato di validità della tessera annuale (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
+            }
+          },
+          app_settings: {
+            title: 'Configurazioni e Parametri di Sistema',
+            desc: 'Parametri di sistema globali salvati in formato JSONB (es. quota iscrizione attiva/disattiva, anno scolastico corrente, importo standard €30).',
+            cardDesc: 'Configurazioni di sistema globali dinamiche (JSONB Key-Value).',
+            columns: {
+              registration_fee_status: 'Stato obbligatorietà quota iscrizione €30 al checkout (1=ACTIVE, 2=INACTIVE)',
+            }
+          },
+        }
       },
+
       en: {
         searchPlaceholder: 'Search by statuses, codes (e.g. PAID, A1, STRIPE)...',
         searchTrigger: '🔍 Search codes & fields...',
         navMain: 'Main',
         navOverview: 'Architecture & Standards',
         navTables: 'Database Tables',
+        navBookings: 'Bookings',
+        navPayments: 'Payments',
+        navCourses: 'Courses',
+        navStudents: 'Students',
+        navLessons: 'Lessons',
+        navMemberships: 'Annual Memberships (€30)',
+        navSettings: 'App Settings',
         themeDark: 'Dark theme',
         themeLight: 'Light theme',
         toastCopied: 'Copied',
@@ -1291,7 +1346,203 @@ export function renderDictionaryHtml(data: any): string {
         tableInPg: 'PostgreSQL Table:',
         enumsCount: 'Dictionary columns:',
         notFound: 'No matching records found',
+        overviewTitle: 'Atena School Data Dictionary & Schema Docs',
+        overviewDesc: 'Unified architectural standard for numeric enumerations (SmallInt Enums) and system entities of Atena School platform. All enums are strictly typed in TypeScript, optimized in PostgreSQL (2 bytes per value), and support multilingual translations (IT / EN / RU).',
+        metaStorage: 'Storage Type:',
+        metaPkg: 'Type Package:',
+        metaLang: 'Languages:',
+        metaTables: 'Schema Tables:',
+        calloutTitle: 'Single Source of Truth Principle',
+        calloutDesc: 'All numeric codes are declared via <code>const ... as const</code> in the <code>packages/api-types</code> package. The PostgreSQL database strictly enforces <code>SMALLINT DEFAULT 1</code>, preventing human insertion errors and ensuring ultra-fast indexing.',
+        registryTitle: 'Database Tables Registry',
+        cardTableLabel: 'Table:',
+        cardColumnsLabel: 'columns',
+        tables: {
+          bookings: {
+            title: 'Bookings & Course Enrollments',
+            desc: 'Main table for orders and bookings. Contains purchaser and student details, selected course, total amount, discounts, and workflow statuses.',
+            cardDesc: 'Course orders and booking inquiries. Payment states, lifecycle statuses, and payment plans.',
+            columns: {
+              payment_status: 'Booking online/offline payment status (1=PENDING..7=CANCELLED)',
+              booking_status: 'General booking lifecycle status (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
+              scheduling_status: 'Class scheduling and coordination status (1=SCHEDULED, 2=PENDING_COORDINATION)',
+              payment_method: 'Payment instrument selected by client (1=STRIPE..4=BANK_TRANSFER)',
+              billing_scheme: 'Course billing scheme (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
+            }
+          },
+          payments: {
+            title: 'Payments & Financial Transactions',
+            desc: 'Accounting ledger table for bookings and students. Each course checkout generates 2 records: course payment (type=1) and €30 annual registration fee (type=2).',
+            cardDesc: 'Accounting entries: course tuition (type=1) and €30 annual membership fee (type=2).',
+            columns: {
+              currency: 'Financial transaction currency (1=EUR, 2=USD, 3=GBP)',
+              payment_method: 'Actual payment instrument used (1=STRIPE..4=BANK_TRANSFER)',
+              type: 'Accounting payment classification (1=COURSE, 2=REGISTRATION_FEE_€30..8=OTHER)',
+              status: 'Financial transaction status (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
+              provider: 'Payment provider / gateway (1=STRIPE, 2=MANUAL, 3=POS, 4=BANK)',
+            }
+          },
+          courses: {
+            title: 'Course Catalog',
+            desc: 'Academic curriculum catalog for language courses (Italian, English, Russian, etc.). CEFR levels A1..C2, individual/group formats, and publishing statuses.',
+            cardDesc: 'Curriculum catalog: CEFR levels A1..C2, individual/group formats, publishing statuses.',
+            columns: {
+              status: 'Course catalog visibility & enrollment status (1=ACTIVE, 2=ARCHIVED)',
+              schedule_type: 'Course schedule structure (1=FIXED_DAYS, 2=FLEXIBLE)',
+              course_format: 'Course delivery format (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          students: {
+            title: 'Student Registry',
+            desc: 'Central registry of Atena language school students. Stores personal info, CEFR proficiency level, enrollment status, and annual membership status.',
+            cardDesc: 'Student registry: enrollment status (ACTIVE..ARCHIVED), CEFR language proficiency (A1..C2).',
+            columns: {
+              status: 'Student status in school registry (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
+              language_level: 'CEFR language proficiency framework level (1=A1..6=C2)',
+            }
+          },
+          lessons: {
+            title: 'Lessons & Attendance',
+            desc: 'Timetable lesson registry. Tracks class delivery, attendance status (present, absent, late, excused), and location format (in-person/online).',
+            cardDesc: 'Scheduled classes: delivery status, attendance tracking (present/absent), formats.',
+            columns: {
+              status: 'Scheduled lesson delivery status (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
+              attendance: 'Student attendance record for the class (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
+              location_type: 'Classroom venue location (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+            }
+          },
+          annual_memberships: {
+            title: 'Annual Memberships (€30)',
+            desc: 'Mandatory €30 annual association membership per student. Valid for the current academic year (September 1 – August 31).',
+            cardDesc: 'Annual association membership cards (€30 per academic year): ACTIVE, PENDING, EXPIRED.',
+            columns: {
+              status: 'Validity status of €30 annual membership (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
+            }
+          },
+          app_settings: {
+            title: 'System Application Settings',
+            desc: 'Dynamic system-wide configuration keys stored in JSONB (e.g. registration fee active/inactive, current academic year, default €30 fee).',
+            cardDesc: 'Dynamic global system configuration parameters (JSONB Key-Value).',
+            columns: {
+              registration_fee_status: 'Mandatory registration fee €30 requirement at checkout (1=ACTIVE, 2=INACTIVE)',
+            }
+          },
+        }
       },
+    };
+
+    // Item-level translation maps for Italian and English descriptions
+    const ITEM_DESC_I18N = {
+      it: {
+        'PENDING': 'Sessione di checkout Stripe aperta, in attesa del pagamento da parte del cliente',
+        'RESERVED': 'Prenotazione confermata con saldo diretto presso la reception della scuola',
+        'PAID': 'Pagamento ricevuto con successo e contabilizzato per intero',
+        'REFUNDED': 'È stato effettuato un rimborso totale dei fondi',
+        'PARTIALLY_REFUNDED': 'È stato effettuato un rimborso parziale dei fondi',
+        'FAILED': 'Transazione di pagamento rifiutata dalla banca o dal gateway',
+        'CANCELLED': 'Ordine annullato prima del pagamento',
+        'ACTIVE': 'Studente iscritto, corso in fase di svolgimento attivo',
+        'COMPLETED': 'Tutte le lezioni sono state completate con successo, corso terminato',
+        'SCHEDULED': 'Lezioni pianificate e calendarizzate nel calendario scolastico',
+        'PENDING_COORDINATION': 'In attesa di definizione orari con il docente o con la segreteria',
+        'STRIPE': 'Carta bancaria online tramite gateway Stripe',
+        'CASH': 'Contanti presso la cassa della segreteria',
+        'POS': 'Carta di debito/credito tramite terminale POS fisico in sede',
+        'BANK_TRANSFER': 'Bonifico bancario diretto su conto della scuola',
+        'FULL': 'Pagamento unico anticipato dell intero importo del corso',
+        'INSTALLMENTS': 'Pagamento rateizzato secondo piano concordato',
+        'PER_LESSON': 'Pagamento ad ogni singola lezione svolta',
+        'EUR': 'Euro (€) — valuta predefinita del sistema',
+        'USD': 'Dollaro statunitense ($)',
+        'GBP': 'Sterlina britannica (£)',
+        'COURSE_PAYMENT': 'Pagamento della quota di iscrizione al corso di lingua',
+        'REGISTRATION_FEE': 'Quota associativa annuale obbligatoria di €30 (1 volta per anno scolastico)',
+        'INSTALLMENT': 'Rata periodica di pagamento del corso',
+        'SINGLE_LESSON': 'Pagamento di una lezione individuale singola',
+        'EXAM_FEE': 'Tassa per esame di certificazione Cambridge / CELI / CILS',
+        'CERTIFICATE_FEE': 'Rilascio certificato o attestato ufficiale',
+        'MATERIAL_TEXTBOOK': 'Acquisto libri di testo e materiali didattici',
+        'OTHER': 'Altre entrate e servizi accessori',
+        'SUCCEEDED': 'Fondi accreditati con successo sul conto',
+        'MANUAL': 'Registrazione manuale da parte della segreteria',
+        'BANK': 'Bonifico bancario su conto corrente',
+        'INACTIVE': 'Formazione non ancora iniziata o profilo temporaneamente inattivo',
+        'PAUSED': 'Congedo accademico o pausa temporanea negli studi',
+        'GRADUATED': 'Corso completato con successo con rilascio del diploma',
+        'ARCHIVED': 'Scheda studente archiviata',
+        'A1': 'Livello QCER A1: Principiante assoluto',
+        'A2': 'Livello QCER A2: Elementare',
+        'B1': 'Livello QCER B1: Intermedio',
+        'B2': 'Livello QCER B2: Intermedio superiore / Autonomo',
+        'C1': 'Livello QCER C1: Avanzato / Padronanza',
+        'C2': 'Livello QCER C2: Madrelingua / Padronanza completa',
+        'FIXED_DAYS': 'Giorni e orari prestabiliti a settimana (es. Lun-Mer-Ven)',
+        'FLEXIBLE': 'Orario flessibile concordato con il docente',
+        'IN_PERSON': 'In presenza nelle aule della scuola',
+        'ONLINE': 'Online tramite videoconferenza (Google Meet / Zoom)',
+        'HYBRID': 'Formato ibrido (lezioni in presenza e online alternate)',
+        'RESCHEDULED': 'Lezione posticipata ad altra data/ora',
+        'PRESENT': 'Studente presente alla lezione',
+        'ABSENT': 'Studente assente non giustificato',
+        'LATE': 'Studente arrivato in ritardo',
+        'EXCUSED': 'Assenza giustificata con preavviso',
+        'EXPIRED': 'Tessera annuale scaduta il 31 agosto dell anno scolastico',
+      },
+      en: {
+        'PENDING': 'Stripe checkout session active, awaiting client payment',
+        'RESERVED': 'Booking confirmed with payment due at school reception',
+        'PAID': 'Payment received in full and successfully processed',
+        'REFUNDED': 'Full refund of funds has been issued',
+        'PARTIALLY_REFUNDED': 'Partial refund has been issued',
+        'FAILED': 'Payment transaction declined by bank or gateway',
+        'CANCELLED': 'Order cancelled prior to payment',
+        'ACTIVE': 'Enrolled student, active ongoing studies',
+        'COMPLETED': 'All lessons completed, course finished successfully',
+        'SCHEDULED': 'Lessons scheduled on the academic calendar',
+        'PENDING_COORDINATION': 'Awaiting schedule coordination with teacher or reception',
+        'STRIPE': 'Online credit/debit card via Stripe checkout',
+        'CASH': 'Cash payment at school reception desk',
+        'POS': 'Physical POS terminal card payment at school',
+        'BANK_TRANSFER': 'Direct bank wire transfer to school account',
+        'FULL': 'Single full upfront payment for the entire course',
+        'INSTALLMENTS': 'Scheduled installment payment plan',
+        'PER_LESSON': 'Pay-as-you-go per individual lesson',
+        'EUR': 'Euro (€) — default platform currency',
+        'USD': 'US Dollar ($)',
+        'GBP': 'British Pound (£)',
+        'COURSE_PAYMENT': 'Language course tuition fee payment',
+        'REGISTRATION_FEE': 'Mandatory €30 annual association membership fee (once per academic year)',
+        'INSTALLMENT': 'Scheduled course installment payment',
+        'SINGLE_LESSON': 'Individual one-off class payment',
+        'EXAM_FEE': 'Cambridge / CELI / CILS exam registration fee',
+        'CERTIFICATE_FEE': 'Official diploma or certificate issuance fee',
+        'MATERIAL_TEXTBOOK': 'Textbooks and educational study materials',
+        'OTHER': 'Other miscellaneous revenue and services',
+        'SUCCEEDED': 'Funds successfully settled to school account',
+        'MANUAL': 'Manual transaction logged by reception staff',
+        'BANK': 'Direct bank wire transfer',
+        'INACTIVE': 'Studies have not started or profile temporarily inactive',
+        'PAUSED': 'Academic leave or temporary pause in studies',
+        'GRADUATED': 'Course successfully completed with diploma issued',
+        'ARCHIVED': 'Student record archived',
+        'A1': 'CEFR A1: Absolute Beginner',
+        'A2': 'CEFR A2: Elementary',
+        'B1': 'CEFR B1: Intermediate',
+        'B2': 'CEFR B2: Upper Intermediate',
+        'C1': 'CEFR C1: Advanced / Proficient',
+        'C2': 'CEFR C2: Mastery / Native-like fluency',
+        'FIXED_DAYS': 'Fixed weekly schedule (e.g. Mon-Wed-Fri)',
+        'FLEXIBLE': 'Flexible lesson schedule coordinated with tutor',
+        'IN_PERSON': 'In-person inside school classrooms',
+        'ONLINE': 'Live online video conference (Google Meet / Zoom)',
+        'HYBRID': 'Hybrid mode (alternating in-person and online)',
+        'RESCHEDULED': 'Lesson moved to another date or time',
+        'PRESENT': 'Student attended the class',
+        'ABSENT': 'Student absent without notice',
+        'LATE': 'Student arrived late to class',
+        'EXCUSED': 'Excused absence with advance notice',
+        'EXPIRED': 'Annual membership card expired on August 31',
+      }
     };
 
     let currentLang = localStorage.getItem('atena_dict_lang') || 'ru';
@@ -1313,6 +1564,27 @@ export function renderDictionaryHtml(data: any): string {
       document.getElementById('nav-title-main').textContent = t.navMain;
       document.getElementById('nav-item-overview').textContent = t.navOverview;
       document.getElementById('nav-title-tables').textContent = t.navTables;
+      document.getElementById('nav-item-bookings').textContent = t.navBookings;
+      document.getElementById('nav-item-payments').textContent = t.navPayments;
+      document.getElementById('nav-item-courses').textContent = t.navCourses;
+      document.getElementById('nav-item-students').textContent = t.navStudents;
+      document.getElementById('nav-item-lessons').textContent = t.navLessons;
+      document.getElementById('nav-item-annual_memberships').textContent = t.navMemberships;
+      document.getElementById('nav-item-app_settings').textContent = t.navSettings;
+
+      // Update Overview texts
+      document.getElementById('overview-hero-title').textContent = t.overviewTitle;
+      document.getElementById('overview-hero-desc').textContent = t.overviewDesc;
+      document.getElementById('meta-storage-text').textContent = t.metaStorage;
+      document.getElementById('meta-pkg-text').textContent = t.metaPkg;
+      document.getElementById('meta-lang-text').textContent = t.metaLang;
+      document.getElementById('meta-tables-text').textContent = t.metaTables;
+      document.getElementById('callout-title-text').textContent = t.calloutTitle;
+      document.getElementById('callout-desc-text').innerHTML = t.calloutDesc;
+      document.getElementById('registry-title-text').textContent = t.registryTitle;
+
+      // Re-render Overview Cards
+      renderOverviewCards();
 
       // Re-render table views to update columns and single labels
       renderTableViews();
@@ -1328,11 +1600,51 @@ export function renderDictionaryHtml(data: any): string {
       return valData.label_ru || valData.label_en || valData.label_it || '—';
     }
 
+    function getValDesc(valData, lang) {
+      if (lang === 'it' && ITEM_DESC_I18N.it[valData.code]) {
+        return ITEM_DESC_I18N.it[valData.code];
+      }
+      if (lang === 'en' && ITEM_DESC_I18N.en[valData.code]) {
+        return ITEM_DESC_I18N.en[valData.code];
+      }
+      return valData.description || '—';
+    }
+
     const LANG_FLAGS = {
       it: '🇮🇹',
       en: '🇬🇧',
       ru: '🇷🇺',
     };
+
+    function renderOverviewCards() {
+      const container = document.getElementById('overview-cards-container');
+      const t = I18N[currentLang];
+      let html = '';
+
+      for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
+        const icon = TABLE_ICONS[tableKey] || '📑';
+        const localizedTable = (t.tables && t.tables[tableKey]) || {};
+        const title = localizedTable.title || tableData.title;
+        const cardDesc = localizedTable.cardDesc || tableData.description;
+        const colCount = Object.keys(tableData.columns).length;
+
+        html += \`
+          <a class="overview-card" onclick="switchTab('\${tableKey}')">
+            <div class="overview-card-header">
+              <span class="overview-card-icon">\${icon}</span>
+              <span class="overview-card-title">\${title}</span>
+            </div>
+            <p class="overview-card-desc">\${cardDesc}</p>
+            <div class="overview-card-footer">
+              <span>\${t.cardTableLabel} <code>\${tableKey}</code></span>
+              <span>\${colCount} \${t.cardColumnsLabel}</span>
+            </div>
+          </a>
+        \`;
+      }
+
+      container.innerHTML = html;
+    }
 
     // Render Dynamic Views for each Table
     function renderTableViews() {
@@ -1343,6 +1655,9 @@ export function renderDictionaryHtml(data: any): string {
 
       for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
         const icon = TABLE_ICONS[tableKey] || '📑';
+        const localizedTable = (t.tables && t.tables[tableKey]) || {};
+        const tableTitle = localizedTable.title || tableData.title;
+        const tableDesc = localizedTable.desc || tableData.description;
         
         html += \`
           <div id="view-\${tableKey}" class="view-container">
@@ -1350,19 +1665,21 @@ export function renderDictionaryHtml(data: any): string {
               <div class="hero-header-top">
                 <div class="hero-icon-badge">\${icon}</div>
                 <div class="hero-header-text">
-                  <h1 class="hero-title">\${tableData.title}</h1>
+                  <h1 class="hero-title">\${tableTitle}</h1>
                   <div class="meta-badges">
                     <span class="meta-pill">🐘 \${t.tableInPg} <code>public.\${tableData.table}</code></span>
                     <span class="meta-pill">📊 \${t.enumsCount} <code>\${Object.keys(tableData.columns).length}</code></span>
                   </div>
                 </div>
               </div>
-              <p class="hero-desc">\${tableData.description}</p>
+              <p class="hero-desc">\${tableDesc}</p>
             </div>
         \`;
 
         // Render each enum column in this table as a structured Card
         for (const [colKey, colData] of Object.entries(tableData.columns)) {
+          const colDesc = (localizedTable.columns && localizedTable.columns[colKey]) || colData.description;
+
           html += \`
             <div class="enum-card">
               <div class="enum-card-header">
@@ -1377,7 +1694,7 @@ export function renderDictionaryHtml(data: any): string {
                   <span class="db-type-badge">\${colData.dbType}</span>
                 </div>
               </div>
-              <div class="enum-card-desc">\${colData.description}</div>
+              <div class="enum-card-desc">\${colDesc}</div>
 
               <div class="table-container">
                 <table class="dict-table">
@@ -1394,6 +1711,7 @@ export function renderDictionaryHtml(data: any): string {
 
           for (const [valKey, valData] of Object.entries(colData.values)) {
             const label = getValLabel(valData, currentLang);
+            const desc = getValDesc(valData, currentLang);
 
             html += \`
               <tr>
@@ -1410,7 +1728,7 @@ export function renderDictionaryHtml(data: any): string {
                   </div>
                 </td>
                 <td style="color: var(--text-secondary); line-height: 1.55; font-size: 13px;">
-                  \${valData.description || '—'}
+                  \${desc}
                 </td>
               </tr>
             \`;
@@ -1450,17 +1768,10 @@ export function renderDictionaryHtml(data: any): string {
       }
 
       // Update Breadcrumbs
-      const titleMap = {
-        overview: currentLang === 'it' ? 'Architettura & Standard' : currentLang === 'en' ? 'Architecture & Standards' : 'Архитектура & Стандарты',
-        bookings: 'Bookings',
-        payments: 'Payments',
-        courses: 'Courses',
-        students: 'Students',
-        lessons: 'Lessons',
-        annual_memberships: 'Annual Memberships',
-        app_settings: 'App Settings',
-      };
-      document.getElementById('current-breadcrumb').textContent = titleMap[tabKey] || tabKey;
+      const t = I18N[currentLang];
+      const localizedTable = (t.tables && t.tables[tabKey]) || {};
+      const title = tabKey === 'overview' ? t.navOverview : (localizedTable.title || tabKey);
+      document.getElementById('current-breadcrumb').textContent = title;
 
       // Update URL Hash
       if (window.location.hash !== '#' + tabKey) {
@@ -1522,14 +1833,18 @@ export function renderDictionaryHtml(data: any): string {
       const query = q.toLowerCase().trim();
       const resultsContainer = document.getElementById('search-results');
       const results = [];
+      const t = I18N[currentLang];
 
       for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
+        const localizedTable = (t.tables && t.tables[tableKey]) || {};
+        const tableTitle = localizedTable.title || tableData.title;
+
         for (const [colKey, colData] of Object.entries(tableData.columns)) {
           for (const [valKey, valData] of Object.entries(colData.values)) {
             const labelIt = (valData.label_it || '').toLowerCase();
             const labelEn = (valData.label_en || '').toLowerCase();
             const labelRu = (valData.label_ru || '').toLowerCase();
-            const desc = (valData.description || '').toLowerCase();
+            const desc = getValDesc(valData, currentLang).toLowerCase();
 
             const matches = 
               !query ||
@@ -1544,12 +1859,12 @@ export function renderDictionaryHtml(data: any): string {
             if (matches) {
               results.push({
                 tableKey,
-                tableTitle: tableData.title,
+                tableTitle,
                 enumName: colData.name,
                 code: valData.code,
                 id: valData.id,
                 label: getValLabel(valData, currentLang),
-                desc: valData.description,
+                desc: getValDesc(valData, currentLang),
               });
             }
           }
@@ -1557,7 +1872,6 @@ export function renderDictionaryHtml(data: any): string {
       }
 
       if (results.length === 0) {
-        const t = I18N[currentLang];
         resultsContainer.innerHTML = \`<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13.5px;">\${t.notFound}</div>\`;
         return;
       }
