@@ -7,77 +7,54 @@ export function renderDictionaryHtml(data: any): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atena School — Data Dictionary & Schema Docs</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-page: #F9FAFB;
-      --bg-sidebar: #FFFFFF;
+      --bg-page: #FFFFFF;
+      --bg-sidebar: #F7F6F3;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F8FAFC;
-      --bg-table-head: #F8FAFC;
-      --bg-subtle: #F1F5F9;
-      --bg-code: #F8FAFC;
-      --border: #E2E8F0;
-      --border-subtle: #EDF2F7;
-      --border-focus: #3B82F6;
+      --bg-card-hover: #F7F6F3;
+      --bg-table-head: #F7F6F3;
+      --bg-subtle: #F1F1EF;
+      --bg-code: #F7F6F3;
+      --border: #E9E9E7;
+      --border-subtle: #EDEDEB;
       
-      --text-main: #0F172A;
-      --text-secondary: #475569;
-      --text-tertiary: #94A3B8;
+      --text-main: #37352F;
+      --text-secondary: #787774;
+      --text-tertiary: #9B9A97;
       
-      --accent: #2563EB;
-      --accent-light: #EFF6FF;
-      --accent-hover: #1D4ED8;
-      --accent-border: #BFDBFE;
+      --accent: #37352F;
+      --accent-bg: #EFEFED;
+      --badge-bg: #F1F1EF;
+      --badge-text: #37352F;
+      --badge-border: #E9E9E7;
 
-      --tag-gray-bg: #F1F5F9;
-      --tag-gray-text: #475569;
-      --tag-blue-bg: #EFF6FF;
-      --tag-blue-text: #1D4ED8;
-
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
       
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-      --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
-      
-      --sidebar-width: 280px;
+      --sidebar-width: 260px;
     }
 
     [data-theme="dark"] {
-      --bg-page: #0B0F19;
-      --bg-sidebar: #111827;
-      --bg-card: #111827;
-      --bg-card-hover: #1E293B;
-      --bg-table-head: #161F30;
-      --bg-subtle: #1F2937;
-      --bg-code: #0B0F19;
-      --border: #1F2937;
-      --border-subtle: #1A2234;
-      --border-focus: #60A5FA;
+      --bg-page: #191919;
+      --bg-sidebar: #202020;
+      --bg-card: #202020;
+      --bg-card-hover: #262626;
+      --bg-table-head: #262626;
+      --bg-subtle: #2B2B2B;
+      --bg-code: #262626;
+      --border: #2F2F2F;
+      --border-subtle: #282828;
       
-      --text-main: #F8FAFC;
-      --text-secondary: #94A3B8;
-      --text-tertiary: #64748B;
+      --text-main: #E6E6E6;
+      --text-secondary: #9B9B9B;
+      --text-tertiary: #6F6F6F;
       
-      --accent: #3B82F6;
-      --accent-light: #1E293B;
-      --accent-hover: #60A5FA;
-      --accent-border: #1D4ED8;
-
-      --tag-gray-bg: #1F2937;
-      --tag-gray-text: #CBD5E1;
-      --tag-blue-bg: #172554;
-      --tag-blue-text: #93C5FD;
-
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-      --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
+      --accent: #E6E6E6;
+      --accent-bg: #2F2F2F;
+      --badge-bg: #2B2B2B;
+      --badge-text: #E6E6E6;
+      --badge-border: #373737;
     }
 
     * {
@@ -113,30 +90,30 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .sidebar-header {
-      padding: 18px 20px 14px;
+      padding: 14px 16px 12px;
       border-bottom: 1px solid var(--border-subtle);
     }
 
     .brand-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
       color: var(--text-main);
     }
 
     .brand-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
-      color: #FFF;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: var(--text-main);
+      color: var(--bg-page);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 800;
-      box-shadow: var(--shadow-sm);
+      font-family: var(--font-sans);
     }
 
     .brand-text {
@@ -145,80 +122,73 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .brand-title {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 600;
       letter-spacing: -0.01em;
       line-height: 1.2;
     }
 
     .brand-subtitle {
-      font-size: 11.5px;
-      font-weight: 500;
+      font-size: 11px;
       color: var(--text-tertiary);
     }
 
     .search-trigger {
-      margin: 14px 16px 8px;
-      padding: 9px 12px;
+      margin: 10px 12px 6px;
+      padding: 6px 10px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 4px;
       color: var(--text-secondary);
-      font-size: 13px;
+      font-size: 12.5px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: var(--shadow-xs);
+      transition: background 0.1s ease;
     }
 
     .search-trigger:hover {
-      border-color: var(--accent);
+      background: var(--bg-subtle);
       color: var(--text-main);
-      box-shadow: var(--shadow-sm);
     }
 
     .search-trigger kbd {
       background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-radius: 5px;
-      padding: 2px 6px;
-      font-size: 11px;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 10px;
       font-family: var(--font-mono);
-      font-weight: 600;
       color: var(--text-secondary);
     }
 
     .sidebar-nav {
       flex: 1;
       overflow-y: auto;
-      padding: 10px 12px 20px;
+      padding: 8px 10px 16px;
     }
 
     .nav-section-title {
       font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      font-weight: 600;
       color: var(--text-tertiary);
-      padding: 14px 10px 6px;
+      padding: 12px 8px 4px;
     }
 
     .nav-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13.5px;
-      font-weight: 500;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 400;
       color: var(--text-secondary);
       text-decoration: none;
       cursor: pointer;
-      transition: all 0.12s ease;
-      margin-bottom: 2px;
-      border: 1px solid transparent;
+      transition: background 0.1s ease;
+      margin-bottom: 1px;
     }
 
     .nav-item:hover {
@@ -227,68 +197,56 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .nav-item.active {
-      background-color: var(--accent-light);
-      color: var(--accent);
+      background-color: var(--accent-bg);
+      color: var(--text-main);
       font-weight: 600;
-      border-color: var(--accent-border);
     }
 
     .nav-item-icon {
-      font-size: 16px;
+      font-size: 14px;
       line-height: 1;
-      width: 20px;
+      width: 18px;
       text-align: center;
     }
 
     .nav-item-badge {
       margin-left: auto;
-      font-size: 11px;
+      font-size: 10.5px;
       font-family: var(--font-mono);
       color: var(--text-tertiary);
       background: var(--bg-card);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 1px 5px;
+      border-radius: 3px;
       border: 1px solid var(--border);
     }
 
-    .nav-item.active .nav-item-badge {
-      border-color: var(--accent-border);
-      color: var(--accent);
-      background: #FFF;
-    }
-
-    [data-theme="dark"] .nav-item.active .nav-item-badge {
-      background: var(--bg-card);
-    }
-
     .sidebar-footer {
-      padding: 14px 16px;
+      padding: 10px 14px;
       border-top: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11.5px;
       background: var(--bg-sidebar);
     }
 
     .theme-toggle-btn {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 12px;
+      border-radius: 4px;
+      padding: 4px 8px;
       color: var(--text-secondary);
       cursor: pointer;
-      font-size: 12.5px;
+      font-size: 11.5px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      transition: background 0.1s ease;
     }
 
     .theme-toggle-btn:hover {
       background: var(--bg-subtle);
       color: var(--text-main);
-      border-color: var(--text-tertiary);
     }
 
     /* MAIN CONTENT */
@@ -301,41 +259,35 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .top-header {
-      height: 56px;
+      height: 46px;
       border-bottom: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--bg-page);
       position: sticky;
       top: 0;
       z-index: 30;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 40px;
-    }
-
-    [data-theme="dark"] .top-header {
-      background: rgba(17, 24, 39, 0.85);
+      padding: 0 32px;
     }
 
     .breadcrumbs {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 13.5px;
+      gap: 6px;
+      font-size: 12.5px;
       color: var(--text-tertiary);
     }
 
     .breadcrumb-active {
       color: var(--text-main);
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .lang-switcher {
@@ -343,7 +295,7 @@ export function renderDictionaryHtml(data: any): string {
       align-items: center;
       background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 4px;
       padding: 2px;
       gap: 2px;
     }
@@ -351,16 +303,14 @@ export function renderDictionaryHtml(data: any): string {
     .lang-btn {
       background: transparent;
       border: none;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12.5px;
-      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11.5px;
+      font-weight: 500;
+      font-family: var(--font-mono);
       color: var(--text-secondary);
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      transition: all 0.12s ease;
+      transition: all 0.1s ease;
     }
 
     .lang-btn:hover {
@@ -369,37 +319,36 @@ export function renderDictionaryHtml(data: any): string {
 
     .lang-btn.active {
       background: var(--bg-card);
-      color: var(--accent);
-      box-shadow: var(--shadow-xs);
+      color: var(--text-main);
+      font-weight: 600;
+      border: 1px solid var(--border);
     }
 
     .header-link-btn {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12.5px;
-      font-weight: 600;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 500;
       color: var(--text-secondary);
       text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 4px 9px;
+      border-radius: 4px;
       border: 1px solid var(--border);
       background: var(--bg-card);
-      transition: all 0.15s ease;
-      box-shadow: var(--shadow-xs);
+      transition: background 0.1s ease;
     }
 
     .header-link-btn:hover {
       background: var(--bg-subtle);
       color: var(--text-main);
-      border-color: var(--accent);
     }
 
     .page-content {
-      max-width: 1160px;
+      max-width: 1040px;
       width: 100%;
       margin: 0 auto;
-      padding: 36px 40px 100px;
+      padding: 32px 32px 80px;
     }
 
     .view-container {
@@ -408,41 +357,26 @@ export function renderDictionaryHtml(data: any): string {
 
     .view-container.active {
       display: block;
-      animation: fadeIn 0.15s ease forwards;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(3px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
+    /* Notion Hero Header */
     .hero-header {
-      margin-bottom: 32px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px 28px;
-      box-shadow: var(--shadow-xs);
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
     }
 
     .hero-header-top {
       display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 12px;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
     }
 
     .hero-icon-badge {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      flex-shrink: 0;
+      font-size: 26px;
+      line-height: 1;
+      padding-top: 2px;
     }
 
     .hero-header-text {
@@ -450,232 +384,184 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .hero-title {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.015em;
       color: var(--text-main);
       margin-bottom: 4px;
     }
 
     .hero-desc {
-      font-size: 14px;
+      font-size: 13.5px;
       color: var(--text-secondary);
-      line-height: 1.6;
-      margin-top: 8px;
+      line-height: 1.55;
     }
 
     .meta-badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .meta-pill {
-      font-size: 12px;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 6px;
+      font-size: 11.5px;
+      padding: 2px 7px;
+      border-radius: 3px;
       background: var(--bg-subtle);
       color: var(--text-secondary);
       border: 1px solid var(--border);
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
     }
 
     .meta-pill code {
       font-family: var(--font-mono);
-      font-size: 11.5px;
-      font-weight: 600;
+      font-size: 11px;
       color: var(--text-main);
     }
 
+    /* Notion Callout */
     .callout {
-      background: var(--bg-card);
+      background: var(--bg-subtle);
       border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
-      border-radius: 10px;
-      padding: 18px 20px;
-      margin-bottom: 28px;
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: flex-start;
-      box-shadow: var(--shadow-xs);
     }
 
     .callout-icon {
-      font-size: 22px;
-      line-height: 1;
+      font-size: 18px;
+      line-height: 1.2;
     }
 
     .callout-content {
-      font-size: 13.5px;
-      line-height: 1.6;
-      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--text-main);
     }
 
     .callout-title {
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 4px;
+      font-weight: 600;
+      margin-bottom: 2px;
     }
 
     .overview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-      margin-bottom: 40px;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      margin-bottom: 32px;
     }
 
     .overview-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
+      border-radius: 4px;
+      padding: 14px 16px;
       cursor: pointer;
       text-decoration: none;
       color: inherit;
-      transition: all 0.16s ease;
+      transition: background 0.1s ease;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-xs);
     }
 
     .overview-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      background: var(--bg-card-hover);
     }
 
     .overview-card-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 6px;
     }
 
     .overview-card-icon {
-      font-size: 24px;
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      background: var(--bg-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--border-subtle);
+      font-size: 18px;
     }
 
     .overview-card-title {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 14px;
+      font-weight: 600;
       color: var(--text-main);
     }
 
     .overview-card-desc {
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-secondary);
-      line-height: 1.5;
+      line-height: 1.45;
       flex: 1;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     .overview-card-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding-top: 12px;
+      padding-top: 8px;
       border-top: 1px solid var(--border-subtle);
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--text-tertiary);
     }
 
+    /* Notion Enum Card */
     .enum-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 32px;
-      box-shadow: var(--shadow-xs);
+      border-radius: 4px;
+      margin-bottom: 24px;
       overflow: hidden;
-      transition: border-color 0.15s ease;
-    }
-
-    .enum-card:hover {
-      border-color: #CBD5E1;
-    }
-
-    [data-theme="dark"] .enum-card:hover {
-      border-color: #334155;
     }
 
     .enum-card-header {
-      padding: 16px 20px;
+      padding: 10px 14px;
       background: var(--bg-table-head);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 12px;
     }
 
     .enum-card-header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .column-name-badge {
-      display: inline-flex;
-      align-items: center;
       gap: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .column-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
     }
 
     .column-name-badge code {
       font-family: var(--font-mono);
-      font-size: 14px;
-      background: var(--bg-subtle);
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--badge-bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px solid var(--badge-border);
+      color: var(--badge-text);
     }
 
     .enum-type-badge {
       font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: var(--tag-blue-bg);
-      color: var(--tag-blue-text);
-      border: 1px solid rgba(37, 99, 235, 0.15);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--badge-bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--badge-border);
     }
 
     .db-type-badge {
-      font-size: 11.5px;
+      font-size: 11px;
       font-family: var(--font-mono);
-      font-weight: 500;
       color: var(--text-tertiary);
-      background: var(--bg-card);
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
     }
-
-
 
     .table-container {
       width: 100%;
@@ -686,23 +572,21 @@ export function renderDictionaryHtml(data: any): string {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 13px;
+      font-size: 12.5px;
     }
 
     .dict-table th {
       background: var(--bg-table-head);
       color: var(--text-secondary);
-      font-weight: 600;
-      padding: 10px 18px;
+      font-weight: 500;
+      padding: 8px 14px;
       border-bottom: 1px solid var(--border);
       font-size: 11.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
       white-space: nowrap;
     }
 
     .dict-table td {
-      padding: 12px 18px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--border-subtle);
       color: var(--text-main);
       vertical-align: middle;
@@ -720,57 +604,44 @@ export function renderDictionaryHtml(data: any): string {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-width: 26px;
-      height: 26px;
-      padding: 0 6px;
-      border-radius: 6px;
-      background: var(--tag-blue-bg);
-      color: var(--tag-blue-text);
+      min-width: 22px;
+      height: 22px;
+      padding: 0 4px;
+      border-radius: 3px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
       font-family: var(--font-mono);
-      font-weight: 700;
-      font-size: 12px;
+      font-weight: 600;
+      font-size: 11.5px;
       cursor: pointer;
-      border: 1px solid rgba(37, 99, 235, 0.2);
-      transition: all 0.12s ease;
+      border: 1px solid var(--badge-border);
     }
 
     .id-badge:hover {
-      transform: scale(1.1);
-      background: var(--accent);
-      color: #FFF;
+      background: var(--border);
     }
 
     .code-badge {
       font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: var(--tag-gray-bg);
-      color: var(--tag-gray-text);
-      border: 1px solid var(--border);
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      border: 1px solid var(--badge-border);
       cursor: pointer;
       display: inline-block;
-      transition: all 0.12s ease;
     }
 
     .code-badge:hover {
-      background: var(--accent-light);
-      color: var(--accent);
-      border-color: var(--accent-border);
-    }
-
-    .lang-flag {
-      font-size: 14px;
-      margin-right: 6px;
-      vertical-align: -1px;
+      background: var(--border);
     }
 
     .single-label-wrapper {
-      display: inline-flex;
-      align-items: center;
-      font-size: 13.5px;
-      font-weight: 600;
+      display: inline-block;
+      font-size: 12.5px;
+      font-weight: 500;
       color: var(--text-main);
     }
 
@@ -780,14 +651,12 @@ export function renderDictionaryHtml(data: any): string {
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(15, 23, 42, 0.5);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(15, 15, 15, 0.4);
       z-index: 100;
       display: none;
       align-items: flex-start;
       justify-content: center;
-      padding-top: 12vh;
+      padding-top: 14vh;
     }
 
     .modal-backdrop.open {
@@ -796,31 +665,25 @@ export function renderDictionaryHtml(data: any): string {
 
     .search-modal {
       width: 100%;
-      max-width: 640px;
+      max-width: 580px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow-lg);
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       overflow: hidden;
-      animation: modalSlide 0.15s ease forwards;
-    }
-
-    @keyframes modalSlide {
-      from { transform: scale(0.97); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
     }
 
     .search-input-wrapper {
-      padding: 16px 20px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       background: var(--bg-card);
     }
 
     .search-icon {
-      font-size: 18px;
+      font-size: 15px;
       color: var(--text-tertiary);
     }
 
@@ -828,27 +691,26 @@ export function renderDictionaryHtml(data: any): string {
       flex: 1;
       border: none;
       background: transparent;
-      font-size: 15px;
+      font-size: 14px;
       font-family: var(--font-sans);
       color: var(--text-main);
       outline: none;
     }
 
     .search-results {
-      max-height: 400px;
+      max-height: 360px;
       overflow-y: auto;
-      padding: 8px;
+      padding: 6px;
     }
 
     .search-item {
-      padding: 10px 14px;
-      border-radius: 8px;
+      padding: 8px 10px;
+      border-radius: 4px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      transition: background 0.1s ease;
+      gap: 10px;
     }
 
     .search-item:hover, .search-item.selected {
@@ -858,7 +720,7 @@ export function renderDictionaryHtml(data: any): string {
     .search-item-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
     }
 
     .search-item-info {
@@ -867,57 +729,50 @@ export function renderDictionaryHtml(data: any): string {
     }
 
     .search-item-title {
-      font-size: 13.5px;
-      font-weight: 600;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--text-main);
     }
 
     .search-item-desc {
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--text-secondary);
     }
 
     .search-item-table {
-      font-size: 11px;
+      font-size: 10.5px;
       font-family: var(--font-mono);
       color: var(--text-tertiary);
       background: var(--bg-page);
       border: 1px solid var(--border);
-      padding: 2px 6px;
-      border-radius: 4px;
+      padding: 1px 5px;
+      border-radius: 3px;
     }
 
     .toast {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #0F172A;
-      color: #FFF;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: var(--shadow-lg);
+      bottom: 20px;
+      right: 20px;
+      background: #2F2F2F;
+      color: #FFFFFF;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       z-index: 200;
       display: none;
       align-items: center;
-      gap: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      animation: toastIn 0.15s ease forwards;
+      gap: 6px;
     }
 
     [data-theme="dark"] .toast {
-      background: #F8FAFC;
-      color: #0F172A;
+      background: #FFFFFF;
+      color: #191919;
     }
 
     .toast.show {
       display: flex;
-    }
-
-    @keyframes toastIn {
-      from { transform: translateY(10px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
@@ -930,13 +785,13 @@ export function renderDictionaryHtml(data: any): string {
         <div class="brand-logo">A</div>
         <div class="brand-text">
           <span class="brand-title">Atena Data Docs</span>
-          <span class="brand-subtitle">Schema & Dictionary v1.5.0</span>
+          <span class="brand-subtitle">Schema & Dictionary</span>
         </div>
       </a>
     </div>
 
     <div class="search-trigger" onclick="openSearch()">
-      <span id="search-trigger-text">🔍 Поиск по кодам & полям...</span>
+      <span id="search-trigger-text">Поиск...</span>
       <kbd>⌘K</kbd>
     </div>
 
@@ -1006,21 +861,15 @@ export function renderDictionaryHtml(data: any): string {
       </div>
 
       <div class="header-actions">
-        <!-- 3-Way Language Switcher -->
+        <!-- Minimalist Language Switcher -->
         <div class="lang-switcher">
-          <button class="lang-btn" id="lang-btn-it" onclick="setLanguage('it')" title="Italiano">
-            <span class="lang-flag">🇮🇹</span> IT
-          </button>
-          <button class="lang-btn" id="lang-btn-en" onclick="setLanguage('en')" title="English">
-            <span class="lang-flag">🇬🇧</span> EN
-          </button>
-          <button class="lang-btn active" id="lang-btn-ru" onclick="setLanguage('ru')" title="Русский">
-            <span class="lang-flag">🇷🇺</span> RU
-          </button>
+          <button class="lang-btn" id="lang-btn-it" onclick="setLanguage('it')" title="Italiano">IT</button>
+          <button class="lang-btn" id="lang-btn-en" onclick="setLanguage('en')" title="English">EN</button>
+          <button class="lang-btn active" id="lang-btn-ru" onclick="setLanguage('ru')" title="Русский">RU</button>
         </div>
 
         <a href="/docs" target="_blank" class="header-link-btn">
-          <span>⚡</span> <span>Swagger UI</span>
+          <span>Swagger UI</span>
         </a>
       </div>
     </header>
@@ -1035,10 +884,10 @@ export function renderDictionaryHtml(data: any): string {
             <div class="hero-header-text">
               <h1 class="hero-title" id="overview-hero-title">Словарь данных и перечислений Atena School</h1>
               <div class="meta-badges">
-                <span class="meta-pill">💾 <span id="meta-storage-text">Тип хранения:</span> <code>SMALLINT (2 Bytes)</code></span>
-                <span class="meta-pill">🛡️ <span id="meta-pkg-text">Пакет типов:</span> <code>@atena/api-types</code></span>
-                <span class="meta-pill">🌐 <span id="meta-lang-text">Языки:</span> <code>IT, EN, RU</code></span>
-                <span class="meta-pill">⚡ <span id="meta-tables-text">Таблиц в схеме:</span> <code>7</code></span>
+                <span class="meta-pill"><span id="meta-storage-text">Тип:</span> <code>SMALLINT (2 Bytes)</code></span>
+                <span class="meta-pill"><span id="meta-pkg-text">Пакет:</span> <code>@atena/api-types</code></span>
+                <span class="meta-pill"><span id="meta-lang-text">Языки:</span> <code>IT, EN, RU</code></span>
+                <span class="meta-pill"><span id="meta-tables-text">Таблиц:</span> <code>7</code></span>
               </div>
             </div>
           </div>
@@ -1055,7 +904,7 @@ export function renderDictionaryHtml(data: any): string {
           </div>
         </div>
 
-        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);" id="registry-title-text">Реестр таблиц базы данных</h2>
+        <h2 style="font-size: 15px; font-weight: 600; margin-bottom: 10px; color: var(--text-main);" id="registry-title-text">Реестр таблиц базы данных</h2>
         <div class="overview-grid" id="overview-cards-container">
           <!-- Dynamically populated per language -->
         </div>
@@ -1080,7 +929,6 @@ export function renderDictionaryHtml(data: any): string {
 
   <!-- Toast -->
   <div id="toast" class="toast">
-    <span>✅</span>
     <span id="toast-text">Скопировано в буфер обмена</span>
   </div>
 
@@ -1101,7 +949,7 @@ export function renderDictionaryHtml(data: any): string {
     const I18N = {
       ru: {
         searchPlaceholder: 'Поиск по статусам, кодам (например, PAID, A1, STRIPE)...',
-        searchTrigger: '🔍 Поиск по кодам & полям...',
+        searchTrigger: 'Поиск по кодам & полям...',
         navMain: 'Главная',
         navOverview: 'Архитектура & Стандарты',
         navTables: 'Таблицы базы данных',
@@ -1119,97 +967,62 @@ export function renderDictionaryHtml(data: any): string {
         colCode: 'TypeScript Code',
         colLabel: 'Название (RU)',
         colDesc: 'Бизнес-назначение и контекст',
-        columnPrefix: 'Колонка:',
-        tableInPg: 'Таблица в PostgreSQL:',
-        enumsCount: 'Колонок со справочниками:',
+        tableInPg: 'Таблица:',
+        enumsCount: 'Колонок:',
         notFound: 'Ничего не найдено',
         overviewTitle: 'Словарь данных и перечислений Atena School',
         overviewDesc: 'Единый архитектурный стандарт числовых перечислений (SmallInt Enums) и системных сущностей платформы Atena School. Все перечисления строго типизированы в TypeScript, оптимизированы в PostgreSQL (2 байта на значение) и поддерживают мультиязычные переводы (IT / EN / RU).',
-        metaStorage: 'Тип хранения:',
-        metaPkg: 'Пакет типов:',
+        metaStorage: 'Тип:',
+        metaPkg: 'Пакет:',
         metaLang: 'Языки:',
-        metaTables: 'Таблиц в схеме:',
+        metaTables: 'Таблиц:',
         calloutTitle: 'Принцип единого источника правды (Single Source of Truth)',
         calloutDesc: 'Все числовые коды объявляются через <code>const ... as const</code> в пакете <code>packages/api-types</code>. База данных PostgreSQL использует строгие <code>SMALLINT DEFAULT 1</code>, исключая человеческие ошибки при вставках и обеспечивая ультра-быстрые индексы.',
         registryTitle: 'Реестр таблиц базы данных',
         cardTableLabel: 'Таблица:',
-        cardColumnsLabel: 'колонок',
+        cardColumnsLabel: 'кол.',
         tables: {
           bookings: {
             title: 'Бронирования и заявки на курсы',
             desc: 'Основная таблица заказов и бронирований. Содержит данные плательщика, студента, выбранный курс, сумму, скидки и статусы.',
             cardDesc: 'Заказы и бронирования курсов клиентами. Статусы оплаты, жизненного цикла, схемы оплат.',
-            columns: {
-              payment_status: 'Статус онлайн/офлайн оплаты бронирования (1=PENDING..7=CANCELLED)',
-              booking_status: 'Общий жизненный статус брони (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
-              scheduling_status: 'Статус согласования расписания занятий (1=SCHEDULED, 2=PENDING_COORDINATION)',
-              payment_method: 'Выбранный клиентом способ оплаты курса (1=STRIPE..4=BANK_TRANSFER)',
-              billing_scheme: 'Схема оплаты курса (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
-            }
           },
           payments: {
             title: 'Платежи и транзакции',
             desc: 'Финансовая таблица бухгалтерских записей и проводок по бронированиям и студентам. Каждый курс генерирует 2 записи: оплату курса (type=1) и членский взнос €30 (type=2).',
             cardDesc: 'Бухгалтерские проводки: оплата курса (type=1) и членский взнос €30 (type=2).',
-            columns: {
-              currency: 'Валюта платежной транзакции (1=EUR, 2=USD, 3=GBP)',
-              payment_method: 'Фактический платежный инструмент (1=STRIPE..4=BANK_TRANSFER)',
-              type: 'Бухгалтерский тип платежа (1=COURSE_PAYMENT, 2=REGISTRATION_FEE (€30)..8=OTHER)',
-              status: 'Статус финансовой транзакции (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
-              provider: 'Платежный провайдер / шлюз (1=STRIPE, 2=MANUAL, 3=POS, 4=BANK)',
-            }
           },
           courses: {
             title: 'Каталог курсов',
             desc: 'Академический каталог программ школы (итальянский, английский, русский и др.). Уровни CEFR A1..C2, индивидуальные/групповые форматы и статусы публикации.',
             cardDesc: 'Каталог программ школы: уровни A1..C2, индивидуальные/групповые форматы, статусы.',
-            columns: {
-              status: 'Статус публикации и доступности курса в каталоге (1=ACTIVE, 2=ARCHIVED)',
-              schedule_type: 'Тип графика проведения занятий (1=FIXED_DAYS, 2=FLEXIBLE)',
-              course_format: 'Формат проведения занятий (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           students: {
             title: 'Реестр студентов',
             desc: 'Основная таблица студентов языковой школы Atena. Хранит персональные данные, уровень CEFR, статус обучения и статус оплаты годового взноса.',
             cardDesc: 'Реестр студентов: статус обучения (ACTIVE..ARCHIVED), уровень владения языком CEFR (A1..C2).',
-            columns: {
-              status: 'Статус студента в реестре школы (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
-              language_level: 'Уровень владения языком по европейской шкале CEFR (1=A1..6=C2)',
-            }
           },
           lessons: {
             title: 'Уроки и расписание',
             desc: 'Журнал индивидуальных и групповых уроков в расписании. Отслеживает проведение занятий, посещаемость (присутствовал, отсутствовал, опоздал) и формат (очно/онлайн).',
             cardDesc: 'Уроки в расписании: статус проведения, отметки о посещаемости (present/absent), форматы.',
-            columns: {
-              status: 'Статус проведения урока в расписании (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
-              attendance: 'Отметка о посещаемости студента на уроке (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
-              location_type: 'Место проведения занятия (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           annual_memberships: {
             title: 'Годовые членские взносы (€30)',
             desc: 'Обязательный ежегодный ассоциативный взнос €30 на каждого студента. Действует в рамках учебного года (1 сентября — 31 августа).',
             cardDesc: 'Годовые членские карты ассоциации (€30 за учебный год): ACTIVE, PENDING, EXPIRED.',
-            columns: {
-              status: 'Статус действия годового членского взноса (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
-            }
           },
           app_settings: {
             title: 'Системные настройки приложения',
             desc: 'Глобальные параметры конфигурации в формате JSONB (включение/отключение сбора взноса, текущий учебный год, базовая ставка €30).',
             cardDesc: 'Глобальные динамические системные конфигурации (JSONB Key-Value).',
-            columns: {
-              registration_fee_status: 'Статус обязательности членского взноса €30 при чекауте (1=ACTIVE, 2=INACTIVE)',
-            }
           },
         }
       },
 
       it: {
         searchPlaceholder: 'Cerca per stati, codici (es. PAID, A1, STRIPE)...',
-        searchTrigger: '🔍 Cerca codici e campi...',
+        searchTrigger: 'Cerca codici e campi...',
         navMain: 'Principale',
         navOverview: 'Architettura & Standard',
         navTables: 'Tabelle del Database',
@@ -1227,97 +1040,62 @@ export function renderDictionaryHtml(data: any): string {
         colCode: 'Codice TypeScript',
         colLabel: 'Denominazione (IT)',
         colDesc: 'Contesto aziendale e utilizzo',
-        columnPrefix: 'Colonna:',
-        tableInPg: 'Tabella in PostgreSQL:',
-        enumsCount: 'Colonne con dizionari:',
+        tableInPg: 'Tabella:',
+        enumsCount: 'Colonne:',
         notFound: 'Nessun risultato trovato',
         overviewTitle: 'Dizionario Dati e Codici Numerici Atena School',
         overviewDesc: 'Standard architetturale unificato per le enumerazioni numeriche (SmallInt Enums) e le entità di sistema della piattaforma Atena School. Tutte le enumerazioni sono rigorosamente tipizzate in TypeScript, ottimizzate in PostgreSQL (2 byte per valore) e supportano traduzioni multilingue (IT / EN / RU).',
-        metaStorage: 'Tipo di memorizzazione:',
-        metaPkg: 'Pacchetto tipi:',
+        metaStorage: 'Tipo:',
+        metaPkg: 'Pacchetto:',
         metaLang: 'Lingue:',
-        metaTables: 'Tabelle nello schema:',
+        metaTables: 'Tabelle:',
         calloutTitle: 'Principio della Singola Fonte di Verità (Single Source of Truth)',
         calloutDesc: 'Tutti i codici numerici sono definiti tramite <code>const ... as const</code> nel pacchetto <code>packages/api-types</code>. Il database PostgreSQL utilizza rigorosamente <code>SMALLINT DEFAULT 1</code>, eliminando gli errori umani negli inserimenti e garantendo indici ultra-veloci.',
         registryTitle: 'Registro Tabelle del Database',
         cardTableLabel: 'Tabella:',
-        cardColumnsLabel: 'colonne',
+        cardColumnsLabel: 'col.',
         tables: {
           bookings: {
             title: 'Prenotazioni e Richieste Corsi',
             desc: "Tabella principale di ordini e prenotazioni. Contiene i dati del contraente, dello studente, il corso selezionato, l'importo, gli sconti e gli stati operativi.",
             cardDesc: 'Ordini e prenotazioni dei corsi. Stati di pagamento, ciclo di vita e piani tariffari.',
-            columns: {
-              payment_status: 'Stato del pagamento online/offline della prenotazione (1=PENDING..7=CANCELLED)',
-              booking_status: 'Stato generale del ciclo di vita della prenotazione (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
-              scheduling_status: 'Stato di coordinamento e inserimento a calendario (1=SCHEDULED, 2=PENDING_COORDINATION)',
-              payment_method: 'Metodo di pagamento selezionato dal cliente (1=STRIPE..4=BANK_TRANSFER)',
-              billing_scheme: 'Piano di fatturazione e rateizzazione (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
-            }
           },
           payments: {
             title: 'Pagamenti e Transazioni',
             desc: 'Tabella contabile delle registrazioni finanziarie per prenotazioni e studenti. Ogni corso genera 2 registrazioni: la quota del corso (type=1) e la quota associativa di €30 (type=2).',
             cardDesc: 'Registrazioni contabili: pagamento del corso (tipo=1) e quota associativa annuale €30 (tipo=2).',
-            columns: {
-              currency: 'Valuta della transazione finanziaria (1=EUR, 2=USD, 3=GBP)',
-              payment_method: 'Strumento effettivo di pagamento utilizzato (1=STRIPE..4=BANK_TRANSFER)',
-              type: 'Tipologia contabile del pagamento (1=CORSO, 2=QUOTA_ISCRIZIONE_30€..8=ALTRO)',
-              status: 'Stato della transazione finanziaria (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
-              provider: 'Fornitore di pagamento / gateway (1=STRIPE, 2=MANUALE, 3=POS, 4=BONIFICO)',
-            }
           },
           courses: {
             title: 'Catalogo Corsi',
             desc: 'Catalogo accademico dei corsi di lingua (Italiano, Inglese, Russo, ecc.). Livelli CEFR A1..C2, formati individuali/di gruppo e stati di pubblicazione.',
             cardDesc: 'Catalogo programmi scolastici: livelli CEFR A1..C2, formati individuali/di gruppo, stati.',
-            columns: {
-              status: 'Stato di visibilità e disponibilità del corso a catalogo (1=ACTIVE, 2=ARCHIVED)',
-              schedule_type: 'Tipologia di programmazione oraria (1=FIXED_DAYS, 2=FLEXIBLE)',
-              course_format: 'Modalità di svolgimento del corso (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           students: {
             title: 'Registro Studenti',
             desc: 'Tabella degli studenti della scuola Atena. Memorizza dati anagrafici, livello CEFR, stato accademico e stato del tesseramento annuale.',
             cardDesc: 'Registro studenti: stato accademico (ACTIVE..ARCHIVED), livello linguistico CEFR (A1..C2).',
-            columns: {
-              status: 'Stato dello studente nel registro scolastico (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
-              language_level: 'Livello di competenza linguistica quadro QCER / CEFR (1=A1..6=C2)',
-            }
           },
           lessons: {
             title: 'Lezioni e Presenze',
             desc: "Registro delle singole lezioni a calendario. Gestisce lo svolgimento dell'ora di lezione, il registro presenze (presente, assente, ritardo) e la modalità (in presenza/online).",
             cardDesc: 'Lezioni a calendario: stato di svolgimento, presenze (presente/assente), formati aula/online.',
-            columns: {
-              status: 'Stato di svolgimento della lezione a calendario (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
-              attendance: "Registro presenze dello studente per l'ora di lezione (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)",
-              location_type: 'Luogo e modalità di svolgimento della lezione (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           annual_memberships: {
             title: 'Quote Associative Annuali (€30)',
             desc: "Tesseramento obbligatorio annuale di €30 per studente. Valido per l'anno scolastico in corso (1 settembre – 31 agosto).",
             cardDesc: 'Tessere associative annuali (€30 per anno accademico): ACTIVE, PENDING, EXPIRED.',
-            columns: {
-              status: 'Stato di validità della tessera annuale (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
-            }
           },
           app_settings: {
             title: 'Configurazioni e Parametri di Sistema',
             desc: 'Parametri di sistema globali salvati in formato JSONB (es. quota iscrizione attiva/disattiva, anno scolastico corrente, importo standard €30).',
             cardDesc: 'Configurazioni di sistema globali dinamiche (JSONB Key-Value).',
-            columns: {
-              registration_fee_status: 'Stato obbligatorietà quota iscrizione €30 al checkout (1=ACTIVE, 2=INACTIVE)',
-            }
           },
         }
       },
 
       en: {
         searchPlaceholder: 'Search by statuses, codes (e.g. PAID, A1, STRIPE)...',
-        searchTrigger: '🔍 Search codes & fields...',
+        searchTrigger: 'Search codes & fields...',
         navMain: 'Main',
         navOverview: 'Architecture & Standards',
         navTables: 'Database Tables',
@@ -1335,96 +1113,61 @@ export function renderDictionaryHtml(data: any): string {
         colCode: 'TypeScript Code',
         colLabel: 'Label (EN)',
         colDesc: 'Business Context & Purpose',
-        columnPrefix: 'Column:',
-        tableInPg: 'PostgreSQL Table:',
-        enumsCount: 'Dictionary columns:',
+        tableInPg: 'Table:',
+        enumsCount: 'Columns:',
         notFound: 'No matching records found',
         overviewTitle: 'Atena School Data Dictionary & Schema Docs',
         overviewDesc: 'Unified architectural standard for numeric enumerations (SmallInt Enums) and system entities of Atena School platform. All enums are strictly typed in TypeScript, optimized in PostgreSQL (2 bytes per value), and support multilingual translations (IT / EN / RU).',
-        metaStorage: 'Storage Type:',
-        metaPkg: 'Type Package:',
+        metaStorage: 'Type:',
+        metaPkg: 'Package:',
         metaLang: 'Languages:',
-        metaTables: 'Schema Tables:',
+        metaTables: 'Tables:',
         calloutTitle: 'Single Source of Truth Principle',
         calloutDesc: 'All numeric codes are declared via <code>const ... as const</code> in the <code>packages/api-types</code> package. The PostgreSQL database strictly enforces <code>SMALLINT DEFAULT 1</code>, preventing human insertion errors and ensuring ultra-fast indexing.',
         registryTitle: 'Database Tables Registry',
         cardTableLabel: 'Table:',
-        cardColumnsLabel: 'columns',
+        cardColumnsLabel: 'cols.',
         tables: {
           bookings: {
             title: 'Bookings & Course Enrollments',
             desc: 'Main table for orders and bookings. Contains purchaser and student details, selected course, total amount, discounts, and workflow statuses.',
             cardDesc: 'Course orders and booking inquiries. Payment states, lifecycle statuses, and payment plans.',
-            columns: {
-              payment_status: 'Booking online/offline payment status (1=PENDING..7=CANCELLED)',
-              booking_status: 'General booking lifecycle status (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
-              scheduling_status: 'Class scheduling and coordination status (1=SCHEDULED, 2=PENDING_COORDINATION)',
-              payment_method: 'Payment instrument selected by client (1=STRIPE..4=BANK_TRANSFER)',
-              billing_scheme: 'Course billing scheme (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
-            }
           },
           payments: {
             title: 'Payments & Financial Transactions',
             desc: 'Accounting ledger table for bookings and students. Each course checkout generates 2 records: course payment (type=1) and €30 annual registration fee (type=2).',
             cardDesc: 'Accounting entries: course tuition (type=1) and €30 annual membership fee (type=2).',
-            columns: {
-              currency: 'Financial transaction currency (1=EUR, 2=USD, 3=GBP)',
-              payment_method: 'Actual payment instrument used (1=STRIPE..4=BANK_TRANSFER)',
-              type: 'Accounting payment classification (1=COURSE, 2=REGISTRATION_FEE_€30..8=OTHER)',
-              status: 'Financial transaction status (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
-              provider: 'Payment provider / gateway (1=STRIPE, 2=MANUAL, 3=POS, 4=BANK)',
-            }
           },
           courses: {
             title: 'Course Catalog',
             desc: 'Academic curriculum catalog for language courses (Italian, English, Russian, etc.). CEFR levels A1..C2, individual/group formats, and publishing statuses.',
             cardDesc: 'Curriculum catalog: CEFR levels A1..C2, individual/group formats, publishing statuses.',
-            columns: {
-              status: 'Course catalog visibility & enrollment status (1=ACTIVE, 2=ARCHIVED)',
-              schedule_type: 'Course schedule structure (1=FIXED_DAYS, 2=FLEXIBLE)',
-              course_format: 'Course delivery format (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           students: {
             title: 'Student Registry',
             desc: 'Central registry of Atena language school students. Stores personal info, CEFR proficiency level, enrollment status, and annual membership status.',
             cardDesc: 'Student registry: enrollment status (ACTIVE..ARCHIVED), CEFR language proficiency (A1..C2).',
-            columns: {
-              status: 'Student status in school registry (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
-              language_level: 'CEFR language proficiency framework level (1=A1..6=C2)',
-            }
           },
           lessons: {
             title: 'Lessons & Attendance',
             desc: 'Timetable lesson registry. Tracks class delivery, attendance status (present, absent, late, excused), and location format (in-person/online).',
             cardDesc: 'Scheduled classes: delivery status, attendance tracking (present/absent), formats.',
-            columns: {
-              status: 'Scheduled lesson delivery status (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
-              attendance: 'Student attendance record for the class (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
-              location_type: 'Classroom venue location (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
-            }
           },
           annual_memberships: {
             title: 'Annual Memberships (€30)',
             desc: 'Mandatory €30 annual association membership per student. Valid for the current academic year (September 1 – August 31).',
             cardDesc: 'Annual association membership cards (€30 per academic year): ACTIVE, PENDING, EXPIRED.',
-            columns: {
-              status: 'Validity status of €30 annual membership (1=ACTIVE, 2=PENDING, 3=EXPIRED)',
-            }
           },
           app_settings: {
             title: 'System Application Settings',
             desc: 'Dynamic system-wide configuration keys stored in JSONB (e.g. registration fee active/inactive, current academic year, default €30 fee).',
             cardDesc: 'Dynamic global system configuration parameters (JSONB Key-Value).',
-            columns: {
-              registration_fee_status: 'Mandatory registration fee €30 requirement at checkout (1=ACTIVE, 2=INACTIVE)',
-            }
           },
         }
       },
     };
 
-    // Item-level translation maps for Italian and English descriptions
+    // Item-level translation maps
     const ITEM_DESC_I18N = {
       it: {
         'PENDING': 'Sessione di checkout Stripe aperta, in attesa del pagamento da parte del cliente',
@@ -1603,12 +1346,6 @@ export function renderDictionaryHtml(data: any): string {
       return valData.description || '—';
     }
 
-    const LANG_FLAGS = {
-      it: '🇮🇹',
-      en: '🇬🇧',
-      ru: '🇷🇺',
-    };
-
     function renderOverviewCards() {
       const container = document.getElementById('overview-cards-container');
       const t = I18N[currentLang];
@@ -1639,11 +1376,10 @@ export function renderDictionaryHtml(data: any): string {
       container.innerHTML = html;
     }
 
-    // Render Dynamic Views for each Table
+    // Render Dynamic Views for each Table in Pure Notion Style
     function renderTableViews() {
       const container = document.getElementById('dynamic-table-views');
       const t = I18N[currentLang];
-      const flag = LANG_FLAGS[currentLang];
       let html = '';
 
       for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
@@ -1660,8 +1396,8 @@ export function renderDictionaryHtml(data: any): string {
                 <div class="hero-header-text">
                   <h1 class="hero-title">\${tableTitle}</h1>
                   <div class="meta-badges">
-                    <span class="meta-pill">🐘 \${t.tableInPg} <code>public.\${tableData.table}</code></span>
-                    <span class="meta-pill">📊 \${t.enumsCount} <code>\${Object.keys(tableData.columns).length}</code></span>
+                    <span class="meta-pill">\${t.tableInPg} <code>public.\${tableData.table}</code></span>
+                    <span class="meta-pill">\${t.enumsCount} <code>\${Object.keys(tableData.columns).length}</code></span>
                   </div>
                 </div>
               </div>
@@ -1669,16 +1405,13 @@ export function renderDictionaryHtml(data: any): string {
             </div>
         \`;
 
-        // Render each enum column in this table as a structured Card
+        // Render each enum column in this table
         for (const [colKey, colData] of Object.entries(tableData.columns)) {
-          const colDesc = (localizedTable.columns && localizedTable.columns[colKey]) || colData.description;
-
           html += \`
             <div class="enum-card">
               <div class="enum-card-header">
                 <div class="enum-card-header-left">
                   <span class="column-name-badge">
-                    <span class="column-dot"></span>
                     <code>\${colData.column}</code>
                   </span>
                   <span class="enum-type-badge">\${colData.name}</span>
@@ -1692,7 +1425,7 @@ export function renderDictionaryHtml(data: any): string {
                 <table class="dict-table">
                   <thead>
                     <tr>
-                      <th style="width: 50px; text-align: center;">\${t.colId}</th>
+                      <th style="width: 44px; text-align: center;">\${t.colId}</th>
                       <th style="width: 170px;">\${t.colCode}</th>
                       <th style="width: 220px;">\${t.colLabel}</th>
                       <th>\${t.colDesc}</th>
@@ -1708,18 +1441,15 @@ export function renderDictionaryHtml(data: any): string {
             html += \`
               <tr>
                 <td style="text-align: center;">
-                  <span class="id-badge" onclick="copyText('\${valData.id}', 'ID \${valData.id}')" title="Нажмите, чтобы скопировать ID \${valData.id}">\${valData.id}</span>
+                  <span class="id-badge" onclick="copyText('\${valData.id}', 'ID \${valData.id}')" title="Скопировать ID \${valData.id}">\${valData.id}</span>
                 </td>
                 <td>
-                  <span class="code-badge" onclick="copyText('\${colData.name}.\${valData.code}', '\${colData.name}.\${valData.code}')" title="Нажмите, чтобы скопировать \${colData.name}.\${valData.code}">\${valData.code}</span>
+                  <span class="code-badge" onclick="copyText('\${colData.name}.\${valData.code}', '\${colData.name}.\${valData.code}')" title="Скопировать \${colData.name}.\${valData.code}">\${valData.code}</span>
                 </td>
                 <td>
-                  <div class="single-label-wrapper">
-                    <span class="lang-flag">\${flag}</span>
-                    <span>\${label}</span>
-                  </div>
+                  <span class="single-label-wrapper">\${label}</span>
                 </td>
-                <td style="color: var(--text-secondary); line-height: 1.55; font-size: 13px;">
+                <td style="color: var(--text-secondary); line-height: 1.5; font-size: 12.5px;">
                   \${desc}
                 </td>
               </tr>
@@ -1742,12 +1472,10 @@ export function renderDictionaryHtml(data: any): string {
 
     // Switch active Tab / View
     function switchTab(tabKey) {
-      // Update Nav Items
       document.querySelectorAll('.nav-item').forEach(el => {
         el.classList.toggle('active', el.dataset.tab === tabKey);
       });
 
-      // Update Views
       document.querySelectorAll('.view-container').forEach(el => {
         el.classList.remove('active');
       });
@@ -1759,22 +1487,18 @@ export function renderDictionaryHtml(data: any): string {
         document.getElementById('view-overview').classList.add('active');
       }
 
-      // Update Breadcrumbs
       const t = I18N[currentLang];
       const localizedTable = (t.tables && t.tables[tabKey]) || {};
       const title = tabKey === 'overview' ? t.navOverview : (localizedTable.title || tabKey);
       document.getElementById('current-breadcrumb').textContent = title;
 
-      // Update URL Hash
       if (window.location.hash !== '#' + tabKey) {
         history.pushState(null, null, '#' + tabKey);
       }
 
-      // Scroll to top
       document.querySelector('.main-wrapper').scrollTop = 0;
     }
 
-    // Copy to clipboard helper
     function copyText(text, label) {
       navigator.clipboard.writeText(text).then(() => {
         const t = I18N[currentLang];
@@ -1788,10 +1512,9 @@ export function renderDictionaryHtml(data: any): string {
       t.classList.add('show');
       setTimeout(() => {
         t.classList.remove('show');
-      }, 2000);
+      }, 1800);
     }
 
-    // Theme Toggle
     function toggleTheme() {
       const isDark = document.body.getAttribute('data-theme') === 'dark';
       const newTheme = isDark ? 'light' : 'dark';
@@ -1803,12 +1526,10 @@ export function renderDictionaryHtml(data: any): string {
       localStorage.setItem('atena_dict_theme', newTheme);
     }
 
-    // Initialize theme from localStorage
     const savedTheme = localStorage.getItem('atena_dict_theme') || 'light';
     document.body.setAttribute('data-theme', savedTheme);
     document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
 
-    // Global Search Spotlight
     function openSearch() {
       document.getElementById('search-modal').classList.add('open');
       const input = document.getElementById('search-input');
@@ -1864,7 +1585,7 @@ export function renderDictionaryHtml(data: any): string {
       }
 
       if (results.length === 0) {
-        resultsContainer.innerHTML = \`<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13.5px;">\${t.notFound}</div>\`;
+        resultsContainer.innerHTML = \`<div style="padding: 20px; text-align: center; color: var(--text-tertiary); font-size: 13px;">\${t.notFound}</div>\`;
         return;
       }
 
@@ -1887,7 +1608,6 @@ export function renderDictionaryHtml(data: any): string {
       switchTab(tableKey);
     }
 
-    // Keyboard Hotkey Listener for Cmd+K and Esc
     window.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -1898,7 +1618,6 @@ export function renderDictionaryHtml(data: any): string {
       }
     });
 
-    // Handle initial load
     window.addEventListener('DOMContentLoaded', () => {
       setLanguage(currentLang);
     });
