@@ -7,54 +7,57 @@ export function renderDictionaryHtml(data: any): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atena School — Data Dictionary & Schema Docs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-page: #FFFFFF;
-      --bg-sidebar: #F7F6F3;
+      --bg-sidebar: #FAFAFA;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F7F6F3;
-      --bg-table-head: #F7F6F3;
-      --bg-subtle: #F1F1EF;
-      --bg-code: #F7F6F3;
-      --border: #E9E9E7;
-      --border-subtle: #EDEDEB;
+      --bg-card-hover: #F4F4F5;
+      --bg-table-head: #FAFAFA;
+      --bg-subtle: #F4F4F5;
+      --bg-code: #F4F4F5;
+      --border: #E4E4E7;
+      --border-subtle: #F4F4F5;
       
-      --text-main: #37352F;
-      --text-secondary: #787774;
-      --text-tertiary: #9B9A97;
+      --text-main: #09090B;
+      --text-secondary: #52525B;
+      --text-tertiary: #A1A1AA;
       
-      --accent: #37352F;
-      --accent-bg: #EFEFED;
-      --badge-bg: #F1F1EF;
-      --badge-text: #37352F;
-      --badge-border: #E9E9E7;
+      --accent: #09090B;
+      --accent-bg: #E4E4E7;
+      --badge-bg: #F4F4F5;
+      --badge-text: #09090B;
+      --badge-border: #E4E4E7;
 
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       
       --sidebar-width: 260px;
     }
 
     [data-theme="dark"] {
-      --bg-page: #191919;
-      --bg-sidebar: #202020;
-      --bg-card: #202020;
-      --bg-card-hover: #262626;
-      --bg-table-head: #262626;
-      --bg-subtle: #2B2B2B;
-      --bg-code: #262626;
-      --border: #2F2F2F;
-      --border-subtle: #282828;
+      --bg-page: #000000;
+      --bg-sidebar: #09090B;
+      --bg-card: #09090B;
+      --bg-card-hover: #18181B;
+      --bg-table-head: #18181B;
+      --bg-subtle: #27272A;
+      --bg-code: #18181B;
+      --border: #27272A;
+      --border-subtle: #1E1E22;
       
-      --text-main: #E6E6E6;
-      --text-secondary: #9B9B9B;
-      --text-tertiary: #6F6F6F;
+      --text-main: #FAFAFA;
+      --text-secondary: #A1A1AA;
+      --text-tertiary: #71717A;
       
-      --accent: #E6E6E6;
-      --accent-bg: #2F2F2F;
-      --badge-bg: #2B2B2B;
-      --badge-text: #E6E6E6;
-      --badge-border: #373737;
+      --accent: #FAFAFA;
+      --accent-bg: #27272A;
+      --badge-bg: #18181B;
+      --badge-text: #FAFAFA;
+      --badge-border: #27272A;
     }
 
     * {
