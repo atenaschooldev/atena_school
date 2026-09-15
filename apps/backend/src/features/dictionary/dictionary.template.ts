@@ -357,10 +357,46 @@ export function renderDictionaryHtml(data: any): string {
       font-weight: 600;
     }
 
-    .header-links {
+    .header-actions {
       display: flex;
       align-items: center;
       gap: 12px;
+    }
+
+    /* Segmented Language Switcher */
+    .lang-switcher {
+      display: flex;
+      align-items: center;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s ease;
+    }
+
+    .lang-btn:hover {
+      color: var(--text-main);
+    }
+
+    .lang-btn.active {
+      background: var(--bg-card);
+      color: var(--accent);
+      box-shadow: var(--shadow-xs);
     }
 
     .header-link-btn {
@@ -773,23 +809,12 @@ export function renderDictionaryHtml(data: any): string {
       vertical-align: -1px;
     }
 
-    .lang-item {
-      margin-bottom: 3px;
-      line-height: 1.4;
-      font-size: 12.5px;
-    }
-
-    .lang-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .lang-item.main {
+    .single-label-wrapper {
+      display: inline-flex;
+      align-items: center;
+      font-size: 13.5px;
       font-weight: 600;
       color: var(--text-main);
-    }
-
-    .lang-item.sub {
-      color: var(--text-secondary);
     }
 
     /* ============================================================ */
@@ -960,18 +985,18 @@ export function renderDictionaryHtml(data: any): string {
     </div>
 
     <div class="search-trigger" onclick="openSearch()">
-      <span>🔍 Поиск по кодам & полям...</span>
+      <span id="search-trigger-text">🔍 Поиск по кодам & полям...</span>
       <kbd>⌘K</kbd>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-title">Главная</div>
+      <div class="nav-section-title" id="nav-title-main">Главная</div>
       <a class="nav-item active" data-tab="overview" onclick="switchTab('overview')">
         <span class="nav-item-icon">🏛️</span>
-        <span>Архитектура & Стандарты</span>
+        <span id="nav-item-overview">Архитектура & Стандарты</span>
       </a>
 
-      <div class="nav-section-title">Таблицы базы данных</div>
+      <div class="nav-section-title" id="nav-title-tables">Таблицы базы данных</div>
       <a class="nav-item" data-tab="bookings" onclick="switchTab('bookings')">
         <span class="nav-item-icon">📦</span>
         <span>Bookings</span>
@@ -1031,7 +1056,20 @@ export function renderDictionaryHtml(data: any): string {
         <span id="current-breadcrumb" class="breadcrumb-active">Архитектура & Стандарты</span>
       </div>
 
-      <div class="header-links">
+      <div class="header-actions">
+        <!-- 3-Language Switcher -->
+        <div class="lang-switcher">
+          <button class="lang-btn" id="lang-btn-it" onclick="setLanguage('it')" title="Italiano">
+            <span class="lang-flag">🇮🇹</span> IT
+          </button>
+          <button class="lang-btn" id="lang-btn-en" onclick="setLanguage('en')" title="English">
+            <span class="lang-flag">🇬🇧</span> EN
+          </button>
+          <button class="lang-btn active" id="lang-btn-ru" onclick="setLanguage('ru')" title="Русский">
+            <span class="lang-flag">🇷🇺</span> RU
+          </button>
+        </div>
+
         <a href="/docs" target="_blank" class="header-link-btn">
           <span>⚡</span> <span>Swagger UI</span>
         </a>
@@ -1048,16 +1086,16 @@ export function renderDictionaryHtml(data: any): string {
           <div class="hero-header-top">
             <div class="hero-icon-badge">🏛️</div>
             <div class="hero-header-text">
-              <h1 class="hero-title">Словарь данных и перечислений Atena School</h1>
+              <h1 class="hero-title" id="overview-hero-title">Словарь данных и перечислений Atena School</h1>
               <div class="meta-badges">
-                <span class="meta-pill">💾 Тип хранения: <code>SMALLINT (2 Bytes)</code></span>
-                <span class="meta-pill">🛡️ Пакет типов: <code>@atena/api-types</code></span>
-                <span class="meta-pill">🌐 Языки: <code>IT, EN, RU</code></span>
-                <span class="meta-pill">⚡ Таблиц в схеме: <code>7</code></span>
+                <span class="meta-pill">💾 <span id="meta-storage-text">Тип хранения:</span> <code>SMALLINT (2 Bytes)</code></span>
+                <span class="meta-pill">🛡️ <span id="meta-pkg-text">Пакет типов:</span> <code>@atena/api-types</code></span>
+                <span class="meta-pill">🌐 <span id="meta-lang-text">Языки:</span> <code>IT, EN, RU</code></span>
+                <span class="meta-pill">⚡ <span id="meta-tables-text">Таблиц в схеме:</span> <code>7</code></span>
               </div>
             </div>
           </div>
-          <p class="hero-desc">
+          <p class="hero-desc" id="overview-hero-desc">
             Единый архитектурный стандарт числовых перечислений (SmallInt Enums) и системных сущностей платформы Atena School. Все перечисления строго типизированы в TypeScript, оптимизированы в PostgreSQL (2 байта на значение) и поддерживают мультиязычные переводы (IT / EN / RU).
           </p>
         </div>
@@ -1065,12 +1103,12 @@ export function renderDictionaryHtml(data: any): string {
         <div class="callout">
           <div class="callout-icon">💡</div>
           <div class="callout-content">
-            <div class="callout-title">Принцип единого источника правды (Single Source of Truth)</div>
-            Все числовые коды объявляются через <code>const ... as const</code> в пакете <code>packages/api-types</code>. База данных PostgreSQL использует строгие <code>SMALLINT DEFAULT 1</code>, исключая человеческие ошибки при вставках и обеспечивая ультра-быстрые индексы.
+            <div class="callout-title" id="callout-title-text">Принцип единого источника правды (Single Source of Truth)</div>
+            <div id="callout-desc-text">Все числовые коды объявляются через <code>const ... as const</code> в пакете <code>packages/api-types</code>. База данных PostgreSQL использует строгие <code>SMALLINT DEFAULT 1</code>, исключая человеческие ошибки при вставках и обеспечивая ультра-быстрые индексы.</div>
           </div>
         </div>
 
-        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);">Реестр таблиц базы данных</h2>
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 14px; color: var(--text-main);" id="registry-title-text">Реестр таблиц базы данных</h2>
         <div class="overview-grid">
           <a class="overview-card" onclick="switchTab('bookings')">
             <div class="overview-card-header">
@@ -1173,7 +1211,7 @@ export function renderDictionaryHtml(data: any): string {
     <div class="search-modal" onclick="event.stopPropagation()">
       <div class="search-input-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" class="search-input" placeholder="Поиск по статусам, кодам (например, PAID, A1, STRIPE) или описанию..." oninput="handleSearch(this.value)">
+        <input type="text" id="search-input" class="search-input" placeholder="Поиск по статусам, кодам (например, PAID, A1, STRIPE)..." oninput="handleSearch(this.value)">
       </div>
       <div id="search-results" class="search-results"></div>
     </div>
@@ -1198,9 +1236,109 @@ export function renderDictionaryHtml(data: any): string {
       app_settings: '⚙️',
     };
 
+    // UI Localizations (IT / EN / RU)
+    const I18N = {
+      ru: {
+        searchPlaceholder: 'Поиск по статусам, кодам (например, PAID, A1, STRIPE)...',
+        searchTrigger: '🔍 Поиск по кодам & полям...',
+        navMain: 'Главная',
+        navOverview: 'Архитектура & Стандарты',
+        navTables: 'Таблицы базы данных',
+        themeDark: 'Темная тема',
+        themeLight: 'Светлая тема',
+        toastCopied: 'Скопировано',
+        colId: 'ID',
+        colCode: 'TypeScript Code',
+        colLabel: 'Название (RU)',
+        colDesc: 'Бизнес-назначение и контекст',
+        columnPrefix: 'Колонка:',
+        tableInPg: 'Таблица в PostgreSQL:',
+        enumsCount: 'Колонок со справочниками:',
+        notFound: 'Ничего не найдено',
+      },
+      it: {
+        searchPlaceholder: 'Cerca per stati, codici (es. PAID, A1, STRIPE)...',
+        searchTrigger: '🔍 Cerca codici e campi...',
+        navMain: 'Principale',
+        navOverview: 'Architettura & Standard',
+        navTables: 'Tabelle del Database',
+        themeDark: 'Tema scuro',
+        themeLight: 'Tema chiaro',
+        toastCopied: 'Copiato',
+        colId: 'ID',
+        colCode: 'Codice TypeScript',
+        colLabel: 'Denominazione (IT)',
+        colDesc: 'Contesto aziendale e utilizzo',
+        columnPrefix: 'Colonna:',
+        tableInPg: 'Tabella in PostgreSQL:',
+        enumsCount: 'Colonne con dizionari:',
+        notFound: 'Nessun risultato trovato',
+      },
+      en: {
+        searchPlaceholder: 'Search by statuses, codes (e.g. PAID, A1, STRIPE)...',
+        searchTrigger: '🔍 Search codes & fields...',
+        navMain: 'Main',
+        navOverview: 'Architecture & Standards',
+        navTables: 'Database Tables',
+        themeDark: 'Dark theme',
+        themeLight: 'Light theme',
+        toastCopied: 'Copied',
+        colId: 'ID',
+        colCode: 'TypeScript Code',
+        colLabel: 'Label (EN)',
+        colDesc: 'Business Context & Purpose',
+        columnPrefix: 'Column:',
+        tableInPg: 'PostgreSQL Table:',
+        enumsCount: 'Dictionary columns:',
+        notFound: 'No matching records found',
+      },
+    };
+
+    let currentLang = localStorage.getItem('atena_dict_lang') || 'ru';
+
+    function setLanguage(lang) {
+      if (!['it', 'en', 'ru'].includes(lang)) lang = 'ru';
+      currentLang = lang;
+      localStorage.setItem('atena_dict_lang', lang);
+
+      // Update switcher buttons
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'lang-btn-' + lang);
+      });
+
+      // Update static UI texts
+      const t = I18N[lang];
+      document.getElementById('search-trigger-text').textContent = t.searchTrigger;
+      document.getElementById('search-input').placeholder = t.searchPlaceholder;
+      document.getElementById('nav-title-main').textContent = t.navMain;
+      document.getElementById('nav-item-overview').textContent = t.navOverview;
+      document.getElementById('nav-title-tables').textContent = t.navTables;
+
+      // Re-render table views to update columns and single labels
+      renderTableViews();
+
+      // Maintain active tab
+      const currentTab = window.location.hash.replace('#', '') || 'overview';
+      switchTab(currentTab);
+    }
+
+    function getValLabel(valData, lang) {
+      if (lang === 'it') return valData.label_it || valData.label_en || valData.label_ru || '—';
+      if (lang === 'en') return valData.label_en || valData.label_it || valData.label_ru || '—';
+      return valData.label_ru || valData.label_en || valData.label_it || '—';
+    }
+
+    const LANG_FLAGS = {
+      it: '🇮🇹',
+      en: '🇬🇧',
+      ru: '🇷🇺',
+    };
+
     // Render Dynamic Views for each Table
     function renderTableViews() {
       const container = document.getElementById('dynamic-table-views');
+      const t = I18N[currentLang];
+      const flag = LANG_FLAGS[currentLang];
       let html = '';
 
       for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
@@ -1214,8 +1352,8 @@ export function renderDictionaryHtml(data: any): string {
                 <div class="hero-header-text">
                   <h1 class="hero-title">\${tableData.title}</h1>
                   <div class="meta-badges">
-                    <span class="meta-pill">🐘 PostgreSQL: <code>public.\${tableData.table}</code></span>
-                    <span class="meta-pill">📊 Колонок со справочниками: <code>\${Object.keys(tableData.columns).length}</code></span>
+                    <span class="meta-pill">🐘 \${t.tableInPg} <code>public.\${tableData.table}</code></span>
+                    <span class="meta-pill">📊 \${t.enumsCount} <code>\${Object.keys(tableData.columns).length}</code></span>
                   </div>
                 </div>
               </div>
@@ -1231,7 +1369,7 @@ export function renderDictionaryHtml(data: any): string {
                 <div class="enum-card-header-left">
                   <span class="column-name-badge">
                     <span class="column-dot"></span>
-                    Колонка: <code>\${colData.column}</code>
+                    \${t.columnPrefix} <code>\${colData.column}</code>
                   </span>
                   <span class="enum-type-badge">\${colData.name}</span>
                 </div>
@@ -1245,16 +1383,18 @@ export function renderDictionaryHtml(data: any): string {
                 <table class="dict-table">
                   <thead>
                     <tr>
-                      <th style="width: 50px; text-align: center;">ID</th>
-                      <th style="width: 170px;">TypeScript Code</th>
-                      <th style="width: 260px;">Переводы (IT / EN / RU)</th>
-                      <th>Бизнес-назначение и контекст</th>
+                      <th style="width: 50px; text-align: center;">\${t.colId}</th>
+                      <th style="width: 170px;">\${t.colCode}</th>
+                      <th style="width: 220px;">\${t.colLabel}</th>
+                      <th>\${t.colDesc}</th>
                     </tr>
                   </thead>
                   <tbody>
           \`;
 
           for (const [valKey, valData] of Object.entries(colData.values)) {
+            const label = getValLabel(valData, currentLang);
+
             html += \`
               <tr>
                 <td style="text-align: center;">
@@ -1264,9 +1404,10 @@ export function renderDictionaryHtml(data: any): string {
                   <span class="code-badge" onclick="copyText('\${colData.name}.\${valData.code}', '\${colData.name}.\${valData.code}')" title="Нажмите, чтобы скопировать \${colData.name}.\${valData.code}">\${valData.code}</span>
                 </td>
                 <td>
-                  <div class="lang-item main"><span class="lang-flag">🇮🇹</span> \${valData.label_it || '—'}</div>
-                  <div class="lang-item sub"><span class="lang-flag">🇬🇧</span> \${valData.label_en || '—'}</div>
-                  <div class="lang-item sub"><span class="lang-flag">🇷🇺</span> \${valData.label_ru || '—'}</div>
+                  <div class="single-label-wrapper">
+                    <span class="lang-flag">\${flag}</span>
+                    <span>\${label}</span>
+                  </div>
                 </td>
                 <td style="color: var(--text-secondary); line-height: 1.55; font-size: 13px;">
                   \${valData.description || '—'}
@@ -1310,14 +1451,14 @@ export function renderDictionaryHtml(data: any): string {
 
       // Update Breadcrumbs
       const titleMap = {
-        overview: 'Архитектура & Стандарты',
-        bookings: 'Таблица Bookings',
-        payments: 'Таблица Payments',
-        courses: 'Таблица Courses',
-        students: 'Таблица Students',
-        lessons: 'Таблица Lessons',
-        annual_memberships: 'Таблица Annual Memberships',
-        app_settings: 'Таблица App Settings',
+        overview: currentLang === 'it' ? 'Architettura & Standard' : currentLang === 'en' ? 'Architecture & Standards' : 'Архитектура & Стандарты',
+        bookings: 'Bookings',
+        payments: 'Payments',
+        courses: 'Courses',
+        students: 'Students',
+        lessons: 'Lessons',
+        annual_memberships: 'Annual Memberships',
+        app_settings: 'App Settings',
       };
       document.getElementById('current-breadcrumb').textContent = titleMap[tabKey] || tabKey;
 
@@ -1333,7 +1474,8 @@ export function renderDictionaryHtml(data: any): string {
     // Copy to clipboard helper
     function copyText(text, label) {
       navigator.clipboard.writeText(text).then(() => {
-        showToast('Скопировано: ' + (label || text));
+        const t = I18N[currentLang];
+        showToast(t.toastCopied + ': ' + (label || text));
       });
     }
 
@@ -1352,7 +1494,9 @@ export function renderDictionaryHtml(data: any): string {
       const newTheme = isDark ? 'light' : 'dark';
       document.body.setAttribute('data-theme', newTheme);
       document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-      document.getElementById('theme-label').textContent = newTheme === 'dark' ? 'Светлая тема' : 'Темная тема';
+      
+      const t = I18N[currentLang];
+      document.getElementById('theme-label').textContent = newTheme === 'dark' ? t.themeLight : t.themeDark;
       localStorage.setItem('atena_dict_theme', newTheme);
     }
 
@@ -1360,7 +1504,6 @@ export function renderDictionaryHtml(data: any): string {
     const savedTheme = localStorage.getItem('atena_dict_theme') || 'light';
     document.body.setAttribute('data-theme', savedTheme);
     document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-    document.getElementById('theme-label').textContent = savedTheme === 'dark' ? 'Светлая тема' : 'Темная тема';
 
     // Global Search Spotlight
     function openSearch() {
@@ -1383,15 +1526,20 @@ export function renderDictionaryHtml(data: any): string {
       for (const [tableKey, tableData] of Object.entries(DICTIONARY_DATA.tables)) {
         for (const [colKey, colData] of Object.entries(tableData.columns)) {
           for (const [valKey, valData] of Object.entries(colData.values)) {
+            const labelIt = (valData.label_it || '').toLowerCase();
+            const labelEn = (valData.label_en || '').toLowerCase();
+            const labelRu = (valData.label_ru || '').toLowerCase();
+            const desc = (valData.description || '').toLowerCase();
+
             const matches = 
               !query ||
               colData.name.toLowerCase().includes(query) ||
               valData.code.toLowerCase().includes(query) ||
               String(valData.id).includes(query) ||
-              (valData.label_it && valData.label_it.toLowerCase().includes(query)) ||
-              (valData.label_en && valData.label_en.toLowerCase().includes(query)) ||
-              (valData.label_ru && valData.label_ru.toLowerCase().includes(query)) ||
-              (valData.description && valData.description.toLowerCase().includes(query));
+              labelIt.includes(query) ||
+              labelEn.includes(query) ||
+              labelRu.includes(query) ||
+              desc.includes(query);
 
             if (matches) {
               results.push({
@@ -1400,7 +1548,7 @@ export function renderDictionaryHtml(data: any): string {
                 enumName: colData.name,
                 code: valData.code,
                 id: valData.id,
-                label: valData.label_it || valData.label_en || valData.label_ru,
+                label: getValLabel(valData, currentLang),
                 desc: valData.description,
               });
             }
@@ -1409,7 +1557,8 @@ export function renderDictionaryHtml(data: any): string {
       }
 
       if (results.length === 0) {
-        resultsContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13.5px;">Ничего не найдено</div>';
+        const t = I18N[currentLang];
+        resultsContainer.innerHTML = \`<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13.5px;">\${t.notFound}</div>\`;
         return;
       }
 
@@ -1443,11 +1592,9 @@ export function renderDictionaryHtml(data: any): string {
       }
     });
 
-    // Handle initial hash navigation
+    // Handle initial load
     window.addEventListener('DOMContentLoaded', () => {
-      renderTableViews();
-      const hash = window.location.hash.replace('#', '') || 'overview';
-      switchTab(hash);
+      setLanguage(currentLang);
     });
 
     window.addEventListener('hashchange', () => {
