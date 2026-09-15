@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
-import { DictionaryController } from './dictionary.controller';
 import { DictionaryService } from './dictionary.service';
 
 @Module({
-  controllers: [DictionaryController],
+  controllers: [],
   providers: [DictionaryService],
   exports: [DictionaryService],
 })

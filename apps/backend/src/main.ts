@@ -150,7 +150,9 @@ async function bootstrap() {
   };
 
   fastify.get('/docs/dictionary', sendDictionary);
+  fastify.get('/docs/dictionary/*', sendDictionary);
   fastify.get('/dictionary', sendDictionary);
+  fastify.get('/dictionary/*', sendDictionary);
 
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
