@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { PaymentsRepository, PaymentEntity } from '../domain/payments.repository.interface';
+import {
+  PaymentCurrency,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+} from '@atena/api-types';
 
 @Injectable()
 export class PrismaPaymentsRepository implements PaymentsRepository {
@@ -53,11 +60,11 @@ export class PrismaPaymentsRepository implements PaymentsRepository {
     studentId?: string;
     userId?: string;
     amount: number;
-    currency?: string;
-    paymentMethod: string;
-    type?: string;
-    status?: string;
-    provider?: string;
+    currency?: number;
+    paymentMethod: number;
+    type?: number;
+    status?: number;
+    provider?: number;
     providerTransactionId?: string;
     notes?: string;
     paidAt?: Date | string;
@@ -68,11 +75,11 @@ export class PrismaPaymentsRepository implements PaymentsRepository {
         studentId: data.studentId || null,
         userId: data.userId || null,
         amount: data.amount,
-        currency: data.currency || 'EUR',
-        paymentMethod: data.paymentMethod,
-        type: data.type || 'payment',
-        status: data.status || 'succeeded',
-        provider: data.provider || 'manual',
+        currency: data.currency !== undefined ? Number(data.currency) : PaymentCurrency.EUR,
+        paymentMethod: Number(data.paymentMethod),
+        type: data.type !== undefined ? Number(data.type) : PaymentType.COURSE_PAYMENT,
+        status: data.status !== undefined ? Number(data.status) : PaymentRecordStatus.SUCCEEDED,
+        provider: data.provider !== undefined ? Number(data.provider) : PaymentProvider.MANUAL,
         providerTransactionId: data.providerTransactionId || null,
         notes: data.notes || null,
         paidAt: data.paidAt ? new Date(data.paidAt) : new Date(),
@@ -83,22 +90,22 @@ export class PrismaPaymentsRepository implements PaymentsRepository {
   async update(
     id: string,
     data: Partial<{
-      status: string;
+      status: number;
       notes: string;
-      paymentMethod: string;
+      paymentMethod: number;
       amount: number;
-      type: string;
+      type: number;
       studentId: string;
       bookingId: string;
       paidAt: Date | string;
     }>,
   ): Promise<PaymentEntity> {
     const updateData: any = {};
-    if (data.status !== undefined) updateData.status = data.status;
+    if (data.status !== undefined) updateData.status = Number(data.status);
     if (data.notes !== undefined) updateData.notes = data.notes;
-    if (data.paymentMethod !== undefined) updateData.paymentMethod = data.paymentMethod;
+    if (data.paymentMethod !== undefined) updateData.paymentMethod = Number(data.paymentMethod);
     if (data.amount !== undefined) updateData.amount = data.amount;
-    if (data.type !== undefined) updateData.type = data.type;
+    if (data.type !== undefined) updateData.type = Number(data.type);
     if (data.studentId !== undefined) updateData.studentId = data.studentId || null;
     if (data.bookingId !== undefined) updateData.bookingId = data.bookingId || null;
     if (data.paidAt !== undefined) updateData.paidAt = data.paidAt ? new Date(data.paidAt) : new Date();

@@ -1,8 +1,13 @@
+import { StudentStatus, LanguageLevel } from '@atena/api-types';
+
+export { StudentStatus, LanguageLevel };
+
 export const STUDENT_STATUS = {
-  ACTIVE: "active",
-  INACTIVE: "inactive",
-  PAUSED: "paused",
-  GRADUATED: "graduated",
+  ACTIVE: StudentStatus.ACTIVE,
+  INACTIVE: StudentStatus.INACTIVE,
+  PAUSED: StudentStatus.PAUSED,
+  GRADUATED: StudentStatus.GRADUATED,
+  ARCHIVED: StudentStatus.ARCHIVED,
 } as const;
 
 export const STUDENT_LANGUAGE_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;

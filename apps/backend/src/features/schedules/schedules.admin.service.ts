@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SchedulesRepository } from './domain/schedules.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { LessonStatus, LessonLocationType } from '@atena/api-types';
 
 @Injectable()
 export class SchedulesService {
@@ -50,7 +51,7 @@ export class SchedulesService {
       courseId: dto.course_id || dto.courseId,
       teacherId: dto.teacher_id || dto.teacherId,
       room: dto.room || null,
-      status: dto.status || 'scheduled',
+      status: dto.status || LessonStatus.SCHEDULED,
       startDate,
       endDate,
       lessonType: dto.format || dto.lessonType || 'offline',
@@ -150,7 +151,7 @@ export class SchedulesService {
         courseId: template.courseId,
         teacherId: template.teacherId,
         room: template.room,
-        status: 'scheduled',
+        status: LessonStatus.SCHEDULED,
         startDate: lessonStart,
         endDate: lessonEnd,
         lessonType: template.lessonType,
@@ -197,7 +198,7 @@ export class SchedulesService {
         },
       },
       data: {
-        status: 'cancelled',
+        status: LessonStatus.CANCELLED,
       },
     });
 

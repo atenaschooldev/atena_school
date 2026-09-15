@@ -9,6 +9,7 @@ import {
   dispatchMagicLinkAction,
   confirmPaymentAction,
 } from "@/app/actions/booking";
+import { BookingPaymentStatus } from "@atena/api-types";
 
 export function useCheckoutSuccess(overrideBookingId?: string) {
   const router = useRouter();
@@ -51,11 +52,11 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
         try {
           const res = await confirmPaymentAction(bookingId, sessionId);
           const enriched = await getBookingDetailsServer(bookingId);
-          setBookingData(enriched?.booking || enriched || res?.booking || { id: bookingId, payment_status: "paid" });
+          setBookingData(enriched?.booking || enriched || res?.booking || { id: bookingId, payment_status: BookingPaymentStatus.PAID });
         } catch (err) {
           console.error("Error confirming payment:", err);
           const fallback = await getBookingDetailsServer(bookingId);
-          setBookingData(fallback?.booking || fallback || { id: bookingId, payment_status: "paid" });
+          setBookingData(fallback?.booking || fallback || { id: bookingId, payment_status: BookingPaymentStatus.PAID });
         } finally {
           setVerifying(false);
           if (typeof window !== "undefined" && window.history && window.location.search) {
@@ -85,7 +86,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
   const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
+  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
 
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {

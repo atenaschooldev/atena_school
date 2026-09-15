@@ -1,3 +1,5 @@
+import { CourseStatus as CourseStatusEnum, CourseScheduleType, CourseFormat } from '@atena/api-types';
+
 export type Level = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 export const LEVELS: Level[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -15,17 +17,17 @@ export interface Course {
   insegnanteIds: string[];
   teacherName?: string | null;
   
-  // New fields
+  // Additional fields
   lessonsPerWeek: number | null;
   sortOrder: number | null;
-  scheduleType: string | null;
+  scheduleType: string | number | null;
   totalLessons: number | null;
   scheduleDays: string[];
   startTime: string | null;
   endTime: string | null;
   lessonDurationMinutes: number | null;
   totalHours: number | null;
-  courseFormat: string | null;
+  courseFormat: string | number | null;
   slug: string | null;
 }
 
@@ -38,17 +40,17 @@ export interface CourseFormValues {
   descrizione: string;
   insegnanteIds: string[];
   
-  // New fields
+  // Additional fields
   lessonsPerWeek: number | null;
   sortOrder: number;
-  scheduleType: string;
+  scheduleType: string | number;
   totalLessons: number | null;
   scheduleDays: string[];
   startTime: string;
   endTime: string;
   lessonDurationMinutes: number | null;
   totalHours: number | null;
-  courseFormat: string;
+  courseFormat: string | number;
   slug: string;
 }
 
@@ -58,27 +60,31 @@ export interface CourseApiResponse {
   title: string;
   category: string | null;
   price: number | null;
-  status: string | null;
+  status: number | string | null;
   photoUrl: string | null;
   description: string | null;
   teacherId: string | null;
   teacherName: string | null;
   lessonsPerWeek: number | null;
   sortOrder: number | null;
-  scheduleType: string | null;
+  scheduleType: number | string | null;
   totalLessons: number | null;
   scheduleDays: string[] | null;
   startTime: string | null;
   endTime: string | null;
   lessonDurationMinutes: number | null;
   totalHours: number | null;
-  courseFormat: string | null;
+  courseFormat: number | string | null;
   slug: string | null;
   updatedAt: string | null;
 }
 
 export function mapApiToCourse(api: CourseApiResponse): Course {
+  const statusRaw = String(api.status || "1");
   const statusMap: Record<string, CourseStatus> = {
+    "1": "attivo",
+    "2": "in-programmazione",
+    "3": "archiviato",
     active: "attivo",
     published: "attivo",
     draft: "in-programmazione",
@@ -99,7 +105,7 @@ export function mapApiToCourse(api: CourseApiResponse): Course {
     nome: api.name || api.title || "",
     categoria: api.category || "",
     prezzo: Number(api.price || 0),
-    stato: statusMap[api.status || "active"] || "attivo",
+    stato: statusMap[statusRaw] || "attivo",
     foto: api.photoUrl || undefined,
     descrizione: api.description || "",
     insegnanteId: api.teacherId || "",
@@ -123,11 +129,11 @@ export function mapApiToCourse(api: CourseApiResponse): Course {
 export function mapCourseToApiPayload(
   form: CourseFormValues,
 ): Record<string, unknown> {
-  const statusMap: Record<CourseStatus, string> = {
-    attivo: "active",
-    "in-programmazione": "draft",
-    concluso: "concluded",
-    archiviato: "archived",
+  const statusMap: Record<CourseStatus, number> = {
+    attivo: CourseStatusEnum.ACTIVE,
+    "in-programmazione": CourseStatusEnum.DRAFT,
+    concluso: CourseStatusEnum.ARCHIVED,
+    archiviato: CourseStatusEnum.ARCHIVED,
   };
 
   const primaryId = form.insegnanteIds[0] || "";
@@ -137,7 +143,7 @@ export function mapCourseToApiPayload(
     name: form.nome,
     category: form.categoria,
     price: Number(form.prezzo || 0),
-    status: statusMap[form.stato],
+    status: statusMap[form.stato] ?? CourseStatusEnum.ACTIVE,
     teacherId: primaryId || null,
     description: form.descrizione,
     photoUrl: form.foto || null,

@@ -4,7 +4,6 @@ import { it } from "date-fns/locale";
 /**
  * Centralized Domain Enums and Status Types
  */
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
 export type PaymentStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'refunded';
 export type CourseStatus = 'active' | 'published' | 'draft' | 'archived';
 export type UserRole = 'admin' | 'student' | 'teacher' | 'parent';

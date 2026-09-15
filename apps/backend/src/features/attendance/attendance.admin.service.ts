@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { BookingPaymentStatus, LessonAttendance, LessonStatus, parseLessonAttendance } from '@atena/api-types';
 
 @Injectable()
 export class AttendanceService {
@@ -34,10 +35,10 @@ export class AttendanceService {
     const lessonItems = lessons.map((l) => {
       const record = l.attendanceRecords[0] || null;
       const b = l.booking;
-      const bookingPaymentStatus = b?.paymentStatus || 'reserved';
+      const bookingPaymentStatus = b?.paymentStatus ?? BookingPaymentStatus.RESERVED;
 
       // Business rule: show quick payment dialog when student attended but hasn't paid
-      const requiresPaymentOnAttendance = bookingPaymentStatus !== 'completed' && bookingPaymentStatus !== 'paid';
+      const requiresPaymentOnAttendance = bookingPaymentStatus !== BookingPaymentStatus.PAID;
 
       return {
         id: l.id,
@@ -77,7 +78,7 @@ export class AttendanceService {
       (l) => l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late',
     ).length;
     const absent = lessonItems.filter((l) => l.attendance_record?.status === 'absent').length;
-    const pending = lessonItems.filter((l) => !l.attendance_record).length;
+    const pending = lessonItems.filter((l) => !l.attendance_record || l.status === LessonAttendance.PENDING).length;
     const pendingPayment = lessonItems.filter(
       (l) =>
         (l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late') &&
@@ -94,7 +95,7 @@ export class AttendanceService {
     lessonId: string;
     bookingId?: string;
     studentId?: string;
-    status: string;
+    status: number | string;
     notes?: string;
     markedBy?: string;
   }) {
@@ -120,7 +121,7 @@ export class AttendanceService {
       record = await this.prisma.attendanceRecord.update({
         where: { id: existing.id },
         data: {
-          status: dto.status,
+          status: String(dto.status),
           notes: dto.notes !== undefined ? dto.notes : existing.notes,
           markedBy: dto.markedBy || 'admin',
           markedAt: new Date(),
@@ -132,7 +133,7 @@ export class AttendanceService {
           lessonId: dto.lessonId,
           bookingId: bookingId || null,
           studentId: studentId || null,
-          status: dto.status,
+          status: String(dto.status),
           notes: dto.notes,
           markedBy: dto.markedBy || 'admin',
           markedAt: new Date(),
@@ -141,12 +142,13 @@ export class AttendanceService {
     }
 
     // Update Lesson status and attendance
-    const isCompleted = dto.status === 'present' || dto.status === 'late' || dto.status === 'absent';
+    const attendanceNum = parseLessonAttendance(dto.status);
+    const isCompleted = attendanceNum === LessonAttendance.PRESENT || attendanceNum === LessonAttendance.LATE || attendanceNum === LessonAttendance.ABSENT;
     await this.prisma.lesson.update({
       where: { id: dto.lessonId },
       data: {
-        attendance: dto.status,
-        status: isCompleted ? 'completed' : lesson.status,
+        attendance: attendanceNum,
+        status: isCompleted ? LessonStatus.COMPLETED : lesson.status,
       },
     });
 
@@ -206,8 +208,8 @@ export class AttendanceService {
         bookingId: dto.bookingId,
         startsAt,
         endsAt,
-        status: 'completed',
-        attendance: dto.status,
+        status: LessonStatus.COMPLETED,
+        attendance: parseLessonAttendance(dto.status),
       },
     });
 
@@ -235,8 +237,8 @@ export class AttendanceService {
     await this.prisma.lesson.update({
       where: { id: lessonId },
       data: {
-        attendance: 'pending',
-        status: 'scheduled',
+        attendance: LessonAttendance.PENDING,
+        status: LessonStatus.SCHEDULED,
       },
     });
 

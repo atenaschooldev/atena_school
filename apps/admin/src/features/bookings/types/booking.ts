@@ -1,3 +1,11 @@
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  BillingScheme,
+} from '@atena/api-types';
+
 export interface BookingOrder {
   id: string;
   course_id?: string | null;
@@ -14,10 +22,14 @@ export interface BookingOrder {
   is_for_child?: boolean;
   amount_paid: number;
   registration_fee: number;
-  payment_status: 'paid' | 'reserved' | 'pending_payment' | 'partially_paid' | 'overdue' | string;
-  payment_method?: 'stripe' | 'cash' | 'card' | string;
-  billing_scheme?: 'full' | string;
-  scheduling_status: 'scheduled' | 'pending_coordination' | 'confirmed';
+  payment_status: BookingPaymentStatus | number | string;
+  payment_status_id?: number;
+  payment_method?: PaymentMethod | number | string;
+  payment_method_id?: number;
+  billing_scheme?: BillingScheme | number | string;
+  scheduling_status: BookingSchedulingStatus | number | string;
+  scheduling_status_id?: number;
+  booking_status?: BookingStatus | number;
   schedule_days?: number[] | null;
   start_time?: string | null;
   end_time?: string | null;

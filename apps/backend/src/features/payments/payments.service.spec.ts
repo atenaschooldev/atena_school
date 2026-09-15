@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PaymentsService } from './payments.service';
+import { PaymentsService } from './payments.admin.service';
 import { PaymentsRepository } from './domain/payments.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import {
+  BookingPaymentStatus,
+  PaymentRecordStatus,
+  PaymentType,
+} from '@atena/api-types';
 
 describe('PaymentsService — Business Logic Tests', () => {
   let service: PaymentsService;
@@ -50,13 +55,13 @@ describe('PaymentsService — Business Logic Tests', () => {
 
   describe('Booking Payment Status Calculation', () => {
     it('should transition booking paymentStatus to "paid" when total succeeded payments meet total target', async () => {
-      const mockExisting = { id: 'pay-1', bookingId: 'booking-1', amount: 300, status: 'pending', type: 'payment' };
-      const mockUpdated = { id: 'pay-1', bookingId: 'booking-1', amount: 300, status: 'succeeded', type: 'payment' };
+      const mockExisting = { id: 'pay-1', bookingId: 'booking-1', amount: 300, status: PaymentRecordStatus.PENDING, type: PaymentType.COURSE_PAYMENT };
+      const mockUpdated = { id: 'pay-1', bookingId: 'booking-1', amount: 300, status: PaymentRecordStatus.SUCCEEDED, type: PaymentType.COURSE_PAYMENT };
 
       repository.findById.mockResolvedValue(mockExisting as any);
       repository.update.mockResolvedValue(mockUpdated as any);
       repository.findAll.mockResolvedValue([
-        { id: 'pay-1', amount: 300, status: 'succeeded', type: 'payment' } as any,
+        { id: 'pay-1', amount: 300, status: PaymentRecordStatus.SUCCEEDED, type: PaymentType.COURSE_PAYMENT } as any,
       ]);
       prisma.booking.findUnique.mockResolvedValue({
         id: 'booking-1',
@@ -65,25 +70,25 @@ describe('PaymentsService — Business Logic Tests', () => {
         userId: 'student-1',
       });
 
-      await service.update('pay-1', { status: 'succeeded' });
+      await service.update('pay-1', { status: PaymentRecordStatus.SUCCEEDED });
 
       expect(prisma.booking.update).toHaveBeenCalledWith({
         where: { id: 'booking-1' },
         data: {
           amountPaid: 300,
-          paymentStatus: 'paid',
+          paymentStatus: BookingPaymentStatus.PAID,
         },
       });
     });
 
     it('should transition booking paymentStatus to "partially_paid" when total succeeded payments are less than target', async () => {
-      const mockExisting = { id: 'pay-1', bookingId: 'booking-1', amount: 150, status: 'pending', type: 'payment' };
-      const mockUpdated = { id: 'pay-1', bookingId: 'booking-1', amount: 150, status: 'succeeded', type: 'payment' };
+      const mockExisting = { id: 'pay-1', bookingId: 'booking-1', amount: 150, status: PaymentRecordStatus.PENDING, type: PaymentType.COURSE_PAYMENT };
+      const mockUpdated = { id: 'pay-1', bookingId: 'booking-1', amount: 150, status: PaymentRecordStatus.SUCCEEDED, type: PaymentType.COURSE_PAYMENT };
 
       repository.findById.mockResolvedValue(mockExisting as any);
       repository.update.mockResolvedValue(mockUpdated as any);
       repository.findAll.mockResolvedValue([
-        { id: 'pay-1', amount: 150, status: 'succeeded', type: 'payment' } as any,
+        { id: 'pay-1', amount: 150, status: PaymentRecordStatus.SUCCEEDED, type: PaymentType.COURSE_PAYMENT } as any,
       ]);
       prisma.booking.findUnique.mockResolvedValue({
         id: 'booking-1',
@@ -92,13 +97,13 @@ describe('PaymentsService — Business Logic Tests', () => {
         userId: 'student-1',
       });
 
-      await service.update('pay-1', { status: 'succeeded' });
+      await service.update('pay-1', { status: PaymentRecordStatus.SUCCEEDED });
 
       expect(prisma.booking.update).toHaveBeenCalledWith({
         where: { id: 'booking-1' },
         data: {
           amountPaid: 150,
-          paymentStatus: 'partially_paid',
+          paymentStatus: BookingPaymentStatus.PARTIALLY_REFUNDED,
         },
       });
     });
@@ -111,10 +116,10 @@ describe('PaymentsService — Business Logic Tests', () => {
         bookingId: 'booking-1',
         studentId: 'student-100',
         amount: 30,
-        status: 'pending',
-        type: 'registration_fee',
+        status: PaymentRecordStatus.PENDING,
+        type: PaymentType.REGISTRATION_FEE,
       };
-      const mockUpdated = { ...mockExisting, status: 'succeeded' };
+      const mockUpdated = { ...mockExisting, status: PaymentRecordStatus.SUCCEEDED };
 
       repository.findById.mockResolvedValue(mockExisting as any);
       repository.update.mockResolvedValue(mockUpdated as any);
@@ -126,14 +131,14 @@ describe('PaymentsService — Business Logic Tests', () => {
         userId: 'student-100',
       });
 
-      await service.update('pay-fee-1', { status: 'succeeded' });
+      await service.update('pay-fee-1', { status: PaymentRecordStatus.SUCCEEDED });
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE students SET annual_fee_paid = true"),
       );
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining("status = 'active'"),
+        expect.stringContaining("status = 1"),
       );
     });
 
@@ -143,10 +148,10 @@ describe('PaymentsService — Business Logic Tests', () => {
         bookingId: 'booking-1',
         studentId: 'student-100',
         amount: 30,
-        status: 'succeeded',
-        type: 'registration_fee',
+        status: PaymentRecordStatus.SUCCEEDED,
+        type: PaymentType.REGISTRATION_FEE,
       };
-      const mockUpdated = { ...mockExisting, status: 'pending' };
+      const mockUpdated = { ...mockExisting, status: PaymentRecordStatus.PENDING };
 
       repository.findById.mockResolvedValue(mockExisting as any);
       repository.update.mockResolvedValue(mockUpdated as any);
@@ -158,14 +163,14 @@ describe('PaymentsService — Business Logic Tests', () => {
         userId: 'student-100',
       });
 
-      await service.update('pay-fee-1', { status: 'pending' });
+      await service.update('pay-fee-1', { status: PaymentRecordStatus.PENDING });
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining("UPDATE students SET annual_fee_paid = false"),
       );
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE annual_memberships SET status = 'pending'"),
+        expect.stringContaining("UPDATE annual_memberships SET status = 2"),
       );
     });
 
@@ -176,19 +181,19 @@ describe('PaymentsService — Business Logic Tests', () => {
         bookingId: null,
         studentId: 'student-200',
         amount: 30,
-        status: 'pending',
-        type: 'registration_fee',
+        status: PaymentRecordStatus.PENDING,
+        type: PaymentType.REGISTRATION_FEE,
         notes: `Quota d'iscrizione annuale [membership_id:${memId}]`,
       };
-      const mockUpdated = { ...mockExisting, status: 'succeeded' };
+      const mockUpdated = { ...mockExisting, status: PaymentRecordStatus.SUCCEEDED };
 
       repository.findById.mockResolvedValue(mockExisting as any);
       repository.update.mockResolvedValue(mockUpdated as any);
 
-      await service.update('pay-standalone-1', { status: 'succeeded' });
+      await service.update('pay-standalone-1', { status: PaymentRecordStatus.SUCCEEDED });
 
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-        expect.stringContaining(`UPDATE annual_memberships SET status = 'active'`),
+        expect.stringContaining(`UPDATE annual_memberships SET status = 1`),
       );
       expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
         expect.stringContaining(`UPDATE students SET annual_fee_paid = true`),

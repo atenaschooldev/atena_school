@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import type { LessonAttendanceItem } from "../types";
+import { LessonAttendance } from "@atena/api-types";
 
 export interface GetAttendanceTableColumnsProps {
-  onMarkAttendance: (item: LessonAttendanceItem, status: string) => void;
+  onMarkAttendance: (item: LessonAttendanceItem, status: number) => void;
   onViewBookingDetail: (item: LessonAttendanceItem) => void;
 }
 
@@ -45,7 +46,7 @@ export function getAttendanceTableColumns({
               type="button"
               variant={currentStatus === "present" ? "default" : "outline"}
               size="sm"
-              onClick={() => onMarkAttendance(item, "present")}
+              onClick={() => onMarkAttendance(item, LessonAttendance.PRESENT)}
               className={`h-7 px-2 text-xs font-semibold cursor-pointer ${
                 currentStatus === "present"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -59,7 +60,7 @@ export function getAttendanceTableColumns({
               type="button"
               variant={currentStatus === "absent" ? "default" : "outline"}
               size="sm"
-              onClick={() => onMarkAttendance(item, "absent")}
+              onClick={() => onMarkAttendance(item, LessonAttendance.ABSENT)}
               className={`h-7 px-2 text-xs font-semibold cursor-pointer ${
                 currentStatus === "absent"
                   ? "bg-rose-600 hover:bg-rose-700 text-white"

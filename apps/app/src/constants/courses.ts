@@ -1,3 +1,7 @@
+import { CourseStatus, CourseScheduleType, CourseFormat } from '@atena/api-types';
+
+export { CourseStatus, CourseScheduleType, CourseFormat };
+
 export const COURSE_CATEGORY = {
   LANGUAGES: "languages",
   CERTIPASS: "Certipass",
@@ -5,19 +9,20 @@ export const COURSE_CATEGORY = {
 } as const;
 
 export const COURSE_STATUS = {
-  ACTIVE: "active",
-  PUBLISHED: "published",
-  DRAFT: "draft",
-  ARCHIVED: "archived",
+  ACTIVE: CourseStatus.ACTIVE,
+  PUBLISHED: CourseStatus.ACTIVE,
+  DRAFT: CourseStatus.DRAFT,
+  ARCHIVED: CourseStatus.ARCHIVED,
 } as const;
 
 export const COURSE_SCHEDULE_TYPE = {
-  FIXED: "fixed",
-  FLEXIBLE: "flexible",
+  FIXED: CourseScheduleType.FIXED,
+  FLEXIBLE: CourseScheduleType.FLEXIBLE,
 } as const;
 
 export const COURSE_FORMAT = {
-  GROUP: "group",
-  PRIVATE: "private",
-  CERTIFICATION: "certification",
+  GROUP: CourseFormat.GROUP,
+  PRIVATE: CourseFormat.INDIVIDUAL,
+  ONLINE: CourseFormat.ONLINE,
+  CERTIFICATION: CourseFormat.CERTIFICATION,
 } as const;

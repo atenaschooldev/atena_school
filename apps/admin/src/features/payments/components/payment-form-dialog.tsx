@@ -32,14 +32,18 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import {
+  PaymentMethod,
+  PaymentType,
+} from "@atena/api-types";
 import type { CreatePaymentFormValues } from "../types";
 
 const paymentFormSchema = z.object({
   bookingId: z.string().optional(),
   studentId: z.string().optional(),
   amount: z.coerce.number().positive({ message: "Inserisci un importo valido." }),
-  paymentMethod: z.string().min(1, { message: "Seleziona un metodo di pagamento." }),
-  type: z.string().min(1),
+  paymentMethod: z.coerce.number().min(1, { message: "Seleziona un metodo di pagamento." }),
+  type: z.coerce.number().min(1),
   paidAt: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -66,8 +70,8 @@ export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
       bookingId: "",
       studentId: "",
       amount: 0,
-      paymentMethod: "cash",
-      type: "course_payment",
+      paymentMethod: PaymentMethod.CASH,
+      type: PaymentType.COURSE_PAYMENT,
       paidAt: "",
       notes: "",
     },
@@ -131,8 +135,8 @@ export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
         bookingId: data.bookingId || undefined,
         studentId: data.studentId || undefined,
         amount: data.amount,
-        paymentMethod: data.paymentMethod,
-        type: data.type,
+        paymentMethod: Number(data.paymentMethod),
+        type: Number(data.type),
         paidAt: data.paidAt ? new Date(data.paidAt).toISOString() : undefined,
         notes: data.notes || undefined,
       });
@@ -256,17 +260,17 @@ export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Metodo di Pagamento</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={(val) => field.onChange(Number(val))} defaultValue={String(field.value)}>
                       <FormControl>
                         <SelectTrigger className="cursor-pointer w-full">
                           <SelectValue placeholder="Seleziona" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="cash">Contanti</SelectItem>
-                        <SelectItem value="pos">POS / Carta</SelectItem>
-                        <SelectItem value="transfer">Bonifico</SelectItem>
-                        <SelectItem value="stripe">Stripe Online</SelectItem>
+                        <SelectItem value={String(PaymentMethod.CASH)}>Contanti</SelectItem>
+                        <SelectItem value={String(PaymentMethod.POS)}>POS / Carta</SelectItem>
+                        <SelectItem value={String(PaymentMethod.BANK_TRANSFER)}>Bonifico</SelectItem>
+                        <SelectItem value={String(PaymentMethod.STRIPE)}>Stripe Online</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -281,20 +285,20 @@ export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo Transazione</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={(val) => field.onChange(Number(val))} defaultValue={String(field.value)}>
                     <FormControl>
                       <SelectTrigger className="cursor-pointer w-full">
                         <SelectValue placeholder="Seleziona tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="course_payment">Pagamento Corso</SelectItem>
-                      <SelectItem value="registration_fee">Quota Iscrizione (€30)</SelectItem>
-                      <SelectItem value="exam_fee">Esame Cambridge / CELI</SelectItem>
-                      <SelectItem value="certificate_fee">Rilascio Certificato</SelectItem>
-                      <SelectItem value="textbook_material">Libro / Materiale Didattico</SelectItem>
-                      <SelectItem value="single_lesson">Lezione Singola</SelectItem>
-                      <SelectItem value="other">Altro</SelectItem>
+                      <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>Pagamento Corso</SelectItem>
+                      <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>Quota Iscrizione (€30)</SelectItem>
+                      <SelectItem value={String(PaymentType.EXAM_FEE)}>Esame Cambridge / CELI</SelectItem>
+                      <SelectItem value={String(PaymentType.CERTIFICATE_FEE)}>Rilascio Certificato</SelectItem>
+                      <SelectItem value={String(PaymentType.MATERIAL_TEXTBOOK)}>Libro / Materiale Didattico</SelectItem>
+                      <SelectItem value={String(PaymentType.SINGLE_LESSON)}>Lezione Singola</SelectItem>
+                      <SelectItem value={String(PaymentType.OTHER)}>Altro</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

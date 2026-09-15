@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { LessonAttendance } from "@atena/api-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,7 +49,7 @@ export function CreateAttendanceDialog({
   const [selectedBookingId, setSelectedBookingId] = useState<string>("");
   const [dateStr, setDateStr] = useState<string>(new Date().toISOString().split("T")[0]);
   const [timeStr, setTimeStr] = useState<string>("10:00");
-  const [status, setStatus] = useState<string>("present");
+  const [status, setStatus] = useState<number>(LessonAttendance.PRESENT);
   const [notes, setNotes] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -163,15 +164,15 @@ export function CreateAttendanceDialog({
 
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Stato Presenza *</Label>
-            <Select value={status} onValueChange={setStatus}>
+            <Select value={String(status)} onValueChange={(v) => setStatus(Number(v))}>
               <SelectTrigger className="h-9 text-xs font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="present">🟢 Presente</SelectItem>
-                <SelectItem value="late">🔵 In Ritardo</SelectItem>
-                <SelectItem value="absent">🔴 Assente</SelectItem>
-                <SelectItem value="excused">🟡 Giustificato</SelectItem>
+                <SelectItem value={String(LessonAttendance.PRESENT)}>🟢 Presente</SelectItem>
+                <SelectItem value={String(LessonAttendance.LATE)}>🔵 In Ritardo</SelectItem>
+                <SelectItem value={String(LessonAttendance.ABSENT)}>🔴 Assente</SelectItem>
+                <SelectItem value={String(LessonAttendance.EXCUSED)}>🟡 Giustificato</SelectItem>
               </SelectContent>
             </Select>
           </div>

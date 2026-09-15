@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { ScheduleEntity } from '../domain/schedule.entity';
 import { SchedulesRepository } from '../domain/schedules.repository.interface';
+import { BookingPaymentStatus, LessonStatus, LessonLocationType, parseLessonStatus } from '@atena/api-types';
 
 @Injectable()
 export class PrismaSchedulesRepository implements SchedulesRepository {
@@ -23,24 +24,34 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         },
         teacher: true,
       },
+      where: {
+        ...(filters?.teacherId ? { teacherId: filters.teacherId } : {}),
+        ...(filters?.courseId ? { booking: { courseId: filters.courseId } } : {}),
+        ...(filters?.startDate || filters?.endDate
+          ? {
+              startsAt: {
+                ...(filters.startDate ? { gte: filters.startDate } : {}),
+                ...(filters.endDate ? { lte: filters.endDate } : {}),
+              },
+            }
+          : {}),
+      },
       orderBy: { startsAt: 'asc' },
     });
 
-    const lessonEntities: ScheduleEntity[] = rawLessons.map((l) => ({
+    return rawLessons.map((l) => ({
       id: l.id,
-      courseId: l.booking?.courseId || 'd5e6f7a8-b9c0-1234-def0-567890123456',
+      courseId: l.booking?.courseId || '',
       teacherId: l.teacherId || '',
-      room: l.teacherNotes || (l.locationType === 'in_person' || l.locationType === 'offline' ? 'Aula 1' : null),
-      status: l.status || 'scheduled',
+      room: l.teacherNotes || null,
+      status: l.status,
       startDate: l.startsAt,
       endDate: l.endsAt,
-      lessonType: l.locationType === 'online' ? 'online' : 'offline',
-      meetingUrl: l.meetingLink || (l.locationType === 'online' ? 'https://meet.google.com/eipass-coding-live' : null),
-      courseName: l.booking?.courseName || l.booking?.course?.name || 'EIPASS Coding',
+      lessonType: l.locationType === LessonLocationType.ONLINE ? 'online' : 'offline',
+      meetingUrl: l.meetingLink || null,
+      courseName: l.booking?.courseName || l.booking?.course?.name || 'Corso',
       teacherName: l.teacher?.fullName || undefined,
     }));
-
-    return lessonEntities;
   }
 
   async findOne(id: string): Promise<ScheduleEntity | null> {
@@ -61,7 +72,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         status: l.status,
         startDate: l.startsAt,
         endDate: l.endsAt,
-        lessonType: l.locationType === 'online' ? 'online' : 'offline',
+        lessonType: l.locationType === LessonLocationType.ONLINE ? 'online' : 'offline',
         meetingUrl: l.meetingLink || null,
         courseName: l.booking?.courseName || 'Corso',
         teacherName: l.teacher?.fullName || undefined,
@@ -75,7 +86,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     courseId: string;
     teacherId: string;
     room?: string | null;
-    status?: string;
+    status?: number | string;
     startDate: Date;
     endDate: Date;
     lessonType?: string;
@@ -95,7 +106,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
           purchaserName: 'Sistema Atena',
           studentName: 'Sistema Atena',
           purchaserEmail: 'admin@atenaschool.com',
-          paymentStatus: 'succeeded',
+          paymentStatus: BookingPaymentStatus.PAID,
         },
       });
     }
@@ -106,8 +117,8 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         teacherId: data.teacherId || null,
         startsAt: data.startDate,
         endsAt: data.endDate,
-        status: data.status || 'scheduled',
-        locationType: data.lessonType === 'online' ? 'online' : 'in_person',
+        status: data.status !== undefined ? parseLessonStatus(data.status) : LessonStatus.SCHEDULED,
+        locationType: data.lessonType === 'online' ? LessonLocationType.ONLINE : LessonLocationType.IN_PERSON,
         meetingLink: data.meetingUrl || null,
         teacherNotes: data.room ? (data.room.startsWith('Aula') ? data.room : `Aula ${data.room}`) : null,
       },
@@ -136,7 +147,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     courseId: string;
     teacherId: string;
     room?: string | null;
-    status?: string;
+    status?: number | string;
     startDate: Date;
     endDate: Date;
     lessonType?: string;
@@ -154,7 +165,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       if (data.endDate !== undefined) updateData.endsAt = data.endDate;
       if (data.status !== undefined) updateData.status = data.status;
       if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
-      if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? 'online' : 'in_person';
+      if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? LessonLocationType.ONLINE : LessonLocationType.IN_PERSON;
       if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
       if (data.room !== undefined) updateData.teacherNotes = data.room ? (data.room.startsWith('Aula') ? data.room : `Aula ${data.room}`) : null;
 
@@ -172,7 +183,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         status: l.status,
         startDate: l.startsAt,
         endDate: l.endsAt,
-        lessonType: l.locationType === 'online' ? 'online' : 'offline',
+        lessonType: l.locationType === LessonLocationType.ONLINE ? 'online' : 'offline',
         meetingUrl: l.meetingLink || null,
         courseName: l.booking?.courseName || 'Corso',
         teacherName: l.teacher?.fullName || undefined,
@@ -185,7 +196,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     if (data.status !== undefined) updateData.status = data.status;
     if (data.startDate !== undefined) updateData.startsAt = data.startDate;
     if (data.endDate !== undefined) updateData.endsAt = data.endDate;
-    if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? 'online' : 'in_person';
+    if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? LessonLocationType.ONLINE : LessonLocationType.IN_PERSON;
     if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
 
     const l = await this.prisma.lesson.update({
@@ -205,7 +216,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
       status: l.status,
       startDate: l.startsAt,
       endDate: l.endsAt,
-      lessonType: l.locationType === 'online' ? 'online' : 'offline',
+      lessonType: l.locationType === LessonLocationType.ONLINE ? 'online' : 'offline',
       meetingUrl: l.meetingLink || null,
       courseName: l.booking?.courseName || 'Corso',
       teacherName: l.teacher?.fullName || undefined,

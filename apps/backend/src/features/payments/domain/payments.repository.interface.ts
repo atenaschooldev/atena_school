@@ -4,11 +4,11 @@ export interface PaymentEntity {
   studentId?: string | null;
   userId?: string | null;
   amount: number | any;
-  currency: string;
-  paymentMethod: string;
-  type: string;
-  status: string;
-  provider: string;
+  currency: number;
+  paymentMethod: number;
+  type: number;
+  status: number;
+  provider: number;
   providerTransactionId?: string | null;
   notes?: string | null;
   createdAt: Date;
@@ -24,15 +24,15 @@ export abstract class PaymentsRepository {
     studentId?: string;
     userId?: string;
     amount: number;
-    currency?: string;
-    paymentMethod: string;
-    type?: string;
-    status?: string;
-    provider?: string;
+    currency?: number;
+    paymentMethod: number;
+    type?: number;
+    status?: number;
+    provider?: number;
     providerTransactionId?: string;
     notes?: string;
     paidAt?: Date | string;
   }): Promise<PaymentEntity>;
-  abstract update(id: string, data: Partial<{ status: string; notes: string; paymentMethod: string; amount: number; type: string; studentId: string; bookingId: string; paidAt: Date | string }>): Promise<PaymentEntity>;
+  abstract update(id: string, data: Partial<{ status: number; notes: string; paymentMethod: number; amount: number; type: number; studentId: string; bookingId: string; paidAt: Date | string }>): Promise<PaymentEntity>;
   abstract delete(id: string): Promise<void>;
 }

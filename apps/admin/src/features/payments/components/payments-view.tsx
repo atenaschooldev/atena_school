@@ -30,6 +30,11 @@ import {
 } from "@tanstack/react-table";
 import type { Payment } from "../types";
 
+import {
+  PaymentMethod,
+  PaymentRecordStatus,
+} from "@atena/api-types";
+
 import { useTranslation } from "@/i18n/context";
 
 export function PaymentsView() {
@@ -107,10 +112,10 @@ export function PaymentsView() {
               placeholder: t("payments.filterMethod"),
               options: [
                 { value: "all", label: t("common.all") },
-                { value: "cash", label: t("common.cash") },
-                { value: "pos", label: t("common.card") },
-                { value: "stripe", label: "Stripe Online" },
-                { value: "bank_transfer", label: t("common.transfer") },
+                { value: String(PaymentMethod.CASH), label: t("common.cash") },
+                { value: String(PaymentMethod.POS), label: t("common.card") },
+                { value: String(PaymentMethod.STRIPE), label: "Stripe Online" },
+                { value: String(PaymentMethod.BANK_TRANSFER), label: t("common.transfer") },
               ],
             },
             {
@@ -119,8 +124,10 @@ export function PaymentsView() {
               placeholder: t("common.status"),
               options: [
                 { value: "all", label: t("common.all") },
-                { value: "completed", label: t("common.paid") },
-                { value: "pending", label: t("common.pending") },
+                { value: String(PaymentRecordStatus.SUCCEEDED), label: t("common.paid") },
+                { value: String(PaymentRecordStatus.PENDING), label: t("common.pending") },
+                { value: String(PaymentRecordStatus.FAILED), label: t("common.failed") },
+                { value: String(PaymentRecordStatus.REFUNDED), label: t("common.refunded") },
               ],
             },
           ]}

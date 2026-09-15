@@ -23,13 +23,15 @@ import {
   Mail,
   ChevronDown,
 } from "lucide-react";
+import { BookingPaymentStatus } from "@atena/api-types";
+import { PaymentMethodBadge } from "@/components/shared/payment-method-badge";
 import type { Booking } from "../types/booking";
 
 interface BookingCardProps {
   booking: Booking;
   onSelect: (booking: Booking) => void;
   onDelete: (id: string) => void;
-  onToggleStatus: (id: string, currentStatus: string) => void;
+  onToggleStatus: (id: string, currentStatus: number | string) => void;
 }
 
 export function BookingCard({
@@ -38,9 +40,9 @@ export function BookingCard({
   onDelete,
   onToggleStatus,
 }: BookingCardProps) {
-  const isCompleted = booking.payment_status === "completed" || booking.payment_status === "paid" || booking.payment_status === "succeeded";
-  const isPartiallyPaid = booking.payment_status === "partially_paid";
-  const isOverdue = booking.payment_status === "overdue" || booking.payment_status === "scaduto";
+  const isCompleted = Number(booking.payment_status) === BookingPaymentStatus.PAID || booking.payment_status === "completed" || booking.payment_status === "paid" || booking.payment_status === "succeeded";
+  const isPartiallyPaid = Number(booking.payment_status) === BookingPaymentStatus.PARTIALLY_REFUNDED || booking.payment_status === "partially_paid";
+  const isOverdue = Number(booking.payment_status) === BookingPaymentStatus.FAILED || booking.payment_status === "overdue" || booking.payment_status === "scaduto";
 
   const purchaserName = booking.purchaser_name || "N/D";
   const studentName = booking.student_name || purchaserName;
@@ -181,7 +183,7 @@ export function BookingCard({
                   onClick={() =>
                     onToggleStatus(
                       booking.id,
-                      isCompleted ? "reserved" : "completed",
+                      isCompleted ? BookingPaymentStatus.RESERVED : BookingPaymentStatus.PAID,
                     )
                   }
                 >
@@ -242,10 +244,7 @@ export function BookingCard({
 
       {/* Footer Bar */}
       <div className="px-4 py-2.5 bg-muted/40 dark:bg-muted/20 border-t flex items-center justify-between text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5 font-medium">
-          <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="capitalize">{booking.payment_method || "In sede"}</span>
-        </div>
+        <PaymentMethodBadge method={booking.payment_method} />
         <div className="flex items-center gap-1.5">
           <Calendar className="h-3.5 w-3.5 shrink-0" />
           <span>

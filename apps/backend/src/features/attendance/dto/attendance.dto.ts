@@ -12,8 +12,8 @@ export class MarkAttendanceDto {
   @IsString()
   studentId?: string;
 
-  @IsString()
-  status: string;
+  @IsNumber()
+  status: number;
 
   @IsOptional()
   @IsString()

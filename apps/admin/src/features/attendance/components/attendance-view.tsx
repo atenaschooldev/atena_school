@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { BookingPaymentStatus, PaymentMethod, BillingScheme } from "@atena/api-types";
 import { useAttendance } from "../hooks/use-attendance";
 import { BookingDetailDialog } from "@/features/bookings/components/booking-detail-dialog";
 import { AttendanceMetrics } from "./attendance-metrics";
@@ -52,7 +53,7 @@ export function AttendanceView() {
     setSelectedDate(d.toISOString().split("T")[0]);
   };
 
-  const handleMarkAttendance = async (item: LessonAttendanceItem, status: string) => {
+  const handleMarkAttendance = async (item: LessonAttendanceItem, status: number) => {
     await markAttendance(item.id, status);
   };
 
@@ -82,7 +83,11 @@ export function AttendanceView() {
   const presentCount = filteredLessons.filter((l) => l.attendance_record?.status === "present").length;
   const absentCount = filteredLessons.filter((l) => l.attendance_record?.status === "absent").length;
   const pendingPaymentCount = filteredLessons.filter(
-    (l) => l.payment_status !== "paid" && l.booking_payment_status !== "completed"
+    (l) =>
+      Number(l.payment_status) !== BookingPaymentStatus.PAID &&
+      l.payment_status !== "paid" &&
+      Number(l.booking_payment_status) !== BookingPaymentStatus.PAID &&
+      l.booking_payment_status !== "completed"
   ).length;
 
   const columns = useMemo(
@@ -96,10 +101,10 @@ export function AttendanceView() {
             purchaser_email: item.purchaser_email || "",
             student_name: item.student_name,
             course_name: item.course_name,
-            payment_status: item.booking_payment_status || "reserved",
-            payment_method: item.payment_method || "cash",
+            payment_status: item.booking_payment_status ?? BookingPaymentStatus.RESERVED,
+            payment_method: item.payment_method ?? PaymentMethod.CASH,
             amount_paid: item.amount_paid || 0,
-            billing_scheme: item.billing_scheme || "full",
+            billing_scheme: item.billing_scheme ?? BillingScheme.FULL,
             created_at: item.starts_at,
           } as Booking);
         },

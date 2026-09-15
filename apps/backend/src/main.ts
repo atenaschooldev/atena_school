@@ -6,6 +6,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './core/filters/all-exceptions.filter';
 import fastifyHelmet from '@fastify/helmet';
 
+import { DictionaryService } from './features/dictionary/dictionary.service';
+
 async function bootstrap() {
   // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB) и подписью rawBody для Stripe
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -49,8 +51,24 @@ async function bootstrap() {
   // Конфигурация Swagger UI
   const config = new DocumentBuilder()
     .setTitle('Atena School API')
-    .setDescription('Академическая система управления (CRM) Atena School (NestJS/Fastify)')
+    .setDescription(
+      'Академическая система управления (CRM) Atena School (NestJS/Fastify)<br><br>' +
+      '<div style="background: #F7F6F3; border: 1px solid #E9E9E7; border-radius: 4px; padding: 14px 18px; margin: 12px 0 16px 0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">' +
+      '  <div style="display: flex; align-items: center; gap: 12px;">' +
+      '    <span style="font-size: 24px;">📖</span>' +
+      '    <div>' +
+      '      <div style="font-weight: 600; color: #37352F; font-size: 14px;">Словарь данных (Data Dictionary)</div>' +
+      '      <div style="color: #787774; font-size: 13px;">Таблицы числовых статусов (1, 2, 3...), кодов и переводов (IT, EN, RU) в стиле Notion</div>' +
+      '    </div>' +
+      '  </div>' +
+      '  <a href="/docs/dictionary" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #2EAADC; color: #FFFFFF; font-weight: 500; font-size: 13px; padding: 7px 14px; border-radius: 4px; text-decoration: none;">' +
+      '    Открыть словарь →' +
+      '  </a>' +
+      '</div>',
+    )
     .setVersion('1.0.0')
+    // 0. СЛОВАРИ И СПРАВОЧНИКИ (вверху)
+    .addTag('Dictionary / Справочники', 'Словарь числовых кодов, статусов и типов данных. Интерактивная таблица: /docs/dictionary')
     // 1. АДМИНКА (вверху)
     .addTag('Admin — Bookings', 'Управление бронированиями и регистрацией на рецепции')
     .addTag('Admin — Students', 'Управление карточками студентов и фильтрами')
@@ -84,13 +102,62 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    customSiteTitle: 'Atena School API Docs',
+    customCss: `
+      .topbar { display: flex !important; background-color: #191919 !important; padding: 10px 24px !important; }
+      .topbar-wrapper { display: flex !important; width: 100% !important; justify-content: space-between !important; align-items: center !important; }
+      .notion-swagger-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        background: #FFFFFF !important;
+        color: #37352F !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        padding: 6px 14px !important;
+        border-radius: 4px !important;
+        border: 1px solid #E9E9E7 !important;
+        text-decoration: none !important;
+        transition: background 0.15s ease !important;
+      }
+      .notion-swagger-btn:hover {
+        background: #F7F6F3 !important;
+      }
+    `,
+    customJsStr: `
+      window.addEventListener('DOMContentLoaded', () => {
+        const topbar = document.querySelector('.topbar-wrapper') || document.querySelector('.topbar');
+        if (topbar && !document.getElementById('swagger-notion-btn')) {
+          const btn = document.createElement('a');
+          btn.id = 'swagger-notion-btn';
+          btn.href = '/docs/dictionary';
+          btn.target = '_blank';
+          btn.className = 'notion-swagger-btn';
+          btn.innerHTML = '<span>📖</span> <span>Словарь (Data Dictionary)</span>';
+          topbar.appendChild(btn);
+        }
+      });
+    `,
+  });
+
+  // Маршруты для страницы словаря в стиле Notion
+  const fastify = app.getHttpAdapter().getInstance();
+  const sendDictionary = (request: any, reply: any) => {
+    const dictionaryService = app.get(DictionaryService);
+    reply.type('text/html; charset=utf-8').send(dictionaryService.renderHtml());
+  };
+
+  fastify.get('/docs/dictionary', sendDictionary);
+  fastify.get('/dictionary', sendDictionary);
 
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
   console.log(`\n============================================================`);
   console.log(`⚙️  Backend API:          http://localhost:${port}/api/v1`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
+  console.log(`📖 Data Dictionary (UI):  http://localhost:${port}/docs/dictionary`);
   console.log(`============================================================\n`);
 }
 bootstrap();

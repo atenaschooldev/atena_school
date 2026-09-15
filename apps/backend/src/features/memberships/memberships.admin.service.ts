@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MembershipStatus, parseMembershipStatus, PaymentRecordStatus } from '@atena/api-types';
 
 @Injectable()
 export class MembershipsService {
@@ -9,7 +10,7 @@ export class MembershipsService {
     private readonly prisma: PrismaService,
   ) {}
 
-  async findAll(status?: string, academicYear?: string, search?: string) {
+  async findAll(status?: number | string, academicYear?: string, search?: string) {
     const raw = await this.membershipsRepository.findAll({ status, academicYear, search });
     return raw.map((m: any) => {
       const studentName =
@@ -53,14 +54,15 @@ export class MembershipsService {
     return membership;
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: number | string) {
+    const numStatus = typeof status === 'number' ? status : parseMembershipStatus(status);
     const existing = await this.findOne(id);
-    const updated = await this.membershipsRepository.updateStatus(id, status);
+    const updated = await this.membershipsRepository.updateStatus(id, numStatus);
 
     const sId = existing.studentId || existing.userId;
     const sTaxCode = existing.taxCode;
 
-    if (status === 'active') {
+    if (numStatus === MembershipStatus.ACTIVE) {
       if (sId) {
         await this.prisma.$executeRawUnsafe(
           `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE id = '${sId}'::uuid`
@@ -72,9 +74,9 @@ export class MembershipsService {
       }
 
       await this.prisma.$executeRawUnsafe(
-        `UPDATE payments SET status = 'succeeded', paid_at = NOW() WHERE notes LIKE '%[membership_id:${id}]%'`
+        `UPDATE payments SET status = ${PaymentRecordStatus.SUCCEEDED}, paid_at = NOW() WHERE notes LIKE '%[membership_id:${id}]%'`
       ).catch(() => null);
-    } else if (status === 'revoked' || status === 'pending') {
+    } else if (numStatus === MembershipStatus.REVOKED || numStatus === MembershipStatus.PENDING) {
       if (sId) {
         await this.prisma.$executeRawUnsafe(
           `UPDATE students SET annual_fee_paid = false WHERE id = '${sId}'::uuid`
@@ -85,9 +87,9 @@ export class MembershipsService {
         ).catch(() => null);
       }
 
-      if (status === 'pending') {
+      if (numStatus === MembershipStatus.PENDING) {
         await this.prisma.$executeRawUnsafe(
-          `UPDATE payments SET status = 'pending' WHERE notes LIKE '%[membership_id:${id}]%'`
+          `UPDATE payments SET status = ${PaymentRecordStatus.PENDING} WHERE notes LIKE '%[membership_id:${id}]%'`
         ).catch(() => null);
       }
     }
@@ -97,24 +99,26 @@ export class MembershipsService {
 
   async toggleStatus(id: string) {
     const existing = await this.findOne(id);
-    const currentStatus = (existing.status || 'active').toLowerCase();
-    const newStatus = currentStatus === 'revoked' ? 'active' : 'revoked';
+    const currentStatus = Number(existing.status);
+    const newStatus = currentStatus === MembershipStatus.REVOKED ? MembershipStatus.ACTIVE : MembershipStatus.REVOKED;
     return this.updateStatus(id, newStatus);
   }
 
   async getStats() {
-    const all = await this.prisma.$queryRawUnsafe<{ status: string; count: string }[]>(
-      `SELECT LOWER(status) as status, COUNT(*) as count FROM annual_memberships GROUP BY LOWER(status)`
-    ).catch(() => [] as { status: string; count: string }[]);
+    const all = await this.prisma.annualMembership.groupBy({
+      by: ['status'],
+      _count: { id: true },
+    }).catch(() => [] as any[]);
 
-    const byStatus = Object.fromEntries(all.map((r) => [r.status, Number(r.count)]));
-    const total = all.reduce((s, r) => s + Number(r.count), 0);
+    const byStatus = Object.fromEntries(all.map((r: any) => [r.status, r._count?.id || 0]));
+    const total = all.reduce((s: number, r: any) => s + (r._count?.id || 0), 0);
 
     return {
       total,
-      active: byStatus['active'] || 0,
-      pending: byStatus['pending'] || 0,
-      expiredOrRevoked: (byStatus['expired'] || 0) + (byStatus['revoked'] || 0),
+      active: byStatus[MembershipStatus.ACTIVE] || 0,
+      pending: byStatus[MembershipStatus.PENDING] || 0,
+      expiredOrRevoked: (byStatus[MembershipStatus.EXPIRED] || 0) + (byStatus[MembershipStatus.REVOKED] || 0),
     };
   }
 }
+

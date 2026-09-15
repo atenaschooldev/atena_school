@@ -1,0 +1,324 @@
+import { Injectable } from '@nestjs/common';
+import {
+  BOOKING_PAYMENT_STATUS_DICTIONARY,
+  BOOKING_STATUS_DICTIONARY,
+  BOOKING_SCHEDULING_STATUS_DICTIONARY,
+  PAYMENT_METHOD_DICTIONARY,
+  BILLING_SCHEME_DICTIONARY,
+  PAYMENT_CURRENCY_DICTIONARY,
+  PAYMENT_TYPE_DICTIONARY,
+  PAYMENT_RECORD_STATUS_DICTIONARY,
+  PAYMENT_PROVIDER_DICTIONARY,
+  LESSON_STATUS_DICTIONARY,
+  LESSON_ATTENDANCE_DICTIONARY,
+  LESSON_LOCATION_TYPE_DICTIONARY,
+  APP_SETTINGS_DICTIONARY,
+  MEMBERSHIP_STATUS_DICTIONARY,
+  STUDENT_STATUS_DICTIONARY,
+  LANGUAGE_LEVEL_DICTIONARY,
+  COURSE_STATUS_DICTIONARY,
+  COURSE_SCHEDULE_TYPE_DICTIONARY,
+  COURSE_FORMAT_DICTIONARY,
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  BillingScheme,
+  PaymentCurrency,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  LessonStatus,
+  LessonAttendance,
+  LessonLocationType,
+  AppSettingKey,
+  MembershipStatus,
+  StudentStatus,
+  LanguageLevel,
+  CourseStatus,
+  CourseScheduleType,
+  CourseFormat,
+} from '@atena/api-types';
+
+import { renderDictionaryHtml } from './dictionary.template';
+
+@Injectable()
+export class DictionaryService {
+  getBookingsDictionary() {
+    const columns = {
+      payment_status: {
+        column: 'payment_status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'BookingPaymentStatus',
+        description: 'Статус онлайн/офлайн оплаты бронирования (1=PENDING..7=CANCELLED)',
+        values: BOOKING_PAYMENT_STATUS_DICTIONARY,
+        codes: BookingPaymentStatus,
+      },
+      booking_status: {
+        column: 'booking_status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'BookingStatus',
+        description: 'Общий жизненный статус брони (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)',
+        values: BOOKING_STATUS_DICTIONARY,
+        codes: BookingStatus,
+      },
+      scheduling_status: {
+        column: 'scheduling_status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'BookingSchedulingStatus',
+        description: 'Статус согласования расписания занятий (1=SCHEDULED, 2=PENDING_COORDINATION)',
+        values: BOOKING_SCHEDULING_STATUS_DICTIONARY,
+        codes: BookingSchedulingStatus,
+      },
+      payment_method: {
+        column: 'payment_method',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentMethod',
+        description: 'Выбранный клиентом способ оплаты курса (1=STRIPE..4=BANK_TRANSFER)',
+        values: PAYMENT_METHOD_DICTIONARY,
+        codes: PaymentMethod,
+      },
+      billing_scheme: {
+        column: 'billing_scheme',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'BillingScheme',
+        description: 'Схема оплаты курса (1=FULL, 2=INSTALLMENTS, 3=PER_LESSON)',
+        values: BILLING_SCHEME_DICTIONARY,
+        codes: BillingScheme,
+      },
+    };
+
+    return {
+      table: 'bookings',
+      title: 'Бронирования и заявки на курсы',
+      description:
+        'Основная таблица заказов и бронирований. Содержит данные плательщика, студента, выбранный курс, сумму, скидки и статусы.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getPaymentsDictionary() {
+    const columns = {
+      currency: {
+        column: 'currency',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentCurrency',
+        description: 'Валюта платежной транзакции (1=EUR, 2=USD, 3=GBP)',
+        values: PAYMENT_CURRENCY_DICTIONARY,
+        codes: PaymentCurrency,
+      },
+      payment_method: {
+        column: 'payment_method',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentMethod',
+        description: 'Фактический платежный инструмент (1=STRIPE..4=BANK_TRANSFER)',
+        values: PAYMENT_METHOD_DICTIONARY,
+        codes: PaymentMethod,
+      },
+      type: {
+        column: 'type',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentType',
+        description: 'Бухгалтерский тип платежа (1=COURSE_PAYMENT, 2=REGISTRATION_FEE (€30)..8=OTHER)',
+        values: PAYMENT_TYPE_DICTIONARY,
+        codes: PaymentType,
+      },
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentRecordStatus',
+        description: 'Статус финансовой транзакции (1=PENDING, 2=SUCCEEDED..6=CANCELLED)',
+        values: PAYMENT_RECORD_STATUS_DICTIONARY,
+        codes: PaymentRecordStatus,
+      },
+      provider: {
+        column: 'provider',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'PaymentProvider',
+        description: 'Платежный провайдер / шлюз (1=STRIPE, 2=MANUAL, 3=POS, 4=BANK)',
+        values: PAYMENT_PROVIDER_DICTIONARY,
+        codes: PaymentProvider,
+      },
+    };
+
+    return {
+      table: 'payments',
+      title: 'Платежи и транзакции',
+      description:
+        'Финансовая таблица бухгалтерских записей и проводок по бронированиям и студентам. Каждый курс генерирует 2 записи: оплату курса (type=1) и членский взнос €30 (type=2).',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getLessonsDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'LessonStatus',
+        description: 'Статус жизненного цикла урока (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)',
+        values: LESSON_STATUS_DICTIONARY,
+        codes: LessonStatus,
+      },
+      attendance: {
+        column: 'attendance',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'LessonAttendance',
+        description: 'Факт посещения студентом урока (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
+        values: LESSON_ATTENDANCE_DICTIONARY,
+        codes: LessonAttendance,
+      },
+      location_type: {
+        column: 'location_type',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'LessonLocationType',
+        description: 'Формат проведения урока (1=IN_PERSON, 2=ONLINE, 3=HYBRID)',
+        values: LESSON_LOCATION_TYPE_DICTIONARY,
+        codes: LessonLocationType,
+      },
+    };
+
+    return {
+      table: 'lessons',
+      title: 'Уроки и расписание',
+      description:
+        'Таблица запланированных уроков, привязанных к бронированиям. Хранит дату/время, статус урока, факт посещения, тип проведения и ссылки на преподавателей.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getCoursesDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'CourseStatus',
+        description: 'Статус курса в каталоге (1=ACTIVE, 2=DRAFT, 3=ARCHIVED)',
+        values: COURSE_STATUS_DICTIONARY,
+        codes: CourseStatus,
+      },
+      schedule_type: {
+        column: 'schedule_type',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'CourseScheduleType',
+        description: 'Тип расписания занятий (1=FIXED, 2=FLEXIBLE)',
+        values: COURSE_SCHEDULE_TYPE_DICTIONARY,
+        codes: CourseScheduleType,
+      },
+      course_format: {
+        column: 'course_format',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'CourseFormat',
+        description: 'Формат проведения курса (1=GROUP, 2=INDIVIDUAL, 3=ONLINE, 4=CERTIFICATION)',
+        values: COURSE_FORMAT_DICTIONARY,
+        codes: CourseFormat,
+      },
+    };
+
+    return {
+      table: 'courses',
+      title: 'Курсы и программы обучения',
+      description:
+        'Каталог курсов языковой школы Atena: индивидуальные и групповые курсы, онлайн-программы и курсы сертификации Certipass/Cambridge.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getAnnualMembershipsDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'MembershipStatus',
+        description: 'Статус членства ассоциации (1=ACTIVE, 2=PENDING, 3=EXPIRED, 4=REVOKED)',
+        values: MEMBERSHIP_STATUS_DICTIONARY,
+        codes: MembershipStatus,
+      },
+    };
+
+    return {
+      table: 'annual_memberships',
+      title: 'Годовые членские взносы (Tessere)',
+      description:
+        'Таблица членских карт ассоциации школы (€30 за учебный год). Автоматически активируется при оплате взноса и действует до 31 августа текущего учебного года.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getStudentsDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'StudentStatus',
+        description: 'Статус студента в реестре школы (1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED)',
+        values: STUDENT_STATUS_DICTIONARY,
+        codes: StudentStatus,
+      },
+      language_level: {
+        column: 'language_level',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'LanguageLevel',
+        description: 'Уровень владения языком по шкале CEFR (1=A1..6=C2)',
+        values: LANGUAGE_LEVEL_DICTIONARY,
+        codes: LanguageLevel,
+      },
+    };
+
+    return {
+      table: 'students',
+      title: 'Студенты (Реестр учеников)',
+      description:
+        'Основная таблица студентов языковой школы Atena. Хранит персональные данные, уровень языка по CEFR, статус обучения и статус оплаты годового взноса.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getAppSettingsDictionary() {
+    const columns = {
+      key: {
+        column: 'key',
+        dbType: 'TEXT PRIMARY KEY',
+        name: 'AppSettingKey',
+        description: 'Уникальный ключ системной настройки приложения (JSONB Key-Value)',
+        values: APP_SETTINGS_DICTIONARY,
+        codes: AppSettingKey,
+      },
+    };
+
+    return {
+      table: 'app_settings',
+      title: 'Системные настройки (App Settings)',
+      description:
+        'Таблица глобальных динамических параметров платформы (JSONB Key-Value). Управляет переключателями платежных шлюзов, интеграциями и системными режимами.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getAll() {
+    return {
+      version: '1.5.0',
+      description: 'Централизованный словарь перечислений и системных настроек Atena School',
+      tables: {
+        bookings: this.getBookingsDictionary(),
+        payments: this.getPaymentsDictionary(),
+        lessons: this.getLessonsDictionary(),
+        courses: this.getCoursesDictionary(),
+        students: this.getStudentsDictionary(),
+        annual_memberships: this.getAnnualMembershipsDictionary(),
+        app_settings: this.getAppSettingsDictionary(),
+      },
+    };
+  }
+
+  renderHtml(): string {
+    return renderDictionaryHtml(this.getAll());
+  }
+}

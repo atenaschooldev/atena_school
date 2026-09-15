@@ -5,6 +5,28 @@ import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutService } from '../public/checkout.public.service';
 import { CheckoutCoreService } from '../checkout-core.service';
 import { calculateLessonDates } from '@atena/utils';
+import {
+  BookingPaymentStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  BillingScheme,
+  PaymentCurrency,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  LessonStatus,
+  parsePaymentMethod,
+  BOOKING_PAYMENT_STATUS_ID_TO_STRING,
+  BOOKING_SCHEDULING_STATUS_ID_TO_STRING,
+  PAYMENT_METHOD_ID_TO_STRING,
+  BOOKING_PAYMENT_STATUS_STRING_TO_ID,
+  PAYMENT_METHOD_STRING_TO_ID,
+  BOOKING_SCHEDULING_STATUS_STRING_TO_ID,
+  BILLING_SCHEME_STRING_TO_ID,
+  MembershipStatus,
+  StudentStatus,
+  LanguageLevel,
+} from '@atena/api-types';
 
 @Injectable()
 export class BookingsAdminService {
@@ -49,8 +71,13 @@ export class BookingsAdminService {
       amount_paid: Number(b.amountPaid || 0),
       registration_fee: Number(b.registrationFee || 0),
       payment_status: b.paymentStatus,
+      payment_status_id: b.paymentStatus,
       payment_method: b.paymentMethod,
+      payment_method_id: b.paymentMethod,
       scheduling_status: b.schedulingStatus,
+      scheduling_status_id: b.schedulingStatus,
+      booking_status: b.booking_status,
+      billing_scheme: b.billingScheme,
       schedule_days: b.scheduleDays || [],
       start_time: b.startTime ?? null,
       end_time: b.endTime ?? null,
@@ -58,7 +85,6 @@ export class BookingsAdminService {
       sdi_code: b.sdiCode ?? null,
       pec_email: b.pecEmail ?? null,
       notes: b.notes ?? null,
-      billing_scheme: b.billingScheme || 'full',
       total_lessons_count: b.totalLessonsCount ?? null,
       subscription_starts_at: b.subscriptionStartsAt ? (b.subscriptionStartsAt instanceof Date ? b.subscriptionStartsAt.toISOString() : b.subscriptionStartsAt) : null,
       subscription_ends_at: b.subscriptionEndsAt ? (b.subscriptionEndsAt instanceof Date ? b.subscriptionEndsAt.toISOString() : b.subscriptionEndsAt) : null,
@@ -72,7 +98,7 @@ export class BookingsAdminService {
 
   private computeFinancialSummary(b: any, payments: any[]) {
     const paidSum = payments
-      .filter((p) => (p.status || '').toLowerCase() === 'succeeded')
+      .filter((p) => p.status === PaymentRecordStatus.SUCCEEDED || (p.status || '').toString().toLowerCase() === 'succeeded')
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     const rawAmount = Number(b.amountPaid || 0);
@@ -82,8 +108,8 @@ export class BookingsAdminService {
 
     const registrationFeePaid = payments.some(
       (p) =>
-        (p.type === 'registration_fee' || Number(p.amount) === 30) &&
-        (p.status || '').toLowerCase() === 'succeeded',
+        (p.type === PaymentType.REGISTRATION_FEE || p.type === 'registration_fee' || Number(p.amount) === 30) &&
+        (p.status === PaymentRecordStatus.SUCCEEDED || (p.status || '').toString().toLowerCase() === 'succeeded'),
     ) || Number(b.registrationFee) > 0;
 
     return {
@@ -98,10 +124,10 @@ export class BookingsAdminService {
     const [totalCount, paidCount, reservedCount, leadsCount] = await Promise.all([
       this.prisma.booking.count(),
       this.prisma.booking.count({
-        where: { paymentStatus: { in: ['completed', 'paid', 'succeeded'] } },
+        where: { paymentStatus: BookingPaymentStatus.PAID },
       }),
-      this.prisma.booking.count({ where: { paymentStatus: 'reserved' } }),
-      this.prisma.booking.count({ where: { schedulingStatus: 'pending_coordination' } }),
+      this.prisma.booking.count({ where: { paymentStatus: BookingPaymentStatus.RESERVED } }),
+      this.prisma.booking.count({ where: { schedulingStatus: BookingSchedulingStatus.PENDING_COORDINATION } }),
     ]);
     return { totalCount, paidCount, reservedCount, leadsCount };
   }
@@ -127,7 +153,10 @@ export class BookingsAdminService {
 
     const where: any = {};
     if (status) {
-      where.paymentStatus = status;
+      const numStatus = Number(status);
+      if (!isNaN(numStatus)) {
+        where.paymentStatus = numStatus;
+      }
     }
     if (search) {
       where.OR = [
@@ -228,7 +257,13 @@ export class BookingsAdminService {
       finalRegFee = feeStatus.annualFeePaid ? 0 : 30;
     }
 
-    const normalizedStatus = dto.paymentStatus === 'completed' ? 'paid' : (dto.paymentStatus || 'reserved');
+    const normalizedStatus = typeof dto.paymentStatus === 'number'
+      ? dto.paymentStatus
+      : (BOOKING_PAYMENT_STATUS_STRING_TO_ID[(dto.paymentStatus || '').toLowerCase()] || BookingPaymentStatus.RESERVED);
+
+    const normalizedMethod = typeof dto.paymentMethod === 'number'
+      ? dto.paymentMethod
+      : (PAYMENT_METHOD_STRING_TO_ID[(dto.paymentMethod || '').toLowerCase()] || PaymentMethod.CASH);
 
     const reservation = await this.checkoutService.createReservation({
       itemId: resolvedCourseId,
@@ -253,17 +288,16 @@ export class BookingsAdminService {
       includeRegistrationFee: finalRegFee > 0,
       notes: dto.notes || '',
       paymentStatus: normalizedStatus,
-      paymentMethod: dto.paymentMethod,
+      paymentMethod: normalizedMethod,
     });
 
-    const billingScheme = dto.billingScheme || 'full';
     const bookingId = reservation.booking?.id;
 
     if (bookingId) {
       await this.prisma.booking.update({
         where: { id: bookingId },
         data: {
-          billingScheme: 'full',
+          billingScheme: BillingScheme.FULL,
           paymentStatus: normalizedStatus,
         },
       });
@@ -303,14 +337,14 @@ export class BookingsAdminService {
     await this.prisma.lesson.update({
       where: { id: lessonId },
       data: {
-        status: 'completed',
+        status: LessonStatus.COMPLETED,
       },
     });
 
     return { success: true, lesson_id: lessonId };
   }
 
-  async updateBookingPaymentStatus(id: string, dto: { payment_status?: string; scheduling_status?: string }) {
+  async updateBookingPaymentStatus(id: string, dto: { payment_status?: number; scheduling_status?: number }) {
     return this.updateBooking(id, dto);
   }
 
@@ -326,18 +360,19 @@ export class BookingsAdminService {
       student_phone?: string;
       student_tax_code?: string;
       student_birth_date?: string;
-      payment_status?: string;
-      payment_method?: string;
-      scheduling_status?: string;
+      payment_status?: number;
+      payment_method?: number;
+      scheduling_status?: number;
       notes?: string;
     },
   ) {
     const existing = await this.prisma.booking.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException(`Booking ${id} not found`);
 
-    const normalizedStatus = dto.payment_status === 'completed' ? 'paid' : dto.payment_status;
-
     const updateData: Record<string, any> = {};
+    if (dto.payment_status !== undefined) updateData.paymentStatus = Number(dto.payment_status);
+    if (dto.payment_method !== undefined) updateData.paymentMethod = Number(dto.payment_method);
+    if (dto.scheduling_status !== undefined) updateData.schedulingStatus = Number(dto.scheduling_status);
     if (dto.purchaser_name !== undefined) updateData.purchaserName = dto.purchaser_name;
     if (dto.purchaser_email !== undefined) updateData.purchaserEmail = dto.purchaser_email;
     if (dto.purchaser_phone !== undefined) updateData.purchaserPhone = dto.purchaser_phone;
@@ -347,9 +382,6 @@ export class BookingsAdminService {
     if (dto.student_phone !== undefined) updateData.studentPhone = dto.student_phone;
     if (dto.student_tax_code !== undefined) updateData.studentTaxCode = dto.student_tax_code;
     if (dto.student_birth_date !== undefined) updateData.studentBirthDate = dto.student_birth_date ? new Date(dto.student_birth_date) : null;
-    if (normalizedStatus !== undefined) updateData.paymentStatus = normalizedStatus;
-    if (dto.payment_method !== undefined) updateData.paymentMethod = dto.payment_method;
-    if (dto.scheduling_status !== undefined) updateData.schedulingStatus = dto.scheduling_status;
     if (dto.notes !== undefined) updateData.notes = dto.notes;
 
     const updatedBooking = await this.prisma.booking.update({
@@ -358,11 +390,11 @@ export class BookingsAdminService {
     });
 
     // Synchronize payments and annual_memberships table when status becomes paid/succeeded
-    if (normalizedStatus === 'paid' || normalizedStatus === 'completed' || normalizedStatus === 'succeeded') {
+    if (dto.payment_status === BookingPaymentStatus.PAID) {
       try {
         await this.prisma.payment.updateMany({
           where: { bookingId: id },
-          data: { status: 'succeeded', paidAt: new Date() },
+          data: { status: PaymentRecordStatus.SUCCEEDED, paidAt: new Date() },
         });
 
         // Activate or create membership in annual_memberships table
@@ -380,7 +412,7 @@ export class BookingsAdminService {
           await this.supabaseAdmin
             .from('annual_memberships')
             .update({
-              status: 'active',
+              status: MembershipStatus.ACTIVE,
               tax_code: sTaxCode,
               email: sEmail,
               phone: sPhone,
@@ -400,7 +432,7 @@ export class BookingsAdminService {
               email: sEmail,
               phone: sPhone,
               academic_year: '2026/2027',
-              status: 'active',
+              status: MembershipStatus.ACTIVE,
               paid_at: new Date().toISOString(),
               expires_at: '2027-08-31T23:59:59.000Z',
             });
@@ -490,9 +522,9 @@ export class BookingsAdminService {
             phone: dto.phone || null,
             tax_code: sTaxCode,
             birth_date: dto.birthDate || null,
-            language_level: 'A1',
+            language_level: LanguageLevel.A1,
             registration_date: new Date().toISOString().split('T')[0],
-            status: 'active',
+            status: isPaid ? StudentStatus.ACTIVE : StudentStatus.INACTIVE,
             annual_fee_paid: isPaid,
             annual_fee_paid_at: isPaid ? new Date().toISOString() : null,
           })
@@ -512,7 +544,7 @@ export class BookingsAdminService {
         email: sEmail,
         phone: dto.phone || null,
         academic_year: '2026/2027',
-        status: isPaid ? 'active' : 'pending',
+        status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
         paid_at: new Date().toISOString(),
         expires_at: '2027-08-31T23:59:59.000Z',
       })
@@ -527,10 +559,11 @@ export class BookingsAdminService {
           bookingId: null,
           studentId: studentId || null,
           amount: 30.0,
-          paymentMethod: pMethod,
-          type: 'registration_fee',
-          status: isPaid ? 'succeeded' : 'pending',
-          provider: 'manual',
+          currency: PaymentCurrency.EUR,
+          paymentMethod: parsePaymentMethod(pMethod) ?? PaymentMethod.CASH,
+          type: PaymentType.REGISTRATION_FEE,
+          status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
+          provider: PaymentProvider.MANUAL,
           notes: `Quota d'iscrizione annuale A.A. 2026/2027 (${sName}) [membership_id:${membership.id}]`,
         },
       });

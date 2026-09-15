@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { MembershipsRepository, MembershipEntity } from '../domain/memberships.repository.interface';
+import { parseMembershipStatus } from '@atena/api-types';
 
 @Injectable()
 export class PrismaMembershipsRepository extends MembershipsRepository {
@@ -8,9 +9,11 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
     super();
   }
 
-  async findAll(filters?: { status?: string; academicYear?: string; search?: string }): Promise<MembershipEntity[]> {
+  async findAll(filters?: { status?: number | string; academicYear?: string; search?: string }): Promise<MembershipEntity[]> {
     const where: Record<string, unknown> = {};
-    if (filters?.status && filters.status !== 'all') where.status = filters.status;
+    if (filters?.status !== undefined && filters.status !== 'all' && filters.status !== '') {
+      where.status = typeof filters.status === 'number' ? filters.status : parseMembershipStatus(filters.status);
+    }
     if (filters?.academicYear && filters.academicYear !== 'all') where.academicYear = filters.academicYear;
 
     if (filters?.search) {
@@ -61,10 +64,12 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
     });
   }
 
-  async updateStatus(id: string, status: string): Promise<MembershipEntity> {
+  async updateStatus(id: string, status: number | string): Promise<MembershipEntity> {
+    const numericStatus = typeof status === 'number' ? status : parseMembershipStatus(status);
     return this.prisma.annualMembership.update({
       where: { id },
-      data: { status },
+      data: { status: numericStatus },
     });
   }
 }
+

@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsBoolean,
   IsNotEmpty,
+  IsInt,
   MinLength,
   MaxLength,
   Matches,
@@ -14,6 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { BookingPaymentStatus, PaymentMethod } from '@atena/api-types';
 
 /**
  * Codice Fiscale — физлицо (16 символов) или Partita IVA (11 цифр).
@@ -245,15 +247,25 @@ export class CreateReservationDto {
   @MaxLength(500, { message: 'Длина примечания не может превышать 500 символов' })
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Статус платежа (reserved / pending / paid)', default: 'reserved' })
+  @ApiPropertyOptional({
+    description: 'Статус платежа (строго числовой код): 1=PENDING, 2=RESERVED, 3=PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED',
+    enum: BookingPaymentStatus,
+    example: BookingPaymentStatus.RESERVED,
+    default: BookingPaymentStatus.RESERVED,
+  })
   @IsOptional()
-  @IsString()
-  paymentStatus?: string;
+  @IsInt({ message: 'paymentStatus должен быть числовым энамом (1..7)' })
+  paymentStatus?: BookingPaymentStatus;
 
-  @ApiPropertyOptional({ description: 'Способ оплаты (cash / pos / stripe)', default: 'cash' })
+  @ApiPropertyOptional({
+    description: 'Способ оплаты (строго числовой код): 1=STRIPE, 2=CASH, 3=POS, 4=BANK_TRANSFER',
+    enum: PaymentMethod,
+    example: PaymentMethod.CASH,
+    default: PaymentMethod.CASH,
+  })
   @IsOptional()
-  @IsString()
-  paymentMethod?: string;
+  @IsInt({ message: 'paymentMethod должен быть числовым энамом (1..4)' })
+  paymentMethod?: PaymentMethod;
 }
 
 // ---------------------------------------------------------------------------

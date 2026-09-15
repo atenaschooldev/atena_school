@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { BookingPaymentStatus } from "@atena/api-types";
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -81,7 +82,7 @@ export async function getDashboardDataAction() {
       .from("bookings")
       .select("*")
       .or(filterConditions.join(","))
-      .in("payment_status", ["paid", "completed", "reserved", "pending_payment", "pending"])
+      .in("payment_status", [BookingPaymentStatus.PENDING, BookingPaymentStatus.RESERVED, BookingPaymentStatus.PAID])
       .order("created_at", { ascending: false });
 
     const bookingsList = rawBookings || [];
@@ -144,7 +145,7 @@ export async function getDashboardDataAction() {
         course_price: coursePrice,
         teacher_name: teacherName,
         is_future: isFuture,
-        status: b.payment_status || b.status || "reserved",
+        status: b.payment_status ?? BookingPaymentStatus.RESERVED,
       };
     });
 

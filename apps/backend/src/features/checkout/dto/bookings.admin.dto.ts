@@ -1,5 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
+import {
+  BookingPaymentStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+} from '@atena/api-types';
 
 export class UpdateBookingDto {
   @ApiPropertyOptional({ description: 'Имя и фамилия покупателя / родителя', example: 'Mario Rossi' })
@@ -32,30 +37,32 @@ export class UpdateBookingDto {
   @IsString()
   purchaser_phone?: string;
 
-  @ApiPropertyOptional({ description: 'Статус оплаты (reserved / pending / paid / completed / refunded)', example: 'paid' })
+  @ApiPropertyOptional({
+    description: 'Статус оплаты: 1=PENDING, 2=RESERVED, 3=PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED',
+    enum: BookingPaymentStatus,
+    example: BookingPaymentStatus.PAID,
+  })
   @IsOptional()
-  @IsString()
-  paymentStatus?: string;
+  @IsInt({ message: 'payment_status должен быть числом (1..7)' })
+  payment_status?: BookingPaymentStatus;
 
-  @ApiPropertyOptional({ description: 'Статус оплаты (snake_case)', example: 'paid' })
+  @ApiPropertyOptional({
+    description: 'Способ оплаты: 1=STRIPE, 2=CASH, 3=POS, 4=BANK_TRANSFER',
+    enum: PaymentMethod,
+    example: PaymentMethod.CASH,
+  })
   @IsOptional()
-  @IsString()
-  payment_status?: string;
+  @IsInt({ message: 'payment_method должен быть числом (1..4)' })
+  payment_method?: PaymentMethod;
 
-  @ApiPropertyOptional({ description: 'Способ оплаты (cash / pos / stripe / bank_transfer)', example: 'cash' })
+  @ApiPropertyOptional({
+    description: 'Статус составления расписания: 1=SCHEDULED, 2=PENDING_COORDINATION',
+    enum: BookingSchedulingStatus,
+    example: BookingSchedulingStatus.SCHEDULED,
+  })
   @IsOptional()
-  @IsString()
-  paymentMethod?: string;
-
-  @ApiPropertyOptional({ description: 'Способ оплаты (snake_case)', example: 'pos' })
-  @IsOptional()
-  @IsString()
-  payment_method?: string;
-
-  @ApiPropertyOptional({ description: 'Статус составления расписания (scheduled / pending / flexible)', example: 'scheduled' })
-  @IsOptional()
-  @IsString()
-  scheduling_status?: string;
+  @IsInt({ message: 'scheduling_status должен быть числом (1..2)' })
+  scheduling_status?: BookingSchedulingStatus;
 }
 
 export class AdminMembershipFeeDto {
@@ -96,13 +103,21 @@ export class AdminMembershipFeeDto {
 }
 
 export class UpdateBookingStatusDto {
-  @ApiPropertyOptional({ description: 'Новый статус оплаты бронирования (pending / paid / refunded)', example: 'paid' })
+  @ApiPropertyOptional({
+    description: 'Новый статус оплаты бронирования: 1=PENDING, 2=RESERVED, 3=PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED',
+    enum: BookingPaymentStatus,
+    example: BookingPaymentStatus.PAID,
+  })
   @IsOptional()
-  @IsString()
-  payment_status?: string;
+  @IsInt({ message: 'payment_status должен быть числом (1..7)' })
+  payment_status?: BookingPaymentStatus;
 
-  @ApiPropertyOptional({ description: 'Новый статус расписания уроков (scheduled / completed / cancelled)', example: 'scheduled' })
+  @ApiPropertyOptional({
+    description: 'Новый статус расписания уроков: 1=SCHEDULED, 2=PENDING_COORDINATION',
+    enum: BookingSchedulingStatus,
+    example: BookingSchedulingStatus.SCHEDULED,
+  })
   @IsOptional()
-  @IsString()
-  scheduling_status?: string;
+  @IsInt({ message: 'scheduling_status должен быть числом (1..2)' })
+  scheduling_status?: BookingSchedulingStatus;
 }

@@ -1,3 +1,11 @@
+import {
+  PaymentCurrency,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+} from '@atena/api-types';
+
 export interface Payment {
   id: string;
   bookingId?: string | null;
@@ -9,12 +17,12 @@ export interface Payment {
   scheduleId?: string | null;
   schedule_id?: string | null;
   amount: number | string;
-  currency: string;
-  paymentMethod?: string;
-  payment_method?: string;
-  type: 'course_payment' | 'payment' | 'registration_fee' | 'exam_fee' | 'certificate_fee' | 'textbook_material' | 'single_lesson' | 'other' | string;
-  status: 'succeeded' | 'pending' | 'failed' | 'refunded' | string;
-  provider: 'stripe' | 'manual' | string;
+  currency: PaymentCurrency | number;
+  paymentMethod?: PaymentMethod | number;
+  payment_method?: PaymentMethod | number;
+  type: PaymentType | number;
+  status: PaymentRecordStatus | number;
+  provider: PaymentProvider | number;
   providerTransactionId?: string | null;
   provider_transaction_id?: string | null;
   notes?: string | null;
@@ -37,15 +45,23 @@ export interface Payment {
     purchaserEmail?: string;
     purchaserTaxCode?: string;
   } | null;
+  purchaser_name?: string;
+  purchaserName?: string;
+  purchaser_email?: string;
+  purchaserEmail?: string;
+  student_name?: string;
+  student_email?: string;
+  description?: string;
 }
 
 export interface CreatePaymentFormValues {
   bookingId?: string;
   studentId?: string;
   amount: number;
-  paymentMethod: string;
-  type?: string;
-  status?: string;
+  paymentMethod: PaymentMethod | number;
+  type?: PaymentType | number;
+  status?: PaymentRecordStatus | number;
+  currency?: PaymentCurrency | number;
   notes?: string;
   paidAt?: string;
 }
@@ -58,5 +74,10 @@ export interface PaymentsSummary {
   todayStripe: number;
   totalAmount: number;
   totalCount: number;
+  totalRevenue?: number;
+  cashRevenue?: number;
+  posRevenue?: number;
+  stripeRevenue?: number;
+  pendingAmount?: number;
   byType: Record<string, number>;
 }

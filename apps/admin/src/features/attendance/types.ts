@@ -10,9 +10,9 @@ export interface LessonAttendanceItem {
   id: string;
   starts_at: string;
   ends_at: string;
-  status: string;
-  payment_status: string;
-  location_type?: string;
+  status: number;
+  payment_status: number | string;
+  location_type?: number;
   teacher_id?: string;
   teacher_name: string;
   booking_id?: string;
@@ -21,8 +21,8 @@ export interface LessonAttendanceItem {
   student_email?: string;
   student_phone?: string;
   purchaser_name?: string;
-  billing_scheme: string;
-  booking_payment_status: string;
+  billing_scheme?: number | string;
+  booking_payment_status: number | string;
   attendance_record: AttendanceRecord | null;
 }
 

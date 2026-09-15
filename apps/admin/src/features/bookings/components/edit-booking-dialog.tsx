@@ -20,6 +20,7 @@ import {
 import { Pencil, Loader2, Save, ShoppingBag } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { BookingPaymentStatus, PaymentMethod } from "@atena/api-types";
 import type { Booking } from "../types";
 
 interface EditBookingDialogProps {
@@ -49,8 +50,8 @@ export function EditBookingDialog({
   const [studentPhone, setStudentPhone] = useState("");
   const [studentTaxCode, setStudentTaxCode] = useState("");
 
-  const [paymentStatus, setPaymentStatus] = useState("reserved");
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentStatus, setPaymentStatus] = useState<string>(String(BookingPaymentStatus.RESERVED));
+  const [paymentMethod, setPaymentMethod] = useState<string>(String(PaymentMethod.CASH));
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -65,8 +66,8 @@ export function EditBookingDialog({
       setStudentPhone(booking.student_phone || booking.purchaser_phone || "");
       setStudentTaxCode(booking.student_tax_code || booking.purchaser_tax_code || "");
 
-      setPaymentStatus(booking.payment_status || "reserved");
-      setPaymentMethod(booking.payment_method || "cash");
+      setPaymentStatus(String(booking.payment_status ?? BookingPaymentStatus.RESERVED));
+      setPaymentMethod(String(booking.payment_method ?? PaymentMethod.CASH));
       setNotes(booking.notes || "");
     }
   }, [booking]);
@@ -86,8 +87,8 @@ export function EditBookingDialog({
         student_email: studentEmail.trim(),
         student_phone: studentPhone.trim(),
         student_tax_code: studentTaxCode.trim(),
-        payment_status: paymentStatus,
-        payment_method: paymentMethod,
+        payment_status: Number(paymentStatus),
+        payment_method: Number(paymentMethod),
         notes: notes.trim(),
       });
 
@@ -218,27 +219,29 @@ export function EditBookingDialog({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
                 <div className="space-y-1 min-w-0">
                   <label className="font-semibold text-foreground">Stato Pagamento</label>
-                  <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+                  <Select value={String(paymentStatus)} onValueChange={setPaymentStatus}>
                     <SelectTrigger className="cursor-pointer h-9 text-xs w-full min-w-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="reserved">⏳ Da Saldare (Acconto / Riservato)</SelectItem>
-                      <SelectItem value="completed">✓ Pagato (Saldo Completo)</SelectItem>
+                      <SelectItem value={String(BookingPaymentStatus.RESERVED)}>⏳ Da Saldare (Acconto / Riservato)</SelectItem>
+                      <SelectItem value={String(BookingPaymentStatus.PAID)}>✓ Pagato (Saldo Completo)</SelectItem>
+                      <SelectItem value={String(BookingPaymentStatus.PENDING)}>⏳ In Attesa (Pending)</SelectItem>
+                      <SelectItem value={String(BookingPaymentStatus.CANCELLED)}>❌ Annullato</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1 min-w-0">
                   <label className="font-semibold text-foreground">Metodo di Pagamento</label>
-                  <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                  <Select value={String(paymentMethod)} onValueChange={setPaymentMethod}>
                     <SelectTrigger className="cursor-pointer h-9 text-xs w-full min-w-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="cash">💵 Contanti (In sede)</SelectItem>
-                      <SelectItem value="pos">💳 POS / Carta (In sede)</SelectItem>
-                      <SelectItem value="transfer">🏦 Bonifico Bancario</SelectItem>
-                      <SelectItem value="stripe">🔗 Stripe (Online)</SelectItem>
+                      <SelectItem value={String(PaymentMethod.CASH)}>💵 Contanti (In sede)</SelectItem>
+                      <SelectItem value={String(PaymentMethod.POS)}>💳 POS / Carta (In sede)</SelectItem>
+                      <SelectItem value={String(PaymentMethod.BANK_TRANSFER)}>🏦 Bonifico Bancario</SelectItem>
+                      <SelectItem value={String(PaymentMethod.STRIPE)}>🔗 Stripe (Online)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

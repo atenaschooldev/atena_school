@@ -34,20 +34,20 @@ model Course {
   name                  String
   category              String?
   price                 Decimal?  @db.Decimal(10, 2)
-  status                String?   @default("active")
+  status                Int       @default(1) @db.SmallInt
   photoUrl              String?   @map("photo_url")
   description           String?
   teacherId             String?   @map("teacher_id") @db.Uuid
   lessonsPerWeek        Int?      @map("lessons_per_week")
   sortOrder             Int?      @default(0) @map("sort_order")
-  scheduleType          String?   @default("fixed") @map("schedule_type")
+  scheduleType          Int       @default(1) @map("schedule_type") @db.SmallInt
   totalLessons          Int?      @map("total_lessons")
   scheduleDays          Int[]     @map("schedule_days")
   startTime             String?   @map("start_time")
   endTime               String?   @map("end_time")
   lessonDurationMinutes Int?      @map("lesson_duration_minutes")
   totalHours            Int?      @map("total_hours")
-  courseFormat          String?   @map("course_format")
+  courseFormat          Int       @default(1) @map("course_format") @db.SmallInt
   slug                  String?
   updatedAt             DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -92,7 +92,7 @@ model Booking {
   session_id           String?
   courseId             String?   @map("course_id") @db.Uuid
   startDate            DateTime? @map("start_date") @db.Date
-  paymentStatus        String    @default("pending") @map("payment_status")
+  paymentStatus        Int       @default(1) @map("payment_status")
   studentName          String    @map("student_name")
   studentEmail         String?   @map("student_email")
   studentPhone         String?   @map("student_phone")
@@ -100,9 +100,9 @@ model Booking {
   createdAt            DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   subscriptionStartsAt DateTime? @map("subscription_starts_at") @db.Timestamptz(6)
   subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
-  schedulingStatus     String?   @default("scheduled") @map("scheduling_status")
-  booking_status       String    @default("active")
-  paymentMethod        String    @default("stripe") @map("payment_method")
+  schedulingStatus     Int?      @default(1) @map("scheduling_status")
+  booking_status       Int       @default(1)
+  paymentMethod        Int       @default(1) @map("payment_method")
   amountPaid           Decimal?  @map("amount_paid") @db.Decimal
   totalLessonsCount    Int?      @map("total_lessons_count")
   discount_amount      Decimal?  @default(0) @db.Decimal
@@ -122,7 +122,7 @@ model Booking {
   scheduleDays         Int[]     @map("schedule_days")
   startTime            String?   @map("start_time")
   endTime              String?   @map("end_time")
-  billingScheme        String    @default("full") @map("billing_scheme")
+  billingScheme        Int       @default(1) @map("billing_scheme")
 
   course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
   lessons           Lesson[]
@@ -138,15 +138,15 @@ model Lesson {
   bookingId       String    @map("booking_id") @db.Uuid
   startsAt        DateTime  @map("starts_at") @db.Timestamptz(6)
   endsAt          DateTime  @map("ends_at") @db.Timestamptz(6)
-  status          String    @default("scheduled")
+  status          Int       @default(1)
   createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  attendance      String    @default("pending")
+  attendance      Int       @default(1)
   homework        String?
   teacherNotes    String?   @map("teacher_notes")
   teacherId       String?   @map("teacher_id") @db.Uuid
   rescheduleCount Int       @default(0) @map("reschedule_count")
   rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz(6)
-  locationType    String    @default("in_person") @map("location_type")
+  locationType    Int       @default(1) @map("location_type")
   meetingLink     String?   @map("meeting_link")
   updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -163,11 +163,11 @@ model Payment {
   studentId             String?   @map("student_id") @db.Uuid
   userId                String?   @map("user_id") @db.Uuid
   amount                Decimal   @db.Decimal(10, 2)
-  currency              String    @default("EUR")
-  paymentMethod         String    @default("cash") @map("payment_method")
-  type                  String    @default("payment")
-  status                String    @default("succeeded")
-  provider              String    @default("manual")
+  currency              Int       @default(1)
+  paymentMethod         Int       @default(2) @map("payment_method")
+  type                  Int       @default(1)
+  status                Int       @default(2)
+  provider              Int       @default(2)
   providerTransactionId String?   @map("provider_transaction_id")
   notes                 String?
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -191,7 +191,7 @@ model AnnualMembership {
   email        String?
   phone        String?
   academicYear String   @default("2026/2027") @map("academic_year")
-  status       String   @default("active")
+  status       Int      @default(1)
   studentId    String?  @map("student_id") @db.Uuid
   userId       String?  @map("user_id") @db.Uuid
   bookingId    String?  @unique @map("booking_id") @db.Uuid
@@ -242,8 +242,8 @@ model stripe_webhook_events {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model students {
   id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  language_level     String    @default("A1")
-  status             String    @default("active")
+  language_level     Int       @default(1) @db.SmallInt
+  status             Int       @default(1) @db.SmallInt
   registration_date  DateTime  @default(now()) @db.Date
   contract_id        String?   @db.Uuid
   birth_date         DateTime? @db.Date
@@ -283,4 +283,14 @@ model AttendanceRecord {
   @@index([status])
   @@map("attendance_records")
 }
+
+model AppSetting {
+  key         String   @id
+  value       Json     @default("{}")
+  description String?
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("app_settings")
+}
+
 

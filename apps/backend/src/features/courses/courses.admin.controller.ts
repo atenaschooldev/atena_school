@@ -1,6 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, UseInterceptors, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
@@ -8,6 +7,7 @@ import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { CoursesService } from './courses.admin.service';
 import { CreateCourseDto, UpdateCourseDto } from './dto/course.dto';
+import { CourseStatus } from '@atena/api-types';
 
 @ApiTags('Admin — Courses')
 @ApiBearerAuth('JWT-auth')
@@ -20,6 +20,9 @@ export class CoursesController {
   @Get()
   @Roles('admin', 'teacher', 'student', 'parent')
   @ApiOperation({ summary: 'Получить список курсов (с поддержкой фильтров)' })
+  @ApiQuery({ name: 'category', required: false, description: 'Фильтр по категории (например, languages, Certipass)' })
+  @ApiQuery({ name: 'status', required: false, enum: CourseStatus, description: 'Статус: 1=ACTIVE, 2=DRAFT, 3=ARCHIVED' })
+  @ApiQuery({ name: 'search', required: false, description: 'Текстовый поиск по названию и описанию' })
   async listCourses(
     @Query('category') category?: string,
     @Query('status') status?: string,

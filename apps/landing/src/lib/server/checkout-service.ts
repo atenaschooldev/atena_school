@@ -1,6 +1,25 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { calculateLessonDates } from '@atena/utils';
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  BillingScheme,
+  PaymentCurrency,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  parsePaymentMethod,
+  AppSettingKey,
+  MembershipStatus,
+  StudentStatus,
+  LanguageLevel,
+  CourseStatus,
+  CourseScheduleType,
+  CourseFormat,
+} from '@atena/api-types';
 
 export interface CheckFeeParams {
   taxCode?: string;
@@ -40,8 +59,8 @@ export interface CreateReservationParams {
   sdiCode?: string;
   pecEmail?: string;
   needsCompanyInvoice?: boolean;
-  paymentMethod?: string;
-  paymentStatus?: string;
+  paymentMethod?: PaymentMethod | string | number;
+  paymentStatus?: BookingPaymentStatus | string | number;
 }
 
 export interface VerifyPaymentParams {
@@ -104,7 +123,7 @@ export async function checkFeeStatus(params: CheckFeeParams) {
     .select('id')
     .ilike('tax_code', cleanTax)
     .eq('academic_year', '2026/2027')
-    .eq('status', 'active')
+    .eq('status', MembershipStatus.ACTIVE)
     .maybeSingle();
 
   if (mem) {
@@ -169,11 +188,11 @@ export interface SupabasePaymentRow {
   user_id?: string | null;
   student_id?: string | null;
   amount: number;
-  currency: string;
-  payment_method: string;
-  type: 'payment' | 'registration_fee' | string;
-  status: string;
-  provider: string;
+  currency: number;
+  payment_method: number;
+  type: number;
+  status: number;
+  provider: number;
   provider_transaction_id?: string | null;
   notes?: string | null;
   created_at?: string;
@@ -202,7 +221,7 @@ function computeEndTime(startTime?: string | null, durationMinutes: number = 60)
 function computeTotalLessonsCount(course: SupabaseCourseRow | null, calculatedLessonsCount: number): number | null {
   if (course?.total_lessons != null) return course.total_lessons;
   if (course?.total_hours != null) return null;
-  if (course?.lessons_per_week != null && course?.schedule_type === 'flexible') {
+  if (course?.lessons_per_week != null && (Number(course?.schedule_type) === CourseScheduleType.FLEXIBLE || course?.schedule_type === 'flexible')) {
     return course.lessons_per_week * 4;
   }
   return calculatedLessonsCount || 8;
@@ -213,7 +232,7 @@ export async function getPublicCourses() {
   let { data: coursesData, error } = await supabase
     .from('courses')
     .select('*')
-    .eq('status', 'active')
+    .eq('status', CourseStatus.ACTIVE)
     .order('name');
 
   if (error || !coursesData) {
@@ -294,7 +313,7 @@ export async function getBookingDetails(id: string) {
     .select('amount, type')
     .eq('booking_id', id);
 
-  const coursePayment = payments?.find((p: { amount: unknown; type: string }) => p.type === 'payment');
+  const coursePayment = payments?.find((p: { amount: unknown; type: unknown }) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
   const amountPaid = Number(booking.amount_paid || 0);
   const regFee = Number(booking.registration_fee || 0);
   const coursePrice = coursePayment
@@ -382,7 +401,7 @@ async function processStudentAndBookingLinks(params: {
         } catch {}
       }
 
-      const isPaid = dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
+      const isPaid = Number(dto.paymentStatus) === BookingPaymentStatus.PAID || dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
       const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
       if (!existingStudent) {
@@ -398,9 +417,9 @@ async function processStudentAndBookingLinks(params: {
             birth_date: dto.studentBirthDate || null,
             parent_id: linkedUserId || null,
             student_user_id: studentAuthUserId || null,
-            language_level: 'A1',
+            language_level: LanguageLevel.A1,
             registration_date: new Date().toISOString().split('T')[0],
-            status: hasPaidMembership ? 'active' : 'pending',
+            status: hasPaidMembership ? StudentStatus.ACTIVE : StudentStatus.INACTIVE,
             annual_fee_paid: hasPaidMembership,
             annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : null,
           })
@@ -421,7 +440,7 @@ async function processStudentAndBookingLinks(params: {
             birth_date: dto.studentBirthDate || undefined,
             parent_id: linkedUserId || undefined,
             student_user_id: studentAuthUserId || undefined,
-            status: hasPaidMembership ? 'active' : undefined,
+            status: hasPaidMembership ? StudentStatus.ACTIVE : undefined,
             annual_fee_paid: hasPaidMembership ? true : undefined,
             annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : undefined,
           })
@@ -459,7 +478,7 @@ async function processStudentAndBookingLinks(params: {
           await supabase
             .from('annual_memberships')
             .update({
-              status: 'active',
+              status: MembershipStatus.ACTIVE,
               paid_at: new Date().toISOString(),
               booking_id: bookingId,
               student_id: studentId || undefined,
@@ -476,7 +495,7 @@ async function processStudentAndBookingLinks(params: {
               email: memEmail,
               phone: memPhone,
               academic_year: '2026/2027',
-              status: 'active',
+              status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
               booking_id: bookingId,
@@ -509,7 +528,7 @@ async function generateAndSaveLessons(
       teacher_id: teacherId,
       starts_at: l.startsAt,
       ends_at: l.endsAt,
-      status: 'scheduled',
+      status: 1, // LessonStatus.SCHEDULED
     }));
 
     await supabase.from('lessons').insert(lessonRows);
@@ -522,23 +541,25 @@ async function recordPaymentLedger(
   bookingId: string,
   coursePrice: number,
   regFee: number,
-  paymentMethod: string,
-  paymentStatus: string,
+  paymentMethod: string | number,
+  paymentStatus: string | number,
   supabase: SupabaseClient
 ) {
   try {
-    const pStatus = paymentStatus === 'completed' || paymentStatus === 'paid' ? 'succeeded' : 'pending';
-    const pMethod = paymentMethod || 'cash';
-    const provider = pMethod === 'stripe' || pMethod === 'card_online' ? 'stripe' : 'manual';
+    const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID || paymentStatus === 'completed' || paymentStatus === 'paid'
+      ? PaymentRecordStatus.SUCCEEDED
+      : PaymentRecordStatus.PENDING;
+    const pMethod = parsePaymentMethod(paymentMethod) ?? PaymentMethod.CASH;
+    const provider = pMethod === PaymentMethod.STRIPE ? PaymentProvider.STRIPE : PaymentProvider.MANUAL;
 
     const paymentsToInsert: SupabasePaymentRow[] = [];
     if (coursePrice > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
         amount: coursePrice,
-        currency: 'eur',
+        currency: PaymentCurrency.EUR,
         status: pStatus,
-        type: 'payment',
+        type: PaymentType.COURSE_PAYMENT,
         payment_method: pMethod,
         provider: provider,
       });
@@ -547,9 +568,9 @@ async function recordPaymentLedger(
       paymentsToInsert.push({
         booking_id: bookingId,
         amount: regFee,
-        currency: 'eur',
+        currency: PaymentCurrency.EUR,
         status: pStatus,
-        type: 'registration_fee',
+        type: PaymentType.REGISTRATION_FEE,
         payment_method: pMethod,
         provider: provider,
       });
@@ -578,7 +599,7 @@ export async function sendBookingNotificationEmails(params: {
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <prenotazioni@atenaschool.com>';
 
-  const isPaidOnline = booking.payment_status === 'paid' || booking.payment_status === 'completed';
+  const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
   const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
   const totalEur = Number(booking.amount_paid || 0).toFixed(2);
   const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
@@ -771,9 +792,11 @@ export async function createReservation(dto: CreateReservationParams) {
         start_date: dto.date || new Date().toISOString(),
         schedule_days: course?.schedule_days || null,
         start_time: course?.start_time || extractCleanTime(dto.time) || null,
-        end_time: course?.end_time || computeEndTime(dto.time, course?.lesson_duration_minutes || 60),
-        payment_status: dto.paymentStatus || 'reserved',
-        payment_method: dto.paymentMethod || 'cash',
+        payment_status: typeof dto.paymentStatus === 'number' ? dto.paymentStatus : BookingPaymentStatus.RESERVED,
+        payment_method: typeof dto.paymentMethod === 'number' ? dto.paymentMethod : PaymentMethod.CASH,
+        booking_status: BookingStatus.ACTIVE,
+        scheduling_status: BookingSchedulingStatus.SCHEDULED,
+        billing_scheme: BillingScheme.FULL,
         amount_paid: totalPaidAmount,
         registration_fee: regFee,
         total_lessons_count: computeTotalLessonsCount(course, lessons.length),
@@ -815,7 +838,7 @@ export async function createReservation(dto: CreateReservationParams) {
     });
 
     await generateAndSaveLessons(booking.id, course, lessons, supabase);
-    await recordPaymentLedger(booking.id, coursePrice, regFee, dto.paymentMethod || 'cash', dto.paymentStatus || 'reserved', supabase);
+    await recordPaymentLedger(booking.id, coursePrice, regFee, dto.paymentMethod ?? PaymentMethod.CASH, dto.paymentStatus ?? BookingPaymentStatus.RESERVED, supabase);
   }
 
   const primaryBooking = createdBookings[0];
@@ -840,7 +863,7 @@ export async function getSystemSettings(): Promise<{ stripeEnabled: boolean }> {
     const { data, error } = await supabase
       .from('app_settings')
       .select('value')
-      .eq('key', 'stripe_enabled')
+      .eq('key', AppSettingKey.STRIPE_ENABLED)
       .maybeSingle();
 
     if (!error && data?.value !== undefined && data?.value !== null) {
@@ -863,7 +886,7 @@ export async function updateSystemSettings(settings: { stripeEnabled: boolean })
   const supabase = getSupabaseAdmin();
   try {
     await supabase.from('app_settings').upsert({
-      key: 'stripe_enabled',
+      key: AppSettingKey.STRIPE_ENABLED,
       value: settings.stripeEnabled,
       description: 'Enable or disable Stripe online payment gateway on checkout',
       updated_at: new Date().toISOString(),
@@ -897,8 +920,8 @@ export async function createStripeSession(dto: CreateReservationParams) {
   if (dto.students && dto.students.length > 0) {
     const reservationRes = await createReservation({
       ...dto,
-      paymentMethod: 'stripe',
-      paymentStatus: 'pending',
+      paymentMethod: PaymentMethod.STRIPE,
+      paymentStatus: BookingPaymentStatus.PENDING,
     });
 
     const { data: course } = await supabase.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
@@ -994,8 +1017,8 @@ export async function createStripeSession(dto: CreateReservationParams) {
   // 2. Fallback ONLY if Edge Function fails: Direct Stripe SDK session creation
   const reservationRes = await createReservation({
     ...dto,
-    paymentMethod: 'stripe',
-    paymentStatus: 'pending',
+    paymentMethod: PaymentMethod.STRIPE,
+    paymentStatus: BookingPaymentStatus.PENDING,
   });
 
   const booking = reservationRes.booking;
@@ -1073,16 +1096,16 @@ export async function verifyPayment(params: VerifyPaymentParams) {
         if (targetBookingId) {
           const { data: updatedBooking } = await supabase
             .from('bookings')
-            .update({ payment_status: 'completed', payment_method: 'card_online' })
+            .update({ payment_status: BookingPaymentStatus.PAID, payment_method: PaymentMethod.STRIPE })
             .eq('id', targetBookingId)
             .select('student_id, student_tax_code')
             .maybeSingle();
 
-          await supabase.from('payments').update({ status: 'succeeded' }).eq('booking_id', targetBookingId);
+          await supabase.from('payments').update({ status: PaymentRecordStatus.SUCCEEDED }).eq('booking_id', targetBookingId);
 
           if (updatedBooking?.student_id) {
             await supabase.from('students').update({
-              status: 'active',
+              status: StudentStatus.ACTIVE,
               annual_fee_paid: true,
               annual_fee_paid_at: new Date().toISOString(),
             }).eq('id', updatedBooking.student_id);
@@ -1162,16 +1185,16 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
       for (const bId of ids) {
         const { data: updatedBooking } = await supabase
           .from('bookings')
-          .update({ payment_status: 'completed', payment_method: 'card_online' })
+          .update({ payment_status: BookingPaymentStatus.PAID, payment_method: PaymentMethod.STRIPE })
           .eq('id', bId)
           .select('student_id, student_tax_code')
           .maybeSingle();
 
-        await supabase.from('payments').update({ status: 'succeeded' }).eq('booking_id', bId);
+        await supabase.from('payments').update({ status: PaymentRecordStatus.SUCCEEDED }).eq('booking_id', bId);
 
         if (updatedBooking?.student_id) {
           await supabase.from('students').update({
-            status: 'active',
+            status: StudentStatus.ACTIVE,
             annual_fee_paid: true,
             annual_fee_paid_at: new Date().toISOString(),
           }).eq('id', updatedBooking.student_id);

@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MembershipsService } from './memberships.service';
+import { MembershipsService } from './memberships.admin.service';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { MembershipStatus, PaymentRecordStatus } from '@atena/api-types';
 
 describe('MembershipsService — Business Logic Tests', () => {
   let service: MembershipsService;
@@ -37,25 +38,25 @@ describe('MembershipsService — Business Logic Tests', () => {
     repository.findById.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'pending',
+      status: MembershipStatus.PENDING,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'active',
+      status: MembershipStatus.ACTIVE,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
-    const result = await service.updateStatus(memId, 'active');
+    const result = await service.updateStatus(memId, MembershipStatus.ACTIVE);
 
-    expect(result.status).toBe('active');
+    expect(result.status).toBe(MembershipStatus.ACTIVE);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining("UPDATE students SET annual_fee_paid = true"),
     );
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-      expect.stringContaining(`UPDATE payments SET status = 'succeeded'`),
+      expect.stringContaining(`UPDATE payments SET status = ${PaymentRecordStatus.SUCCEEDED}`),
     );
   });
 
@@ -64,25 +65,25 @@ describe('MembershipsService — Business Logic Tests', () => {
     repository.findById.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'active',
+      status: MembershipStatus.ACTIVE,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'pending',
+      status: MembershipStatus.PENDING,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
-    const result = await service.updateStatus(memId, 'pending');
+    const result = await service.updateStatus(memId, MembershipStatus.PENDING);
 
-    expect(result.status).toBe('pending');
+    expect(result.status).toBe(MembershipStatus.PENDING);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining("UPDATE students SET annual_fee_paid = false"),
     );
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-      expect.stringContaining(`UPDATE payments SET status = 'pending'`),
+      expect.stringContaining(`UPDATE payments SET status = ${PaymentRecordStatus.PENDING}`),
     );
   });
 
@@ -91,22 +92,23 @@ describe('MembershipsService — Business Logic Tests', () => {
     repository.findById.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'active',
+      status: MembershipStatus.ACTIVE,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,
       studentId: 'student-99',
-      status: 'revoked',
+      status: MembershipStatus.REVOKED,
       taxCode: 'RSSMRA80A01H501Z',
     } as any);
 
-    const result = await service.updateStatus(memId, 'revoked');
+    const result = await service.updateStatus(memId, MembershipStatus.REVOKED);
 
-    expect(result.status).toBe('revoked');
+    expect(result.status).toBe(MembershipStatus.REVOKED);
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining("UPDATE students SET annual_fee_paid = false"),
     );
   });
 });
+

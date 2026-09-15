@@ -1,29 +1,40 @@
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  PaymentCurrency,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+} from "@atena/api-types";
+
 export const BOOKING_PAYMENT_STATUS = {
-  PENDING_PAYMENT: "pending_payment",
-  RESERVED: "reserved",
-  PAID: "paid",
-  REFUNDED: "refunded",
-  PARTIALLY_REFUNDED: "partially_refunded",
-  DISPUTED: "disputed",
-  FAILED: "failed",
+  PENDING: BookingPaymentStatus.PENDING,
+  RESERVED: BookingPaymentStatus.RESERVED,
+  PAID: BookingPaymentStatus.PAID,
+  REFUNDED: BookingPaymentStatus.REFUNDED,
+  PARTIALLY_REFUNDED: BookingPaymentStatus.PARTIALLY_REFUNDED,
+  FAILED: BookingPaymentStatus.FAILED,
+  CANCELLED: BookingPaymentStatus.CANCELLED,
 } as const;
 
 export const BOOKING_STATUS = {
-  ACTIVE: "active",
-  COMPLETED: "completed",
-  CANCELLED: "cancelled",
+  ACTIVE: BookingStatus.ACTIVE,
+  COMPLETED: BookingStatus.COMPLETED,
+  CANCELLED: BookingStatus.CANCELLED,
 } as const;
 
 export const SCHEDULING_STATUS = {
-  SCHEDULED: "scheduled",
-  PENDING_COORDINATION: "pending_coordination",
+  SCHEDULED: BookingSchedulingStatus.SCHEDULED,
+  PENDING_COORDINATION: BookingSchedulingStatus.PENDING_COORDINATION,
 } as const;
 
 export const PAYMENT_METHOD = {
-  STRIPE: "stripe",
-  CASH: "cash",
-  POS: "pos",
-  BANK_TRANSFER: "bank_transfer",
+  STRIPE: PaymentMethod.STRIPE,
+  CASH: PaymentMethod.CASH,
+  POS: PaymentMethod.POS,
+  BANK_TRANSFER: PaymentMethod.BANK_TRANSFER,
 } as const;
 
 export const SCHEDULE_TYPE = {
@@ -43,11 +54,23 @@ export const MEMBERSHIP_STATUS = {
 } as const;
 
 export const PAYMENT_TYPE = {
-  PAYMENT: "payment",
-  REGISTRATION_FEE: "registration_fee",
-  INSTALLMENT: "installment",
-  REFUND: "refund",
-  ADJUSTMENT: "adjustment",
+  COURSE_PAYMENT: PaymentType.COURSE_PAYMENT,
+  REGISTRATION_FEE: PaymentType.REGISTRATION_FEE,
+  INSTALLMENT: PaymentType.INSTALLMENT,
+  SINGLE_LESSON: PaymentType.SINGLE_LESSON,
+  EXAM_FEE: PaymentType.EXAM_FEE,
+  CERTIFICATE_FEE: PaymentType.CERTIFICATE_FEE,
+  MATERIAL_TEXTBOOK: PaymentType.MATERIAL_TEXTBOOK,
+  OTHER: PaymentType.OTHER,
+} as const;
+
+export const PAYMENT_RECORD_STATUS = {
+  PENDING: PaymentRecordStatus.PENDING,
+  SUCCEEDED: PaymentRecordStatus.SUCCEEDED,
+  FAILED: PaymentRecordStatus.FAILED,
+  REFUNDED: PaymentRecordStatus.REFUNDED,
+  PARTIALLY_REFUNDED: PaymentRecordStatus.PARTIALLY_REFUNDED,
+  CANCELLED: PaymentRecordStatus.CANCELLED,
 } as const;
 
 export const USER_ROLE = {
@@ -59,3 +82,49 @@ export const USER_ROLE = {
 
 // Aliases for clean imports
 export const PAYMENT_STATUS = BOOKING_PAYMENT_STATUS;
+
+// Numeric Enums & Mappings from @atena/api-types
+export {
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  PaymentMethod,
+  BillingScheme,
+  PaymentCurrency,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  BOOKING_PAYMENT_STATUS_DICTIONARY,
+  BOOKING_STATUS_DICTIONARY,
+  BOOKING_SCHEDULING_STATUS_DICTIONARY,
+  PAYMENT_METHOD_DICTIONARY,
+  BILLING_SCHEME_DICTIONARY,
+  PAYMENT_CURRENCY_DICTIONARY,
+  PAYMENT_TYPE_DICTIONARY,
+  PAYMENT_RECORD_STATUS_DICTIONARY,
+  PAYMENT_PROVIDER_DICTIONARY,
+  BOOKING_PAYMENT_STATUS_STRING_TO_ID,
+  BOOKING_PAYMENT_STATUS_ID_TO_STRING,
+  PAYMENT_METHOD_STRING_TO_ID,
+  PAYMENT_METHOD_ID_TO_STRING,
+  BOOKING_STATUS_STRING_TO_ID,
+  BOOKING_STATUS_ID_TO_STRING,
+  BOOKING_SCHEDULING_STATUS_STRING_TO_ID,
+  BOOKING_SCHEDULING_STATUS_ID_TO_STRING,
+  BILLING_SCHEME_STRING_TO_ID,
+  BILLING_SCHEME_ID_TO_STRING,
+  PAYMENT_CURRENCY_STRING_TO_ID,
+  PAYMENT_CURRENCY_ID_TO_STRING,
+  PAYMENT_TYPE_STRING_TO_ID,
+  PAYMENT_TYPE_ID_TO_STRING,
+  PAYMENT_RECORD_STATUS_STRING_TO_ID,
+  PAYMENT_RECORD_STATUS_ID_TO_STRING,
+  PAYMENT_PROVIDER_STRING_TO_ID,
+  PAYMENT_PROVIDER_ID_TO_STRING,
+  parseBookingPaymentStatus,
+  parsePaymentMethod,
+  parsePaymentCurrency,
+  parsePaymentType,
+  parsePaymentRecordStatus,
+  parsePaymentProvider,
+} from "@atena/api-types";

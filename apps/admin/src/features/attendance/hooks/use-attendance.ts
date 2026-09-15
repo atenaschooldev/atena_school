@@ -60,7 +60,7 @@ export function useAttendance(selectedDateStr?: string) {
       notes,
     }: {
       lessonId: string;
-      status: string;
+      status: number;
       notes?: string;
     }) => {
       return apiFetch("/admin/attendance/mark", {
@@ -80,7 +80,7 @@ export function useAttendance(selectedDateStr?: string) {
   });
 
   const markAttendance = useCallback(
-    (lessonId: string, status: string, notes?: string) => {
+    (lessonId: string, status: number, notes?: string) => {
       return markMutation.mutateAsync({ lessonId, status, notes });
     },
     [markMutation]

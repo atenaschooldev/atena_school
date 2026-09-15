@@ -20,7 +20,10 @@ import { ReportsModule } from './features/reports/reports.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 import { StudentsModule } from './features/students/students.module';
 
+import { DictionaryModule } from './features/dictionary/dictionary.module';
+
 const businessModules = [
+  DictionaryModule,
   AuthModule,
   CoursesModule,
   SchedulesModule,

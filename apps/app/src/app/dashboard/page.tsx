@@ -8,6 +8,7 @@ import { useDashboard } from "@/features/dashboard/hooks/useDashboard";
 import { signOutAction } from "@/app/actions/auth";
 
 import { formatCourseScheduleText } from "@atena/utils";
+import { BookingPaymentStatus } from "@atena/api-types";
 
 export default function DashboardPage() {
   const dateLocale = it;
@@ -161,16 +162,16 @@ export default function DashboardPage() {
                         <span className="text-lg font-black text-primary">€{Number(b.price || b.amount_paid || b.course_price || 0).toFixed(2)}</span>
                         <span
                           className={`block text-[10px] font-bold uppercase tracking-wider mt-1 px-2.5 py-1 rounded-full text-center ${
-                            (b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
+                            Number(b.payment_status ?? b.status) === BookingPaymentStatus.PAID || (b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
                               ? "bg-green-500/10 text-green-700 border border-green-500/20"
-                              : (b.payment_status || b.status) === "reserved"
+                              : Number(b.payment_status ?? b.status) === BookingPaymentStatus.RESERVED || (b.payment_status || b.status) === "reserved"
                               ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                               : "bg-muted/60 text-muted-foreground border border-border"
                           }`}
                         >
-                          {(b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
+                          {Number(b.payment_status ?? b.status) === BookingPaymentStatus.PAID || (b.payment_status || b.status) === "paid" || (b.payment_status || b.status) === "completed"
                             ? "✓ Pagato"
-                            : (b.payment_status || b.status) === "reserved"
+                            : Number(b.payment_status ?? b.status) === BookingPaymentStatus.RESERVED || (b.payment_status || b.status) === "reserved"
                             ? "Prenotato"
                             : "In attesa"}
                         </span>

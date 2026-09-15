@@ -66,7 +66,7 @@ export function useBookingDetail(bookingId: string) {
   const totalAmount = Number(booking?.amount_paid || 0);
   const coursePrice = rawCoursePrice > 0 ? rawCoursePrice : Math.max(0, totalAmount - regFee);
 
-  const isFixedSchedule = course?.schedule_type === "fixed";
+  const isFixedSchedule = Number(course?.schedule_type) === 1 || course?.schedule_type === "fixed";
   const effectiveMaxLessons = isFixedSchedule ? lessons.length : (maxLessons ?? Infinity);
 
   const completedLessons = lessons.filter(l => !isFuture(parseISO(l.starts_at))).length;

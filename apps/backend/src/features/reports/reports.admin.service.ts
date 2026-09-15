@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import {
+  BookingPaymentStatus,
+  PaymentMethod,
+  PaymentRecordStatus,
+  PaymentType,
+  PAYMENT_METHOD_ID_TO_STRING,
+} from '@atena/api-types';
 
 @Injectable()
 export class ReportsService {
@@ -11,7 +18,7 @@ export class ReportsService {
 
     const payments = await this.prisma.payment.findMany({
       where: {
-        status: 'succeeded',
+        status: PaymentRecordStatus.SUCCEEDED,
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -22,15 +29,15 @@ export class ReportsService {
 
     const totalRevenue = payments.reduce((sum, p) => sum + Number(p.amount), 0);
     const coursePaymentsRevenue = payments
-      .filter((p) => p.type !== 'registration_fee' && Number(p.amount) !== 30)
+      .filter((p) => p.type !== PaymentType.REGISTRATION_FEE && Number(p.amount) !== 30)
       .reduce((sum, p) => sum + Number(p.amount), 0);
     const membershipFeesRevenue = payments
-      .filter((p) => p.type === 'registration_fee' || Number(p.amount) === 30)
+      .filter((p) => p.type === PaymentType.REGISTRATION_FEE || Number(p.amount) === 30)
       .reduce((sum, p) => sum + Number(p.amount), 0);
 
     const byMethod: Record<string, number> = {};
     payments.forEach((p) => {
-      const method = p.paymentMethod || 'other';
+      const method = (PAYMENT_METHOD_ID_TO_STRING as Record<number, string>)[p.paymentMethod] || String(p.paymentMethod);
       byMethod[method] = (byMethod[method] || 0) + Number(p.amount);
     });
 
@@ -56,7 +63,7 @@ export class ReportsService {
     const bookings = await this.prisma.booking.findMany({
       where: {
         paymentStatus: {
-          in: ['reserved', 'partially_paid', 'pending'],
+          in: [BookingPaymentStatus.PENDING, BookingPaymentStatus.RESERVED, BookingPaymentStatus.PARTIALLY_REFUNDED],
         },
       },
       orderBy: { createdAt: 'desc' },

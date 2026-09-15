@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.admin.service';
-import { CreatePaymentDto, UpdatePaymentDto } from './dto/payment.dto';
+import { CreatePaymentDto, UpdatePaymentDto, PosCheckoutDto } from './dto/payment.dto';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
@@ -59,7 +59,7 @@ export class PaymentsController {
   @Roles('admin')
   @Audit('payments', 'pos_checkout')
   @ApiOperation({ summary: 'Универсальная кассовая регистрация оплаты (курс, взнос €30, урок)' })
-  async posCheckout(@Body() dto: any) {
+  async posCheckout(@Body() dto: PosCheckoutDto) {
     return this.paymentsService.posCheckout(dto);
   }
 

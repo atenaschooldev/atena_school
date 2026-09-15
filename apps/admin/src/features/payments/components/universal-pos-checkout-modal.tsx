@@ -30,6 +30,10 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@atena/utils";
+import {
+  PaymentMethod,
+  PaymentType,
+} from "@atena/api-types";
 
 interface UniversalPosCheckoutModalProps {
   open: boolean;
@@ -85,7 +89,7 @@ export function UniversalPosCheckoutModal({
   const [payRegistrationFee, setPayRegistrationFee] = useState(defaultFeeOnly);
   const [registrationFeeAmount] = useState<number>(30);
 
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "pos" | "bank_transfer">("cash");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -141,7 +145,7 @@ export function UniversalPosCheckoutModal({
       const items = [];
       if (payCourse && courseAmount > 0) {
         items.push({
-          type: "payment",
+          type: PaymentType.COURSE_PAYMENT,
           amount: courseAmount,
           description: selectedClient?.courseName
             ? `Quota Corso: ${selectedClient.courseName}`
@@ -150,7 +154,7 @@ export function UniversalPosCheckoutModal({
       }
       if (payRegistrationFee) {
         items.push({
-          type: "registration_fee",
+          type: PaymentType.REGISTRATION_FEE,
           amount: registrationFeeAmount,
           description: "Quota Iscrizione Annuale €30",
         });
@@ -161,7 +165,7 @@ export function UniversalPosCheckoutModal({
         purchaserName: selectedClient?.name || searchQuery,
         purchaserEmail: selectedClient?.email,
         purchaserTaxCode: selectedClient?.taxCode,
-        paymentMethod,
+        paymentMethod: Number(paymentMethod),
         items,
         notes,
       });
@@ -320,25 +324,25 @@ export function UniversalPosCheckoutModal({
             <div className="grid grid-cols-3 gap-2">
               <Button
                 type="button"
-                variant={paymentMethod === "cash" ? "default" : "outline"}
+                variant={paymentMethod === PaymentMethod.CASH ? "default" : "outline"}
                 className="h-10 text-xs font-bold cursor-pointer"
-                onClick={() => setPaymentMethod("cash")}
+                onClick={() => setPaymentMethod(PaymentMethod.CASH)}
               >
                 <Banknote className="w-3.5 h-3.5 mr-1" /> Contanti
               </Button>
               <Button
                 type="button"
-                variant={paymentMethod === "pos" ? "default" : "outline"}
+                variant={paymentMethod === PaymentMethod.POS ? "default" : "outline"}
                 className="h-10 text-xs font-bold cursor-pointer"
-                onClick={() => setPaymentMethod("pos")}
+                onClick={() => setPaymentMethod(PaymentMethod.POS)}
               >
                 <CreditCard className="w-3.5 h-3.5 mr-1" /> Carta / POS
               </Button>
               <Button
                 type="button"
-                variant={paymentMethod === "bank_transfer" ? "default" : "outline"}
+                variant={paymentMethod === PaymentMethod.BANK_TRANSFER ? "default" : "outline"}
                 className="h-10 text-xs font-bold cursor-pointer"
-                onClick={() => setPaymentMethod("bank_transfer")}
+                onClick={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
               >
                 <Building2 className="w-3.5 h-3.5 mr-1" /> Bonifico
               </Button>

@@ -1,6 +1,19 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import {
+  BookingPaymentStatus,
+  PaymentCurrency,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  parsePaymentMethod,
+  LessonStatus,
+  MembershipStatus,
+  StudentStatus,
+  LanguageLevel,
+} from '@atena/api-types';
 
 export interface ProcessStudentParams {
   dto: any;
@@ -87,7 +100,7 @@ export class CheckoutCoreService {
           } catch {}
         }
 
-        const isPaid = dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
+        const isPaid = Number(dto.paymentStatus) === BookingPaymentStatus.PAID || dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
         const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
         if (!existingStudent) {
@@ -103,9 +116,9 @@ export class CheckoutCoreService {
               birth_date: dto.studentBirthDate || null,
               parent_id: linkedUserId || null,
               student_user_id: studentAuthUserId || null,
-              language_level: 'A1',
+              language_level: LanguageLevel.A1,
               registration_date: new Date().toISOString().split('T')[0],
-              status: hasPaidMembership ? 'active' : 'pending',
+              status: hasPaidMembership ? StudentStatus.ACTIVE : StudentStatus.INACTIVE,
               annual_fee_paid: hasPaidMembership,
               annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : null,
             })
@@ -131,7 +144,7 @@ export class CheckoutCoreService {
               birth_date: dto.studentBirthDate || undefined,
               parent_id: linkedUserId || undefined,
               student_user_id: studentAuthUserId || undefined,
-              status: hasPaidMembership ? 'active' : undefined,
+              status: hasPaidMembership ? StudentStatus.ACTIVE : undefined,
               annual_fee_paid: hasPaidMembership ? true : undefined,
               annual_fee_paid_at: hasPaidMembership ? new Date().toISOString() : undefined,
             })
@@ -170,7 +183,7 @@ export class CheckoutCoreService {
             await supabaseAdmin
               .from('annual_memberships')
               .update({
-                status: 'active',
+                status: MembershipStatus.ACTIVE,
                 paid_at: new Date().toISOString(),
                 booking_id: bookingId,
                 student_id: studentId || undefined,
@@ -186,7 +199,7 @@ export class CheckoutCoreService {
               email: memEmail,
               phone: memPhone,
               academic_year: '2026/2027',
-              status: 'active',
+              status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
               booking_id: bookingId,
@@ -222,7 +235,7 @@ export class CheckoutCoreService {
         teacherId: teacherId,
         startsAt: new Date(l.startsAt),
         endsAt: new Date(l.endsAt),
-        status: 'scheduled',
+        status: LessonStatus.SCHEDULED,
       }));
 
       await this.prisma.lesson.createMany({ data: lessonRows });
@@ -234,20 +247,22 @@ export class CheckoutCoreService {
   /**
    * Generates payments accounting ledger entries.
    */
-  async recordPaymentLedger(bookingId: string, coursePrice: number, regFee: number, paymentMethod: string, paymentStatus: string) {
+  async recordPaymentLedger(bookingId: string, coursePrice: number, regFee: number, paymentMethod?: string | number, paymentStatus?: string | number) {
     try {
-      const pStatus = (paymentStatus === 'completed' || paymentStatus === 'paid') ? 'succeeded' : 'pending';
-      const pMethod = paymentMethod || 'cash';
-      const provider = (pMethod === 'stripe' || pMethod === 'card_online') ? 'stripe' : 'manual';
+      const pStatus = (Number(paymentStatus) === BookingPaymentStatus.PAID || paymentStatus === 'completed' || paymentStatus === 'paid')
+        ? PaymentRecordStatus.SUCCEEDED
+        : PaymentRecordStatus.PENDING;
+      const pMethod = parsePaymentMethod(paymentMethod) ?? PaymentMethod.CASH;
+      const provider = pMethod === PaymentMethod.STRIPE ? PaymentProvider.STRIPE : PaymentProvider.MANUAL;
 
       if (coursePrice > 0) {
         await this.prisma.payment.create({
           data: {
             bookingId: bookingId,
             amount: coursePrice,
-            currency: 'eur',
+            currency: PaymentCurrency.EUR,
             status: pStatus,
-            type: 'payment',
+            type: PaymentType.COURSE_PAYMENT,
             paymentMethod: pMethod,
             provider: provider,
           },
@@ -259,9 +274,9 @@ export class CheckoutCoreService {
           data: {
             bookingId: bookingId,
             amount: regFee,
-            currency: 'eur',
+            currency: PaymentCurrency.EUR,
             status: pStatus,
-            type: 'registration_fee',
+            type: PaymentType.REGISTRATION_FEE,
             paymentMethod: pMethod,
             provider: provider,
           },

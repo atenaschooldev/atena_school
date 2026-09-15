@@ -68,19 +68,19 @@ export function categoryColor(category?: string | null): string {
 }
 
 export const COURSE_FORMAT_OPTIONS = [
-  { value: "group", label: "Di Gruppo" },
-  { value: "private", label: "Individuale" },
-  { value: "certification", label: "Certificazione" },
+  { value: 1, label: "Di Gruppo" },
+  { value: 2, label: "Individuale" },
+  { value: 3, label: "Online" },
+  { value: 4, label: "Certificazione" },
 ] as const;
 
-export function formatCourseFormatLabel(fmt?: string | null): string {
-  if (!fmt) return "In Sede";
-  const lower = fmt.toLowerCase().trim();
-  if (lower === "group" || lower === "gruppo" || lower === "di gruppo") return "Di Gruppo";
-  if (lower === "private" || lower === "individuale" || lower === "privato") return "Individuale";
-  if (lower === "certification" || lower === "certificazione") return "Certificazione";
-  if (lower === "in sede" || lower === "in_sede") return "In Sede";
-  if (lower === "online") return "Online";
-  if (lower === "ibrido" || lower === "hybrid") return "Ibrido";
-  return fmt.charAt(0).toUpperCase() + fmt.slice(1);
+export function formatCourseFormatLabel(fmt?: string | number | null): string {
+  if (fmt === null || fmt === undefined || fmt === "") return "Di Gruppo";
+  const str = String(fmt).toLowerCase().trim();
+  if (str === "1" || str === "group" || str === "gruppo" || str === "di gruppo" || str === "in sede") return "Di Gruppo";
+  if (str === "2" || str === "private" || str === "individual" || str === "individuale" || str === "privato") return "Individuale";
+  if (str === "3" || str === "online") return "Online";
+  if (str === "4" || str === "certification" || str === "certificazione" || str === "esame" || str === "certipass") return "Certificazione";
+  if (str === "ibrido" || str === "hybrid") return "Ibrido";
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }

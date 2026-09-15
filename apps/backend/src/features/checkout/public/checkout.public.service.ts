@@ -6,6 +6,21 @@ import type Stripe from 'stripe';
 const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } from '../dto/checkout.public.dto';
 import { calculateLessonDates } from '@atena/utils';
+import {
+  BookingPaymentStatus,
+  BookingStatus,
+  BookingSchedulingStatus,
+  BillingScheme,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  BOOKING_PAYMENT_STATUS_ID_TO_STRING,
+  PAYMENT_METHOD_ID_TO_STRING,
+  AppSettingKey,
+  MembershipStatus,
+  StudentStatus,
+  CourseScheduleType,
+} from '@atena/api-types';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutCoreService } from '../checkout-core.service';
@@ -59,7 +74,7 @@ export class CheckoutService {
       .select('id')
       .ilike('tax_code', cleanTax)
       .eq('academic_year', '2026/2027')
-      .eq('status', 'active')
+      .eq('status', MembershipStatus.ACTIVE)
       .maybeSingle();
 
     if (mem) return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
@@ -96,7 +111,7 @@ export class CheckoutService {
     // Hours-based course (e.g. EIPASS) — no fixed lesson count, stored as null
     if (course?.total_hours != null) return null;
     // Flexible with lessons_per_week (e.g. C2, C1 private) — estimate 1 month
-    if (course?.lessons_per_week != null && course?.schedule_type === 'flexible') {
+    if (course?.lessons_per_week != null && (Number(course?.schedule_type) === CourseScheduleType.FLEXIBLE || course?.schedule_type === 'flexible')) {
       return course.lessons_per_week * 4;
     }
     // Fixed schedule — use calendar-calculated count
@@ -153,10 +168,19 @@ export class CheckoutService {
     const createdBookings: any[] = [];
     const bookingIds: string[] = [];
 
+    const paymentStatusNum = dto.paymentStatus !== undefined
+      ? Number(dto.paymentStatus)
+      : BookingPaymentStatus.RESERVED;
+
+    const paymentMethodNum = dto.paymentMethod !== undefined
+      ? Number(dto.paymentMethod)
+      : PaymentMethod.CASH;
+
     for (const student of rawStudents) {
       const studentName = `${student.firstName} ${student.lastName}`.trim();
       const studentTaxCode = student.taxCode ? student.taxCode.trim().toUpperCase() : '';
 
+      // Check annual membership fee for each student individually
       const feeStatus = await this.checkFeeStatus({
         taxCode: studentTaxCode,
       });
@@ -183,8 +207,11 @@ export class CheckoutService {
           schedule_days: course?.schedule_days || null,
           start_time: course?.start_time || (dto.time ? (dto.time.match(/(\d{1,2}:\d{2})/) ? dto.time.match(/(\d{1,2}:\d{2})/)![1] : dto.time) : null),
           end_time: course?.end_time || null,
-          payment_status: dto.paymentStatus || 'reserved',
-          payment_method: dto.paymentMethod || 'cash',
+          payment_status: paymentStatusNum,
+          payment_method: paymentMethodNum,
+          booking_status: BookingStatus.ACTIVE,
+          scheduling_status: BookingSchedulingStatus.SCHEDULED,
+          billing_scheme: BillingScheme.FULL,
           amount_paid: totalPaidAmount,
           registration_fee: regFee,
           total_lessons_count: this.computeTotalLessonsCount(course, lessons.length),
@@ -234,8 +261,8 @@ export class CheckoutService {
         booking.id,
         coursePrice,
         regFee,
-        dto.paymentMethod || 'cash',
-        dto.paymentStatus || 'reserved'
+        paymentMethodNum,
+        paymentStatusNum,
       );
     }
 
@@ -263,7 +290,7 @@ export class CheckoutService {
         ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
         : purchaserName;
       const adminEmail = this.configService.get<string>('SCHOOL_ADMIN_EMAIL') || this.configService.get<string>('ADMIN_EMAIL') || 'info@atenaschool.com';
-      const isPaidOnline = booking.payment_status === 'paid' || booking.payment_status === 'completed';
+      const isPaidOnline = booking.payment_status === BookingPaymentStatus.PAID;
       const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
       const totalEur = Number(booking.amount_paid || 0).toFixed(2);
       const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
@@ -318,23 +345,41 @@ export class CheckoutService {
     }
   }
 
+  /**
+   * Retrieves app settings (e.g. Stripe enablement toggle).
+   */
   async getSettings() {
     try {
-      const { data, error } = await this.supabaseAdmin
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'stripe_enabled')
-        .maybeSingle();
+      const setting = await (this.prisma as any).appSetting.findUnique({
+        where: { key: AppSettingKey.STRIPE_ENABLED },
+      });
 
-      if (!error && data?.value !== undefined && data?.value !== null) {
-        if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
-        if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
-        if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
-          return { stripeEnabled: Boolean((data.value as any).enabled) };
+      if (setting && setting.value !== undefined && setting.value !== null) {
+        if (typeof setting.value === 'boolean') return { stripeEnabled: setting.value };
+        if (typeof setting.value === 'string') return { stripeEnabled: setting.value === 'true' };
+        if (typeof setting.value === 'object' && 'enabled' in (setting.value as any)) {
+          return { stripeEnabled: Boolean((setting.value as any).enabled) };
         }
       }
     } catch (err) {
-      this.logger.warn(`Failed to fetch app_settings: ${err}`);
+      this.logger.warn(`Failed to fetch app_settings from Prisma, falling back to Supabase: ${err}`);
+      try {
+        const { data, error } = await this.supabaseAdmin
+          .from('app_settings')
+          .select('value')
+          .eq('key', AppSettingKey.STRIPE_ENABLED)
+          .maybeSingle();
+
+        if (!error && data?.value !== undefined && data?.value !== null) {
+          if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
+          if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
+          if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
+            return { stripeEnabled: Boolean((data.value as any).enabled) };
+          }
+        }
+      } catch (sbErr) {
+        this.logger.warn(`Failed to fetch app_settings from Supabase: ${sbErr}`);
+      }
     }
 
     const envEnabled = this.configService.get<string>('ENABLE_STRIPE') === 'true' || process.env.ENABLE_STRIPE === 'true';
@@ -343,15 +388,31 @@ export class CheckoutService {
 
   async updateSettings(dto: { stripeEnabled: boolean }) {
     try {
-      await this.supabaseAdmin.from('app_settings').upsert({
-        key: 'stripe_enabled',
-        value: dto.stripeEnabled,
-        description: 'Enable or disable Stripe online payment gateway on checkout',
-        updated_at: new Date().toISOString(),
+      await (this.prisma as any).appSetting.upsert({
+        where: { key: AppSettingKey.STRIPE_ENABLED },
+        update: {
+          value: dto.stripeEnabled,
+          description: 'Enable or disable Stripe online payment gateway on checkout',
+        },
+        create: {
+          key: AppSettingKey.STRIPE_ENABLED,
+          value: dto.stripeEnabled,
+          description: 'Enable or disable Stripe online payment gateway on checkout',
+        },
       });
     } catch (err) {
-      this.logger.error(`Failed to update app_settings: ${err}`);
-      throw new BadRequestException('Ошибка при сохранении настроек приложения');
+      this.logger.warn(`Failed to update app_settings in Prisma, trying Supabase: ${err}`);
+      try {
+        await this.supabaseAdmin.from('app_settings').upsert({
+          key: AppSettingKey.STRIPE_ENABLED,
+          value: dto.stripeEnabled,
+          description: 'Enable or disable Stripe online payment gateway on checkout',
+          updated_at: new Date().toISOString(),
+        });
+      } catch (sbErr) {
+        this.logger.error(`Failed to update app_settings: ${sbErr}`);
+        throw new BadRequestException('Ошибка при сохранении настроек приложения');
+      }
     }
     return { stripeEnabled: dto.stripeEnabled };
   }
@@ -377,8 +438,8 @@ export class CheckoutService {
     if (dto.students && dto.students.length > 0) {
       const reservationRes = await this.createReservation({
         ...dto,
-        paymentMethod: 'stripe',
-        paymentStatus: 'pending',
+        paymentMethod: PaymentMethod.STRIPE,
+        paymentStatus: BookingPaymentStatus.PENDING,
       });
 
       const { data: course } = await this.supabaseAdmin.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
@@ -464,8 +525,8 @@ export class CheckoutService {
       // Fallback to direct Stripe SDK session
       const reservationRes = await this.createReservation({
         ...dto,
-        paymentMethod: 'stripe',
-        paymentStatus: 'pending',
+        paymentMethod: PaymentMethod.STRIPE,
+        paymentStatus: BookingPaymentStatus.PENDING,
       });
 
       const booking = reservationRes.booking;
@@ -571,16 +632,19 @@ export class CheckoutService {
         for (const bId of ids) {
           const { data: updatedBooking } = await this.supabaseAdmin
             .from('bookings')
-            .update({ payment_status: 'paid', payment_method: 'card_online' })
+            .update({
+              payment_status: BookingPaymentStatus.PAID,
+              payment_method: PaymentMethod.STRIPE,
+            })
             .eq('id', bId)
             .select('student_id')
             .maybeSingle();
 
-          await this.supabaseAdmin.from('payments').update({ status: 'succeeded' }).eq('booking_id', bId);
+          await this.supabaseAdmin.from('payments').update({ status: PaymentRecordStatus.SUCCEEDED }).eq('booking_id', bId);
 
           if (updatedBooking?.student_id) {
             await this.supabaseAdmin.from('students').update({
-              status: 'active',
+              status: StudentStatus.ACTIVE,
               annual_fee_paid: true,
               annual_fee_paid_at: new Date().toISOString(),
             }).eq('id', updatedBooking.student_id);
@@ -659,7 +723,7 @@ export class CheckoutService {
       .select('amount, type')
       .eq('booking_id', bookingId);
 
-    const coursePayment = payments?.find((p: any) => p.type === 'payment');
+    const coursePayment = payments?.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
     const amountPaid = Number(booking.amount_paid || 0);
     const regFee = Number(booking.registration_fee || 0);
     const coursePrice = coursePayment
@@ -678,8 +742,8 @@ export class CheckoutService {
         student_name: booking.student_name || booking.purchaser_name || 'Studente',
         purchaser_name: booking.purchaser_name || booking.student_name || 'Acquirente',
         student_email: booking.student_email || booking.purchaser_email || '',
-        payment_method: booking.payment_method || 'card',
-        payment_status: booking.payment_status || 'reserved',
+        payment_method: booking.payment_method ?? PaymentMethod.CASH,
+        payment_status: booking.payment_status ?? BookingPaymentStatus.RESERVED,
         start_date: booking.start_date || booking.booking_date,
       },
     };

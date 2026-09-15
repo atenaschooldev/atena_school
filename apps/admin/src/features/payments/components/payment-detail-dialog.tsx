@@ -1,5 +1,15 @@
 import type { Payment } from "../types";
 import {
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  PAYMENT_METHOD_DICTIONARY,
+  PAYMENT_TYPE_DICTIONARY,
+  PAYMENT_RECORD_STATUS_DICTIONARY,
+  PAYMENT_PROVIDER_DICTIONARY,
+} from "@atena/api-types";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -37,9 +47,9 @@ export function PaymentDetailDialog({
   const navigate = useNavigate();
   if (!payment) return null;
 
-  const isSucceeded = payment.status === "succeeded" || payment.status === "paid";
+  const isSucceeded = Number(payment.status) === PaymentRecordStatus.SUCCEEDED;
   const dateVal = payment.createdAt || payment.created_at;
-  const pMethod = payment.paymentMethod || payment.payment_method;
+  const pMethod = payment.paymentMethod ?? payment.payment_method;
   const pTxId = payment.providerTransactionId || payment.provider_transaction_id;
   const bId = payment.bookingId || payment.booking_id;
 
@@ -64,7 +74,10 @@ export function PaymentDetailDialog({
                   : "text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-medium"
               }
             >
-              {isSucceeded ? "Completato" : payment.status}
+              {isSucceeded
+                ? "Completato"
+                : (PAYMENT_RECORD_STATUS_DICTIONARY[Number(payment.status) as PaymentRecordStatus]?.label_it ||
+                   PAYMENT_RECORD_STATUS_DICTIONARY[Number(payment.status) as PaymentRecordStatus]?.it || "In attesa")}
             </Badge>
           </div>
 
@@ -72,7 +85,8 @@ export function PaymentDetailDialog({
             <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <Receipt className="w-5 h-5 text-primary shrink-0" />
               <span>
-                {payment.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso"}
+                {PAYMENT_TYPE_DICTIONARY[Number(payment.type) as PaymentType]?.label_it ||
+                 PAYMENT_TYPE_DICTIONARY[Number(payment.type) as PaymentType]?.it || "Pagamento"}
               </span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
@@ -95,13 +109,15 @@ export function PaymentDetailDialog({
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Metodo di Pagamento:</span>
                 <span className="font-semibold text-foreground capitalize">
-                  {pMethod || "N/D"}
+                  {PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.label_it ||
+                   PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.it || String(pMethod || "N/D")}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Provider:</span>
                 <span className="font-semibold text-foreground capitalize">
-                  {payment.provider || "Manual"}
+                  {PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.label_it ||
+                   PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.it || String(payment.provider || "Manuale")}
                 </span>
               </div>
               {pTxId && (

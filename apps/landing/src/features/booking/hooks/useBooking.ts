@@ -24,7 +24,7 @@ export function useBooking(
   const [item] = useState<any>(initialItem);
   const [user] = useState<any>(initialUser);
 
-  const isFlexibleSchedule = item?.schedule_type === "flexible" || (!item?.schedule_days || item.schedule_days.length === 0);
+  const isFlexibleSchedule = Number(item?.schedule_type) === 2 || item?.schedule_type === "flexible" || (!item?.schedule_days || item.schedule_days.length === 0);
   const isFixedSchedule = !isFlexibleSchedule;
 
   const allowedDays: number[] = (item?.schedule_days && Array.isArray(item.schedule_days) && item.schedule_days.length > 0)

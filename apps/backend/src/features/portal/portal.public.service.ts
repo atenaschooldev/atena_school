@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './dto/portal.dto';
 import { calculateLessonDates } from '@atena/utils';
 import { getDynamicMaxLessons } from '@atena/utils';
+import { BookingPaymentStatus, MembershipStatus, CourseScheduleType } from '@atena/api-types';
 
 export interface PortalUser {
   id: string;
@@ -197,7 +198,7 @@ export class PortalService {
       .from('bookings')
       .select('*')
       .or(filterConditions.join(','))
-      .in('payment_status', ['paid', 'completed', 'reserved', 'pending_payment', 'pending'])
+      .in('payment_status', [BookingPaymentStatus.PENDING, BookingPaymentStatus.RESERVED, BookingPaymentStatus.PAID])
       .order('created_at', { ascending: false });
 
     const bookingsList = rawBookings || [];
@@ -257,7 +258,7 @@ export class PortalService {
           .from('annual_memberships')
           .select('id')
           .ilike('email', cleanEmail)
-          .eq('status', 'active')
+          .eq('status', MembershipStatus.ACTIVE)
           .maybeSingle();
         if (mem?.id) annualFeePaid = true;
       } catch {}
@@ -352,7 +353,7 @@ export class PortalService {
       }));
     }
 
-    const isFixedSchedule = course?.schedule_type === 'fixed';
+    const isFixedSchedule = Number(course?.schedule_type) === CourseScheduleType.FIXED || course?.schedule_type === 'fixed';
     const maxLessons = booking.total_lessons_count != null
       ? booking.total_lessons_count
       : isFixedSchedule

@@ -111,11 +111,11 @@ export function usePayments(
       ...data
     }: {
       id: string;
-      status?: string;
-      paymentMethod?: string;
+      status?: number;
+      paymentMethod?: number;
       notes?: string;
       amount?: number;
-      type?: string;
+      type?: number;
       studentId?: string;
       bookingId?: string;
       paidAt?: string;

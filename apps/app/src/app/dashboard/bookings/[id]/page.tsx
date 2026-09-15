@@ -19,6 +19,7 @@ import { it } from "date-fns/locale";
 import { Link } from "@/i18n/routing";
 import { useBookingDetail, TIME_SLOTS } from "@/features/dashboard/hooks/useBookingDetail";
 import { formatCourseScheduleText } from "@atena/utils";
+import { BookingPaymentStatus } from "@atena/api-types";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -113,16 +114,16 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </span>
                   <span
                     className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                      (booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
+                      Number(booking.payment_status ?? booking.status) === BookingPaymentStatus.PAID || (booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
                         ? "bg-green-500/10 text-green-700 border border-green-500/20"
-                        : (booking.payment_status || booking.status) === "reserved"
+                        : Number(booking.payment_status ?? booking.status) === BookingPaymentStatus.RESERVED || (booking.payment_status || booking.status) === "reserved"
                           ? "bg-amber-500/10 text-amber-700 border border-amber-500/20"
                           : "bg-muted text-muted-foreground border border-border"
                       }`}
                   >
-                    {(booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
+                    {Number(booking.payment_status ?? booking.status) === BookingPaymentStatus.PAID || (booking.payment_status || booking.status) === "paid" || (booking.payment_status || booking.status) === "completed"
                       ? "✓ Pagato"
-                      : (booking.payment_status || booking.status) === "reserved"
+                      : Number(booking.payment_status ?? booking.status) === BookingPaymentStatus.RESERVED || (booking.payment_status || booking.status) === "reserved"
                         ? "Prenotato"
                         : "In attesa"}
                   </span>

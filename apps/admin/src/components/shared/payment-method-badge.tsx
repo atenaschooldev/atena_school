@@ -3,16 +3,21 @@
 import { Badge } from "@/components/ui/badge";
 import { Banknote, CreditCard, Building2, HelpCircle } from "lucide-react";
 
+import { useTranslation } from "@/i18n/context";
+import { PaymentMethod, PAYMENT_METHOD_ID_TO_STRING } from "@atena/api-types";
+
 export interface PaymentMethodBadgeProps {
-  method?: string | null;
+  method?: string | number | null;
   className?: string;
 }
 
-import { useTranslation } from "@/i18n/context";
-
 export function PaymentMethodBadge({ method, className }: PaymentMethodBadgeProps) {
   const { t } = useTranslation();
-  const normalized = (method || "").toLowerCase().trim();
+  const num = typeof method === "number" ? method : (!isNaN(Number(method)) && String(method ?? "").trim() !== "" ? Number(method) : null);
+  const resolved = num !== null && num in PAYMENT_METHOD_ID_TO_STRING
+    ? PAYMENT_METHOD_ID_TO_STRING[num as PaymentMethod]
+    : method;
+  const normalized = String(resolved ?? "").toLowerCase().trim();
 
   switch (normalized) {
     case "pos":

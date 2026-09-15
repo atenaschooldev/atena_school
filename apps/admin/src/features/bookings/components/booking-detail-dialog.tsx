@@ -1,6 +1,18 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Booking } from "../types/booking";
+import {
+  BookingPaymentStatus,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+  PAYMENT_METHOD_DICTIONARY,
+  PAYMENT_TYPE_DICTIONARY,
+  PAYMENT_RECORD_STATUS_DICTIONARY,
+  parsePaymentMethod,
+  parsePaymentType,
+} from "@atena/api-types";
 import { usePayments } from "@/features/payments/hooks/use-payments";
 import { api } from "@/lib/api";
 import {
@@ -77,7 +89,7 @@ interface BookingDetailDialogProps {
   booking: Booking | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdateStatus?: (id: string, paymentStatus: string, scheduleStatus?: string) => void;
+  onUpdateStatus?: (id: string, paymentStatus: number | string, scheduleStatus?: number | string) => void;
   onDelete?: (id: string) => Promise<boolean>;
 }
 
@@ -103,8 +115,8 @@ export function BookingDetailDialog({
 
   // New Payment Form State
   const [newPaymentAmount, setNewPaymentAmount] = useState("");
-  const [newPaymentMethod, setNewPaymentMethod] = useState("cash");
-  const [newPaymentType, setNewPaymentType] = useState("payment");
+  const [newPaymentMethod, setNewPaymentMethod] = useState(String(PaymentMethod.CASH));
+  const [newPaymentType, setNewPaymentType] = useState(String(PaymentType.COURSE_PAYMENT));
   const [newPaymentNotes, setNewPaymentNotes] = useState("");
 
   const queryClient = useQueryClient();
@@ -115,8 +127,8 @@ export function BookingDetailDialog({
 
   if (!booking) return null;
 
-  const isCompleted = booking.payment_status === "completed" || booking.payment_status === "paid";
-  const isReserved = booking.payment_status === "reserved";
+  const isCompleted = Number(booking.payment_status) === BookingPaymentStatus.PAID || booking.payment_status === "completed" || booking.payment_status === "paid";
+  const isReserved = Number(booking.payment_status) === BookingPaymentStatus.RESERVED || booking.payment_status === "reserved";
   const isDifferentStudent = booking.student_name && booking.purchaser_name !== booking.student_name;
 
   const formattedSchedule = formatScheduleText(
@@ -134,8 +146,8 @@ export function BookingDetailDialog({
     await createPayment({
       bookingId: booking.id,
       amount: Number(newPaymentAmount),
-      paymentMethod: newPaymentMethod,
-      type: newPaymentType,
+      paymentMethod: Number(newPaymentMethod),
+      type: Number(newPaymentType),
       notes: newPaymentNotes || undefined,
     });
     setNewPaymentAmount("");
@@ -143,7 +155,7 @@ export function BookingDetailDialog({
     setAddPaymentOpen(false);
     refreshPayments();
     if (onUpdateStatus) {
-      onUpdateStatus(booking.id, "paid");
+      onUpdateStatus(booking.id, BookingPaymentStatus.PAID);
     }
   };
 
@@ -364,12 +376,12 @@ export function BookingDetailDialog({
             // Values now come pre-computed from the backend via booking.financial_summary
             const fs = (booking as any).financial_summary;
             const paidSum = fs?.paid_sum ?? payments
-              .filter((p) => p.status === "succeeded")
+              .filter((p) => p.status === PaymentRecordStatus.SUCCEEDED || p.status === "succeeded" || String(p.status) === "2")
               .reduce((sum, p) => sum + Number(p.amount || 0), 0);
             const totalTarget = fs?.total_target ?? Number(booking.amount_paid || booking.registration_fee || 30);
             const remaining = fs?.remaining ?? Math.max(0, totalTarget - paidSum);
             const registrationFeePaid = fs?.registration_fee_paid ??
-              payments.some((p) => (p.type === "registration_fee" || Number(p.amount) === 30) && p.status === "succeeded");
+              payments.some((p) => (parsePaymentType(p.type) === PaymentType.REGISTRATION_FEE || Number(p.amount) === 30) && (p.status === PaymentRecordStatus.SUCCEEDED || p.status === "succeeded" || String(p.status) === "2"));
 
             return (
               <div className="rounded-lg border p-4 bg-card space-y-3">
@@ -493,9 +505,35 @@ export function BookingDetailDialog({
             ) : payments.length > 0 ? (
               <div className="space-y-2 border-t pt-3">
                 {payments.map((p) => {
-                  const pMethod = p.paymentMethod || p.payment_method;
-                  const rawMethod = (pMethod || "").toLowerCase();
-                  const pMethodLabel = rawMethod === "cash" ? "Contanti" : rawMethod === "pos" ? "Carta (POS)" : rawMethod === "transfer" ? "Bonifico" : rawMethod === "stripe" ? "Stripe Online" : pMethod || "N/D";
+                  const pMethod = p.paymentMethod ?? p.payment_method;
+                  const parsedMethod = parsePaymentMethod(pMethod);
+                  const pMethodLabel =
+                    PAYMENT_METHOD_DICTIONARY[parsedMethod]?.label_it ||
+                    PAYMENT_METHOD_DICTIONARY[parsedMethod]?.it ||
+                    String(pMethod || "Contanti");
+
+                  const parsedType = parsePaymentType(p.type);
+                  const pTypeLabel =
+                    PAYMENT_TYPE_DICTIONARY[parsedType]?.label_it ||
+                    PAYMENT_TYPE_DICTIONARY[parsedType]?.it ||
+                    (p.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso");
+
+                  const isSucceeded =
+                    p.status === PaymentRecordStatus.SUCCEEDED ||
+                    p.status === "succeeded" ||
+                    String(p.status) === "2";
+                  const isPending =
+                    p.status === PaymentRecordStatus.PENDING ||
+                    p.status === "pending" ||
+                    String(p.status) === "1";
+                  const statusLabel = isSucceeded
+                    ? "✓ Completato"
+                    : isPending
+                      ? "⏳ Sospeso"
+                      : PAYMENT_RECORD_STATUS_DICTIONARY[Number(p.status) as PaymentRecordStatus]?.label_it ||
+                        PAYMENT_RECORD_STATUS_DICTIONARY[Number(p.status) as PaymentRecordStatus]?.it ||
+                        String(p.status);
+
                   const dateVal = p.createdAt || p.created_at;
                   const txId = p.providerTransactionId || p.provider_transaction_id;
                   return (
@@ -506,17 +544,17 @@ export function BookingDetailDialog({
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-foreground">
-                            {p.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso"}
+                            {pTypeLabel}
                           </span>
                           <Badge
                             variant="secondary"
                             className={
-                              p.status === "succeeded"
+                              isSucceeded
                                 ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-[10px] font-semibold"
                                 : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-[10px] font-semibold"
                             }
                           >
-                            {p.status === "succeeded" ? "✓ Completato" : p.status === "pending" ? "⏳ Sospeso" : p.status}
+                            {statusLabel}
                           </Badge>
                         </div>
                         <div className="text-[11px] text-muted-foreground flex items-center gap-2">
@@ -584,7 +622,19 @@ export function BookingDetailDialog({
         {/* Single Row Footer Bar */}
         <div className="p-4 bg-muted/20 border-t flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2 flex-wrap">
-            {payments.some((p) => (p.paymentMethod || p.payment_method || p.provider) === "stripe" || !!(p.providerTransactionId || p.provider_transaction_id)) ? (
+            {payments.some((p) => {
+              const m = p.paymentMethod ?? p.payment_method;
+              const prov = p.provider;
+              return (
+                m === PaymentMethod.STRIPE ||
+                m === "stripe" ||
+                String(m) === "1" ||
+                prov === PaymentProvider.STRIPE ||
+                prov === "stripe" ||
+                String(prov) === "1" ||
+                !!(p.providerTransactionId || p.provider_transaction_id)
+              );
+            }) ? (
               <a
                 href="https://dashboard.stripe.com/payments"
                 target="_blank"
@@ -659,9 +709,10 @@ export function BookingDetailDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Contanti</SelectItem>
-                    <SelectItem value="pos">POS / Carta</SelectItem>
-                    <SelectItem value="transfer">Bonifico</SelectItem>
+                    <SelectItem value={String(PaymentMethod.CASH)}>Contanti</SelectItem>
+                    <SelectItem value={String(PaymentMethod.POS)}>Carta (POS)</SelectItem>
+                    <SelectItem value={String(PaymentMethod.BANK_TRANSFER)}>Bonifico</SelectItem>
+                    <SelectItem value={String(PaymentMethod.STRIPE)}>Stripe Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -673,8 +724,8 @@ export function BookingDetailDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="payment">Pagamento Corso</SelectItem>
-                    <SelectItem value="registration_fee">Quota Iscrizione</SelectItem>
+                    <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>Pagamento Corso</SelectItem>
+                    <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>Quota Iscrizione</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

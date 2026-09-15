@@ -60,12 +60,20 @@ export function useBookings() {
       scheduling_status,
     }: {
       id: string;
-      payment_status: string;
-      scheduling_status?: string;
+      payment_status: number | string;
+      scheduling_status?: number | string;
     }) => {
+      const numPaymentStatus = typeof payment_status === "number" ? payment_status : Number(payment_status);
+      const numSchedulingStatus = scheduling_status !== undefined
+        ? (typeof scheduling_status === "number" ? scheduling_status : Number(scheduling_status))
+        : undefined;
+
       return apiFetch<BookingOrder>(`/admin/bookings/${id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ payment_status, scheduling_status }),
+        body: JSON.stringify({
+          payment_status: !isNaN(numPaymentStatus) ? numPaymentStatus : payment_status,
+          scheduling_status: numSchedulingStatus !== undefined && !isNaN(numSchedulingStatus) ? numSchedulingStatus : scheduling_status,
+        }),
       });
     },
     onSuccess: (updated, { id }) => {
@@ -125,7 +133,7 @@ export function useBookings() {
   });
 
   const updateBookingStatus = useCallback(
-    async (id: string, payment_status: string, scheduling_status?: string) => {
+    async (id: string, payment_status: number | string, scheduling_status?: number | string) => {
       await updateStatusMutation.mutateAsync({ id, payment_status, scheduling_status });
     },
     [updateStatusMutation],

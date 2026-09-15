@@ -1,4 +1,11 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  PaymentCurrency,
+  PaymentMethod,
+  PaymentType,
+  PaymentRecordStatus,
+  PaymentProvider,
+} from '@atena/api-types';
 
 export class CreatePaymentDto {
   @IsOptional()
@@ -17,23 +24,23 @@ export class CreatePaymentDto {
   amount: number;
 
   @IsOptional()
-  @IsString()
-  currency?: string;
+  @IsInt()
+  currency?: PaymentCurrency;
 
-  @IsString()
-  paymentMethod: string;
-
-  @IsOptional()
-  @IsString()
-  type?: string;
+  @IsInt()
+  paymentMethod: PaymentMethod;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsInt()
+  type?: PaymentType;
 
   @IsOptional()
-  @IsString()
-  provider?: string;
+  @IsInt()
+  status?: PaymentRecordStatus;
+
+  @IsOptional()
+  @IsInt()
+  provider?: PaymentProvider;
 
   @IsOptional()
   @IsString()
@@ -50,24 +57,24 @@ export class CreatePaymentDto {
 
 export class UpdatePaymentDto {
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsInt()
+  status?: PaymentRecordStatus;
 
   @IsOptional()
   @IsString()
   notes?: string;
 
   @IsOptional()
-  @IsString()
-  paymentMethod?: string;
+  @IsInt()
+  paymentMethod?: PaymentMethod;
 
   @IsOptional()
   @IsNumber()
   amount?: number;
 
   @IsOptional()
-  @IsString()
-  type?: string;
+  @IsInt()
+  type?: PaymentType;
 
   @IsOptional()
   @IsString()
@@ -81,3 +88,6 @@ export class UpdatePaymentDto {
   @IsString()
   paidAt?: string;
 }
+
+export * from './pos-checkout.dto';
+

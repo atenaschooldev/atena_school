@@ -11,15 +11,20 @@ import {
   UserCheck,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
+import { BookingPaymentStatus, BOOKING_PAYMENT_STATUS_ID_TO_STRING } from "@atena/api-types";
 
 export interface StatusBadgeProps {
-  status: string;
+  status: string | number;
   className?: string;
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const { t } = useTranslation();
-  const normalized = (status || "").toLowerCase().trim();
+  const num = typeof status === "number" ? status : (!isNaN(Number(status)) && String(status).trim() !== "" ? Number(status) : null);
+  const normalized = (num !== null && num in BOOKING_PAYMENT_STATUS_ID_TO_STRING
+    ? BOOKING_PAYMENT_STATUS_ID_TO_STRING[num as BookingPaymentStatus]
+    : String(status || "")
+  ).toLowerCase().trim();
 
   switch (normalized) {
     case "completed":

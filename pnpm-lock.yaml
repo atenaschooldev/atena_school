@@ -24,6 +24,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@atena/api-types':
+        specifier: workspace:*
+        version: link:../../packages/api-types
       '@atena/utils':
         specifier: workspace:*
         version: link:../../packages/utils

@@ -12,7 +12,7 @@ export abstract class SchedulesRepository {
     courseId: string;
     teacherId: string;
     room?: string | null;
-    status?: string;
+    status?: number | string;
     startDate: Date;
     endDate: Date;
     lessonType?: string;
@@ -22,7 +22,7 @@ export abstract class SchedulesRepository {
     courseId: string;
     teacherId: string;
     room?: string | null;
-    status?: string;
+    status?: number | string;
     startDate: Date;
     endDate: Date;
     lessonType?: string;

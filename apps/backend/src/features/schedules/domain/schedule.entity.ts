@@ -3,7 +3,7 @@ export class ScheduleEntity {
   courseId: string;
   teacherId: string;
   room: string | null;
-  status: string;
+  status: number | string;
   startDate: Date;
   endDate: Date;
   lessonType: string;

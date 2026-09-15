@@ -16,13 +16,18 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import {
+  PaymentType,
+  PaymentRecordStatus,
+  PAYMENT_TYPE_DICTIONARY,
+} from "@atena/api-types";
 import type { Payment } from "../types";
 
 export interface GetPaymentsTableColumnsProps {
   onViewDetail: (p: Payment) => void;
   onEdit: (p: Payment) => void;
   onDelete: (id: string) => void;
-  onStatusChange?: (id: string, status: string) => void;
+  onStatusChange?: (id: string, status: number) => void;
   t: (k: string) => string;
 }
 
@@ -100,25 +105,26 @@ export function getPaymentsTableColumns({
       accessorKey: "type",
       header: t("payments.paymentType"),
       cell: ({ row }) => {
-        const type = row.original.type;
+        const type = Number(row.original.type);
         const desc = row.original.description;
-        if (type === "registration_fee") {
+        if (type === PaymentType.REGISTRATION_FEE) {
           return (
             <Badge variant="outline" className="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30">
               {t("payments.typeMembership")}
             </Badge>
           );
         }
-        if (type === "lesson_fee") {
+        if (type === PaymentType.SINGLE_LESSON) {
           return (
             <Badge variant="outline" className="text-purple-600 bg-purple-50 dark:bg-purple-950/20 border-purple-500/30">
               {t("courses.individual")}
             </Badge>
           );
         }
+        const label = PAYMENT_TYPE_DICTIONARY[type as PaymentType]?.label_it || PAYMENT_TYPE_DICTIONARY[type as PaymentType]?.it || desc || t("payments.typeTuition");
         return (
           <div className="flex flex-col text-xs">
-            <span className="font-medium text-foreground">{desc || t("payments.typeTuition")}</span>
+            <span className="font-medium text-foreground">{label}</span>
           </div>
         );
       },
@@ -126,7 +132,7 @@ export function getPaymentsTableColumns({
     {
       accessorKey: "payment_method",
       header: t("payments.filterMethod"),
-      cell: ({ row }) => <PaymentMethodBadge method={row.original.payment_method} />,
+      cell: ({ row }) => <PaymentMethodBadge method={row.original.payment_method ?? row.original.paymentMethod} />,
     },
     {
       accessorKey: "status",
@@ -149,29 +155,58 @@ export function getPaymentsTableColumns({
       ),
       cell: ({ row }) => {
         const payment = row.original;
-        const norm = (payment.status || "pending").toLowerCase().trim();
-        const currentVal = norm === "paid" || norm === "succeeded" ? "completed" : norm;
+        const statusNum = Number(payment.status);
+        const currentVal = String(statusNum);
+
+        const renderBadge = (st: number) => {
+          if (st === PaymentRecordStatus.SUCCEEDED) {
+            return (
+              <Badge variant="secondary" className="text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-semibold gap-1.5 border border-emerald-500/30">
+                {t("common.paid")}
+              </Badge>
+            );
+          }
+          if (st === PaymentRecordStatus.FAILED) {
+            return (
+              <Badge variant="secondary" className="text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20 font-semibold gap-1.5 border border-rose-500/30">
+                {t("common.failed")}
+              </Badge>
+            );
+          }
+          if (st === PaymentRecordStatus.REFUNDED) {
+            return (
+              <Badge variant="secondary" className="text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800 font-semibold gap-1.5 border border-slate-300">
+                {t("common.refunded")}
+              </Badge>
+            );
+          }
+          return (
+            <Badge variant="outline" className="text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-semibold gap-1.5 border border-amber-500/30">
+              {t("common.pending")}
+            </Badge>
+          );
+        };
 
         if (!onStatusChange) {
-          return <StatusBadge status={currentVal} />;
+          return renderBadge(statusNum);
         }
 
         return (
-          <Select value={currentVal} onValueChange={(val) => onStatusChange(payment.id, val)}>
+          <Select value={currentVal} onValueChange={(val) => onStatusChange(payment.id, Number(val))}>
             <SelectTrigger className="h-8 w-auto border-0 p-0 shadow-none bg-transparent hover:opacity-80 focus:ring-0 cursor-pointer">
-              <StatusBadge status={currentVal} />
+              {renderBadge(statusNum)}
             </SelectTrigger>
             <SelectContent side="bottom" align="start">
-              <SelectItem value="completed" className="text-xs cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
+              <SelectItem value={String(PaymentRecordStatus.SUCCEEDED)} className="text-xs cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
                 {t("common.paid")}
               </SelectItem>
-              <SelectItem value="pending" className="text-xs cursor-pointer font-semibold text-indigo-600 dark:text-indigo-400">
+              <SelectItem value={String(PaymentRecordStatus.PENDING)} className="text-xs cursor-pointer font-semibold text-amber-600 dark:text-amber-400">
                 {t("common.pending")}
               </SelectItem>
-              <SelectItem value="failed" className="text-xs cursor-pointer font-semibold text-rose-600 dark:text-rose-400">
+              <SelectItem value={String(PaymentRecordStatus.FAILED)} className="text-xs cursor-pointer font-semibold text-rose-600 dark:text-rose-400">
                 {t("common.failed")}
               </SelectItem>
-              <SelectItem value="refunded" className="text-xs cursor-pointer font-semibold text-slate-600 dark:text-slate-400">
+              <SelectItem value={String(PaymentRecordStatus.REFUNDED)} className="text-xs cursor-pointer font-semibold text-slate-600 dark:text-slate-400">
                 {t("common.refunded")}
               </SelectItem>
             </SelectContent>

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../core/prisma/prisma.service';
+import { StudentStatus, LanguageLevel, parseStudentStatus, parseLanguageLevel } from '@atena/api-types';
 
 export interface UpdateStudentDto {
   fullName?: string;
@@ -9,8 +10,12 @@ export interface UpdateStudentDto {
   phone?: string;
   taxCode?: string;
   birthDate?: string;
-  languageLevel?: string;
+  languageLevel?: LanguageLevel | number | string;
+  status?: StudentStatus | number | string;
   annualFeePaid?: boolean;
+  notes?: string;
+  sdiCode?: string;
+  pecEmail?: string;
 }
 
 @Injectable()
@@ -20,7 +25,8 @@ export class StudentsService {
   async findAll(filters?: {
     search?: string;
     annualFeePaid?: boolean;
-    languageLevel?: string;
+    languageLevel?: LanguageLevel | number | string;
+    status?: StudentStatus | number | string;
     page?: number;
     limit?: number;
   }) {
@@ -33,8 +39,11 @@ export class StudentsService {
     if (filters?.annualFeePaid !== undefined) {
       where.annual_fee_paid = filters.annualFeePaid;
     }
-    if (filters?.languageLevel) {
-      where.language_level = filters.languageLevel;
+    if (filters?.languageLevel !== undefined && filters.languageLevel !== null && filters.languageLevel !== '') {
+      where.language_level = parseLanguageLevel(filters.languageLevel);
+    }
+    if (filters?.status !== undefined && filters.status !== null && filters.status !== '') {
+      where.status = parseStudentStatus(filters.status);
     }
     if (search) {
       where.OR = [
@@ -102,7 +111,8 @@ export class StudentsService {
     if (dto.phone !== undefined) updateData.phone = dto.phone;
     if (dto.taxCode !== undefined) updateData.tax_code = dto.taxCode;
     if (dto.birthDate !== undefined) updateData.birth_date = dto.birthDate ? new Date(dto.birthDate) : null;
-    if (dto.languageLevel !== undefined) updateData.language_level = dto.languageLevel;
+    if (dto.languageLevel !== undefined) updateData.language_level = parseLanguageLevel(dto.languageLevel);
+    if (dto.status !== undefined) updateData.status = parseStudentStatus(dto.status);
     if (dto.annualFeePaid !== undefined) {
       updateData.annual_fee_paid = dto.annualFeePaid;
       if (dto.annualFeePaid) updateData.annual_fee_paid_at = new Date();
