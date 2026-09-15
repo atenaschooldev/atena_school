@@ -1679,7 +1679,7 @@ export function renderDictionaryHtml(data: any): string {
                 <div class="enum-card-header-left">
                   <span class="column-name-badge">
                     <span class="column-dot"></span>
-                    \${t.columnPrefix} <code>\${colData.column}</code>
+                    <code>\${colData.column}</code>
                   </span>
                   <span class="enum-type-badge">\${colData.name}</span>
                 </div>
