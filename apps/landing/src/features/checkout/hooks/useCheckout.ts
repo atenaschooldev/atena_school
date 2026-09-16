@@ -200,6 +200,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const feeCacheRef = useRef<Map<string, boolean>>(new Map());
 
+  const studentTaxCodesKey = (studentsList || [])
+    .map((s) => (s.taxCode || "").trim().toUpperCase())
+    .join(",");
+
   // Check fee status for each student in studentsList (when isForChild is true)
   useEffect(() => {
     if (!watchedIsForChild) return;
@@ -246,7 +250,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     return () => {
       timers.forEach((t) => clearTimeout(t));
     };
-  }, [studentsList, watchedIsForChild]);
+  }, [studentTaxCodesKey, watchedIsForChild]);
 
   // Single purchaser fee check (when isForChild is false)
   useEffect(() => {
