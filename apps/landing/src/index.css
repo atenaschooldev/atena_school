@@ -77,6 +77,15 @@
     font-family: var(--font-serif);
     letter-spacing: 0.02em;
   }
+
+  /* Prevent mobile Safari / WebKit auto-zoom on input focus */
+  @media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer utilities {

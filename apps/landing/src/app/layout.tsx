@@ -6,6 +6,13 @@ import CookieBanner from '@/components/CookieBanner';
 import ScrollToTop from '@/components/ScrollToTop';
 import '@/index.css';
 import { Nunito } from 'next/font/google';
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 const nunito = Nunito({
   subsets: ['latin', 'latin-ext', 'cyrillic'],

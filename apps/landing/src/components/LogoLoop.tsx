@@ -115,6 +115,22 @@ const useAnimationLoop = (
   const velocityRef = useRef<number>(0);
 
   useEffect(() => {
+    const handleResetTime = () => {
+      lastTimestampRef.current = null;
+    };
+
+    window.addEventListener('focus', handleResetTime);
+    window.addEventListener('pageshow', handleResetTime);
+    document.addEventListener('visibilitychange', handleResetTime);
+
+    return () => {
+      window.removeEventListener('focus', handleResetTime);
+      window.removeEventListener('pageshow', handleResetTime);
+      document.removeEventListener('visibilitychange', handleResetTime);
+    };
+  }, []);
+
+  useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
@@ -133,7 +149,9 @@ const useAnimationLoop = (
         lastTimestampRef.current = timestamp;
       }
 
-      const deltaTime = Math.max(0, timestamp - lastTimestampRef.current) / 1000;
+      // Clamp deltaTime to max 100ms to prevent jumping/freezing when switching tabs
+      const rawDelta = (timestamp - lastTimestampRef.current) / 1000;
+      const deltaTime = Math.min(Math.max(0, rawDelta), 0.1);
       lastTimestampRef.current = timestamp;
 
       const target = isHovered && hoverSpeed !== undefined ? hoverSpeed : targetVelocity;
@@ -270,12 +288,45 @@ export const LogoLoop = memo(
       [isVertical, fadeOut, scaleOnHover, className]
     );
 
-    const handleMouseEnter = useCallback(() => {
-      if (effectiveHoverSpeed !== undefined) setIsHovered(true);
-    }, [effectiveHoverSpeed]);
-    const handleMouseLeave = useCallback(() => {
-      if (effectiveHoverSpeed !== undefined) setIsHovered(false);
-    }, [effectiveHoverSpeed]);
+    useEffect(() => {
+      const resetHover = () => setIsHovered(false);
+      window.addEventListener('blur', resetHover);
+      window.addEventListener('focus', resetHover);
+      window.addEventListener('pageshow', resetHover);
+      const handleVisibility = () => {
+        if (!document.hidden) resetHover();
+      };
+      document.addEventListener('visibilitychange', handleVisibility);
+
+      return () => {
+        window.removeEventListener('blur', resetHover);
+        window.removeEventListener('focus', resetHover);
+        window.removeEventListener('pageshow', resetHover);
+        document.removeEventListener('visibilitychange', handleVisibility);
+      };
+    }, []);
+
+    const handlePointerEnter = useCallback(
+      (e: React.PointerEvent) => {
+        if (e.pointerType !== 'touch' && effectiveHoverSpeed !== undefined) {
+          setIsHovered(true);
+        }
+      },
+      [effectiveHoverSpeed]
+    );
+
+    const handlePointerLeave = useCallback(
+      (e: React.PointerEvent) => {
+        if (e.pointerType !== 'touch' && effectiveHoverSpeed !== undefined) {
+          setIsHovered(false);
+        }
+      },
+      [effectiveHoverSpeed]
+    );
+
+    const handleTouchEnd = useCallback(() => {
+      setIsHovered(false);
+    }, []);
 
     const renderLogoItem = useCallback(
       (item: LogoItem, key: React.Key) => {
@@ -313,6 +364,8 @@ export const LogoLoop = memo(
             aria-label={itemAriaLabel || 'logo link'}
             target="_blank"
             rel="noreferrer noopener"
+            onClick={() => setIsHovered(false)}
+            onTouchEnd={() => setIsHovered(false)}
           >
             {content}
           </a>
@@ -359,7 +412,14 @@ export const LogoLoop = memo(
 
     return (
       <div ref={containerRef} className={rootClassName} style={containerStyle} role="region" aria-label={ariaLabel}>
-        <div className="logoloop__track" ref={trackRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+        <div
+          className="logoloop__track"
+          ref={trackRef}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
+        >
           {logoLists}
         </div>
       </div>
