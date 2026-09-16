@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await submitContact(parsed.data as any);
+    const result = await submitContact(parsed.data);
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json(

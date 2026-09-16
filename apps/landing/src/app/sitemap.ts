@@ -6,52 +6,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = env.NEXT_PUBLIC_SITE_URL;
   const supabase = createClient();
 
-  // Static routes
-  const staticRoutes = ['', '/corsi', '/carrello', '/blog'];
+  const entries: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
+    { url: `${baseUrl}/corsi`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+  ];
 
-  const entries: MetadataRoute.Sitemap = [];
-
-  // Add static routes
-  staticRoutes.forEach(route => {
-    entries.push({
-      url: `${baseUrl}${route}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: route === '' ? 1 : 0.8,
-    });
-  });
-
-  // Fetch dynamic courses
+  // Dynamic course pages
   const { data: courses } = await supabase
     .from('courses')
-    .select('id, slug, name')
+    .select('id, slug')
     .in('status', ['active', 'published']);
 
   if (courses) {
     (courses as any[]).forEach(course => {
-      const courseSlug = course.slug || course.id;
       entries.push({
-        url: `${baseUrl}/corsi/${courseSlug}`,
+        url: `${baseUrl}/corsi/${course.slug || course.id}`,
         lastModified: new Date(),
         changeFrequency: 'weekly',
         priority: 0.8,
-      });
-    });
-  }
-
-  // Fetch dynamic blog posts
-  const { data: posts } = await supabase
-    .from('blog_posts')
-    .select('slug, published_at')
-    .eq('is_active', true);
-
-  if (posts) {
-    (posts as any[]).forEach(post => {
-      entries.push({
-        url: `${baseUrl}/blog/${post.slug}`,
-        lastModified: new Date(post.published_at || new Date()),
-        changeFrequency: 'monthly',
-        priority: 0.6,
       });
     });
   }

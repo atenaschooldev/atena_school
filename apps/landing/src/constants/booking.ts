@@ -45,6 +45,7 @@ export const SCHEDULE_TYPE = {
 export const ACADEMIC_YEAR = {
   CURRENT: "2026/2027",
   NEXT: "2027/2028",
+  EXPIRY_DATE: "2027-08-31T23:59:59.000Z",
 } as const;
 
 export const MEMBERSHIP_STATUS = {

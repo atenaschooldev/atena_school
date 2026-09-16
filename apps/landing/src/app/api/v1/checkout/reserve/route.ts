@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await createReservation(parsed.data as any);
+    const result = await createReservation(parsed.data);
     return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(

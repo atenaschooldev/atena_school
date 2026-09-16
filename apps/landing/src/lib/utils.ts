@@ -22,7 +22,7 @@ export function getSessionId() {
   
   let sessionId = localStorage.getItem("atenas_session_id");
   if (!sessionId) {
-    sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    sessionId = crypto.randomUUID();
     localStorage.setItem("atenas_session_id", sessionId);
   }
   return sessionId;

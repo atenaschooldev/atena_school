@@ -176,26 +176,30 @@ export const getTeachers = unstable_cache(
 
 import { getPublicCourses, getItem } from './server/checkout-service';
 
-export async function getCourses() {
-  try {
-    const res = await getPublicCourses();
-    if (res.success && res.courses) {
-      return res.courses.map((c: SupabaseCourseRow) => ({
-        ...c,
-        slug: (c.slug as string) || slugify(c.name || ''),
-        title_it: c.name || '',
-        title_en: c.name || '',
-        description_it: c.description || '',
-        description_en: c.description || '',
-        price: Number(c.price) || 0,
-        price_eur: Number(c.price) || 0,
-      }));
+export const getCourses = unstable_cache(
+  async () => {
+    try {
+      const res = await getPublicCourses();
+      if (res.success && res.courses) {
+        return res.courses.map((c: SupabaseCourseRow) => ({
+          ...c,
+          slug: (c.slug as string) || slugify(c.name || ''),
+          title_it: c.name || '',
+          title_en: c.name || '',
+          description_it: c.description || '',
+          description_en: c.description || '',
+          price: Number(c.price) || 0,
+          price_eur: Number(c.price) || 0,
+        }));
+      }
+    } catch (bErr) {
+      console.error("getCourses error:", bErr);
     }
-  } catch (bErr) {
-    console.error("getCourses error:", bErr);
-  }
-  return [];
-}
+    return [];
+  },
+  ['courses-data'],
+  { tags: [CACHE_TAGS.COURSES], revalidate: CACHE_TTL }
+);
 
 export const getBlogPosts = unstable_cache(
   async () => {
@@ -205,27 +209,31 @@ export const getBlogPosts = unstable_cache(
   { tags: [CACHE_TAGS.BLOG], revalidate: CACHE_TTL }
 );
 
-export async function getSingleCourse(id: string) {
-  try {
-    const res = await getItem(id);
-    if (res.success && (res.item || res.course)) {
-      const c = (res.item || res.course) as unknown as CourseItem;
-      return {
-        ...c,
-        slug: (c.slug as string) || slugify(c.name || ''),
-        title_it: c.name || '',
-        title_en: c.name || '',
-        description_it: c.description || '',
-        description_en: c.description || '',
-        price: Number(c.price) || 0,
-        price_eur: Number(c.price) || 0,
-      };
+export const getSingleCourse = (id: string) => unstable_cache(
+  async () => {
+    try {
+      const res = await getItem(id);
+      if (res.success && (res.item || res.course)) {
+        const c = (res.item || res.course) as unknown as CourseItem;
+        return {
+          ...c,
+          slug: (c.slug as string) || slugify(c.name || ''),
+          title_it: c.name || '',
+          title_en: c.name || '',
+          description_it: c.description || '',
+          description_en: c.description || '',
+          price: Number(c.price) || 0,
+          price_eur: Number(c.price) || 0,
+        };
+      }
+    } catch (bErr) {
+      console.error("getSingleCourse error:", bErr);
     }
-  } catch (bErr) {
-    console.error("getSingleCourse error:", bErr);
-  }
-  return null;
-}
+    return null;
+  },
+  [`course-${id}`],
+  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: CACHE_TTL }
+)();
 
 export const getSingleBlogPost = (slug: string) => unstable_cache(
   async () => {

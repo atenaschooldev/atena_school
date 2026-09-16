@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { UserCircle } from "@phosphor-icons/react";
+import Image from "next/image";
 
 interface Profile {
   id: string;
@@ -40,10 +41,12 @@ export default function TeachersSection({ data }: TeachersSectionProps) {
             <div key={teacher.id || idx} className="bg-card rounded-2xl overflow-hidden shadow-lg border border-border group hover:-translate-y-2 transition-all duration-300">
               <div className="aspect-[4/3] bg-muted relative overflow-hidden flex items-center justify-center">
                 {teacher.avatar_url ? (
-                  <img 
-                    src={teacher.avatar_url} 
-                    alt={teacher.full_name || "Teacher"} 
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                  <Image
+                    src={teacher.avatar_url}
+                    alt={teacher.full_name || "Teacher"}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
                   />
                 ) : (
                   <UserCircle className="w-24 h-24 text-muted-foreground/30" />

@@ -1,6 +1,12 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { calculateLessonDates } from '@atena/utils';
+import { ACADEMIC_YEAR } from '@/constants/booking';
+import { getSupabaseAdmin } from './supabase-admin';
+import { checkFeeStatus, CheckFeeParams } from './fee-service';
+import { sendBookingNotificationEmails } from './email-service';
+export { checkFeeStatus, sendBookingNotificationEmails };
+export type { CheckFeeParams };
 import {
   BookingPaymentStatus,
   BookingStatus,
@@ -20,12 +26,6 @@ import {
   CourseScheduleType,
   CourseFormat,
 } from '@atena/api-types';
-
-export interface CheckFeeParams {
-  taxCode?: string;
-  email?: string;
-  phone?: string;
-}
 
 export interface StudentInfo {
   firstName: string;
@@ -78,84 +78,13 @@ export interface ContactFormParams {
   message?: string;
   messaggio?: string;
   interest?: string;
-  interesse?: string;
+  interesse?: string | null;
   courseInterest?: string;
-}
-
-function getSupabaseAdmin(): SupabaseClient {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    '';
-
-  if (!url || !serviceKey) {
-    throw new Error('Supabase configuration missing: SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
-  }
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_KEY) {
-    console.warn('Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to anon key. Some admin operations may be restricted by RLS.');
-  }
-
-  return createClient(url, serviceKey);
 }
 
 function getStripe(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY || '';
   return new Stripe(secretKey, { apiVersion: '2023-10-16' as any });
-}
-
-export async function checkFeeStatus(params: CheckFeeParams) {
-  const supabase = getSupabaseAdmin();
-  const rawTax = params.taxCode ? params.taxCode.trim().toUpperCase() : null;
-  // Strict sanitization to prevent PostgREST filter injection in .or() query
-  const cleanTax = rawTax ? rawTax.replace(/[^A-Z0-9]/gi, '') : null;
-
-  if (!cleanTax) {
-    return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
-  }
-
-  // 1. Check active annual memberships by Codice Fiscale
-  const { data: mem } = await supabase
-    .from('annual_memberships')
-    .select('id')
-    .ilike('tax_code', cleanTax)
-    .eq('academic_year', '2026/2027')
-    .eq('status', MembershipStatus.ACTIVE)
-    .maybeSingle();
-
-  if (mem) {
-    return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
-  }
-
-  // 2. Check student record by Codice Fiscale
-  const { data: st } = await supabase
-    .from('students')
-    .select('id')
-    .ilike('tax_code', cleanTax)
-    .eq('annual_fee_paid', true)
-    .maybeSingle();
-
-  if (st) {
-    return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
-  }
-
-  // 3. Check if fee is reserved in an existing booking by Codice Fiscale
-  const { data: pendingBooking } = await supabase
-    .from('bookings')
-    .select('id')
-    .or(`student_tax_code.ilike.${cleanTax},purchaser_tax_code.ilike.${cleanTax}`)
-    .gt('registration_fee', 0)
-    .limit(1)
-    .maybeSingle();
-
-  if (pendingBooking) {
-    return { success: true, annualFeePaid: true, userFound: true, feeReservedInBooking: true, requiresFee: false };
-  }
-
-  return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
 }
 
 export interface SupabaseCourseRow {
@@ -194,6 +123,26 @@ export interface SupabasePaymentRow {
   status: number;
   provider: number;
   provider_transaction_id?: string | null;
+  notes?: string | null;
+  created_at?: string;
+}
+
+export interface SupabaseBookingRow {
+  id: string;
+  course_id?: string | null;
+  course_name?: string | null;
+  purchaser_name?: string | null;
+  purchaser_email?: string | null;
+  student_name?: string | null;
+  student_email?: string | null;
+  student_tax_code?: string | null;
+  amount_paid?: number | null;
+  registration_fee?: number | null;
+  payment_status?: number | null;
+  payment_method?: number | null;
+  start_date?: string | null;
+  schedule_days?: number[] | null;
+  start_time?: string | null;
   notes?: string | null;
   created_at?: string;
 }
@@ -458,7 +407,7 @@ async function processStudentAndBookingLinks(params: {
             .from('annual_memberships')
             .select('id')
             .ilike('tax_code', sTaxCode)
-            .eq('academic_year', '2026/2027')
+            .eq('academic_year', ACADEMIC_YEAR.CURRENT)
             .maybeSingle();
           if (mData) existingMem = mData;
         } else if (studentId) {
@@ -466,7 +415,7 @@ async function processStudentAndBookingLinks(params: {
             .from('annual_memberships')
             .select('id')
             .eq('student_id', studentId)
-            .eq('academic_year', '2026/2027')
+            .eq('academic_year', ACADEMIC_YEAR.CURRENT)
             .maybeSingle();
           if (mData) existingMem = mData;
         }
@@ -494,13 +443,13 @@ async function processStudentAndBookingLinks(params: {
               tax_code: sTaxCode || null,
               email: memEmail,
               phone: memPhone,
-              academic_year: '2026/2027',
+              academic_year: ACADEMIC_YEAR.CURRENT,
               status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
               booking_id: bookingId,
               paid_at: new Date().toISOString(),
-              expires_at: '2027-08-31T23:59:59.000Z',
+              expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
             },
             { onConflict: 'booking_id' }
           );
@@ -584,131 +533,7 @@ async function recordPaymentLedger(
   }
 }
 
-export async function sendBookingNotificationEmails(params: {
-  booking: any;
-  course: any;
-  dto: CreateReservationParams;
-}) {
-  const { booking, course, dto } = params;
-  const courseName = course?.name || course?.title_it || 'Corso Atena School';
-  const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
-  const studentName = dto.isForChild
-    ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
-    : purchaserName;
-  const adminEmail = process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <prenotazioni@atenaschool.com>';
 
-  const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
-  const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
-  const totalEur = Number(booking.amount_paid || 0).toFixed(2);
-  const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
-
-  const clientSubject = isPaidOnline
-    ? `Conferma Pagamento e Iscrizione: ${courseName} - Atena School`
-    : `Conferma Prenotazione: ${courseName} - Atena School`;
-
-  const clientHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <style>
-          body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 24px; }
-          .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-          .header { text-align: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 24px; }
-          .logo { font-size: 22px; font-weight: 900; color: #043569; letter-spacing: 1px; }
-          .badge { display: inline-block; padding: 6px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; background: ${isPaidOnline ? '#ecfdf5; color: #047857;' : '#fffbeb; color: #b45309;'}; margin-top: 10px; }
-          .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 14px; }
-          .label { color: #64748b; font-weight: 500; }
-          .val { font-weight: 700; color: #0f172a; }
-          .total-box { background: #f8fafc; border-radius: 12px; padding: 16px; margin: 20px 0; }
-          .btn { display: block; text-align: center; background: #043569; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 24px; border-radius: 12px; margin-top: 24px; font-size: 14px; }
-          .footer { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 24px; }
-        </style>
-      </head>
-      <body>
-        <div class="card">
-          <div class="header">
-            <div class="logo">ATENA SCHOOL</div>
-            <div class="badge">${paymentStatusText}</div>
-          </div>
-          <h2 style="color: #043569; font-size: 18px; margin-bottom: 8px;">Grazie per la tua prenotazione, ${purchaserName}!</h2>
-          <p style="font-size: 14px; color: #475569; line-height: 1.5;">La tua richiesta per il corso <strong>${courseName}</strong> è stata registrata con successo.</p>
-          
-          <div class="total-box">
-            <div class="row"><span class="label">Studente:</span><span class="val">${studentName}</span></div>
-            <div class="row"><span class="label">Data inizio:</span><span class="val">${dto.date || 'Da concordare'}</span></div>
-            <div class="row"><span class="label">Orario:</span><span class="val">${dto.time || '16:00'}</span></div>
-            ${Number(regFeeEur) > 0 ? `<div class="row"><span class="label">Quota iscrizione annuale:</span><span class="val">€${regFeeEur}</span></div>` : ''}
-            <div class="row" style="border: none; font-size: 16px; margin-top: 8px;"><span class="label" style="font-weight: 800; color: #043569;">Totale:</span><span class="val" style="font-size: 18px; color: #f8861d;">€${totalEur}</span></div>
-          </div>
-
-          <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://atena-school-app.vercel.app'}" class="btn">Accedi al tuo Portale Studente</a>
-          
-          <div class="footer">
-            Atena School — Via Matteotti 11, 89022 Cittanova (RC)<br>
-            Per qualsiasi informazione o supporto: info@atenaschool.com
-          </div>
-        </div>
-      </body>
-    </html>
-  `;
-
-  const adminSubject = `[Nuova Prenotazione] ${courseName} - ${studentName} (${paymentStatusText})`;
-  const adminHtml = `
-    <div style="font-family: sans-serif; padding: 20px;">
-      <h2 style="color: #043569;">Nuova prenotazione ricevuta dal sito web</h2>
-      <p><strong>Corso:</strong> ${courseName}</p>
-      <p><strong>Acquirente:</strong> ${purchaserName} (<a href="mailto:${dto.email}">${dto.email}</a>, tel: ${dto.phone || 'N/D'})</p>
-      <p><strong>Codice Fiscale Acquirente:</strong> ${dto.purchaserTaxCode || 'N/D'}</p>
-      ${dto.isForChild ? `<p><strong>Studente (Figlio):</strong> ${studentName} (CF: ${dto.studentTaxCode || 'N/D'}, Nascita: ${dto.studentBirthDate || 'N/D'})</p>` : ''}
-      <p><strong>Importo:</strong> €${totalEur} (Quota annuale: €${regFeeEur})</p>
-      <p><strong>Modalità di pagamento:</strong> ${paymentStatusText}</p>
-      <p><strong>Data/Orario richiesto:</strong> ${dto.date || 'Da concordare'} ore ${dto.time || 'N/D'}</p>
-      ${dto.notes ? `<p><strong>Note cliente:</strong> ${dto.notes}</p>` : ''}
-      <p><strong>ID Prenotazione:</strong> ${booking.id}</p>
-    </div>
-  `;
-
-  if (resendApiKey) {
-    try {
-      await Promise.allSettled([
-        fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: [dto.email],
-            subject: clientSubject,
-            html: clientHtml,
-          }),
-        }),
-        fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: [adminEmail],
-            subject: adminSubject,
-            html: adminHtml,
-          }),
-        }),
-      ]);
-      console.log(`[EMAIL DISPATCHED]: Confirmation sent to ${dto.email} and admin ${adminEmail}`);
-    } catch (err) {
-      console.error('[EMAIL DISPATCH ERROR]:', err);
-    }
-  } else {
-    console.log(`[EMAIL NOTIFICATION]: Booking ${booking.id} created for ${dto.email} -> ${adminEmail}`);
-  }
-}
 
 export async function createReservation(dto: CreateReservationParams) {
   const supabase = getSupabaseAdmin();

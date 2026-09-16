@@ -3,6 +3,7 @@
 import { createApiClient } from "@atena/api-client";
 import { checkFeeSchema, createReservationSchema } from "@atena/validators";
 import type { CreateReservationParams } from "@/lib/server/checkout-service";
+import { ACADEMIC_YEAR } from "@/constants/booking";
 
 const getApi = () => {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
@@ -38,7 +39,7 @@ export async function checkRegistrationFeeStatusAction(params: {
     return {
       success: false,
       annualFeePaid: false,
-      academicYear: "2026/2027",
+      academicYear: ACADEMIC_YEAR.CURRENT,
       requiresFee: true,
       error: "Codice Fiscale non valido",
     };
@@ -56,7 +57,7 @@ export async function checkRegistrationFeeStatusAction(params: {
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Errore di connessione";
     console.error("checkRegistrationFeeStatusAction error:", err);
-    return { success: false, annualFeePaid: false, academicYear: "2026/2027", requiresFee: true, error: errorMsg };
+    return { success: false, annualFeePaid: false, academicYear: ACADEMIC_YEAR.CURRENT, requiresFee: true, error: errorMsg };
   }
 }
 

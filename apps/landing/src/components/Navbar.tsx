@@ -4,15 +4,11 @@ import Image from "next/image";
 import logo from "@/assets/logo.webp";
 import { useEffect, useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ShoppingCart, User, SignOut, UserCircle, InstagramLogo, FacebookLogo, House, Users, GraduationCap, Newspaper, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { InstagramLogo, FacebookLogo, House, Users, GraduationCap, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
-import { getCartCountAction, getCurrentUserAction } from "@/app/actions/booking";
-import { getSessionId, mergeGuestBookings } from "@/lib/utils";
+import { getCurrentUserAction } from "@/app/actions/booking";
 import { env } from "@/config/env";
 
 const Navbar = () => {
@@ -25,7 +21,6 @@ const Navbar = () => {
   const isHome = pathname === "/";
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [cartCount, setCartCount] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
@@ -60,14 +55,6 @@ const Navbar = () => {
     };
   }, [isHome]);
 
-  const fetchCartCount = async () => {
-    const sid = getSessionId();
-    const res = await getCartCountAction(sid);
-    if (res.success) {
-      setCartCount(res.count);
-    }
-  };
-
   // Lock body scroll when mobile menu is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (open) {
@@ -93,14 +80,6 @@ const Navbar = () => {
 
   useEffect(() => {
     setMounted(true);
-    fetchCartCount();
-
-    // Listen for cart updates
-    window.addEventListener("cartUpdated", fetchCartCount);
-
-    return () => {
-      window.removeEventListener("cartUpdated", fetchCartCount);
-    };
   }, []);
 
   const handleLinkClick = (href: string) => {
@@ -210,19 +189,6 @@ const Navbar = () => {
             ) : (
               /* Full actions */
               <>
-                <Link href="/carrello" className="relative group">
-                  <div className={`p-2 rounded-full transition-all duration-300 hover:scale-110 active:scale-90 ${isLightHeader
-                      ? "text-white hover:text-[#FAA904] hover:bg-white/10"
-                      : "text-gray-600 hover:text-primary hover:bg-primary/10"
-                    }`}>
-                    <ShoppingCart className="w-5 h-5 cursor-pointer" />
-                  </div>
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
                 <a
                   href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
                   target="_blank"
@@ -382,23 +348,6 @@ const Navbar = () => {
                     </Link>
                   );
                 })}
-
-                {/* Shopping Cart */}
-                <Link
-                  href="/carrello"
-                  className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
-                  onClick={() => setOpen(false)}
-                >
-                  <div className="flex items-center gap-4">
-                    <ShoppingCart className="w-5 h-5 text-[#FAA904]" weight="bold" />
-                    <span>Carrello</span>
-                  </div>
-                  {cartCount > 0 && (
-                    <span className="bg-[#FAA904] text-white text-xs font-black h-5 w-5 rounded-full flex items-center justify-center animate-in zoom-in bounce-in">
-                      {cartCount}
-                    </span>
-                  )}
-                </Link>
               </div>
 
               {/* Bottom Section */}
