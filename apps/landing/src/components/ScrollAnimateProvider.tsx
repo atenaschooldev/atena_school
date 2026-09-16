@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { ReactLenis } from "lenis/react";
+import { ReactLenis, useLenis } from "lenis/react";
 import type { LenisRef } from "lenis/react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -12,6 +12,13 @@ gsap.registerPlugin(ScrollTrigger);
 // Ignore mobile address bar resize height triggers
 ScrollTrigger.config({ ignoreMobileResize: true });
 
+function LenisScrollTriggerSync() {
+  useLenis(() => {
+    ScrollTrigger.update();
+  });
+  return null;
+}
+
 export default function ScrollAnimateProvider({
   children,
 }: {
@@ -19,18 +26,9 @@ export default function ScrollAnimateProvider({
 }) {
   const lenisRef = useRef<LenisRef>(null);
   const pathname = usePathname();
-  const [enabled, setEnabled] = useState(false);
   const isHistoryNavigation = useRef(false);
 
   useEffect(() => {
-    // Only enable Lenis smooth scrolling on desktop devices with fine pointers and motion enabled
-    const isMobileDevice = window.matchMedia("(max-width: 1023px), (pointer: coarse)").matches;
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (!isMobileDevice && !prefersReducedMotion) {
-      setEnabled(true);
-    }
-
     // Configure manual scroll restoration to avoid browser jumps
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -107,11 +105,9 @@ export default function ScrollAnimateProvider({
           const restoreScroll = () => {
             if (lenisRef.current?.lenis) {
               lenisRef.current.lenis.scrollTo(savedY, { immediate: true });
+            } else {
+              window.scrollTo(0, savedY);
             }
-            const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-            document.documentElement.style.scrollBehavior = "auto";
-            window.scrollTo(0, savedY);
-            document.documentElement.style.scrollBehavior = originalScrollBehavior;
           };
 
           // Apply at multiple lifecycle stages to ensure GSAP and layout render without jumping
@@ -132,35 +128,11 @@ export default function ScrollAnimateProvider({
       // Normal forward navigation to new page -> start at top
       if (lenisRef.current?.lenis) {
         lenisRef.current.lenis.scrollTo(0, { immediate: true });
+      } else {
+        window.scrollTo(0, 0);
       }
-      const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-      document.documentElement.style.scrollBehavior = "auto";
-      window.scrollTo(0, 0);
-      document.documentElement.style.scrollBehavior = originalScrollBehavior;
     }
   }, [pathname]);
-
-  // Synchronize Lenis smooth scroll ticker with GSAP ticker & ScrollTrigger
-  useEffect(() => {
-    if (!enabled) return;
-
-    function update(time: number) {
-      lenisRef.current?.lenis?.raf(time * 1000);
-    }
-
-    gsap.ticker.add(update);
-
-    // Sync ScrollTrigger updates with Lenis scroll events
-    const lenisInstance = lenisRef.current?.lenis;
-    if (lenisInstance) {
-      lenisInstance.on("scroll", ScrollTrigger.update);
-    }
-
-    return () => {
-      gsap.ticker.remove(update);
-      lenisInstance?.off("scroll", ScrollTrigger.update);
-    };
-  }, [enabled]);
 
   // GSAP Responsive MatchMedia & Context Setup
   useEffect(() => {
@@ -252,26 +224,24 @@ export default function ScrollAnimateProvider({
 
     return () => {
       clearTimeout(timer);
-      ctx.revert(); // GSAP Context Revert cleanly cleans up all matchMedia and ScrollTrigger instances
+      ctx.revert();
     };
   }, [pathname]);
 
-  if (enabled) {
-    return (
-      <ReactLenis
-        root
-        ref={lenisRef}
-        options={{
-          lerp: 0.1,
-          duration: 1.2,
-          smoothWheel: true,
-          autoRaf: false, // Driven via GSAP ticker
-        }}
-      >
-        {children}
-      </ReactLenis>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <ReactLenis
+      root
+      ref={lenisRef}
+      options={{
+        lerp: 0.08,
+        duration: 1.2,
+        smoothWheel: true,
+        syncTouch: false,
+      }}
+    >
+      <LenisScrollTriggerSync />
+      {children}
+    </ReactLenis>
+  );
 }
+
