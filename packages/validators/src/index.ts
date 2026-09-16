@@ -189,8 +189,8 @@ const reservationBaseObject = z.object({
   studentPhone: optionalPhone("Numero di telefono dello studente non valido"),
   studentBirthDate: z
     .string()
-    .min(1, "La data di nascita è obbligatoria")
-    .refine(isValidBirthDate, {
+    .optional()
+    .refine((v) => !v || v.trim() === "" || isValidBirthDate(v), {
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),
   studentTaxCode: optionalCodiceFiscale("Codice Fiscale dello studente non valido"),

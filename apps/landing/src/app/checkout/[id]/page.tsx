@@ -3,6 +3,7 @@
 import React, { Suspense, use, useState, useEffect } from "react";
 import { format } from "date-fns";
 import { it as dateLocale } from "date-fns/locale";
+import { toast } from "sonner";
 import { useCheckout } from "@/features/checkout/hooks/useCheckout";
 import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
 import {
@@ -108,6 +109,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     }
   };
 
+  const handleInvalid = (validationErrors: any) => {
+    console.warn("Validation errors on submit:", validationErrors);
+    toast.error("Compila tutti i campi obbligatori contrassegnati con *");
+  };
+
   return (
     <main className="bg-slate-100 min-h-screen pt-20 sm:pt-24 pb-28 lg:pb-8 font-sans flex flex-col justify-center">
       <div className="max-w-6xl mx-auto w-full px-3 sm:px-6 lg:px-8 py-3 sm:py-4">
@@ -130,7 +136,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
         {/* Main Form Grid — Mobile Sticky Bottom Bar MUST be inside form tag to submit reliably */}
         <form
           id="checkout-form"
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, handleInvalid)}
           className="grid grid-cols-1 lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] gap-5 items-start"
         >
           {/* LEFT FORM CARD */}
