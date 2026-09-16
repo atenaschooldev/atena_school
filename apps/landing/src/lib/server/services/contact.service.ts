@@ -25,5 +25,17 @@ export async function submitContact(dto: ContactFormParams) {
     throw new Error(`Impossibile inviare il messaggio: ${error.message}`);
   }
 
+  // Asynchronously send notification email to school admin
+  import('../email-service').then(({ sendContactFormNotificationEmail }) => {
+    sendContactFormNotificationEmail({
+      firstName,
+      lastName,
+      email,
+      phone: phone || undefined,
+      interest: interest || undefined,
+      message,
+    }).catch((err) => console.warn('Async contact email notification error:', err));
+  });
+
   return { success: true, message: 'Messaggio inviato con successo' };
 }

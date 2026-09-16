@@ -108,3 +108,51 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
     console.error('[EMAIL DISPATCH UNEXPECTED ERROR]:', err);
   }
 }
+
+export async function sendContactFormNotificationEmail(params: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  interest?: string;
+  message: string;
+}): Promise<void> {
+  const { renderContactFormAdminEmail } = await import('./email-templates');
+  const adminEmail = process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
+  const resendApiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <info@atenaschool.com>';
+
+  const emailData = renderContactFormAdminEmail(params);
+
+  if (!resendApiKey) {
+    console.log(`[CONTACT EMAIL SKIPPED - NO RESEND API KEY]: From ${params.email} -> ${adminEmail}`);
+    return;
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: [adminEmail],
+        reply_to: params.email,
+        subject: emailData.subject,
+        html: emailData.html,
+      }),
+    });
+
+    if (response.ok) {
+      console.log(`[CONTACT EMAIL SUCCESS] Sent contact form notification to admin (${adminEmail})`);
+    } else {
+      const err = await response.text().catch(() => '');
+      console.error(`[CONTACT EMAIL ERROR] Status ${response.status}:`, err);
+    }
+  } catch (err) {
+    console.error('[CONTACT EMAIL NETWORK ERROR]:', err);
+  }
+}
+
