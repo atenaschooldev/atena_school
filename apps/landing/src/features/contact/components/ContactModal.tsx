@@ -22,7 +22,6 @@ import {
   Lock,
 } from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
-import { submitContactForm } from "@/app/actions/contact";
 import { contactFormSchema } from "@atena/validators";
 
 interface ContactModalProps {
@@ -162,7 +161,12 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
 
     setLoading(true);
     try {
-      const res = await submitContactForm(formData);
+      const response = await fetch("/api/v1/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const res = await response.json();
       if (res.success) {
         setSubmitted(true);
         setTimeout(() => {

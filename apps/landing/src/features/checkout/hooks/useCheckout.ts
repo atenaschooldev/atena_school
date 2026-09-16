@@ -15,14 +15,7 @@ import type { CourseItem, UserProfile } from "@atena/api-types";
 export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 
 export type BookingItem = CourseItem;
-import {
-  fetchCheckoutItemAction,
-  createOrUpdateReservationServerAction,
-  initiateStripePaymentAction,
-  getCurrentUserAction,
-  checkRegistrationFeeStatusAction,
-  fetchSystemSettingsAction,
-} from "@/app/actions/booking";
+import { getCurrentUserAction } from "@/app/actions/booking";
 
 export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
 
@@ -48,16 +41,6 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
-  const [studentsList, setStudentsList] = useState<Array<{
-    firstName: string;
-    lastName: string;
-    email?: string;
-    phone?: string;
-    taxCode: string;
-    birthDate?: string;
-  }>>([
-    { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
-  ]);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
     0: "initial",
   });
@@ -100,16 +83,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     async function initCheckout() {
       try {
         const [itemRes, settingsRes] = await Promise.all([
-          fetchCheckoutItemAction(id),
-          fetchSystemSettingsAction(),
+          fetch(`/api/v1/courses/${id}`).then((r) => r.json()).catch(() => ({ success: false })),
+          fetch('/api/v1/settings/payment-gateway').then((r) => r.json()).catch(() => ({ success: false })),
         ]);
 
-        if (itemRes.success && itemRes.item) {
-          setItem(itemRes.item as unknown as BookingItem);
+        if (itemRes.success && (itemRes.item || itemRes.course)) {
+          setItem((itemRes.item || itemRes.course) as unknown as BookingItem);
         }
 
-        if (settingsRes?.success) {
-          setStripeEnabled(Boolean(settingsRes.stripeEnabled));
+        if (settingsRes?.success && settingsRes.settings) {
+          setStripeEnabled(Boolean(settingsRes.settings.stripeEnabled));
         }
 
         const userRes = await getCurrentUserAction();
@@ -129,29 +112,36 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
 
           reset({
+            firstName,
+            lastName,
             email: currentUser.email || "",
-            phone: phone,
-            firstName: firstName,
-            lastName: lastName,
-            taxCode: taxCode,
-            purchaserTaxCode: taxCode,
+            phone,
+            taxCode,
+            isForChild: false,
+            studentFirstName: "",
+            studentLastName: "",
+            studentEmail: "",
+            studentPhone: "",
+            studentBirthDate: "",
             includeRegistrationFee: !hasPaidFee,
-            notes: "",
+            students: [],
           });
         }
-      } catch (err) {
-        console.error("Error initializing checkout:", err);
+      } catch (err: unknown) {
+        console.error("initCheckout error:", err);
       } finally {
         setLoading(false);
       }
     }
 
     initCheckout();
-  }, [id, type, reset]);
+  }, [id, reset]);
 
   const watchedTaxCode = useWatch({ control: formMethods.control, name: "taxCode" });
   const watchedPurchaserTaxCode = useWatch({ control: formMethods.control, name: "purchaserTaxCode" });
   const watchedIsForChild = useWatch({ control: formMethods.control, name: "isForChild" });
+  const watchedStudents = useWatch({ control: formMethods.control, name: "students" });
+  const studentsList = watchedStudents || [];
 
   // Sync taxCode when toggling isForChild
   useEffect(() => {
@@ -160,44 +150,29 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   }, [watchedIsForChild, watchedPurchaserTaxCode, watchedTaxCode, formMethods]);
 
-  // Keep form's `students` field in sync with studentsList
-  useEffect(() => {
-    if (watchedIsForChild) {
-      formMethods.setValue("students", studentsList as any, { shouldValidate: false });
-      if (studentsList.length > 0) {
-        formMethods.setValue("studentFirstName", studentsList[0].firstName);
-        formMethods.setValue("studentLastName", studentsList[0].lastName);
-        formMethods.setValue("taxCode", studentsList[0].taxCode);
-        formMethods.setValue("studentEmail", studentsList[0].email);
-        formMethods.setValue("studentPhone", studentsList[0].phone);
-        formMethods.setValue("studentBirthDate", studentsList[0].birthDate);
-      }
-    }
-  }, [studentsList, watchedIsForChild, formMethods]);
-
   const addStudent = () => {
-    setStudentsList((prev) => [
-      ...prev,
-      { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
+    const current = formMethods.getValues("students") || [];
+    formMethods.setValue("students", [
+      ...current,
+      { firstName: "", lastName: "", taxCode: "", email: "", phone: "", birthDate: "" },
     ]);
   };
 
   const removeStudent = (index: number) => {
-    if (studentsList.length <= 1) return;
-    setStudentsList((prev) => prev.filter((_, i) => i !== index));
-    setStudentFeeStatuses((prev) => {
-      const next = { ...prev };
-      delete next[index];
-      return next;
-    });
+    const current = formMethods.getValues("students") || [];
+    formMethods.setValue(
+      "students",
+      current.filter((_, i) => i !== index)
+    );
   };
 
   const updateStudent = (index: number, field: keyof StudentItemInput, value: string) => {
-    setStudentsList((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
+    const current = formMethods.getValues("students") || [];
+    const updated = [...current];
+    if (updated[index]) {
+      updated[index] = { ...updated[index], [field]: value };
+      formMethods.setValue("students", updated);
+    }
   };
 
   // Check fee status for each student in studentsList
@@ -214,10 +189,19 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "checking" }));
 
       const timer = setTimeout(async () => {
-        const res = await checkRegistrationFeeStatusAction({ taxCode: tax });
-        if (res.success && res.annualFeePaid) {
-          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "paid" }));
-        } else {
+        try {
+          const res = await fetch("/api/v1/checkout/check-fee", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ taxCode: tax }),
+          }).then((r) => r.json());
+
+          if (res.success && res.annualFeePaid) {
+            setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "paid" }));
+          } else {
+            setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
+          }
+        } catch {
           setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
         }
       }, 500);
@@ -240,15 +224,24 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setFeeCheckStatus("checking");
 
     const timer = setTimeout(async () => {
-      const res = await checkRegistrationFeeStatusAction({ taxCode: targetTaxCode });
-      if (res.success && res.annualFeePaid) {
-        setHasPaidAnnualFee(true);
-        setFeeCheckStatus("paid");
-        formMethods.setValue("includeRegistrationFee", false);
-      } else {
-        setHasPaidAnnualFee(false);
+      try {
+        const res = await fetch("/api/v1/checkout/check-fee", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taxCode: targetTaxCode }),
+        }).then((r) => r.json());
+
+        if (res.success && res.annualFeePaid) {
+          setHasPaidAnnualFee(true);
+          setFeeCheckStatus("paid");
+          formMethods.setValue("includeRegistrationFee", false);
+        } else {
+          setHasPaidAnnualFee(false);
+          setFeeCheckStatus("not_paid");
+          formMethods.setValue("includeRegistrationFee", true);
+        }
+      } catch {
         setFeeCheckStatus("not_paid");
-        formMethods.setValue("includeRegistrationFee", true);
       }
     }, 500);
 
@@ -262,6 +255,39 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
   const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
 
+  const buildReservationPayload = (values: CheckoutFormValues) => {
+    const isForChild = Boolean(values.isForChild);
+    const purchaserTaxCode = (values.purchaserTaxCode || values.taxCode || "").trim().toUpperCase();
+    const studentTaxCode = isForChild 
+      ? (values.taxCode || "").trim().toUpperCase() 
+      : purchaserTaxCode;
+
+    return {
+      itemId: id,
+      itemType: type,
+      date: effectiveDate,
+      time: effectiveTime,
+      firstName: (values.firstName || "").trim(),
+      lastName: (values.lastName || "").trim(),
+      email: (values.email || "").trim().toLowerCase(),
+      phone: (values.phone || "").trim(),
+      purchaserTaxCode: purchaserTaxCode,
+      isForChild: isForChild,
+      studentFirstName: isForChild ? (values.studentFirstName || "").trim() : undefined,
+      studentLastName: isForChild ? (values.studentLastName || "").trim() : undefined,
+      studentEmail: isForChild ? (values.studentEmail || "").trim().toLowerCase() : undefined,
+      studentPhone: isForChild ? (values.studentPhone || "").trim() : undefined,
+      studentTaxCode: studentTaxCode,
+      studentBirthDate: isForChild ? values.studentBirthDate : undefined,
+      students: isForChild && studentsList.length > 0 ? studentsList : undefined,
+      includeRegistrationFee: Boolean(values.includeRegistrationFee),
+      notes: values.notes || undefined,
+      needsCompanyInvoice: Boolean(values.needsCompanyInvoice),
+      sdiCode: values.sdiCode || undefined,
+      pecEmail: values.pecEmail || undefined,
+    };
+  };
+
   const handleBook = async (values: CheckoutFormValues) => {
     if (!item) {
       toast.error("Servizio non trovato");
@@ -270,19 +296,17 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     setSubmitting("book");
     try {
-      const sid = getSessionId();
-      const res = await createOrUpdateReservationServerAction({
-        type,
-        id,
-        dateParam: effectiveDate || "",
-        timeParam: effectiveTime || "",
-        values,
-        sessionId: sid,
-        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      const payload = buildReservationPayload(values);
+      const response = await fetch("/api/v1/checkout/reserve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!res.success) {
-        if ("details" in res && res.details && typeof res.details === "object") {
+      const res = await response.json();
+
+      if (!response.ok || !res.success) {
+        if (res.details && typeof res.details === "object") {
           Object.entries(res.details).forEach(([field, msgs]) => {
             if (Array.isArray(msgs) && msgs.length > 0) {
               formMethods.setError(field as keyof CheckoutFormValues, {
@@ -296,7 +320,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         return;
       }
 
-      const bookingId = ("bookingId" in res && res.bookingId) || ("booking" in res && (res.booking as { id?: string })?.id) || "";
+      const bookingId = res.bookingId || res.booking?.id || (res.bookingIds && res.bookingIds[0]) || "";
       toast.success("Prenotazione completata con successo!");
       router.push(`/checkout/success/${bookingId}`);
     } catch (err: unknown) {
@@ -315,18 +339,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     setSubmitting("pay");
     try {
-      const sid = getSessionId();
-      const res = await initiateStripePaymentAction({
-        type,
-        id,
-        dateParam: effectiveDate || "",
-        timeParam: effectiveTime || "",
-        values,
-        sessionId: sid,
-        origin: typeof window !== "undefined" ? window.location.origin : undefined,
+      const payload = buildReservationPayload(values);
+      const response = await fetch("/api/v1/checkout/stripe-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!res.success || !res.url) {
+      const res = await response.json();
+
+      if (!response.ok || !res.success || !res.url) {
         if (res.details && typeof res.details === "object") {
           Object.entries(res.details).forEach(([field, msgs]) => {
             if (Array.isArray(msgs) && msgs.length > 0) {
@@ -343,7 +365,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       window.location.href = res.url;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Errore durante l'avvio del pagamento";
+      const msg = err instanceof Error ? err.message : "Errore imprevisto";
       toast.error(msg);
     } finally {
       setSubmitting(false);

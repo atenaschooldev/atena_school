@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { submitContactForm } from "@/app/actions/contact";
 import { contactFormSchema } from "@atena/validators";
 import { getStoredUtmParams } from "@/lib/utm";
 import { trackEvent } from "@/lib/analytics";
@@ -111,13 +110,25 @@ export function useContactForm() {
     setLoading(true);
     try {
       const utm = getStoredUtmParams();
-      const res = await submitContactForm({
-        ...formData,
-        honeypot: formData.website_url,
-        utm,
+      if (formData.website_url) {
+        // Bot submission caught by honeypot
+        setSubmitted(true);
+        setTimeout(() => resetForm(), 5000);
+        return;
+      }
+
+      const res = await fetch("/api/v1/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          utm,
+        }),
       });
 
-      if (res.success) {
+      const data = await res.json();
+
+      if (data.success) {
         setSubmitted(true);
         trackEvent("generate_lead", {
           lead_type: "contact_form",
@@ -128,18 +139,18 @@ export function useContactForm() {
 
         setTimeout(() => {
           resetForm();
-        }, 8000);
+        }, 5000);
       } else {
-        if (res.details) {
+        if (data.details) {
           const errorsMap: FieldErrors = {};
-          for (const [key, msgs] of Object.entries(res.details)) {
+          for (const [key, msgs] of Object.entries(data.details)) {
             if (Array.isArray(msgs) && msgs.length > 0) {
               errorsMap[key as keyof ContactFormData] = msgs[0] as string;
             }
           }
           setFieldErrors(errorsMap);
         }
-        setError(res.error || "Qualcosa è andato storto. Riprova più tardi.");
+        setError(data.error || "Qualcosa è andato storto. Riprova più tardi.");
       }
     } catch (err: any) {
       console.error(err);
