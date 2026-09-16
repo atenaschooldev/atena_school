@@ -191,8 +191,10 @@ export function CheckoutStudentsList({
                       className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
                     />
                   </div>
-                  {studentErrors?.birthDate && (
-                    <p className="text-[10px] text-red-500 mt-1 font-semibold">{studentErrors.birthDate.message}</p>
+                  {(studentErrors?.birthDate || (idx === 0 && errors.studentBirthDate)) && (
+                    <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                      {studentErrors?.birthDate?.message || (idx === 0 && errors.studentBirthDate?.message)}
+                    </p>
                   )}
                 </div>
 

@@ -232,6 +232,7 @@ function applyReservationRefinements<T extends {
   students?: Array<StudentItemInput>;
   studentFirstName?: string;
   studentLastName?: string;
+  studentBirthDate?: string;
   purchaserTaxCode?: string;
   needsCompanyInvoice?: boolean;
   sdiCode?: string;
@@ -252,6 +253,13 @@ function applyReservationRefinements<T extends {
           code: z.ZodIssueCode.custom,
           path: ["studentLastName"],
           message: "Il cognome dello studente è obbligatorio (min. 2 caratteri)",
+        });
+      }
+      if (!data.studentBirthDate || !isValidBirthDate(data.studentBirthDate)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["studentBirthDate"],
+          message: "La data di nascita dello studente è obbligatoria",
         });
       }
     }

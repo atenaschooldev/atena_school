@@ -188,7 +188,13 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     const updated = [...current];
     if (updated[index]) {
       updated[index] = { ...updated[index], [field]: value };
-      formMethods.setValue("students", updated);
+      formMethods.setValue("students", updated, { shouldValidate: true });
+      if (index === 0) {
+        if (field === "firstName") formMethods.setValue("studentFirstName", value, { shouldValidate: true });
+        if (field === "lastName") formMethods.setValue("studentLastName", value, { shouldValidate: true });
+        if (field === "birthDate") formMethods.setValue("studentBirthDate", value, { shouldValidate: true });
+        if (field === "taxCode") formMethods.setValue("taxCode", value, { shouldValidate: true });
+      }
     }
   };
 
