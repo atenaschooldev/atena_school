@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
-import { checkoutFormSchema } from "@atena/validators";
+import { checkoutFormSchema, isValidCodiceFiscale } from "@atena/validators";
 import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
 
@@ -198,18 +198,31 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
   };
 
-  // Check fee status for each student in studentsList
+  const feeCacheRef = useRef<Map<string, boolean>>(new Map());
+
+  // Check fee status for each student in studentsList (when isForChild is true)
   useEffect(() => {
     if (!watchedIsForChild) return;
 
+    const timers: NodeJS.Timeout[] = [];
+
     studentsList.forEach((s, idx) => {
       const tax = (s.taxCode || "").trim().toUpperCase();
-      if (tax.length < 11) {
-        setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "initial" }));
+
+      // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
+      if (!isValidCodiceFiscale(tax)) {
+        setStudentFeeStatuses((prev) => (prev[idx] === "initial" ? prev : { ...prev, [idx]: "initial" }));
         return;
       }
 
-      setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "checking" }));
+      // Check cache first to avoid duplicate network calls
+      if (feeCacheRef.current.has(tax)) {
+        const isPaid = Boolean(feeCacheRef.current.get(tax));
+        setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? "paid" : "not_paid" }));
+        return;
+      }
+
+      setStudentFeeStatuses((prev) => (prev[idx] === "checking" ? prev : { ...prev, [idx]: "checking" }));
 
       const timer = setTimeout(async () => {
         try {
@@ -219,28 +232,40 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
             body: JSON.stringify({ taxCode: tax }),
           }).then((r) => r.json());
 
-          if (res.success && res.annualFeePaid) {
-            setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "paid" }));
-          } else {
-            setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
-          }
+          const isPaid = Boolean(res.success && res.annualFeePaid);
+          feeCacheRef.current.set(tax, isPaid);
+          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? "paid" : "not_paid" }));
         } catch {
           setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
         }
-      }, 500);
+      }, 400);
 
-      return () => clearTimeout(timer);
+      timers.push(timer);
     });
+
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
+    };
   }, [studentsList, watchedIsForChild]);
 
   // Single purchaser fee check (when isForChild is false)
   useEffect(() => {
     if (watchedIsForChild) return;
 
-    const targetTaxCode = (watchedTaxCode || watchedPurchaserTaxCode || "").trim();
+    const targetTaxCode = (watchedTaxCode || watchedPurchaserTaxCode || "").trim().toUpperCase();
 
-    if (!targetTaxCode || targetTaxCode.length < 11) {
+    // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
+    if (!isValidCodiceFiscale(targetTaxCode)) {
       setFeeCheckStatus("initial");
+      return;
+    }
+
+    // Check cache first to avoid duplicate network calls
+    if (feeCacheRef.current.has(targetTaxCode)) {
+      const isPaid = Boolean(feeCacheRef.current.get(targetTaxCode));
+      setHasPaidAnnualFee(isPaid);
+      setFeeCheckStatus(isPaid ? "paid" : "not_paid");
+      formMethods.setValue("includeRegistrationFee", !isPaid);
       return;
     }
 
@@ -254,19 +279,15 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           body: JSON.stringify({ taxCode: targetTaxCode }),
         }).then((r) => r.json());
 
-        if (res.success && res.annualFeePaid) {
-          setHasPaidAnnualFee(true);
-          setFeeCheckStatus("paid");
-          formMethods.setValue("includeRegistrationFee", false);
-        } else {
-          setHasPaidAnnualFee(false);
-          setFeeCheckStatus("not_paid");
-          formMethods.setValue("includeRegistrationFee", true);
-        }
+        const isPaid = Boolean(res.success && res.annualFeePaid);
+        feeCacheRef.current.set(targetTaxCode, isPaid);
+        setHasPaidAnnualFee(isPaid);
+        setFeeCheckStatus(isPaid ? "paid" : "not_paid");
+        formMethods.setValue("includeRegistrationFee", !isPaid);
       } catch {
         setFeeCheckStatus("not_paid");
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [watchedTaxCode, watchedPurchaserTaxCode, watchedIsForChild, formMethods]);
