@@ -79,6 +79,17 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const { reset } = formMethods;
   const initFetchedRef = useRef<string | null>(null);
+  const DRAFT_STORAGE_KEY = `atena_checkout_draft_${id}`;
+
+  const clearDraft = () => {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {
+        // Safe failover
+      }
+    }
+  };
 
   useEffect(() => {
     if (initFetchedRef.current === id) return;
@@ -99,6 +110,18 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setStripeEnabled(Boolean(settingsRes.settings.stripeEnabled));
         }
 
+        let draftValues: Partial<CheckoutFormValues> | null = null;
+        if (typeof window !== "undefined") {
+          try {
+            const raw = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+            if (raw) {
+              draftValues = JSON.parse(raw);
+            }
+          } catch {
+            draftValues = null;
+          }
+        }
+
         const supabase = createClient();
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (currentUser) {
@@ -106,13 +129,13 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           const meta = currentUser.user_metadata || {};
           const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
           const parts = fullName.split(" ");
-          const firstName = meta.first_name || parts[0] || "";
-          const lastName = meta.last_name || parts.slice(1).join(" ") || "";
-          const phone = meta.phone || currentUser.phone || "";
-          const taxCode = meta.tax_code || "";
+          const firstName = draftValues?.firstName || meta.first_name || parts[0] || "";
+          const lastName = draftValues?.lastName || meta.last_name || parts.slice(1).join(" ") || "";
+          const phone = draftValues?.phone || meta.phone || currentUser.phone || "";
+          const taxCode = draftValues?.taxCode || meta.tax_code || "";
 
           let hasPaidFee = false;
-          if (taxCode) {
+          if (taxCode && isValidCodiceFiscale(taxCode)) {
             try {
               const feeRes = await fetch("/api/landing/checkout/check-fee", {
                 method: "POST",
@@ -131,17 +154,51 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           reset({
             firstName,
             lastName,
-            email: currentUser.email || "",
+            email: draftValues?.email || currentUser.email || "",
             phone,
             taxCode,
-            isForChild: false,
-            studentFirstName: "",
-            studentLastName: "",
-            studentEmail: "",
-            studentPhone: "",
-            studentBirthDate: "",
-            includeRegistrationFee: !hasPaidFee,
-            students: [],
+            purchaserTaxCode: draftValues?.purchaserTaxCode || taxCode,
+            isForChild: draftValues?.isForChild ?? false,
+            studentFirstName: draftValues?.studentFirstName || "",
+            studentLastName: draftValues?.studentLastName || "",
+            studentEmail: draftValues?.studentEmail || "",
+            studentPhone: draftValues?.studentPhone || "",
+            studentBirthDate: draftValues?.studentBirthDate || "",
+            includeRegistrationFee: draftValues?.includeRegistrationFee ?? !hasPaidFee,
+            students: draftValues?.students && draftValues.students.length > 0
+              ? draftValues.students
+              : [{ firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" }],
+            needsCompanyInvoice: draftValues?.needsCompanyInvoice ?? false,
+            sdiCode: draftValues?.sdiCode || "",
+            pecEmail: draftValues?.pecEmail || "",
+            notes: draftValues?.notes || "",
+          });
+        } else if (draftValues) {
+          const targetTax = draftValues.isForChild
+            ? draftValues.purchaserTaxCode
+            : (draftValues.taxCode || draftValues.purchaserTaxCode);
+
+          let hasPaidFee = false;
+          if (targetTax && isValidCodiceFiscale(targetTax)) {
+            try {
+              const feeRes = await fetch("/api/landing/checkout/check-fee", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ taxCode: targetTax }),
+              }).then((r) => r.json());
+              hasPaidFee = Boolean(feeRes.annualFeePaid);
+            } catch {
+              hasPaidFee = false;
+            }
+          }
+
+          setHasPaidAnnualFee(hasPaidFee);
+          setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
+
+          reset({
+            ...formMethods.getValues(),
+            ...draftValues,
+            includeRegistrationFee: draftValues.includeRegistrationFee ?? !hasPaidFee,
           });
         }
       } catch (err: unknown) {
@@ -152,7 +209,42 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
 
     initCheckout();
-  }, [id]);
+  }, [id, DRAFT_STORAGE_KEY, formMethods]);
+
+  // BigTech pattern: debounced auto-save form draft to sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || !id) return;
+
+    let timer: NodeJS.Timeout;
+
+    const subscription = formMethods.watch((values) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const hasData = Boolean(
+          values.firstName ||
+          values.lastName ||
+          values.email ||
+          values.phone ||
+          values.taxCode ||
+          values.purchaserTaxCode ||
+          (values.students && values.students.some((s) => s?.firstName || s?.lastName || s?.taxCode || s?.email))
+        );
+
+        try {
+          if (hasData) {
+            sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
+          }
+        } catch {
+          // Safe failover
+        }
+      }, 300);
+    });
+
+    return () => {
+      clearTimeout(timer);
+      subscription.unsubscribe();
+    };
+  }, [formMethods, id, DRAFT_STORAGE_KEY]);
 
   const watchedTaxCode = useWatch({ control: formMethods.control, name: "taxCode" });
   const watchedPurchaserTaxCode = useWatch({ control: formMethods.control, name: "purchaserTaxCode" });
@@ -369,6 +461,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       }
 
       const bookingId = res.bookingId || res.booking?.id || (res.bookingIds && res.bookingIds[0]) || "";
+      clearDraft();
       toast.success("Prenotazione completata con successo!");
       router.push(`/checkout/success/${bookingId}`);
     } catch (err: unknown) {
@@ -411,6 +504,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         return;
       }
 
+      clearDraft();
       window.location.href = res.url;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Errore imprevisto";

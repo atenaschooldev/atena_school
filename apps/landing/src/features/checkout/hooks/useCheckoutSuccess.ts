@@ -48,6 +48,18 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       if (fetchedRef.current) return;
       fetchedRef.current = true;
 
+      if (typeof window !== "undefined") {
+        try {
+          Object.keys(sessionStorage).forEach((key) => {
+            if (key.startsWith("atena_checkout_draft_")) {
+              sessionStorage.removeItem(key);
+            }
+          });
+        } catch {
+          // Ignore
+        }
+      }
+
       if (sessionId) {
         // Stripe payment confirmation
         try {
