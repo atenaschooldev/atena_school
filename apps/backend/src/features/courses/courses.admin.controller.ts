@@ -13,7 +13,7 @@ import { CourseStatus } from '@atena/api-types';
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Controller('courses')
+@Controller('admin/courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 

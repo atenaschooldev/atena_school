@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   const rate = checkRateLimit(`contact:${ip}`, { intervalMs: 60 * 1000, maxRequests: 5 });
   if (!rate.success) {
     return NextResponse.json(
-      { success: false, error: 'Troppi tentativi. Riprova tra un minuto.' },
+      { success: false, error: 'Too many requests. Please try again in a minute.' },
       { status: 429 }
     );
   }
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { success: false, error: 'JSON non valido' },
+      { success: false, error: 'Invalid JSON payload' },
       { status: 400 }
     );
   }
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Dati non validi',
+        error: 'Validation failed',
         details: parsed.error.flatten().fieldErrors,
       },
       { status: 422 }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, error: err.message || 'Impossibile inviare il messaggio' },
+      { success: false, error: err.message || 'Failed to submit contact message' },
       { status: 400 }
     );
   }

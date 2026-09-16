@@ -12,7 +12,7 @@ export async function GET(
     const cleanId = (id || '').trim();
     if (!cleanId || cleanId.length > 100) {
       return NextResponse.json(
-        { success: false, error: 'ID corso non valido' },
+        { success: false, error: 'Invalid course ID' },
         { status: 400 }
       );
     }

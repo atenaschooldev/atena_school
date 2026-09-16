@@ -17,7 +17,7 @@ export function useCourses() {
   } = useQuery<Course[]>({
     queryKey: ["courses"],
     queryFn: async () => {
-      const data = await apiFetch<CourseApiResponse[]>("/courses");
+      const data = await apiFetch<CourseApiResponse[]>("/admin/courses");
       return Array.isArray(data) ? data.map(mapApiToCourse) : [];
     },
     staleTime: 1000 * 30, // 30s stale time for instant 0ms render
@@ -25,7 +25,7 @@ export function useCourses() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiFetch<{ success: boolean }>(`/courses/${id}`, { method: "DELETE" });
+      return apiFetch<{ success: boolean }>(`/admin/courses/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       toast.success("Corso eliminato");
@@ -40,13 +40,13 @@ export function useCourses() {
   const saveMutation = useMutation({
     mutationFn: async ({ payload, editId }: { payload: any; editId?: string }) => {
       if (editId) {
-        const updated = await apiFetch<CourseApiResponse>(`/courses/${editId}`, {
+        const updated = await apiFetch<CourseApiResponse>(`/admin/courses/${editId}`, {
           method: "PUT",
           body: JSON.stringify(payload),
         });
         return mapApiToCourse(updated);
       } else {
-        const created = await apiFetch<CourseApiResponse>("/courses", {
+        const created = await apiFetch<CourseApiResponse>("/admin/courses", {
           method: "POST",
           body: JSON.stringify(payload),
         });

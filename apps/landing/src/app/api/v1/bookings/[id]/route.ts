@@ -12,7 +12,7 @@ export async function GET(
     const cleanId = (id || '').trim();
     if (!cleanId || cleanId.length > 100) {
       return NextResponse.json(
-        { success: false, error: 'ID prenotazione non valido' },
+        { success: false, error: 'Invalid booking ID' },
         { status: 400 }
       );
     }

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { success: false, error: 'JSON non valido' },
+      { success: false, error: 'Invalid JSON payload' },
       { status: 400 }
     );
   }
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Dati non validi',
+        error: 'Validation failed',
         details: parsed.error.flatten().fieldErrors,
       },
       { status: 422 }
@@ -32,9 +32,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, error: err.message || 'Impossibile verificare il pagamento' },
+      { success: false, error: err.message || 'Failed to verify payment' },
       { status: 400 }
     );
   }
 }
-

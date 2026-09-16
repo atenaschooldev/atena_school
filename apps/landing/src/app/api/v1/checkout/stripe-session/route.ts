@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { success: false, error: 'Corpo della richiesta non valido (JSON malformato)' },
+      { success: false, error: 'Malformed JSON payload' },
       { status: 400 }
     );
   }
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Dati non validi',
+        error: 'Validation failed',
         details: parsed.error.flatten().fieldErrors,
       },
       { status: 422 }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error('[create-stripe-session route error]:', err);
     return NextResponse.json(
-      { success: false, error: err.message || 'Impossibile avviare il pagamento con Stripe' },
+      { success: false, error: err.message || 'Failed to initialize Stripe checkout session' },
       { status: 400 }
     );
   }
