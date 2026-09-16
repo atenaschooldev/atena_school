@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { checkRateLimit, getClientIp } from "@/lib/server/rate-limit";
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from "@/lib/server/rate-limit";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 export async function POST(req: NextRequest) {
@@ -11,10 +11,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!rateCheck.success) {
-      return NextResponse.json(
-        { success: false, error: "Too many requests. Please try again later." },
-        { status: 429 }
-      );
+      return rateLimitExceededResponse(rateCheck.retryAfter);
     }
 
     const body = await req.json().catch(() => ({}));

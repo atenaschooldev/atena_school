@@ -50,6 +50,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
   const [user, setUser] = useState<User | UserProfile | null>(null);
   const actionRef = useRef<SubmitAction>("book");
+  const idempotencyKeyRef = useRef<string>(
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  );
 
   const formMethods = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema as never),
@@ -415,6 +420,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       needsCompanyInvoice: Boolean(values.needsCompanyInvoice),
       sdiCode: values.sdiCode || undefined,
       pecEmail: values.pecEmail || undefined,
+      idempotencyKey: idempotencyKeyRef.current,
     };
   };
 

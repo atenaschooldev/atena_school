@@ -167,6 +167,26 @@ export async function getBookingDetails(id: string) {
 export async function createReservation(dto: CreateReservationParams) {
   const supabase = getSupabaseAdmin();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
+
+  // 1. Idempotency Check: if booking was already created with this idempotencyKey/session_id, return it
+  if (dto.idempotencyKey) {
+    const { data: existingBookings } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('session_id', dto.idempotencyKey);
+
+    if (existingBookings && existingBookings.length > 0) {
+      const b = existingBookings[0];
+      return {
+        success: true,
+        booking: b,
+        bookings: existingBookings,
+        bookingId: b.id,
+        bookingIds: existingBookings.map((eb) => eb.id),
+      };
+    }
+  }
+
   let course: SupabaseCourseRow | null = null;
 
   if (isUuid) {
@@ -234,6 +254,7 @@ export async function createReservation(dto: CreateReservationParams) {
       .insert({
         course_id: courseId,
         course_name: course?.name || course?.title_it || 'Corso Atena School',
+        session_id: dto.idempotencyKey || null,
         purchaser_name: purchaserName,
         purchaser_email: dto.email,
         purchaser_phone: dto.phone || null,

@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
   const rate = checkRateLimit(`check-fee:${ip}`, { intervalMs: 60 * 1000, maxRequests: 30 });
   if (!rate.success) {
     return NextResponse.json(
-      { success: false, annualFeePaid: false, userFound: false, requiresFee: true, error: 'Too many requests. Please try again in a minute.' },
-      { status: 429 }
+      { success: false, annualFeePaid: false, userFound: false, requiresFee: true, error: 'Too many requests. Please try again in a minute.', retryAfter: rate.retryAfter },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfter) } }
     );
   }
 

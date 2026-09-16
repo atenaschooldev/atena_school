@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { submitContact } from '@/lib/server/checkout-service';
 import { contactFormSchema } from '@atena/validators';
-import { checkRateLimit, getClientIp } from '@/lib/server/rate-limit';
+import { checkRateLimit, getClientIp, rateLimitExceededResponse } from '@/lib/server/rate-limit';
 
 export const runtime = 'nodejs';
 
@@ -9,10 +9,7 @@ export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   const rate = checkRateLimit(`contact:${ip}`, { intervalMs: 60 * 1000, maxRequests: 5 });
   if (!rate.success) {
-    return NextResponse.json(
-      { success: false, error: 'Too many requests. Please try again in a minute.' },
-      { status: 429 }
-    );
+    return rateLimitExceededResponse(rate.retryAfter);
   }
 
   let body: unknown;

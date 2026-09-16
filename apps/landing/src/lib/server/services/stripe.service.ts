@@ -128,6 +128,8 @@ export async function createStripeSession(dto: CreateReservationParams) {
         booking_ids: reservationRes.bookingIds.join(','),
         purchaser_tax_code: dto.purchaserTaxCode || '',
       },
+    }, {
+      idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${reservationRes.bookingId}`,
     });
 
     return { success: true, url: session.url, bookingId: reservationRes.bookingId };
@@ -222,6 +224,8 @@ export async function createStripeSession(dto: CreateReservationParams) {
       purchaser_tax_code: dto.purchaserTaxCode || '',
       student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
     },
+  }, {
+    idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${booking.id}`,
   });
 
   return { success: true, url: session.url, bookingId: booking.id };

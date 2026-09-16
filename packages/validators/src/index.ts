@@ -218,6 +218,7 @@ const reservationBaseObject = z.object({
     .optional(),
   paymentStatus: z.union([z.number().int(), z.string()]).optional(),
   paymentMethod: z.union([z.number().int(), z.string()]).optional(),
+  idempotencyKey: z.string().max(100).optional(),
 });
 
 /**

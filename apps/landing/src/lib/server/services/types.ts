@@ -37,6 +37,7 @@ export interface CreateReservationParams {
   needsCompanyInvoice?: boolean;
   paymentMethod?: PaymentMethod | string | number;
   paymentStatus?: BookingPaymentStatus | string | number;
+  idempotencyKey?: string;
 }
 
 export interface VerifyPaymentParams {
