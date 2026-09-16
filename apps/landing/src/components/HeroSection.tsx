@@ -17,7 +17,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const t = useTranslations("hero");
 
   return (
-    <section id="home" className="relative min-h-dvh lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-20 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
+    <section id="home" className="relative min-h-svh lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-20 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
 
       {/* Subtle Background Radial Ambient Glows */}
       <div className="absolute top-0 right-0 w-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:w-[800px] h-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:h-[800px] bg-[#F8861D]/10 rounded-full blur-[100px] [@media(min-width:1024px)_and_(min-height:850px)]:blur-[160px] pointer-events-none -z-0" />
