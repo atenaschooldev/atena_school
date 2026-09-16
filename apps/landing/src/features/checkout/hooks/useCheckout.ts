@@ -133,24 +133,6 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           const lastName = draftValues?.lastName || meta.last_name || parts.slice(1).join(" ") || "";
           const phone = draftValues?.phone || meta.phone || currentUser.phone || "";
           const taxCode = draftValues?.taxCode || meta.tax_code || "";
-
-          let hasPaidFee = false;
-          if (taxCode && isValidCodiceFiscale(taxCode)) {
-            try {
-              const feeRes = await fetch("/api/landing/checkout/check-fee", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ taxCode }),
-              }).then((r) => r.json());
-              hasPaidFee = Boolean(feeRes.annualFeePaid);
-            } catch {
-              hasPaidFee = false;
-            }
-          }
-
-          setHasPaidAnnualFee(hasPaidFee);
-          setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
-
           reset({
             firstName,
             lastName,
@@ -164,7 +146,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
             studentEmail: draftValues?.studentEmail || "",
             studentPhone: draftValues?.studentPhone || "",
             studentBirthDate: draftValues?.studentBirthDate || "",
-            includeRegistrationFee: draftValues?.includeRegistrationFee ?? !hasPaidFee,
+            includeRegistrationFee: true,
             students: draftValues?.students && draftValues.students.length > 0
               ? draftValues.students
               : [{ firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" }],
@@ -174,31 +156,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
             notes: draftValues?.notes || "",
           });
         } else if (draftValues) {
-          const targetTax = draftValues.isForChild
-            ? draftValues.purchaserTaxCode
-            : (draftValues.taxCode || draftValues.purchaserTaxCode);
-
-          let hasPaidFee = false;
-          if (targetTax && isValidCodiceFiscale(targetTax)) {
-            try {
-              const feeRes = await fetch("/api/landing/checkout/check-fee", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ taxCode: targetTax }),
-              }).then((r) => r.json());
-              hasPaidFee = Boolean(feeRes.annualFeePaid);
-            } catch {
-              hasPaidFee = false;
-            }
-          }
-
-          setHasPaidAnnualFee(hasPaidFee);
-          setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
-
           reset({
             ...formMethods.getValues(),
             ...draftValues,
-            includeRegistrationFee: draftValues.includeRegistrationFee ?? !hasPaidFee,
+            includeRegistrationFee: true,
           });
         }
       } catch (err: unknown) {
