@@ -17,7 +17,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const t = useTranslations("hero");
 
   return (
-    <section id="home" className="relative min-h-[calc(100dvh-56px)] lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-16 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 lg:pb-3 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
+    <section id="home" className="relative min-h-dvh lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-20 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
 
       {/* Subtle Background Radial Ambient Glows */}
       <div className="absolute top-0 right-0 w-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:w-[800px] h-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:h-[800px] bg-[#F8861D]/10 rounded-full blur-[100px] [@media(min-width:1024px)_and_(min-height:850px)]:blur-[160px] pointer-events-none -z-0" />
@@ -27,10 +27,10 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] [@media(min-width:1024px)_and_(min-height:850px)]:bg-[size:44px_44px] [mask-image:linear-gradient(to_bottom,transparent_80px,black_130px)] pointer-events-none -z-0" />
 
       {/* Main Content Area */}
-      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-1.5 sm:py-3 min-h-0">
+      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-2 sm:py-3 min-h-0">
 
         {/* MOBILE ONLY LAYOUT (< lg) */}
-        <div className="lg:hidden flex flex-col gap-3 pt-0.5 pb-2 text-left">
+        <div className="lg:hidden flex flex-col gap-3.5 pt-1 pb-4 text-left">
 
           {/* Centered School Logo & Brand Lockup */}
           <div className="flex flex-col items-center justify-center pt-0.5 gap-1.5 select-none" translate="no">
