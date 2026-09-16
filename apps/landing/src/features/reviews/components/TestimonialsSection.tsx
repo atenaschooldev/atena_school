@@ -13,14 +13,53 @@ interface TestimonialsSectionProps {
 
 const GOOGLE_MAPS_URL = "https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7";
 
-const FALLBACK_AVATARS = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+const GOOGLE_AVATAR_PALETTE = [
+  "bg-[#8E24AA] text-white", // Purple
+  "bg-[#D81B60] text-white", // Pink
+  "bg-[#00897B] text-white", // Teal
+  "bg-[#3949AB] text-white", // Indigo
+  "bg-[#E65100] text-white", // Deep Orange
+  "bg-[#039BE5] text-white", // Light Blue
+  "bg-[#43A047] text-white", // Green
+  "bg-[#6D4C41] text-white", // Brown
 ];
+
+const getAuthorInitial = (author: string) => {
+  if (!author) return "A";
+  const clean = author.replace(/[^a-zA-Z]/g, "");
+  return (clean.charAt(0) || "A").toUpperCase();
+};
+
+const getAvatarColorClass = (name: string, index: number = 0) => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colorIndex = Math.abs(hash + index) % GOOGLE_AVATAR_PALETTE.length;
+  return GOOGLE_AVATAR_PALETTE[colorIndex];
+};
+
+const GoogleAvatar = ({
+  name,
+  index = 0,
+  sizeClass = "w-11 h-11 text-base",
+}: {
+  name: string;
+  index?: number;
+  sizeClass?: string;
+}) => {
+  const initial = getAuthorInitial(name);
+  const colorClass = getAvatarColorClass(name, index);
+
+  return (
+    <div
+      className={`relative ${sizeClass} rounded-full ${colorClass} font-black flex items-center justify-center shrink-0 select-none shadow-2xs border border-white/40`}
+      aria-hidden="true"
+    >
+      <span>{initial}</span>
+    </div>
+  );
+};
 
 const GoogleIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -182,8 +221,6 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
           <div className="overflow-hidden py-4 -my-4 px-2 md:px-6 w-full" ref={emblaRef}>
             <div className="flex -ml-4 items-stretch">
               {testimonials.map((item, index) => {
-                const avatar = item.avatarUrl || FALLBACK_AVATARS[index % FALLBACK_AVATARS.length];
-
                 return (
                   <div
                     key={item.id || index}
@@ -195,11 +232,11 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                       aria-haspopup="dialog"
                       aria-label={`Leggi recensione di ${item.author}`}
                       className="h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#043569] rounded-3xl"
-                      onClick={() => setActiveTestimonial({ ...item, avatarUrl: avatar })}
+                      onClick={() => setActiveTestimonial(item)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
-                          setActiveTestimonial({ ...item, avatarUrl: avatar });
+                          setActiveTestimonial(item);
                         }
                       }}
                     >
@@ -209,13 +246,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
                         {/* Top: User info + Google Badge */}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="relative w-11 h-11 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                              <img
-                                src={avatar}
-                                alt={item.author}
-                                className="object-cover w-full h-full"
-                              />
-                            </div>
+                            <GoogleAvatar name={item.author} index={index} sizeClass="w-10 h-10 text-sm" />
                             <div className="min-w-0">
                               <p className="text-xs font-black text-slate-800 truncate">
                                 {item.author}
@@ -299,13 +330,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
             {/* Testimonial Author & Google Header */}
             <div className="flex items-center justify-between gap-4 pr-8">
               <div className="flex items-center gap-3">
-                <div className="relative w-14 h-14 rounded-full overflow-hidden border border-slate-200 shrink-0">
-                  <img
-                    src={activeTestimonial.avatarUrl ?? undefined}
-                    alt={activeTestimonial.author}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
+                <GoogleAvatar name={activeTestimonial.author} sizeClass="w-13 h-13 text-lg" />
                 <div className="text-left">
                   <p className="text-sm font-black text-slate-800">
                     {activeTestimonial.author}
