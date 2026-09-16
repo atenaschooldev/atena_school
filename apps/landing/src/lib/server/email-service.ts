@@ -119,6 +119,13 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
   } catch (err) {
     console.error('[EMAIL DISPATCH UNEXPECTED ERROR]:', err);
   }
+
+  // Asynchronously send Telegram notification to school admin/team
+  import('./telegram-service').then(({ sendTelegramBookingNotification }) => {
+    sendTelegramBookingNotification(templateData).catch((err) =>
+      console.warn('Async Telegram booking notification error:', err)
+    );
+  });
 }
 
 export async function sendContactFormNotificationEmail(params: {
@@ -133,6 +140,13 @@ export async function sendContactFormNotificationEmail(params: {
   const adminEmail = process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'atenaschool20@gmail.com';
   const resendApiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <info@atenaschool.com>';
+
+  // Send Telegram notification regardless of Resend key status
+  import('./telegram-service').then(({ sendTelegramContactNotification }) => {
+    sendTelegramContactNotification(params).catch((err) =>
+      console.warn('Async Telegram contact notification error:', err)
+    );
+  });
 
   const emailData = renderContactFormAdminEmail(params);
 
@@ -167,4 +181,5 @@ export async function sendContactFormNotificationEmail(params: {
     console.error('[CONTACT EMAIL NETWORK ERROR]:', err);
   }
 }
+
 
