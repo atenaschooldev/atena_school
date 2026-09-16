@@ -43,8 +43,8 @@ export default function GoogleAnalytics() {
       if (consentStr) {
         try {
           const data = JSON.parse(consentStr);
-          if (typeof window !== "undefined" && (window as any).gtag) {
-            (window as any).gtag("consent", "update", {
+          if (typeof window !== "undefined" && window.gtag) {
+            window.gtag("consent", "update", {
               analytics_storage: data.analytics ? "granted" : "denied",
               ad_storage: data.marketing ? "granted" : "denied",
               ad_user_data: data.marketing ? "granted" : "denied",
@@ -79,15 +79,15 @@ export default function GoogleAnalytics() {
       removeListeners();
 
       // Initialize dataLayer
-      const dataLayer = ((window as any).dataLayer = (window as any).dataLayer || []);
+      const dataLayer = (window.dataLayer = window.dataLayer || []);
       
       // Initialize gtag function for Consent Mode
-      if (!(window as any).gtag) {
-        (window as any).gtag = function () {
+      if (!window.gtag) {
+        window.gtag = function () {
           dataLayer.push(arguments);
         };
       }
-      const gtag = (window as any).gtag;
+      const gtag = window.gtag;
 
       // Read current saved consent
       const consentStr = localStorage.getItem("cookie-consent");
@@ -111,8 +111,8 @@ export default function GoogleAnalytics() {
       });
 
       // Inject GTM if configured
-      if (GTM_ID && !(window as any).__gtm_loaded__) {
-        (window as any).__gtm_loaded__ = true;
+      if (GTM_ID && !window.__gtm_loaded__) {
+        window.__gtm_loaded__ = true;
         
         dataLayer.push({
           "gtm.start": new Date().getTime(),
@@ -126,8 +126,8 @@ export default function GoogleAnalytics() {
       }
 
       // Inject GA4 if configured
-      if (GA_ID && !(window as any).__ga_loaded__) {
-        (window as any).__ga_loaded__ = true;
+      if (GA_ID && !window.__ga_loaded__) {
+        window.__ga_loaded__ = true;
 
         gtag("js", new Date());
         gtag("config", GA_ID, {
@@ -141,11 +141,12 @@ export default function GoogleAnalytics() {
       }
 
       // Inject Microsoft Clarity if configured
-      if (CLARITY_ID && !(window as any).__clarity_loaded__) {
-        (window as any).__clarity_loaded__ = true;
-        (function(c: any, l: Document, a: string, r: string, i: string) {
-          c[a] = c[a] || function() {
-            (c[a].q = c[a].q || []).push(arguments);
+      if (CLARITY_ID && !window.__clarity_loaded__) {
+        window.__clarity_loaded__ = true;
+        (function(c: Window, l: Document, a: string, r: string, i: string) {
+          (c as unknown as Record<string, unknown>)[a] = (c as unknown as Record<string, unknown>)[a] || function() {
+            const q = ((c as unknown as Record<string, { q?: unknown[] }>)[a].q = (c as unknown as Record<string, { q?: unknown[] }>)[a].q || []);
+            q.push(arguments);
           };
           const t = l.createElement(r) as HTMLScriptElement;
           t.async = true;

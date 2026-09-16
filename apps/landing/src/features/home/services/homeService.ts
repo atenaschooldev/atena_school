@@ -46,7 +46,7 @@ export async function getHomePageData(): Promise<HomePageData> {
   const hero: HeroData = {
     title: rawHero?.title_it || "",
     tagline: rawHero?.subtitle_it || "",
-    imageUrl: (rawHero as any)?.image_url || null,
+    imageUrl: rawHero?.image_url || null,
   };
 
   const about: AboutData = {
@@ -54,7 +54,7 @@ export async function getHomePageData(): Promise<HomePageData> {
     imageUrl: rawAbout?.image_url || null,
   };
 
-  const testimonials: Testimonial[] = (rawTestimonials || []).map((t: any) => ({
+  const testimonials: Testimonial[] = (rawTestimonials || []).map((t) => ({
     id: t.id || String(Math.random()),
     quote: t.quote_it || t.content_it || t.quote_en || t.content_en || "",
     author: t.author_name || t.author || "Anonimo",

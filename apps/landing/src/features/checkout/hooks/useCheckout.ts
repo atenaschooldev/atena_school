@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
@@ -249,7 +249,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       formMethods.setValue("students", updated, { shouldValidate: false, shouldDirty: true });
 
       // Clear errors on the field currently being typed into
-      formMethods.clearErrors(`students.${index}.${field}` as any);
+      formMethods.clearErrors(`students.${index}.${field}` as FieldPath<CheckoutFormValues>);
 
       if (index === 0) {
         if (field === "firstName") {

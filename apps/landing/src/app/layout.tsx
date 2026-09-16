@@ -1,4 +1,4 @@
-import { NextIntlClientProvider } from 'next-intl';
+import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
 import messages from '../../messages/it.json';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -133,7 +133,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <NextIntlClientProvider locale="it" messages={messages as any}>
+        <NextIntlClientProvider locale="it" messages={messages as unknown as AbstractIntlMessages}>
           <ScrollAnimateProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />

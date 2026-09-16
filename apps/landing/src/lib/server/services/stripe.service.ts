@@ -12,7 +12,7 @@ import { createReservation } from './reservation.service';
 
 export function getStripe(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY || '';
-  return new Stripe(secretKey, { apiVersion: '2023-10-16' as any });
+  return new Stripe(secretKey, { apiVersion: '2023-10-16' as Stripe.StripeConfig['apiVersion'] });
 }
 
 export async function getSystemSettings(): Promise<{ stripeEnabled: boolean }> {
@@ -28,7 +28,7 @@ export async function getSystemSettings(): Promise<{ stripeEnabled: boolean }> {
       if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
       if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
       if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
-        return { stripeEnabled: Boolean((data.value as any).enabled) };
+        return { stripeEnabled: Boolean((data.value as { enabled?: boolean }).enabled) };
       }
     }
   } catch (err) {

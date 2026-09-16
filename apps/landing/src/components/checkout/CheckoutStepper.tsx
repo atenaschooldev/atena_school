@@ -96,7 +96,7 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
 
           if (isClickable && step.href) {
             return (
-              <Link key={step.number} href={step.href as any} className="no-underline">
+              <Link key={step.number} href={step.href} className="no-underline">
                 {content}
               </Link>
             );

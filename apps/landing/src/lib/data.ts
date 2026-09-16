@@ -10,6 +10,7 @@ interface HeroRow {
   title_en?: string | null;
   subtitle_it?: string | null;
   subtitle_en?: string | null;
+  image_url?: string | null;
   updated_at?: string | null;
 }
 
@@ -25,11 +26,16 @@ interface AboutRow {
 interface TestimonialRow {
   id: string;
   author_name?: string | null;
+  author?: string | null;
+  role_it?: string | null;
+  role_en?: string | null;
   content_it?: string | null;
   content_en?: string | null;
+  quote_it?: string | null;
+  quote_en?: string | null;
+  avatar_url?: string | null;
   rating?: number | null;
   is_active?: boolean;
-  [key: string]: unknown;
 }
 
 interface ContactRow {
@@ -101,6 +107,7 @@ export const getHeroData = unstable_cache(
       title_en: data?.title_en || '',
       subtitle_it: data?.subtitle_it || '',
       subtitle_en: data?.subtitle_en || '',
+      image_url: data?.image_url || null,
       updated_at: data?.updated_at || new Date().toISOString(),
     };
   },
@@ -213,11 +220,11 @@ export const getSingleCourse = (id: string) => unstable_cache(
   async () => {
     try {
       const res = await getItem(id);
-      if (res.success && (res.item || res.course)) {
-        const c = (res.item || res.course) as unknown as CourseItem;
+      if (res.success && res.item) {
+        const c = res.item;
         return {
           ...c,
-          slug: (c.slug as string) || slugify(c.name || ''),
+          slug: c.slug || slugify(c.name || ''),
           title_it: c.name || '',
           title_en: c.name || '',
           description_it: c.description || '',

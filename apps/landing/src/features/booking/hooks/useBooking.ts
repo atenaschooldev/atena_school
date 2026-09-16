@@ -63,7 +63,7 @@ export function useBooking(
     if (!selectedDate || !selectedTime) return;
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const targetUrl = buildCheckoutUrl(id, dateStr, selectedTime);
-    router.push(targetUrl as any);
+    router.push(targetUrl);
   };
 
   return {

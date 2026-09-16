@@ -31,23 +31,47 @@ export function computeTotalLessonsCount(course: SupabaseCourseRow | null, calcu
   return calculatedLessonsCount || 8;
 }
 
-export async function getPublicCourses() {
+export interface TeacherRow {
+  teacher_id: string;
+  full_name: string | null;
+  photo_url: string | null;
+}
+
+export type CourseWithTeacher = SupabaseCourseRow & {
+  teacher_name: string | null;
+  teacher_photo_url: string | null;
+};
+
+export type GetItemResult =
+  | { success: true; item: CourseWithTeacher; course: CourseWithTeacher; error?: never }
+  | { success: false; error: string; item?: never; course?: never };
+
+export type GetPublicCoursesResult = {
+  success: boolean;
+  courses: CourseWithTeacher[];
+};
+
+export async function getPublicCourses(): Promise<GetPublicCoursesResult> {
   const supabase = getSupabaseAdmin();
   let { data: coursesData, error } = await supabase
     .from('courses')
     .select('*')
     .eq('status', CourseStatus.ACTIVE)
-    .order('name');
+    .order('name')
+    .returns<SupabaseCourseRow[]>();
 
   if (error || !coursesData) {
-    const { data: fallbackData } = await supabase.from('courses').select('*');
+    const { data: fallbackData } = await supabase.from('courses').select('*').returns<SupabaseCourseRow[]>();
     coursesData = fallbackData || [];
   }
 
-  const { data: teachersData } = await supabase.from('teachers').select('teacher_id, full_name, photo_url');
-  const teacherMap = new Map((teachersData || []).map((t: any) => [t.teacher_id, t]));
+  const { data: teachersData } = await supabase
+    .from('teachers')
+    .select('teacher_id, full_name, photo_url')
+    .returns<TeacherRow[]>();
+  const teacherMap = new Map((teachersData || []).map((t) => [t.teacher_id, t]));
 
-  const courses = (coursesData || []).map((c: any) => {
+  const courses: CourseWithTeacher[] = (coursesData || []).map((c) => {
     const teacher = c.teacher_id ? teacherMap.get(c.teacher_id) : null;
     return {
       ...c,
@@ -59,17 +83,17 @@ export async function getPublicCourses() {
   return { success: true, courses };
 }
 
-export async function getItem(id: string) {
+export async function getItem(id: string): Promise<GetItemResult> {
   const supabase = getSupabaseAdmin();
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-  let courseData: any = null;
+  let courseData: SupabaseCourseRow | null = null;
   if (isUuid) {
-    const { data } = await supabase.from('courses').select('*').eq('id', id).maybeSingle();
+    const { data } = await supabase.from('courses').select('*').eq('id', id).maybeSingle<SupabaseCourseRow>();
     courseData = data;
   }
   if (!courseData) {
-    const { data } = await supabase.from('courses').select('*').eq('slug', id).maybeSingle();
+    const { data } = await supabase.from('courses').select('*').eq('slug', id).maybeSingle<SupabaseCourseRow>();
     courseData = data;
   }
 
@@ -77,21 +101,21 @@ export async function getItem(id: string) {
     return { success: false, error: 'Item not found' };
   }
 
-  let teacherName = null;
-  let teacherPhotoUrl = null;
+  let teacherName: string | null = null;
+  let teacherPhotoUrl: string | null = null;
   if (courseData.teacher_id) {
     const { data: teacher } = await supabase
       .from('teachers')
       .select('full_name, photo_url')
       .eq('teacher_id', courseData.teacher_id)
-      .maybeSingle();
+      .maybeSingle<TeacherRow>();
     if (teacher) {
       teacherName = teacher.full_name;
       teacherPhotoUrl = teacher.photo_url;
     }
   }
 
-  const course = {
+  const course: CourseWithTeacher = {
     ...courseData,
     teacher_name: teacherName,
     teacher_photo_url: teacherPhotoUrl,

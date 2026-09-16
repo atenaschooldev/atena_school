@@ -12,18 +12,18 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
   const res = await getItem(id);
-  const course = (res as any)?.item || (res as any)?.course;
 
-  if (!course) {
+  if (!res.success || !res.item) {
     return {
       title: "Corso non trovato | Atena School",
     };
   }
 
+  const course = res.item;
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const courseSlug = course.slug || id;
   const title = `${course.title_it || course.name} | Atena School`;
-  const description = course.description_it || course.description || `Scopri il corso di ${course.title_it || course.name} presso Atena School a Cittanova.`;
+  const description = course.description || `Scopri il corso di ${course.title_it || course.name} presso Atena School a Cittanova.`;
   const imageUrl = course.photo_url || `${siteUrl}/icon.png`;
 
   return {
@@ -61,17 +61,18 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
   
   const res = await getItem(id);
-  const course = (res as any)?.item || (res as any)?.course;
 
-  if (!course) {
+  if (!res.success || !res.item) {
     notFound();
   }
+
+  const course = res.item;
 
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const title = course.title_it || course.name;
-  const description = course.description_it || course.description || "";
+  const title = course.title_it || course.name || "Corso Atena School";
+  const description = course.description || "";
   const price = course.price ? `${Number(course.price).toFixed(2)}€` : undefined;
 
   return (
@@ -79,7 +80,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
       <CourseSchema
         name={title}
         description={description}
-        image={course.photo_url}
+        image={course.photo_url || undefined}
         price={price}
       />
       <CourseDetailClient

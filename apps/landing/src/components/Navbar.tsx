@@ -144,7 +144,7 @@ const Navbar = () => {
               {navLinks.map((l) => (
                 <Link
                   key={l.href}
-                  href={l.href as any}
+                  href={l.href}
                   className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${isLightHeader
                       ? "text-white hover:text-[#FAA904] hover:bg-white/10"
                       : "text-gray-700 hover:text-primary hover:bg-primary/10"
@@ -336,7 +336,7 @@ const Navbar = () => {
                   return (
                     <Link
                       key={l.href}
-                      href={l.href as any}
+                      href={l.href}
                       className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
                       onClick={() => setOpen(false)}
                     >

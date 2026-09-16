@@ -62,7 +62,7 @@ export function CheckoutStudentsList({
       <div className="space-y-3">
         {studentsList.map((student, idx) => {
           const studentFee = studentFeeStatuses[idx];
-          const studentErrors = (errors.students as any)?.[idx];
+          const studentErrors = errors.students?.[idx];
 
           return (
             <div

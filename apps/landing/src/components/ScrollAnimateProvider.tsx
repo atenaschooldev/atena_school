@@ -174,7 +174,14 @@ export default function ScrollAnimateProvider({
           reduceMotion: "(prefers-reduced-motion: reduce)",
         },
         (context) => {
-          const { isDesktop, isMobile, reduceMotion } = context.conditions as any;
+          const conditions = context.conditions as {
+            isDesktop?: boolean;
+            isMobile?: boolean;
+            reduceMotion?: boolean;
+          } | undefined;
+          const isDesktop = conditions?.isDesktop;
+          const isMobile = conditions?.isMobile;
+          const reduceMotion = conditions?.reduceMotion;
 
           // 1. Reduced motion preference -> clear all inline styles immediately
           if (reduceMotion) {
