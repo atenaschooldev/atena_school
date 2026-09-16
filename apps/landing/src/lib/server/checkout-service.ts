@@ -259,22 +259,35 @@ export async function getBookingDetails(id: string) {
 
   const { data: payments } = await supabase
     .from('payments')
-    .select('amount, type')
+    .select('id, amount, type, status, payment_method, academic_year, created_at')
     .eq('booking_id', id);
 
-  const coursePayment = payments?.find((p: { amount: unknown; type: unknown }) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
+  const coursePayment = payments?.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
   const amountPaid = Number(booking.amount_paid || 0);
   const regFee = Number(booking.registration_fee || 0);
   const coursePrice = coursePayment
     ? Number(coursePayment.amount)
     : (amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid);
 
+  const statusMap: Record<number, string> = {
+    0: 'pending',
+    1: 'paid',
+    2: 'partial',
+    3: 'refunded',
+    4: 'cancelled',
+  };
+
+  const statusNum = Number(booking.payment_status ?? 0);
+  const paymentStatusLabel = statusMap[statusNum] || (typeof booking.payment_status === 'string' ? booking.payment_status : 'pending');
+
   return {
     success: true,
     booking: {
       ...booking,
+      payment_status_label: paymentStatusLabel,
       course_price: coursePrice,
       item_price: coursePrice,
+      payments: payments || [],
     },
   };
 }
