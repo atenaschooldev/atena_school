@@ -66,7 +66,7 @@ export function isValidSdiCode(sdi?: string | null): boolean {
  * Возвращает true если строка пустая (поле необязательное).
  */
 export function isValidBirthDate(dateStr?: string | null): boolean {
-  if (!dateStr || dateStr.trim() === "") return true;
+  if (!dateStr || dateStr.trim() === "") return false;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return false;
   const now = new Date();
@@ -143,7 +143,7 @@ export const studentItemSchema = z.object({
     ),
   birthDate: z
     .string()
-    .optional()
+    .min(1, "La data di nascita dello studente è obbligatoria")
     .refine(isValidBirthDate, {
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),
@@ -192,7 +192,7 @@ const reservationBaseObject = z.object({
   studentPhone: optionalPhone("Numero di telefono dello studente non valido"),
   studentBirthDate: z
     .string()
-    .optional()
+    .min(1, "La data di nascita è obbligatoria")
     .refine(isValidBirthDate, {
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),

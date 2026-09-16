@@ -192,7 +192,7 @@ export function CheckoutPurchaserFields({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita (opzionale)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
               <div className="relative">
                 <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
