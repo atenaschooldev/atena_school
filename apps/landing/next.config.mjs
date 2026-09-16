@@ -119,7 +119,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://js.stripe.com",
+              `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== 'production' ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://js.stripe.com`,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://cdn.sanity.io https://www.cambridgeenglish.org https://*.supabase.co https://images.unsplash.com https://www.googletagmanager.com https://www.google-analytics.com https://*.clarity.ms https://c.bing.com",
@@ -127,6 +127,7 @@ const nextConfig = {
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com",
               "object-src 'none'",
               "base-uri 'self'",
+              "upgrade-insecure-requests",
             ].join('; '),
           },
         ],
