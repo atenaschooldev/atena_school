@@ -13,12 +13,9 @@ export const CODICE_FISCALE_RE =
   /^([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}|[0-9]{11})$/i;
 
 /**
- * Итальянский телефон.
- * Принимает: +39 333 1234567 | 0331 1234567 | 3331234567 | 06 12345678
- * Пробелы и дефисы допустимы.
+ * Телефон: принимает итальянские (+39, 3xx, 0xx) и международные номера (E.164: +1, +380, +44 и т.д.)
  */
-export const PHONE_IT_RE =
-  /^(\+?39[\s\-]?)?(0\d{1,4}[\s\-]?\d{4,8}|3\d{2}[\s\-]?\d{6,7})$/;
+export const PHONE_RE = /^\+?[0-9\s\-()]{7,20}$/;
 
 /**
  * Codice SDI — ровно 7 буквенно-цифровых символов (fatturazione elettronica).
@@ -35,10 +32,6 @@ export const codiceFiscaleRegex = CODICE_FISCALE_RE;
 /** @deprecated Используй CODICE_FISCALE_RE */
 export const partitaIvaRegex = /^\d{11}$/;
 
-// ---------------------------------------------------------------------------
-// Helper functions
-// ---------------------------------------------------------------------------
-
 export function isValidCodiceFiscale(cf?: string | null): boolean {
   if (!cf) return false;
   return CODICE_FISCALE_RE.test(cf.trim());
@@ -49,12 +42,16 @@ export function isValidPartitaIva(piva?: string | null): boolean {
   return partitaIvaRegex.test(piva.trim());
 }
 
-export function isValidPhoneIT(phone?: string | null): boolean {
+export function isValidPhone(phone?: string | null): boolean {
   if (!phone || phone.trim() === "") return false;
-  const digits = phone.replace(/[\s\-\(\)]/g, "").replace(/^\+?39/, "");
-  if (digits.length < 9 || digits.length > 11) return false;
-  return PHONE_IT_RE.test(phone.trim());
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 7 || digits.length > 15) return false;
+  return /^\+?[0-9\s\-().]{7,25}$/.test(phone.trim());
 }
+
+/** @deprecated Используй isValidPhone */
+export const isValidPhoneIT = isValidPhone;
+export const PHONE_IT_RE = PHONE_RE;
 
 export function isValidSdiCode(sdi?: string | null): boolean {
   if (!sdi) return false;
