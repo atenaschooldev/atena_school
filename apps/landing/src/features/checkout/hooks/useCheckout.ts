@@ -255,23 +255,28 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   // Sync taxCode when toggling isForChild
   useEffect(() => {
     if (!watchedIsForChild && watchedPurchaserTaxCode && !watchedTaxCode) {
-      formMethods.setValue("taxCode", watchedPurchaserTaxCode, { shouldValidate: true });
+      formMethods.setValue("taxCode", watchedPurchaserTaxCode, { shouldValidate: false });
     }
   }, [watchedIsForChild, watchedPurchaserTaxCode, watchedTaxCode, formMethods]);
 
   const addStudent = () => {
     const current = formMethods.getValues("students") || [];
-    formMethods.setValue("students", [
-      ...current,
-      { firstName: "", lastName: "", taxCode: "", email: "", phone: "", birthDate: "" },
-    ]);
+    formMethods.setValue(
+      "students",
+      [
+        ...current,
+        { firstName: "", lastName: "", taxCode: "", email: "", phone: "", birthDate: "" },
+      ],
+      { shouldValidate: false, shouldDirty: true }
+    );
   };
 
   const removeStudent = (index: number) => {
     const current = formMethods.getValues("students") || [];
     formMethods.setValue(
       "students",
-      current.filter((_, i) => i !== index)
+      current.filter((_, i) => i !== index),
+      { shouldValidate: false, shouldDirty: true }
     );
   };
 
@@ -280,12 +285,36 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     const updated = [...current];
     if (updated[index]) {
       updated[index] = { ...updated[index], [field]: value };
-      formMethods.setValue("students", updated, { shouldValidate: true });
+      formMethods.setValue("students", updated, { shouldValidate: false, shouldDirty: true });
+
+      // Clear errors on the field currently being typed into
+      formMethods.clearErrors(`students.${index}.${field}` as any);
+
       if (index === 0) {
-        if (field === "firstName") formMethods.setValue("studentFirstName", value, { shouldValidate: true });
-        if (field === "lastName") formMethods.setValue("studentLastName", value, { shouldValidate: true });
-        if (field === "birthDate") formMethods.setValue("studentBirthDate", value, { shouldValidate: true });
-        if (field === "taxCode") formMethods.setValue("taxCode", value, { shouldValidate: true });
+        if (field === "firstName") {
+          formMethods.setValue("studentFirstName", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentFirstName");
+        }
+        if (field === "lastName") {
+          formMethods.setValue("studentLastName", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentLastName");
+        }
+        if (field === "birthDate") {
+          formMethods.setValue("studentBirthDate", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentBirthDate");
+        }
+        if (field === "taxCode") {
+          formMethods.setValue("taxCode", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("taxCode");
+        }
+        if (field === "email") {
+          formMethods.setValue("studentEmail", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentEmail");
+        }
+        if (field === "phone") {
+          formMethods.setValue("studentPhone", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentPhone");
+        }
       }
     }
   };
