@@ -78,8 +78,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   });
 
   const { reset } = formMethods;
+  const initFetchedRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (initFetchedRef.current === id) return;
+    initFetchedRef.current = id;
+
     async function initCheckout() {
       try {
         const [itemRes, settingsRes] = await Promise.all([
@@ -148,7 +152,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
 
     initCheckout();
-  }, [id, reset]);
+  }, [id]);
 
   const watchedTaxCode = useWatch({ control: formMethods.control, name: "taxCode" });
   const watchedPurchaserTaxCode = useWatch({ control: formMethods.control, name: "purchaserTaxCode" });
