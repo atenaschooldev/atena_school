@@ -151,7 +151,7 @@ export function CheckoutOrderSummary({
 
       {/* Bottom Action Area */}
       <div className="pt-3 border-t border-slate-100 space-y-3">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between" aria-live="polite" aria-atomic="true">
           <div>
             <span className="text-xs font-black text-[#043569] uppercase tracking-wider block">Totale</span>
             <span className="text-[10px] text-slate-400 font-semibold">Tasse e IVA incluse</span>

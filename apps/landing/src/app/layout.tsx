@@ -1,7 +1,9 @@
-import { NextIntlClientProvider, type AbstractIntlMessages } from 'next-intl';
-import messages from '../../messages/it.json';
+import dynamic from 'next/dynamic';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+
 import CookieBanner from '@/components/CookieBanner';
 import ScrollToTop from '@/components/ScrollToTop';
 import '@/index.css';
@@ -37,6 +39,10 @@ export async function generateMetadata() {
     metadataBase: new URL(siteUrl),
     alternates: {
       canonical: siteUrl,
+      languages: {
+        'it-IT': siteUrl,
+        'en-US': `${siteUrl}/en`,
+      },
     },
     other: {
       google: 'notranslate',
@@ -84,11 +90,13 @@ import { Toaster } from 'sonner';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import ScrollAnimateProvider from '@/components/ScrollAnimateProvider';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const messages = await getMessages();
+
   return (
     <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`} data-scroll-behavior="smooth">
       <head>
@@ -133,7 +141,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
-        <NextIntlClientProvider locale="it" messages={messages as unknown as AbstractIntlMessages}>
+        <NextIntlClientProvider locale="it" messages={messages}>
           <ScrollAnimateProvider>
             <div className="flex flex-col min-h-screen">
               <Navbar />

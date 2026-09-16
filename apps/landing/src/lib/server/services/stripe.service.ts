@@ -170,8 +170,9 @@ export async function createStripeSession(dto: CreateReservationParams) {
     if (edgeErr || edgeData?.error) {
       console.warn('[Supabase Edge Function Warning]:', edgeErr?.message || edgeData?.error);
     }
-  } catch (invokeErr: any) {
-    console.warn('[Supabase Functions Invoke Failed, fallback to direct Stripe SDK]:', invokeErr?.message || invokeErr);
+  } catch (invokeErr: unknown) {
+    const msg = invokeErr instanceof Error ? invokeErr.message : String(invokeErr);
+    console.warn('[Supabase Functions Invoke Failed, fallback to direct Stripe SDK]:', msg);
   }
 
   // 2. Fallback ONLY if Edge Function fails: Direct Stripe SDK session creation
@@ -294,8 +295,9 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-  } catch (err: any) {
-    throw new Error(`Stripe webhook signature verification failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`Stripe webhook signature verification failed: ${msg}`);
   }
 
   const supabase = getSupabaseAdmin();

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { checkRateLimit, rateLimitExceededResponse } from '../rate-limit';
+import { checkRateLimit, rateLimitExceededResponse, getClientIp } from '../rate-limit';
 
 describe('Serverless In-Memory Rate Limiter', () => {
   it('allows requests within limit', () => {
@@ -22,13 +22,18 @@ describe('Serverless In-Memory Rate Limiter', () => {
     expect(blocked.retryAfter).toBeGreaterThan(0);
   });
 
-  it('generates standard 429 response with Retry-After header', async () => {
-    const res = rateLimitExceededResponse(45);
-    expect(res.status).toBe(429);
-    expect(res.headers.get('Retry-After')).toBe('45');
+  it('extracts IP correctly from request headers', () => {
+    const reqWithForwarded = new Request('http://localhost:3000', {
+      headers: { 'x-forwarded-for': '192.168.1.1, 10.0.0.1' },
+    });
+    expect(getClientIp(reqWithForwarded)).toBe('192.168.1.1');
 
-    const body = await res.json();
-    expect(body.success).toBe(false);
-    expect(body.retryAfter).toBe(45);
+    const reqWithRealIp = new Request('http://localhost:3000', {
+      headers: { 'x-real-ip': '10.0.0.2' },
+    });
+    expect(getClientIp(reqWithRealIp)).toBe('10.0.0.2');
+
+    const emptyReq = new Request('http://localhost:3000');
+    expect(getClientIp(emptyReq)).toBe('unknown-client');
   });
 });

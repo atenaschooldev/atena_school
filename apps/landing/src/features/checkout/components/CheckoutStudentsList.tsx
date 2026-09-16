@@ -186,13 +186,13 @@ export function CheckoutStudentsList({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 min-w-0">
                 <div className="min-w-0">
                   <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
-                  <div className="relative min-w-0">
-                    <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
+                    <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                     <input
                       type="date"
                       value={student.birthDate || ""}
                       onChange={(e) => updateStudent(idx, "birthDate", e.target.value)}
-                      className="w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
                     />
                   </div>
                   {(studentErrors?.birthDate || (idx === 0 && errors.studentBirthDate)) && (

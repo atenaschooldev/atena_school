@@ -102,72 +102,84 @@ export function CheckoutPurchaserFields({
         {/* 2 columns even on mobile for Name / Surname */}
         <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label htmlFor="checkout-firstName" className="block text-xs font-bold text-slate-700 mb-1">
               {isForChild ? "Nome Genitore *" : "Nome *"}
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="checkout-firstName"
                 type="text"
+                aria-invalid={!!errors.firstName}
+                aria-describedby={errors.firstName ? "checkout-firstName-error" : undefined}
                 {...register("firstName")}
                 placeholder="Mario"
                 className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
               />
             </div>
             {errors.firstName && (
-              <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.firstName.message}</p>
+              <p id="checkout-firstName-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.firstName.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label htmlFor="checkout-lastName" className="block text-xs font-bold text-slate-700 mb-1">
               {isForChild ? "Cognome Genitore *" : "Cognome *"}
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="checkout-lastName"
                 type="text"
+                aria-invalid={!!errors.lastName}
+                aria-describedby={errors.lastName ? "checkout-lastName-error" : undefined}
                 {...register("lastName")}
                 placeholder="Rossi"
                 className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
               />
             </div>
             {errors.lastName && (
-              <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.lastName.message}</p>
+              <p id="checkout-lastName-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.lastName.message}</p>
             )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Email *</label>
+            <label htmlFor="checkout-email" className="block text-xs font-bold text-slate-700 mb-1">Email *</label>
             <div className="relative">
               <Envelope className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="checkout-email"
                 type="email"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? "checkout-email-error" : undefined}
                 {...register("email")}
                 placeholder="mario.rossi@gmail.com"
                 className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
               />
             </div>
             {errors.email && (
-              <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.email.message}</p>
+              <p id="checkout-email-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.email.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Telefono (WhatsApp) *</label>
+            <label htmlFor="checkout-phone" className="block text-xs font-bold text-slate-700 mb-1">Telefono (WhatsApp) *</label>
             <div className="relative">
               <Phone className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="checkout-phone"
                 type="tel"
+                aria-invalid={!!errors.phone}
+                aria-describedby={errors.phone ? "checkout-phone-error" : undefined}
                 {...register("phone")}
                 placeholder="+39 340 1234567"
                 className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
               />
             </div>
             {errors.phone && (
-              <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.phone.message}</p>
+              <p id="checkout-phone-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.phone.message}</p>
             )}
           </div>
         </div>
@@ -175,15 +187,18 @@ export function CheckoutPurchaserFields({
         {/* Purchaser Tax Code (when parent) OR Personal Tax Code (when purchasing for self) */}
         {isForChild ? (
           <div className="min-w-0">
-            <label className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale Genitore *</label>
+            <label htmlFor="checkout-purchaserTaxCode" className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale Genitore *</label>
             <div className="relative min-w-0">
               <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
+                id="checkout-purchaserTaxCode"
                 type="text"
                 maxLength={16}
                 autoCapitalize="characters"
                 autoCorrect="off"
                 spellCheck={false}
+                aria-invalid={!!errors.purchaserTaxCode}
+                aria-describedby={errors.purchaserTaxCode ? "checkout-purchaserTaxCode-error" : undefined}
                 {...register("purchaserTaxCode", {
                   onChange: (e) => {
                     e.target.value = e.target.value.toUpperCase().slice(0, 16);
@@ -194,36 +209,42 @@ export function CheckoutPurchaserFields({
               />
             </div>
             {errors.purchaserTaxCode && (
-              <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.purchaserTaxCode.message}</p>
+              <p id="checkout-purchaserTaxCode-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.purchaserTaxCode.message}</p>
             )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 min-w-0">
             <div className="min-w-0">
-              <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
-              <div className="relative min-w-0">
-                <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <label htmlFor="checkout-studentBirthDate" className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
+              <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
+                <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
                 <input
+                  id="checkout-studentBirthDate"
                   type="date"
+                  aria-invalid={!!errors.studentBirthDate}
+                  aria-describedby={errors.studentBirthDate ? "checkout-studentBirthDate-error" : undefined}
                   {...register("studentBirthDate")}
-                  className="w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                  className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
                 />
               </div>
               {errors.studentBirthDate && (
-                <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentBirthDate.message}</p>
+                <p id="checkout-studentBirthDate-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentBirthDate.message}</p>
               )}
             </div>
 
             <div className="min-w-0">
-              <label className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale *</label>
+              <label htmlFor="checkout-taxCode" className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale *</label>
               <div className="relative min-w-0">
                 <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
+                  id="checkout-taxCode"
                   type="text"
                   maxLength={16}
                   autoCapitalize="characters"
                   autoCorrect="off"
                   spellCheck={false}
+                  aria-invalid={!!errors.taxCode}
+                  aria-describedby={errors.taxCode ? "checkout-taxCode-error" : undefined}
                   {...register("taxCode", {
                     onChange: (e) => {
                       e.target.value = e.target.value.toUpperCase().slice(0, 16);
@@ -234,7 +255,7 @@ export function CheckoutPurchaserFields({
                 />
               </div>
               {errors.taxCode && (
-                <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.taxCode.message}</p>
+                <p id="checkout-taxCode-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.taxCode.message}</p>
               )}
             </div>
           </div>

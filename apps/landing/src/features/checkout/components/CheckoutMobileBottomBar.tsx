@@ -22,7 +22,7 @@ export function CheckoutMobileBottomBar({
   return (
     <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-4 py-3 shadow-2xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1" aria-live="polite" aria-atomic="true">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale da Saldare"}
           </p>

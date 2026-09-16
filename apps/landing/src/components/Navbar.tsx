@@ -72,10 +72,21 @@ const Navbar = () => {
     };
   }, [open]);
 
-  // Reset mobile menu on page transition
+  // Reset mobile menu on page transition or Escape key
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   useEffect(() => {
     setMounted(true);

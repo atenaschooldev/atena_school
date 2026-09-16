@@ -8,6 +8,7 @@
     "dev:webpack": "next dev -p 3000 --webpack",
     "dev:turbo": "next dev -p 3000 --turbo",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start",
     "lint": "eslint src",
     "test": "vitest run"
