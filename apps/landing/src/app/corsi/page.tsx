@@ -5,7 +5,7 @@ import CoursesCatalog from "@/features/courses/components/CoursesCatalog";
 import { getResolvedCourseSections } from "@/features/courses/services/coursesService";
 import { env } from "@/config/env";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 
 export async function generateMetadata() {

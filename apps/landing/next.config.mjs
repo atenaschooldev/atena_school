@@ -127,6 +127,7 @@ const nextConfig = {
               "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.google.com",
               "object-src 'none'",
               "base-uri 'self'",
+              "frame-ancestors 'none'",
               "upgrade-insecure-requests",
             ].join('; '),
           },

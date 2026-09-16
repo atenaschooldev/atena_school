@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createStripeSession } from '@/lib/server/checkout-service';
 import { createReservationSchema } from '@atena/validators';
 import { checkRateLimit, getClientIp, rateLimitExceededResponse } from '@/lib/server/rate-limit';
+import { apiError, apiSuccess } from '@/lib/server/api-response';
 
 export const runtime = 'nodejs';
 
@@ -16,32 +17,20 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { success: false, error: 'Malformed JSON payload' },
-      { status: 400 }
-    );
+    return apiError('Malformed JSON payload', 400);
   }
 
   const parsed = createReservationSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Validation failed',
-        details: parsed.error.flatten().fieldErrors,
-      },
-      { status: 422 }
-    );
+    return apiError('Validation failed', 422, parsed.error.flatten().fieldErrors);
   }
 
   try {
     const result = await createStripeSession(parsed.data);
-    return NextResponse.json(result, { status: 201 });
-  } catch (err: any) {
+    return apiSuccess(result, 201);
+  } catch (err: unknown) {
     console.error('[create-stripe-session route error]:', err);
-    return NextResponse.json(
-      { success: false, error: err.message || 'Failed to initialize Stripe checkout session' },
-      { status: 400 }
-    );
+    const message = err instanceof Error ? err.message : 'Failed to initialize Stripe checkout session';
+    return apiError(message, 400);
   }
 }

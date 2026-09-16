@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test": "npx tsx --test src/tests/*.test.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@atena/api-client": "workspace:*",
