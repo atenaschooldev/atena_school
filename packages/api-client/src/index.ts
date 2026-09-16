@@ -61,6 +61,74 @@ export function createApiClient(baseUrl?: string) {
   const apiBase = baseUrl || envUrl || "http://localhost:4000";
 
   return {
+    landing: {
+      courses: {
+        async getAll(): Promise<{ success: boolean; courses: CourseItem[] }> {
+          const res = await fetch(`${apiBase}/api/landing/courses`);
+          return handleResponse<{ success: boolean; courses: CourseItem[] }>(res);
+        },
+        async getById(id: string): Promise<{ success: boolean; item?: CourseItem; course?: CourseItem }> {
+          const res = await fetch(`${apiBase}/api/landing/courses/${id}`);
+          return handleResponse<{ success: boolean; item?: CourseItem; course?: CourseItem }>(res);
+        },
+      },
+      checkout: {
+        async checkFee(params: { taxCode: string }): Promise<FeeStatusResponse> {
+          const res = await fetch(`${apiBase}/api/landing/checkout/check-fee`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
+          });
+          return handleResponse<FeeStatusResponse>(res);
+        },
+        async reserve(payload: ReservationPayload | Record<string, unknown>): Promise<ReservationResponse> {
+          const res = await fetch(`${apiBase}/api/landing/checkout/reserve`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          return handleResponse<ReservationResponse>(res);
+        },
+        async createStripeSession(payload: StripeSessionPayload | Record<string, unknown>): Promise<CheckoutSessionResponse> {
+          const res = await fetch(`${apiBase}/api/landing/checkout/stripe-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          return handleResponse<CheckoutSessionResponse>(res);
+        },
+        async verifyPayment(dto: { sessionId: string; bookingId: string }): Promise<{ success: boolean; booking: BookingRecord }> {
+          const res = await fetch(`${apiBase}/api/landing/checkout/verify-payment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto),
+          });
+          return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
+        },
+      },
+      bookings: {
+        async getById(bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> {
+          const res = await fetch(`${apiBase}/api/landing/bookings/${bookingId}`);
+          return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
+        },
+      },
+      contact: {
+        async submit(payload: ContactFormPayload): Promise<{ success: boolean; message?: string }> {
+          const res = await fetch(`${apiBase}/api/landing/contact`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          return handleResponse<{ success: boolean; message?: string }>(res);
+        },
+      },
+      settings: {
+        async getPaymentGateway(): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+          const res = await fetch(`${apiBase}/api/landing/settings/payment-gateway`);
+          return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+        },
+      },
+    },
     courses: {
       async getCourses(): Promise<{ success: boolean; courses: CourseItem[] }> {
         const res = await fetch(`${apiBase}/api/v1/courses`);

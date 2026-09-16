@@ -257,12 +257,23 @@ export async function getBookingDetails(id: string) {
     return { success: false, error: 'Booking not found' };
   }
 
-  const { data: payments } = await supabase
-    .from('payments')
-    .select('id, amount, type, status, payment_method, academic_year, created_at')
-    .eq('booking_id', id);
+  const [paymentsRes, lessonsRes] = await Promise.all([
+    supabase
+      .from('payments')
+      .select('id, amount, type, status, payment_method, academic_year, created_at')
+      .eq('booking_id', id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('lessons')
+      .select('id, starts_at, ends_at, status')
+      .eq('booking_id', id)
+      .order('starts_at', { ascending: true }),
+  ]);
 
-  const coursePayment = payments?.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
+  const payments = paymentsRes.data || [];
+  const lessons = lessonsRes.data || [];
+
+  const coursePayment = payments.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
   const amountPaid = Number(booking.amount_paid || 0);
   const regFee = Number(booking.registration_fee || 0);
   const coursePrice = coursePayment
@@ -271,23 +282,40 @@ export async function getBookingDetails(id: string) {
 
   const statusMap: Record<number, string> = {
     0: 'pending',
-    1: 'paid',
-    2: 'partial',
-    3: 'refunded',
-    4: 'cancelled',
+    1: 'pending',
+    2: 'reserved',
+    3: 'paid',
+    4: 'refunded',
+    5: 'partially_refunded',
+    6: 'failed',
+    7: 'cancelled',
+  };
+
+  const methodMap: Record<number, string> = {
+    1: 'stripe',
+    2: 'cash',
+    3: 'pos',
+    4: 'bank_transfer',
   };
 
   const statusNum = Number(booking.payment_status ?? 0);
   const paymentStatusLabel = statusMap[statusNum] || (typeof booking.payment_status === 'string' ? booking.payment_status : 'pending');
+
+  const methodNum = Number(booking.payment_method ?? 0);
+  const paymentMethodLabel = methodMap[methodNum] || (typeof booking.payment_method === 'string' ? booking.payment_method : 'cash');
 
   return {
     success: true,
     booking: {
       ...booking,
       payment_status_label: paymentStatusLabel,
+      payment_method_label: paymentMethodLabel,
       course_price: coursePrice,
       item_price: coursePrice,
-      payments: payments || [],
+      total_price: amountPaid > 0 ? amountPaid : coursePrice + regFee,
+      payments: payments,
+      lessons_count: lessons.length,
+      lessons: lessons,
     },
   };
 }

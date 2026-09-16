@@ -1426,6 +1426,40 @@ export function parseCourseFormat(val: any): CourseFormat {
   return CourseFormat.GROUP;
 }
 
+export interface BookingPaymentItem {
+  id: string;
+  amount: number;
+  type: string | number;
+  status: string | number;
+  payment_method?: string | number;
+  academic_year?: string;
+  created_at?: string;
+}
+
+export interface BookingLessonItem {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  status: number | string;
+}
+
+export interface BookingDetailsRecord extends BookingRecord {
+  payment_status_label?: string;
+  payment_method_label?: string;
+  course_price?: number;
+  item_price?: number;
+  total_price?: number;
+  payments?: BookingPaymentItem[];
+  lessons_count?: number;
+  lessons?: BookingLessonItem[];
+}
+
+export interface BookingDetailsResponse {
+  success: boolean;
+  booking?: BookingDetailsRecord;
+  error?: string;
+}
+
 
 
 
