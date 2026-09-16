@@ -3,6 +3,7 @@ import CourseDetailClient from "./CourseDetailClient";
 import { getItem } from "@/lib/server/checkout-service";
 import { createClient } from "@/lib/supabase/server";
 import CourseSchema from "@/features/courses/components/CourseSchema";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { env } from "@/config/env";
 
 interface PageProps {
@@ -77,6 +78,13 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
   return (
     <>
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Corsi", url: "/corsi" },
+          { name: title, url: `/corsi/${course.slug || id}` },
+        ]}
+      />
       <CourseSchema
         name={title}
         description={description}

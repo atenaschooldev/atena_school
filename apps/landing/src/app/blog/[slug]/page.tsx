@@ -2,6 +2,7 @@ import { getBlogPostDetail, getBlogStaticParams } from "@/features/blog/services
 import Link from "next/link";
 import { CaretLeft, Calendar, ShareNetwork } from "@/components/Icons";
 import { notFound } from "next/navigation";
+import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { env } from "@/config/env";
 
 export async function generateStaticParams() {
@@ -45,6 +46,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 
   return (
     <main className="min-h-screen bg-background pt-24 pb-28 relative overflow-hidden">
+      <BreadcrumbSchema
+        items={[
+          { name: "Home", url: "/" },
+          { name: "Blog", url: "/blog" },
+          { name: post.title, url: `/blog/${slug}` },
+        ]}
+      />
       <article className="max-w-4xl mx-auto px-4">
         {/* Navigation */}
         <div className="mb-12">
