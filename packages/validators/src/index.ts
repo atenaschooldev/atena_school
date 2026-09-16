@@ -299,18 +299,24 @@ export type CreateReservationInput = z.infer<typeof createReservationSchema>;
 // ---------------------------------------------------------------------------
 
 export const checkoutFormSchema = reservationBaseObject
-  .omit({ studentTaxCode: true })
+  .omit({ studentTaxCode: true, itemId: true })
   .extend({
-    // На форме поле называется taxCode (CF студента)
-    taxCode: z
-      .string()
-      .min(11, "Il Codice Fiscale è obbligatorio (almeno 11 caratteri)")
-      .refine(
-        (v) => CODICE_FISCALE_RE.test(v.trim()),
-        "Codice Fiscale non valido (es. RSSMRA80A01H501T)"
-      ),
+    itemId: z.string().optional(),
+    taxCode: optionalCodiceFiscale("Codice Fiscale non valido (es. RSSMRA80A01H501T)"),
   })
-  .superRefine(applyReservationRefinements);
+  .superRefine((data, ctx) => {
+    // When purchasing for self (isForChild === false/undefined), taxCode is mandatory
+    if (!data.isForChild) {
+      if (!data.taxCode || !CODICE_FISCALE_RE.test(data.taxCode.trim())) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["taxCode"],
+          message: "Il Codice Fiscale è obbligatorio (es. RSSMRA80A01H501T)",
+        });
+      }
+    }
+    applyReservationRefinements(data, ctx);
+  });
 
 export type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
