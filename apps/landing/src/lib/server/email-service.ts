@@ -25,9 +25,12 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://atena-school-app.vercel.app';
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
-  const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
+  const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta (Stripe)' : 'Prenotato con Saldo in Sede';
   const totalEur = Number(booking.amount_paid || 0).toFixed(2);
   const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
+  const courseFeeEur = (Number(totalEur) - Number(regFeeEur)).toFixed(2);
+  const stripePaymentIntentId = (booking as unknown as { stripe_payment_intent_id?: string; payment_intent_id?: string }).stripe_payment_intent_id || (booking as unknown as { payment_intent_id?: string }).payment_intent_id || undefined;
+  const stripeSessionId = (booking as unknown as { stripe_session_id?: string }).stripe_session_id || undefined;
 
   const templateData: BookingEmailTemplateData = {
     courseName,
@@ -41,13 +44,22 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
     studentBirthDate: dto.studentBirthDate,
     date: dto.date,
     time: dto.time,
+    lessonSchedule: dto.time || undefined,
     totalEur,
+    courseFeeEur,
     regFeeEur,
     isPaidOnline,
     paymentStatusText,
+    paymentMethodText: isPaidOnline ? 'Carta di Credito (Stripe)' : 'Contanti / POS in Segreteria',
     bookingId: booking.id,
     notes: dto.notes,
     appUrl,
+    pecEmail: dto.pecEmail,
+    sdiCode: dto.sdiCode,
+    needsCompanyInvoice: dto.needsCompanyInvoice,
+    stripeSessionId,
+    stripePaymentIntentId,
+    stripeDashboardUrl: stripePaymentIntentId ? `https://dashboard.stripe.com/payments/${stripePaymentIntentId}` : undefined,
   };
 
   const clientEmail = renderClientBookingConfirmationEmail(templateData);
