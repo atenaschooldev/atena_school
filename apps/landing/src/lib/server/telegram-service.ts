@@ -80,7 +80,7 @@ export async function sendTelegramBookingNotification(data: BookingEmailTemplate
     `🏛 <b>Sede:</b> In Presenza (Cittanova)`,
     ``,
     `👤 <b>Acquirente:</b> ${escapeHtml(data.purchaserName)}`,
-    `📧 <b>Email:</b> ${escapeHtml(data.purchaserEmail)}`,
+    `📧 <b>Email:</b> <a href="mailto:${escapeHtml(data.purchaserEmail)}">${escapeHtml(data.purchaserEmail)}</a>`,
     `📱 <b>Telefono:</b> ${escapeHtml(data.purchaserPhone || 'N/D')}`,
     `🧾 <b>Codice Fiscale:</b> <code>${escapeHtml(data.purchaserTaxCode || 'N/D')}</code>`,
   ];
@@ -134,16 +134,7 @@ export async function sendTelegramBookingNotification(data: BookingEmailTemplate
     keyboard.push(actionRow);
   }
 
-  if (data.purchaserEmail) {
-    keyboard.push([
-      {
-        text: '✉️ Invia Email al Cliente',
-        url: `mailto:${data.purchaserEmail}?subject=Conferma%20Iscrizione%20Corso%20${encodeURIComponent(data.courseName)}%20-%20Atena%20School`,
-      },
-    ]);
-  }
-
-  return sendTelegramMessage(lines.join('\n'), keyboard);
+  return sendTelegramMessage(lines.join('\n'), keyboard.length > 0 ? keyboard : undefined);
 }
 
 /**
@@ -158,7 +149,7 @@ export async function sendTelegramContactNotification(data: ContactEmailTemplate
     `✉️ <b>NUOVO MESSAGGIO DAL SITO WEB — ATENA SCHOOL</b>`,
     ``,
     `👤 <b>Da:</b> ${escapeHtml(data.firstName)} ${escapeHtml(data.lastName)}`,
-    `📧 <b>Email:</b> ${escapeHtml(data.email)}`,
+    `📧 <b>Email:</b> <a href="mailto:${escapeHtml(data.email)}">${escapeHtml(data.email)}</a>`,
     `📱 <b>Telefono:</b> ${escapeHtml(data.phone || 'Non indicato')}`,
     `🎯 <b>Interesse:</b> ${escapeHtml(data.interest || 'Informazioni Generali')}`,
     ``,
@@ -167,18 +158,10 @@ export async function sendTelegramContactNotification(data: ContactEmailTemplate
   ];
 
   const keyboard: Array<Array<{ text: string; url: string }>> = [];
-  const actionRow: Array<{ text: string; url: string }> = [];
 
   if (whatsappUrl) {
-    actionRow.push({ text: '💬 WhatsApp', url: whatsappUrl });
+    keyboard.push([{ text: '💬 Contatta su WhatsApp', url: whatsappUrl }]);
   }
 
-  actionRow.push({
-    text: '✉️ Rispondi via Email',
-    url: `mailto:${data.email}?subject=Re:%20Richiesta%20informazioni%20Atena%20School`,
-  });
-
-  keyboard.push(actionRow);
-
-  return sendTelegramMessage(lines.join('\n'), keyboard);
+  return sendTelegramMessage(lines.join('\n'), keyboard.length > 0 ? keyboard : undefined);
 }
