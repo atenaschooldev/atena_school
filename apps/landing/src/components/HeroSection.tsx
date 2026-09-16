@@ -6,6 +6,7 @@ import { MapPin, ArrowRight, Star, CheckCircle, ShieldCheck, Trophy, GraduationC
 import { Link } from "@/i18n/routing";
 
 import studentImg from "@/assets/hero.webp";
+import logo from "@/assets/logo.webp";
 import { HeroData } from "@/features/home/services/homeService";
 
 interface HeroSectionProps {
@@ -29,118 +30,119 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-2 sm:py-3 min-h-0">
 
         {/* MOBILE ONLY LAYOUT (< lg) */}
-        <div className="lg:hidden flex flex-col justify-between gap-4 py-2 flex-1">
+        <div className="lg:hidden flex flex-col gap-4 pt-1 pb-4 text-left">
 
-          {/* Top row: Text (Left) + Student Image (Right) */}
-          <div className="flex flex-row items-stretch gap-3">
-            {/* Left Column: Heading & Info */}
-            <div className="flex-1 space-y-2.5 text-left">
-              {/* Location Badge Pill */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 border border-slate-200/90 text-[10px] sm:text-xs font-bold text-slate-600 tracking-wider uppercase shadow-2xs">
-                <MapPin size={13} className="text-[#F8861D] shrink-0" weight="bold" />
-                <span>A CITTANOVA (RC) • IN SEDE E ONLINE</span>
-              </div>
-
-              {/* Main Heading H1 */}
-              <h1 className="font-serif text-[1.65rem] xs:text-[1.8rem] sm:text-3xl font-black text-[#043569] leading-[1.1] tracking-tight">
-                Corsi di Lingua e Certificazioni in Presenza e Online
-              </h1>
-
-              {/* Description Subtitle */}
-              <p className="text-slate-600 text-xs sm:text-sm font-medium leading-relaxed">
-                Con <strong className="font-extrabold text-[#043569]">ATENA <span className="text-[#F8861D]">SCHOOL</span></strong> impara l&apos;inglese, preparati agli esami <strong className="font-bold text-[#D9232D]">Cambridge University</strong> e <strong className="font-bold text-[#6C207E]">Trinity College</strong> ed ottieni certificazioni ufficiali <strong className="font-bold text-[#0056B3]">EIPASS</strong>.
-              </p>
-
-              <p className="text-slate-500 text-[11px] sm:text-xs font-medium leading-relaxed">
-                Percorsi riconosciuti per scuola, università e lavoro — in sede e online in tutta Italia.
-              </p>
-            </div>
-
-            {/* Right Column: Student Image Cutout */}
-            <div className="w-[145px] xs:w-[170px] sm:w-[210px] shrink-0 relative flex items-end justify-center self-end">
-              {/* Background dot grid pattern effect */}
-              <div className="absolute top-2 right-0 w-20 h-20 bg-[radial-gradient(#f8861d33_1.5px,transparent_1.5px)] bg-[size:8px_8px] pointer-events-none" />
+          {/* Centered School Logo & Brand Lockup */}
+          <div className="flex flex-col items-center justify-center pt-1 pb-1 gap-2 select-none" translate="no">
+            <div className="w-16 h-16 xs:w-20 xs:h-20 rounded-full bg-white p-1.5 shadow-md border border-slate-200/80 flex items-center justify-center">
               <Image
-                src={studentImg}
-                alt="Studente Atena School"
-                width={400}
-                height={520}
-                className="object-contain max-h-[260px] xs:max-h-[290px] sm:max-h-[340px] w-auto relative z-10 drop-shadow-lg"
+                src={logo}
+                alt="Atena School"
+                width={80}
+                height={80}
+                className="w-full h-full object-contain"
                 priority
               />
             </div>
+            <div className="flex flex-col items-center leading-tight">
+              <span className="font-serif font-black text-2xl xs:text-3xl tracking-wider uppercase text-[#043569]">
+                Atena <span className="text-[#F8861D]">School</span>
+              </span>
+              <span className="text-[9.5px] xs:text-[10.5px] tracking-[0.25em] font-bold text-slate-400 uppercase mt-0.5">
+                Civitatis Ornamento
+              </span>
+            </div>
           </div>
 
-          {/* 4 Feature Cards Grid */}
-          <div className="grid grid-cols-4 gap-2 sm:gap-3 my-1">
-            {/* Card 1: Cambridge */}
-            <Link href="#corsi" className="bg-white/95 border border-slate-200/80 shadow-sm rounded-xl p-2.5 sm:p-3 flex flex-col items-center text-center group hover:border-orange-300 transition-all">
-              <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100 mb-1.5">
-                <ShieldCheck size={16} weight="bold" className="text-[#F8861D]" />
+          {/* Top Rating & Accreditation Badge (Centered) */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-slate-800">
+              <div className="flex items-center text-amber-400 gap-0.5">
+                <Star size={12} weight="fill" />
+                <Star size={12} weight="fill" />
+                <Star size={12} weight="fill" />
+                <Star size={12} weight="fill" />
+                <Star size={12} weight="fill" />
               </div>
-              <p className="text-[11px] sm:text-xs font-black text-[#043569] leading-tight">Centro Cambridge</p>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">KET, PET, FCE</p>
-            </Link>
-
-            {/* Card 2: EIPASS */}
-            <Link href="#corsi" className="bg-white/95 border border-slate-200/80 shadow-sm rounded-xl p-2.5 sm:p-3 flex flex-col items-center text-center group hover:border-blue-300 transition-all">
-              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 border border-blue-100 mb-1.5">
-                <GraduationCap size={16} weight="fill" className="text-[#043569]" />
-              </div>
-              <p className="text-[11px] sm:text-xs font-black text-[#043569] leading-tight">Certificazioni EIPASS</p>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">Moduli, Coding &amp; IT</p>
-            </Link>
-
-            {/* Card 3: Madrelingua */}
-            <Link href="#contatti" className="bg-white/95 border border-slate-200/80 shadow-sm rounded-xl p-2.5 sm:p-3 flex flex-col items-center text-center group hover:border-emerald-300 transition-all">
-              <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100 mb-1.5">
-                <Star size={16} weight="fill" className="text-emerald-600" />
-              </div>
-              <p className="text-[11px] sm:text-xs font-black text-[#043569] leading-tight">Docenti Madrelingua</p>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">Tutor qualificati</p>
-            </Link>
-
-            {/* Card 4: Per tutte le età */}
-            <a href="#contatti" className="bg-white/95 border border-slate-200/80 shadow-sm rounded-xl p-2.5 sm:p-3 flex flex-col items-center text-center group hover:border-amber-300 transition-all">
-              <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100 mb-1.5">
-                <Users size={16} weight="fill" className="text-amber-600" />
-              </div>
-              <p className="text-[11px] sm:text-xs font-black text-[#043569] leading-tight">Per tutte le età</p>
-              <p className="text-[9px] sm:text-[10px] text-slate-400 font-semibold leading-tight mt-0.5">Bambini e adulti</p>
-            </a>
+              <span className="font-black text-[#043569]">4.9 / 5</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-bold text-[10.5px]">
+                <span className="text-[#D9232D]">Cambridge</span>, <span className="text-[#6C207E]">Trinity</span> &amp; <span className="text-[#0056B3]">EIPASS</span>
+              </span>
+            </div>
           </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-col gap-2.5 my-1">
+          {/* Heading & Subtitle (Same as Desktop) */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+              <MapPin size={14} className="text-[#F8861D] shrink-0" weight="bold" />
+              <span>Cittanova (RC) • In Presenza e Online</span>
+            </div>
+
+            <h1 className="font-serif text-[1.95rem] xs:text-[2.25rem] font-black text-[#043569] leading-[1.12] tracking-tight">
+              Corsi di Lingua e Certificazioni in Presenza e Online
+            </h1>
+
+            <p className="text-slate-600 text-[13px] xs:text-sm font-medium leading-relaxed">
+              Con <strong className="font-extrabold text-[#043569]">ATENA <span className="text-[#F8861D]">SCHOOL</span></strong> impara l&apos;inglese, preparati agli esami <strong className="font-bold text-[#D9232D]">Cambridge University</strong> e <strong className="font-bold text-[#6C207E]">Trinity College</strong> ed ottieni certificazioni ufficiali <strong className="font-bold text-[#0056B3]">EIPASS</strong>. Percorsi riconosciuti per scuola, università e lavoro — in sede e online in tutta&nbsp;Italia.
+            </p>
+          </div>
+
+          {/* Official Accreditation Badges */}
+          <div className="flex flex-wrap items-center gap-2 pt-0.5">
+            <Link
+              href="#corsi"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
+            >
+              <ShieldCheck size={15} weight="bold" className="text-[#D9232D]" />
+              <span>Centro Cambridge</span>
+            </Link>
+            <Link
+              href="#corsi"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
+            >
+              <Trophy size={15} weight="bold" className="text-[#6C207E]" />
+              <span>Trinity College</span>
+            </Link>
+            <Link
+              href="#corsi"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
+            >
+              <GraduationCap size={15} weight="fill" className="text-[#0056B3]" />
+              <span>Certificazioni EIPASS</span>
+            </Link>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col gap-2.5 pt-1.5">
             <a
               href="#contatti"
-              className="group inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-6 py-3.5 rounded-full font-black text-sm transition-all duration-300 shadow-md shadow-orange-500/20 active:translate-y-0 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] active:scale-[0.98] text-white py-3.5 px-6 rounded-full font-extrabold text-sm transition-all duration-200 shadow-md shadow-orange-500/25 cursor-pointer"
             >
-              Prenota una consulenza gratuita
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" weight="bold" />
+              <span>Prenota una consulenza gratuita</span>
+              <ArrowRight size={16} weight="bold" />
             </a>
             <Link
               href="/test-inglese"
-              className="inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 text-[#043569] border border-[#043569]/80 px-6 py-3.5 rounded-full font-extrabold text-sm transition-all duration-300 shadow-sm active:translate-y-0 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 active:scale-[0.98] text-[#043569] border border-slate-200/90 py-3 px-6 rounded-full font-extrabold text-sm transition-all duration-200 shadow-2xs cursor-pointer"
             >
-              Testa il tuo inglese ⚡
+              <span>Testa il tuo inglese</span>
+              <span className="text-amber-500">⚡</span>
             </Link>
           </div>
 
-          {/* Benefits Card Container */}
-          <div className="bg-white border border-slate-200/80 rounded-xl px-4 py-3 flex items-center justify-around text-xs text-slate-700 font-bold shadow-sm">
-            <div className="flex items-center gap-1.5">
-              <CheckCircle size={16} className="text-[#043569]" weight="bold" />
+          {/* Quick Benefits Bullet Points */}
+          <div className="flex items-center justify-between px-1 text-[11.5px] text-slate-600 font-bold pt-1">
+            <div className="flex items-center gap-1">
+              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
               <span>Esami in sede</span>
             </div>
-            <div className="h-3.5 w-[1px] bg-slate-200" />
-            <div className="flex items-center gap-1.5">
-              <Users size={16} className="text-[#043569]" weight="bold" />
+            <div className="flex items-center gap-1">
+              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
               <span>Gruppi ridotti</span>
             </div>
-            <div className="h-3.5 w-[1px] bg-slate-200" />
-            <div className="flex items-center gap-1.5">
-              <Clock size={16} className="text-[#043569]" weight="bold" />
+            <div className="flex items-center gap-1">
+              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
               <span>Orari flessibili</span>
             </div>
           </div>
