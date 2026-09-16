@@ -8,7 +8,6 @@ import { InstagramLogo, FacebookLogo, House, Users, GraduationCap, EnvelopeSimpl
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
-import { getCurrentUserAction } from "@/app/actions/booking";
 import { env } from "@/config/env";
 
 const Navbar = () => {

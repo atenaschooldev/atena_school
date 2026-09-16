@@ -28,10 +28,7 @@ export function getSessionId() {
   return sessionId;
 }
 
-import { mergeGuestBookingsAction } from "@/app/actions/booking";
-
-export async function mergeGuestBookings(supabase: any, userId: string) {
-  const sessionId = getSessionId();
-  if (!sessionId) return;
-  await mergeGuestBookingsAction(sessionId);
+export async function mergeGuestBookings(_supabase: any, _userId: string) {
+  // Guest bookings are linked via email/tax_code during checkout flow
+  return;
 }

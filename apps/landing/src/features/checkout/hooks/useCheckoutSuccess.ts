@@ -3,12 +3,7 @@ import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
-import {
-  getBookingDetailsServer,
-  getCurrentUserAction,
-  dispatchMagicLinkAction,
-  confirmPaymentAction,
-} from "@/app/actions/booking";
+import { createClient } from "@/lib/supabase/client";
 import { BookingPaymentStatus } from "@atena/api-types";
 import { trackEvent } from "@/lib/analytics";
 
@@ -29,9 +24,14 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
   useEffect(() => {
     async function fetchUser() {
-      const res = await getCurrentUserAction();
-      if (res.success) {
-        setUser(res.user);
+      try {
+        const supabase = createClient();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          setUser(authUser);
+        }
+      } catch (err) {
+        console.warn("Could not fetch current auth user:", err);
       }
     }
     fetchUser();
@@ -51,13 +51,35 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       if (sessionId) {
         // Stripe payment confirmation
         try {
-          const res = await confirmPaymentAction(bookingId, sessionId);
-          const enriched = await getBookingDetailsServer(bookingId);
-          setBookingData(enriched?.booking || enriched || res?.booking || { id: bookingId, payment_status: BookingPaymentStatus.PAID });
+          const verifyRes = await fetch("/api/landing/checkout/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bookingId, sessionId }),
+          });
+          const verifyData = await verifyRes.json();
+
+          const bookingRes = await fetch(`/api/landing/bookings/${bookingId}`);
+          const enriched = await bookingRes.json();
+
+          setBookingData(
+            enriched?.booking ||
+            enriched?.data ||
+            verifyData?.booking ||
+            { id: bookingId, payment_status: BookingPaymentStatus.PAID }
+          );
         } catch (err) {
           console.error("Error confirming payment:", err);
-          const fallback = await getBookingDetailsServer(bookingId);
-          setBookingData(fallback?.booking || fallback || { id: bookingId, payment_status: BookingPaymentStatus.PAID });
+          try {
+            const fallbackRes = await fetch(`/api/landing/bookings/${bookingId}`);
+            const fallback = await fallbackRes.json();
+            setBookingData(
+              fallback?.booking ||
+              fallback?.data ||
+              { id: bookingId, payment_status: BookingPaymentStatus.PAID }
+            );
+          } catch {
+            setBookingData({ id: bookingId, payment_status: BookingPaymentStatus.PAID });
+          }
         } finally {
           setVerifying(false);
           if (typeof window !== "undefined" && window.history && window.location.search) {
@@ -65,9 +87,16 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
           }
         }
       } else {
-        const data = await getBookingDetailsServer(bookingId);
-        setBookingData(data?.booking || data || { id: bookingId });
-        setVerifying(false);
+        try {
+          const res = await fetch(`/api/landing/bookings/${bookingId}`);
+          const data = await res.json();
+          setBookingData(data?.booking || data?.data || { id: bookingId });
+        } catch (err) {
+          console.error("Error fetching booking details:", err);
+          setBookingData({ id: bookingId });
+        } finally {
+          setVerifying(false);
+        }
       }
     }
 
@@ -108,6 +137,20 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     }
   }, [verifying, isPaid, bookingId, bookingData]);
 
+  const sendMagicLink = async (emailToSend: string) => {
+    try {
+      const res = await fetch("/api/landing/auth/magic-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: emailToSend }),
+      });
+      return await res.json();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      return { success: false, error: msg };
+    }
+  };
+
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {
     if (verifying) return;
@@ -124,7 +167,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     sentRef.current = true;
 
     setSendingMagicLink(true);
-    dispatchMagicLinkAction(emailDisplay).then((res) => {
+    sendMagicLink(emailDisplay).then((res) => {
       setSendingMagicLink(false);
       if (res.success) {
         toast.success(`Magic Link inviato a ${emailDisplay}! Controlla la tua posta.`);
@@ -143,7 +186,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     }
 
     setSendingMagicLink(true);
-    const res = await dispatchMagicLinkAction(emailToSend);
+    const res = await sendMagicLink(emailToSend);
     setSendingMagicLink(false);
 
     if (res.success) {

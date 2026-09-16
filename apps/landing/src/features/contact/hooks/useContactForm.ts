@@ -117,7 +117,7 @@ export function useContactForm() {
         return;
       }
 
-      const res = await fetch("/api/v1/contact", {
+      const res = await fetch("/api/landing/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -13,9 +13,9 @@ import type { User } from "@supabase/supabase-js";
 import type { CourseItem, UserProfile } from "@atena/api-types";
 
 export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
-
 export type BookingItem = CourseItem;
-import { getCurrentUserAction } from "@/app/actions/booking";
+
+import { createClient } from "@/lib/supabase/client";
 
 export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
 
@@ -83,8 +83,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     async function initCheckout() {
       try {
         const [itemRes, settingsRes] = await Promise.all([
-          fetch(`/api/v1/courses/${id}`).then((r) => r.json()).catch(() => ({ success: false })),
-          fetch('/api/v1/settings/payment-gateway').then((r) => r.json()).catch(() => ({ success: false })),
+          fetch(`/api/landing/courses/${id}`).then((r) => r.json()).catch(() => ({ success: false })),
+          fetch('/api/landing/settings/payment-gateway').then((r) => r.json()).catch(() => ({ success: false })),
         ]);
 
         if (itemRes.success && (itemRes.item || itemRes.course)) {
@@ -95,9 +95,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setStripeEnabled(Boolean(settingsRes.settings.stripeEnabled));
         }
 
-        const userRes = await getCurrentUserAction();
-        if (userRes.success && userRes.user) {
-          const currentUser = userRes.user;
+        const supabase = createClient();
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
           setUser(currentUser);
           const meta = currentUser.user_metadata || {};
           const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
@@ -107,7 +107,20 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           const phone = meta.phone || currentUser.phone || "";
           const taxCode = meta.tax_code || "";
 
-          const hasPaidFee = userRes.annualFeePaid ?? false;
+          let hasPaidFee = false;
+          if (taxCode) {
+            try {
+              const feeRes = await fetch("/api/landing/checkout/check-fee", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ taxCode }),
+              }).then((r) => r.json());
+              hasPaidFee = Boolean(feeRes.annualFeePaid);
+            } catch {
+              hasPaidFee = false;
+            }
+          }
+
           setHasPaidAnnualFee(hasPaidFee);
           setFeeCheckStatus(hasPaidFee ? "paid" : "not_paid");
 
@@ -190,7 +203,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       const timer = setTimeout(async () => {
         try {
-          const res = await fetch("/api/v1/checkout/check-fee", {
+          const res = await fetch("/api/landing/checkout/check-fee", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ taxCode: tax }),
@@ -225,7 +238,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch("/api/v1/checkout/check-fee", {
+        const res = await fetch("/api/landing/checkout/check-fee", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ taxCode: targetTaxCode }),
@@ -297,7 +310,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setSubmitting("book");
     try {
       const payload = buildReservationPayload(values);
-      const response = await fetch("/api/v1/checkout/reserve", {
+      const response = await fetch("/api/landing/checkout/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -340,7 +353,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setSubmitting("pay");
     try {
       const payload = buildReservationPayload(values);
-      const response = await fetch("/api/v1/checkout/stripe-session", {
+      const response = await fetch("/api/landing/checkout/stripe-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

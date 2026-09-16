@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import CourseDetailClient from "./CourseDetailClient";
-import { fetchCourseAction, getCurrentUserAction } from "@/app/actions/booking";
+import { getItem } from "@/lib/server/checkout-service";
+import { createClient } from "@/lib/supabase/server";
 import CourseSchema from "@/features/courses/components/CourseSchema";
 import { env } from "@/config/env";
 
@@ -10,8 +11,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const res = await fetchCourseAction(id);
-  const course = res?.course;
+  const res = await getItem(id);
+  const course = (res as any)?.item || (res as any)?.course;
 
   if (!course) {
     return {
@@ -59,15 +60,15 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
   
-  const res = await fetchCourseAction(id);
-  const course = res?.course;
+  const res = await getItem(id);
+  const course = (res as any)?.item || (res as any)?.course;
 
   if (!course) {
     notFound();
   }
 
-  const userRes = await getCurrentUserAction();
-  const user = userRes?.user || null;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const title = course.title_it || course.name;
   const description = course.description_it || course.description || "";
