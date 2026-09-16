@@ -1,59 +1,12 @@
-import { Body, Controller, Post, Get, Patch, Param, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
-import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } from '../dto/checkout.public.dto';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from '../dto/checkout.public.dto';
 
-@ApiTags('Landing — Checkout & Catalog')
+@ApiTags('Public — Checkout')
 @Controller('checkout')
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
-
-  @Get('settings')
-  @ApiOperation({
-    summary: 'Получить настройки чекаута',
-    description: 'Возвращает состояние платежного шлюза Stripe (включен/отключен) для отображения на форме чекаута лендинга',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Настройки чекаута успешно получены',
-    schema: {
-      example: {
-        success: true,
-        settings: {
-          stripeEnabled: true,
-        },
-      },
-    },
-  })
-  async getSettings() {
-    const settings = await this.checkoutService.getSettings();
-    return { success: true, settings };
-  }
-
-  @Patch('settings')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Обновить настройки чекаута',
-    description: 'Позволяет включить или выключить Stripe шлюз на чекауте',
-  })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        stripeEnabled: { type: 'boolean', example: true, description: 'Флаг активности Stripe' },
-      },
-      required: ['stripeEnabled'],
-    },
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Настройки успешно обновлены',
-    schema: { example: { success: true, settings: { stripeEnabled: true } } },
-  })
-  async updateSettings(@Body() body: { stripeEnabled: boolean }) {
-    const settings = await this.checkoutService.updateSettings(body);
-    return { success: true, settings };
-  }
 
   @Post('check-fee')
   @HttpCode(HttpStatus.OK)
@@ -102,14 +55,14 @@ export class CheckoutController {
     return this.checkoutService.createReservation(dto);
   }
 
-  @Post('create-stripe-session')
-  @HttpCode(HttpStatus.OK)
+  @Post('stripe-session')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Инициализация сессии Stripe Checkout',
     description: 'Создает сессию оплаты Stripe с позициями по каждому студенту и членским взносам, возвращает URL для редиректа на страницу оплаты',
   })
   @ApiResponse({
-    status: HttpStatus.OK,
+    status: HttpStatus.CREATED,
     description: 'Сессия Stripe создана',
     schema: {
       example: {
@@ -149,74 +102,4 @@ export class CheckoutController {
   async verifyPayment(@Body() dto: VerifyPaymentDto) {
     return this.checkoutService.verifyPayment(dto);
   }
-
-  @Get('item/:id')
-  @ApiOperation({
-    summary: 'Получить публичную информацию о курсе',
-    description: 'Возвращает карточку курса по ID (UUID) или slug с информацией о преподавателе',
-  })
-  @ApiParam({ name: 'id', description: 'UUID или slug курса (напр. b1-preliminary)', example: 'b1-preliminary' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Информация о курсе найдена',
-    schema: {
-      example: {
-        success: true,
-        item: {
-          id: '550e8400-e29b-41d4-a716-446655440000',
-          name: 'Corso di Inglese B1 Preliminary',
-          slug: 'b1-preliminary',
-          price: 240,
-          category: 'languages',
-          teacher_name: 'Sarah Jenkins',
-        },
-      },
-    },
-  })
-  async getItem(@Param('id') id: string) {
-    return this.checkoutService.getItem(id);
-  }
-
-  @Get('booking-details/:id')
-  @ApiOperation({
-    summary: 'Получить детали квитанции бронирования',
-    description: 'Возвращает полную информацию о бронировании для экрана подтверждения заказа',
-  })
-  @ApiParam({ name: 'id', description: 'UUID бронирования', example: '550e8400-e29b-41d4-a716-446655440000' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Детали бронирования получены',
-  })
-  async getBookingDetails(@Param('id') id: string) {
-    return this.checkoutService.getBookingDetails(id);
-  }
-
-  @Get('courses')
-  @ApiOperation({
-    summary: 'Получить полный каталог активных курсов',
-    description: 'Возвращает список всех активных курсов школы с привязанными преподавателями',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Список курсов успешно получен',
-  })
-  async getPublicCourses() {
-    return this.checkoutService.getPublicCourses();
-  }
-
-  @Post('contact')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Отправка формы обратной связи',
-    description: 'Сохраняет входящую заявку/сообщение в таблицу contact_messages для обработки секретариатом',
-  })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Сообщение успешно сохранено',
-    schema: { example: { success: true, message: 'Сообщение успешно отправлено' } },
-  })
-  async submitContact(@Body() dto: ContactFormDto) {
-    return this.checkoutService.submitContact(dto);
-  }
 }
-

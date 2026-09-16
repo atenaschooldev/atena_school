@@ -12,7 +12,7 @@ export async function GET(
     const cleanId = (id || '').trim();
     if (!cleanId || cleanId.length > 100) {
       return NextResponse.json(
-        { success: false, error: 'ID elemento non valido' },
+        { success: false, error: 'ID corso non valido' },
         { status: 400 }
       );
     }
@@ -23,7 +23,7 @@ export async function GET(
     return NextResponse.json(result);
   } catch (err: any) {
     return NextResponse.json(
-      { success: false, error: err.message || 'Failed to fetch item' },
+      { success: false, error: err.message || 'Failed to fetch course' },
       { status: 500 }
     );
   }

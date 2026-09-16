@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await createStripeSession(parsed.data as any);
-    return NextResponse.json(result);
+    const result = await createStripeSession(parsed.data);
+    return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
     console.error('[create-stripe-session route error]:', err);
     return NextResponse.json(
@@ -38,4 +38,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

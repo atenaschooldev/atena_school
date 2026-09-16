@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const result = await submitContact(parsed.data);
-    return NextResponse.json(result);
+    return NextResponse.json(result, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message || 'Impossibile inviare il messaggio' },
@@ -47,4 +47,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
