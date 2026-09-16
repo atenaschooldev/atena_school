@@ -17,7 +17,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
   const t = useTranslations("hero");
 
   return (
-    <section id="home" className="relative min-h-[calc(100dvh-56px)] lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-20 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 lg:pb-3 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
+    <section id="home" className="relative min-h-[calc(100dvh-56px)] lg:h-dvh w-full flex flex-col justify-between overflow-hidden bg-slate-50/70 pt-16 sm:pt-24 lg:pt-20 [@media(min-width:1024px)_and_(min-height:850px)]:pt-28 pb-8 lg:pb-3 sm:pb-4 [@media(min-width:1024px)_and_(min-height:850px)]:pb-8">
 
       {/* Subtle Background Radial Ambient Glows */}
       <div className="absolute top-0 right-0 w-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:w-[800px] h-[450px] [@media(min-width:1024px)_and_(min-height:850px)]:h-[800px] bg-[#F8861D]/10 rounded-full blur-[100px] [@media(min-width:1024px)_and_(min-height:850px)]:blur-[160px] pointer-events-none -z-0" />
@@ -27,28 +27,28 @@ const HeroSection = ({ data }: HeroSectionProps) => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] [@media(min-width:1024px)_and_(min-height:850px)]:bg-[size:44px_44px] [mask-image:linear-gradient(to_bottom,transparent_80px,black_130px)] pointer-events-none -z-0" />
 
       {/* Main Content Area */}
-      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-2 sm:py-3 min-h-0">
+      <div className="relative z-10 w-full max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-12 flex-1 flex flex-col justify-start lg:justify-between py-1.5 sm:py-3 min-h-0">
 
         {/* MOBILE ONLY LAYOUT (< lg) */}
-        <div className="lg:hidden flex flex-col gap-4 pt-1 pb-4 text-left">
+        <div className="lg:hidden flex flex-col gap-3 pt-0.5 pb-2 text-left">
 
           {/* Centered School Logo & Brand Lockup */}
-          <div className="flex flex-col items-center justify-center pt-1 pb-1 gap-2 select-none" translate="no">
-            <div className="w-16 h-16 xs:w-20 xs:h-20 rounded-full bg-white p-1.5 shadow-md border border-slate-200/80 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center pt-0.5 gap-1.5 select-none" translate="no">
+            <div className="w-14 h-14 xs:w-16 xs:h-16 rounded-full bg-white p-1 shadow-sm border border-slate-200/80 flex items-center justify-center">
               <Image
                 src={logo}
                 alt="Atena School"
-                width={80}
-                height={80}
+                width={70}
+                height={70}
                 className="w-full h-full object-contain"
                 priority
               />
             </div>
             <div className="flex flex-col items-center leading-tight">
-              <span className="font-serif font-black text-2xl xs:text-3xl tracking-wider uppercase text-[#043569]">
+              <span className="font-serif font-black text-xl xs:text-2xl tracking-wider uppercase text-[#043569]">
                 Atena <span className="text-[#F8861D]">School</span>
               </span>
-              <span className="text-[9.5px] xs:text-[10.5px] tracking-[0.25em] font-bold text-slate-400 uppercase mt-0.5">
+              <span className="text-[9px] xs:text-[10px] tracking-[0.22em] font-bold text-slate-400 uppercase mt-0.5">
                 Civitatis Ornamento
               </span>
             </div>
@@ -56,65 +56,40 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
           {/* Top Rating & Accreditation Badge (Centered) */}
           <div className="flex justify-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-slate-800">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-slate-200/90 shadow-2xs text-[10.5px] font-bold text-slate-800">
               <div className="flex items-center text-amber-400 gap-0.5">
-                <Star size={12} weight="fill" />
-                <Star size={12} weight="fill" />
-                <Star size={12} weight="fill" />
-                <Star size={12} weight="fill" />
-                <Star size={12} weight="fill" />
+                <Star size={11} weight="fill" />
+                <Star size={11} weight="fill" />
+                <Star size={11} weight="fill" />
+                <Star size={11} weight="fill" />
+                <Star size={11} weight="fill" />
               </div>
               <span className="font-black text-[#043569]">4.9 / 5</span>
               <span className="text-slate-300">•</span>
-              <span className="font-bold text-[10.5px]">
+              <span className="font-bold text-[10px]">
                 <span className="text-[#D9232D]">Cambridge</span>, <span className="text-[#6C207E]">Trinity</span> &amp; <span className="text-[#0056B3]">EIPASS</span>
               </span>
             </div>
           </div>
 
           {/* Heading & Subtitle (Same as Desktop) */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
-              <MapPin size={14} className="text-[#F8861D] shrink-0" weight="bold" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">
+              <MapPin size={13} className="text-[#F8861D] shrink-0" weight="bold" />
               <span>Cittanova (RC) • In Presenza e Online</span>
             </div>
 
-            <h1 className="font-serif text-[1.95rem] xs:text-[2.25rem] font-black text-[#043569] leading-[1.12] tracking-tight">
+            <h1 className="font-serif text-[1.85rem] xs:text-[2.1rem] font-black text-[#043569] leading-[1.12] tracking-tight">
               Corsi di Lingua e Certificazioni in Presenza e Online
             </h1>
 
-            <p className="text-slate-600 text-[13px] xs:text-sm font-medium leading-relaxed">
+            <p className="text-slate-600 text-xs xs:text-[13px] font-medium leading-relaxed">
               Con <strong className="font-extrabold text-[#043569]">ATENA <span className="text-[#F8861D]">SCHOOL</span></strong> impara l&apos;inglese, preparati agli esami <strong className="font-bold text-[#D9232D]">Cambridge University</strong> e <strong className="font-bold text-[#6C207E]">Trinity College</strong> ed ottieni certificazioni ufficiali <strong className="font-bold text-[#0056B3]">EIPASS</strong>. Percorsi riconosciuti per scuola, università e lavoro — in sede e online in tutta&nbsp;Italia.
             </p>
           </div>
 
-          {/* Official Accreditation Badges */}
-          <div className="flex flex-wrap items-center gap-2 pt-0.5">
-            <Link
-              href="#corsi"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
-            >
-              <ShieldCheck size={15} weight="bold" className="text-[#D9232D]" />
-              <span>Centro Cambridge</span>
-            </Link>
-            <Link
-              href="#corsi"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
-            >
-              <Trophy size={15} weight="bold" className="text-[#6C207E]" />
-              <span>Trinity College</span>
-            </Link>
-            <Link
-              href="#corsi"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-[11px] font-bold text-[#043569] active:scale-95 transition-transform"
-            >
-              <GraduationCap size={15} weight="fill" className="text-[#0056B3]" />
-              <span>Certificazioni EIPASS</span>
-            </Link>
-          </div>
-
           {/* CTA Buttons */}
-          <div className="flex flex-col gap-2.5 pt-1.5">
+          <div className="flex flex-col gap-2 pt-1">
             <a
               href="#contatti"
               className="w-full inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] active:scale-[0.98] text-white py-3.5 px-6 rounded-full font-extrabold text-sm transition-all duration-200 shadow-md shadow-orange-500/25 cursor-pointer"
@@ -124,7 +99,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             </a>
             <Link
               href="/test-inglese"
-              className="w-full inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 active:scale-[0.98] text-[#043569] border border-slate-200/90 py-3 px-6 rounded-full font-extrabold text-sm transition-all duration-200 shadow-2xs cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-white hover:bg-slate-50 active:scale-[0.98] text-[#043569] border border-slate-200/90 py-3 px-6 rounded-full font-extrabold text-xs transition-all duration-200 shadow-2xs cursor-pointer"
             >
               <span>Testa il tuo inglese</span>
               <span className="text-amber-500">⚡</span>
@@ -132,17 +107,17 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           </div>
 
           {/* Quick Benefits Bullet Points */}
-          <div className="flex items-center justify-between px-1 text-[11.5px] text-slate-600 font-bold pt-1">
+          <div className="flex items-center justify-between px-1 text-[11px] text-slate-600 font-bold pt-0.5">
             <div className="flex items-center gap-1">
-              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
+              <CheckCircle size={14} className="text-[#F8861D]" weight="fill" />
               <span>Esami in sede</span>
             </div>
             <div className="flex items-center gap-1">
-              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
+              <CheckCircle size={14} className="text-[#F8861D]" weight="fill" />
               <span>Gruppi ridotti</span>
             </div>
             <div className="flex items-center gap-1">
-              <CheckCircle size={15} className="text-[#F8861D]" weight="fill" />
+              <CheckCircle size={14} className="text-[#F8861D]" weight="fill" />
               <span>Orari flessibili</span>
             </div>
           </div>
