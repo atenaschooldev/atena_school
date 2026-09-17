@@ -88,9 +88,7 @@ async function bootstrap() {
     // ==========================================
     .addTag('Dictionary / Справочники', 'Словарь числовых кодов, статусов и типов данных. Интерактивная таблица: /docs/dictionary')
 
-    // ==========================================
-    // 4. 🏢 CRM АДМИНИСТРАТОРА (ADMIN)
-    // ==========================================
+    .addTag('Admin — Dashboard / Home', 'Главный дашборд CRM и аналитическая сводка')
     .addTag('Admin — Bookings', 'Управление бронированиями и регистрацией на рецепции')
     .addTag('Admin — Students', 'Управление карточками студентов и фильтрами')
     .addTag('Admin — Courses', 'Управление каталогом курсов')
@@ -101,7 +99,7 @@ async function bootstrap() {
     .addTag('Admin — Schedules', 'Управление расписанием')
     .addTag('Admin — Reports / Analytics', 'Финансовые отчёты, должники и сводки посещаемости')
     .addTag('Admin — Audit Logs', 'Журнал активности и логов действий сотрудников')
-    .addTag('Admin — Mail', 'Отправка писем и уведомлений')
+    .addTag('Admin — Notifications (Mail & Telegram)', 'Отправка писем и Telegram-уведомлений')
     .addBearerAuth(
       {
         type: 'http',
