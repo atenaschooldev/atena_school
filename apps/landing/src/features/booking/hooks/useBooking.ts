@@ -3,32 +3,35 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
 import { formatCourseDurationText, buildCheckoutUrl } from "@atena/utils";
+import type { CourseItem } from "@atena/api-types";
+import type { User } from "@supabase/supabase-js";
 
 export function useBooking(
   typeOrId: string,
-  idOrItem: any,
-  itemOrUser?: any,
-  userOrUndefined?: any
+  idOrItem?: string | CourseItem | null,
+  itemOrUser?: CourseItem | User | null,
+  userOrUndefined?: User | null
 ) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const isLegacy = typeof idOrItem === "string";
-  const id = isLegacy ? idOrItem : typeOrId;
-  const initialItem = isLegacy ? itemOrUser : idOrItem;
-  const initialUser = isLegacy ? userOrUndefined : itemOrUser;
+  const id = isLegacy ? (idOrItem as string) : typeOrId;
+  const initialItem = (isLegacy ? itemOrUser : idOrItem) as CourseItem | null;
+  const initialUser = (isLegacy ? userOrUndefined : itemOrUser) as User | null;
 
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
 
-  const [item] = useState<any>(initialItem);
-  const [user] = useState<any>(initialUser);
+  const [item] = useState<CourseItem | null>(initialItem);
+  const [user] = useState<User | null>(initialUser);
 
   const isFlexibleSchedule = Number(item?.schedule_type) === 2 || item?.schedule_type === "flexible" || (!item?.schedule_days || item.schedule_days.length === 0);
   const isFixedSchedule = !isFlexibleSchedule;
 
-  const allowedDays: number[] = (item?.schedule_days && Array.isArray(item.schedule_days) && item.schedule_days.length > 0)
-    ? item.schedule_days
+  const rawDays = item?.schedule_days;
+  const allowedDays: number[] = Array.isArray(rawDays) && rawDays.length > 0
+    ? rawDays.map(Number).filter((n) => !isNaN(n))
     : [1, 2, 3, 4, 5];
 
   const formattedTimeRange = (item?.start_time && item?.end_time)

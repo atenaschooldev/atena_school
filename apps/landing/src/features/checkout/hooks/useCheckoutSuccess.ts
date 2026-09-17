@@ -1,11 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
-import confetti from "canvas-confetti";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { createClient } from "@/lib/supabase/client";
-import { BookingPaymentStatus } from "@atena/api-types";
+import { api } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
+import { BookingPaymentStatus } from "@atena/api-types";
+import type { User } from "@supabase/supabase-js";
+import type { BookingRecord } from "@atena/api-types";
 
 export function useCheckoutSuccess(overrideBookingId?: string) {
   const router = useRouter();
@@ -13,13 +16,14 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
   const sessionId = searchParams.get("session_id");
   const queryBookingId = searchParams.get("booking_id");
   const emailParam = searchParams.get("email");
-  const bookingId = overrideBookingId || queryBookingId;
+  const bookingId = overrideBookingId || queryBookingId || "";
 
+  const [bookingData, setBookingData] = useState<Partial<BookingRecord> | null>(null);
   const [verifying, setVerifying] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [bookingData, setBookingData] = useState<any>(null);
   const [sendingMagicLink, setSendingMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
   const sentRef = useRef(false);
 
   useEffect(() => {
@@ -63,30 +67,20 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       if (sessionId) {
         // Stripe payment confirmation
         try {
-          const verifyRes = await fetch("/api/landing/checkout/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bookingId, sessionId }),
-          });
-          const verifyData = await verifyRes.json();
-
-          const bookingRes = await fetch(`/api/landing/bookings/${bookingId}`);
-          const enriched = await bookingRes.json();
+          const verifyData = await api.checkout.verifyPayment({ bookingId, sessionId }).catch(() => null);
+          const enriched = await api.bookings.getById(bookingId).catch(() => null);
 
           setBookingData(
             enriched?.booking ||
-            enriched?.data ||
             verifyData?.booking ||
             { id: bookingId, payment_status: BookingPaymentStatus.PAID }
           );
         } catch (err) {
           console.error("Error confirming payment:", err);
           try {
-            const fallbackRes = await fetch(`/api/landing/bookings/${bookingId}`);
-            const fallback = await fallbackRes.json();
+            const fallback = await api.bookings.getById(bookingId);
             setBookingData(
               fallback?.booking ||
-              fallback?.data ||
               { id: bookingId, payment_status: BookingPaymentStatus.PAID }
             );
           } catch {
@@ -100,9 +94,8 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
         }
       } else {
         try {
-          const res = await fetch(`/api/landing/bookings/${bookingId}`);
-          const data = await res.json();
-          setBookingData(data?.booking || data?.data || { id: bookingId });
+          const data = await api.bookings.getById(bookingId);
+          setBookingData(data?.booking || { id: bookingId });
         } catch (err) {
           console.error("Error fetching booking details:", err);
           setBookingData({ id: bookingId });
@@ -117,7 +110,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
   const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || bookingData?.payment_status === "paid" || bookingData?.status === "paid";
+  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || String(bookingData?.payment_status) === "paid" || String(bookingData?.status) === "paid";
 
   const purchaseTrackedRef = useRef(false);
 
@@ -133,35 +126,22 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
     if (isPaid && bookingId && !purchaseTrackedRef.current) {
       purchaseTrackedRef.current = true;
+      const bookingAmount = Number(bookingData?.amount_paid || bookingData?.course_price || 0);
       trackEvent("purchase", {
         transaction_id: bookingId,
-        value: bookingData?.total_amount || bookingData?.amount || 0,
+        value: bookingAmount,
         currency: "EUR",
         items: [
           {
             item_id: bookingData?.course_id || bookingId,
             item_name: bookingData?.course_name || "Corso Atena School",
-            price: bookingData?.total_amount || bookingData?.amount || 0,
+            price: bookingAmount,
             quantity: 1,
           },
         ],
       });
     }
   }, [verifying, isPaid, bookingId, bookingData]);
-
-  const sendMagicLink = async (emailToSend: string) => {
-    try {
-      const res = await fetch("/api/landing/auth/magic-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emailToSend }),
-      });
-      return await res.json();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Network error";
-      return { success: false, error: msg };
-    }
-  };
 
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {
@@ -171,7 +151,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     sentRef.current = true;
 
     setSendingMagicLink(true);
-    sendMagicLink(emailDisplay).then((res) => {
+    api.auth.sendMagicLink(emailDisplay).then((res) => {
       setSendingMagicLink(false);
       if (res.success) {
         toast.success(`Magic Link inviato a ${emailDisplay}! Controlla la tua posta.`);
@@ -190,7 +170,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     }
 
     setSendingMagicLink(true);
-    const res = await sendMagicLink(emailToSend);
+    const res = await api.auth.sendMagicLink(emailToSend);
     setSendingMagicLink(false);
 
     if (res.success) {

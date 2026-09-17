@@ -113,13 +113,13 @@ export function createApiClient(baseUrl?: string) {
         },
       },
       contact: {
-        async submit(payload: ContactFormPayload): Promise<{ success: boolean; message?: string }> {
+        async submit(payload: ContactFormPayload): Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, string[]> }> {
           const res = await fetch(`${apiBase}/api/landing/contact`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          return handleResponse<{ success: boolean; message?: string }>(res);
+          return handleResponse<{ success: boolean; message?: string; error?: string; details?: Record<string, string[]> }>(res);
         },
       },
       settings: {

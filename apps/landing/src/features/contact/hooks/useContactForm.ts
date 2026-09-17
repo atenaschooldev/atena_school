@@ -2,6 +2,7 @@ import { useState } from "react";
 import { contactFormSchema } from "@atena/validators";
 import { getStoredUtmParams } from "@/lib/utm";
 import { trackEvent } from "@/lib/analytics";
+import { api } from "@/lib/api";
 
 export interface ContactFormData {
   nome: string;
@@ -117,16 +118,10 @@ export function useContactForm() {
         return;
       }
 
-      const res = await fetch("/api/landing/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          utm,
-        }),
+      const data = await api.contact.submit({
+        ...formData,
+        ...utm,
       });
-
-      const data = await res.json();
 
       if (data.success) {
         setSubmitted(true);

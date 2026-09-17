@@ -16,6 +16,7 @@ export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 export type BookingItem = CourseItem;
 
 import { createClient } from "@/lib/supabase/client";
+import { api } from "@/lib/api";
 
 export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
 
@@ -103,8 +104,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     async function initCheckout() {
       try {
         const [itemRes, settingsRes] = await Promise.all([
-          fetch(`/api/landing/courses/${id}`).then((r) => r.json()).catch(() => ({ success: false })),
-          fetch('/api/landing/settings/payment-gateway').then((r) => r.json()).catch(() => ({ success: false })),
+          api.courses.getById(id).catch(() => ({ success: false, item: undefined, course: undefined })),
+          api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false } })),
         ]);
 
         if (itemRes.success && (itemRes.item || itemRes.course)) {
@@ -318,11 +319,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       const timer = setTimeout(async () => {
         try {
-          const res = await fetch("/api/landing/checkout/check-fee", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ taxCode: tax }),
-          }).then((r) => r.json());
+          const res = await api.checkout.checkFee(tax);
 
           const isPaid = Boolean(res.success && res.annualFeePaid);
           feeCacheRef.current.set(tax, isPaid);
@@ -365,11 +362,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch("/api/landing/checkout/check-fee", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ taxCode: targetTaxCode }),
-        }).then((r) => r.json());
+        const res = await api.checkout.checkFee(targetTaxCode);
 
         const isPaid = Boolean(res.success && res.annualFeePaid);
         feeCacheRef.current.set(targetTaxCode, isPaid);
@@ -434,25 +427,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setSubmitting("book");
     try {
       const payload = buildReservationPayload(values);
-      const response = await fetch("/api/landing/checkout/reserve", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.checkout.reserve(payload as unknown as Record<string, unknown>);
 
-      const res = await response.json();
-
-      if (!response.ok || !res.success) {
-        if (res.details && typeof res.details === "object") {
-          Object.entries(res.details).forEach(([field, msgs]) => {
-            if (Array.isArray(msgs) && msgs.length > 0) {
-              formMethods.setError(field as keyof CheckoutFormValues, {
-                type: "server",
-                message: msgs[0],
-              });
-            }
-          });
-        }
+      if (!res.success) {
         toast.error(res.error || "Errore durante la prenotazione");
         return;
       }
@@ -478,25 +455,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setSubmitting("pay");
     try {
       const payload = buildReservationPayload(values);
-      const response = await fetch("/api/landing/checkout/stripe-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.checkout.createStripeSession(payload as unknown as Record<string, unknown>);
 
-      const res = await response.json();
-
-      if (!response.ok || !res.success || !res.url) {
-        if (res.details && typeof res.details === "object") {
-          Object.entries(res.details).forEach(([field, msgs]) => {
-            if (Array.isArray(msgs) && msgs.length > 0) {
-              formMethods.setError(field as keyof CheckoutFormValues, {
-                type: "server",
-                message: msgs[0],
-              });
-            }
-          });
-        }
+      if (!res.success || !res.url) {
         toast.error(res.error || "Impossibile avviare il pagamento con Stripe");
         return;
       }

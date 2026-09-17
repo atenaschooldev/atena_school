@@ -86,7 +86,7 @@ export function formatCourseDurationText(
 }
 
 export function formatCourseScheduleText(
-  scheduleDays?: number[] | null,
+  scheduleDays?: (number | string)[] | null,
   startTime?: string | null,
   endTime?: string | null
 ): string {
@@ -94,7 +94,11 @@ export function formatCourseScheduleText(
     return "Da concordare";
   }
   const dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
-  const daysText = scheduleDays.map((d) => dayNames[d % 7]).join(" e ");
+  const daysText = scheduleDays
+    .map(Number)
+    .filter((d) => !isNaN(d))
+    .map((d) => dayNames[d % 7])
+    .join(" e ");
   const timeText = endTime ? `${startTime}-${endTime}` : startTime;
   return `${daysText} ${timeText}`;
 }
@@ -244,11 +248,11 @@ export function calculateLessonDates(
   startDateStr: string,
   timeStr: string,
   courseType?: string,
-  dbScheduleDays?: number[] | null,
+  dbScheduleDays?: (number | string)[] | null,
   dbDurationMinutes?: number | null,
   dbStartTime?: string | null,
   dbEndTime?: string | null,
-  dbScheduleType?: string | null,
+  dbScheduleType?: string | number | null,
   customMaxLessons?: number | null
 ): ScheduledLesson[] {
   if (!startDateStr) return [];
@@ -256,7 +260,7 @@ export function calculateLessonDates(
   const baseDate = new Date(startDateStr);
   if (isNaN(baseDate.getTime())) return [];
 
-  const isFlexible = dbScheduleType === "flexible" || courseType === "flexible";
+  const isFlexible = dbScheduleType === "flexible" || Number(dbScheduleType) === 2 || courseType === "flexible";
 
   let startTime = dbStartTime || "10:00";
   let durationMinutes = dbDurationMinutes || 60;
@@ -295,7 +299,7 @@ export function calculateLessonDates(
 
   let targetDays: number[] = [];
   if (dbScheduleDays && dbScheduleDays.length > 0) {
-    targetDays = dbScheduleDays;
+    targetDays = dbScheduleDays.map(Number).filter((d) => !isNaN(d));
   } else if (timeStr) {
     const timeLower = timeStr.toLowerCase();
     if (timeLower.includes("lunedì") || timeLower.includes("lunedi")) targetDays.push(1);

@@ -25,6 +25,10 @@ export interface CourseItem {
   schedule_type?: CourseScheduleType | number | string;
   course_format?: CourseFormat | number | string;
   lesson_duration_minutes?: number;
+  lessons_per_week?: number | null;
+  total_hours?: number | null;
+  total_lessons?: number | null;
+  type?: string;
   start_time?: string;
   end_time?: string;
   teacher_id?: string;
@@ -983,6 +987,10 @@ export interface BookingRecord {
   id: string;
   course_id: string;
   course_name: string;
+  item_name?: string;
+  name?: string;
+  title_it?: string;
+  title?: string;
   purchaser_name: string;
   purchaser_email: string;
   purchaser_phone?: string;
@@ -994,9 +1002,13 @@ export interface BookingRecord {
   student_birth_date?: string;
   booking_date: string;
   start_date: string;
+  starts_at?: string;
+  date?: string;
   schedule_days?: number[];
   start_time?: string;
   end_time?: string;
+  time?: string;
+  orario?: string;
   schedule_type?: string;
   status: string;
   booking_status?: BookingStatus | number;
@@ -1008,6 +1020,8 @@ export interface BookingRecord {
   registration_fee: number;
   course_price?: number;
   item_price?: number;
+  total_amount?: number;
+  amount?: number;
   notes?: string;
   created_at?: string;
 }
@@ -1026,22 +1040,33 @@ export interface EnrichedBooking extends BookingRecord {
 }
 
 export interface FeeStatusResponse {
+  success?: boolean;
   annualFeePaid: boolean;
-  academicYear: string;
+  academicYear?: string;
   requiresFee: boolean;
   membership?: any;
+  userFound?: boolean;
+  feeReservedInBooking?: boolean;
+  error?: string;
 }
 
 export interface ReservationResponse {
   success: boolean;
-  bookingId: string;
-  booking: BookingRecord;
+  bookingId?: string;
+  bookingIds?: string[];
+  booking?: BookingRecord;
+  bookings?: BookingRecord[];
+  error?: string;
+  details?: Record<string, string[]>;
 }
 
 export interface CheckoutSessionResponse {
   success: boolean;
-  url: string;
-  bookingId: string;
+  url?: string;
+  bookingId?: string;
+  bookingIds?: string[];
+  error?: string;
+  details?: Record<string, string[]>;
 }
 
 export interface SiteContentResponse {

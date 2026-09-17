@@ -194,7 +194,7 @@ export default function BookingPageClient({
                         onSelect={(date: Date | undefined) => {
                           setSelectedDate(date);
                           if (isFixedSchedule && date) {
-                            setSelectedTime(item.standard_schedule);
+                            setSelectedTime(item?.start_time ? `${item.start_time}-${item.end_time || ""}` : "");
                           } else {
                             setSelectedTime(null);
                           }
