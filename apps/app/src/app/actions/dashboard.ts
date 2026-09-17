@@ -47,7 +47,7 @@ export async function getDashboardDataAction() {
     try {
       const token = await getAuthToken();
       if (token) {
-        const res = await fetch(`${backendUrl}/app/portal/dashboard`, {
+        const res = await fetch(`${backendUrl}/app/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
@@ -212,7 +212,7 @@ export async function getBookingLessonsAction(bookingId: string) {
     try {
       const token = await getAuthToken();
       if (token) {
-        const res = await fetch(`${backendUrl}/app/portal/bookings/${bookingId}/lessons`, {
+        const res = await fetch(`${backendUrl}/app/bookings/${bookingId}/lessons`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });

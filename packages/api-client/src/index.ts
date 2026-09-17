@@ -235,15 +235,17 @@ export function createApiClient(config?: string | ApiClientConfig) {
     },
   };
 
-  const portalService = {
+  const appService = {
     async getDashboard(token: string) {
-      const res = await fetch(`${prefix}/portal/dashboard`, {
+      const appPrefix = baseUrl ? `${baseUrl}/app` : "/app";
+      const res = await fetch(`${appPrefix}/dashboard`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return handleResponse(res);
     },
     async updateProfile(token: string, data: { profileName: string; profilePhone: string }) {
-      const res = await fetch(`${prefix}/portal/profile`, {
+      const appPrefix = baseUrl ? `${baseUrl}/app` : "/app";
+      const res = await fetch(`${appPrefix}/profile`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -263,7 +265,8 @@ export function createApiClient(config?: string | ApiClientConfig) {
     bookings: bookingsService,
     contact: contactService,
     settings: settingsService,
-    portal: portalService,
+    app: appService,
+    portal: appService,
     cms: {
       async getCourses(): Promise<{ success: boolean; courses: CourseItem[] }> {
         return coursesService.getAll();
