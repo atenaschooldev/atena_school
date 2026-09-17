@@ -27,6 +27,7 @@ model User {
   pec_email  String?
 
   bookings   Booking[]
+  payments   Payment[]
 
   @@map("users")
 }
@@ -207,29 +208,35 @@ model Lesson {
 
 model Payment {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bookingId             String?   @map("booking_id") @db.Uuid
-  studentId             String?   @map("student_id") @db.Uuid
-  userId                String?   @map("user_id") @db.Uuid
-  amount                Decimal   @db.Decimal(10, 2)
-  currency              Int       @default(1)
-  paymentMethod         Int       @default(2) @map("payment_method")
-  type                  Int       @default(1)
-  status                Int       @default(2)
-  provider              Int       @default(2)
-  providerTransactionId String?   @map("provider_transaction_id")
-  notes                 String?
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   paidAt                DateTime? @default(now()) @map("paid_at") @db.Timestamptz(6)
   updatedAt             DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  scheduleId            String?   @map("schedule_id") @db.Uuid
 
-  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  student           students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  annualMemberships AnnualMembership[]
+  bookingId             String?   @map("booking_id") @db.Uuid
+  studentId             String?   @map("student_id") @db.Uuid
+  userId                String?   @map("user_id") @db.Uuid
+
+  amount                Decimal   @db.Decimal(10, 2)
+  currency              Int       @default(1) @db.SmallInt
+  type                  Int       @default(1) @db.SmallInt
+  status                Int       @default(2) @db.SmallInt
+  paymentMethod         Int       @default(1) @map("payment_method") @db.SmallInt
+  provider              Int       @default(1) @db.SmallInt
+  providerTransactionId String?   @map("provider_transaction_id")
+  notes                 String?
+
+  booking               Booking?           @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  student               students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  user                  User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  annualMemberships     AnnualMembership[]
 
   @@index([bookingId], map: "idx_payments_booking_id")
   @@index([studentId], map: "idx_payments_student_id")
   @@index([userId], map: "idx_payments_user_id")
+  @@index([createdAt], map: "idx_payments_created_at")
+  @@index([paidAt], map: "idx_payments_paid_at")
+  @@index([status], map: "idx_payments_status")
+  @@index([type], map: "idx_payments_type")
   @@map("payments")
 }
 
