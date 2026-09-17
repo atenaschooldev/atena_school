@@ -237,3 +237,6 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     </main>
   );
 }
+
+export default CheckoutView;
+
