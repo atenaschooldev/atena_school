@@ -22,7 +22,8 @@ export function clearAdminToken(): void {
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAdminToken();
-  const res = await fetch(`${BACKEND_URL}/v1${path}`, {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const res = await fetch(`${BACKEND_URL}${normalizedPath}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

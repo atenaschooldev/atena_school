@@ -4,7 +4,7 @@ import { CheckoutService } from './checkout.public.service';
 import { ContactFormDto } from '../dto/checkout.public.dto';
 
 @ApiTags('Landing — Contact & Leads')
-@Controller('contact')
+@Controller('landing/contact')
 export class ContactPublicController {
   constructor(private readonly checkoutService: CheckoutService) {}
 

@@ -78,7 +78,7 @@ export class SendTelegramDto {
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Controller('mail')
+@Controller(['admin/mail', 'landing/mail', 'mail'])
 export class MailController {
   constructor(
     private readonly mailService: MailService,

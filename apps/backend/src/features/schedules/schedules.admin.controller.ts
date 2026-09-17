@@ -18,7 +18,7 @@ import {
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
 @UseInterceptors(AuditInterceptor)
-@Controller('schedules')
+@Controller(['admin/schedules', 'schedules'])
 export class SchedulesController {
   constructor(private readonly schedulesService: SchedulesService) {}
 

@@ -2,8 +2,8 @@ import { Controller, Get, Param, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
 
-@ApiTags('Landing — Courses Catalog')
-@Controller('courses')
+@ApiTags('Landing — Courses (Catalog)')
+@Controller('landing/courses')
 export class CoursesPublicController {
   constructor(private readonly checkoutService: CheckoutService) {}
 

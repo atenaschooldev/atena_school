@@ -35,7 +35,6 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
   });
-  app.setGlobalPrefix('v1');
 
   // Глобальный фильтр ошибок (совместимость с FastAPI для Flutter-клиента)
   app.useGlobalFilters(new AllExceptionsFilter());

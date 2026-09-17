@@ -114,7 +114,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     (baseUrl.startsWith("http") && !baseUrl.includes(typeof window !== "undefined" ? window.location.host : ""))
   ));
 
-  const prefix = isNest ? `${baseUrl}/v1` : (baseUrl ? `${baseUrl}/landing` : "/landing");
+  const prefix = baseUrl ? `${baseUrl}/landing` : "/landing";
 
   const coursesService = {
     async getAll(): Promise<{ success: boolean; courses: CourseItem[] }> {

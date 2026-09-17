@@ -4,7 +4,7 @@ import { AuthService } from './auth.service';
 import { LoginDto, MagicLinkDto } from './dto/login.dto';
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller(['auth', 'landing/auth', 'admin/auth', 'app/auth'])
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

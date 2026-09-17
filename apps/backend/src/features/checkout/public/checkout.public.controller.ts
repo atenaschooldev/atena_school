@@ -4,7 +4,7 @@ import { CheckoutService } from './checkout.public.service';
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, CustomerPortalDto } from '../dto/checkout.public.dto';
 
 @ApiTags('Landing — Checkout & Payments')
-@Controller('checkout')
+@Controller('landing/checkout')
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
 
