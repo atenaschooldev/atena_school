@@ -94,15 +94,54 @@ export async function updateSystemSettings(settings: { stripeEnabled?: boolean; 
   return await getSystemSettings();
 }
 
-export async function createCustomerPortalSession(params: { customerId: string; returnUrl?: string }) {
+export async function createCustomerPortalSession(params: {
+  customerId?: string;
+  bookingId?: string;
+  email?: string;
+  returnUrl?: string;
+}) {
+  const supabase = getSupabaseAdmin();
+  let customerId = params.customerId?.trim();
+
+  if (!customerId && params.bookingId) {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('stripe_customer_id')
+      .eq('id', params.bookingId)
+      .maybeSingle();
+    if (booking?.stripe_customer_id) {
+      customerId = booking.stripe_customer_id;
+    }
+  }
+
+  if (!customerId && params.email) {
+    const cleanEmail = params.email.trim().toLowerCase();
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('stripe_customer_id')
+      .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`)
+      .not('stripe_customer_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (booking?.stripe_customer_id) {
+      customerId = booking.stripe_customer_id;
+    }
+  }
+
+  if (!customerId) {
+    throw new Error('Nessun cliente Stripe o abbonamento attivo trovato per i dati forniti.');
+  }
+
   const stripe = getStripe();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   const session = await stripe.billingPortal.sessions.create({
-    customer: params.customerId,
+    customer: customerId,
     return_url: params.returnUrl || `${siteUrl}/checkout`,
   });
   return { success: true, url: session.url };
 }
+
 
 export async function createStripeSession(dto: CreateReservationParams) {
   const settings = await getSystemSettings();

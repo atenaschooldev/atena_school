@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
-import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto } from '../dto/checkout.public.dto';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto, CustomerPortalDto } from '../dto/checkout.public.dto';
 import { calculateLessonDates } from '@atena/utils';
 import {
   BookingPaymentStatus,
@@ -1131,5 +1131,57 @@ export class CheckoutService {
 
     return { success: true, message: 'Messaggio inviato con successo' };
   }
+
+  /**
+   * Инициализация сессии Stripe Customer Portal для управления подпиской клиентом
+   */
+  async createCustomerPortalSession(dto: CustomerPortalDto) {
+    let customerId = dto.customerId?.trim();
+
+    if (!customerId && dto.bookingId) {
+      const { data: booking } = await this.supabaseAdmin
+        .from('bookings')
+        .select('stripe_customer_id, purchaser_email')
+        .eq('id', dto.bookingId)
+        .maybeSingle();
+      if (booking?.stripe_customer_id) {
+        customerId = booking.stripe_customer_id;
+      }
+    }
+
+    if (!customerId && dto.email) {
+      const cleanEmail = dto.email.trim().toLowerCase();
+      const { data: booking } = await this.supabaseAdmin
+        .from('bookings')
+        .select('stripe_customer_id')
+        .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`)
+        .not('stripe_customer_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (booking?.stripe_customer_id) {
+        customerId = booking.stripe_customer_id;
+      }
+    }
+
+    if (!customerId) {
+      throw new BadRequestException('Nessun cliente Stripe o abbonamento attivo trovato per i dati forniti.');
+    }
+
+    const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'https://atena.school';
+    const returnUrl = dto.returnUrl || `${siteUrl}/checkout`;
+
+    try {
+      const session = await this.stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+      });
+      return { success: true, url: session.url };
+    } catch (err: any) {
+      this.logger.error(`Stripe billing portal session error: ${err.message}`);
+      throw new BadRequestException(`Errore creazione sessione portale Stripe: ${err.message}`);
+    }
+  }
 }
+
 

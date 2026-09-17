@@ -347,3 +347,40 @@ export class ContactFormDto {
   privacy?: boolean;
 }
 
+// ---------------------------------------------------------------------------
+
+export class CustomerPortalDto {
+  @ApiPropertyOptional({
+    description: 'Идентификатор клиента Stripe (cus_...)',
+    example: 'cus_R1234567890abc',
+  })
+  @IsOptional()
+  @IsString()
+  customerId?: string;
+
+  @ApiPropertyOptional({
+    description: 'UUID бронирования с привязанным stripe_customer_id',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsOptional()
+  @IsString()
+  bookingId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Email покупателя или студента для поиска активной подписки',
+    example: 'mario.rossi@gmail.com',
+  })
+  @IsOptional()
+  @IsEmail({}, { message: 'Введите корректный адрес электронной почты' })
+  email?: string;
+
+  @ApiPropertyOptional({
+    description: 'URL возврата после завершения действий в кабинете Stripe',
+    example: 'https://atena.school/checkout',
+  })
+  @IsOptional()
+  @IsString()
+  returnUrl?: string;
+}
+
+

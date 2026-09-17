@@ -1,7 +1,7 @@
 import { Body, Controller, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
-import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto } from '../dto/checkout.public.dto';
+import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, CustomerPortalDto } from '../dto/checkout.public.dto';
 
 @ApiTags('Landing — Checkout & Payments')
 @Controller('checkout')
@@ -108,4 +108,29 @@ export class CheckoutController {
   async verifyPayment(@Body() dto: VerifyPaymentDto) {
     return this.checkoutService.verifyPayment(dto);
   }
+
+  @Post('customer-portal')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Создание сессии Stripe Customer Portal (Self-Service)',
+    description: 'Генерирует ссылку на портал самообслуживания Stripe для управления ежемесячной подпиской, смены платежной карты и просмотра счетов',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Ссылка на портал Stripe сформирована',
+    schema: {
+      example: {
+        success: true,
+        url: 'https://billing.stripe.com/p/session/test_YWNjdF8x...',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Клиент Stripe не найден для указанных параметров',
+  })
+  async createCustomerPortalSession(@Body() dto: CustomerPortalDto) {
+    return this.checkoutService.createCustomerPortalSession(dto);
+  }
 }
+

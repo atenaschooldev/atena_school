@@ -12,8 +12,11 @@ export interface StudentInfo {
   email?: string;
   phone?: string;
   taxCode: string;
+  studentTaxCode?: string;
   birthDate?: string;
 }
+
+
 
 export interface CreateReservationParams {
   itemId: string;

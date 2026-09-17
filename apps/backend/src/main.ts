@@ -114,7 +114,24 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
+
+  if (process.env.GENERATE_OPENAPI === 'true' || process.env.EXPORT_OPENAPI === 'true') {
+    const fs = await import('fs-extra');
+    const path = await import('path');
+    const swaggerJsonPath = path.join(process.cwd(), 'swagger.json');
+    const docsOpenApiPath = path.join(process.cwd(), '../../docs/openapi.json');
+
+    console.log(`[SWAGGER GENERATOR]: Exporting OpenAPI specification to: ${swaggerJsonPath}`);
+    await fs.outputJson(swaggerJsonPath, document, { spaces: 2 });
+    console.log(`[SWAGGER GENERATOR]: Exporting OpenAPI specification to: ${docsOpenApiPath}`);
+    await fs.outputJson(docsOpenApiPath, document, { spaces: 2 });
+    console.log('[SWAGGER GENERATOR]: OpenAPI specification exported successfully.');
+    await app.close();
+    process.exit(0);
+  }
+
   SwaggerModule.setup('docs', app, document, {
+
     customSiteTitle: 'Atena School API Docs',
     customCss: `
       .topbar { display: flex !important; background-color: #191919 !important; padding: 10px 24px !important; }

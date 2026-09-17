@@ -19,8 +19,11 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "generate:spec": "ts-node scripts/generate-spec.ts"
+    "generate:spec": "nest build && GENERATE_OPENAPI=true node dist/main",
+    "generate:openapi": "nest build && GENERATE_OPENAPI=true node dist/main"
   },
+
+
   "dependencies": {
     "@atena/api-types": "workspace:*",
     "@atena/utils": "workspace:*",

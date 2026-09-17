@@ -138,13 +138,22 @@ export const studentItemSchema = z.object({
       (v) => CODICE_FISCALE_RE.test(v.trim()),
       "Codice Fiscale dello studente non valido (es. RSSLCU10A01H501Z)"
     ),
+  studentTaxCode: z
+    .string()
+    .optional()
+    .refine(
+      (v) => !v || v.trim() === "" || CODICE_FISCALE_RE.test(v.trim()),
+      "Codice Fiscale dello studente non valido (es. RSSLCU10A01H501Z)"
+    ),
   birthDate: z
     .string()
     .min(1, "La data di nascita dello studente è obbligatoria")
+
     .refine(isValidBirthDate, {
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),
 });
+
 
 export type StudentItemInput = z.infer<typeof studentItemSchema>;
 
@@ -332,6 +341,26 @@ export const verifyPaymentSchema = z.object({
 });
 
 export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+
+// ---------------------------------------------------------------------------
+// CustomerPortal schema
+// ---------------------------------------------------------------------------
+
+export const customerPortalSchema = z
+  .object({
+    customerId: z.string().optional(),
+    bookingId: z.string().optional(),
+    email: z.string().email("Inserisci un indirizzo email valido").optional(),
+    returnUrl: z.string().url("URL di ritorno non valido").optional(),
+  })
+  .refine(
+    (data) => Boolean(data.customerId || data.bookingId || data.email),
+    {
+      message: "È necessario fornire almeno uno tra customerId, bookingId o email",
+    }
+  );
+
+export type CustomerPortalInput = z.infer<typeof customerPortalSchema>;
 
 // ---------------------------------------------------------------------------
 // ContactForm schema
