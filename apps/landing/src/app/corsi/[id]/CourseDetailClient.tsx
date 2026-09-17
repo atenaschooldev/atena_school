@@ -20,8 +20,10 @@ import {
   ArrowRight,
   GraduationCap,
   Sparkle,
+  ArrowsClockwise,
 } from "@phosphor-icons/react";
 
+import { CourseBillingType } from "@atena/api-types";
 import { Calendar } from "@/components/ui/calendar";
 import { useBooking } from "@/features/booking/hooks/useBooking";
 import { calculateLessonDates, formatCourseScheduleText } from "@/lib/utils/bookingScheduler";
@@ -132,6 +134,13 @@ export function CourseDetailClient({
   const canContinue = isFlexibleSchedule || (!!selectedDate && !!selectedTime);
   const priceDisplay = course?.price ? `${Number(course.price).toFixed(2)}€` : null;
 
+  const billingTypeNum = course?.billing_type !== undefined && course?.billing_type !== null
+    ? Number(course.billing_type)
+    : CourseBillingType.ONE_TIME_ONLY;
+  const subPriceNum = course?.subscription_price !== undefined && course?.subscription_price !== null
+    ? Number(course.subscription_price)
+    : (course?.price ? parseFloat(String(course.price).replace(/[^0-9.]/g, "")) : 73.2);
+
   const upcomingDates = useMemo(() => {
     if (!allowedDays || allowedDays.length === 0) return [];
     const dates: Date[] = [];
@@ -152,6 +161,16 @@ export function CourseDetailClient({
       ? { icon: Clock, label: "Durata", value: courseDuration, color: "text-amber-600 bg-amber-50" }
       : null,
     { icon: FormatIcon, label: "Formato", value: courseFormat.label, color: "text-blue-600 bg-blue-50" },
+    {
+      icon: ArrowsClockwise,
+      label: "Modalità",
+      value: billingTypeNum === CourseBillingType.BOTH
+        ? "Saldo o Abbonamento"
+        : billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY
+        ? "Abbonamento Mensile"
+        : "Pagamento Unico",
+      color: "text-orange-600 bg-orange-50",
+    },
     lessonsPerWeek
       ? { icon: CalendarCheck, label: "Frequenza", value: lessonsPerWeek, color: "text-emerald-600 bg-emerald-50" }
       : null,
@@ -204,6 +223,18 @@ export function CourseDetailClient({
                       <FormatIcon className="w-3 h-3" weight="bold" />
                       {courseFormat.label}
                     </span>
+                    {billingTypeNum === CourseBillingType.BOTH && (
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center gap-1.5 shadow-sm">
+                        <ArrowsClockwise className="w-3 h-3" weight="bold" />
+                        Abbonamento o Saldo
+                      </span>
+                    )}
+                    {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY && (
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 text-white flex items-center gap-1.5 shadow-sm">
+                        <ArrowsClockwise className="w-3 h-3" weight="bold" />
+                        Abbonamento Mensile
+                      </span>
+                    )}
                   </div>
                   <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white leading-tight tracking-tight drop-shadow-lg">
                     {title}
@@ -334,11 +365,24 @@ export function CourseDetailClient({
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-                      Prezzo Corso
+                      {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? "Abbonamento Mensile" : "Prezzo Corso"}
                     </p>
-                    <p className="text-3xl sm:text-4xl font-black text-[#F8861D] leading-none tracking-tight">
-                      {priceDisplay || "---"}
-                    </p>
+                    {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? (
+                      <p className="text-3xl sm:text-4xl font-black text-[#F8861D] leading-none tracking-tight">
+                        {subPriceNum.toFixed(2)}€
+                        <span className="text-sm font-bold text-slate-400 ml-1">/mese</span>
+                      </p>
+                    ) : (
+                      <p className="text-3xl sm:text-4xl font-black text-[#F8861D] leading-none tracking-tight">
+                        {priceDisplay || "---"}
+                      </p>
+                    )}
+                    {billingTypeNum === CourseBillingType.BOTH && (
+                      <p className="text-xs font-bold text-[#043569] mt-2 flex items-center gap-1.5">
+                        <ArrowsClockwise className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+                        Disponibile anche in abbonamento: <span className="text-[#F8861D] font-black">{subPriceNum.toFixed(2)}€/mese</span>
+                      </p>
+                    )}
                   </div>
                   <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1.5 mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -566,8 +610,19 @@ export function CourseDetailClient({
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 px-4 py-3 shadow-2xl pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Prezzo corso</p>
-            <p className="text-xl font-black text-[#F8861D] leading-none">{priceDisplay || "---"}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? "Abbonamento" : "Prezzo corso"}
+            </p>
+            <div className="flex items-baseline gap-1.5">
+              <p className="text-xl font-black text-[#F8861D] leading-none">
+                {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? `${subPriceNum.toFixed(2)}€/mese` : (priceDisplay || "---")}
+              </p>
+              {billingTypeNum === CourseBillingType.BOTH && (
+                <span className="text-[10px] font-bold text-[#043569]">
+                  (o {subPriceNum.toFixed(2)}€/m)
+                </span>
+              )}
+            </div>
           </div>
           <button
             onClick={handleContinue}

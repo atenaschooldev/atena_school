@@ -11,6 +11,7 @@ import {
   PaymentRecordStatus,
   PaymentProvider,
   LessonStatus,
+  SubscriptionStatus,
   parsePaymentMethod,
 } from '@atena/api-types';
 import { getSupabaseAdmin } from '../supabase-admin';
@@ -207,6 +208,11 @@ export async function createReservation(dto: CreateReservationParams) {
   subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
   const subEndsAt = subEndsAtDate.toISOString();
 
+  const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION;
+  const effectiveCoursePrice = isSubscription
+    ? (course?.subscription_price != null ? Number(course.subscription_price) : coursePrice)
+    : coursePrice;
+
   const createdBookings: any[] = [];
   const bookingIds: string[] = [];
 
@@ -222,7 +228,21 @@ export async function createReservation(dto: CreateReservationParams) {
 
     const isFeeRequired = feeStatus.annualFeePaid === false;
     const regFee = isFeeRequired ? 30 : 0;
-    const totalPaidAmount = coursePrice + regFee;
+    const totalPaidAmount = effectiveCoursePrice + regFee;
+
+    const pStatus = typeof dto.paymentStatus === 'number' ? dto.paymentStatus : BookingPaymentStatus.RESERVED;
+    const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : PaymentMethod.CASH;
+
+    let subStatus: number | null = null;
+    if (isSubscription) {
+      if (pStatus === BookingPaymentStatus.PAID) {
+        subStatus = SubscriptionStatus.ACTIVE;
+      } else if (pMethod === PaymentMethod.STRIPE) {
+        subStatus = SubscriptionStatus.ACTIVE;
+      } else {
+        subStatus = SubscriptionStatus.PENDING_RECEPTION_PAYMENT;
+      }
+    }
 
     const { data: booking, error } = await supabase
       .from('bookings')
@@ -242,11 +262,12 @@ export async function createReservation(dto: CreateReservationParams) {
         start_date: dto.date || new Date().toISOString(),
         schedule_days: course?.schedule_days || null,
         start_time: course?.start_time || extractCleanTime(dto.time) || null,
-        payment_status: typeof dto.paymentStatus === 'number' ? dto.paymentStatus : BookingPaymentStatus.RESERVED,
-        payment_method: typeof dto.paymentMethod === 'number' ? dto.paymentMethod : PaymentMethod.CASH,
+        payment_status: pStatus,
+        payment_method: pMethod,
         booking_status: BookingStatus.ACTIVE,
         scheduling_status: BookingSchedulingStatus.SCHEDULED,
-        billing_scheme: BillingScheme.FULL,
+        billing_scheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
+        subscription_status: subStatus,
         amount_paid: totalPaidAmount,
         registration_fee: regFee,
         total_lessons_count: computeTotalLessonsCount(course, lessons.length),
@@ -288,7 +309,7 @@ export async function createReservation(dto: CreateReservationParams) {
     });
 
     await generateAndSaveLessons(booking.id, course, lessons, supabase);
-    await recordPaymentLedger(booking.id, coursePrice, regFee, dto.paymentMethod ?? PaymentMethod.CASH, dto.paymentStatus ?? BookingPaymentStatus.RESERVED, supabase);
+    await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase);
   }
 
   const primaryBooking = createdBookings[0];

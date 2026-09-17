@@ -1,6 +1,9 @@
 import {
   BookingPaymentStatus,
   PaymentMethod,
+  BillingScheme,
+  SubscriptionStatus,
+  CourseBillingType,
 } from '@atena/api-types';
 
 export interface StudentInfo {
@@ -35,6 +38,7 @@ export interface CreateReservationParams {
   sdiCode?: string;
   pecEmail?: string;
   needsCompanyInvoice?: boolean;
+  billingScheme?: BillingScheme | string | number;
   paymentMethod?: PaymentMethod | string | number;
   paymentStatus?: BookingPaymentStatus | string | number;
   idempotencyKey?: string;
@@ -78,6 +82,9 @@ export interface SupabaseCourseRow {
   lesson_duration_minutes?: number | null;
   total_hours?: number | null;
   course_format?: string | null;
+  billing_type?: number | string | null;
+  subscription_price?: number | string | null;
+  stripe_monthly_price_id?: string | null;
   category?: string | null;
   slug?: string | null;
   updated_at?: string | null;
@@ -112,6 +119,13 @@ export interface SupabaseBookingRow {
   registration_fee?: number | null;
   payment_status?: number | null;
   payment_method?: number | null;
+  billing_scheme?: number | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: number | null;
+  cancel_at_period_end?: boolean | null;
+  subscription_starts_at?: string | null;
+  subscription_ends_at?: string | null;
   start_date?: string | null;
   schedule_days?: number[] | null;
   start_time?: string | null;

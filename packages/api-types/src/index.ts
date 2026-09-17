@@ -24,6 +24,9 @@ export interface CourseItem {
   schedule_days?: string[] | number[];
   schedule_type?: CourseScheduleType | number | string;
   course_format?: CourseFormat | number | string;
+  billing_type?: CourseBillingType | number | string;
+  subscription_price?: number | string | null;
+  stripe_monthly_price_id?: string | null;
   lesson_duration_minutes?: number;
   lessons_per_week?: number | null;
   total_hours?: number | null;
@@ -39,7 +42,7 @@ export interface CourseItem {
 }
 
 // ---------------------------------------------------------------------------
-// Numeric Enums for Bookings (Single Source of Truth)
+// Numeric Enums for Bookings & Subscriptions (Single Source of Truth)
 // ---------------------------------------------------------------------------
 
 export const BookingPaymentStatus = {
@@ -78,8 +81,26 @@ export const BillingScheme = {
   FULL: 1,         // Full course payment upfront
   INSTALLMENTS: 2, // Payment in installments
   PER_LESSON: 3,   // Pay per lesson
+  SUBSCRIPTION: 4, // Recurring monthly subscription / Abbonamento mensile
 } as const;
 export type BillingScheme = (typeof BillingScheme)[keyof typeof BillingScheme];
+
+export const SubscriptionStatus = {
+  ACTIVE: 1,                    // Active and paid (Attiva e pagata)
+  PENDING_RECEPTION_PAYMENT: 2, // In-person subscription awaiting payment (In attesa di saldo in sede)
+  PAST_DUE: 3,                  // Payment failed or overdue (Scaduta / Pagamento fallito)
+  PAUSED: 4,                    // Temporarily paused / frozen (In pausa)
+  CANCELED: 5,                  // Canceled by student/admin (Annullata)
+  EXPIRED: 6,                   // Expired at period end (Terminata)
+} as const;
+export type SubscriptionStatus = (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
+
+export const CourseBillingType = {
+  ONE_TIME_ONLY: 1,     // One-time payment only (packages, certifications, single lessons)
+  SUBSCRIPTION_ONLY: 2, // Subscription only (recurring monthly)
+  BOTH: 3,              // Both one-time purchase and monthly subscription available
+} as const;
+export type CourseBillingType = (typeof CourseBillingType)[keyof typeof CourseBillingType];
 
 export const PaymentCurrency = {
   EUR: 1, // Euro (€)
@@ -327,6 +348,92 @@ export const BILLING_SCHEME_DICTIONARY: Record<BillingScheme, DictionaryEntry> =
     label_ru: 'Поурочная оплата',
     description: 'Оплата за каждое фактически посещённое занятие',
   },
+  [BillingScheme.SUBSCRIPTION]: {
+    id: 4,
+    code: 'SUBSCRIPTION',
+    label_it: 'Abbonamento mensile',
+    label_en: 'Monthly subscription',
+    label_ru: 'Ежемесячная подписка',
+    description: 'Регулярная помесячная подписка с автопродлением или оплатой в кассе школы',
+  },
+};
+
+export const SUBSCRIPTION_STATUS_DICTIONARY: Record<SubscriptionStatus, DictionaryEntry> = {
+  [SubscriptionStatus.ACTIVE]: {
+    id: 1,
+    code: 'ACTIVE',
+    label_it: 'Attivo',
+    label_en: 'Active',
+    label_ru: 'Активна',
+    description: 'Подписка активна и оплачена на текущий период',
+  },
+  [SubscriptionStatus.PENDING_RECEPTION_PAYMENT]: {
+    id: 2,
+    code: 'PENDING_RECEPTION_PAYMENT',
+    label_it: 'In attesa di saldo in sede',
+    label_en: 'Pending in-person payment',
+    label_ru: 'Ожидает оплаты в кассе',
+    description: 'Подписка оформлена с оплатой наличными или картой на рецепции школы',
+  },
+  [SubscriptionStatus.PAST_DUE]: {
+    id: 3,
+    code: 'PAST_DUE',
+    label_it: 'Pagamento scaduto',
+    label_en: 'Past due',
+    label_ru: 'Просрочена',
+    description: 'Банк отклонил автосписание средств за следующий период',
+  },
+  [SubscriptionStatus.PAUSED]: {
+    id: 4,
+    code: 'PAUSED',
+    label_it: 'In pausa',
+    label_en: 'Paused',
+    label_ru: 'На паузе',
+    description: 'Подписка временно приостановлена (каникулы/заморозка)',
+  },
+  [SubscriptionStatus.CANCELED]: {
+    id: 5,
+    code: 'CANCELED',
+    label_it: 'Disdetta / In chiusura',
+    label_en: 'Canceled (ends at period end)',
+    label_ru: 'Отменена',
+    description: 'Автопродление отключено, студент доучивается до конца оплаченного месяца',
+  },
+  [SubscriptionStatus.EXPIRED]: {
+    id: 6,
+    code: 'EXPIRED',
+    label_it: 'Terminata',
+    label_en: 'Expired',
+    label_ru: 'Истекла',
+    description: 'Срок действия подписки завершен',
+  },
+};
+
+export const COURSE_BILLING_TYPE_DICTIONARY: Record<CourseBillingType, DictionaryEntry> = {
+  [CourseBillingType.ONE_TIME_ONLY]: {
+    id: 1,
+    code: 'ONE_TIME_ONLY',
+    label_it: 'Solo saldo unico',
+    label_en: 'One-time only',
+    label_ru: 'Только разовая оплата',
+    description: 'Курс доступен только для разовой единовременной покупки (пакеты, сертификаты)',
+  },
+  [CourseBillingType.SUBSCRIPTION_ONLY]: {
+    id: 2,
+    code: 'SUBSCRIPTION_ONLY',
+    label_it: 'Solo abbonamento',
+    label_en: 'Subscription only',
+    label_ru: 'Только по подписке',
+    description: 'Курс доступен исключительно по ежемесячной подписке / абонементу',
+  },
+  [CourseBillingType.BOTH]: {
+    id: 3,
+    code: 'BOTH',
+    label_it: 'Entrambe le modalità',
+    label_en: 'Both one-time & subscription',
+    label_ru: 'Разово или по подписке',
+    description: 'Студент может выбрать как оплатить весь курс сразу, так и оформить ежемесячный абонемент',
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -403,13 +510,98 @@ export const BILLING_SCHEME_STRING_TO_ID: Record<string, BillingScheme> = {
   full: BillingScheme.FULL,
   installments: BillingScheme.INSTALLMENTS,
   per_lesson: BillingScheme.PER_LESSON,
+  subscription: BillingScheme.SUBSCRIPTION,
+  abbonamento: BillingScheme.SUBSCRIPTION,
 };
 
 export const BILLING_SCHEME_ID_TO_STRING: Record<BillingScheme, string> = {
   [BillingScheme.FULL]: 'full',
   [BillingScheme.INSTALLMENTS]: 'installments',
   [BillingScheme.PER_LESSON]: 'per_lesson',
+  [BillingScheme.SUBSCRIPTION]: 'subscription',
 };
+
+export const SUBSCRIPTION_STATUS_STRING_TO_ID: Record<string, SubscriptionStatus> = {
+  active: SubscriptionStatus.ACTIVE,
+  pending_reception_payment: SubscriptionStatus.PENDING_RECEPTION_PAYMENT,
+  pending: SubscriptionStatus.PENDING_RECEPTION_PAYMENT,
+  past_due: SubscriptionStatus.PAST_DUE,
+  paused: SubscriptionStatus.PAUSED,
+  canceled: SubscriptionStatus.CANCELED,
+  cancelled: SubscriptionStatus.CANCELED,
+  expired: SubscriptionStatus.EXPIRED,
+};
+
+export const SUBSCRIPTION_STATUS_ID_TO_STRING: Record<SubscriptionStatus, string> = {
+  [SubscriptionStatus.ACTIVE]: 'active',
+  [SubscriptionStatus.PENDING_RECEPTION_PAYMENT]: 'pending_reception_payment',
+  [SubscriptionStatus.PAST_DUE]: 'past_due',
+  [SubscriptionStatus.PAUSED]: 'paused',
+  [SubscriptionStatus.CANCELED]: 'canceled',
+  [SubscriptionStatus.EXPIRED]: 'expired',
+};
+
+export const COURSE_BILLING_TYPE_STRING_TO_ID: Record<string, CourseBillingType> = {
+  one_time_only: CourseBillingType.ONE_TIME_ONLY,
+  one_time: CourseBillingType.ONE_TIME_ONLY,
+  subscription_only: CourseBillingType.SUBSCRIPTION_ONLY,
+  subscription: CourseBillingType.SUBSCRIPTION_ONLY,
+  both: CourseBillingType.BOTH,
+};
+
+export const COURSE_BILLING_TYPE_ID_TO_STRING: Record<CourseBillingType, string> = {
+  [CourseBillingType.ONE_TIME_ONLY]: 'one_time_only',
+  [CourseBillingType.SUBSCRIPTION_ONLY]: 'subscription_only',
+  [CourseBillingType.BOTH]: 'both',
+};
+
+export function parseBillingScheme(val: unknown): BillingScheme {
+  if (typeof val === 'number' && val in BILLING_SCHEME_DICTIONARY) {
+    return val as BillingScheme;
+  }
+  if (typeof val === 'string') {
+    const normalized = val.trim().toLowerCase();
+    const mapped = BILLING_SCHEME_STRING_TO_ID[normalized];
+    if (mapped) return mapped;
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num in BILLING_SCHEME_DICTIONARY) {
+      return num as BillingScheme;
+    }
+  }
+  return BillingScheme.FULL;
+}
+
+export function parseSubscriptionStatus(val: unknown): SubscriptionStatus {
+  if (typeof val === 'number' && val in SUBSCRIPTION_STATUS_DICTIONARY) {
+    return val as SubscriptionStatus;
+  }
+  if (typeof val === 'string') {
+    const normalized = val.trim().toLowerCase();
+    const mapped = SUBSCRIPTION_STATUS_STRING_TO_ID[normalized];
+    if (mapped) return mapped;
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num in SUBSCRIPTION_STATUS_DICTIONARY) {
+      return num as SubscriptionStatus;
+    }
+  }
+  return SubscriptionStatus.ACTIVE;
+}
+
+export function parseCourseBillingType(val: unknown): CourseBillingType {
+  if (typeof val === 'number' && val in COURSE_BILLING_TYPE_DICTIONARY) {
+    return val as CourseBillingType;
+  }
+  if (typeof val === 'string') {
+    const normalized = val.trim().toLowerCase();
+    const mapped = COURSE_BILLING_TYPE_STRING_TO_ID[normalized];
+    if (mapped) return mapped;
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num in COURSE_BILLING_TYPE_DICTIONARY) {
+      return num as CourseBillingType;
+    }
+  }
+  return CourseBillingType.ONE_TIME_ONLY;
+}
 
 export function parseBookingPaymentStatus(val: unknown): BookingPaymentStatus {
   if (typeof val === 'number' && val in BOOKING_PAYMENT_STATUS_DICTIONARY) {
@@ -1016,6 +1208,12 @@ export interface BookingRecord {
   payment_status: BookingPaymentStatus | number;
   payment_method: PaymentMethod | number;
   billing_scheme?: BillingScheme | number;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: SubscriptionStatus | number | null;
+  cancel_at_period_end?: boolean | null;
+  subscription_starts_at?: string | null;
+  subscription_ends_at?: string | null;
   amount_paid: number;
   registration_fee: number;
   course_price?: number;
@@ -1082,6 +1280,7 @@ export interface SiteContentResponse {
  */
 export const AppSettingKey = {
   STRIPE_ENABLED: 'stripe_enabled',
+  SUBSCRIPTIONS_ENABLED: 'subscriptions_enabled',
 } as const;
 export type AppSettingKey = (typeof AppSettingKey)[keyof typeof AppSettingKey];
 
@@ -1100,6 +1299,14 @@ export const APP_SETTINGS_DICTIONARY: Record<string, DictionaryEntry> = {
     label_en: 'Stripe Online Payments',
     label_ru: 'Онлайн-оплата картой через Stripe',
     description: 'Включение/отключение приема онлайн-платежей через Stripe на странице чекаута',
+  },
+  [AppSettingKey.SUBSCRIPTIONS_ENABLED]: {
+    id: 2,
+    code: AppSettingKey.SUBSCRIPTIONS_ENABLED,
+    label_it: 'Abbonamenti mensili',
+    label_en: 'Monthly Subscriptions',
+    label_ru: 'Функционал ежемесячных подписок',
+    description: 'Включение/отключение функционала ежемесячных подписок и абонементов на курсы на странице чекаута',
   },
 };
 

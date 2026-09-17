@@ -216,6 +216,7 @@ const reservationBaseObject = z.object({
     .string()
     .max(500, "Le note non possono superare i 500 caratteri")
     .optional(),
+  billingScheme: z.union([z.number().int(), z.string()]).optional(),
   paymentStatus: z.union([z.number().int(), z.string()]).optional(),
   paymentMethod: z.union([z.number().int(), z.string()]).optional(),
   idempotencyKey: z.string().max(100).optional(),

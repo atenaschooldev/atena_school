@@ -48,6 +48,9 @@ model Course {
   lessonDurationMinutes Int?      @map("lesson_duration_minutes")
   totalHours            Int?      @map("total_hours")
   courseFormat          Int       @default(1) @map("course_format") @db.SmallInt
+  billingType           Int       @default(1) @map("billing_type") @db.SmallInt
+  subscriptionPrice     Decimal?  @map("subscription_price") @db.Decimal(10, 2)
+  stripeMonthlyPriceId  String?   @map("stripe_monthly_price_id")
   slug                  String?
   updatedAt             DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
 
@@ -123,6 +126,10 @@ model Booking {
   startTime            String?   @map("start_time")
   endTime              String?   @map("end_time")
   billingScheme        Int       @default(1) @map("billing_scheme")
+  stripeCustomerId     String?   @map("stripe_customer_id")
+  stripeSubscriptionId String?   @map("stripe_subscription_id")
+  subscriptionStatus   Int?      @map("subscription_status") @db.SmallInt
+  cancelAtPeriodEnd    Boolean?  @default(false) @map("cancel_at_period_end")
 
   course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
   lessons           Lesson[]

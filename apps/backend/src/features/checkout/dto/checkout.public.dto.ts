@@ -15,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BookingPaymentStatus, PaymentMethod } from '@atena/api-types';
+import { BookingPaymentStatus, PaymentMethod, BillingScheme } from '@atena/api-types';
 
 /**
  * Codice Fiscale — физлицо (16 символов) или Partita IVA (11 цифр).
@@ -272,6 +272,16 @@ export class CreateReservationDto {
   @IsOptional()
   @IsInt({ message: 'paymentMethod должен быть числовым энамом (1..4)' })
   paymentMethod?: PaymentMethod;
+
+  @ApiPropertyOptional({
+    description: 'Схема оплаты: 1=FULL, 2=INSTALLMENTS, 3=PER_LESSON, 4=SUBSCRIPTION',
+    enum: BillingScheme,
+    example: BillingScheme.FULL,
+    default: BillingScheme.FULL,
+  })
+  @IsOptional()
+  @IsInt({ message: 'billingScheme должен быть числовым энамом (1..4)' })
+  billingScheme?: BillingScheme;
 }
 
 // ---------------------------------------------------------------------------

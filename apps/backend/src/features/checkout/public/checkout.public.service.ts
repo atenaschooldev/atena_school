@@ -11,8 +11,11 @@ import {
   BookingStatus,
   BookingSchedulingStatus,
   BillingScheme,
+  SubscriptionStatus,
   PaymentMethod,
   PaymentType,
+  PaymentCurrency,
+  PaymentProvider,
   PaymentRecordStatus,
   BOOKING_PAYMENT_STATUS_ID_TO_STRING,
   PAYMENT_METHOD_ID_TO_STRING,
@@ -199,6 +202,11 @@ export class CheckoutService {
       ? Number(dto.paymentMethod)
       : PaymentMethod.CASH;
 
+    const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION;
+    const effectiveCoursePrice = isSubscription
+      ? (course && (course as any).subscription_price != null ? Number((course as any).subscription_price) : coursePrice)
+      : coursePrice;
+
     for (const student of rawStudents) {
       const studentName = `${student.firstName} ${student.lastName}`.trim();
       const studentTaxCode = student.taxCode ? student.taxCode.trim().toUpperCase() : '';
@@ -210,7 +218,16 @@ export class CheckoutService {
 
       const isFeeRequired = feeStatus.annualFeePaid === false;
       const regFee = isFeeRequired ? 30 : 0;
-      const totalPaidAmount = coursePrice + regFee;
+      const totalPaidAmount = effectiveCoursePrice + regFee;
+
+      let subStatus: number | null = null;
+      if (isSubscription) {
+        if (paymentStatusNum === BookingPaymentStatus.PAID || paymentMethodNum === PaymentMethod.STRIPE) {
+          subStatus = SubscriptionStatus.ACTIVE;
+        } else {
+          subStatus = SubscriptionStatus.PENDING_RECEPTION_PAYMENT;
+        }
+      }
 
       const { data: booking, error } = await this.supabaseAdmin
         .from('bookings')
@@ -235,7 +252,8 @@ export class CheckoutService {
           payment_method: paymentMethodNum,
           booking_status: BookingStatus.ACTIVE,
           scheduling_status: BookingSchedulingStatus.SCHEDULED,
-          billing_scheme: BillingScheme.FULL,
+          billing_scheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
+          subscription_status: subStatus,
           amount_paid: totalPaidAmount,
           registration_fee: regFee,
           total_lessons_count: this.computeTotalLessonsCount(course, lessons.length),
@@ -283,7 +301,7 @@ export class CheckoutService {
       // Generate accounting ledger entries in payments table
       await this.checkoutCore.recordPaymentLedger(
         booking.id,
-        coursePrice,
+        effectiveCoursePrice,
         regFee,
         paymentMethodNum,
         paymentStatusNum,
@@ -396,19 +414,30 @@ export class CheckoutService {
   }
 
   /**
-   * Retrieves app settings (e.g. Stripe enablement toggle).
+   * Retrieves app settings (e.g. Stripe & Subscriptions enablement toggles).
    */
   async getSettings() {
+    let stripeEnabled = false;
+    let subscriptionsEnabled = false;
+
     try {
-      const setting = await (this.prisma as any).appSetting.findUnique({
-        where: { key: AppSettingKey.STRIPE_ENABLED },
+      const settings = await (this.prisma as any).appSetting.findMany({
+        where: {
+          key: { in: [AppSettingKey.STRIPE_ENABLED, AppSettingKey.SUBSCRIPTIONS_ENABLED] },
+        },
       });
 
-      if (setting && setting.value !== undefined && setting.value !== null) {
-        if (typeof setting.value === 'boolean') return { stripeEnabled: setting.value };
-        if (typeof setting.value === 'string') return { stripeEnabled: setting.value === 'true' };
-        if (typeof setting.value === 'object' && 'enabled' in (setting.value as any)) {
-          return { stripeEnabled: Boolean((setting.value as any).enabled) };
+      if (settings && settings.length > 0) {
+        for (const s of settings) {
+          let boolVal = false;
+          if (typeof s.value === 'boolean') boolVal = s.value;
+          else if (typeof s.value === 'string') boolVal = s.value === 'true';
+          else if (typeof s.value === 'object' && s.value !== null && 'enabled' in s.value) {
+            boolVal = Boolean((s.value as any).enabled);
+          }
+
+          if (s.key === AppSettingKey.STRIPE_ENABLED) stripeEnabled = boolVal;
+          if (s.key === AppSettingKey.SUBSCRIPTIONS_ENABLED) subscriptionsEnabled = boolVal;
         }
       }
     } catch (err) {
@@ -416,15 +445,20 @@ export class CheckoutService {
       try {
         const { data, error } = await this.supabaseAdmin
           .from('app_settings')
-          .select('value')
-          .eq('key', AppSettingKey.STRIPE_ENABLED)
-          .maybeSingle();
+          .select('key, value')
+          .in('key', [AppSettingKey.STRIPE_ENABLED, AppSettingKey.SUBSCRIPTIONS_ENABLED]);
 
-        if (!error && data?.value !== undefined && data?.value !== null) {
-          if (typeof data.value === 'boolean') return { stripeEnabled: data.value };
-          if (typeof data.value === 'string') return { stripeEnabled: data.value === 'true' };
-          if (typeof data.value === 'object' && data.value !== null && 'enabled' in data.value) {
-            return { stripeEnabled: Boolean((data.value as any).enabled) };
+        if (!error && data && data.length > 0) {
+          for (const s of data) {
+            let boolVal = false;
+            if (typeof s.value === 'boolean') boolVal = s.value;
+            else if (typeof s.value === 'string') boolVal = s.value === 'true';
+            else if (typeof s.value === 'object' && s.value !== null && 'enabled' in s.value) {
+              boolVal = Boolean((s.value as any).enabled);
+            }
+
+            if (s.key === AppSettingKey.STRIPE_ENABLED) stripeEnabled = boolVal;
+            if (s.key === AppSettingKey.SUBSCRIPTIONS_ENABLED) subscriptionsEnabled = boolVal;
           }
         }
       } catch (sbErr) {
@@ -432,45 +466,86 @@ export class CheckoutService {
       }
     }
 
-    const envEnabled = this.configService.get<string>('ENABLE_STRIPE') === 'true' || process.env.ENABLE_STRIPE === 'true';
-    return { stripeEnabled: envEnabled };
+    if (!stripeEnabled) {
+      stripeEnabled = this.configService.get<string>('ENABLE_STRIPE') === 'true' || process.env.ENABLE_STRIPE === 'true';
+    }
+    if (!subscriptionsEnabled) {
+      subscriptionsEnabled = this.configService.get<string>('ENABLE_SUBSCRIPTIONS') === 'true' || process.env.ENABLE_SUBSCRIPTIONS === 'true';
+    }
+
+    return { stripeEnabled, subscriptionsEnabled };
   }
 
-  async updateSettings(dto: { stripeEnabled: boolean }) {
+  async updateSettings(dto: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }) {
     try {
-      await (this.prisma as any).appSetting.upsert({
-        where: { key: AppSettingKey.STRIPE_ENABLED },
-        update: {
-          value: dto.stripeEnabled,
-          description: 'Enable or disable Stripe online payment gateway on checkout',
-        },
-        create: {
-          key: AppSettingKey.STRIPE_ENABLED,
-          value: dto.stripeEnabled,
-          description: 'Enable or disable Stripe online payment gateway on checkout',
-        },
-      });
+      if (dto.stripeEnabled !== undefined) {
+        await (this.prisma as any).appSetting.upsert({
+          where: { key: AppSettingKey.STRIPE_ENABLED },
+          update: {
+            value: dto.stripeEnabled,
+            description: 'Enable or disable Stripe online payment gateway on checkout',
+          },
+          create: {
+            key: AppSettingKey.STRIPE_ENABLED,
+            value: dto.stripeEnabled,
+            description: 'Enable or disable Stripe online payment gateway on checkout',
+          },
+        });
+      }
+      if (dto.subscriptionsEnabled !== undefined) {
+        await (this.prisma as any).appSetting.upsert({
+          where: { key: AppSettingKey.SUBSCRIPTIONS_ENABLED },
+          update: {
+            value: dto.subscriptionsEnabled,
+            description: 'Enable or disable monthly recurring subscriptions on checkout',
+          },
+          create: {
+            key: AppSettingKey.SUBSCRIPTIONS_ENABLED,
+            value: dto.subscriptionsEnabled,
+            description: 'Enable or disable monthly recurring subscriptions on checkout',
+          },
+        });
+      }
     } catch (err) {
       this.logger.warn(`Failed to update app_settings in Prisma, trying Supabase: ${err}`);
       try {
-        await this.supabaseAdmin.from('app_settings').upsert({
-          key: AppSettingKey.STRIPE_ENABLED,
-          value: dto.stripeEnabled,
-          description: 'Enable or disable Stripe online payment gateway on checkout',
-          updated_at: new Date().toISOString(),
-        });
+        const upserts: any[] = [];
+        if (dto.stripeEnabled !== undefined) {
+          upserts.push({
+            key: AppSettingKey.STRIPE_ENABLED,
+            value: dto.stripeEnabled,
+            description: 'Enable or disable Stripe online payment gateway on checkout',
+            updated_at: new Date().toISOString(),
+          });
+        }
+        if (dto.subscriptionsEnabled !== undefined) {
+          upserts.push({
+            key: AppSettingKey.SUBSCRIPTIONS_ENABLED,
+            value: dto.subscriptionsEnabled,
+            description: 'Enable or disable monthly recurring subscriptions on checkout',
+            updated_at: new Date().toISOString(),
+          });
+        }
+        if (upserts.length > 0) {
+          await this.supabaseAdmin.from('app_settings').upsert(upserts);
+        }
       } catch (sbErr) {
         this.logger.error(`Failed to update app_settings: ${sbErr}`);
         throw new BadRequestException('Ошибка при сохранении настроек приложения');
       }
     }
-    return { stripeEnabled: dto.stripeEnabled };
+    return await this.getSettings();
   }
 
   async createStripeSession(dto: CreateReservationDto) {
     const settings = await this.getSettings();
     if (!settings.stripeEnabled) {
       throw new BadRequestException('Онлайн-оплата временно отключена. Пожалуйста, выберите бронирование с оплатой в школе.');
+    }
+
+    const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION;
+    if (isSubscription && !settings.subscriptionsEnabled) {
+      throw new BadRequestException('Ежемесячные абонементы в данный момент отключены.');
     }
 
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
@@ -490,30 +565,54 @@ export class CheckoutService {
         ...dto,
         paymentMethod: PaymentMethod.STRIPE,
         paymentStatus: BookingPaymentStatus.PENDING,
+        billingScheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
       });
 
       const { data: course } = await this.supabaseAdmin.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
       const courseName = course?.name || course?.title_it || 'Corso Atena School';
-      const coursePrice = course ? Number(course.price) : 73.20;
+      const coursePrice = isSubscription
+        ? (course && (course as any).subscription_price != null ? Number((course as any).subscription_price) : (Number(course?.price) || 73.20))
+        : (course ? Number(course.price) : 73.20);
 
       const lineItems: any[] = [];
-      let totalFeeCount = 0;
 
       for (const b of reservationRes.bookings) {
-        lineItems.push({
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `${courseName} — ${b.student_name}`,
+        if (isSubscription) {
+          if ((course as any)?.stripe_monthly_price_id) {
+            lineItems.push({
+              price: (course as any).stripe_monthly_price_id,
+              quantity: 1,
+            });
+          } else {
+            lineItems.push({
+              price_data: {
+                currency: 'eur',
+                product_data: {
+                  name: `${courseName} — Abbonamento Mensile (${b.student_name})`,
+                },
+                unit_amount: Math.round(coursePrice * 100),
+                recurring: {
+                  interval: 'month',
+                },
+              },
+              quantity: 1,
+            });
+          }
+        } else {
+          lineItems.push({
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: `${courseName} — ${b.student_name}`,
+              },
+              unit_amount: Math.round(coursePrice * 100),
             },
-            unit_amount: Math.round(coursePrice * 100),
-          },
-          quantity: 1,
-        });
+            quantity: 1,
+          });
+        }
 
         const regFee = Number(b.registration_fee || 0);
         if (regFee > 0) {
-          totalFeeCount += 1;
           lineItems.push({
             price_data: {
               currency: 'eur',
@@ -530,7 +629,7 @@ export class CheckoutService {
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: lineItems,
-        mode: 'payment',
+        mode: isSubscription ? 'subscription' : 'payment',
         customer_email: dto.email,
         success_url: `${siteUrl}/checkout/success/${reservationRes.bookingId}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
@@ -538,95 +637,131 @@ export class CheckoutService {
           booking_id: reservationRes.bookingId,
           booking_ids: reservationRes.bookingIds.join(','),
           purchaser_tax_code: dto.purchaserTaxCode || '',
+          billing_scheme: isSubscription ? String(BillingScheme.SUBSCRIPTION) : String(BillingScheme.FULL),
         },
       });
 
       return { success: true, url: session.url, bookingId: reservationRes.bookingId };
     }
 
-    const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('create-checkout-session', {
-      body: {
-        itemType: dto.itemType || 'course',
-        itemId: resolvedItemId,
-        date: dto.date,
-        time: dto.time,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        customerEmail: dto.email,
-        phone: dto.phone,
-        notes: dto.notes,
-        studentFirstName: dto.studentFirstName,
-        studentLastName: dto.studentLastName,
-        studentEmail: dto.studentEmail,
-        studentPhone: dto.studentPhone,
-        purchaserTaxCode: dto.purchaserTaxCode,
-        taxCode: dto.studentTaxCode || dto.purchaserTaxCode,
-        studentBirthDate: dto.studentBirthDate,
-        needsCompanyInvoice: dto.needsCompanyInvoice,
-        sdiCode: dto.sdiCode,
-        pecEmail: dto.pecEmail,
-        includeRegistrationFee: dto.includeRegistrationFee,
-        isForChild: dto.isForChild,
-        origin: siteUrl,
-      },
+    if (!isSubscription) {
+      try {
+        const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('create-checkout-session', {
+          body: {
+            itemType: dto.itemType || 'course',
+            itemId: resolvedItemId,
+            date: dto.date,
+            time: dto.time,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            customerEmail: dto.email,
+            phone: dto.phone,
+            notes: dto.notes,
+            studentFirstName: dto.studentFirstName,
+            studentLastName: dto.studentLastName,
+            studentEmail: dto.studentEmail,
+            studentPhone: dto.studentPhone,
+            purchaserTaxCode: dto.purchaserTaxCode,
+            taxCode: dto.studentTaxCode || dto.purchaserTaxCode,
+            studentBirthDate: dto.studentBirthDate,
+            needsCompanyInvoice: dto.needsCompanyInvoice,
+            sdiCode: dto.sdiCode,
+            pecEmail: dto.pecEmail,
+            includeRegistrationFee: dto.includeRegistrationFee,
+            isForChild: dto.isForChild,
+            origin: siteUrl,
+          },
+        });
+
+        if (!edgeErr && edgeData?.url) {
+          return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
+        }
+      } catch (invokeErr: any) {
+        this.logger.warn(`Edge function invoke warning: ${invokeErr.message}`);
+      }
+    }
+
+    // Direct Stripe SDK session
+    const reservationRes = await this.createReservation({
+      ...dto,
+      paymentMethod: PaymentMethod.STRIPE,
+      paymentStatus: BookingPaymentStatus.PENDING,
+      billingScheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
     });
 
-    if (edgeErr || !edgeData?.url) {
-      // Fallback to direct Stripe SDK session
-      const reservationRes = await this.createReservation({
-        ...dto,
-        paymentMethod: PaymentMethod.STRIPE,
-        paymentStatus: BookingPaymentStatus.PENDING,
-      });
+    const booking = reservationRes.booking;
+    const { data: course } = await this.supabaseAdmin.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
+    const courseName = course?.name || course?.title_it || booking.course_name || 'Corso Atena School';
+    const coursePrice = isSubscription
+      ? (course && (course as any).subscription_price != null ? Number((course as any).subscription_price) : (Number(course?.price) || 73.20))
+      : Number(booking.amount_paid) - Number(booking.registration_fee || 0);
+    const regFee = Number(booking.registration_fee || 0);
 
-      const booking = reservationRes.booking;
-      const coursePrice = Number(booking.amount_paid) - Number(booking.registration_fee || 0);
-      const regFee = Number(booking.registration_fee || 0);
+    const lineItems: any[] = [];
 
-      const lineItems: any[] = [
-        {
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: booking.course_name || 'Corso Atena School',
-            },
-            unit_amount: Math.round(coursePrice * 100),
-          },
+    if (isSubscription) {
+      if ((course as any)?.stripe_monthly_price_id) {
+        lineItems.push({
+          price: (course as any).stripe_monthly_price_id,
           quantity: 1,
-        },
-      ];
-
-      if (regFee > 0) {
+        });
+      } else {
         lineItems.push({
           price_data: {
             currency: 'eur',
             product_data: {
-              name: 'Quota Associativa / Iscrizione Annuale (2026/2027)',
+              name: `${courseName} — Abbonamento Mensile`,
             },
-            unit_amount: Math.round(regFee * 100),
+            unit_amount: Math.round(coursePrice * 100),
+            recurring: {
+              interval: 'month',
+            },
           },
           quantity: 1,
         });
       }
-
-      const session = await this.stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: lineItems,
-        mode: 'payment',
-        customer_email: dto.email,
-        success_url: `${siteUrl}/checkout/success/${booking.id}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
-        metadata: {
-          booking_id: booking.id,
-          purchaser_tax_code: dto.purchaserTaxCode || '',
-          student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
+    } else {
+      lineItems.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: courseName,
+          },
+          unit_amount: Math.round(coursePrice * 100),
         },
+        quantity: 1,
       });
-
-      return { success: true, url: session.url, bookingId: booking.id };
     }
 
-    return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
+    if (regFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: 'Quota Associativa / Iscrizione Annuale (2026/2027)',
+          },
+          unit_amount: Math.round(regFee * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    const session = await this.stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: isSubscription ? 'subscription' : 'payment',
+      customer_email: dto.email,
+      success_url: `${siteUrl}/checkout/success/${booking.id}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
+      metadata: {
+        booking_id: booking.id,
+        purchaser_tax_code: dto.purchaserTaxCode || '',
+        student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
+        billing_scheme: isSubscription ? String(BillingScheme.SUBSCRIPTION) : String(BillingScheme.FULL),
+      },
+    });
+
+    return { success: true, url: session.url, bookingId: booking.id };
   }
 
   async verifyPayment(dto: VerifyPaymentDto) {
@@ -673,6 +808,7 @@ export class CheckoutService {
       }
     }
 
+    // 1. Checkout Session Completed
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const bookingIdsStr = session.metadata?.booking_ids || session.metadata?.booking_id;
@@ -680,12 +816,21 @@ export class CheckoutService {
       if (bookingIdsStr) {
         const ids = bookingIdsStr.split(',').map((s) => s.trim()).filter(Boolean);
         for (const bId of ids) {
+          const updatePayload: Record<string, any> = {
+            payment_status: BookingPaymentStatus.PAID,
+            payment_method: PaymentMethod.STRIPE,
+          };
+          if (session.customer) {
+            updatePayload.stripe_customer_id = typeof session.customer === 'string' ? session.customer : session.customer.id;
+          }
+          if (session.subscription) {
+            updatePayload.stripe_subscription_id = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+            updatePayload.subscription_status = SubscriptionStatus.ACTIVE;
+          }
+
           const { data: updatedBooking } = await this.supabaseAdmin
             .from('bookings')
-            .update({
-              payment_status: BookingPaymentStatus.PAID,
-              payment_method: PaymentMethod.STRIPE,
-            })
+            .update(updatePayload)
             .eq('id', bId)
             .select('student_id')
             .maybeSingle();
@@ -701,6 +846,94 @@ export class CheckoutService {
           }
         }
       }
+    }
+
+    // 2. Subscription Renewal Payment Succeeded (invoice.payment_succeeded)
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object as any;
+      const subscriptionId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id;
+
+      if (subscriptionId) {
+        const { data: booking } = await this.supabaseAdmin
+          .from('bookings')
+          .select('*')
+          .eq('stripe_subscription_id', subscriptionId)
+          .maybeSingle();
+
+        if (booking) {
+          const { data: course } = await this.supabaseAdmin
+            .from('courses')
+            .select('*')
+            .eq('id', booking.course_id)
+            .maybeSingle();
+
+          const currentPeriodEnd = booking.subscription_ends_at ? new Date(booking.subscription_ends_at) : new Date();
+          const nextPeriodStart = currentPeriodEnd.toISOString();
+          const nextPeriodEndDate = new Date(currentPeriodEnd);
+          nextPeriodEndDate.setMonth(nextPeriodEndDate.getMonth() + 1);
+          const nextPeriodEnd = nextPeriodEndDate.toISOString();
+
+          // Calculate next month's lesson batch
+          const nextLessons = calculateLessonDates(
+            nextPeriodStart,
+            booking.start_time || '10:00',
+            course?.category || undefined,
+            booking.schedule_days || course?.schedule_days || null,
+            course?.lesson_duration_minutes || 60,
+            course?.start_time || booking.start_time || null,
+            course?.end_time || null,
+            course?.schedule_type || null
+          );
+
+          if (nextLessons && nextLessons.length > 0) {
+            await this.checkoutCore.generateAndSaveLessons(booking.id, course, nextLessons);
+          }
+
+          // Record renewal payment in ledger
+          const renewalAmount = Number(invoice.amount_paid || 0) / 100;
+          await this.supabaseAdmin.from('payments').insert({
+            booking_id: booking.id,
+            amount: renewalAmount,
+            currency: PaymentCurrency.EUR,
+            status: PaymentRecordStatus.SUCCEEDED,
+            type: PaymentType.COURSE_PAYMENT,
+            payment_method: PaymentMethod.STRIPE,
+            provider: PaymentProvider.STRIPE,
+            academic_year: '2026/2027',
+          });
+
+          // Update booking subscription status and period
+          await this.supabaseAdmin.from('bookings').update({
+            subscription_ends_at: nextPeriodEnd,
+            subscription_status: SubscriptionStatus.ACTIVE,
+            updated_at: new Date().toISOString(),
+          }).eq('id', booking.id);
+        }
+      }
+    }
+
+    // 3. Customer Subscription Updated (Cancellation / Status change)
+    if (event.type === 'customer.subscription.updated') {
+      const sub = event.data.object as any;
+      let subStatus: SubscriptionStatus = SubscriptionStatus.ACTIVE;
+      if (sub.status === 'past_due') subStatus = SubscriptionStatus.PAST_DUE;
+      else if (sub.status === 'canceled' || sub.status === 'unpaid') subStatus = SubscriptionStatus.CANCELED;
+      else if (sub.status === 'paused') subStatus = SubscriptionStatus.PAUSED;
+
+      await this.supabaseAdmin.from('bookings').update({
+        cancel_at_period_end: sub.cancel_at_period_end,
+        subscription_status: subStatus,
+        updated_at: new Date().toISOString(),
+      }).eq('stripe_subscription_id', sub.id);
+    }
+
+    // 4. Customer Subscription Deleted
+    if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object as any;
+      await this.supabaseAdmin.from('bookings').update({
+        subscription_status: SubscriptionStatus.CANCELED,
+        updated_at: new Date().toISOString(),
+      }).eq('stripe_subscription_id', sub.id);
     }
 
     if (event && event.id) {

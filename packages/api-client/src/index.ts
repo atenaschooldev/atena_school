@@ -56,6 +56,7 @@ export interface ReservationPayload {
   notes?: string;
   paymentStatus?: number;
   paymentMethod?: number;
+  billingScheme?: number;
   idempotencyKey?: string;
   students?: Array<{
     firstName: string;
@@ -183,17 +184,17 @@ export function createApiClient(config?: string | ApiClientConfig) {
       const res = await fetch(`${prefix}/bookings/${bookingId}`);
       return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
     },
-    async getSettings(): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+    async getSettings(): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`);
-      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
-    async updateSettings(data: { stripeEnabled: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+    async updateSettings(data: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
   };
 
@@ -219,17 +220,17 @@ export function createApiClient(config?: string | ApiClientConfig) {
   };
 
   const settingsService = {
-    async getPaymentGateway(): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+    async getPaymentGateway(): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`);
-      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
-    async updatePaymentGateway(data: { stripeEnabled: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean } }> {
+    async updatePaymentGateway(data: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean } }>(res);
+      return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
   };
 

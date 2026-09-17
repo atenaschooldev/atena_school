@@ -36,6 +36,7 @@ interface CheckoutOrderSummaryProps {
   submitting: false | SubmitAction;
   isAnyFeeChecking: boolean;
   stripeEnabled: boolean;
+  isSubscription?: boolean;
 }
 
 export function CheckoutOrderSummary({
@@ -59,6 +60,7 @@ export function CheckoutOrderSummary({
   submitting,
   isAnyFeeChecking,
   stripeEnabled,
+  isSubscription,
 }: CheckoutOrderSummaryProps) {
   return (
     <div className="hidden lg:block lg:sticky lg:top-24 bg-white rounded-2xl border border-slate-200 shadow-lg p-4 sm:p-5 space-y-4">
@@ -132,7 +134,8 @@ export function CheckoutOrderSummary({
         <div className="space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-slate-600 font-medium">
-              Prezzo Corso {studentCount > 1 ? `(${studentCount}x ${coursePrice.toFixed(2)}€)` : ""}
+              {isSubscription ? "Abbonamento Mensile (1° mese)" : "Prezzo Corso"}{" "}
+              {studentCount > 1 ? `(${studentCount}x ${coursePrice.toFixed(2)}€${isSubscription ? "/mese" : ""})` : ""}
             </span>
             <span className="font-bold text-slate-800">{totalCoursePrice.toFixed(2)}€</span>
           </div>
@@ -155,7 +158,9 @@ export function CheckoutOrderSummary({
         <div className="flex items-baseline justify-between" aria-live="polite" aria-atomic="true">
           <div>
             <span className="text-xs font-black text-[#043569] uppercase tracking-wider block">Totale</span>
-            <span className="text-[10px] text-slate-400 font-semibold">Tasse e IVA incluse</span>
+            <span className="text-[10px] text-slate-400 font-semibold">
+              {isSubscription ? "1° mese + quota (se dovuta)" : "Tasse e IVA incluse"}
+            </span>
           </div>
           <span className="text-3xl font-black text-[#F8861D]">{totalPrice.toFixed(2)}€</span>
         </div>
@@ -185,12 +190,12 @@ export function CheckoutOrderSummary({
             ) : selectedPaymentMode === SubmitAction.PAY ? (
               <>
                 <CreditCard className="w-4 h-4" weight="bold" />
-                Paga Online Ora ({totalPrice.toFixed(2)}€)
+                {isSubscription ? `Attiva Abbonamento Online (${totalPrice.toFixed(2)}€)` : `Paga Online Ora (${totalPrice.toFixed(2)}€)`}
               </>
             ) : (
               <>
                 <Storefront className="w-4 h-4 text-white" weight="bold" />
-                Prenota e Paga in Sede ({totalPrice.toFixed(2)}€)
+                {isSubscription ? `Prenota Abbonamento in Sede (${totalPrice.toFixed(2)}€)` : `Prenota e Paga in Sede (${totalPrice.toFixed(2)}€)`}
               </>
             )}
           </button>

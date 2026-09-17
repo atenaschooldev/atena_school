@@ -14,10 +14,12 @@ import {
   CheckoutStudentsList,
   CheckoutRegistrationFeeSelector,
   CheckoutPaymentModeSelector,
+  CheckoutBillingSchemeSelector,
   CheckoutNotesAndGdpr,
   CheckoutOrderSummary,
   CheckoutMobileBottomBar,
 } from "@/features/checkout/components";
+import { BillingScheme } from "@atena/api-types";
 
 function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -26,6 +28,9 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     item,
     loading,
     stripeEnabled,
+    subscriptionsEnabled,
+    billingScheme,
+    setBillingScheme,
     submitting,
     feeCheckStatus,
     studentsList,
@@ -66,7 +71,11 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
     );
   }
 
-  const coursePrice = Number(item?.price || 0);
+  const isSubscription = subscriptionsEnabled && billingScheme === BillingScheme.SUBSCRIPTION;
+  const coursePrice = isSubscription
+    ? (item?.subscription_price != null ? Number(item.subscription_price) : (Number(item?.price) || 73.20))
+    : Number(item?.price || 0);
+
   const studentCount = isForChild ? Math.max(1, studentsList.length) : 1;
   const totalCoursePrice = coursePrice * studentCount;
 
@@ -161,6 +170,14 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
               />
             )}
 
+            {/* Billing Scheme / Tariff Selector: Render ONLY when subscriptions are enabled & course supports it */}
+            <CheckoutBillingSchemeSelector
+              subscriptionsEnabled={subscriptionsEnabled}
+              item={item}
+              billingScheme={billingScheme}
+              setBillingScheme={setBillingScheme}
+            />
+
             {/* Registration Fee Option: Render ONLY when Stripe is enabled and any fee is due */}
             <CheckoutRegistrationFeeSelector
               stripeEnabled={stripeEnabled}
@@ -207,6 +224,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
             submitting={submitting}
             isAnyFeeChecking={isAnyFeeChecking}
             stripeEnabled={stripeEnabled}
+            isSubscription={isSubscription}
           />
 
           {/* Mobile Sticky Bottom Bar — Inside form grid so it submits form id="checkout-form" */}

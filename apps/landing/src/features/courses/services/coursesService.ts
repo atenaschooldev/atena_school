@@ -13,6 +13,8 @@ export interface ResolvedCourse {
   description: string;
   image?: string;
   price?: string;
+  billing_type?: number | null;
+  subscription_price?: number | string | null;
   type: string;
   teacher_name?: string;
   lessons_per_week?: number | null;
@@ -92,6 +94,8 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
         description: itemDesc,
         image: itemImage,
         price: itemPrice,
+        billing_type: course.billing_type !== undefined ? Number(course.billing_type) : null,
+        subscription_price: course.subscription_price !== undefined ? course.subscription_price : null,
         type: course.type || 'course',
         teacher_name: course.teacher_name || undefined,
         lessons_per_week: course.lessons_per_week !== undefined ? course.lessons_per_week : null,

@@ -94,6 +94,8 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                       image={course.image}
                       category={section.title}
                       price={course.price}
+                      billing_type={course.billing_type}
+                      subscription_price={course.subscription_price}
                       type={course.type}
                       teacher_name={course.teacher_name}
                       priority={sIdx === 0 && idx < 2}

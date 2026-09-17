@@ -10,7 +10,7 @@ import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
 
 import type { User } from "@supabase/supabase-js";
-import type { CourseItem, UserProfile } from "@atena/api-types";
+import { BillingScheme, CourseBillingType, type CourseItem, type UserProfile } from "@atena/api-types";
 
 export type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 export type BookingItem = CourseItem;
@@ -47,6 +47,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [stripeEnabled, setStripeEnabled] = useState(false);
+  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false);
+  const [billingScheme, setBillingScheme] = useState<BillingScheme>(BillingScheme.FULL);
   const [submitting, setSubmitting] = useState<false | SubmitAction>(false);
   const [user, setUser] = useState<User | UserProfile | null>(null);
   const actionRef = useRef<SubmitAction>(SubmitAction.BOOK);
@@ -104,15 +106,24 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       try {
         const [itemRes, settingsRes] = await Promise.all([
           api.courses.getById(id).catch(() => ({ success: false, item: undefined, course: undefined })),
-          api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false } })),
+          api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false, subscriptionsEnabled: false } })),
         ]);
 
+        let fetchedItem: BookingItem | null = null;
         if (itemRes.success && (itemRes.item || itemRes.course)) {
-          setItem((itemRes.item || itemRes.course) as unknown as BookingItem);
+          fetchedItem = (itemRes.item || itemRes.course) as unknown as BookingItem;
+          setItem(fetchedItem);
         }
 
         if (settingsRes?.success && settingsRes.settings) {
           setStripeEnabled(Boolean(settingsRes.settings.stripeEnabled));
+          const subsEnabled = Boolean(settingsRes.settings.subscriptionsEnabled);
+          setSubscriptionsEnabled(subsEnabled);
+
+          // If course is strictly subscription-only and subscriptions are enabled, default to subscription
+          if (subsEnabled && fetchedItem && Number(fetchedItem.billing_type) === CourseBillingType.SUBSCRIPTION_ONLY) {
+            setBillingScheme(BillingScheme.SUBSCRIPTION);
+          }
         }
 
         let draftValues: Partial<CheckoutFormValues> | null = null;
@@ -413,6 +424,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       needsCompanyInvoice: Boolean(values.needsCompanyInvoice),
       sdiCode: values.sdiCode || undefined,
       pecEmail: values.pecEmail || undefined,
+      billingScheme: subscriptionsEnabled ? billingScheme : BillingScheme.FULL,
       idempotencyKey: idempotencyKeyRef.current,
     };
   };
@@ -488,6 +500,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     item,
     loading,
     stripeEnabled,
+    subscriptionsEnabled,
+    billingScheme,
+    setBillingScheme,
     submitting,
     hasPaidAnnualFee,
     feeCheckStatus,

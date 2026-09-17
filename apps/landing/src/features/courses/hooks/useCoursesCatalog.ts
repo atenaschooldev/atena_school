@@ -7,6 +7,8 @@ export interface CleanCourse {
   description: string;
   image?: string;
   price?: string;
+  billing_type?: number | null;
+  subscription_price?: number | string | null;
   type: "course" | "shop" | string;
   teacher_name?: string;
   lessons_per_week?: number | null;

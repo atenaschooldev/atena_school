@@ -9,15 +9,18 @@ export async function GET() {
     return NextResponse.json({ success: true, settings });
   } catch (err: any) {
     console.error('[GET /api/settings/payment-gateway error]:', err);
-    return NextResponse.json({ success: true, settings: { stripeEnabled: false } });
+    return NextResponse.json({ success: true, settings: { stripeEnabled: false, subscriptionsEnabled: false } });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const stripeEnabled = Boolean(body.stripeEnabled);
-    const updated = await updateSystemSettings({ stripeEnabled });
+    const payload: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean } = {};
+    if (body.stripeEnabled !== undefined) payload.stripeEnabled = Boolean(body.stripeEnabled);
+    if (body.subscriptionsEnabled !== undefined) payload.subscriptionsEnabled = Boolean(body.subscriptionsEnabled);
+
+    const updated = await updateSystemSettings(payload);
     return NextResponse.json({ success: true, settings: updated });
   } catch (err: any) {
     console.error('[PATCH /api/settings/payment-gateway error]:', err);
