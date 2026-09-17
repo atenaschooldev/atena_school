@@ -1,9 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional, IsString } from 'class-validator';
 import {
   BookingPaymentStatus,
   BookingSchedulingStatus,
   PaymentMethod,
+  BillingScheme,
+  SubscriptionStatus,
 } from '@atena/api-types';
 
 export class UpdateBookingDto {
@@ -63,6 +65,32 @@ export class UpdateBookingDto {
   @IsOptional()
   @IsInt({ message: 'scheduling_status должен быть числом (1..2)' })
   scheduling_status?: BookingSchedulingStatus;
+
+  @ApiPropertyOptional({
+    description: 'Схема оплаты: 1=FULL, 2=INSTALLMENTS, 3=PER_LESSON, 4=SUBSCRIPTION',
+    enum: BillingScheme,
+    example: BillingScheme.SUBSCRIPTION,
+  })
+  @IsOptional()
+  @IsInt({ message: 'billing_scheme должен быть числом (1..4)' })
+  billing_scheme?: BillingScheme;
+
+  @ApiPropertyOptional({
+    description: 'Статус ежемесячной подписки: 1=ACTIVE, 2=PENDING_RECEPTION_PAYMENT, 3=PAST_DUE, 4=PAUSED, 5=CANCELED, 6=EXPIRED',
+    enum: SubscriptionStatus,
+    example: SubscriptionStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsInt({ message: 'subscription_status должен быть числом (1..6)' })
+  subscription_status?: SubscriptionStatus;
+
+  @ApiPropertyOptional({
+    description: 'Флаг отмены подписки в конце расчетного периода',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  cancel_at_period_end?: boolean;
 }
 
 export class AdminMembershipFeeDto {
@@ -120,4 +148,13 @@ export class UpdateBookingStatusDto {
   @IsOptional()
   @IsInt({ message: 'scheduling_status должен быть числом (1..2)' })
   scheduling_status?: BookingSchedulingStatus;
+
+  @ApiPropertyOptional({
+    description: 'Новый статус подписки: 1=ACTIVE, 2=PENDING_RECEPTION_PAYMENT, 3=PAST_DUE, 4=PAUSED, 5=CANCELED, 6=EXPIRED',
+    enum: SubscriptionStatus,
+    example: SubscriptionStatus.ACTIVE,
+  })
+  @IsOptional()
+  @IsInt({ message: 'subscription_status должен быть числом (1..6)' })
+  subscription_status?: SubscriptionStatus;
 }

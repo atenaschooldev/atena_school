@@ -1,8 +1,41 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
-import { CourseStatus, CourseScheduleType, CourseFormat } from '@atena/api-types';
+import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType } from '@atena/api-types';
 
 export class CreateCourseDto {
+  @ApiPropertyOptional({
+    description: 'Формат оплаты курса: 1=ONE_TIME_ONLY (только разово), 2=SUBSCRIPTION_ONLY (только подписка), 3=BOTH (разово или по подписке)',
+    enum: CourseBillingType,
+    example: CourseBillingType.BOTH,
+    default: CourseBillingType.ONE_TIME_ONLY,
+  })
+  @IsOptional()
+  billingType?: CourseBillingType | number;
+
+  @ApiPropertyOptional({ description: 'Формат оплаты курса (алиас billing_type)' })
+  @IsOptional()
+  billing_type?: number;
+
+  @ApiPropertyOptional({ description: 'Стоимость ежемесячной подписки в EUR', example: 73.2 })
+  @IsOptional()
+  @IsNumber()
+  subscriptionPrice?: number;
+
+  @ApiPropertyOptional({ description: 'Стоимость подписки (алиас subscription_price)', example: 73.2 })
+  @IsOptional()
+  @IsNumber()
+  subscription_price?: number;
+
+  @ApiPropertyOptional({ description: 'Stripe Price ID для ежемесячной подписки', example: 'price_1Qxyz...' })
+  @IsOptional()
+  @IsString()
+  stripeMonthlyPriceId?: string;
+
+  @ApiPropertyOptional({ description: 'Stripe Price ID (алиас stripe_monthly_price_id)' })
+  @IsOptional()
+  @IsString()
+  stripe_monthly_price_id?: string;
+
   @ApiPropertyOptional({ description: 'Название курса (EN/IT)' })
   @IsOptional()
   @IsString()

@@ -84,7 +84,7 @@ export class CheckoutController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Синхронное подтверждение оплаты Stripe',
-    description: 'Проверяет статус сессии Stripe после возврата пользователя на экран успеха и переводит бронирование в статус paid',
+    description: 'Проверяет статус сессии Stripe после возврата пользователя на экран успеха и переводит бронирование в статус PAID (числовой код 3)',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -94,7 +94,13 @@ export class CheckoutController {
         success: true,
         booking: {
           id: '550e8400-e29b-41d4-a716-446655440000',
-          payment_status: 'paid',
+          purchaser_name: 'Mario Rossi',
+          purchaser_email: 'mario.rossi@gmail.com',
+          payment_status: 3,
+          payment_method: 1,
+          billing_scheme: 4,
+          subscription_status: 1,
+          stripe_subscription_id: 'sub_1Qxyz...',
         },
       },
     },

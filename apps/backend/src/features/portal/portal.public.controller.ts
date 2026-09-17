@@ -5,7 +5,7 @@ import { PortalService } from './portal.public.service';
 import { UpdateProfileDto } from './dto/portal.dto';
 
 @ApiTags('Student & Parent Portal (LK)')
-@ApiBearerAuth()
+@ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard)
 @Controller('portal')
 export class PortalController {
