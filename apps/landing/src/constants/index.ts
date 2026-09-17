@@ -1,9 +1,3 @@
-export * from "./pricing";
-export * from "./school";
 export * from "./booking";
-export * from "./lessons";
-export * from "./students";
-export * from "./courses";
-export * from "./teachers";
-export * from "./cookies";
-export * from "./routes";
+export { ANNUAL_REGISTRATION_FEE_EUR } from "@atena/utils";
+

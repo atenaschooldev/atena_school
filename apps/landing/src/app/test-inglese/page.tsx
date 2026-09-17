@@ -1,4 +1,4 @@
-import EnglishTest from "@/components/EnglishTest";
+import { EnglishTest } from "@/features/test-inglese";
 import { env } from "@/config/env";
 
 export async function generateMetadata() {
