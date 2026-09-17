@@ -24,6 +24,7 @@ import {
   StudentStatus,
   CourseStatus,
   CourseScheduleType,
+  CourseBillingType,
   parseCourseScheduleType,
 } from '@atena/api-types';
 
@@ -202,7 +203,9 @@ export class CheckoutService {
       ? Number(dto.paymentMethod)
       : PaymentMethod.CASH;
 
-    const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION;
+    const courseBillingType = (course as any)?.billing_type != null ? Number((course as any).billing_type) : CourseBillingType.ONE_TIME_ONLY;
+    const courseAllowsSubscription = courseBillingType === CourseBillingType.BOTH || courseBillingType === CourseBillingType.SUBSCRIPTION_ONLY;
+    const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION && courseAllowsSubscription;
     const effectiveCoursePrice = isSubscription
       ? (course && (course as any).subscription_price != null ? Number((course as any).subscription_price) : coursePrice)
       : coursePrice;

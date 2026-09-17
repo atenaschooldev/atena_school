@@ -12,6 +12,7 @@ import {
   PaymentProvider,
   LessonStatus,
   SubscriptionStatus,
+  CourseBillingType,
   parsePaymentMethod,
 } from '@atena/api-types';
 import { getSupabaseAdmin } from '../supabase-admin';
@@ -208,7 +209,9 @@ export async function createReservation(dto: CreateReservationParams) {
   subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
   const subEndsAt = subEndsAtDate.toISOString();
 
-  const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION;
+  const courseBillingType = course?.billing_type != null ? Number(course.billing_type) : CourseBillingType.ONE_TIME_ONLY;
+  const courseAllowsSubscription = courseBillingType === CourseBillingType.BOTH || courseBillingType === CourseBillingType.SUBSCRIPTION_ONLY;
+  const isSubscription = Number(dto.billingScheme) === BillingScheme.SUBSCRIPTION && courseAllowsSubscription;
   const effectiveCoursePrice = isSubscription
     ? (course?.subscription_price != null ? Number(course.subscription_price) : coursePrice)
     : coursePrice;
