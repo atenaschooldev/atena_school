@@ -8,7 +8,7 @@ export async function GET() {
     const settings = await getSystemSettings();
     return NextResponse.json({ success: true, settings });
   } catch (err: any) {
-    console.error('[GET /api/settings/payment-gateway error]:', err);
+    console.error('[GET /landing/settings/payment-gateway error]:', err);
     return NextResponse.json({ success: true, settings: { stripeEnabled: false, subscriptionsEnabled: false } });
   }
 }
@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest) {
     const updated = await updateSystemSettings(payload);
     return NextResponse.json({ success: true, settings: updated });
   } catch (err: any) {
-    console.error('[PATCH /api/settings/payment-gateway error]:', err);
+    console.error('[PATCH /landing/settings/payment-gateway error]:', err);
     return NextResponse.json(
       { success: false, error: err.message || 'Failed to update system settings' },
       { status: 500 }
