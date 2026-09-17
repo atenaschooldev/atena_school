@@ -1,104 +1,172 @@
-# 🏛️ Atena School
+# 🏛️ Atena School — Landing & Self-Checkout Portal
 
-A premium, localized landing page and CMS for **Atena School**, a language and academic tutoring center in Cittanova, Italy. Built with modern web technologies for performance, SEO, and ease of management.
+Клиентский лендинг и платформа самостоятельного онлайн-бронирования курсов для языковой школы **Atena School** (Читтанова, Италия). Приложение оптимизировано для высокой конверсии, максимального SEO, мгновенной скорости загрузки и прозрачного флоу оплаты.
 
 ---
 
-## 🚀 Quick Start
+## 🛠 Технологический стек
 
-### 1. Prerequisites
-- **Node.js** (v18+ recommended)
-- **Supabase CLI** (for local development)
-- **Stripe Account** (for payments integration)
+- **Фреймворк**: [Next.js 16](https://nextjs.org/) (App Router, Turbopack)
+- **Язык**: TypeScript (строгая типизация)
+- **Стилизация**: [Tailwind CSS](https://tailwindcss.com/) + кастомная дизайн-система Atena UI
+- **База данных и Auth**: [Supabase](https://supabase.com/) (`@supabase/ssr`)
+- **Эквайринг & Платежи**: [Stripe](https://stripe.com/) (Node.js SDK, Checkout Sessions, Webhooks)
+- **Интернационализация**: [next-intl](https://next-intl-docs.vercel.app/)
+- **Формы и валидация**: `react-hook-form` + `@hookform/resolvers` + `@atena/validators` (Zod)
+- **Иконки**: `@phosphor-icons/react`
+- **Анимации & Эффекты**: GSAP, Canvas Confetti, CSS-модули
+- **Тестирование**: [Vitest](https://vitest.dev/)
 
-### 2. Installation
-```bash
-git clone <repository-url>
-cd atenas-school
-npm install
+---
+
+## 📂 Архитектура и структура каталогов
+
+Проект организован по принципу **Feature-Driven Development**. Все страницы в каталоге `src/app/` представляют собой тонкие серверные/Suspense обёртки, а бизнес-логика, хуки, компоненты и вьюхи изолированы в модулях `src/features/`.
+
+```
+apps/landing/src/
+├── app/                          # Исключительно тонкие роуты Next.js и метаданные
+│   ├── api/                      # Серверные REST API хэндлеры лендинга (/api/landing/*)
+│   │   ├── auth/                 # Авторизация и Magic-link генерация
+│   │   ├── bookings/             # Проверка статуса бронирований
+│   │   ├── checkout/             # Stripe Session, Reserve, Check Fee, Verify Payment
+│   │   ├── contact/              # Отправка сообщений из формы обратной связи
+│   │   ├── courses/              # Публичный список и детали курсов
+│   │   ├── mail/                 # Отправка транзакционных писем (Resend/SMTP)
+│   │   ├── portal/               # Stripe Customer Portal
+│   │   ├── telegram/             # Уведомления администраторам в Telegram
+│   │   └── webhooks/stripe/      # Обработка событий Stripe (checkout.session.completed и др.)
+│   ├── book/
+│   │   └── [type]/[id]/page.tsx  # Роут редиректа на страницу курса
+│   ├── checkout/
+│   │   ├── [id]/page.tsx         # Тонкий Suspense-роут -> <CheckoutView />
+│   │   └── success/
+│   │       ├── [id]/page.tsx     # Редирект на success-страницу с query-параметрами
+│   │       └── page.tsx          # Тонкий Suspense-роут -> <CheckoutSuccessView />
+│   ├── cookies/page.tsx          # Страница Cookie Policy (GDPR)
+│   ├── corsi/
+│   │   ├── page.tsx              # Каталог курсов с SEO Schema
+│   │   └── [id]/page.tsx         # Тонкий серверный роут с SEO -> <CourseDetailView />
+│   ├── privacy/page.tsx          # Страница Privacy Policy (GDPR)
+│   ├── test-inglese/page.tsx     # Тонкий роут -> <EnglishTest />
+│   ├── global-error.tsx          # Глобальный перехватчик критических ошибок
+│   ├── layout.tsx                # Root Layout с компонентами из @/components/layout
+│   ├── not-found.tsx             # Кастомная 404 страница
+│   ├── page.tsx                  # Home Route (<HeroSection />, <StatsSection />, etc.)
+│   ├── robots.ts                 # Динамический robots.txt
+│   └── sitemap.ts                # Динамический sitemap.xml
+│
+├── components/
+│   ├── layout/                   # Сквозной layout (Navbar, Footer, CookieBanner, ScrollToTop, GoogleAnalytics, ScrollAnimateProvider)
+│   ├── seo/                      # SEO-схемы Schema.org (BreadcrumbSchema, FaqSchema, CourseSchema)
+│   └── ui/                       # Атомарные UI-компоненты (Button, Input, Dialog, LogoLoop, Calendar, etc.)
+│
+├── config/                       # Конфигурация окружения (Zod-валидированный env)
+├── constants/                    # Константы (ежегодный взнос €30, типы оплат, тарифные схемы)
+│
+├── features/                     # Доменные модули (Feature-Driven Architecture)
+│   ├── about/                    # Секция "О школе" (AboutSection)
+│   ├── booking/                  # Календарь выбора слотов, хук useBooking
+│   ├── checkout/                 # Чекаут: CheckoutView, CheckoutSuccessView, CheckoutStepper, хуки useCheckout / useCheckoutSuccess
+│   ├── contact/                  # Форма обратной связи: ContactSection, useContactForm
+│   ├── courses/                  # Курсы: CourseDetailView, CoursesCatalog, CourseCard, CambridgeCard, EipassCard, FaqSidebar
+│   ├── home/                     # Главная: HeroSection, StatsSection, CtaBanner, homeService
+│   ├── reviews/                  # Отзывы студентов: TestimonialsSection
+│   ├── teachers/                 # Преподаватели: TeachersSection
+│   └── test-inglese/             # Интерактивный тест CEFR: EnglishTest, useEnglishQuiz
+│
+├── hooks/                        # Общие React-хуки (useMounted и др.)
+├── i18n/                         # Конфигурация локализации (next-intl, routing, messages)
+├── lib/                          # Утилиты, Supabase-клиенты, analytics, server services
+│   ├── server/                   # Серверные сервисы (checkout-service, email-service, telegram-service)
+│   ├── supabase/                 # Инициализация Supabase Client / Server / Middleware
+│   └── utils/                    # Генератор расписания (@atena/utils), форматирование дат и валют
+└── types/                        # Дополнительные TypeScript интерфейсы лендинга
 ```
 
-### 3. Environment Setup
-Copy `.env.example` to `.env.local` and fill in your credentials:
+---
+
+## 🎯 Основные функциональные модули
+
+### 1. 🏠 Главная страница (`features/home`)
+- **Hero Section**: Динамический заголовок с призывом к действию и быстрым переходом к каталогу или бесплатному тесту.
+- **Интерактивная статистика**: Анимированные счетчики учеников, часов и бегущая строка аккредитаций (`LogoLoop`: Cambridge, Trinity, EIPASS).
+- **Секции доверия**: О школе, преподавателях, отзывы реальных студентов и контактная форма с защитой от спама.
+
+### 2. 📚 Каталог и детали курсов (`features/courses`)
+- **Каталог**: Фильтрация по направлениям (дети, взрослые, EIPASS, Cambridge, подготовка к экзаменам), мгновенный поиск.
+- **Страница курса (`CourseDetailView`)**:
+  - Выбор гибкого/фиксированного расписания.
+  - Интерактивный выбор первой даты и времени урока через календарь.
+  - Расчёт дат занятий через эталонную функцию `@atena/utils` (`calculateLessonDates`).
+  - Полный блок FAQ и SEO JSON-LD микроразметка `Course` и `BreadcrumbList`.
+
+### 3. 💳 Чекаут и оплата (`features/checkout`)
+- **Проверка ежегодного членского взноса (€30)**:
+  - Автоматическая валидация через `Codice Fiscale` и email студента.
+  - Если взнос оплачен в текущем году — повторно не начисляется.
+- **Гибкие схемы оплаты**:
+  - Разовая полная оплата курса (`BillingScheme.FULL`).
+  - Ежемесячная подписка (`BillingScheme.SUBSCRIPTION` / Stripe Subscriptions).
+  - Бронирование без онлайн-оплаты с расчётом на месте в школе (`type='cash'`).
+- **Синхронизация**: Прямое создание Stripe Checkout Session через бэкенд-сервисы и обработка вебхуков.
+
+### 4. 🎉 Экран успешной оплаты (`features/checkout/views/CheckoutSuccessView`)
+- Отображение чека и параметров бронирования (дата первого урока, стоимость курса, регистрационный взнос).
+- Генерация и отправка Magic Link для мгновенного входа в личный кабинет (`apps/app`).
+- Быстрый вход через Google OAuth.
+
+### 5. 📝 Онлайн-тест по английскому языку (`features/test-inglese`)
+- 6 адаптивных вопросов с определением ориентировочного уровня по шкале CEFR (A1, A2, B1, B2, C1, C2).
+- Мгновенный результат, конфетти-эффект и кнопка подбора подходящего курса.
+
+---
+
+## 🚀 Запуск и разработка
+
+### 1. Установка зависимостей (из корня монорепозитория)
 ```bash
-cp .env.example .env.local
+pnpm install
 ```
 
-### 4. Development
+### 2. Запуск локального сервера разработки
 ```bash
-npm run dev
+# Только лендинг
+pnpm --filter landing dev
+
+# Или все сервисы монорепозитория
+pnpm dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to see the application.
+Лендинг будет доступен по адресу: [http://localhost:3000](http://localhost:3000).
+
+### 3. Запуск тестов
+```bash
+pnpm --filter landing test
+```
+
+### 4. Сборка для продакшена
+```bash
+pnpm --filter landing build
+```
 
 ---
 
-## 🛠 Tech Stack
+## 🔐 Переменные окружения (`.env.local`)
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
-- **Database & Auth**: [Supabase](https://supabase.com/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Shadcn UI](https://ui.shadcn.com/)
-- **Internationalization**: [next-intl](https://next-intl-docs.vercel.app/) (IT/EN support)
-- **Form Management**: React Hook Form + Zod
-- **Editor**: [Tiptap](https://tiptap.dev/) (Rich-text for CMS)
-
----
-
-## ✨ Key Features
-
-- **Multilingual Support**: Full localization (Italian & English) across the entire site.
-- **Dynamic CMS**: Admin dashboard to manage courses, teachers, blog posts, and testimonials.
-- **High Performance**: Optimized with Next.js `unstable_cache` and centralized cache revalidation.
-- **Secure Admin**: Role-based access control (RBAC) via Supabase Auth and Server Actions.
-- **Clean Architecture**: Repository pattern for data fetching ensures strict type safety and maintainability.
-- **SEO Ready**: Automated metadata generation, sitemap support, and Canonical URLs.
+| Переменная | Описание |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | URL текущего сайта лендинга (напр. `https://atena-school.it` или `http://localhost:3000`) |
+| `NEXT_PUBLIC_APP_URL` | URL личного кабинета студента (напр. `http://localhost:3002`) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Публичный URL инстанса Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Анонимный ключ Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Сервисный ключ Supabase для серверных API роутов |
+| `STRIPE_SECRET_KEY` | Секретный ключ Stripe API |
+| `STRIPE_WEBHOOK_SECRET` | Секретный ключ подписи вебхуков Stripe (`whsec_...`) |
+| `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота для отправки уведомлений |
+| `TELEGRAM_CHAT_ID` | ID чата/канала для оповещений о бронированиях |
+| `RESEND_API_KEY` | API-ключ Resend для отправки email |
 
 ---
 
-## ⚙️ Build & Performance Optimizations
-
-### 1. Build and Run Commands
-*   **Compile Production Build**:
-    ```bash
-    npx pnpm build
-    # or to target only this project:
-    npx pnpm --filter landing build
-    ```
-*   **Start Production Server**:
-    ```bash
-    npx pnpm --filter landing start
-    ```
-
-### 2. Next.js Rendering Strategies
-*   **Static & ISR (Incremental Static Regeneration)** (`○`): Core marketing routes (e.g. `/`, `/courses`, `/blog`) are compiled to flat static HTML. Under `Revalidate: 1h`, Next.js checks database updates periodically and regenerates the static page cache in the background without needing a full rebuild.
-*   **SSG (Static Site Generation)** (`●`): Dynamic pages like `/blog/[slug]` are pre-rendered at build time using `generateStaticParams()` to guarantee instant SEO load times.
-*   **Dynamic / SSR (Server-Side Rendering)** (`ƒ`): Routes requiring user session context or live booking details (e.g. `/book/[type]/[id]`, `/checkout/[type]/[id]`, `/auth/callback`) are compiled to run dynamically on demand.
-
-### 3. Media & Assets Compression
-*   **WebP Standard**: Raw PNG files (logo resources and backgrounds) have been converted to WebP to reduce first-load sizes (logo decreased from 110KB to 36KB).
-*   **Favicon & Apple Icons**: Compressed using macOS `sips` commands (e.g. `icon.png` is reduced from 110KB to 2.5KB) to prevent network resource bloat warnings.
-*   **Font Loading**: Satoshi and Clash Display fonts are bound using `display=swap` to avoid visual layout shifts (CLS) on slow connections.
-*   **Server Component Support**: Phosphor Icons use React Context, which can conflict with SSR. They are wrapped in a client-side exporter (`src/components/Icons.tsx`) to allow server-rendered page compilations to build cleanly.
-
----
-
-## 📂 Project Structure
-
-- `src/app/[locale]`: Multilingual routing and page layouts.
-- `src/components`: UI components organized by feature (admin, ui, forms).
-- `src/lib/data.ts`: Centralized data fetching and mapping layer.
-- `src/lib/constants.ts`: Global constants, including `CACHE_TAGS` and `TABLE_MAP`.
-- `src/app/actions.ts`: Secure Server Actions for all database mutations.
-- `supabase/`: Database migrations and Edge Functions.
-
----
-
-## 📖 Documentation
-
-For more detailed technical information, please refer to:
-- [**Developer Guide**](./DEVELOPER_GUIDE.md) — Architecture, Caching, and CMS details.
-- [**AI Context**](./AI_CONTEXT.md) — Technical rules for AI Agents.
-
----
-
-## 📄 License
-Privately owned by **Atena School**. All rights reserved.
+## 📄 Лицензия
+Принадлежит **Atena School S.R.L.S.** Все права защищены.
