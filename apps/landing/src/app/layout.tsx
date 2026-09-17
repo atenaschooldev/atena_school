@@ -1,11 +1,14 @@
 import dynamic from 'next/dynamic';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-
-import CookieBanner from '@/components/CookieBanner';
-import ScrollToTop from '@/components/ScrollToTop';
+import {
+  Navbar,
+  Footer,
+  CookieBanner,
+  ScrollToTop,
+  GoogleAnalytics,
+  ScrollAnimateProvider,
+} from '@/components/layout';
 import '@/index.css';
 import { Nunito } from 'next/font/google';
 import type { Viewport } from 'next';
@@ -86,8 +89,6 @@ export async function generateMetadata() {
 }
 
 import { Toaster } from 'sonner';
-import GoogleAnalytics from '@/components/GoogleAnalytics';
-import ScrollAnimateProvider from '@/components/ScrollAnimateProvider';
 
 export default async function RootLayout({
   children,

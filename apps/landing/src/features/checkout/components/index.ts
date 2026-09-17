@@ -8,3 +8,5 @@ export { CheckoutBillingSchemeSelector } from "./CheckoutBillingSchemeSelector";
 export { CheckoutNotesAndGdpr } from "./CheckoutNotesAndGdpr";
 export { CheckoutOrderSummary } from "./CheckoutOrderSummary";
 export { CheckoutMobileBottomBar } from "./CheckoutMobileBottomBar";
+export { CheckoutStepper } from "./CheckoutStepper";
+

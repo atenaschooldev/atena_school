@@ -16,8 +16,9 @@ import {
   GraduationCap,
 } from "@phosphor-icons/react";
 import { Link } from "@/i18n/routing";
-import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
+import { CheckoutStepper } from "@/features/checkout/components";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
+
 import { useMounted } from "@/hooks/useMounted";
 
 function SuccessContent() {

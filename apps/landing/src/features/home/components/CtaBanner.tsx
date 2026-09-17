@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Users, CheckCircle, Certificate, Headset, ArrowRight } from "@phosphor-icons/react";
-import bannerBg from "@/assets/cta-banner-bg.png";
+import bannerBg from "@/assets/about-studying.webp";
 
 const CtaBanner = () => {
+
   const t = useTranslations("ctaBanner");
 
   const features = [

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";

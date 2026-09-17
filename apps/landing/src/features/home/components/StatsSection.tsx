@@ -7,7 +7,7 @@ import Image from "next/image";
 import cambridgeLogo from "@/assets/cambridge.webp";
 import eipassLogo from "@/assets/eipass_logo.webp";
 import trinityLogo from "@/assets/trinity_transparent.webp";
-import LogoLoop, { LogoItem } from "@/components/LogoLoop";
+import LogoLoop, { LogoItem } from "@/components/ui/LogoLoop";
 
 type StatItem =
   | { type: "icon"; icon: React.ElementType; value: string; label: string }

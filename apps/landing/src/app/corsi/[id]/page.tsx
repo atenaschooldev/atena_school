@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
-import CourseDetailClient from "./CourseDetailClient";
 import { getItem } from "@/lib/server/checkout-service";
 import { createClient } from "@/lib/supabase/server";
-import CourseSchema from "@/features/courses/components/CourseSchema";
+import { CourseSchema, CourseDetailView } from "@/features/courses";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { env } from "@/config/env";
 
@@ -91,7 +90,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
         image={course.photo_url || undefined}
         price={price}
       />
-      <CourseDetailClient
+      <CourseDetailView
         id={id}
         initialCourse={course}
         initialUser={user}

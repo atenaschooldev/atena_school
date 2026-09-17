@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { contactFormSchema } from "@atena/validators";
 import { getStoredUtmParams } from "@/lib/utm";

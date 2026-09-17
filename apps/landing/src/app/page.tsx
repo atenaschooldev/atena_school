@@ -1,9 +1,7 @@
-import HeroSection from "@/components/HeroSection";
-import StatsSection from "@/components/StatsSection";
-import AboutSection from "@/features/about/components/AboutSection";
-import TestimonialsSection from "@/features/reviews/components/TestimonialsSection";
-import ContactSection from "@/features/contact/components/ContactSection";
-import { getHomePageData } from "@/features/home/services/homeService";
+import { HeroSection, StatsSection, getHomePageData } from "@/features/home";
+import { AboutSection } from "@/features/about";
+import { TestimonialsSection } from "@/features/reviews";
+import { ContactSection } from "@/features/contact";
 import { env } from "@/config/env";
 
 export async function generateMetadata() {
