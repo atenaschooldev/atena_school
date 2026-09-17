@@ -192,8 +192,9 @@ model Payment {
   updatedAt             DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   scheduleId            String?   @map("schedule_id") @db.Uuid
 
-  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  student students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  student           students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  annualMemberships AnnualMembership[]
 
   @@index([bookingId], map: "idx_payments_booking_id")
   @@index([studentId], map: "idx_payments_student_id")
@@ -202,19 +203,29 @@ model Payment {
 }
 
 model AnnualMembership {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  taxCode      String   @map("tax_code")
-  studentId    String?  @map("student_id") @db.Uuid
-  userId       String?  @map("user_id") @db.Uuid
-  status       Int      @default(1)
-  academicYear String   @default("2026/2027") @map("academic_year")
-  paidAt       DateTime @default(now()) @map("paid_at") @db.Timestamptz(6)
-  expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  taxCode          String    @map("tax_code")
+  studentId        String?   @map("student_id") @db.Uuid
+  userId           String?   @map("user_id") @db.Uuid
+  membershipNumber String?   @map("membership_number")
+  amount           Decimal   @default(30.00) @db.Decimal(10, 2)
+  paymentMethod    Int       @default(1) @map("payment_method") @db.SmallInt
+  paymentId        String?   @map("payment_id") @db.Uuid
+  status           Int       @default(1) @db.SmallInt
+  academicYear     String    @default("2026/2027") @map("academic_year")
+  paidAt           DateTime  @default(now()) @map("paid_at") @db.Timestamptz(6)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
 
   student   students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  payment   Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
 
   @@unique([taxCode, academicYear])
+  @@index([studentId], map: "idx_annual_memberships_student_id")
+  @@index([userId], map: "idx_annual_memberships_user_id")
+  @@index([paymentId], map: "idx_annual_memberships_payment_id")
+  @@index([academicYear], map: "idx_annual_memberships_academic_year")
+  @@index([status], map: "idx_annual_memberships_status")
   @@map("annual_memberships")
 }
 

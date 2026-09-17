@@ -7,6 +7,10 @@ export interface MembershipEntity {
   status: MembershipStatus | number;
   studentId: string | null;
   userId: string | null;
+  membershipNumber?: string | null;
+  amount?: number | any;
+  paymentMethod?: number;
+  paymentId?: string | null;
   paidAt: Date;
   expiresAt: Date;
   createdAt: Date;

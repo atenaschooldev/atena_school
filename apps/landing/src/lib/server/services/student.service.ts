@@ -5,6 +5,7 @@ import {
   MembershipStatus,
   BookingPaymentStatus,
   parseBookingPaymentStatus,
+  parsePaymentMethod,
 } from '@atena/api-types';
 import { ACADEMIC_YEAR } from '@/constants/booking';
 import { CreateReservationParams } from './types';
@@ -150,6 +151,8 @@ export async function processStudentAndBookingLinks(params: {
           if (mData) existingMem = mData;
         }
 
+        const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : parsePaymentMethod(dto.paymentMethod) || 1;
+
         if (existingMem) {
           await supabase
             .from('annual_memberships')
@@ -159,6 +162,7 @@ export async function processStudentAndBookingLinks(params: {
               student_id: studentId || undefined,
               user_id: linkedUserId || studentAuthUserId || undefined,
               tax_code: sTaxCode || undefined,
+              payment_method: pMethod,
             })
             .eq('id', existingMem.id);
         } else if (sTaxCode) {
@@ -169,6 +173,8 @@ export async function processStudentAndBookingLinks(params: {
               status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
+              amount: 30.00,
+              payment_method: pMethod,
               paid_at: new Date().toISOString(),
               expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
             },

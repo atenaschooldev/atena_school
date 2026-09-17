@@ -15,6 +15,7 @@ import {
   StudentStatus,
   LanguageLevel,
 } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 
 export interface ProcessStudentParams {
   dto: any;
@@ -158,13 +159,16 @@ export class CheckoutCoreService {
 
         // Process annual memberships record
         if (hasPaidMembership) {
+          const { academicYear, expiresAt } = getCurrentAcademicYear();
+          const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : parsePaymentMethod(dto.paymentMethod) || PaymentMethod.STRIPE;
+
           let existingMem: { id: string } | null = null;
           if (sTaxCode) {
             const { data: mData } = await supabaseAdmin
               .from('annual_memberships')
               .select('id')
               .ilike('tax_code', sTaxCode)
-              .eq('academic_year', '2026/2027')
+              .eq('academic_year', academicYear)
               .maybeSingle();
             if (mData) existingMem = mData;
           } else if (studentId) {
@@ -172,7 +176,7 @@ export class CheckoutCoreService {
               .from('annual_memberships')
               .select('id')
               .eq('student_id', studentId)
-              .eq('academic_year', '2026/2027')
+              .eq('academic_year', academicYear)
               .maybeSingle();
             if (mData) existingMem = mData;
           }
@@ -186,17 +190,20 @@ export class CheckoutCoreService {
                 student_id: studentId || undefined,
                 user_id: linkedUserId || studentAuthUserId || undefined,
                 tax_code: sTaxCode || undefined,
+                payment_method: pMethod,
               })
               .eq('id', existingMem.id);
           } else if (sTaxCode) {
             const { error: mErr } = await supabaseAdmin.from('annual_memberships').upsert({
               tax_code: sTaxCode,
-              academic_year: '2026/2027',
+              academic_year: academicYear,
               status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
+              amount: 30.00,
+              payment_method: pMethod,
               paid_at: new Date().toISOString(),
-              expires_at: '2027-08-31T23:59:59.000Z',
+              expires_at: expiresAt,
             }, { onConflict: 'tax_code,academic_year' });
 
             if (mErr && mErr.code !== '23505') {

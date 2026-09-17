@@ -20,6 +20,42 @@ import {
 export const ANNUAL_REGISTRATION_FEE_EUR = 30;
 
 /**
+ * Returns dynamic academic year in Italy (runs from 1 September to 31 August).
+ * E.g., for any date between 2026-09-01 and 2027-08-31 returns academicYear: "2026/2027", expiresAt: "2027-08-31T23:59:59.000Z".
+ */
+export function getCurrentAcademicYear(dateInput?: Date | string | null): {
+  academicYear: string;
+  expiresAt: string;
+  startYear: number;
+  endYear: number;
+} {
+  const d = dateInput ? (typeof dateInput === "string" ? new Date(dateInput) : dateInput) : new Date();
+  const validDate = isNaN(d.getTime()) ? new Date() : d;
+  const currentYear = validDate.getFullYear();
+  const currentMonth = validDate.getMonth() + 1; // 1-12 (September is 9)
+
+  const startYear = currentMonth >= 9 ? currentYear : currentYear - 1;
+  const endYear = startYear + 1;
+
+  return {
+    academicYear: `${startYear}/${endYear}`,
+    expiresAt: `${endYear}-08-31T23:59:59.000Z`,
+    startYear,
+    endYear,
+  };
+}
+
+/**
+ * Generates a standard Italian association membership number (Libro Soci format).
+ * E.g., SOC-2026-0042
+ */
+export function formatMembershipNumber(year: number | string, sequence: number | string): string {
+  const yStr = String(year).slice(-4);
+  const sStr = String(sequence).padStart(4, "0");
+  return `SOC-${yStr}-${sStr}`;
+}
+
+/**
  * Format currency amount to EUR (e.g. €152.00)
  */
 export function formatCurrency(amount: number | string): string {
