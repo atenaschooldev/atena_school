@@ -43,41 +43,41 @@ export interface CourseItem {
 // ---------------------------------------------------------------------------
 
 export const BookingPaymentStatus = {
-  PENDING: 1,            // Ожидает онлайн-оплаты (Stripe checkout)
-  RESERVED: 2,           // Забронировано с оплатой на месте (в секретариате)
-  PAID: 3,               // Оплачено
-  REFUNDED: 4,           // Полный возврат средств
-  PARTIALLY_REFUNDED: 5, // Частичный возврат
-  FAILED: 6,             // Ошибка оплаты
-  CANCELLED: 7,          // Отменено до оплаты
+  PENDING: 1,            // Awaiting online payment (Stripe checkout)
+  RESERVED: 2,           // Reserved with in-person payment (at the reception)
+  PAID: 3,               // Paid
+  REFUNDED: 4,           // Full refund issued
+  PARTIALLY_REFUNDED: 5, // Partial refund issued
+  FAILED: 6,             // Payment failed
+  CANCELLED: 7,          // Cancelled before payment
 } as const;
 export type BookingPaymentStatus = (typeof BookingPaymentStatus)[keyof typeof BookingPaymentStatus];
 
 export const BookingStatus = {
-  ACTIVE: 1,    // Действующее активное бронирование (обучение идёт)
-  COMPLETED: 2, // Курс успешно пройден
-  CANCELLED: 3, // Бронь аннулирована
+  ACTIVE: 1,    // Active enrollment — lessons in progress
+  COMPLETED: 2, // Course successfully completed
+  CANCELLED: 3, // Booking cancelled
 } as const;
 export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 export const BookingSchedulingStatus = {
-  SCHEDULED: 1,            // Уроки расписаны в календаре
-  PENDING_COORDINATION: 2, // Ожидает согласования времени (гибкий график)
+  SCHEDULED: 1,            // Lessons are scheduled in the calendar
+  PENDING_COORDINATION: 2, // Awaiting schedule coordination (flexible timetable)
 } as const;
 export type BookingSchedulingStatus = (typeof BookingSchedulingStatus)[keyof typeof BookingSchedulingStatus];
 
 export const PaymentMethod = {
-  STRIPE: 1,        // Онлайн через Stripe
-  CASH: 2,          // Наличные в кассе (Contanti)
-  POS: 3,           // Банковской картой в терминале школы (POS)
-  BANK_TRANSFER: 4, // Банковский перевод (Bonifico)
+  STRIPE: 1,        // Online via Stripe
+  CASH: 2,          // Cash at the reception (Contanti)
+  POS: 3,           // Bank card at school POS terminal
+  BANK_TRANSFER: 4, // Bank transfer (Bonifico)
 } as const;
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 export const BillingScheme = {
-  FULL: 1,         // Полная оплата за курс
-  INSTALLMENTS: 2, // Оплата частями / взносы
-  PER_LESSON: 3,   // Поурочная оплата
+  FULL: 1,         // Full course payment upfront
+  INSTALLMENTS: 2, // Payment in installments
+  PER_LESSON: 3,   // Pay per lesson
 } as const;
 export type BillingScheme = (typeof BillingScheme)[keyof typeof BillingScheme];
 
@@ -89,32 +89,32 @@ export const PaymentCurrency = {
 export type PaymentCurrency = (typeof PaymentCurrency)[keyof typeof PaymentCurrency];
 
 export const PaymentType = {
-  COURSE_PAYMENT: 1,    // Оплата курса / Pagamento Corso
-  REGISTRATION_FEE: 2,  // Ежегодный регистрационный взнос €30 / Quota Iscrizione
-  INSTALLMENT: 3,       // Платёж по рассрочке / Rata Corso
-  SINGLE_LESSON: 4,     // Разовый урок / Lezione Singola
-  EXAM_FEE: 5,          // Взнос за экзамен Cambridge/CELI / Quota Esame
-  CERTIFICATE_FEE: 6,   // Выдача сертификата / Rilascio Certificato
-  MATERIAL_TEXTBOOK: 7, // Учебные материалы и книги / Libro o Materiale Didattico
-  OTHER: 8,             // Прочее / Altro
+  COURSE_PAYMENT: 1,    // Course payment / Pagamento Corso
+  REGISTRATION_FEE: 2,  // Annual registration fee €30 / Quota Iscrizione
+  INSTALLMENT: 3,       // Installment payment / Rata Corso
+  SINGLE_LESSON: 4,     // Single lesson / Lezione Singola
+  EXAM_FEE: 5,          // Exam entry fee Cambridge/CELI / Quota Esame
+  CERTIFICATE_FEE: 6,   // Certificate issuance / Rilascio Certificato
+  MATERIAL_TEXTBOOK: 7, // Study materials and textbooks / Libro o Materiale Didattico
+  OTHER: 8,             // Other / Altro
 } as const;
 export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType];
 
 export const PaymentRecordStatus = {
-  PENDING: 1,            // В обработке / In attesa
-  SUCCEEDED: 2,          // Успешно проведён / Completato
-  FAILED: 3,             // Ошибка оплаты / Fallito
-  REFUNDED: 4,           // Полный возврат / Rimborsato
-  PARTIALLY_REFUNDED: 5, // Частичный возврат / Parzialmente rimborsato
-  CANCELLED: 6,          // Отменён / Annullato
+  PENDING: 1,            // Processing / In attesa
+  SUCCEEDED: 2,          // Successfully completed / Completato
+  FAILED: 3,             // Payment failed / Fallito
+  REFUNDED: 4,           // Full refund / Rimborsato
+  PARTIALLY_REFUNDED: 5, // Partial refund / Parzialmente rimborsato
+  CANCELLED: 6,          // Cancelled / Annullato
 } as const;
 export type PaymentRecordStatus = (typeof PaymentRecordStatus)[keyof typeof PaymentRecordStatus];
 
 export const PaymentProvider = {
-  STRIPE: 1,       // Шлюз Stripe
-  MANUAL: 2,       // Ручная касса школы / Manual Reception
-  POS_TERMINAL: 3, // Физический банковский POS-терминал
-  BANK: 4,         // Прямой банковский перевод по реквизитам
+  STRIPE: 1,       // Stripe payment gateway
+  MANUAL: 2,       // Manual reception cash register
+  POS_TERMINAL: 3, // Physical bank POS terminal
+  BANK: 4,         // Direct bank transfer (IBAN)
 } as const;
 export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider];
 
@@ -123,26 +123,26 @@ export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvi
 // ---------------------------------------------------------------------------
 
 export const LessonStatus = {
-  SCHEDULED:   1, // Запланирован / Programmata
-  COMPLETED:   2, // Проведён / Completata
-  CANCELLED:   3, // Отменён / Annullata
-  RESCHEDULED: 4, // Перенесён / Riprogrammata
+  SCHEDULED:   1, // Scheduled / Programmata
+  COMPLETED:   2, // Completed / Completata
+  CANCELLED:   3, // Cancelled / Annullata
+  RESCHEDULED: 4, // Rescheduled / Riprogrammata
 } as const;
 export type LessonStatus = (typeof LessonStatus)[keyof typeof LessonStatus];
 
 export const LessonAttendance = {
-  PENDING: 1, // Ещё не отмечено / Da registrare
-  PRESENT: 2, // Присутствовал / Presente
-  ABSENT:  3, // Отсутствовал / Assente
-  LATE:    4, // Опоздал / In ritardo
-  EXCUSED: 5, // Уважительная причина / Giustificato
+  PENDING: 1, // Not yet recorded / Da registrare
+  PRESENT: 2, // Attended / Presente
+  ABSENT:  3, // Absent / Assente
+  LATE:    4, // Late / In ritardo
+  EXCUSED: 5, // Excused absence / Giustificato
 } as const;
 export type LessonAttendance = (typeof LessonAttendance)[keyof typeof LessonAttendance];
 
 export const LessonLocationType = {
-  IN_PERSON: 1, // Очно / In presenza
-  ONLINE:    2, // Онлайн / Online
-  HYBRID:    3, // Смешанный / Ibrido
+  IN_PERSON: 1, // In person / In presenza
+  ONLINE:    2, // Online
+  HYBRID:    3, // Hybrid / Ibrido
 } as const;
 export type LessonLocationType = (typeof LessonLocationType)[keyof typeof LessonLocationType];
 
@@ -1078,7 +1078,7 @@ export interface SiteContentResponse {
 }
 
 /**
- * Ключи системных настроек приложения (app_settings)
+ * Keys for application system settings (app_settings table)
  */
 export const AppSettingKey = {
   STRIPE_ENABLED: 'stripe_enabled',
@@ -1108,10 +1108,10 @@ export const APP_SETTINGS_DICTIONARY: Record<string, DictionaryEntry> = {
 // ---------------------------------------------------------------------------
 
 export const MembershipStatus = {
-  ACTIVE: 1,  // Действующее активное членство
-  PENDING: 2, // Ожидает оплаты / подтверждения
-  EXPIRED: 3, // Срок действия членства истек
-  REVOKED: 4, // Отозвано / аннулировано
+  ACTIVE: 1,  // Active and valid membership
+  PENDING: 2, // Awaiting payment or confirmation
+  EXPIRED: 3, // Membership term has ended
+  REVOKED: 4, // Revoked / cancelled by admin
 } as const;
 export type MembershipStatus = (typeof MembershipStatus)[keyof typeof MembershipStatus];
 
@@ -1168,11 +1168,11 @@ export function parseMembershipStatus(val: any): MembershipStatus {
 // ---------------------------------------------------------------------------
 
 export const StudentStatus = {
-  ACTIVE: 1,    // Активный студент (Attivo)
-  INACTIVE: 2,  // Неактивен / В ожидании (Inattivo / In attesa)
-  PAUSED: 3,    // Приостановлено / Академический отпуск (In pausa)
-  GRADUATED: 4, // Завершил обучение / Выпускник (Diplomato / Concluso)
-  ARCHIVED: 5,  // В архиве (Archiviato)
+  ACTIVE: 1,    // Active student (Attivo)
+  INACTIVE: 2,  // Inactive / Awaiting payment (Inattivo / In attesa)
+  PAUSED: 3,    // On hold / Academic leave (In pausa)
+  GRADUATED: 4, // Graduated / Completed (Diplomato / Concluso)
+  ARCHIVED: 5,  // Archived (Archiviato)
 } as const;
 export type StudentStatus = (typeof StudentStatus)[keyof typeof StudentStatus];
 
@@ -1314,9 +1314,9 @@ export function parseLanguageLevel(val: any): LanguageLevel {
 // ---------------------------------------------------------------------------
 
 export const CourseStatus = {
-  ACTIVE: 1,   // Активен / Опубликован (Attivo / Pubblicato)
-  DRAFT: 2,    // Черновик / Планируется (Bozza / In programmazione)
-  ARCHIVED: 3, // В архиве / Завершен (Archiviato / Concluso)
+  ACTIVE: 1,   // Active / Published (Attivo / Pubblicato)
+  DRAFT: 2,    // Draft / Planned (Bozza / In programmazione)
+  ARCHIVED: 3, // Archived / Concluded (Archiviato / Concluso)
 } as const;
 export type CourseStatus = (typeof CourseStatus)[keyof typeof CourseStatus];
 
@@ -1348,8 +1348,8 @@ export const COURSE_STATUS_DICTIONARY: Record<CourseStatus, DictionaryEntry> = {
 };
 
 export const CourseScheduleType = {
-  FIXED: 1,    // Фиксированное расписание по дням и часам (Fisso)
-  FLEXIBLE: 2, // Гибкий график / По согласованию (Flessibile / Da concordare)
+  FIXED: 1,    // Fixed schedule with set days and times (Fisso)
+  FLEXIBLE: 2, // Flexible schedule / To be agreed (Flessibile / Da concordare)
 } as const;
 export type CourseScheduleType = (typeof CourseScheduleType)[keyof typeof CourseScheduleType];
 
@@ -1373,10 +1373,10 @@ export const COURSE_SCHEDULE_TYPE_DICTIONARY: Record<CourseScheduleType, Diction
 };
 
 export const CourseFormat = {
-  GROUP: 1,         // Групповые занятия (Di Gruppo)
-  INDIVIDUAL: 2,    // Индивидуальные занятия (Individuale / Privato)
-  ONLINE: 3,        // Онлайн курс (Online)
-  CERTIFICATION: 4, // Сертификация / Экзамен (Certificazione)
+  GROUP: 1,         // Group lessons (Di Gruppo)
+  INDIVIDUAL: 2,    // Individual / private lessons (Individuale / Privato)
+  ONLINE: 3,        // Online course
+  CERTIFICATION: 4, // Certification / Exam prep (Certificazione)
 } as const;
 export type CourseFormat = (typeof CourseFormat)[keyof typeof CourseFormat];
 
@@ -1439,10 +1439,10 @@ export function parseCourseScheduleType(val: any): CourseScheduleType {
 }
 
 export const CourseCategory = {
-  LANGUAGES: 1,  // Corsi di Lingua (Иностранные языки)
-  ACADEMIC: 2,   // Recupero Scolastico (Школьная программа и репетиторство)
-  CERTIPASS: 3,  // Certificazioni EIPASS / Certipass (IT-сертификации)
-  OTHER: 4,      // Altro / Generale (Прочие направления)
+  LANGUAGES: 1,  // Corsi di Lingua (Foreign languages)
+  ACADEMIC: 2,   // Recupero Scolastico (School tutoring)
+  CERTIPASS: 3,  // Certificazioni EIPASS / Certipass (IT certifications)
+  OTHER: 4,      // Altro / Generale (Other directions)
 } as const;
 export type CourseCategory = (typeof CourseCategory)[keyof typeof CourseCategory];
 
@@ -1921,3 +1921,274 @@ export const ERROR_CODE_DICTIONARY: Record<ErrorCode, DictionaryEntry> = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Numeric Enums — Scheduling & Discounts & Certifications & Contact
+// ---------------------------------------------------------------------------
+
+export const DayOfWeek = {
+  MONDAY:    1, // Monday / Lunedì
+  TUESDAY:   2, // Tuesday / Martedì
+  WEDNESDAY: 3, // Wednesday / Mercoledì
+  THURSDAY:  4, // Thursday / Giovedì
+  FRIDAY:    5, // Friday / Venerdì
+  SATURDAY:  6, // Saturday / Sabato
+  SUNDAY:    7, // Sunday / Domenica
+} as const;
+export type DayOfWeek = (typeof DayOfWeek)[keyof typeof DayOfWeek];
+
+export const DAY_OF_WEEK_DICTIONARY: Record<DayOfWeek, DictionaryEntry> = {
+  [DayOfWeek.MONDAY]: {
+    id: 1,
+    code: 'MONDAY',
+    label_it: 'Lunedì',
+    label_en: 'Monday',
+    label_ru: 'Понедельник',
+    description: 'Первый рабочий день недели (ISO 8601)',
+  },
+  [DayOfWeek.TUESDAY]: {
+    id: 2,
+    code: 'TUESDAY',
+    label_it: 'Martedì',
+    label_en: 'Tuesday',
+    label_ru: 'Вторник',
+    description: 'Второй день недели',
+  },
+  [DayOfWeek.WEDNESDAY]: {
+    id: 3,
+    code: 'WEDNESDAY',
+    label_it: 'Mercoledì',
+    label_en: 'Wednesday',
+    label_ru: 'Среда',
+    description: 'Третий день недели',
+  },
+  [DayOfWeek.THURSDAY]: {
+    id: 4,
+    code: 'THURSDAY',
+    label_it: 'Giovedì',
+    label_en: 'Thursday',
+    label_ru: 'Четверг',
+    description: 'Четвёртый день недели',
+  },
+  [DayOfWeek.FRIDAY]: {
+    id: 5,
+    code: 'FRIDAY',
+    label_it: 'Venerdì',
+    label_en: 'Friday',
+    label_ru: 'Пятница',
+    description: 'Пятый рабочий день недели',
+  },
+  [DayOfWeek.SATURDAY]: {
+    id: 6,
+    code: 'SATURDAY',
+    label_it: 'Sabato',
+    label_en: 'Saturday',
+    label_ru: 'Суббота',
+    description: 'Шестой день недели, обычно выходной',
+  },
+  [DayOfWeek.SUNDAY]: {
+    id: 7,
+    code: 'SUNDAY',
+    label_it: 'Domenica',
+    label_en: 'Sunday',
+    label_ru: 'Воскресенье',
+    description: 'Последний день недели, выходной',
+  },
+};
+
+export const DAY_OF_WEEK_STRING_TO_ID: Record<string, DayOfWeek> = {
+  monday:    DayOfWeek.MONDAY,
+  lunedi:    DayOfWeek.MONDAY,
+  tuesday:   DayOfWeek.TUESDAY,
+  martedi:   DayOfWeek.TUESDAY,
+  wednesday: DayOfWeek.WEDNESDAY,
+  mercoledi: DayOfWeek.WEDNESDAY,
+  thursday:  DayOfWeek.THURSDAY,
+  giovedi:   DayOfWeek.THURSDAY,
+  friday:    DayOfWeek.FRIDAY,
+  venerdi:   DayOfWeek.FRIDAY,
+  saturday:  DayOfWeek.SATURDAY,
+  sabato:    DayOfWeek.SATURDAY,
+  sunday:    DayOfWeek.SUNDAY,
+  domenica:  DayOfWeek.SUNDAY,
+};
+
+export const DAY_OF_WEEK_ID_TO_STRING: Record<DayOfWeek, string> = {
+  [DayOfWeek.MONDAY]:    'monday',
+  [DayOfWeek.TUESDAY]:   'tuesday',
+  [DayOfWeek.WEDNESDAY]: 'wednesday',
+  [DayOfWeek.THURSDAY]:  'thursday',
+  [DayOfWeek.FRIDAY]:    'friday',
+  [DayOfWeek.SATURDAY]:  'saturday',
+  [DayOfWeek.SUNDAY]:    'sunday',
+};
+
+// ---------------------------------------------------------------------------
+
+export const DiscountType = {
+  PERCENTAGE:       1, // Percentage discount off the total price
+  FIXED_AMOUNT:     2, // Fixed euro amount deducted
+  SIBLING_DISCOUNT: 3, // Discount for siblings enrolled simultaneously
+  EARLY_BIRD:       4, // Early enrolment discount
+} as const;
+export type DiscountType = (typeof DiscountType)[keyof typeof DiscountType];
+
+export const DISCOUNT_TYPE_DICTIONARY: Record<DiscountType, DictionaryEntry> = {
+  [DiscountType.PERCENTAGE]: {
+    id: 1,
+    code: 'PERCENTAGE',
+    label_it: 'Sconto Percentuale',
+    label_en: 'Percentage Discount',
+    label_ru: 'Скидка в процентах',
+    description: 'Скидка в % от итоговой стоимости курса',
+  },
+  [DiscountType.FIXED_AMOUNT]: {
+    id: 2,
+    code: 'FIXED_AMOUNT',
+    label_it: 'Sconto Fisso (€)',
+    label_en: 'Fixed Amount Discount',
+    label_ru: 'Фиксированная скидка (€)',
+    description: 'Скидка на фиксированную сумму в евро',
+  },
+  [DiscountType.SIBLING_DISCOUNT]: {
+    id: 3,
+    code: 'SIBLING_DISCOUNT',
+    label_it: 'Sconto Fratelli / Sorelle',
+    label_en: 'Sibling Discount',
+    label_ru: 'Скидка для братьев/сестёр',
+    description: 'Скидка при одновременной записи двух и более братьев/сестёр',
+  },
+  [DiscountType.EARLY_BIRD]: {
+    id: 4,
+    code: 'EARLY_BIRD',
+    label_it: 'Iscrizione Anticipata',
+    label_en: 'Early Bird Discount',
+    label_ru: 'Ранняя запись',
+    description: 'Скидка при записи до начала учебного года',
+  },
+};
+
+// ---------------------------------------------------------------------------
+
+export const ExamCertificationType = {
+  CAMBRIDGE:        1, // Cambridge English (PET, FCE, CAE, CPE)
+  IELTS:            2, // IELTS Academic / General Training
+  TOEFL:            3, // TOEFL iBT
+  CERTIPASS_EIPASS: 4, // EIPASS / Certipass IT certifications
+  DELF_DALF:        5, // French DELF / DALF (Alliance Française)
+  GOETHE:           6, // Goethe-Zertifikat (German)
+} as const;
+export type ExamCertificationType = (typeof ExamCertificationType)[keyof typeof ExamCertificationType];
+
+export const EXAM_CERTIFICATION_TYPE_DICTIONARY: Record<ExamCertificationType, DictionaryEntry> = {
+  [ExamCertificationType.CAMBRIDGE]: {
+    id: 1,
+    code: 'CAMBRIDGE',
+    label_it: 'Cambridge English',
+    label_en: 'Cambridge English',
+    label_ru: 'Cambridge English (PET, FCE, CAE, CPE)',
+    description: 'Международные экзамены Cambridge English — PET, FCE, CAE, CPE',
+  },
+  [ExamCertificationType.IELTS]: {
+    id: 2,
+    code: 'IELTS',
+    label_it: 'IELTS',
+    label_en: 'IELTS',
+    label_ru: 'IELTS Academic / General Training',
+    description: 'Международный экзамен для академических целей и иммиграции',
+  },
+  [ExamCertificationType.TOEFL]: {
+    id: 3,
+    code: 'TOEFL',
+    label_it: 'TOEFL iBT',
+    label_en: 'TOEFL iBT',
+    label_ru: 'TOEFL iBT (онлайн-экзамен)',
+    description: 'Тест на знание английского языка для поступления в американские университеты',
+  },
+  [ExamCertificationType.CERTIPASS_EIPASS]: {
+    id: 4,
+    code: 'CERTIPASS_EIPASS',
+    label_it: 'EIPASS / Certipass',
+    label_en: 'EIPASS / Certipass',
+    label_ru: 'EIPASS / Certipass (IT-сертификации)',
+    description: 'Европейские IT-сертификации — валидны для конкурсов государственной службы (concorsi)',
+  },
+  [ExamCertificationType.DELF_DALF]: {
+    id: 5,
+    code: 'DELF_DALF',
+    label_it: 'DELF / DALF (Francese)',
+    label_en: 'DELF / DALF (French)',
+    label_ru: 'DELF / DALF (французский язык)',
+    description: 'Дипломы французского языка DELF (A1–B2) и DALF (C1–C2)',
+  },
+  [ExamCertificationType.GOETHE]: {
+    id: 6,
+    code: 'GOETHE',
+    label_it: 'Goethe-Zertifikat (Tedesco)',
+    label_en: 'Goethe-Zertifikat (German)',
+    label_ru: 'Goethe-Zertifikat (немецкий язык)',
+    description: 'Официальный сертификат немецкого языка Института Гёте',
+  },
+};
+
+// ---------------------------------------------------------------------------
+
+export const ContactTopic = {
+  GENERAL_INFO:       1, // General information about the school
+  COURSE_ENROLLMENT:  2, // Enrollment in a specific course
+  CORPORATE_TRAINING: 3, // Corporate / B2B language training
+  CERTIFICATIONS:     4, // Info about exams and certifications
+  PLACEMENT_TEST:     5, // Request a free placement test
+  OTHER:              6, // Other / not categorised
+} as const;
+export type ContactTopic = (typeof ContactTopic)[keyof typeof ContactTopic];
+
+export const CONTACT_TOPIC_DICTIONARY: Record<ContactTopic, DictionaryEntry> = {
+  [ContactTopic.GENERAL_INFO]: {
+    id: 1,
+    code: 'GENERAL_INFO',
+    label_it: 'Informazioni Generali',
+    label_en: 'General Information',
+    label_ru: 'Общая информация о школе',
+    description: 'Общий запрос: контакты, адрес, цены, расписание',
+  },
+  [ContactTopic.COURSE_ENROLLMENT]: {
+    id: 2,
+    code: 'COURSE_ENROLLMENT',
+    label_it: 'Iscrizione a un Corso',
+    label_en: 'Course Enrollment',
+    label_ru: 'Запись на курс',
+    description: 'Заявка на запись в конкретный курс школы',
+  },
+  [ContactTopic.CORPORATE_TRAINING]: {
+    id: 3,
+    code: 'CORPORATE_TRAINING',
+    label_it: 'Formazione Aziendale',
+    label_en: 'Corporate Training',
+    label_ru: 'Корпоративное обучение',
+    description: 'Языковые курсы для компаний и B2B-клиентов',
+  },
+  [ContactTopic.CERTIFICATIONS]: {
+    id: 4,
+    code: 'CERTIFICATIONS',
+    label_it: 'Esami e Certificazioni',
+    label_en: 'Exams & Certifications',
+    label_ru: 'Экзамены и сертификации',
+    description: 'Информация о подготовке к Cambridge, IELTS, EIPASS и другим экзаменам',
+  },
+  [ContactTopic.PLACEMENT_TEST]: {
+    id: 5,
+    code: 'PLACEMENT_TEST',
+    label_it: 'Test di Livello Gratuito',
+    label_en: 'Free Placement Test',
+    label_ru: 'Бесплатный тест на определение уровня',
+    description: 'Запрос на прохождение бесплатного теста для определения уровня языка',
+  },
+  [ContactTopic.OTHER]: {
+    id: 6,
+    code: 'OTHER',
+    label_it: 'Altro',
+    label_en: 'Other',
+    label_ru: 'Другое',
+    description: 'Прочие вопросы, не вошедшие в другие категории',
+  },
+};

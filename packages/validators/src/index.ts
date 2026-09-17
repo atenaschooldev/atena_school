@@ -5,31 +5,31 @@ import { z } from "zod";
 // ---------------------------------------------------------------------------
 
 /**
- * Codice Fiscale — два формата:
- *  - Физлицо (16 символов): RSSMRA80A01H501T
- *  - Юрлицо / Partita IVA (11 цифр): 12345678901
+ * Codice Fiscale — two formats:
+ *  - Individual (16 chars): RSSMRA80A01H501T
+ *  - Company / Partita IVA (11 digits): 12345678901
  */
 export const CODICE_FISCALE_RE =
   /^([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}|[0-9]{11})$/i;
 
 /**
- * Телефон: принимает итальянские (+39, 3xx, 0xx) и международные номера (E.164: +1, +380, +44 и т.д.)
+ * Phone: accepts Italian (+39, 3xx, 0xx) and international numbers (E.164: +1, +380, +44 etc.)
  */
 export const PHONE_RE = /^\+?[0-9\s\-()]{7,20}$/;
 
 /**
- * Codice SDI — ровно 7 буквенно-цифровых символов (fatturazione elettronica).
+ * Codice SDI — exactly 7 alphanumeric characters (fatturazione elettronica).
  */
 export const SDI_CODE_RE = /^[A-Z0-9]{7}$/i;
 
 // ---------------------------------------------------------------------------
-// Legacy aliases (обратная совместимость)
+// Legacy aliases (kept for backwards compatibility)
 // ---------------------------------------------------------------------------
 
-/** @deprecated Используй CODICE_FISCALE_RE */
+/** @deprecated Use CODICE_FISCALE_RE */
 export const codiceFiscaleRegex = CODICE_FISCALE_RE;
 
-/** @deprecated Используй CODICE_FISCALE_RE */
+/** @deprecated Use CODICE_FISCALE_RE */
 export const partitaIvaRegex = /^\d{11}$/;
 
 export function isValidCodiceFiscale(cf?: string | null): boolean {
@@ -49,7 +49,7 @@ export function isValidPhone(phone?: string | null): boolean {
   return /^\+?[0-9\s\-().]{7,25}$/.test(phone.trim());
 }
 
-/** @deprecated Используй isValidPhone */
+/** @deprecated Use isValidPhone */
 export const isValidPhoneIT = isValidPhone;
 export const PHONE_IT_RE = PHONE_RE;
 
@@ -59,8 +59,8 @@ export function isValidSdiCode(sdi?: string | null): boolean {
 }
 
 /**
- * Проверяет, что дата рождения в прошлом и не старше 100 лет.
- * Возвращает true если строка пустая (поле необязательное).
+ * Validates that the birth date is in the past and no older than 100 years.
+ * Returns false if the string is empty (field is optional — caller decides).
  */
 export function isValidBirthDate(dateStr?: string | null): boolean {
   if (!dateStr || dateStr.trim() === "") return false;
@@ -72,7 +72,7 @@ export function isValidBirthDate(dateStr?: string | null): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Zod field builders (переиспользуемые)
+// Reusable Zod field builders
 // ---------------------------------------------------------------------------
 
 const codiceFiscaleField = (message = "Codice Fiscale non valido (es. RSSMRA80A01H501T)") =>
@@ -113,7 +113,7 @@ export const checkFeeSchema = z.object({
 export type CheckFeeInput = z.infer<typeof checkFeeSchema>;
 
 // ---------------------------------------------------------------------------
-// StudentItem schema — отдельный профиль студента для мульти-бронирования
+// StudentItem schema — individual student profile for multi-booking
 // ---------------------------------------------------------------------------
 
 export const studentItemSchema = z.object({
@@ -149,17 +149,17 @@ export const studentItemSchema = z.object({
 export type StudentItemInput = z.infer<typeof studentItemSchema>;
 
 // ---------------------------------------------------------------------------
-// CreateReservation schema — полная схема брони для API
+// CreateReservation schema — full booking schema for the API
 // ---------------------------------------------------------------------------
 
-// Базовый объект схемы (ZodObject без superRefine — нужен для .omit()/.extend())
+// Base schema object (ZodObject without superRefine — required for .omit()/.extend())
 const reservationBaseObject = z.object({
   itemId: z.string().min(1, "itemId è obbligatorio"),
   itemType: z.string().optional(),
   date: z.string().optional(),
   time: z.string().optional(),
 
-  // Покупатель / Genitore
+  // Purchaser / Parent (Genitore)
   firstName: z
     .string()
     .min(2, "Il nome deve avere almeno 2 caratteri")
@@ -174,10 +174,10 @@ const reservationBaseObject = z.object({
     "Codice Fiscale del genitore/acquirente non valido"
   ),
 
-  // Мульти-студенты (N детей/учеников)
+  // Multiple students (N children / pupils)
   students: z.array(studentItemSchema).optional(),
 
-  // Одиночный студент (обратная совместимость)
+  // Single student (backwards compatibility)
   isForChild: z.boolean().optional(),
   studentFirstName: z.string().max(50).optional(),
   studentLastName: z.string().max(50).optional(),
@@ -210,7 +210,7 @@ const reservationBaseObject = z.object({
     .optional()
     .or(z.literal("")),
 
-  // Прочее
+  // Other
   includeRegistrationFee: z.boolean().optional(),
   notes: z
     .string()
@@ -222,8 +222,8 @@ const reservationBaseObject = z.object({
 });
 
 /**
- * Переиспользуемые cross-field проверки (isForChild, needsCompanyInvoice).
- * Применяется к createReservationSchema и checkoutFormSchema одинаково.
+ * Reusable cross-field validations (isForChild, needsCompanyInvoice).
+ * Applied identically to createReservationSchema and checkoutFormSchema.
  */
 function applyReservationRefinements<T extends {
   isForChild?: boolean;
@@ -296,7 +296,7 @@ export type CreateReservationInput = z.infer<typeof createReservationSchema>;
 
 // ---------------------------------------------------------------------------
 // Frontend checkout form schema
-// Поле taxCode на форме соответствует studentTaxCode в API.
+// Note: `taxCode` on the form corresponds to `studentTaxCode` in the API.
 // ---------------------------------------------------------------------------
 
 export const checkoutFormSchema = reservationBaseObject

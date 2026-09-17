@@ -24,6 +24,10 @@ import {
   ITEM_TYPE_DICTIONARY,
   NOTIFICATION_TYPE_DICTIONARY,
   ERROR_CODE_DICTIONARY,
+  DAY_OF_WEEK_DICTIONARY,
+  DISCOUNT_TYPE_DICTIONARY,
+  EXAM_CERTIFICATION_TYPE_DICTIONARY,
+  CONTACT_TOPIC_DICTIONARY,
   BookingPaymentStatus,
   BookingStatus,
   BookingSchedulingStatus,
@@ -48,6 +52,10 @@ import {
   ItemType,
   NotificationType,
   ErrorCode,
+  DayOfWeek,
+  DiscountType,
+  ExamCertificationType,
+  ContactTopic,
 } from '@atena/api-types';
 
 import { renderDictionaryHtml } from './dictionary.template';
@@ -394,9 +402,93 @@ export class DictionaryService {
     };
   }
 
+  getDaysOfWeekDictionary() {
+    const columns = {
+      day_of_week: {
+        column: 'day_of_week',
+        dbType: 'SMALLINT / INTEGER (1..7)',
+        name: 'DayOfWeek',
+        description: 'Дни недели по стандарту ISO (1=MONDAY .. 7=SUNDAY)',
+        values: DAY_OF_WEEK_DICTIONARY,
+        codes: DayOfWeek,
+      },
+    };
+
+    return {
+      table: 'days_of_week',
+      title: 'Дни недели (ISO)',
+      description: 'Числовые идентификаторы дней недели для расписания и планирования занятий.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getDiscountsDictionary() {
+    const columns = {
+      discount_type: {
+        column: 'discount_type',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'DiscountType',
+        description: 'Тип применяемой скидки к курсу (1=PERCENTAGE, 2=FIXED_AMOUNT, 3=SIBLING_DISCOUNT, 4=EARLY_BIRD)',
+        values: DISCOUNT_TYPE_DICTIONARY,
+        codes: DiscountType,
+      },
+    };
+
+    return {
+      table: 'discounts',
+      title: 'Скидки и промо-акции',
+      description: 'Типы скидок и специальных предложений для студентов и семей.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getCertificationsDictionary() {
+    const columns = {
+      certification_type: {
+        column: 'certification_type',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'ExamCertificationType',
+        description: 'Тип официального экзамена / сертификации (1=CAMBRIDGE..6=GOETHE)',
+        values: EXAM_CERTIFICATION_TYPE_DICTIONARY,
+        codes: ExamCertificationType,
+      },
+    };
+
+    return {
+      table: 'exam_certifications',
+      title: 'Экзамены и сертификации',
+      description: 'Международные языковые и IT-сертификации (Cambridge, IELTS, TOEFL, Certipass EIPASS, DELF/DALF, Goethe).',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getContactTopicsDictionary() {
+    const columns = {
+      topic: {
+        column: 'topic',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'ContactTopic',
+        description: 'Тема обращения через форму обратной связи (1=GENERAL_INFO..6=OTHER)',
+        values: CONTACT_TOPIC_DICTIONARY,
+        codes: ContactTopic,
+      },
+    };
+
+    return {
+      table: 'contact_topics',
+      title: 'Темы контактной формы',
+      description: 'Категории входящих обращений и заявок с лендинга.',
+      columns,
+      enums: columns,
+    };
+  }
+
   getAll() {
     return {
-      version: '1.7.0',
+      version: '1.8.0',
       description: 'Централизованный словарь перечислений и системных настроек Atena School',
       tables: {
         bookings: this.getBookingsDictionary(),
@@ -409,6 +501,10 @@ export class DictionaryService {
         notifications: this.getNotificationsDictionary(),
         app_settings: this.getAppSettingsDictionary(),
         error_codes: this.getErrorCodesDictionary(),
+        days_of_week: this.getDaysOfWeekDictionary(),
+        discounts: this.getDiscountsDictionary(),
+        exam_certifications: this.getCertificationsDictionary(),
+        contact_topics: this.getContactTopicsDictionary(),
       },
     };
   }
