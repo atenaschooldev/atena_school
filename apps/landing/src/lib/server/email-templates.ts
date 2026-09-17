@@ -6,6 +6,8 @@ export interface BookingEmailTemplateData {
   purchaserPhone?: string;
   purchaserTaxCode?: string;
   isForChild?: boolean;
+  studentEmail?: string;
+  studentPhone?: string;
   studentTaxCode?: string;
   studentBirthDate?: string;
   date?: string;

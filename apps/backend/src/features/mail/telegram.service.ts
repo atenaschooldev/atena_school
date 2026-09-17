@@ -65,6 +65,44 @@ export class TelegramService {
     }
   }
 
+  private formatDisplayDate(dateStr?: string | null): string {
+    if (!dateStr || dateStr.trim() === '') return 'Da concordare con la segreteria';
+    try {
+      const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+      const parts = raw.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10);
+        const day = parseInt(parts[2], 10);
+        const d = new Date(year, month - 1, day);
+        const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        const formattedDay = String(day).padStart(2, '0');
+        const formattedMonth = String(month).padStart(2, '0');
+        return `${formattedDay}/${formattedMonth}/${year} (${dayNames[d.getDay()]})`;
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  }
+
+  private formatBirthDate(dateStr?: string | null): string {
+    if (!dateStr || dateStr.trim() === '') return '';
+    try {
+      const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+      const parts = raw.split('-');
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parts[1].padStart(2, '0');
+        const day = parts[2].padStart(2, '0');
+        return `${day}/${month}/${year}`;
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  }
+
   async sendBookingNotification(data: {
     courseName: string;
     purchaserName: string;
@@ -74,7 +112,12 @@ export class TelegramService {
     studentName?: string;
     studentTaxCode?: string;
     studentBirthDate?: string;
+    studentEmail?: string;
+    studentPhone?: string;
     isForChild?: boolean;
+    needsCompanyInvoice?: boolean;
+    pecEmail?: string;
+    sdiCode?: string;
     date?: string;
     time?: string;
     lessonSchedule?: string;
@@ -94,50 +137,71 @@ export class TelegramService {
     const waNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : (cleanPhone.startsWith('39') ? cleanPhone : `39${cleanPhone}`);
     const whatsappUrl = cleanPhone ? `https://wa.me/${waNumber}` : null;
     const stripeDashboardUrl = data.stripeDashboardUrl || (data.stripePaymentIntentId ? `https://dashboard.stripe.com/payments/${data.stripePaymentIntentId}` : null);
+    const adminCrmUrl = this.configService.get<string>('ADMIN_URL') || 'https://atena-school-admin.vercel.app';
+
+    const startDateFormatted = this.formatDisplayDate(data.date);
+    const birthDateFormatted = this.formatBirthDate(data.studentBirthDate);
+    const scheduleFormatted = data.lessonSchedule && data.lessonSchedule !== 'N/D' && data.lessonSchedule !== 'Da concordare'
+      ? data.lessonSchedule
+      : (data.time || 'Da concordare con la segreteria');
 
     const lines: string[] = [
-      `🚨 <b>NUOVA ISCRIZIONE CORSO — ATENA SCHOOL</b>`,
+      `🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>`,
+      `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
       `📚 <b>Corso:</b> ${this.escapeHtml(data.courseName)}`,
-      `🗓 <b>Data inizio:</b> ${this.escapeHtml(data.date || 'Da concordare con la segreteria')}`,
-      `⏰ <b>Orario:</b> ${this.escapeHtml(data.lessonSchedule || data.time || 'N/D')}`,
-      `🏛 <b>Sede:</b> In Presenza (Cittanova)`,
+      `🗓 <b>Data di Inizio:</b> <code>${this.escapeHtml(startDateFormatted)}</code>`,
+      `⏰ <b>Orario & Giorni:</b> ${this.escapeHtml(scheduleFormatted)}`,
+      `📍 <b>Sede:</b> In Presenza (Cittanova)`,
       ``,
-      `👤 <b>Acquirente:</b> ${this.escapeHtml(data.purchaserName)}`,
-      `📧 <b>Email:</b> <a href="mailto:${this.escapeHtml(data.purchaserEmail)}">${this.escapeHtml(data.purchaserEmail)}</a>`,
-      `📱 <b>Telefono:</b> ${this.escapeHtml(data.purchaserPhone || 'N/D')}`,
-      `🧾 <b>Codice Fiscale:</b> <code>${this.escapeHtml(data.purchaserTaxCode || 'N/D')}</code>`,
+      `👤 <b>ACQUIRENTE / GENITORE:</b>`,
+      `• Nome: <b>${this.escapeHtml(data.purchaserName)}</b>`,
+      `• 📧 Email: <a href="mailto:${this.escapeHtml(data.purchaserEmail)}">${this.escapeHtml(data.purchaserEmail)}</a>`,
+      `• 📱 Telefono: <code>${this.escapeHtml(data.purchaserPhone || 'Non indicato')}</code>`,
+      `• 🧾 Codice Fiscale: <code>${this.escapeHtml(data.purchaserTaxCode || 'Non indicato')}</code>`,
     ];
+
+    if (data.needsCompanyInvoice) {
+      lines.push(`• 💼 Fattura Elettronica: PEC <code>${this.escapeHtml(data.pecEmail || 'N/D')}</code> • SDI <code>${this.escapeHtml(data.sdiCode || 'N/D')}</code>`);
+    }
 
     if (data.isForChild) {
       lines.push(``);
-      lines.push(`👶 <b>Dati Studente (Minore):</b>`);
+      lines.push(`👶 <b>DATI STUDENTE (MINORE):</b>`);
       lines.push(`• Nome: <b>${this.escapeHtml(data.studentName)}</b>`);
-      lines.push(`• Codice Fiscale: <code>${this.escapeHtml(data.studentTaxCode || 'N/D')}</code>`);
-      if (data.studentBirthDate) {
-        lines.push(`• Data di Nascita: ${this.escapeHtml(data.studentBirthDate)}`);
+      if (birthDateFormatted) {
+        lines.push(`• 🎂 Data di Nascita: <code>${this.escapeHtml(birthDateFormatted)}</code>`);
+      }
+      lines.push(`• 🧾 Codice Fiscale: <code>${this.escapeHtml(data.studentTaxCode || 'Non indicato')}</code>`);
+      if (data.studentEmail) {
+        lines.push(`• 📧 Email Studente: <a href="mailto:${this.escapeHtml(data.studentEmail)}">${this.escapeHtml(data.studentEmail)}</a>`);
+      }
+      if (data.studentPhone) {
+        lines.push(`• 📱 Tel Studente: <code>${this.escapeHtml(data.studentPhone)}</code>`);
       }
     }
 
     lines.push(``);
-    lines.push(`💰 <b>Riepilogo Economico:</b>`);
-    lines.push(`• Quota Corso: €${this.escapeHtml(String(data.courseFeeEur || '0.00'))}`);
+    lines.push(`💶 <b>RIEPILOGO ECONOMICO:</b>`);
+    lines.push(`• Quota Corso: <b>€${this.escapeHtml(String(data.courseFeeEur || '0.00'))}</b>`);
     if (Number(data.regFeeEur) > 0) {
-      lines.push(`• Quota Iscrizione Annuale: €${this.escapeHtml(String(data.regFeeEur))}`);
+      lines.push(`• Quota Associativa Annuale: <b>€${this.escapeHtml(String(data.regFeeEur))}</b>`);
     }
-    lines.push(`• <b>Totale ${isPaid ? 'Incassato' : 'Da Saldare'}:</b> <b>€${this.escapeHtml(String(data.totalEur))}</b>`);
-    lines.push(`• Stato: ${statusEmoji} <b>${this.escapeHtml(data.paymentStatusText)}</b>`);
+    lines.push(`• 💳 <b>Totale ${isPaid ? 'Incassato' : 'Da Saldare'}:</b> <b>€${this.escapeHtml(String(data.totalEur))}</b>`);
+    lines.push(`• Stato Pagamento: ${statusEmoji} <b>${this.escapeHtml(data.paymentStatusText)}</b>`);
 
     if (isPaid && data.stripePaymentIntentId) {
-      lines.push(`• Stripe Intent: <code>${this.escapeHtml(data.stripePaymentIntentId)}</code>`);
+      lines.push(`• Stripe Intent ID: <code>${this.escapeHtml(data.stripePaymentIntentId)}</code>`);
     }
 
     if (data.notes) {
       lines.push(``);
-      lines.push(`📝 <b>Note cliente:</b> <i>"${this.escapeHtml(data.notes)}"</i>`);
+      lines.push(`📝 <b>Note del Cliente:</b>`);
+      lines.push(`<i>"${this.escapeHtml(data.notes)}"</i>`);
     }
 
     lines.push(``);
+    lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━`);
     lines.push(`🆔 <b>ID Prenotazione:</b> <code>${this.escapeHtml(data.bookingId)}</code>`);
 
     const keyboard: TelegramButton[][] = [];
@@ -147,8 +211,9 @@ export class TelegramService {
       actionRow.push({ text: '💬 WhatsApp', url: whatsappUrl });
     }
     if (stripeDashboardUrl) {
-      actionRow.push({ text: '💳 Stripe Dashboard', url: stripeDashboardUrl });
+      actionRow.push({ text: '💳 Stripe', url: stripeDashboardUrl });
     }
+    actionRow.push({ text: '🌐 Admin CRM', url: adminCrmUrl });
 
     if (actionRow.length > 0) {
       keyboard.push(actionRow);

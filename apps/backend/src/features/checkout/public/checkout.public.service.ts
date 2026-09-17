@@ -5,7 +5,7 @@ import type Stripe from 'stripe';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const StripeClient = require('stripe');
 import { CheckFeeDto, CreateReservationDto, VerifyPaymentDto, ContactFormDto, CustomerPortalDto } from '../dto/checkout.public.dto';
-import { calculateLessonDates } from '@atena/utils';
+import { calculateLessonDates, formatCourseScheduleText } from '@atena/utils';
 import {
   BookingPaymentStatus,
   BookingStatus,
@@ -387,6 +387,12 @@ export class CheckoutService {
       // 2. Send to school admin via email
       await this.mailService.sendEmail(adminEmail, adminSubject, `Nuova prenotazione ${courseName} - ${studentName}`, adminHtml);
 
+      const lessonSchedule = formatCourseScheduleText(
+        booking.schedule_days || course?.schedule_days,
+        booking.start_time || course?.start_time,
+        course?.end_time
+      ) || dto.time || 'Orario Flessibile / Da Concordare';
+
       // 3. Dispatch Telegram alert to school channel
       this.telegramService.sendBookingNotification({
         courseName,
@@ -397,10 +403,15 @@ export class CheckoutService {
         studentName,
         studentTaxCode: dto.studentTaxCode,
         studentBirthDate: dto.studentBirthDate,
+        studentEmail: dto.studentEmail,
+        studentPhone: dto.studentPhone,
         isForChild: dto.isForChild,
+        needsCompanyInvoice: dto.needsCompanyInvoice,
+        pecEmail: dto.pecEmail,
+        sdiCode: dto.sdiCode,
         date: dto.date,
         time: dto.time,
-        lessonSchedule: dto.time,
+        lessonSchedule,
         totalEur,
         courseFeeEur,
         regFeeEur,

@@ -5,6 +5,7 @@ import {
 } from './email-templates';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from './checkout-service';
 import { BookingPaymentStatus } from '@atena/api-types';
+import { formatCourseScheduleText } from '@atena/utils';
 
 export interface SendBookingEmailsParams {
   booking: SupabaseBookingRow;
@@ -32,6 +33,21 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
   const stripePaymentIntentId = (booking as unknown as { stripe_payment_intent_id?: string; payment_intent_id?: string }).stripe_payment_intent_id || (booking as unknown as { payment_intent_id?: string }).payment_intent_id || undefined;
   const stripeSessionId = (booking as unknown as { stripe_session_id?: string }).stripe_session_id || undefined;
 
+  const bookingRecord = booking as Record<string, any>;
+  const scheduleDays = bookingRecord.schedule_days || course?.schedule_days || null;
+  const startTime = bookingRecord.start_time || course?.start_time || dto.time || null;
+  const endTime = bookingRecord.end_time || course?.end_time || null;
+  let lessonSchedule = formatCourseScheduleText(scheduleDays, startTime, endTime);
+  if (lessonSchedule === 'Da concordare') {
+    if (dto.time && dto.time.trim() !== '') {
+      lessonSchedule = dto.time;
+    } else if (course?.schedule_type === 'flexible' || Number(course?.schedule_type) === 2) {
+      lessonSchedule = 'Orario Flessibile (Concordato)';
+    } else if (startTime) {
+      lessonSchedule = startTime;
+    }
+  }
+
   const templateData: BookingEmailTemplateData = {
     courseName,
     purchaserName,
@@ -40,11 +56,13 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
     purchaserPhone: dto.phone,
     purchaserTaxCode: dto.purchaserTaxCode,
     isForChild: dto.isForChild,
+    studentEmail: dto.studentEmail || (dto.isForChild ? undefined : dto.email),
+    studentPhone: dto.studentPhone || (dto.isForChild ? undefined : dto.phone),
     studentTaxCode: dto.studentTaxCode,
     studentBirthDate: dto.studentBirthDate,
     date: dto.date,
-    time: dto.time,
-    lessonSchedule: dto.time || undefined,
+    time: startTime || dto.time,
+    lessonSchedule,
     totalEur,
     courseFeeEur,
     regFeeEur,

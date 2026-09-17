@@ -60,6 +60,44 @@ export async function sendTelegramMessage(htmlText: string, inlineKeyboard?: Arr
   }
 }
 
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr || dateStr.trim() === '') return 'Da concordare con la segreteria';
+  try {
+    const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month - 1, day);
+      const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+      const formattedDay = String(day).padStart(2, '0');
+      const formattedMonth = String(month).padStart(2, '0');
+      return `${formattedDay}/${formattedMonth}/${year} (${dayNames[d.getDay()]})`;
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatBirthDate(dateStr?: string | null): string {
+  if (!dateStr || dateStr.trim() === '') return '';
+  try {
+    const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parts[1].padStart(2, '0');
+      const day = parts[2].padStart(2, '0');
+      return `${day}/${month}/${year}`;
+    }
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+
 /**
  * Sends a rich booking notification to the admin Telegram chat/channel.
  */
@@ -70,54 +108,71 @@ export async function sendTelegramBookingNotification(data: BookingEmailTemplate
   const waNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : (cleanPhone.startsWith('39') ? cleanPhone : `39${cleanPhone}`);
   const whatsappUrl = cleanPhone ? `https://wa.me/${waNumber}` : null;
   const stripeDashboardUrl = data.stripeDashboardUrl || (data.stripePaymentIntentId ? `https://dashboard.stripe.com/payments/${data.stripePaymentIntentId}` : null);
+  const adminCrmUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
+
+  const startDateFormatted = formatDisplayDate(data.date);
+  const birthDateFormatted = formatBirthDate(data.studentBirthDate);
+  const scheduleFormatted = data.lessonSchedule && data.lessonSchedule !== 'N/D' && data.lessonSchedule !== 'Da concordare'
+    ? data.lessonSchedule
+    : (data.time || 'Da concordare con la segreteria');
 
   const lines: string[] = [
-    `🚨 <b>NUOVA ISCRIZIONE CORSO — ATENA SCHOOL</b>`,
+    `🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>`,
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
     ``,
     `📚 <b>Corso:</b> ${escapeHtml(data.courseName)}`,
-    `🗓 <b>Data inizio:</b> ${escapeHtml(data.date || 'Da concordare con la segreteria')}`,
-    `⏰ <b>Orario:</b> ${escapeHtml(data.lessonSchedule || data.time || 'N/D')}`,
-    `🏛 <b>Sede:</b> In Presenza (Cittanova)`,
+    `🗓 <b>Data di Inizio:</b> <code>${escapeHtml(startDateFormatted)}</code>`,
+    `⏰ <b>Orario & Giorni:</b> ${escapeHtml(scheduleFormatted)}`,
+    `📍 <b>Sede:</b> In Presenza (Cittanova)`,
     ``,
-    `👤 <b>Acquirente:</b> ${escapeHtml(data.purchaserName)}`,
-    `📧 <b>Email:</b> <a href="mailto:${escapeHtml(data.purchaserEmail)}">${escapeHtml(data.purchaserEmail)}</a>`,
-    `📱 <b>Telefono:</b> ${escapeHtml(data.purchaserPhone || 'N/D')}`,
-    `🧾 <b>Codice Fiscale:</b> <code>${escapeHtml(data.purchaserTaxCode || 'N/D')}</code>`,
+    `👤 <b>ACQUIRENTE / GENITORE:</b>`,
+    `• Nome: <b>${escapeHtml(data.purchaserName)}</b>`,
+    `• 📧 Email: <a href="mailto:${escapeHtml(data.purchaserEmail)}">${escapeHtml(data.purchaserEmail)}</a>`,
+    `• 📱 Telefono: <code>${escapeHtml(data.purchaserPhone || 'Non indicato')}</code>`,
+    `• 🧾 Codice Fiscale: <code>${escapeHtml(data.purchaserTaxCode || 'Non indicato')}</code>`,
   ];
 
   if (data.needsCompanyInvoice) {
-    lines.push(`💼 <b>Fattura Aziendale:</b> PEC <code>${escapeHtml(data.pecEmail)}</code> • SDI <code>${escapeHtml(data.sdiCode)}</code>`);
+    lines.push(`• 💼 Fattura Elettronica: PEC <code>${escapeHtml(data.pecEmail || 'N/D')}</code> • SDI <code>${escapeHtml(data.sdiCode || 'N/D')}</code>`);
   }
 
   if (data.isForChild) {
     lines.push(``);
-    lines.push(`👶 <b>Dati Studente (Minore):</b>`);
+    lines.push(`👶 <b>DATI STUDENTE (MINORE):</b>`);
     lines.push(`• Nome: <b>${escapeHtml(data.studentName)}</b>`);
-    lines.push(`• Codice Fiscale: <code>${escapeHtml(data.studentTaxCode || 'N/D')}</code>`);
-    if (data.studentBirthDate) {
-      lines.push(`• Data di Nascita: ${escapeHtml(data.studentBirthDate)}`);
+    if (birthDateFormatted) {
+      lines.push(`• 🎂 Data di Nascita: <code>${escapeHtml(birthDateFormatted)}</code>`);
+    }
+    lines.push(`• 🧾 Codice Fiscale: <code>${escapeHtml(data.studentTaxCode || 'Non indicato')}</code>`);
+    if (data.studentEmail) {
+      lines.push(`• 📧 Email Studente: <a href="mailto:${escapeHtml(data.studentEmail)}">${escapeHtml(data.studentEmail)}</a>`);
+    }
+    if (data.studentPhone) {
+      lines.push(`• 📱 Tel Studente: <code>${escapeHtml(data.studentPhone)}</code>`);
     }
   }
 
   lines.push(``);
-  lines.push(`💰 <b>Riepilogo Economico:</b>`);
-  lines.push(`• Quota Corso: €${escapeHtml(data.courseFeeEur || '0.00')}`);
+  lines.push(`💶 <b>RIEPILOGO ECONOMICO:</b>`);
+  lines.push(`• Quota Corso: <b>€${escapeHtml(data.courseFeeEur || '0.00')}</b>`);
   if (Number(data.regFeeEur) > 0) {
-    lines.push(`• Quota Iscrizione Annuale: €${escapeHtml(data.regFeeEur)}`);
+    lines.push(`• Quota Associativa Annuale: <b>€${escapeHtml(data.regFeeEur)}</b>`);
   }
-  lines.push(`• <b>Totale ${isPaid ? 'Incassato' : 'Da Saldare'}:</b> <b>€${escapeHtml(data.totalEur)}</b>`);
-  lines.push(`• Stato: ${statusEmoji} <b>${escapeHtml(data.paymentStatusText)}</b>`);
+  lines.push(`• 💳 <b>Totale ${isPaid ? 'Incassato' : 'Da Saldare'}:</b> <b>€${escapeHtml(data.totalEur)}</b>`);
+  lines.push(`• Stato Pagamento: ${statusEmoji} <b>${escapeHtml(data.paymentStatusText)}</b>`);
 
   if (data.isPaidOnline && data.stripePaymentIntentId) {
-    lines.push(`• Stripe Intent: <code>${escapeHtml(data.stripePaymentIntentId)}</code>`);
+    lines.push(`• Stripe Intent ID: <code>${escapeHtml(data.stripePaymentIntentId)}</code>`);
   }
 
   if (data.notes) {
     lines.push(``);
-    lines.push(`📝 <b>Note cliente:</b> <i>"${escapeHtml(data.notes)}"</i>`);
+    lines.push(`📝 <b>Note del Cliente:</b>`);
+    lines.push(`<i>"${escapeHtml(data.notes)}"</i>`);
   }
 
   lines.push(``);
+  lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━`);
   lines.push(`🆔 <b>ID Prenotazione:</b> <code>${escapeHtml(data.bookingId)}</code>`);
 
   const keyboard: Array<Array<{ text: string; url: string }>> = [];
@@ -127,8 +182,9 @@ export async function sendTelegramBookingNotification(data: BookingEmailTemplate
     actionRow.push({ text: '💬 WhatsApp', url: whatsappUrl });
   }
   if (stripeDashboardUrl) {
-    actionRow.push({ text: '💳 Stripe Dashboard', url: stripeDashboardUrl });
+    actionRow.push({ text: '💳 Stripe', url: stripeDashboardUrl });
   }
+  actionRow.push({ text: '🌐 Admin CRM', url: adminCrmUrl });
 
   if (actionRow.length > 0) {
     keyboard.push(actionRow);
