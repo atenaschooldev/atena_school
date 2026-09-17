@@ -150,38 +150,29 @@ export async function processStudentAndBookingLinks(params: {
           if (mData) existingMem = mData;
         }
 
-        const memEmail = dto.isForChild ? (dto.studentEmail || dto.email || null) : (dto.email || null);
-        const memPhone = (dto.isForChild ? dto.studentPhone : dto.phone) || null;
-
         if (existingMem) {
           await supabase
             .from('annual_memberships')
             .update({
               status: MembershipStatus.ACTIVE,
               paid_at: new Date().toISOString(),
-              booking_id: bookingId,
               student_id: studentId || undefined,
               user_id: linkedUserId || studentAuthUserId || undefined,
               tax_code: sTaxCode || undefined,
-              email: memEmail || undefined,
-              phone: memPhone || undefined,
             })
             .eq('id', existingMem.id);
-        } else {
+        } else if (sTaxCode) {
           await supabase.from('annual_memberships').upsert(
             {
-              tax_code: sTaxCode || null,
-              email: memEmail,
-              phone: memPhone,
+              tax_code: sTaxCode,
               academic_year: ACADEMIC_YEAR.CURRENT,
               status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
-              booking_id: bookingId,
               paid_at: new Date().toISOString(),
               expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
             },
-            { onConflict: 'booking_id' }
+            { onConflict: 'tax_code,academic_year' }
           );
         }
       }

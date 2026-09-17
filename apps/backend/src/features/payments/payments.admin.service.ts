@@ -49,7 +49,7 @@ export class PaymentsService {
 
     try {
       const memberships = await this.prisma.$queryRawUnsafe<any[]>(
-        `SELECT id, booking_id, student_id, email, tax_code FROM annual_memberships`
+        `SELECT id, student_id, tax_code FROM annual_memberships`
       ).catch(() => []);
 
       const memList: any[] = Array.isArray(memberships) ? memberships : [];
@@ -62,8 +62,8 @@ export class PaymentsService {
           mId = noteMatch[1];
         }
 
-        if (!mId && p.bookingId) {
-          const match = memList.find((m) => m.booking_id === p.bookingId);
+        if (!mId && p.studentId) {
+          const match = memList.find((m) => m.student_id === p.studentId);
           if (match) mId = match.id;
         }
 
@@ -315,11 +315,15 @@ export class PaymentsService {
       const memId = noteMatch ? noteMatch[1] : null;
       let sId = dto.studentId || existing.studentId || null;
 
-      if (!sId && targetBookingId) {
-        const b = await this.prisma.booking.findUnique({ where: { id: targetBookingId } });
-        if (b?.student_id) {
+      let b: any = null;
+      if (targetBookingId) {
+        b = await this.prisma.booking.findUnique({ where: { id: targetBookingId } });
+      }
+
+      if (!sId && b) {
+        if (b.student_id) {
           sId = b.student_id;
-        } else if (b?.studentTaxCode || b?.studentEmail) {
+        } else if (b.studentTaxCode || b.studentEmail) {
           const found = await this.prisma.students.findFirst({
             where: {
               OR: [
@@ -330,6 +334,12 @@ export class PaymentsService {
           });
           if (found) sId = found.id;
         }
+      }
+
+      let studentTaxCode = b?.studentTaxCode || b?.purchaserTaxCode || null;
+      if (!studentTaxCode && sId) {
+        const sRecord = await this.prisma.students.findUnique({ where: { id: sId } });
+        if (sRecord?.tax_code) studentTaxCode = sRecord.tax_code;
       }
 
       if (isPaymentSucceeded) {
@@ -343,16 +353,11 @@ export class PaymentsService {
           await this.prisma.$executeRawUnsafe(
             `UPDATE annual_memberships SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW() WHERE id = '${memId}'::uuid`
           ).catch(() => null);
-        } else if (targetBookingId) {
+        } else if (studentTaxCode) {
           await this.prisma.$executeRawUnsafe(`
-            INSERT INTO annual_memberships (id, tax_code, email, phone, academic_year, status, student_id, booking_id, paid_at, expires_at)
-            VALUES (gen_random_uuid(), NULL, NULL, NULL, '2026/2027', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${targetBookingId}'::uuid, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
-            ON CONFLICT (booking_id) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW();
-          `).catch(() => null);
-        } else if (sId) {
-          await this.prisma.$executeRawUnsafe(`
-            INSERT INTO annual_memberships (id, tax_code, email, phone, academic_year, status, student_id, booking_id, paid_at, expires_at)
-            VALUES (gen_random_uuid(), NULL, NULL, NULL, '2026/2027', ${MembershipStatus.ACTIVE}, '${sId}'::uuid, NULL, NOW(), '2027-08-31 23:59:59+00'::timestamptz);
+            INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, paid_at, expires_at)
+            VALUES (gen_random_uuid(), '${studentTaxCode}', '2026/2027', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
+            ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id);
           `).catch(() => null);
         }
       } else {
@@ -366,9 +371,9 @@ export class PaymentsService {
           await this.prisma.$executeRawUnsafe(
             `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE id = '${memId}'::uuid`
           ).catch(() => null);
-        } else if (targetBookingId) {
+        } else if (studentTaxCode) {
           await this.prisma.$executeRawUnsafe(
-            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE booking_id = '${targetBookingId}'::uuid`
+            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE LOWER(tax_code) = LOWER('${studentTaxCode}') AND academic_year = '2026/2027'`
           ).catch(() => null);
         }
       }
@@ -441,31 +446,22 @@ export class PaymentsService {
       });
       createdPayments.push(payment);
 
-      if ((itemType === PaymentType.REGISTRATION_FEE || Number(item.amount) === 30) && (dto.purchaserTaxCode || dto.purchaserEmail || dto.studentId || dto.bookingId)) {
+      if ((itemType === PaymentType.REGISTRATION_FEE || Number(item.amount) === 30) && (dto.purchaserTaxCode || dto.studentId)) {
         const expiresAt = new Date();
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
         try {
-          if (dto.bookingId) {
+          const taxCode = dto.purchaserTaxCode || (dto.studentId ? (await this.prisma.students.findUnique({ where: { id: dto.studentId } }))?.tax_code : null);
+          if (taxCode) {
             await this.prisma.$executeRawUnsafe(
-              `INSERT INTO annual_memberships (id, booking_id, student_id, email, tax_code, status, academic_year, paid_at, expires_at)
-               VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3, $4, ${MembershipStatus.ACTIVE}, '2026/2027', NOW(), $5::timestamptz)
-               ON CONFLICT (booking_id) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW()`,
-              dto.bookingId,
+              `INSERT INTO annual_memberships (id, tax_code, student_id, user_id, status, academic_year, paid_at, expires_at)
+               VALUES (gen_random_uuid(), $1, $2::uuid, $3::uuid, ${MembershipStatus.ACTIVE}, '2026/2027', NOW(), $4::timestamptz)
+               ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id)`,
+              taxCode,
               dto.studentId || null,
-              dto.purchaserEmail || null,
-              dto.purchaserTaxCode || null,
+              payment.userId || null,
               expiresAt.toISOString(),
-            ).catch((e) => console.error("Error inserting annual_membership with bookingId:", e));
-          } else {
-            await this.prisma.$executeRawUnsafe(
-              `INSERT INTO annual_memberships (id, booking_id, student_id, email, tax_code, status, academic_year, paid_at, expires_at)
-               VALUES (gen_random_uuid(), NULL, $1::uuid, $2, $3, ${MembershipStatus.ACTIVE}, '2026/2027', NOW(), $4::timestamptz)`,
-              dto.studentId || null,
-              dto.purchaserEmail || null,
-              dto.purchaserTaxCode || null,
-              expiresAt.toISOString(),
-            ).catch((e) => console.error("Error inserting annual_membership standalone:", e));
+            ).catch((e) => console.error("Error inserting annual_membership:", e));
           }
         } catch (err) {
           console.error("Error in membership insertion logic:", err);

@@ -20,8 +20,8 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
       const search = filters.search.trim();
       (where as any).OR = [
         { taxCode: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search, mode: 'insensitive' } },
+        { student: { is: { full_name: { contains: search, mode: 'insensitive' } } } },
+        { student: { is: { email: { contains: search, mode: 'insensitive' } } } },
       ];
     }
 
@@ -39,17 +39,6 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
             tax_code: true,
           },
         },
-        booking: {
-          select: {
-            id: true,
-            studentName: true,
-            purchaserName: true,
-            studentEmail: true,
-            purchaserEmail: true,
-            studentTaxCode: true,
-            purchaserTaxCode: true,
-          },
-        },
       },
     });
   }
@@ -59,7 +48,6 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
       where: { id },
       include: {
         student: true,
-        booking: true,
       },
     });
   }

@@ -398,44 +398,41 @@ export class BookingsAdminService {
         });
 
         // Activate or create membership in annual_memberships table
-        const { data: existingMem } = await this.supabaseAdmin
-          .from('annual_memberships')
-          .select('id')
-          .eq('booking_id', id)
-          .maybeSingle();
-
         const sTaxCode = updatedBooking.studentTaxCode || updatedBooking.purchaserTaxCode || null;
         const sEmail = updatedBooking.studentEmail || updatedBooking.purchaserEmail || null;
-        const sPhone = updatedBooking.studentPhone || updatedBooking.purchaserPhone || null;
 
-        if (existingMem?.id) {
-          await this.supabaseAdmin
+        if (sTaxCode) {
+          const { data: existingMem } = await this.supabaseAdmin
             .from('annual_memberships')
-            .update({
-              status: MembershipStatus.ACTIVE,
-              tax_code: sTaxCode,
-              email: sEmail,
-              phone: sPhone,
-              student_id: (updatedBooking as any).student_id || null,
-              user_id: updatedBooking.userId || null,
-              paid_at: new Date().toISOString(),
-            })
-            .eq('id', existingMem.id);
-        } else {
-          await this.supabaseAdmin
-            .from('annual_memberships')
-            .insert({
-              booking_id: id,
-              student_id: (updatedBooking as any).student_id || null,
-              user_id: updatedBooking.userId || null,
-              tax_code: sTaxCode,
-              email: sEmail,
-              phone: sPhone,
-              academic_year: '2026/2027',
-              status: MembershipStatus.ACTIVE,
-              paid_at: new Date().toISOString(),
-              expires_at: '2027-08-31T23:59:59.000Z',
-            });
+            .select('id')
+            .ilike('tax_code', sTaxCode)
+            .eq('academic_year', '2026/2027')
+            .maybeSingle();
+
+          if (existingMem?.id) {
+            await this.supabaseAdmin
+              .from('annual_memberships')
+              .update({
+                status: MembershipStatus.ACTIVE,
+                tax_code: sTaxCode,
+                student_id: (updatedBooking as any).student_id || null,
+                user_id: updatedBooking.userId || null,
+                paid_at: new Date().toISOString(),
+              })
+              .eq('id', existingMem.id);
+          } else {
+            await this.supabaseAdmin
+              .from('annual_memberships')
+              .insert({
+                student_id: (updatedBooking as any).student_id || null,
+                user_id: updatedBooking.userId || null,
+                tax_code: sTaxCode,
+                academic_year: '2026/2027',
+                status: MembershipStatus.ACTIVE,
+                paid_at: new Date().toISOString(),
+                expires_at: '2027-08-31T23:59:59.000Z',
+              });
+          }
         }
 
         // Update student annual_fee_paid status and activate profile
@@ -582,8 +579,6 @@ export class BookingsAdminService {
     await this.prisma.payment.deleteMany({ where: { bookingId: id } });
     await this.prisma.booking.delete({ where: { id } });
 
-    await this.supabaseAdmin.from('annual_memberships').delete().eq('booking_id', id);
-
     return { success: true };
   }
 
@@ -624,18 +619,14 @@ export class BookingsAdminService {
       const { data: membership } = await this.supabaseAdmin
         .from('annual_memberships')
         .select('*')
-        .or(`email.ilike.${q},tax_code.ilike.${q},phone.ilike.${q}`)
+        .ilike('tax_code', q)
         .limit(1)
         .maybeSingle();
 
       if (membership) {
         return {
           found: true,
-          purchaserEmail: membership.email || '',
-          purchaserPhone: membership.phone || '',
           purchaserTaxCode: membership.tax_code || '',
-          studentEmail: membership.email || '',
-          studentPhone: membership.phone || '',
           studentTaxCode: membership.tax_code || '',
         };
       }

@@ -135,7 +135,6 @@ model Booking {
   lessons           Lesson[]
   payments          Payment[]
   attendanceRecords AttendanceRecord[]
-  annualMembership  AnnualMembership?
 
   @@map("bookings")
 }
@@ -191,24 +190,20 @@ model Payment {
   @@map("payments")
 }
 
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model AnnualMembership {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  taxCode      String?  @map("tax_code")
-  email        String?
-  phone        String?
+  taxCode      String   @map("tax_code")
   academicYear String   @default("2026/2027") @map("academic_year")
   status       Int      @default(1)
   studentId    String?  @map("student_id") @db.Uuid
   userId       String?  @map("user_id") @db.Uuid
-  bookingId    String?  @unique @map("booking_id") @db.Uuid
   paidAt       DateTime @default(now()) @map("paid_at") @db.Timestamptz(6)
   expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  booking   Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   student   students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
 
+  @@unique([taxCode, academicYear])
   @@map("annual_memberships")
 }
 

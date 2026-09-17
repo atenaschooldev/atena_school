@@ -177,36 +177,27 @@ export class CheckoutCoreService {
             if (mData) existingMem = mData;
           }
 
-          const memEmail = dto.isForChild ? (dto.studentEmail || dto.email || null) : (dto.email || null);
-          const memPhone = (dto.isForChild ? dto.studentPhone : dto.phone) || null;
-
           if (existingMem) {
             await supabaseAdmin
               .from('annual_memberships')
               .update({
                 status: MembershipStatus.ACTIVE,
                 paid_at: new Date().toISOString(),
-                booking_id: bookingId,
                 student_id: studentId || undefined,
                 user_id: linkedUserId || studentAuthUserId || undefined,
                 tax_code: sTaxCode || undefined,
-                email: memEmail || undefined,
-                phone: memPhone || undefined,
               })
               .eq('id', existingMem.id);
-          } else {
+          } else if (sTaxCode) {
             const { error: mErr } = await supabaseAdmin.from('annual_memberships').upsert({
-              tax_code: sTaxCode || null,
-              email: memEmail,
-              phone: memPhone,
+              tax_code: sTaxCode,
               academic_year: '2026/2027',
               status: MembershipStatus.ACTIVE,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
-              booking_id: bookingId,
               paid_at: new Date().toISOString(),
               expires_at: '2027-08-31T23:59:59.000Z',
-            }, { onConflict: 'booking_id' });
+            }, { onConflict: 'tax_code,academic_year' });
 
             if (mErr && mErr.code !== '23505') {
               console.error('Membership insert error:', mErr);
