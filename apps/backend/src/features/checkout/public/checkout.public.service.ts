@@ -19,6 +19,7 @@ import {
   AppSettingKey,
   MembershipStatus,
   StudentStatus,
+  CourseStatus,
   CourseScheduleType,
   parseCourseScheduleType,
 } from '@atena/api-types';
@@ -26,6 +27,7 @@ import {
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutCoreService } from '../checkout-core.service';
 import { MailService } from '../../mail/mail.service';
+import { TelegramService } from '../../mail/telegram.service';
 
 export interface CourseRecord {
   id: string;
@@ -51,6 +53,7 @@ export class CheckoutService {
     private prisma: PrismaService,
     private checkoutCore: CheckoutCoreService,
     private mailService: MailService,
+    private telegramService: TelegramService,
   ) {
     const supabaseUrl = this.configService.get<string>('SUPABASE_URL') || this.configService.get<string>('NEXT_PUBLIC_SUPABASE_URL') || process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const serviceKey = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -120,6 +123,25 @@ export class CheckoutService {
   }
 
   async createReservation(dto: CreateReservationDto) {
+    // 1. Idempotency Check: if booking was already created with this idempotencyKey/session_id, return it
+    if (dto.idempotencyKey) {
+      const { data: existingBookings } = await this.supabaseAdmin
+        .from('bookings')
+        .select('*')
+        .eq('session_id', dto.idempotencyKey);
+
+      if (existingBookings && existingBookings.length > 0) {
+        const b = existingBookings[0];
+        return {
+          success: true,
+          booking: b,
+          bookings: existingBookings,
+          bookingId: b.id,
+          bookingIds: existingBookings.map((eb) => eb.id),
+        };
+      }
+    }
+
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
     let course: CourseRecord | null = null;
 
@@ -195,6 +217,7 @@ export class CheckoutService {
         .insert({
           course_id: courseId,
           course_name: course?.name || course?.title_it || 'Corso Atena School',
+          session_id: dto.idempotencyKey || null,
           purchaser_name: purchaserName,
           purchaser_email: dto.email,
           purchaser_phone: dto.phone,
@@ -269,9 +292,9 @@ export class CheckoutService {
 
     const primaryBooking = createdBookings[0];
 
-    // Send transactional email notifications
+    // Send transactional email & telegram notifications
     this.sendBookingNotificationEmails(primaryBooking, course, dto).catch((err) => {
-      this.logger.warn(`Async email send error: ${err.message}`);
+      this.logger.warn(`Async notification send error: ${err.message}`);
     });
 
     return {
@@ -295,6 +318,7 @@ export class CheckoutService {
       const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta' : 'Prenotato con Saldo in Sede';
       const totalEur = Number(booking.amount_paid || 0).toFixed(2);
       const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
+      const courseFeeEur = (Number(totalEur) - Number(regFeeEur)).toFixed(2);
 
       const clientSubject = isPaidOnline
         ? `Conferma Pagamento e Iscrizione: ${courseName} - Atena School`
@@ -337,12 +361,37 @@ export class CheckoutService {
         </div>
       `;
 
-      // 1. Send to client
+      // 1. Send to client via email
       await this.mailService.sendEmail(dto.email, clientSubject, `Conferma prenotazione ${courseName}`, clientHtml);
-      // 2. Send to school admin
+      // 2. Send to school admin via email
       await this.mailService.sendEmail(adminEmail, adminSubject, `Nuova prenotazione ${courseName} - ${studentName}`, adminHtml);
+
+      // 3. Dispatch Telegram alert to school channel
+      this.telegramService.sendBookingNotification({
+        courseName,
+        purchaserName,
+        purchaserEmail: dto.email,
+        purchaserPhone: dto.phone,
+        purchaserTaxCode: dto.purchaserTaxCode,
+        studentName,
+        studentTaxCode: dto.studentTaxCode,
+        studentBirthDate: dto.studentBirthDate,
+        isForChild: dto.isForChild,
+        date: dto.date,
+        time: dto.time,
+        lessonSchedule: dto.time,
+        totalEur,
+        courseFeeEur,
+        regFeeEur,
+        isPaidOnline,
+        paymentStatusText,
+        bookingId: booking.id,
+        notes: dto.notes,
+      }).catch((tErr) => {
+        this.logger.warn(`Async Telegram booking notification error: ${tErr.message}`);
+      });
     } catch (e: any) {
-      this.logger.error(`Error sending booking notification emails: ${e.message}`);
+      this.logger.error(`Error sending booking notification emails/telegram: ${e.message}`);
     }
   }
 
@@ -690,7 +739,27 @@ export class CheckoutService {
       return { success: false, error: 'Курс не найден' };
     }
 
-    return { success: true, item, course: item };
+    let teacherName: string | null = null;
+    let teacherPhotoUrl: string | null = null;
+    if (item.teacher_id) {
+      const { data: teacher } = await this.supabaseAdmin
+        .from('teachers')
+        .select('full_name, photo_url')
+        .eq('teacher_id', item.teacher_id)
+        .maybeSingle();
+      if (teacher) {
+        teacherName = teacher.full_name;
+        teacherPhotoUrl = teacher.photo_url;
+      }
+    }
+
+    const course = {
+      ...item,
+      teacher_name: teacherName,
+      teacher_photo_url: teacherPhotoUrl,
+    };
+
+    return { success: true, item: course, course };
   }
 
   async getBookingDetails(bookingId: string) {
@@ -704,27 +773,23 @@ export class CheckoutService {
       return { success: false, error: 'Бронирование не найдено' };
     }
 
-    const cid = booking.course_id || booking.item_id;
-    let courseName = booking.course_name || 'Corso Atena School';
+    const [paymentsRes, lessonsRes] = await Promise.all([
+      this.supabaseAdmin
+        .from('payments')
+        .select('id, amount, type, status, payment_method, academic_year, created_at')
+        .eq('booking_id', bookingId)
+        .order('created_at', { ascending: true }),
+      this.supabaseAdmin
+        .from('lessons')
+        .select('id, starts_at, ends_at, status')
+        .eq('booking_id', bookingId)
+        .order('starts_at', { ascending: true }),
+    ]);
 
-    if (cid) {
-      const { data: course } = await this.supabaseAdmin
-        .from('courses')
-        .select('name, title_it')
-        .eq('id', cid)
-        .maybeSingle();
+    const payments = paymentsRes.data || [];
+    const lessons = lessonsRes.data || [];
 
-      if (course) {
-        courseName = course.name || course.title_it || courseName;
-      }
-    }
-
-    const { data: payments } = await this.supabaseAdmin
-      .from('payments')
-      .select('amount, type')
-      .eq('booking_id', bookingId);
-
-    const coursePayment = payments?.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
+    const coursePayment = payments.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
     const amountPaid = Number(booking.amount_paid || 0);
     const regFee = Number(booking.registration_fee || 0);
     const coursePrice = coursePayment
@@ -734,41 +799,52 @@ export class CheckoutService {
     return {
       success: true,
       booking: {
-        id: booking.id,
-        course_name: courseName,
-        amount_paid: amountPaid,
-        registration_fee: regFee,
+        ...booking,
         course_price: coursePrice,
         item_price: coursePrice,
-        student_name: booking.student_name || booking.purchaser_name || 'Studente',
-        purchaser_name: booking.purchaser_name || booking.student_name || 'Acquirente',
-        student_email: booking.student_email || booking.purchaser_email || '',
-        payment_method: booking.payment_method ?? PaymentMethod.CASH,
-        payment_status: booking.payment_status ?? BookingPaymentStatus.RESERVED,
-        start_date: booking.start_date || booking.booking_date,
+        total_price: amountPaid > 0 ? amountPaid : coursePrice + regFee,
+        payments: payments,
+        lessons_count: lessons.length,
+        lessons: lessons,
       },
     };
   }
 
   async getPublicCourses() {
-    const { data, error } = await this.supabaseAdmin
+    let { data: coursesData, error } = await this.supabaseAdmin
       .from('courses')
-      .select('*');
+      .select('*')
+      .eq('status', CourseStatus.ACTIVE)
+      .order('name');
 
-    if (error || !data) {
-      console.error('getPublicCourses error:', error);
-      return { success: false, courses: [] };
+    if (error || !coursesData) {
+      const { data: fallbackData } = await this.supabaseAdmin.from('courses').select('*');
+      coursesData = fallbackData || [];
     }
 
-    return { success: true, courses: data };
+    const { data: teachersData } = await this.supabaseAdmin
+      .from('teachers')
+      .select('teacher_id, full_name, photo_url');
+    const teacherMap = new Map((teachersData || []).map((t: any) => [t.teacher_id, t]));
+
+    const courses = (coursesData || []).map((c: any) => {
+      const teacher = c.teacher_id ? teacherMap.get(c.teacher_id) : null;
+      return {
+        ...c,
+        teacher_name: teacher?.full_name || null,
+        teacher_photo_url: teacher?.photo_url || null,
+      };
+    });
+
+    return { success: true, courses };
   }
 
   async submitContact(dto: ContactFormDto) {
-    const firstName = (dto.nome || (dto as any).first_name || '').trim();
-    const lastName = (dto.cognome || (dto as any).last_name || '').trim();
+    const firstName = (dto.nome || (dto as any).first_name || (dto as any).name?.split(' ')[0] || '').trim();
+    const lastName = (dto.cognome || (dto as any).last_name || (dto as any).name?.split(' ').slice(1).join(' ') || '').trim();
     const email = (dto.email || '').trim().toLowerCase();
     const phone = (dto.telefono || (dto as any).phone || '').trim() || null;
-    const interest = (dto.interesse || (dto as any).interest || '').trim() || null;
+    const interest = (dto.interesse || (dto as any).interest || (dto as any).courseInterest || '').trim() || null;
     const message = (dto.messaggio || (dto as any).message || '').trim();
 
     const { error } = await this.supabaseAdmin
@@ -786,6 +862,36 @@ export class CheckoutService {
     if (error) {
       throw new BadRequestException(error.message);
     }
+
+    // 1. Asynchronously send Telegram notification to school team
+    this.telegramService.sendContactNotification({
+      firstName,
+      lastName,
+      email,
+      phone: phone || undefined,
+      interest: interest || undefined,
+      message,
+    }).catch((tErr) => {
+      this.logger.warn(`Async Telegram contact notification error: ${tErr.message}`);
+    });
+
+    // 2. Asynchronously send Email notification to admin
+    const adminEmail = this.configService.get<string>('SCHOOL_ADMIN_EMAIL') || this.configService.get<string>('ADMIN_EMAIL') || 'atenaschool20@gmail.com';
+    const subject = `[Nuovo Messaggio dal Sito Web] ${firstName} ${lastName}`;
+    const html = `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2 style="color: #043569;">Nuovo messaggio di contatto ricevuto dal sito web</h2>
+        <p><strong>Nome:</strong> ${firstName} ${lastName}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Telefono:</strong> ${phone || 'N/D'}</p>
+        <p><strong>Interesse:</strong> ${interest || 'N/D'}</p>
+        <p><strong>Messaggio:</strong></p>
+        <p style="background: #f1f5f9; padding: 12px; border-radius: 8px;">${message}</p>
+      </div>
+    `;
+    this.mailService.sendEmail(adminEmail, subject, `Nuovo messaggio da ${firstName} ${lastName}: ${message}`, html).catch((mErr) => {
+      this.logger.warn(`Async contact email notification error: ${mErr.message}`);
+    });
 
     return { success: true, message: 'Messaggio inviato con successo' };
   }

@@ -13,3 +13,10 @@ export class LoginDto {
   @MinLength(6, { message: 'Пароль должен быть не менее 6 символов' })
   password: string;
 }
+
+export class MagicLinkDto {
+  @ApiProperty({ example: 'student@example.com', description: 'Email студента для отправки Magic Link' })
+  @IsEmail({}, { message: 'Некорректный формат email' })
+  @IsNotEmpty({ message: 'Email обязателен' })
+  email: string;
+}

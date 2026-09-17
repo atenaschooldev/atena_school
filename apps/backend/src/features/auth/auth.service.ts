@@ -1,7 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, MagicLinkDto } from './dto/login.dto';
 import { UsersRepository } from './domain/users.repository.interface';
 
 @Injectable()
@@ -56,5 +56,33 @@ export class AuthService {
       if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Ошибка авторизации. Проверьте правильность логина и пароля.');
     }
+  }
+
+  async sendMagicLink(dto: MagicLinkDto) {
+    const email = dto.email ? dto.email.trim().toLowerCase() : '';
+    if (!email || !email.includes('@')) {
+      throw new BadRequestException('A valid email address is required');
+    }
+
+    const siteUrl =
+      this.configService.get<string>('NEXT_PUBLIC_SITE_URL') ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      'https://atena-school.vercel.app';
+
+    const { error } = await this.supabaseAdmin.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${siteUrl}/autenticazione/callback`,
+      },
+    });
+
+    if (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return {
+      success: true,
+      message: `Magic Link successfully dispatched to ${email}`,
+    };
   }
 }

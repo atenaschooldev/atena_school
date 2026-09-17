@@ -258,6 +258,11 @@ export class CreateReservationDto {
   @IsInt({ message: 'paymentStatus должен быть числовым энамом (1..7)' })
   paymentStatus?: BookingPaymentStatus;
 
+  @ApiPropertyOptional({ description: 'Ключ идемпотентности для предотвращения дублирования бронирований', example: 'client_req_123456789' })
+  @IsOptional()
+  @IsString()
+  idempotencyKey?: string;
+
   @ApiPropertyOptional({
     description: 'Способ оплаты (строго числовой код): 1=STRIPE, 2=CASH, 3=POS, 4=BANK_TRANSFER',
     enum: PaymentMethod,
