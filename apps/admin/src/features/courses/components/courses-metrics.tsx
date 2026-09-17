@@ -9,8 +9,8 @@ export interface CoursesMetricsProps {
 
 export function CoursesMetrics({ courses }: CoursesMetricsProps) {
   const { t } = useTranslation();
-  const activeCount = courses.filter((c) => (c.stato || "").toLowerCase() === "attivo").length;
-  const inProgCount = courses.filter((c) => (c.stato || "").toLowerCase() === "in-programmazione").length;
+  const activeCount = courses.filter((c) => String(c.stato ?? "").toLowerCase() === "attivo" || Number(c.stato) === 1).length;
+  const inProgCount = courses.filter((c) => String(c.stato ?? "").toLowerCase() === "in-programmazione" || Number(c.stato) === 0).length;
   const totalLessonsCount = courses.reduce((acc, c) => acc + (c.totalLessons || 0), 0);
 
   const metrics = [

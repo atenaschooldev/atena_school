@@ -9,9 +9,9 @@ export interface UsersMetricsProps {
 }
 
 export function UsersMetrics({ users }: UsersMetricsProps) {
-  const adminCount = users.filter((u) => (u.role || "").toLowerCase() === "admin").length;
-  const teacherCount = users.filter((u) => (u.role || "").toLowerCase() === "teacher").length;
-  const studentCount = users.filter((u) => (u.role || "").toLowerCase() === "student").length;
+  const adminCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "admin").length;
+  const teacherCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "teacher").length;
+  const studentCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "student").length;
 
   const metrics = [
     {

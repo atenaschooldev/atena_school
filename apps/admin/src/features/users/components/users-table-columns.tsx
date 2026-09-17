@@ -91,7 +91,7 @@ export function getUsersTableColumns({
       accessorKey: "role",
       header: "Ruolo",
       cell: ({ row }) => {
-        const role = (row.original.role || "").toLowerCase();
+        const role = String(row.original.role ?? "").toLowerCase();
         if (role === "admin") {
           return (
             <Badge variant="secondary" className="bg-purple-50 text-purple-700 dark:bg-purple-950/20 border border-purple-500/30 gap-1 text-xs">

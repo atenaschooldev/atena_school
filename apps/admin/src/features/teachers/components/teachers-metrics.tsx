@@ -9,7 +9,10 @@ export interface TeachersMetricsProps {
 }
 
 export function TeachersMetrics({ teachers }: TeachersMetricsProps) {
-  const activeCount = teachers.filter((t) => (t.status || "").toLowerCase() === "active" || (t.status || "").toLowerCase() === "attivo").length;
+  const activeCount = teachers.filter((t) => {
+    const s = String(t.status ?? "").toLowerCase();
+    return s === "active" || s === "attivo" || Number(t.status) === 1;
+  }).length;
   const totalLessons = teachers.reduce((acc, t) => acc + (t.lessonCount || 0), 0);
   const totalCourses = teachers.reduce((acc, t) => acc + (t.courseCount || 0), 0);
 

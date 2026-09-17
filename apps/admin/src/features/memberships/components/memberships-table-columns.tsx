@@ -122,7 +122,7 @@ export function getMembershipsTableColumns({
       enableHiding: false,
       cell: ({ row }) => {
         const m = row.original;
-        const isRevoked = (m.status || "").toLowerCase() === "revoked";
+        const isRevoked = String(m.status ?? "").toLowerCase() === "revoked" || Number(m.status) === 2;
         return (
           <div className="flex items-center gap-1">
             <Button
