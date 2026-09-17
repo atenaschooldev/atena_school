@@ -58,7 +58,12 @@ export interface ContactFormPayload {
 
 export function createApiClient(baseUrl?: string) {
   const envUrl = typeof process !== "undefined" && process?.env ? process.env.NEXT_PUBLIC_BACKEND_URL : undefined;
-  const apiBase = baseUrl || envUrl || "http://localhost:4000";
+  const isBrowser = typeof window !== "undefined";
+  const apiBase = baseUrl !== undefined
+    ? baseUrl
+    : (envUrl !== undefined
+        ? envUrl
+        : (isBrowser ? "" : "http://localhost:4000"));
 
   return {
     landing: {
