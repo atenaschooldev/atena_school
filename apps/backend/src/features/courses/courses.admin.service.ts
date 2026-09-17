@@ -179,9 +179,9 @@ export class CoursesService {
     if (teacherId) {
       try {
         await this.prisma.$executeRaw`
-          INSERT INTO course_teachers (course_id, teacher_id)
-          VALUES (${c.id}::uuid, ${teacherId}::uuid)
-          ON CONFLICT DO NOTHING
+          INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
+          VALUES (${c.id}::uuid, ${teacherId}::uuid, 1, true)
+          ON CONFLICT (course_id, teacher_id) DO UPDATE SET is_primary = true, role = 1
         `;
       } catch {}
     }
@@ -235,12 +235,12 @@ export class CoursesService {
     // Sync course_teachers pivot if teacher changed
     if (dto.teacherId !== undefined || dto.teacher_id !== undefined) {
       const newTeacherId: string | null = dto.teacherId ?? dto.teacher_id ?? null;
-      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${id}::uuid`;
+      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${id}::uuid AND is_primary = true`;
       if (newTeacherId) {
         await this.prisma.$executeRaw`
-          INSERT INTO course_teachers (course_id, teacher_id)
-          VALUES (${id}::uuid, ${newTeacherId}::uuid)
-          ON CONFLICT DO NOTHING
+          INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
+          VALUES (${id}::uuid, ${newTeacherId}::uuid, 1, true)
+          ON CONFLICT (course_id, teacher_id) DO UPDATE SET is_primary = true, role = 1
         `;
       }
     }

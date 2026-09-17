@@ -1622,6 +1622,52 @@ export const COURSE_FORMAT_DICTIONARY: Record<CourseFormat, DictionaryEntry> = {
   },
 };
 
+export const CourseTeacherRole = {
+  PRIMARY: 1,    // Main / Lead Teacher (Docente Principale)
+  ASSISTANT: 2,  // Co-teacher / Assistant (Docente di Supporto / Assistente)
+  SUBSTITUTE: 3, // Substitute (Docente Sostituto)
+} as const;
+export type CourseTeacherRole = (typeof CourseTeacherRole)[keyof typeof CourseTeacherRole];
+
+export const COURSE_TEACHER_ROLE_DICTIONARY: Record<CourseTeacherRole, DictionaryEntry> = {
+  [CourseTeacherRole.PRIMARY]: {
+    id: 1,
+    code: 'PRIMARY',
+    label_it: 'Docente Principale',
+    label_en: 'Primary / Lead Teacher',
+    label_ru: 'Основной преподаватель',
+    description: 'Ведущий преподаватель курса',
+  },
+  [CourseTeacherRole.ASSISTANT]: {
+    id: 2,
+    code: 'ASSISTANT',
+    label_it: 'Docente di Supporto',
+    label_en: 'Assistant / Co-teacher',
+    label_ru: 'Второй преподаватель / Ассистент',
+    description: 'Второй преподаватель или ассистент курса',
+  },
+  [CourseTeacherRole.SUBSTITUTE]: {
+    id: 3,
+    code: 'SUBSTITUTE',
+    label_it: 'Sostituto',
+    label_en: 'Substitute Teacher',
+    label_ru: 'Замещающий преподаватель',
+    description: 'Преподаватель на замену',
+  },
+};
+
+export function parseCourseTeacherRole(val: any): CourseTeacherRole {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 3) return val as CourseTeacherRole;
+    return CourseTeacherRole.PRIMARY;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'primary' || s === 'lead' || s === 'principale' || s === 'main') return CourseTeacherRole.PRIMARY;
+  if (s === '2' || s === 'assistant' || s === 'supporto' || s === 'co-teacher' || s === 'coteacher') return CourseTeacherRole.ASSISTANT;
+  if (s === '3' || s === 'substitute' || s === 'sostituto' || s === 'replacement') return CourseTeacherRole.SUBSTITUTE;
+  return CourseTeacherRole.PRIMARY;
+}
+
 export function parseCourseStatus(val: any): CourseStatus {
   if (typeof val === 'number') {
     if (val >= 1 && val <= 3) return val as CourseStatus;

@@ -80,13 +80,17 @@ model Teacher {
 }
 
 model CourseTeacher {
-  courseId  String @map("course_id") @db.Uuid
-  teacherId String @map("teacher_id") @db.Uuid
+  courseId  String   @map("course_id") @db.Uuid
+  teacherId String   @map("teacher_id") @db.Uuid
+  role      Int      @default(1) @db.SmallInt
+  isPrimary Boolean  @default(true) @map("is_primary")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade)
 
   @@id([courseId, teacherId])
+  @@index([teacherId], map: "idx_course_teachers_teacher_id")
   @@map("course_teachers")
 }
 
