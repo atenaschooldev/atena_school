@@ -26,6 +26,8 @@ model User {
   sdi_code   String?
   pec_email  String?
 
+  bookings   Booking[]
+
   @@map("users")
 }
 
@@ -101,51 +103,71 @@ model CourseTeacher {
 
 model Booking {
   id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sessionId            String?   @map("session_id")
   userId               String?   @map("user_id") @db.Uuid
-  session_id           String?
+  studentId            String?   @map("student_id") @db.Uuid
   courseId             String?   @map("course_id") @db.Uuid
-  startDate            DateTime? @map("start_date") @db.Date
-  paymentStatus        Int       @default(1) @map("payment_status")
+  courseName           String?   @map("course_name")
+
   studentName          String    @map("student_name")
   studentEmail         String?   @map("student_email")
   studentPhone         String?   @map("student_phone")
-  notes                String?
-  createdAt            DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  subscriptionStartsAt DateTime? @map("subscription_starts_at") @db.Timestamptz(6)
-  subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
-  schedulingStatus     Int?      @default(1) @map("scheduling_status")
-  booking_status       Int       @default(1)
-  paymentMethod        Int       @default(1) @map("payment_method")
-  amountPaid           Decimal?  @map("amount_paid") @db.Decimal
-  totalLessonsCount    Int?      @map("total_lessons_count")
-  discount_amount      Decimal?  @default(0) @db.Decimal
-  promo_code           String?
-  student_id           String?   @db.Uuid
+  studentTaxCode       String?   @map("student_tax_code")
   studentBirthDate     DateTime? @map("student_birth_date") @db.Date
+
   purchaserName        String?   @map("purchaser_name")
-  sdiCode              String?   @map("sdi_code")
-  pecEmail             String?   @map("pec_email")
-  registrationFee      Decimal?  @default(0) @map("registration_fee") @db.Decimal
   purchaserEmail       String?   @map("purchaser_email")
   purchaserPhone       String?   @map("purchaser_phone")
-  studentTaxCode       String?   @map("student_tax_code")
   purchaserTaxCode     String?   @map("purchaser_tax_code")
-  courseName           String?   @map("course_name")
-  updated_at           DateTime? @default(now()) @db.Timestamptz(6)
+  sdiCode              String?   @map("sdi_code")
+  pecEmail             String?   @map("pec_email")
+
+  bookingStatus        Int       @default(1) @map("booking_status") @db.SmallInt
+  paymentStatus        Int       @default(1) @map("payment_status") @db.SmallInt
+  schedulingStatus     Int       @default(1) @map("scheduling_status") @db.SmallInt
+
+  billingScheme        Int       @default(1) @map("billing_scheme") @db.SmallInt
+  paymentMethod        Int       @default(1) @map("payment_method") @db.SmallInt
+  amountPaid           Decimal   @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  registrationFee      Decimal   @default(0.00) @map("registration_fee") @db.Decimal(10, 2)
+  discountAmount       Decimal   @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  promoCode            String?   @map("promo_code")
+
+  startDate            DateTime? @map("start_date") @db.Date
   scheduleDays         Int[]     @map("schedule_days")
   startTime            String?   @map("start_time")
   endTime              String?   @map("end_time")
-  billingScheme        Int       @default(1) @map("billing_scheme")
+  totalLessonsCount    Int?      @map("total_lessons_count")
+  notes                String?
+
   stripeCustomerId     String?   @map("stripe_customer_id")
   stripeSubscriptionId String?   @map("stripe_subscription_id")
   subscriptionStatus   Int?      @map("subscription_status") @db.SmallInt
-  cancelAtPeriodEnd    Boolean?  @default(false) @map("cancel_at_period_end")
+  subscriptionStartsAt DateTime? @map("subscription_starts_at") @db.Timestamptz(6)
+  subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
 
-  course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  lessons           Lesson[]
-  payments          Payment[]
-  attendanceRecords AttendanceRecord[]
+  course               Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  student              students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  user                 User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  lessons              Lesson[]
+  payments             Payment[]
+  attendanceRecords    AttendanceRecord[]
 
+  @@index([userId], map: "idx_bookings_user_id")
+  @@index([studentId], map: "idx_bookings_student_id")
+  @@index([courseId], map: "idx_bookings_course_id")
+  @@index([sessionId], map: "idx_bookings_session_id")
+  @@index([createdAt], map: "idx_bookings_created_at")
+  @@index([paymentStatus], map: "idx_bookings_payment_status")
+  @@index([bookingStatus], map: "idx_bookings_booking_status")
+  @@index([schedulingStatus], map: "idx_bookings_scheduling_status")
+  @@index([purchaserTaxCode], map: "idx_bookings_purchaser_tax_code")
+  @@index([studentTaxCode], map: "idx_bookings_student_tax_code")
+  @@index([stripeSubscriptionId], map: "idx_bookings_stripe_subscription_id")
+  @@index([studentId, courseId, paymentStatus, bookingStatus], map: "idx_bookings_active_services")
   @@map("bookings")
 }
 
@@ -296,6 +318,7 @@ model students {
   payments          Payment[]
   annualMemberships AnnualMembership[]
   lessons           Lesson[]
+  bookings          Booking[]
 }
 
 model AttendanceRecord {
