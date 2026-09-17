@@ -421,6 +421,17 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
     if (existingEvent) {
       return { received: true, duplicate: true };
     }
+
+    const { error: insertError } = await supabase
+      .from('stripe_webhook_events')
+      .insert({
+        stripe_event_id: event.id,
+        event_type: event.type,
+      });
+
+    if (insertError && (insertError.code === '23505' || insertError.message?.includes('duplicate key') || insertError.message?.includes('unique'))) {
+      return { received: true, duplicate: true };
+    }
   }
 
   // 1. Checkout Session Completed
@@ -548,13 +559,6 @@ export async function handleStripeWebhook(rawBody: string | Buffer, signature: s
       subscription_status: SubscriptionStatus.CANCELED,
       updated_at: new Date().toISOString(),
     }).eq('stripe_subscription_id', sub.id);
-  }
-
-  if (event && event.id) {
-    await supabase.from('stripe_webhook_events').insert({
-      stripe_event_id: event.id,
-      event_type: event.type,
-    });
   }
 
   return { received: true };

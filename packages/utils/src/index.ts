@@ -57,14 +57,66 @@ export interface ScheduledLesson {
   endsAt: string;   // ISO string with timezone
 }
 
-function getRomeOffsetHours(date: Date): number {
-  const romeString = date.toLocaleString("en-US", { timeZone: "Europe/Rome" });
-  const utcString = date.toLocaleString("en-US", { timeZone: "UTC" });
-  
-  const romeDate = new Date(romeString);
-  const utcDate = new Date(utcString);
-  
-  return Math.round((romeDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
+/**
+ * Deterministically converts a local Rome date & time to a precise UTC ISO-8601 string.
+ * Immune to Daylight Saving Time (DST) changes (UTC+1 CET / UTC+2 CEST) and server host timezones.
+ */
+export function romeDateTimeToIso(year: number, month: number, day: number, hour: number, min: number): string {
+  try {
+    const tentativeUtc = Date.UTC(year, month, day, hour, min, 0);
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Rome",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hourCycle: "h23",
+    });
+    const parts = dtf.formatToParts(new Date(tentativeUtc));
+    const p: Record<string, number> = {};
+    for (const part of parts) {
+      if (part.type !== "literal") {
+        p[part.type] = parseInt(part.value, 10);
+      }
+    }
+    const romeUtcMs = Date.UTC(p.year, p.month - 1, p.day, p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+    const offsetMs = romeUtcMs - tentativeUtc;
+    const exactUtcMs = tentativeUtc - offsetMs;
+    return new Date(exactUtcMs).toISOString();
+  } catch {
+    return new Date(Date.UTC(year, month, day, hour - 1, min, 0)).toISOString();
+  }
+}
+
+/**
+ * Get UTC offset in hours for Europe/Rome at a specific Date instance.
+ */
+export function getRomeOffsetHours(date: Date): number {
+  try {
+    const dtf = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Rome",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      hourCycle: "h23",
+    });
+    const parts = dtf.formatToParts(date);
+    const p: Record<string, number> = {};
+    for (const part of parts) {
+      if (part.type !== "literal") {
+        p[part.type] = parseInt(part.value, 10);
+      }
+    }
+    const romeUtcMs = Date.UTC(p.year, p.month - 1, p.day, p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+    return Math.round((romeUtcMs - date.getTime()) / (1000 * 60 * 60));
+  } catch {
+    return 1;
+  }
 }
 
 export function formatCourseDurationText(
@@ -104,15 +156,18 @@ export function formatCourseScheduleText(
 }
 
 /**
- * HMAC slot signature key for URL integrity check
+ * URL Checksum Salt for frontend query parameter integrity verification
+ * (Protects prefilled checkout query parameters from accidental URL corruption).
  */
-const SLOT_SECRET_SALT = "atena_slot_salt_2026";
+export const SLOT_CHECKSUM_SALT = "atena_slot_salt_2026";
+/** @deprecated Alias for backwards compatibility */
+export const SLOT_SECRET_SALT = SLOT_CHECKSUM_SALT;
 
 /**
- * Generate 8-character HMAC signature for course slot parameters
+ * Generate 8-character URL checksum for course slot query parameters
  */
 export function generateSlotSignature(itemSlugOrId: string, dateStr: string, daysSlug: string, timeSlug: string): string {
-  const payload = `${itemSlugOrId}:${dateStr}:${daysSlug}:${timeSlug}:${SLOT_SECRET_SALT}`;
+  const payload = `${itemSlugOrId}:${dateStr}:${daysSlug}:${timeSlug}:${SLOT_CHECKSUM_SALT}`;
   let hash = 0;
   for (let i = 0; i < payload.length; i++) {
     const char = payload.charCodeAt(i);
@@ -123,7 +178,7 @@ export function generateSlotSignature(itemSlugOrId: string, dateStr: string, day
 }
 
 /**
- * Verify HMAC slot signature for URL integrity check
+ * Verify 8-character URL checksum for course slot query parameters
  */
 export function verifySlotSignature(itemSlugOrId: string, dateStr?: string | null, daysSlug?: string | null, timeSlug?: string | null, sig?: string | null): boolean {
   if (!dateStr || !daysSlug || !timeSlug || !sig) return false;
@@ -287,13 +342,12 @@ export function calculateLessonDates(
     const month = baseDate.getMonth();
     const day = baseDate.getDate();
 
-    const candidateLocalStart = new Date(year, month, day, startHour, startMin, 0);
-    const romeOffsetHours = getRomeOffsetHours(candidateLocalStart);
+    const startIso = romeDateTimeToIso(year, month, day, startHour, startMin);
+    const endIso = new Date(new Date(startIso).getTime() + durationMinutes * 60 * 1000).toISOString();
 
-    const utcTimeMs = Date.UTC(year, month, day, startHour - romeOffsetHours, startMin, 0);
     return [{
-      startsAt: new Date(utcTimeMs).toISOString(),
-      endsAt: new Date(utcTimeMs + durationMinutes * 60 * 1000).toISOString(),
+      startsAt: startIso,
+      endsAt: endIso,
     }];
   }
 
@@ -331,12 +385,8 @@ export function calculateLessonDates(
       const month = currDate.getMonth();
       const day = currDate.getDate();
 
-      const candidateLocalStart = new Date(year, month, day, startHour, startMin, 0);
-      const romeOffsetHours = getRomeOffsetHours(candidateLocalStart);
-
-      const utcTimeMs = Date.UTC(year, month, day, startHour - romeOffsetHours, startMin, 0);
-      const startIso = new Date(utcTimeMs).toISOString();
-      const endIso = new Date(utcTimeMs + durationMinutes * 60 * 1000).toISOString();
+      const startIso = romeDateTimeToIso(year, month, day, startHour, startMin);
+      const endIso = new Date(new Date(startIso).getTime() + durationMinutes * 60 * 1000).toISOString();
 
       lessons.push({
         startsAt: startIso,

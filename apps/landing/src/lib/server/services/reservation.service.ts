@@ -301,18 +301,24 @@ export async function createReservation(dto: CreateReservationParams) {
       studentBirthDate: student.birthDate,
     };
 
-    await processStudentAndBookingLinks({
-      dto: studentDto,
-      bookingId: booking.id,
-      feeStatus,
-      regFee,
-      purchaserName,
-      studentName,
-      supabase,
-    });
+    try {
+      await processStudentAndBookingLinks({
+        dto: studentDto,
+        bookingId: booking.id,
+        feeStatus,
+        regFee,
+        purchaserName,
+        studentName,
+        supabase,
+      });
 
-    await generateAndSaveLessons(booking.id, course, lessons, supabase);
-    await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase);
+      await generateAndSaveLessons(booking.id, course, lessons, supabase);
+      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase);
+    } catch (stepErr) {
+      // Rollback created booking record on linkage / lessons failure
+      await supabase.from('bookings').delete().eq('id', booking.id);
+      throw stepErr;
+    }
   }
 
   const primaryBooking = createdBookings[0];
