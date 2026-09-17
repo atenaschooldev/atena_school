@@ -7,9 +7,11 @@ import {
   CourseStatus,
   CourseScheduleType,
   CourseFormat,
+  CourseCategory,
   parseCourseStatus,
   parseCourseScheduleType,
   parseCourseFormat,
+  parseCourseCategory,
 } from '@atena/api-types';
 import { slugify } from '@atena/utils';
 
@@ -78,7 +80,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
 
   async create(data: {
     name: string;
-    category?: string | null;
+    category?: CourseCategory | number | string | null;
     price?: number | null;
     status?: CourseStatus | number | string | null;
     photoUrl?: string | null;
@@ -99,7 +101,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
     const c = await this.prisma.course.create({
       data: {
         name: data.name,
-        category: data.category,
+        category: data.category !== undefined && data.category !== null ? parseCourseCategory(data.category) : CourseCategory.LANGUAGES,
         price: data.price != null ? new Prisma.Decimal(data.price) : null,
         status: data.status !== undefined && data.status !== null ? parseCourseStatus(data.status) : CourseStatus.ACTIVE,
         photoUrl: data.photoUrl,
@@ -124,7 +126,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
   async update(id: string, data: Partial<CourseEntity>): Promise<CourseEntity> {
     const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
-    if (data.category !== undefined) updateData.category = data.category;
+    if (data.category !== undefined && data.category !== null) updateData.category = parseCourseCategory(data.category);
     if (data.price !== undefined) updateData.price = data.price != null ? new Prisma.Decimal(data.price) : null;
     if (data.status !== undefined && data.status !== null) updateData.status = parseCourseStatus(data.status);
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;

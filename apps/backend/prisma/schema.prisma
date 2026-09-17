@@ -37,7 +37,7 @@ model Course {
   updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   name                  String
   slug                  String    @unique
-  category              String?
+  category              Int       @default(1) @db.SmallInt
   status                Int       @default(1) @db.SmallInt
   sortOrder             Int?      @default(0) @map("sort_order")
   photoUrl              String?   @map("photo_url")

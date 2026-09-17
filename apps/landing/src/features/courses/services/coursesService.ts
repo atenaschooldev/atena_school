@@ -4,7 +4,7 @@ import { slugify } from "@/lib/utils";
 
 
 
-import type { CourseItem } from "@atena/api-types";
+import { CourseItem, CourseCategory, COURSE_CATEGORY_DICTIONARY, parseCourseCategory } from "@atena/api-types";
 
 export interface ResolvedCourse {
   id: string;
@@ -43,34 +43,32 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
   let courseSections: Array<{ id: string; title: string; courses: CourseItem[] }> = [];
 
   if (supabaseCourses && supabaseCourses.length > 0) {
-    const categoriesMap: Record<string, CourseItem[]> = {};
+    const categoriesMap: Record<number, CourseItem[]> = {};
     supabaseCourses.forEach((course) => {
-      const cat = course.category || "Other";
-      if (!categoriesMap[cat]) {
-        categoriesMap[cat] = [];
+      const catId = parseCourseCategory(course.category);
+      if (!categoriesMap[catId]) {
+        categoriesMap[catId] = [];
       }
-      categoriesMap[cat].push(course as unknown as CourseItem);
+      categoriesMap[catId].push(course as unknown as CourseItem);
     });
 
-    courseSections = Object.entries(categoriesMap).map(([catName, courses]) => {
-      let sectionTitle = catName;
-      const lowerCat = catName.toLowerCase();
-      if (lowerCat === "languages" || lowerCat === "language") {
+    courseSections = Object.entries(categoriesMap).map(([catKey, courses]) => {
+      const catId = Number(catKey) as CourseCategory;
+      let sectionTitle = COURSE_CATEGORY_DICTIONARY[catId]?.label_it || "Altro";
+      if (catId === CourseCategory.LANGUAGES) {
         sectionTitle = t("sections.language");
-      } else if (lowerCat === "academic" || lowerCat === "recupero") {
+      } else if (catId === CourseCategory.ACADEMIC) {
         sectionTitle = t("sections.academic");
-      } else if (lowerCat === "certipass" || lowerCat === "eipass") {
+      } else if (catId === CourseCategory.CERTIPASS) {
         sectionTitle = t("sections.certipass");
       }
       return {
-        id: catName,
+        id: String(catId),
         title: sectionTitle,
         courses
       };
     });
   }
-
-
 
   // Resolve all sections into clean structures
   const resolvedSections = courseSections.map((section) => {
@@ -132,7 +130,7 @@ export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
 
   // Sort sections: place "Corsi di lingua" (languages) first
   const langIndex = resolvedSections.findIndex(
-    (s) => s.id.toLowerCase() === "languages" || s.id.toLowerCase() === "language"
+    (s) => s.id === String(CourseCategory.LANGUAGES) || s.id.toLowerCase() === "languages" || s.id.toLowerCase() === "language"
   );
   if (langIndex > 0) {
     const [langSection] = resolvedSections.splice(langIndex, 1);

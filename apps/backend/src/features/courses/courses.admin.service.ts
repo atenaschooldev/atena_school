@@ -7,16 +7,18 @@ import {
   CourseStatus,
   CourseScheduleType,
   CourseFormat,
+  CourseCategory,
   parseCourseStatus,
   parseCourseScheduleType,
   parseCourseFormat,
+  parseCourseCategory,
 } from '@atena/api-types';
 
 export interface CourseResponseDto {
   id: string;
   name: string;
   title: string;
-  category: string | null;
+  category: CourseCategory | number | string | null;
   price: number | null;
   status: CourseStatus | number | null;
   photoUrl: string | null;
@@ -117,8 +119,11 @@ export class CoursesService {
     let list = await this.coursesRepository.findMany();
 
     if (params?.category) {
-      const cat = params.category.toLowerCase().trim();
-      list = list.filter((c) => (c.category || '').toLowerCase().includes(cat));
+      const targetCat = parseCourseCategory(params.category);
+      list = list.filter((c) => {
+        const cat = c.category != null ? parseCourseCategory(c.category) : null;
+        return cat === targetCat;
+      });
     }
     if (params?.status !== undefined && params?.status !== null && params?.status !== '') {
       const targetStatus = parseCourseStatus(params.status);
@@ -153,10 +158,11 @@ export class CoursesService {
     const rawStatus = dto.status ?? dto.stato;
     const rawSchedule = dto.scheduleType ?? dto.schedule_type;
     const rawFormat = dto.courseFormat ?? dto.course_format;
+    const rawCategory = dto.category ?? dto.categoria;
 
     const c = await this.coursesRepository.create({
       name: courseName,
-      category: dto.category ?? dto.categoria ?? null,
+      category: rawCategory != null ? parseCourseCategory(rawCategory) : CourseCategory.LANGUAGES,
       price: (dto.price != null ? Number(dto.price) : (dto.prezzo != null ? Number(dto.prezzo) : null)),
       status: rawStatus != null ? parseCourseStatus(rawStatus) : CourseStatus.ACTIVE,
       teacherId,
@@ -195,8 +201,8 @@ export class CoursesService {
     if (dto.title !== undefined) updateData.name = dto.title;
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.nome !== undefined) updateData.name = dto.nome;
-    if (dto.category !== undefined) updateData.category = dto.category;
-    if (dto.categoria !== undefined) updateData.category = dto.categoria;
+    if (dto.category !== undefined) updateData.category = parseCourseCategory(dto.category);
+    if (dto.categoria !== undefined) updateData.category = parseCourseCategory(dto.categoria);
     if (dto.price !== undefined) updateData.price = dto.price != null ? Number(dto.price) : null;
     if (dto.prezzo !== undefined) updateData.price = dto.prezzo != null ? Number(dto.prezzo) : null;
     if (dto.status !== undefined) updateData.status = parseCourseStatus(dto.status);

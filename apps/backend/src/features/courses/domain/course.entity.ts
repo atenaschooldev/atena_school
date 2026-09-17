@@ -1,4 +1,4 @@
-import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType } from '@atena/api-types';
+import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType, CourseCategory } from '@atena/api-types';
 
 export class CourseEntity {
   id: string;
@@ -6,7 +6,7 @@ export class CourseEntity {
   updatedAt?: Date | null;
   name: string;
   slug?: string | null;
-  category?: string | null;
+  category?: CourseCategory | number | string | null;
   status?: CourseStatus | number | string | null;
   sortOrder?: number | null;
   photoUrl?: string | null;

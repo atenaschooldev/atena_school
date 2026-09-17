@@ -1,12 +1,12 @@
 import { CourseEntity } from './course.entity';
-import { CourseStatus, CourseScheduleType, CourseFormat } from '@atena/api-types';
+import { CourseStatus, CourseScheduleType, CourseFormat, CourseCategory } from '@atena/api-types';
 
 export abstract class CoursesRepository {
   abstract findMany(): Promise<CourseEntity[]>;
   abstract findOne(id: string): Promise<CourseEntity | null>;
   abstract create(data: {
     name: string;
-    category?: string | null;
+    category?: CourseCategory | number | string | null;
     price?: number | null;
     status?: CourseStatus | number | string | null;
     photoUrl?: string | null;
