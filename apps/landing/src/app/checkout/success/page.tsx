@@ -18,12 +18,10 @@ import {
 import { Link } from "@/i18n/routing";
 import { CheckoutStepper } from "@/components/checkout/CheckoutStepper";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
+import { useMounted } from "@/hooks/useMounted";
 
 function SuccessContent() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const {
     router,

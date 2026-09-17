@@ -41,7 +41,6 @@ export async function generateMetadata() {
       canonical: siteUrl,
       languages: {
         'it-IT': siteUrl,
-        'en-US': `${siteUrl}/en`,
       },
     },
     other: {

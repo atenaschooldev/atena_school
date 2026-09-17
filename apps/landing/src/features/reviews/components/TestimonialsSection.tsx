@@ -131,8 +131,10 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
   useEffect(() => {
     if (!emblaApi) return;
 
-    onSelect();
     emblaApi.on("select", onSelect);
+    queueMicrotask(() => {
+      onSelect();
+    });
 
     let intervalId: NodeJS.Timeout;
 

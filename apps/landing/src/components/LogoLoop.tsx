@@ -63,6 +63,7 @@ const useResizeObserver = (
     return () => {
       observers.forEach(observer => observer?.disconnect());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callback, elements, ...dependencies]);
 };
 
@@ -97,6 +98,7 @@ const useImageLoader = (
         img.removeEventListener('error', handleImageLoad);
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onLoad, seqRef, ...dependencies]);
 };
 
@@ -343,6 +345,7 @@ export const LogoLoop = memo(
             {item.node}
           </span>
         ) : (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={item.src}
             srcSet={item.srcSet}

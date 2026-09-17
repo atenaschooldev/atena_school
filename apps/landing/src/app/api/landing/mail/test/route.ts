@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateInternalAuth } from '@/lib/server/api-auth';
 
 export async function POST(request: NextRequest) {
+  const auth = validateInternalAuth(request);
+  if (!auth.authorized) {
+    return auth.errorResponse!;
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const targetEmail = body.to || 'atenaschool20@gmail.com';

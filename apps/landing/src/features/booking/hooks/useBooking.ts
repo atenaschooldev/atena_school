@@ -40,17 +40,13 @@ export function useBooking(
   );
   const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || null);
 
+  const effectiveSelectedTime = selectedTime || (isFixedSchedule && selectedDate ? formattedTimeRange : null);
+
   useEffect(() => {
     if (user && dateParam && timeParam) {
       router.push(`/checkout/${id}?date=${dateParam}&time=${timeParam}`);
     }
   }, [user, id, dateParam, timeParam, router]);
-
-  useEffect(() => {
-    if (isFixedSchedule && selectedDate && !selectedTime) {
-      setSelectedTime(formattedTimeRange);
-    }
-  }, [isFixedSchedule, selectedDate, selectedTime, formattedTimeRange]);
 
   const title = item?.title_it || item?.name || "Lezione / Corso Atena";
   const courseDuration = formatCourseDurationText(item?.lesson_duration_minutes, item?.total_hours, item?.total_lessons);
@@ -60,9 +56,9 @@ export function useBooking(
       router.push(`/checkout/${id}`);
       return;
     }
-    if (!selectedDate || !selectedTime) return;
+    if (!selectedDate || !effectiveSelectedTime) return;
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const targetUrl = buildCheckoutUrl(id, dateStr, selectedTime);
+    const targetUrl = buildCheckoutUrl(id, dateStr, effectiveSelectedTime);
     router.push(targetUrl);
   };
 
@@ -74,7 +70,7 @@ export function useBooking(
     allowedDays,
     selectedDate,
     setSelectedDate,
-    selectedTime,
+    selectedTime: effectiveSelectedTime,
     setSelectedTime,
     title,
     courseDuration,

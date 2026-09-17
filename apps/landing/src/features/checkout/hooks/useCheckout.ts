@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useSearchParams } from "next/navigation";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
@@ -175,7 +175,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
 
     initCheckout();
-  }, [id, DRAFT_STORAGE_KEY, formMethods]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, DRAFT_STORAGE_KEY]);
 
   // BigTech pattern: debounced auto-save form draft to sessionStorage
   useEffect(() => {
@@ -216,7 +217,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const watchedPurchaserTaxCode = useWatch({ control: formMethods.control, name: "purchaserTaxCode" });
   const watchedIsForChild = useWatch({ control: formMethods.control, name: "isForChild" });
   const watchedStudents = useWatch({ control: formMethods.control, name: "students" });
-  const studentsList = watchedStudents || [];
+  const studentsList: StudentItemInput[] = useMemo(() => (watchedStudents as StudentItemInput[]) || [], [watchedStudents]);
 
   // Sync taxCode when toggling isForChild
   useEffect(() => {
@@ -337,7 +338,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     return () => {
       timers.forEach((t) => clearTimeout(t));
     };
-  }, [studentTaxCodesKey, watchedIsForChild]);
+  }, [studentTaxCodesKey, watchedIsForChild, studentsList]);
 
   // Single purchaser fee check (when isForChild is false)
   useEffect(() => {

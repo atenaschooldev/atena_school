@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Link } from "@/i18n/routing";
 
+import { useMounted } from "@/hooks/useMounted";
+
 type CookieSelection = {
   mandatory: boolean;
   analytics: boolean;
@@ -16,7 +18,8 @@ type CookieSelection = {
 
 export default function CookieBanner() {
   const t = useTranslations("cookieBanner");
-  const [isVisible, setIsVisible] = useState(false);
+  const mounted = useMounted();
+  const [dismissed, setDismissed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [selection, setSelection] = useState<CookieSelection>({
     mandatory: true,
@@ -24,12 +27,8 @@ export default function CookieBanner() {
     marketing: true,
   });
 
-  useEffect(() => {
-    const consent = localStorage.getItem("cookie-consent");
-    if (!consent) {
-      setIsVisible(true);
-    }
-  }, []);
+  const hasConsent = typeof window !== "undefined" && Boolean(localStorage.getItem("cookie-consent"));
+  const isVisible = mounted && !hasConsent && !dismissed;
 
   const handleAcceptAll = () => {
     const allSelected = { mandatory: true, analytics: true, marketing: true };
@@ -47,7 +46,7 @@ export default function CookieBanner() {
 
   const saveConsent = (data: CookieSelection) => {
     localStorage.setItem("cookie-consent", JSON.stringify(data));
-    setIsVisible(false);
+    setDismissed(true);
     // Force a reload or notify other components if needed
     window.dispatchEvent(new Event("cookie-consent-updated"));
   };

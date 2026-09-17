@@ -1,1 +1,2 @@
-export default {};
+const emptyMock = {};
+export default emptyMock;

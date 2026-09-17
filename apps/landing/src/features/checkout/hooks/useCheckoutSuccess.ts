@@ -165,15 +165,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
   // Auto-send magic link for non-Gmail guests
   useEffect(() => {
-    if (verifying) return;
-    if (user) return;
-    if (!emailDisplay) return;
-    if (isGmail) return;
-
-    if (!isPaid) {
-      setMagicLinkSent(true);
-      return;
-    }
+    if (verifying || user || !emailDisplay || isGmail || !isPaid) return;
 
     if (sentRef.current) return;
     sentRef.current = true;

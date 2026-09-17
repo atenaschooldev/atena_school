@@ -39,7 +39,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
 
       return () => clearTimeout(timer);
     }
-  }, [answers, currentIndex, shuffledQuestions.length]);
+  }, [answers, currentIndex, shuffledQuestions.length, handleNext]);
 
   const handleBack = () => {
     handlePrev();

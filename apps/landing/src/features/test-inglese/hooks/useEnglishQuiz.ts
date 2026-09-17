@@ -92,16 +92,10 @@ export const LEVEL_DESCRIPTIONS: Record<string, string> = {
 };
 
 export function useEnglishQuiz() {
-  const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>([]);
+  const [shuffledQuestions] = useState<Question[]>(() => [...QUESTIONS].sort(() => Math.random() - 0.5));
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<(string | null)[]>([]);
+  const [answers, setAnswers] = useState<(string | null)[]>(() => new Array(QUESTIONS.length).fill(null));
   const [completed, setCompleted] = useState(false);
-
-  useEffect(() => {
-    const shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
-    setShuffledQuestions(shuffled);
-    setAnswers(new Array(shuffled.length).fill(null));
-  }, []);
 
   useEffect(() => {
     if (completed) {

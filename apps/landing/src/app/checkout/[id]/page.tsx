@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { it as dateLocale } from "date-fns/locale";
 import { toast } from "sonner";
 import { useCheckout } from "@/features/checkout/hooks/useCheckout";
+import { useMounted } from "@/hooks/useMounted";
 import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
 import {
   CheckoutHeader,
@@ -42,22 +43,17 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
   const isForChild = watch("isForChild");
   const includeRegistrationFee = watch("includeRegistrationFee");
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">("book");
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">(
+    stripeEnabled ? "pay" : "book"
+  );
+  const [prevStripeEnabled, setPrevStripeEnabled] = useState(stripeEnabled);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!stripeEnabled) {
-      setSelectedPaymentMode("book");
-      setValue("includeRegistrationFee", false);
-    } else {
-      setSelectedPaymentMode("pay");
-      setValue("includeRegistrationFee", true);
-    }
-  }, [stripeEnabled, setValue]);
+  if (prevStripeEnabled !== stripeEnabled) {
+    setPrevStripeEnabled(stripeEnabled);
+    setSelectedPaymentMode(stripeEnabled ? "pay" : "book");
+    setValue("includeRegistrationFee", stripeEnabled);
+  }
 
   if (!mounted || loading) {
     return (

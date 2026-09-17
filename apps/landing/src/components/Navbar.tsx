@@ -8,15 +8,21 @@ import { InstagramLogo, FacebookLogo, House, Users, GraduationCap, EnvelopeSimpl
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
+import { useMounted } from "@/hooks/useMounted";
 import { env } from "@/config/env";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const t = useTranslations("nav");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    setOpen(false);
+  }
   const isHome = pathname === "/";
   const currentLocale = useLocale();
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -72,11 +78,6 @@ const Navbar = () => {
     };
   }, [open]);
 
-  // Reset mobile menu on page transition or Escape key
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,10 +88,6 @@ const Navbar = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLinkClick = (href: string) => {
     setOpen(false);

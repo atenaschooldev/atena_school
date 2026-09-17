@@ -1,4 +1,5 @@
 import { getBlogPostDetail, getBlogStaticParams } from "@/features/blog/services/blogService";
+import Image from "next/image";
 import Link from "next/link";
 import { CaretLeft, Calendar, ShareNetwork } from "@/components/Icons";
 import { notFound } from "next/navigation";
@@ -86,10 +87,13 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         {/* Featured Image */}
         {post.mainImage && (
           <div className="relative aspect-[21/9] rounded-3xl overflow-hidden mb-16 shadow-2xl">
-            <img
+            <Image
               src={post.mainImage}
               alt={post.title}
-              className="object-cover w-full h-full"
+              fill
+              sizes="(max-width: 1200px) 100vw, 1200px"
+              priority
+              className="object-cover"
             />
           </div>
         )}
