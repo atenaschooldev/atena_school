@@ -145,11 +145,11 @@ export function useContactForm() {
           }
           setFieldErrors(errorsMap);
         }
-        setError(data.error || "Qualcosa è andato storto. Riprova più tardi.");
+        setError(data.error || "Something went wrong. Please try again later.");
       }
     } catch (err: any) {
       console.error(err);
-      setError("Errore di connessione. Riprova più tardi.");
+      setError("Network connection error. Please try again later.");
     } finally {
       setLoading(false);
     }

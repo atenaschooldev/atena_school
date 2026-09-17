@@ -154,10 +154,10 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     api.auth.sendMagicLink(emailDisplay).then((res) => {
       setSendingMagicLink(false);
       if (res.success) {
-        toast.success(`Magic Link inviato a ${emailDisplay}! Controlla la tua posta.`);
+        toast.success(`Magic Link sent to ${emailDisplay}! Check your inbox.`);
         setMagicLinkSent(true);
       } else {
-        toast.error(res.error || "Errore durante l'invio del link");
+        toast.error(res.error || "Failed to dispatch magic link");
       }
     });
   }, [verifying, user, emailDisplay, isGmail, isPaid]);
@@ -165,7 +165,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
   const handleSendMagicLink = async () => {
     const emailToSend = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email;
     if (!emailToSend) {
-      toast.error("Email non trovata per l'invio del link");
+      toast.error("Email address not found for magic link delivery");
       return;
     }
 
@@ -174,10 +174,10 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
     setSendingMagicLink(false);
 
     if (res.success) {
-      toast.success(`Magic Link inviato a ${emailToSend}! Controlla la tua posta.`);
+      toast.success(`Magic Link sent to ${emailToSend}! Check your inbox.`);
       setMagicLinkSent(true);
     } else {
-      toast.error(res.error || "Errore durante l'invio del link");
+      toast.error(res.error || "Failed to dispatch magic link");
     }
   };
 

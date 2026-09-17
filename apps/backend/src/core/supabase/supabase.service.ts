@@ -19,9 +19,9 @@ export class SupabaseService implements OnModuleInit {
           autoRefreshToken: false,
         },
       });
-      console.log('[SUPABASE]: Клиент успешно инициализирован.');
+      console.log('[SUPABASE]: Client successfully initialized.');
     } else {
-      console.warn('[SUPABASE WARNING]: Переменные окружения SUPABASE_URL и SUPABASE_KEY не заданы. Клиент работает в MOCK-режиме.');
+      console.warn('[SUPABASE WARNING]: Environment variables SUPABASE_URL and SUPABASE_KEY are not set. Client running in MOCK mode.');
     }
   }
 

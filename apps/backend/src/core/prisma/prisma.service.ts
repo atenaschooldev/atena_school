@@ -17,10 +17,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleInit() {
     try {
       await this.$connect();
-      console.log('[PRISMA]: Успешно подключено к базе данных.');
+      console.log('[PRISMA]: Database connection successfully established.');
     } catch (err: any) {
       console.warn(
-        `[PRISMA WARNING]: Не удалось подключиться к базе данных при запуске: ${err.message}. Убедитесь, что сервер БД запущен и доступен.`,
+        `[PRISMA WARNING]: Could not connect to database on startup: ${err.message}. Make sure DB server is running and accessible.`,
       );
     }
   }
@@ -28,9 +28,9 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   async onModuleDestroy() {
     try {
       await this.$disconnect();
-      console.log('[PRISMA]: Соединение с базой данных закрыто.');
+      console.log('[PRISMA]: Database connection closed.');
     } catch (err: any) {
-      console.warn(`[PRISMA WARNING]: Ошибка при закрытии соединения: ${err.message}`);
+      console.warn(`[PRISMA WARNING]: Error closing database connection: ${err.message}`);
     }
   }
 }

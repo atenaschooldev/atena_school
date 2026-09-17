@@ -59,7 +59,7 @@ export async function updateSystemSettings(settings: { stripeEnabled: boolean })
 export async function createStripeSession(dto: CreateReservationParams) {
   const settings = await getSystemSettings();
   if (!settings.stripeEnabled) {
-    throw new Error('I pagamenti online sono temporaneamente disabilitati. Si prega di selezionare la prenotazione con saldo in sede.');
+    throw new Error('Online payments are temporarily disabled. Please choose the pay on-site reservation option.');
   }
 
   const supabase = getSupabaseAdmin();

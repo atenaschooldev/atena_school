@@ -78,7 +78,7 @@ export function rateLimitExceededResponse(retryAfter: number = 60): NextResponse
   return NextResponse.json(
     {
       success: false,
-      error: 'Troppe richieste. Riprova tra qualche secondo.',
+      error: 'Too many requests. Please try again later.',
       retryAfter,
     },
     {

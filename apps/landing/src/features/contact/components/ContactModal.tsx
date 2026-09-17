@@ -189,11 +189,11 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
           }
           setFieldErrors(errorsMap);
         }
-        setError(res.error || "Qualcosa è andato storto. Riprova più tardi.");
+        setError(res.error || "Something went wrong. Please try again later.");
       }
     } catch (err: any) {
       console.error(err);
-      setError("Errore di rete. Riprova più tardi.");
+      setError("Network error. Please try again later.");
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,7 @@ export async function submitContact(dto: ContactFormParams) {
 
   if (error) {
     console.error('Contact message insert error:', error.message);
-    throw new Error(`Impossibile inviare il messaggio: ${error.message}`);
+    throw new Error(`Failed to submit message: ${error.message}`);
   }
 
   // Asynchronously send notification email to school admin
@@ -37,5 +37,5 @@ export async function submitContact(dto: ContactFormParams) {
     }).catch((err) => console.warn('Async contact email notification error:', err));
   });
 
-  return { success: true, message: 'Messaggio inviato con successo' };
+  return { success: true, message: 'Message sent successfully' };
 }

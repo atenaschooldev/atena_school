@@ -419,7 +419,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const handleBook = async (values: CheckoutFormValues) => {
     if (!item) {
-      toast.error("Servizio non trovato");
+      toast.error("Service not found");
       return;
     }
 
@@ -429,16 +429,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       const res = await api.checkout.reserve(payload as unknown as Record<string, unknown>);
 
       if (!res.success) {
-        toast.error(res.error || "Errore durante la prenotazione");
+        toast.error(res.error || "Reservation failed");
         return;
       }
 
       const bookingId = res.bookingId || res.booking?.id || (res.bookingIds && res.bookingIds[0]) || "";
       clearDraft();
-      toast.success("Prenotazione completata con successo!");
+      toast.success("Reservation completed successfully!");
       router.push(`/checkout/success?booking_id=${bookingId}&email=${encodeURIComponent(values.email)}`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Errore imprevisto";
+      const msg = err instanceof Error ? err.message : "Unexpected error occurred";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -447,7 +447,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const handlePay = async (values: CheckoutFormValues) => {
     if (!item) {
-      toast.error("Servizio non trovato");
+      toast.error("Service not found");
       return;
     }
 
@@ -457,14 +457,14 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       const res = await api.checkout.createStripeSession(payload as unknown as Record<string, unknown>);
 
       if (!res.success || !res.url) {
-        toast.error(res.error || "Impossibile avviare il pagamento con Stripe");
+        toast.error(res.error || "Failed to initialize Stripe checkout session");
         return;
       }
 
       clearDraft();
       window.location.href = res.url;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Errore imprevisto";
+      const msg = err instanceof Error ? err.message : "Unexpected error occurred";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -473,7 +473,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const onSubmit = (values: CheckoutFormValues) => {
     if (feeCheckStatus === FeeCheckStatus.CHECKING || isAnyFeeChecking) {
-      toast.info("Verifica della quota associativa in corso, attendere un istante...");
+      toast.info("Checking membership fee status, please wait a moment...");
       return;
     }
     if (actionRef.current === SubmitAction.PAY) {

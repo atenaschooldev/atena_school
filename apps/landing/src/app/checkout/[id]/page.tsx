@@ -107,7 +107,7 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
   const handleInvalid = (validationErrors: any) => {
     console.warn("Validation errors on submit:", validationErrors);
-    toast.error("Compila tutti i campi obbligatori contrassegnati con *");
+    toast.error("Please fill in all required fields marked with *");
   };
 
   return (
