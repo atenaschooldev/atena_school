@@ -437,7 +437,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       const bookingId = res.bookingId || res.booking?.id || (res.bookingIds && res.bookingIds[0]) || "";
       clearDraft();
       toast.success("Prenotazione completata con successo!");
-      router.push(`/checkout/success/${bookingId}`);
+      router.push(`/checkout/success?booking_id=${bookingId}&email=${encodeURIComponent(values.email)}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Errore imprevisto";
       toast.error(msg);

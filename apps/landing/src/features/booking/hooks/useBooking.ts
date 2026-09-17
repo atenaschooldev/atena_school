@@ -3,7 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { format } from "date-fns";
 import { formatCourseDurationText, buildCheckoutUrl } from "@atena/utils";
-import type { CourseItem } from "@atena/api-types";
+import { CourseScheduleType, type CourseItem } from "@atena/api-types";
 import type { User } from "@supabase/supabase-js";
 
 export function useBooking(
@@ -26,7 +26,7 @@ export function useBooking(
   const [item] = useState<CourseItem | null>(initialItem);
   const [user] = useState<User | null>(initialUser);
 
-  const isFlexibleSchedule = Number(item?.schedule_type) === 2 || item?.schedule_type === "flexible" || (!item?.schedule_days || item.schedule_days.length === 0);
+  const isFlexibleSchedule = Number(item?.schedule_type) === CourseScheduleType.FLEXIBLE || (!item?.schedule_days || item.schedule_days.length === 0);
   const isFixedSchedule = !isFlexibleSchedule;
 
   const rawDays = item?.schedule_days;

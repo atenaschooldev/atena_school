@@ -74,24 +74,7 @@ interface CourseRow {
   [key: string]: unknown;
 }
 
-export interface BlogPostRow {
-  id: string;
-  title_it?: string | null;
-  title_en?: string | null;
-  title?: string | null;
-  excerpt_it?: string | null;
-  excerpt_en?: string | null;
-  excerpt?: string | null;
-  content_it?: string | null;
-  content_en?: string | null;
-  content?: string | null;
-  image_placeholder?: string | null;
-  main_image?: string | null;
-  is_active?: boolean;
-  slug?: string;
-  published_at?: string | null;
-  [key: string]: unknown;
-}
+
 
 /**
  * CLEANUP MAPPERS
@@ -208,14 +191,6 @@ export const getCourses = unstable_cache(
   { tags: [CACHE_TAGS.COURSES], revalidate: CACHE_TTL }
 );
 
-export const getBlogPosts = unstable_cache(
-  async () => {
-    return [];
-  },
-  ['blog-posts-data'],
-  { tags: [CACHE_TAGS.BLOG], revalidate: CACHE_TTL }
-);
-
 export const getSingleCourse = (id: string) => unstable_cache(
   async () => {
     try {
@@ -242,19 +217,4 @@ export const getSingleCourse = (id: string) => unstable_cache(
   { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: CACHE_TTL }
 )();
 
-export const getSingleBlogPost = (slug: string) => unstable_cache(
-  async () => {
-    const supabase = createClient();
-    const { data } = await supabase.from('blog_posts').select('*').eq('slug', slug).single<BlogPostRow>();
-    return data ? {
-      ...data,
-      title_it: data.title_it || '',
-      title_en: data.title_en || '',
-      content_it: data.content_it || '',
-      content_en: data.content_en || '',
-    } : null;
-  },
-  [`blog-post-${slug}`],
-  { tags: [CACHE_TAGS.BLOG, `blog-${slug}`], revalidate: CACHE_TTL }
-)();
 

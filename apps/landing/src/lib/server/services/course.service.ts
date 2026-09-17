@@ -25,7 +25,7 @@ export function computeEndTime(startTime?: string | null, durationMinutes: numbe
 export function computeTotalLessonsCount(course: SupabaseCourseRow | null, calculatedLessonsCount: number): number | null {
   if (course?.total_lessons != null) return course.total_lessons;
   if (course?.total_hours != null) return null;
-  if (course?.lessons_per_week != null && (Number(course?.schedule_type) === CourseScheduleType.FLEXIBLE || course?.schedule_type === 'flexible')) {
+  if (course?.lessons_per_week != null && Number(course?.schedule_type) === CourseScheduleType.FLEXIBLE) {
     return course.lessons_per_week * 4;
   }
   return calculatedLessonsCount || 8;

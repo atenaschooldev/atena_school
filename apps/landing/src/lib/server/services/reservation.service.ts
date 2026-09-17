@@ -51,7 +51,7 @@ export async function recordPaymentLedger(
   supabase: SupabaseClient
 ) {
   try {
-    const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID || paymentStatus === 'completed' || paymentStatus === 'paid'
+    const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID
       ? PaymentRecordStatus.SUCCEEDED
       : PaymentRecordStatus.PENDING;
     const pMethod = parsePaymentMethod(paymentMethod) ?? PaymentMethod.CASH;
@@ -117,43 +117,17 @@ export async function getBookingDetails(id: string) {
   const payments = paymentsRes.data || [];
   const lessons = lessonsRes.data || [];
 
-  const coursePayment = payments.find((p: any) => p.type === PaymentType.COURSE_PAYMENT || p.type === 1 || p.type === 'payment');
+  const coursePayment = payments.find((p: any) => p.type === PaymentType.COURSE_PAYMENT);
   const amountPaid = Number(booking.amount_paid || 0);
   const regFee = Number(booking.registration_fee || 0);
   const coursePrice = coursePayment
     ? Number(coursePayment.amount)
     : (amountPaid > 0 && regFee > 0 ? Math.max(0, amountPaid - regFee) : amountPaid);
 
-  const statusMap: Record<number, string> = {
-    0: 'pending',
-    1: 'pending',
-    2: 'reserved',
-    3: 'paid',
-    4: 'refunded',
-    5: 'partially_refunded',
-    6: 'failed',
-    7: 'cancelled',
-  };
-
-  const methodMap: Record<number, string> = {
-    1: 'stripe',
-    2: 'cash',
-    3: 'pos',
-    4: 'bank_transfer',
-  };
-
-  const statusNum = Number(booking.payment_status ?? 0);
-  const paymentStatusLabel = statusMap[statusNum] || (typeof booking.payment_status === 'string' ? booking.payment_status : 'pending');
-
-  const methodNum = Number(booking.payment_method ?? 0);
-  const paymentMethodLabel = methodMap[methodNum] || (typeof booking.payment_method === 'string' ? booking.payment_method : 'cash');
-
   return {
     success: true,
     booking: {
       ...booking,
-      payment_status_label: paymentStatusLabel,
-      payment_method_label: paymentMethodLabel,
       course_price: coursePrice,
       item_price: coursePrice,
       total_price: amountPaid > 0 ? amountPaid : coursePrice + regFee,

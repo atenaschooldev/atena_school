@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { env } from '@/config/env';
 import { CACHE_TAGS, CACHE_TTL } from '@/lib/constants';
+import { CourseStatus } from '@atena/api-types';
 
 interface CourseSitemapRow {
   id: string;
@@ -15,7 +16,7 @@ const getSitemapCourses = unstable_cache(
     const { data: courses } = await supabase
       .from('courses')
       .select('id, slug')
-      .in('status', ['active', 'published'])
+      .eq('status', CourseStatus.ACTIVE)
       .returns<CourseSitemapRow[]>();
     return courses || [];
   },
@@ -29,7 +30,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
     { url: `${baseUrl}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
     { url: `${baseUrl}/corsi`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/test-inglese`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ];
 

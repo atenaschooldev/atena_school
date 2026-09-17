@@ -110,7 +110,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
 
   const emailDisplay = bookingData?.purchaser_email || emailParam || bookingData?.student_email || user?.email || "";
   const isGmail = emailDisplay.toLowerCase().endsWith("@gmail.com");
-  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID || String(bookingData?.payment_status) === "paid" || String(bookingData?.status) === "paid";
+  const isPaid = !!sessionId || Number(bookingData?.payment_status) === BookingPaymentStatus.PAID;
 
   const purchaseTrackedRef = useRef(false);
 
