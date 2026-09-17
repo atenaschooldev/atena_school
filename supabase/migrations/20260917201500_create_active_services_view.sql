@@ -18,8 +18,9 @@ SELECT
   b.purchaser_phone,
   b.purchaser_tax_code,
   b.course_id,
-  COALESCE(b.course_name, c.name, c.title_it) AS course_name,
+  COALESCE(b.course_name, c.name) AS course_name,
   c.category AS course_category,
+
   c.schedule_type AS course_schedule_type,
   b.billing_scheme,
   b.payment_status,
