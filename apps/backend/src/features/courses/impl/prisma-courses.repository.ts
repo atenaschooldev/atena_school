@@ -11,6 +11,7 @@ import {
   parseCourseScheduleType,
   parseCourseFormat,
 } from '@atena/api-types';
+import { slugify } from '@atena/utils';
 
 @Injectable()
 export class PrismaCoursesRepository implements CoursesRepository {
@@ -114,7 +115,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
         lessonDurationMinutes: data.lessonDurationMinutes,
         totalHours: data.totalHours,
         courseFormat: data.courseFormat !== undefined && data.courseFormat !== null ? parseCourseFormat(data.courseFormat) : CourseFormat.GROUP,
-        slug: data.slug,
+        slug: data.slug || slugify(data.name || 'course'),
       },
     });
     return this.mapToEntity(c);
@@ -155,7 +156,10 @@ export class PrismaCoursesRepository implements CoursesRepository {
     const teacherName = c.courseTeachers?.[0]?.teacher?.fullName ?? null;
     return {
       id: c.id,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
       name: c.name,
+      slug: c.slug,
       category: c.category,
       price: c.price ? Number(c.price) : null,
       status: c.status,
@@ -172,8 +176,9 @@ export class PrismaCoursesRepository implements CoursesRepository {
       lessonDurationMinutes: c.lessonDurationMinutes,
       totalHours: c.totalHours,
       courseFormat: c.courseFormat,
-      slug: c.slug,
-      updatedAt: c.updatedAt,
+      billingType: c.billingType,
+      subscriptionPrice: c.subscriptionPrice ? Number(c.subscriptionPrice) : null,
+      stripeMonthlyPriceId: c.stripeMonthlyPriceId,
       teacherName,
     };
   }

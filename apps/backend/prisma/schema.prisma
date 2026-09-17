@@ -31,33 +31,38 @@ model User {
 
 model Course {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   name                  String
+  slug                  String    @unique
   category              String?
-  price                 Decimal?  @db.Decimal(10, 2)
   status                Int       @default(1) @db.SmallInt
+  sortOrder             Int?      @default(0) @map("sort_order")
   photoUrl              String?   @map("photo_url")
   description           String?
   teacherId             String?   @map("teacher_id") @db.Uuid
-  lessonsPerWeek        Int?      @map("lessons_per_week")
-  sortOrder             Int?      @default(0) @map("sort_order")
+  courseFormat          Int       @default(1) @map("course_format") @db.SmallInt
   scheduleType          Int       @default(1) @map("schedule_type") @db.SmallInt
-  totalLessons          Int?      @map("total_lessons")
   scheduleDays          Int[]     @map("schedule_days")
   startTime             String?   @map("start_time")
   endTime               String?   @map("end_time")
   lessonDurationMinutes Int?      @map("lesson_duration_minutes")
+  lessonsPerWeek        Int?      @map("lessons_per_week")
+  totalLessons          Int?      @map("total_lessons")
   totalHours            Int?      @map("total_hours")
-  courseFormat          Int       @default(1) @map("course_format") @db.SmallInt
   billingType           Int       @default(1) @map("billing_type") @db.SmallInt
+  price                 Decimal?  @db.Decimal(10, 2)
   subscriptionPrice     Decimal?  @map("subscription_price") @db.Decimal(10, 2)
   stripeMonthlyPriceId  String?   @map("stripe_monthly_price_id")
-  slug                  String?
-  updatedAt             DateTime? @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   bookings              Booking[]
   courseTeachers        CourseTeacher[]
   lessons               Lesson[]
 
+  @@index([slug], map: "idx_courses_slug")
+  @@index([status], map: "idx_courses_status")
+  @@index([teacherId], map: "idx_courses_teacher_id")
+  @@index([category], map: "idx_courses_category")
   @@map("courses")
 }
 
