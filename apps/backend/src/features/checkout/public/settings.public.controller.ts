@@ -32,24 +32,24 @@ export class SettingsPublicController {
   @Patch('payment-gateway')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Обновить настройки платежного шлюза',
-    description: 'Позволяет включить или выключить Stripe шлюз на чекауте',
+    summary: 'Обновить настройки платежного шлюза и подписок',
+    description: 'Позволяет включить или выключить Stripe шлюз и регулярные подписки на чекауте',
   })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        stripeEnabled: { type: 'boolean', example: true, description: 'Флаг активности Stripe' },
+        stripeEnabled: { type: 'boolean', example: true, description: 'Флаг активности Stripe онлайн-оплаты' },
+        subscriptionsEnabled: { type: 'boolean', example: true, description: 'Флаг активности ежемесячных подписок' },
       },
-      required: ['stripeEnabled'],
     },
   })
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Настройки успешно обновлены',
-    schema: { example: { success: true, settings: { stripeEnabled: true } } },
+    schema: { example: { success: true, settings: { stripeEnabled: true, subscriptionsEnabled: true } } },
   })
-  async updatePaymentGateway(@Body() body: { stripeEnabled: boolean }) {
+  async updatePaymentGateway(@Body() body: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }) {
     const settings = await this.checkoutService.updateSettings(body);
     return { success: true, settings };
   }
