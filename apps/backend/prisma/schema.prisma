@@ -295,10 +295,12 @@ model documents {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model stripe_webhook_events {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  stripe_event_id String    @unique
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stripe_event_id String   @unique
   event_type      String
-  processed_at    DateTime? @default(now()) @db.Timestamptz(6)
+  processed_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([processed_at], map: "idx_stripe_webhook_events_processed_at")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
