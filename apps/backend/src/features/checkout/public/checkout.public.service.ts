@@ -768,26 +768,58 @@ export class CheckoutService {
   }
 
   async verifyPayment(dto: VerifyPaymentDto) {
-    const { data: edgeData, error: edgeErr } = await this.supabaseAdmin.functions.invoke('verify-payment', {
-      body: {
-        session_id: dto.sessionId,
-        booking_id: dto.bookingId,
-      },
-    });
+    const { sessionId, bookingId } = dto;
 
-    if (edgeErr || edgeData?.error) {
-      let detailMessage = edgeErr?.message || edgeData?.error || 'Ошибка подтверждения платежа';
-      if (edgeErr && (edgeErr as any).context) {
-        try {
-          const body = await (edgeErr as any).context.json();
-          if (body?.error) detailMessage = body.error;
-        } catch {}
+    if (sessionId) {
+      try {
+        const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+        if (session.payment_status === 'paid') {
+          const targetBookingId = bookingId || (session.metadata?.booking_id as string);
+          if (targetBookingId) {
+            const isSubscription = session.mode === 'subscription';
+            const updatePayload: Record<string, any> = {
+              payment_status: BookingPaymentStatus.PAID,
+              payment_method: PaymentMethod.STRIPE,
+            };
+            if (session.customer) {
+              updatePayload.stripe_customer_id = typeof session.customer === 'string' ? session.customer : session.customer.id;
+            }
+            if (session.subscription) {
+              updatePayload.stripe_subscription_id = typeof session.subscription === 'string' ? session.subscription : session.subscription.id;
+              updatePayload.subscription_status = SubscriptionStatus.ACTIVE;
+            }
+
+            const { data: updatedBooking } = await this.supabaseAdmin
+              .from('bookings')
+              .update(updatePayload)
+              .eq('id', targetBookingId)
+              .select('student_id, student_tax_code')
+              .maybeSingle();
+
+            await this.supabaseAdmin.from('payments').update({ status: PaymentRecordStatus.SUCCEEDED }).eq('booking_id', targetBookingId);
+
+            if (updatedBooking?.student_id) {
+              await this.supabaseAdmin.from('students').update({
+                status: StudentStatus.ACTIVE,
+                annual_fee_paid: true,
+                annual_fee_paid_at: new Date().toISOString(),
+              }).eq('id', updatedBooking.student_id);
+            }
+          }
+        }
+      } catch (err: any) {
+        this.logger.warn(`Verify payment stripe check warning: ${err.message}`);
       }
-      throw new BadRequestException(detailMessage);
     }
 
-    return { success: true, booking: edgeData?.booking };
+    if (bookingId) {
+      const { data: booking } = await this.supabaseAdmin.from('bookings').select('*').eq('id', bookingId).maybeSingle();
+      return { success: true, booking };
+    }
+
+    return { success: true };
   }
+
 
   async handleStripeWebhook(body: any, signature: string) {
     const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');

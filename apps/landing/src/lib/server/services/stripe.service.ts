@@ -254,50 +254,9 @@ export async function createStripeSession(dto: CreateReservationParams) {
     return { success: true, url: session.url, bookingId: reservationRes.bookingId };
   }
 
-  // 1. Primary: If not subscription and single student, invoke Supabase Edge Function 'create-checkout-session' if available
-  if (!isSubscription) {
-    try {
-      const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('create-checkout-session', {
-        body: {
-          itemType: dto.itemType || 'course',
-          itemId: resolvedItemId,
-          date: dto.date,
-          time: dto.time,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          customerEmail: dto.email,
-          phone: dto.phone,
-          notes: dto.notes,
-          studentFirstName: dto.studentFirstName,
-          studentLastName: dto.studentLastName,
-          studentEmail: dto.studentEmail,
-          studentPhone: dto.studentPhone,
-          purchaserTaxCode: dto.purchaserTaxCode,
-          taxCode: dto.studentTaxCode || dto.purchaserTaxCode,
-          studentBirthDate: dto.studentBirthDate,
-          needsCompanyInvoice: dto.needsCompanyInvoice,
-          sdiCode: dto.sdiCode,
-          pecEmail: dto.pecEmail,
-          includeRegistrationFee: dto.includeRegistrationFee,
-          isForChild: dto.isForChild,
-          origin: siteUrl,
-        },
-      });
-
-      if (!edgeErr && edgeData?.url) {
-        return { success: true, url: edgeData.url, bookingId: edgeData.bookingId };
-      }
-      if (edgeErr || edgeData?.error) {
-        console.warn('[Supabase Edge Function Warning]:', edgeErr?.message || edgeData?.error);
-      }
-    } catch (invokeErr: unknown) {
-      const msg = invokeErr instanceof Error ? invokeErr.message : String(invokeErr);
-      console.warn('[Supabase Functions Invoke Failed, fallback to direct Stripe SDK]:', msg);
-    }
-  }
-
-  // 2. Direct Stripe SDK session creation (Supports both One-time and Subscription)
+  // Direct Stripe SDK session creation for single student (Supports both One-time and Subscription)
   const reservationRes = await createReservation({
+
     ...dto,
     paymentMethod: PaymentMethod.STRIPE,
     paymentStatus: BookingPaymentStatus.PENDING,
@@ -386,24 +345,11 @@ export async function verifyPayment(params: VerifyPaymentParams) {
   const supabase = getSupabaseAdmin();
   const { sessionId, bookingId } = params;
 
-  try {
-    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('verify-payment', {
-      body: {
-        session_id: sessionId,
-        booking_id: bookingId,
-      },
-    });
-    if (!edgeErr && edgeData?.booking) {
-      return { success: true, booking: edgeData.booking };
-    }
-  } catch (edgeErr) {
-    console.warn('Supabase edge verify-payment warning:', edgeErr);
-  }
-
   if (sessionId) {
     try {
       const stripe = getStripe();
       const session = await stripe.checkout.sessions.retrieve(sessionId);
+
       if (session.payment_status === 'paid') {
         const targetBookingId = bookingId || (session.metadata?.booking_id as string);
         if (targetBookingId) {
