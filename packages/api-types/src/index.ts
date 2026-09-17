@@ -1714,6 +1714,31 @@ export function parseCourseFormat(val: any): CourseFormat {
   return CourseFormat.GROUP;
 }
 
+// ---------------------------------------------------------------------------
+// Weekdays Enums & Dictionaries
+// ---------------------------------------------------------------------------
+
+export const Weekday = {
+  SUNDAY: 0,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+} as const;
+export type Weekday = (typeof Weekday)[keyof typeof Weekday];
+
+export const WEEKDAY_DICTIONARY: Record<number, DictionaryEntry> = {
+  [Weekday.SUNDAY]: { id: 0, code: 'SUN', label_it: 'Domenica', label_en: 'Sunday', label_ru: 'Воскресенье', description: 'Domenica' },
+  [Weekday.MONDAY]: { id: 1, code: 'MON', label_it: 'Lunedì', label_en: 'Monday', label_ru: 'Понедельник', description: 'Lunedì' },
+  [Weekday.TUESDAY]: { id: 2, code: 'TUE', label_it: 'Martedì', label_en: 'Tuesday', label_ru: 'Вторник', description: 'Martedì' },
+  [Weekday.WEDNESDAY]: { id: 3, code: 'WED', label_it: 'Mercoledì', label_en: 'Wednesday', label_ru: 'Среда', description: 'Mercoledì' },
+  [Weekday.THURSDAY]: { id: 4, code: 'THU', label_it: 'Giovedì', label_en: 'Thursday', label_ru: 'Четверг', description: 'Giovedì' },
+  [Weekday.FRIDAY]: { id: 5, code: 'FRI', label_it: 'Venerdì', label_en: 'Friday', label_ru: 'Пятница', description: 'Venerdì' },
+  [Weekday.SATURDAY]: { id: 6, code: 'SAT', label_it: 'Sabato', label_en: 'Saturday', label_ru: 'Суббота', description: 'Sabato' },
+};
+
 export interface BookingPaymentItem {
   id: string;
   amount: number;

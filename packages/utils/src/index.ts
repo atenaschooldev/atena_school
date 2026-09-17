@@ -1,5 +1,17 @@
 import { format, parseISO, isFuture } from "date-fns";
 import { it } from "date-fns/locale";
+import { addDays } from "date-fns";
+import {
+  CourseScheduleType,
+  parseCourseScheduleType,
+  CourseCategory,
+  parseCourseCategory,
+  CourseFormat,
+  parseCourseFormat,
+  COURSE_SCHEDULE_TYPE_DICTIONARY,
+  Weekday,
+  WEEKDAY_DICTIONARY,
+} from "@atena/api-types";
 
 
 /**
@@ -49,8 +61,6 @@ export function isFutureDate(dateString?: string): boolean {
     return false;
   }
 }
-
-import { addDays } from "date-fns";
 
 export interface ScheduledLesson {
   startsAt: string; // ISO string with timezone
@@ -145,11 +155,10 @@ export function formatCourseScheduleText(
   if (!scheduleDays || scheduleDays.length === 0 || !startTime) {
     return "Da concordare";
   }
-  const dayNames = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
   const daysText = scheduleDays
     .map(Number)
     .filter((d) => !isNaN(d))
-    .map((d) => dayNames[d % 7])
+    .map((d) => WEEKDAY_DICTIONARY[d % 7]?.label_it || String(d))
     .join(" e ");
   const timeText = endTime ? `${startTime}-${endTime}` : startTime;
   return `${daysText} ${timeText}`;
@@ -264,15 +273,7 @@ export function buildCheckoutUrl(courseSlugOrId: string, dateInput?: string | Da
   return `/checkout/${courseSlugOrId}?date=${dateStr}&days=${daysSlug}&time=${timeSlug}&sig=${sig}`;
 }
 
-import {
-  CourseScheduleType,
-  parseCourseScheduleType,
-  CourseCategory,
-  parseCourseCategory,
-  CourseFormat,
-  parseCourseFormat,
-  COURSE_SCHEDULE_TYPE_DICTIONARY,
-} from "@atena/api-types";
+
 
 export function getDynamicMaxLessons(
   titleOrName?: string | null,
@@ -442,21 +443,10 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
 } {
   const { scheduleType, lessonsPerWeek, scheduleDays, startTime, endTime, totalLessons } = params;
 
-  const dayNames: Record<number, string> = {
-    1: "Lunedì",
-    2: "Martedì",
-    3: "Mercoledì",
-    4: "Giovedì",
-    5: "Venerdì",
-    6: "Sabato",
-    0: "Domenica",
-    7: "Domenica",
-  };
-
   const formattedDays =
     scheduleDays && scheduleDays.length > 0
       ? scheduleDays
-          .map((d) => (typeof d === "number" ? dayNames[d] || String(d) : d))
+          .map((d) => (typeof d === "number" ? WEEKDAY_DICTIONARY[d % 7]?.label_it || String(d) : d))
           .filter(Boolean)
           .join(", ")
       : null;
@@ -465,12 +455,12 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
   const freqText = lessonsPerWeek ? `${lessonsPerWeek}x / sett.` : totalLessons ? `${totalLessons} lez.` : null;
 
   const parsedSchedType = parseCourseScheduleType(scheduleType);
-  const schedShortLabel = parsedSchedType === CourseScheduleType.FLEXIBLE ? "Flessibile" : "Fissa";
+  const schedLabel = COURSE_SCHEDULE_TYPE_DICTIONARY[parsedSchedType]?.label_it || "Orario Fisso";
 
   const primary =
     formattedDays ||
     freqText ||
-    (scheduleType ? schedShortLabel : "-");
+    (scheduleType ? schedLabel : "-");
 
   const secondaryParts: string[] = [];
   if (formattedDays) {
@@ -478,9 +468,9 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
     if (timeText) secondaryParts.push(timeText);
   } else if (freqText) {
     if (timeText) secondaryParts.push(timeText);
-    if (scheduleType) secondaryParts.push(schedShortLabel);
+    if (scheduleType) secondaryParts.push(schedLabel);
   } else if (scheduleType) {
-    secondaryParts.push(schedShortLabel);
+    secondaryParts.push(schedLabel);
   }
 
   return {
