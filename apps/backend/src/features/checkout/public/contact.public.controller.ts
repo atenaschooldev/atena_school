@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
 import { ContactFormDto } from '../dto/checkout.public.dto';
 
-@ApiTags('Public — Contact Leads')
+@ApiTags('Landing — Contact & Leads')
 @Controller('contact')
 export class ContactPublicController {
   constructor(private readonly checkoutService: CheckoutService) {}
