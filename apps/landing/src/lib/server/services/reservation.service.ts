@@ -19,7 +19,7 @@ import { getSupabaseAdmin } from '../supabase-admin';
 import { checkFeeStatus } from '../fee-service';
 import { sendBookingNotificationEmails } from '../email-service';
 import { CreateReservationParams, SupabaseCourseRow, SupabasePaymentRow } from './types';
-import { extractCleanTime, computeTotalLessonsCount } from './course.service';
+import { extractCleanTime, computeEndTime, computeTotalLessonsCount } from './course.service';
 import { processStudentAndBookingLinks } from './student.service';
 
 export async function generateAndSaveLessons(
@@ -247,6 +247,18 @@ export async function createReservation(dto: CreateReservationParams) {
       }
     }
 
+    const resolvedStartTime = course?.start_time || extractCleanTime(dto.time) || null;
+    let resolvedEndTime = course?.end_time || null;
+    if (!resolvedEndTime && dto.time) {
+      const intervalMatch = dto.time.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}:\d{2})/);
+      if (intervalMatch) {
+        resolvedEndTime = intervalMatch[1];
+      }
+    }
+    if (!resolvedEndTime && resolvedStartTime && course?.lesson_duration_minutes && course.lesson_duration_minutes > 0) {
+      resolvedEndTime = computeEndTime(resolvedStartTime, course.lesson_duration_minutes);
+    }
+
     const { data: booking, error } = await supabase
       .from('bookings')
       .insert({
@@ -264,7 +276,8 @@ export async function createReservation(dto: CreateReservationParams) {
         student_birth_date: student.birthDate || null,
         start_date: dto.date || new Date().toISOString(),
         schedule_days: course?.schedule_days || null,
-        start_time: course?.start_time || extractCleanTime(dto.time) || null,
+        start_time: resolvedStartTime,
+        end_time: resolvedEndTime,
         payment_status: pStatus,
         payment_method: pMethod,
         booking_status: BookingStatus.ACTIVE,

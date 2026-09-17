@@ -232,6 +232,15 @@ export class CheckoutService {
         }
       }
 
+      const resolvedStartTime = course?.start_time || (dto.time ? (dto.time.match(/(\d{1,2}:\d{2})/) ? dto.time.match(/(\d{1,2}:\d{2})/)![1] : dto.time) : null);
+      let resolvedEndTime = course?.end_time || null;
+      if (!resolvedEndTime && dto.time) {
+        const intervalMatch = dto.time.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}:\d{2})/);
+        if (intervalMatch) {
+          resolvedEndTime = intervalMatch[1];
+        }
+      }
+
       const { data: booking, error } = await this.supabaseAdmin
         .from('bookings')
         .insert({
@@ -249,8 +258,8 @@ export class CheckoutService {
           student_birth_date: student.birthDate || null,
           start_date: dto.date || new Date().toISOString(),
           schedule_days: course?.schedule_days || null,
-          start_time: course?.start_time || (dto.time ? (dto.time.match(/(\d{1,2}:\d{2})/) ? dto.time.match(/(\d{1,2}:\d{2})/)![1] : dto.time) : null),
-          end_time: course?.end_time || null,
+          start_time: resolvedStartTime,
+          end_time: resolvedEndTime,
           payment_status: paymentStatusNum,
           payment_method: paymentMethodNum,
           booking_status: BookingStatus.ACTIVE,
