@@ -264,24 +264,40 @@ export function buildCheckoutUrl(courseSlugOrId: string, dateInput?: string | Da
   return `/checkout/${courseSlugOrId}?date=${dateStr}&days=${daysSlug}&time=${timeSlug}&sig=${sig}`;
 }
 
+import {
+  CourseScheduleType,
+  parseCourseScheduleType,
+  CourseCategory,
+  parseCourseCategory,
+  CourseFormat,
+  parseCourseFormat,
+  COURSE_SCHEDULE_TYPE_DICTIONARY,
+} from "@atena/api-types";
+
 export function getDynamicMaxLessons(
-  titleOrName: string,
+  titleOrName?: string | null,
   startDateStr?: string | null,
-  category?: string | null,
-  lessonsPerWeek?: number | null
+  category?: CourseCategory | number | string | null,
+  lessonsPerWeek?: number | null,
+  totalLessons?: number | null,
+  courseFormat?: CourseFormat | number | string | null
 ): number {
-  const nameLower = (titleOrName || "").toLowerCase();
-  
-  if (nameLower.includes("dizione") || nameLower.includes("lettura espressiva")) {
-    return 10;
+  if (totalLessons && totalLessons > 0) {
+    return totalLessons;
   }
-  
+
   if (lessonsPerWeek && lessonsPerWeek > 0) {
     return lessonsPerWeek * 4;
   }
 
-  if (category === "individual" || nameLower.includes("individual")) {
+  const format = parseCourseFormat(courseFormat);
+  if (format === CourseFormat.INDIVIDUAL) {
     return 4;
+  }
+
+  const parsedCategory = parseCourseCategory(category);
+  if (parsedCategory === CourseCategory.CERTIPASS) {
+    return 10;
   }
 
   if (!startDateStr) return 8;
@@ -302,12 +318,12 @@ export function getDynamicMaxLessons(
 export function calculateLessonDates(
   startDateStr: string,
   timeStr: string,
-  courseType?: string,
+  courseCategory?: CourseCategory | number | string | null,
   dbScheduleDays?: (number | string)[] | null,
   dbDurationMinutes?: number | null,
   dbStartTime?: string | null,
   dbEndTime?: string | null,
-  dbScheduleType?: string | number | null,
+  dbScheduleType?: CourseScheduleType | number | string | null,
   customMaxLessons?: number | null
 ): ScheduledLesson[] {
   if (!startDateStr) return [];
@@ -315,7 +331,8 @@ export function calculateLessonDates(
   const baseDate = new Date(startDateStr);
   if (isNaN(baseDate.getTime())) return [];
 
-  const isFlexible = dbScheduleType === "flexible" || Number(dbScheduleType) === 2 || courseType === "flexible";
+  const scheduleType = parseCourseScheduleType(dbScheduleType);
+  const isFlexible = scheduleType === CourseScheduleType.FLEXIBLE;
 
   let startTime = dbStartTime || "10:00";
   let durationMinutes = dbDurationMinutes || 60;
@@ -411,7 +428,7 @@ export function slugify(text: string): string {
 }
 
 export interface CourseFrequencyParams {
-  scheduleType?: string | null;
+  scheduleType?: CourseScheduleType | number | string | null;
   lessonsPerWeek?: number | null;
   scheduleDays?: (string | number)[] | null;
   startTime?: string | null;
@@ -447,10 +464,13 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
   const timeText = startTime ? `${startTime}${endTime ? ` - ${endTime}` : ""}` : null;
   const freqText = lessonsPerWeek ? `${lessonsPerWeek}x / sett.` : totalLessons ? `${totalLessons} lez.` : null;
 
+  const parsedSchedType = parseCourseScheduleType(scheduleType);
+  const schedShortLabel = parsedSchedType === CourseScheduleType.FLEXIBLE ? "Flessibile" : "Fissa";
+
   const primary =
     formattedDays ||
     freqText ||
-    (scheduleType === "flexible" ? "Flessibile" : scheduleType === "fixed" ? "Fissa" : "-");
+    (scheduleType ? schedShortLabel : "-");
 
   const secondaryParts: string[] = [];
   if (formattedDays) {
@@ -458,10 +478,9 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
     if (timeText) secondaryParts.push(timeText);
   } else if (freqText) {
     if (timeText) secondaryParts.push(timeText);
-    if (scheduleType === "flexible") secondaryParts.push("Flessibile");
-    else if (scheduleType === "fixed") secondaryParts.push("Fissa");
+    if (scheduleType) secondaryParts.push(schedShortLabel);
   } else if (scheduleType) {
-    secondaryParts.push(scheduleType === "flexible" ? "Flessibile" : "Fissa");
+    secondaryParts.push(schedShortLabel);
   }
 
   return {

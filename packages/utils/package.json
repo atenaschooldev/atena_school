@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@atena/api-types": "workspace:*",
     "date-fns": "^4.1.0"
   },
   "devDependencies": {

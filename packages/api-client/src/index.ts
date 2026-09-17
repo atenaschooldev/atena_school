@@ -6,6 +6,9 @@ import type {
   CourseItem,
   BookingRecord,
   ErrorCode,
+  BookingPaymentStatus,
+  PaymentMethod,
+  BillingScheme,
 } from "@atena/api-types";
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -54,9 +57,9 @@ export interface ReservationPayload {
   studentBirthDate?: string;
   includeRegistrationFee?: boolean;
   notes?: string;
-  paymentStatus?: number;
-  paymentMethod?: number;
-  billingScheme?: number;
+  paymentStatus?: BookingPaymentStatus | number;
+  paymentMethod?: PaymentMethod | number;
+  billingScheme?: BillingScheme | number;
   idempotencyKey?: string;
   students?: Array<{
     firstName: string;
