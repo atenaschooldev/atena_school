@@ -144,7 +144,7 @@ export function formatCourseDurationText(
   if (totalLessons && totalLessons > 0) {
     return `${totalLessons} lezioni`;
   }
-  return "Orario flessibile";
+  return COURSE_SCHEDULE_TYPE_DICTIONARY[CourseScheduleType.FLEXIBLE].label_it;
 }
 
 export function formatCourseScheduleText(
@@ -153,7 +153,7 @@ export function formatCourseScheduleText(
   endTime?: string | null
 ): string {
   if (!scheduleDays || scheduleDays.length === 0 || !startTime) {
-    return "Da concordare";
+    return COURSE_SCHEDULE_TYPE_DICTIONARY[CourseScheduleType.FLEXIBLE].label_it;
   }
   const daysText = scheduleDays
     .map(Number)
@@ -239,25 +239,35 @@ export function encodeScheduleSlot(rawTimeText?: string | null): { daysSlug: str
  * Reconstruct Italian schedule string from ASCII slugs or fallback safely
  */
 export function decodeScheduleSlot(daysSlug?: string | null, timeSlug?: string | null, rawTime?: string | null): string {
-  if (rawTime && (rawTime.includes('Martedì') || rawTime.includes('Lunedì') || rawTime.includes('Mercoledì') || rawTime.includes('Giovedì') || rawTime.includes('Venerdì'))) {
+  if (
+    rawTime &&
+    (rawTime.includes(WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it) ||
+      rawTime.includes(WEEKDAY_DICTIONARY[Weekday.MONDAY].label_it) ||
+      rawTime.includes(WEEKDAY_DICTIONARY[Weekday.WEDNESDAY].label_it) ||
+      rawTime.includes(WEEKDAY_DICTIONARY[Weekday.THURSDAY].label_it) ||
+      rawTime.includes(WEEKDAY_DICTIONARY[Weekday.FRIDAY].label_it))
+  ) {
     return rawTime;
   }
 
   const daysMap: Record<string, string> = {
-    'mar-gio': 'Martedì e Giovedì',
-    'lun-mer': 'Lunedì e Mercoledì',
-    'mar-ven': 'Martedì e Venerdì',
-    'lun-ven': 'Lunedì e Venerdì',
-    'lun': 'Lunedì',
-    'mar': 'Martedì',
-    'mer': 'Mercoledì',
-    'gio': 'Giovedì',
-    'ven': 'Venerdì',
-    'sab': 'Sabato',
-    'dom': 'Domenica',
+    'mar-gio': `${WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it} e ${WEEKDAY_DICTIONARY[Weekday.THURSDAY].label_it}`,
+    'lun-mer': `${WEEKDAY_DICTIONARY[Weekday.MONDAY].label_it} e ${WEEKDAY_DICTIONARY[Weekday.WEDNESDAY].label_it}`,
+    'mar-ven': `${WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it} e ${WEEKDAY_DICTIONARY[Weekday.FRIDAY].label_it}`,
+    'lun-ven': `${WEEKDAY_DICTIONARY[Weekday.MONDAY].label_it} e ${WEEKDAY_DICTIONARY[Weekday.FRIDAY].label_it}`,
+    lun: WEEKDAY_DICTIONARY[Weekday.MONDAY].label_it,
+    mar: WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it,
+    mer: WEEKDAY_DICTIONARY[Weekday.WEDNESDAY].label_it,
+    gio: WEEKDAY_DICTIONARY[Weekday.THURSDAY].label_it,
+    ven: WEEKDAY_DICTIONARY[Weekday.FRIDAY].label_it,
+    sab: WEEKDAY_DICTIONARY[Weekday.SATURDAY].label_it,
+    dom: WEEKDAY_DICTIONARY[Weekday.SUNDAY].label_it,
   };
 
-  const dayText = (daysSlug && daysMap[daysSlug]) ? daysMap[daysSlug] : 'Martedì e Giovedì';
+  const dayText =
+    daysSlug && daysMap[daysSlug]
+      ? daysMap[daysSlug]
+      : `${WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it} e ${WEEKDAY_DICTIONARY[Weekday.THURSDAY].label_it}`;
   const timeText = timeSlug || '16:00';
   return `${dayText} ${timeText}`;
 }
@@ -374,13 +384,13 @@ export function calculateLessonDates(
     targetDays = dbScheduleDays.map(Number).filter((d) => !isNaN(d));
   } else if (timeStr) {
     const timeLower = timeStr.toLowerCase();
-    if (timeLower.includes("lunedì") || timeLower.includes("lunedi")) targetDays.push(1);
-    if (timeLower.includes("martedì") || timeLower.includes("martedi")) targetDays.push(2);
-    if (timeLower.includes("mercoledì") || timeLower.includes("mercoledi")) targetDays.push(3);
-    if (timeLower.includes("giovedì") || timeLower.includes("giovedi")) targetDays.push(4);
-    if (timeLower.includes("venerdì") || timeLower.includes("venerdi")) targetDays.push(5);
-    if (timeLower.includes("sabato")) targetDays.push(6);
-    if (timeLower.includes("domenica")) targetDays.push(0);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.MONDAY].label_it.toLowerCase()) || timeLower.includes("lunedi")) targetDays.push(Weekday.MONDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.TUESDAY].label_it.toLowerCase()) || timeLower.includes("martedi")) targetDays.push(Weekday.TUESDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.WEDNESDAY].label_it.toLowerCase()) || timeLower.includes("mercoledi")) targetDays.push(Weekday.WEDNESDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.THURSDAY].label_it.toLowerCase()) || timeLower.includes("giovedi")) targetDays.push(Weekday.THURSDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.FRIDAY].label_it.toLowerCase()) || timeLower.includes("venerdi")) targetDays.push(Weekday.FRIDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.SATURDAY].label_it.toLowerCase())) targetDays.push(Weekday.SATURDAY);
+    if (timeLower.includes(WEEKDAY_DICTIONARY[Weekday.SUNDAY].label_it.toLowerCase())) targetDays.push(Weekday.SUNDAY);
   }
 
   if (targetDays.length === 0) {
@@ -455,7 +465,7 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
   const freqText = lessonsPerWeek ? `${lessonsPerWeek}x / sett.` : totalLessons ? `${totalLessons} lez.` : null;
 
   const parsedSchedType = parseCourseScheduleType(scheduleType);
-  const schedLabel = COURSE_SCHEDULE_TYPE_DICTIONARY[parsedSchedType]?.label_it || "Orario Fisso";
+  const schedLabel = COURSE_SCHEDULE_TYPE_DICTIONARY[parsedSchedType]?.label_it || COURSE_SCHEDULE_TYPE_DICTIONARY[CourseScheduleType.FIXED].label_it;
 
   const primary =
     formattedDays ||
