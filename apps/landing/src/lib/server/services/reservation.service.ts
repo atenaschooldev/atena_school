@@ -10,6 +10,7 @@ import {
   PaymentType,
   PaymentRecordStatus,
   PaymentProvider,
+  LessonStatus,
   parsePaymentMethod,
 } from '@atena/api-types';
 import { getSupabaseAdmin } from '../supabase-admin';
@@ -33,7 +34,7 @@ export async function generateAndSaveLessons(
       teacher_id: teacherId,
       starts_at: l.startsAt,
       ends_at: l.endsAt,
-      status: 1, // LessonStatus.SCHEDULED
+      status: LessonStatus.SCHEDULED,
     }));
 
     await supabase.from('lessons').insert(lessonRows);
@@ -193,7 +194,7 @@ export async function createReservation(dto: CreateReservationParams) {
   const lessons = calculateLessonDates(
     dto.date || new Date().toISOString(),
     dto.time || '10:00',
-    course?.category || 'general',
+    course?.category || undefined,
     course?.schedule_days || null,
     course?.lesson_duration_minutes || 60,
     course?.start_time || null,

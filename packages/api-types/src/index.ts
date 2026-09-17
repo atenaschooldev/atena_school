@@ -1438,6 +1438,62 @@ export function parseCourseScheduleType(val: any): CourseScheduleType {
   return CourseScheduleType.FIXED;
 }
 
+export const CourseCategory = {
+  LANGUAGES: 1,  // Corsi di Lingua (Иностранные языки)
+  ACADEMIC: 2,   // Recupero Scolastico (Школьная программа и репетиторство)
+  CERTIPASS: 3,  // Certificazioni EIPASS / Certipass (IT-сертификации)
+  OTHER: 4,      // Altro / Generale (Прочие направления)
+} as const;
+export type CourseCategory = (typeof CourseCategory)[keyof typeof CourseCategory];
+
+export const COURSE_CATEGORY_DICTIONARY: Record<CourseCategory, DictionaryEntry> = {
+  [CourseCategory.LANGUAGES]: {
+    id: 1,
+    code: 'LANGUAGES',
+    label_it: 'Corsi di Lingua',
+    label_en: 'Language Courses',
+    label_ru: 'Языковые курсы',
+    description: 'Английский, итальянский, немецкий, французский, испанский и др.',
+  },
+  [CourseCategory.ACADEMIC]: {
+    id: 2,
+    code: 'ACADEMIC',
+    label_it: 'Recupero Scolastico',
+    label_en: 'School Tutoring',
+    label_ru: 'Школьное репетиторство',
+    description: 'Помощь по школьным предметам, подготовка к экзаменам и аттестациям',
+  },
+  [CourseCategory.CERTIPASS]: {
+    id: 3,
+    code: 'CERTIPASS',
+    label_it: 'Certificazioni EIPASS',
+    label_en: 'EIPASS Certifications',
+    label_ru: 'IT-сертификации EIPASS',
+    description: 'Международные цифровые сертификации EIPASS / Certipass для школы и конкурсов',
+  },
+  [CourseCategory.OTHER]: {
+    id: 4,
+    code: 'OTHER',
+    label_it: 'Altro / Generale',
+    label_en: 'Other / General',
+    label_ru: 'Общие курсы / Другое',
+    description: 'Специальные и дополнительные направления обучения',
+  },
+};
+
+export function parseCourseCategory(val: any): CourseCategory {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 4) return val as CourseCategory;
+    return CourseCategory.LANGUAGES;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'languages' || s === 'language' || s === 'lingua' || s === 'lingue') return CourseCategory.LANGUAGES;
+  if (s === '2' || s === 'academic' || s === 'recupero' || s === 'scuola') return CourseCategory.ACADEMIC;
+  if (s === '3' || s === 'certipass' || s === 'eipass' || s === 'certificazione') return CourseCategory.CERTIPASS;
+  if (s === '4' || s === 'other' || s === 'general' || s === 'generale') return CourseCategory.OTHER;
+  return CourseCategory.LANGUAGES;
+}
+
 export function parseCourseFormat(val: any): CourseFormat {
   if (typeof val === 'number') {
     if (val >= 1 && val <= 4) return val as CourseFormat;
@@ -1485,6 +1541,383 @@ export interface BookingDetailsResponse {
   error?: string;
 }
 
+export const UserRole = {
+  STUDENT: 1,
+  TEACHER: 2,
+  ADMIN: 3,
+  PARENT: 4,
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+export const USER_ROLE_DICTIONARY: Record<UserRole, DictionaryEntry> = {
+  [UserRole.STUDENT]: {
+    id: 1,
+    code: 'STUDENT',
+    label_it: 'Studente',
+    label_en: 'Student',
+    label_ru: 'Студент',
+    description: 'Ученик школы, доступ к личному кабинету и расписанию',
+  },
+  [UserRole.TEACHER]: {
+    id: 2,
+    code: 'TEACHER',
+    label_it: 'Docente / Insegnante',
+    label_en: 'Teacher / Instructor',
+    label_ru: 'Преподаватель',
+    description: 'Учитель языковой школы, доступ к журналу занятий и группам',
+  },
+  [UserRole.ADMIN]: {
+    id: 3,
+    code: 'ADMIN',
+    label_it: 'Amministratore / Segreteria',
+    label_en: 'Administrator / Secretary',
+    label_ru: 'Администратор / Секретариат',
+    description: 'Полный доступ к управлению школой, CRM, кассе и студентам',
+  },
+  [UserRole.PARENT]: {
+    id: 4,
+    code: 'PARENT',
+    label_it: 'Genitore / Tutore',
+    label_en: 'Parent / Guardian',
+    label_ru: 'Родитель / Опекун',
+    description: 'Законный представитель несовершеннолетнего ученика',
+  },
+};
 
+export function parseUserRole(val: any): UserRole {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 4) return val as UserRole;
+    return UserRole.STUDENT;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'student' || s === 'studente' || s === 'allievo') return UserRole.STUDENT;
+  if (s === '2' || s === 'teacher' || s === 'docente' || s === 'insegnante') return UserRole.TEACHER;
+  if (s === '3' || s === 'admin' || s === 'administrator' || s === 'amministratore' || s === 'segreteria') return UserRole.ADMIN;
+  if (s === '4' || s === 'parent' || s === 'genitore' || s === 'tutore') return UserRole.PARENT;
+  return UserRole.STUDENT;
+}
+
+export const ItemType = {
+  COURSE: 1,
+  SINGLE_LESSON: 2,
+  PACKAGE: 3,
+  CERTIFICATION: 4,
+} as const;
+export type ItemType = (typeof ItemType)[keyof typeof ItemType];
+
+export const ITEM_TYPE_DICTIONARY: Record<ItemType, DictionaryEntry> = {
+  [ItemType.COURSE]: {
+    id: 1,
+    code: 'COURSE',
+    label_it: 'Corso Standard',
+    label_en: 'Standard Course',
+    label_ru: 'Стандартный курс',
+    description: 'Регулярный групповой или индивидуальный курс школы',
+  },
+  [ItemType.SINGLE_LESSON]: {
+    id: 2,
+    code: 'SINGLE_LESSON',
+    label_it: 'Lezione Singola',
+    label_en: 'Single Lesson',
+    label_ru: 'Разовое занятие',
+    description: 'Однократный индивидуальный урок или консультация',
+  },
+  [ItemType.PACKAGE]: {
+    id: 3,
+    code: 'PACKAGE',
+    label_it: 'Pacchetto Ore / Lezioni',
+    label_en: 'Hour / Lesson Package',
+    label_ru: 'Пакет занятий',
+    description: 'Блок уроков (например, 10 или 20 часов)',
+  },
+  [ItemType.CERTIFICATION]: {
+    id: 4,
+    code: 'CERTIFICATION',
+    label_it: 'Esame di Certificazione',
+    label_en: 'Certification Exam',
+    label_ru: 'Сертификационный экзамен',
+    description: 'Экзаменационный ваучер / сессия (EIPASS, Cambridge)',
+  },
+};
+
+export function parseItemType(val: any): ItemType {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 4) return val as ItemType;
+    return ItemType.COURSE;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'course' || s === 'corso') return ItemType.COURSE;
+  if (s === '2' || s === 'lesson' || s === 'lezione' || s === 'single') return ItemType.SINGLE_LESSON;
+  if (s === '3' || s === 'package' || s === 'pacchetto') return ItemType.PACKAGE;
+  if (s === '4' || s === 'certification' || s === 'certificazione' || s === 'shop') return ItemType.CERTIFICATION;
+  return ItemType.COURSE;
+}
+
+export const NotificationType = {
+  BOOKING_CONFIRMATION: 1,
+  PAYMENT_RECEIPT: 2,
+  PAYMENT_REMINDER: 3,
+  MEMBERSHIP_CARD: 4,
+  CONTACT_FORM: 5,
+} as const;
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
+
+export const NOTIFICATION_TYPE_DICTIONARY: Record<NotificationType, DictionaryEntry> = {
+  [NotificationType.BOOKING_CONFIRMATION]: {
+    id: 1,
+    code: 'BOOKING_CONFIRMATION',
+    label_it: 'Conferma Prenotazione',
+    label_en: 'Booking Confirmation',
+    label_ru: 'Подтверждение бронирования',
+    description: 'Уведомление клиенту и школе об успешной записи на курс',
+  },
+  [NotificationType.PAYMENT_RECEIPT]: {
+    id: 2,
+    code: 'PAYMENT_RECEIPT',
+    label_it: 'Ricevuta di Pagamento',
+    label_en: 'Payment Receipt',
+    label_ru: 'Квитанция об оплате',
+    description: 'Финансовая квитанция с детализацией курса и взноса €30',
+  },
+  [NotificationType.PAYMENT_REMINDER]: {
+    id: 3,
+    code: 'PAYMENT_REMINDER',
+    label_it: 'Promemoria Saldo',
+    label_en: 'Payment Reminder',
+    label_ru: 'Напоминание об оплате',
+    description: 'Напоминание о необходимости доплаты в секретариате',
+  },
+  [NotificationType.MEMBERSHIP_CARD]: {
+    id: 4,
+    code: 'MEMBERSHIP_CARD',
+    label_it: 'Tessera Associativa',
+    label_en: 'Membership Card',
+    label_ru: 'Членская карта',
+    description: 'Подтверждение членства ассоциации на учебный год',
+  },
+  [NotificationType.CONTACT_FORM]: {
+    id: 5,
+    code: 'CONTACT_FORM',
+    label_it: 'Richiesta di Contatto',
+    label_en: 'Contact Request',
+    label_ru: 'Заявка с сайта',
+    description: 'Сообщение из формы обратной связи лендинга',
+  },
+};
+
+export const CourseDetailTab = {
+  INFO: 1,
+  INCLUDED: 2,
+} as const;
+export type CourseDetailTab = (typeof CourseDetailTab)[keyof typeof CourseDetailTab];
+
+// ---------------------------------------------------------------------------
+// Error Codes (System Error Enums)
+// ---------------------------------------------------------------------------
+
+export const ErrorCode = {
+  // Validation (400xx / 422xx)
+  VALIDATION_ERROR: 40001,
+  INVALID_TAX_CODE: 42201,
+  INVALID_PHONE: 42202,
+  INVALID_EMAIL: 42203,
+  INVALID_BIRTH_DATE: 42204,
+  INVALID_SDI_OR_PEC: 42205,
+
+  // Auth & Permissions (401xx / 403xx)
+  UNAUTHORIZED: 40101,
+  FORBIDDEN: 40301,
+  TOKEN_EXPIRED: 40102,
+
+  // Resource & Availability (404xx / 409xx)
+  NOT_FOUND: 40401,
+  COURSE_NOT_FOUND: 40402,
+  STUDENT_NOT_FOUND: 40403,
+  SLOT_UNAVAILABLE: 40901,
+  COURSE_FULL: 40902,
+  DUPLICATE_ENTRY: 40903,
+
+  // Payment & Memberships (402xx)
+  PAYMENT_REQUIRED: 40201,
+  PAYMENT_FAILED: 40202,
+  STRIPE_ERROR: 40203,
+  FEE_NOT_PAID: 40204,
+
+  // Server (500xx / 503xx)
+  INTERNAL_SERVER_ERROR: 50001,
+  SERVICE_UNAVAILABLE: 50301,
+} as const;
+
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
+
+export const ERROR_CODE_DICTIONARY: Record<ErrorCode, DictionaryEntry> = {
+  [ErrorCode.VALIDATION_ERROR]: {
+    id: 40001,
+    code: 'VALIDATION_ERROR',
+    label_it: 'Errore di validazione',
+    label_en: 'Validation error',
+    label_ru: 'Ошибка валидации полей запроса',
+    description: 'Переданные в запросе данные не соответствуют схеме DTO / Zod',
+  },
+  [ErrorCode.INVALID_TAX_CODE]: {
+    id: 42201,
+    code: 'INVALID_TAX_CODE',
+    label_it: 'Codice Fiscale non valido',
+    label_en: 'Invalid Tax Code',
+    label_ru: 'Некорректный налоговый код (Codice Fiscale)',
+    description: 'Формат Codice Fiscale или Partita IVA не прошел проверку регулярного выражения',
+  },
+  [ErrorCode.INVALID_PHONE]: {
+    id: 42202,
+    code: 'INVALID_PHONE',
+    label_it: 'Numero di telefono non valido',
+    label_en: 'Invalid phone number',
+    label_ru: 'Некорректный номер телефона',
+    description: 'Номер телефона не соответствует формату E.164 или итальянскому стандарту',
+  },
+  [ErrorCode.INVALID_EMAIL]: {
+    id: 42203,
+    code: 'INVALID_EMAIL',
+    label_it: 'Email non valida',
+    label_en: 'Invalid email address',
+    label_ru: 'Некорректный адрес электронной почты',
+    description: 'Синтаксис почтового адреса не прошел валидацию',
+  },
+  [ErrorCode.INVALID_BIRTH_DATE]: {
+    id: 42204,
+    code: 'INVALID_BIRTH_DATE',
+    label_it: 'Data di nascita non valida',
+    label_en: 'Invalid birth date',
+    label_ru: 'Некорректная дата рождения',
+    description: 'Дата рождения должна быть в прошлом и не старше 100 лет',
+  },
+  [ErrorCode.INVALID_SDI_OR_PEC]: {
+    id: 42205,
+    code: 'INVALID_SDI_OR_PEC',
+    label_it: 'Codice SDI o PEC mancante',
+    label_en: 'Missing SDI code or PEC email',
+    label_ru: 'Отсутствует код SDI или PEC для фактуры',
+    description: 'Для выставления электронной фактуры юрлицу необходим 7-значный код SDI или PEC email',
+  },
+  [ErrorCode.UNAUTHORIZED]: {
+    id: 40101,
+    code: 'UNAUTHORIZED',
+    label_it: 'Non autorizzato',
+    label_en: 'Unauthorized',
+    label_ru: 'Требуется аутентификация',
+    description: 'JWT токен отсутствует или является недействительным',
+  },
+  [ErrorCode.FORBIDDEN]: {
+    id: 40301,
+    code: 'FORBIDDEN',
+    label_it: 'Accesso negato',
+    label_en: 'Forbidden',
+    label_ru: 'Доступ запрещен',
+    description: 'У пользователя недостаточно прав для выполнения операции (RBAC)',
+  },
+  [ErrorCode.TOKEN_EXPIRED]: {
+    id: 40102,
+    code: 'TOKEN_EXPIRED',
+    label_it: 'Sessione scaduta',
+    label_en: 'Token expired',
+    label_ru: 'Срок действия сессии истек',
+    description: 'Необходимо обновить токен доступа или войти повторно',
+  },
+  [ErrorCode.NOT_FOUND]: {
+    id: 40401,
+    code: 'NOT_FOUND',
+    label_it: 'Risorsa non trovata',
+    label_en: 'Resource not found',
+    label_ru: 'Запрашиваемый ресурс не найден',
+    description: 'Сущность с указанным идентификатором отсутствует в базе данных',
+  },
+  [ErrorCode.COURSE_NOT_FOUND]: {
+    id: 40402,
+    code: 'COURSE_NOT_FOUND',
+    label_it: 'Corso non trovato',
+    label_en: 'Course not found',
+    label_ru: 'Курс не найден',
+    description: 'Курс с указанным ID или slug не существует или неактивен',
+  },
+  [ErrorCode.STUDENT_NOT_FOUND]: {
+    id: 40403,
+    code: 'STUDENT_NOT_FOUND',
+    label_it: 'Studente non trovato',
+    label_en: 'Student not found',
+    label_ru: 'Студент не найден',
+    description: 'Профиль студента не найден по указанным критериям поиска',
+  },
+  [ErrorCode.SLOT_UNAVAILABLE]: {
+    id: 40901,
+    code: 'SLOT_UNAVAILABLE',
+    label_it: 'Orario non disponibile',
+    label_en: 'Slot unavailable',
+    label_ru: 'Выбранный слот расписания недоступен',
+    description: 'Преподаватель или аудитория уже заняты на выбранное время',
+  },
+  [ErrorCode.COURSE_FULL]: {
+    id: 40902,
+    code: 'COURSE_FULL',
+    label_it: 'Corso al completo',
+    label_en: 'Course full',
+    label_ru: 'Группа курса полностью укомплектована',
+    description: 'Достигнут максимальный лимит студентов в группе',
+  },
+  [ErrorCode.DUPLICATE_ENTRY]: {
+    id: 40903,
+    code: 'DUPLICATE_ENTRY',
+    label_it: 'Elemento duplicato',
+    label_en: 'Duplicate entry',
+    label_ru: 'Дубликат записи',
+    description: 'Запись с такими уникальными данными (email, tax_code) уже существует',
+  },
+  [ErrorCode.PAYMENT_REQUIRED]: {
+    id: 40201,
+    code: 'PAYMENT_REQUIRED',
+    label_it: 'Pagamento richiesto',
+    label_en: 'Payment required',
+    label_ru: 'Требуется оплата',
+    description: 'Для завершения действия требуется подтверждение финансовой транзакции',
+  },
+  [ErrorCode.PAYMENT_FAILED]: {
+    id: 40202,
+    code: 'PAYMENT_FAILED',
+    label_it: 'Pagamento non riuscito',
+    label_en: 'Payment failed',
+    label_ru: 'Платеж отклонен',
+    description: 'Транзакция была отклонена банком или платежным шлюзом',
+  },
+  [ErrorCode.STRIPE_ERROR]: {
+    id: 40203,
+    code: 'STRIPE_ERROR',
+    label_it: 'Errore Stripe',
+    label_en: 'Stripe gateway error',
+    label_ru: 'Ошибка шлюза Stripe',
+    description: 'Сбой при взаимодействии со Stripe Checkout или API подписок',
+  },
+  [ErrorCode.FEE_NOT_PAID]: {
+    id: 40204,
+    code: 'FEE_NOT_PAID',
+    label_it: 'Quota associativa non saldata',
+    label_en: 'Annual fee unpaid',
+    label_ru: 'Ежегодный взнос €30 не оплачен',
+    description: 'У студента отсутствует действующий ежегодный членский взнос на текущий учебный год',
+  },
+  [ErrorCode.INTERNAL_SERVER_ERROR]: {
+    id: 50001,
+    code: 'INTERNAL_SERVER_ERROR',
+    label_it: 'Errore interno del server',
+    label_en: 'Internal server error',
+    label_ru: 'Внутренняя ошибка сервера',
+    description: 'Непредвиденное исключение при обработке запроса на стороне сервера',
+  },
+  [ErrorCode.SERVICE_UNAVAILABLE]: {
+    id: 50301,
+    code: 'SERVICE_UNAVAILABLE',
+    label_it: 'Servizio non disponibile',
+    label_en: 'Service unavailable',
+    label_ru: 'Сервис временно недоступен',
+    description: 'Внешний сервис (Stripe, Resend, Supabase) временно недоступен',
+  },
+};
 

@@ -7,7 +7,20 @@ import {
   PaymentType,
   PaymentRecordStatus,
   PaymentProvider,
+  UserRole,
 } from "@atena/api-types";
+
+export enum FeeCheckStatus {
+  INITIAL = 1,
+  CHECKING = 2,
+  PAID = 3,
+  NOT_PAID = 4,
+}
+
+export enum SubmitAction {
+  BOOK = 1,
+  PAY = 2,
+}
 
 export const BOOKING_PAYMENT_STATUS = {
   PENDING: BookingPaymentStatus.PENDING,
@@ -75,10 +88,10 @@ export const PAYMENT_RECORD_STATUS = {
 } as const;
 
 export const USER_ROLE = {
-  STUDENT: "student",
-  TEACHER: "teacher",
-  ADMIN: "admin",
-  PARENT: "parent",
+  STUDENT: UserRole.STUDENT,
+  TEACHER: UserRole.TEACHER,
+  ADMIN: UserRole.ADMIN,
+  PARENT: UserRole.PARENT,
 } as const;
 
 // Aliases for clean imports
@@ -95,6 +108,11 @@ export {
   PaymentType,
   PaymentRecordStatus,
   PaymentProvider,
+  CourseCategory,
+  UserRole,
+  ItemType,
+  NotificationType,
+  CourseDetailTab,
   BOOKING_PAYMENT_STATUS_DICTIONARY,
   BOOKING_STATUS_DICTIONARY,
   BOOKING_SCHEDULING_STATUS_DICTIONARY,
@@ -104,6 +122,10 @@ export {
   PAYMENT_TYPE_DICTIONARY,
   PAYMENT_RECORD_STATUS_DICTIONARY,
   PAYMENT_PROVIDER_DICTIONARY,
+  COURSE_CATEGORY_DICTIONARY,
+  USER_ROLE_DICTIONARY,
+  ITEM_TYPE_DICTIONARY,
+  NOTIFICATION_TYPE_DICTIONARY,
   BOOKING_PAYMENT_STATUS_STRING_TO_ID,
   BOOKING_PAYMENT_STATUS_ID_TO_STRING,
   PAYMENT_METHOD_STRING_TO_ID,
@@ -128,4 +150,7 @@ export {
   parsePaymentType,
   parsePaymentRecordStatus,
   parsePaymentProvider,
+  parseCourseCategory,
+  parseUserRole,
+  parseItemType,
 } from "@atena/api-types";

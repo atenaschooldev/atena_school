@@ -19,9 +19,8 @@ import { createClient } from "@/lib/supabase/client";
 import { api } from "@/lib/api";
 
 export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
-
-export type SubmitAction = "book" | "pay";
-export type FeeCheckStatus = "initial" | "checking" | "paid" | "not_paid";
+import { FeeCheckStatus, SubmitAction } from "@/constants";
+export { FeeCheckStatus, SubmitAction };
 
 export function useCheckout(typeOrId: string, optionalId?: string) {
   const router = useRouter();
@@ -41,16 +40,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     : decodeScheduleSlot(null, null, null);
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
-  const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>("initial");
+  const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>(FeeCheckStatus.INITIAL);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
-    0: "initial",
+    0: FeeCheckStatus.INITIAL,
   });
   const [item, setItem] = useState<BookingItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [stripeEnabled, setStripeEnabled] = useState(false);
-  const [submitting, setSubmitting] = useState<false | "book" | "pay">(false);
+  const [submitting, setSubmitting] = useState<false | SubmitAction>(false);
   const [user, setUser] = useState<User | UserProfile | null>(null);
-  const actionRef = useRef<SubmitAction>("book");
+  const actionRef = useRef<SubmitAction>(SubmitAction.BOOK);
   const idempotencyKeyRef = useRef<string>(
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
@@ -304,18 +303,18 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
       if (!isValidCodiceFiscale(tax)) {
-        setStudentFeeStatuses((prev) => (prev[idx] === "initial" ? prev : { ...prev, [idx]: "initial" }));
+        setStudentFeeStatuses((prev) => (prev[idx] === FeeCheckStatus.INITIAL ? prev : { ...prev, [idx]: FeeCheckStatus.INITIAL }));
         return;
       }
 
       // Check cache first to avoid duplicate network calls
       if (feeCacheRef.current.has(tax)) {
         const isPaid = Boolean(feeCacheRef.current.get(tax));
-        setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? "paid" : "not_paid" }));
+        setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID }));
         return;
       }
 
-      setStudentFeeStatuses((prev) => (prev[idx] === "checking" ? prev : { ...prev, [idx]: "checking" }));
+      setStudentFeeStatuses((prev) => (prev[idx] === FeeCheckStatus.CHECKING ? prev : { ...prev, [idx]: FeeCheckStatus.CHECKING }));
 
       const timer = setTimeout(async () => {
         try {
@@ -323,9 +322,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
           const isPaid = Boolean(res.success && res.annualFeePaid);
           feeCacheRef.current.set(tax, isPaid);
-          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? "paid" : "not_paid" }));
+          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID }));
         } catch {
-          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: "not_paid" }));
+          setStudentFeeStatuses((prev) => ({ ...prev, [idx]: FeeCheckStatus.NOT_PAID }));
         }
       }, 400);
 
@@ -345,7 +344,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
     if (!isValidCodiceFiscale(targetTaxCode)) {
-      setFeeCheckStatus("initial");
+      setFeeCheckStatus(FeeCheckStatus.INITIAL);
       return;
     }
 
@@ -353,12 +352,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     if (feeCacheRef.current.has(targetTaxCode)) {
       const isPaid = Boolean(feeCacheRef.current.get(targetTaxCode));
       setHasPaidAnnualFee(isPaid);
-      setFeeCheckStatus(isPaid ? "paid" : "not_paid");
+      setFeeCheckStatus(isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID);
       formMethods.setValue("includeRegistrationFee", !isPaid);
       return;
     }
 
-    setFeeCheckStatus("checking");
+    setFeeCheckStatus(FeeCheckStatus.CHECKING);
 
     const timer = setTimeout(async () => {
       try {
@@ -367,10 +366,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         const isPaid = Boolean(res.success && res.annualFeePaid);
         feeCacheRef.current.set(targetTaxCode, isPaid);
         setHasPaidAnnualFee(isPaid);
-        setFeeCheckStatus(isPaid ? "paid" : "not_paid");
+        setFeeCheckStatus(isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID);
         formMethods.setValue("includeRegistrationFee", !isPaid);
       } catch {
-        setFeeCheckStatus("not_paid");
+        setFeeCheckStatus(FeeCheckStatus.NOT_PAID);
       }
     }, 400);
 
@@ -378,11 +377,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   }, [watchedTaxCode, watchedPurchaserTaxCode, watchedIsForChild, formMethods]);
 
   const isAnyFeeChecking = watchedIsForChild
-    ? Object.values(studentFeeStatuses).some((status) => status === "checking")
-    : feeCheckStatus === "checking";
+    ? Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
+    : feeCheckStatus === FeeCheckStatus.CHECKING;
 
-  const effectiveDate = (dateParam && dateParam !== "da_concordare") ? dateParam : undefined;
-  const effectiveTime = (timeParam && timeParam !== "da_concordare") ? timeParam : undefined;
+  const effectiveDate = (dateParam && !isNaN(Date.parse(dateParam))) ? dateParam : undefined;
+  const effectiveTime = (timeParam && /^\d{1,2}:\d{2}/.test(timeParam)) ? timeParam : undefined;
 
   const buildReservationPayload = (values: CheckoutFormValues) => {
     const isForChild = Boolean(values.isForChild);
@@ -424,7 +423,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       return;
     }
 
-    setSubmitting("book");
+    setSubmitting(SubmitAction.BOOK);
     try {
       const payload = buildReservationPayload(values);
       const res = await api.checkout.reserve(payload as unknown as Record<string, unknown>);
@@ -452,7 +451,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       return;
     }
 
-    setSubmitting("pay");
+    setSubmitting(SubmitAction.PAY);
     try {
       const payload = buildReservationPayload(values);
       const res = await api.checkout.createStripeSession(payload as unknown as Record<string, unknown>);
@@ -473,11 +472,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   };
 
   const onSubmit = (values: CheckoutFormValues) => {
-    if (feeCheckStatus === "checking" || isAnyFeeChecking) {
+    if (feeCheckStatus === FeeCheckStatus.CHECKING || isAnyFeeChecking) {
       toast.info("Verifica della quota associativa in corso, attendere un istante...");
       return;
     }
-    if (actionRef.current === "pay") {
+    if (actionRef.current === SubmitAction.PAY) {
       handlePay(values);
     } else {
       handleBook(values);

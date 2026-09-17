@@ -3,6 +3,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import {
   BookingPaymentStatus,
+  parseBookingPaymentStatus,
   PaymentCurrency,
   PaymentMethod,
   PaymentType,
@@ -100,7 +101,7 @@ export class CheckoutCoreService {
           } catch {}
         }
 
-        const isPaid = Number(dto.paymentStatus) === BookingPaymentStatus.PAID || dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
+        const isPaid = parseBookingPaymentStatus(dto.paymentStatus) === BookingPaymentStatus.PAID;
         const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
         if (!existingStudent) {
@@ -249,7 +250,7 @@ export class CheckoutCoreService {
    */
   async recordPaymentLedger(bookingId: string, coursePrice: number, regFee: number, paymentMethod?: string | number, paymentStatus?: string | number) {
     try {
-      const pStatus = (Number(paymentStatus) === BookingPaymentStatus.PAID || paymentStatus === 'completed' || paymentStatus === 'paid')
+      const pStatus = parseBookingPaymentStatus(paymentStatus) === BookingPaymentStatus.PAID
         ? PaymentRecordStatus.SUCCEEDED
         : PaymentRecordStatus.PENDING;
       const pMethod = parsePaymentMethod(paymentMethod) ?? PaymentMethod.CASH;

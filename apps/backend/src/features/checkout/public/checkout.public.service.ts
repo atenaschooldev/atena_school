@@ -20,6 +20,7 @@ import {
   MembershipStatus,
   StudentStatus,
   CourseScheduleType,
+  parseCourseScheduleType,
 } from '@atena/api-types';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -111,7 +112,7 @@ export class CheckoutService {
     // Hours-based course (e.g. EIPASS) — no fixed lesson count, stored as null
     if (course?.total_hours != null) return null;
     // Flexible with lessons_per_week (e.g. C2, C1 private) — estimate 1 month
-    if (course?.lessons_per_week != null && (Number(course?.schedule_type) === CourseScheduleType.FLEXIBLE || course?.schedule_type === 'flexible')) {
+    if (course?.lessons_per_week != null && parseCourseScheduleType(course?.schedule_type) === CourseScheduleType.FLEXIBLE) {
       return course.lessons_per_week * 4;
     }
     // Fixed schedule — use calendar-calculated count
@@ -152,7 +153,7 @@ export class CheckoutService {
     const lessons = calculateLessonDates(
       dto.date || new Date().toISOString(),
       dto.time || '10:00',
-      course?.category || 'general',
+      course?.category || undefined,
       course?.schedule_days || null,
       course?.lesson_duration_minutes || 60,
       course?.start_time || null,

@@ -4,6 +4,7 @@ import {
   LanguageLevel,
   MembershipStatus,
   BookingPaymentStatus,
+  parseBookingPaymentStatus,
 } from '@atena/api-types';
 import { ACADEMIC_YEAR } from '@/constants/booking';
 import { CreateReservationParams } from './types';
@@ -79,7 +80,7 @@ export async function processStudentAndBookingLinks(params: {
         } catch {}
       }
 
-      const isPaid = Number(dto.paymentStatus) === BookingPaymentStatus.PAID || dto.paymentStatus === 'completed' || dto.paymentStatus === 'paid';
+      const isPaid = parseBookingPaymentStatus(dto.paymentStatus) === BookingPaymentStatus.PAID;
       const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
       if (!existingStudent) {

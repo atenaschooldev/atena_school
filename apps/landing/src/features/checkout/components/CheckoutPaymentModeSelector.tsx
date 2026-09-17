@@ -2,11 +2,12 @@
 
 import React from "react";
 import { CreditCard, Storefront } from "@phosphor-icons/react";
+import { SubmitAction } from "@/constants";
 
 interface CheckoutPaymentModeSelectorProps {
   stripeEnabled: boolean;
-  selectedPaymentMode: "pay" | "book";
-  setSelectedPaymentMode: (mode: "pay" | "book") => void;
+  selectedPaymentMode: SubmitAction;
+  setSelectedPaymentMode: (mode: SubmitAction) => void;
 }
 
 export function CheckoutPaymentModeSelector({
@@ -24,9 +25,9 @@ export function CheckoutPaymentModeSelector({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {/* Option 1: Online */}
         <div
-          onClick={() => setSelectedPaymentMode("pay")}
+          onClick={() => setSelectedPaymentMode(SubmitAction.PAY)}
           className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
-            selectedPaymentMode === "pay"
+            selectedPaymentMode === SubmitAction.PAY
               ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
               : "border-slate-200 hover:border-slate-300 opacity-75"
           }`}
@@ -34,8 +35,8 @@ export function CheckoutPaymentModeSelector({
           <input
             type="radio"
             name="paymentMode"
-            checked={selectedPaymentMode === "pay"}
-            onChange={() => setSelectedPaymentMode("pay")}
+            checked={selectedPaymentMode === SubmitAction.PAY}
+            onChange={() => setSelectedPaymentMode(SubmitAction.PAY)}
             className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
           />
           <div className="space-y-0.5">
@@ -51,9 +52,9 @@ export function CheckoutPaymentModeSelector({
 
         {/* Option 2: In Sede */}
         <div
-          onClick={() => setSelectedPaymentMode("book")}
+          onClick={() => setSelectedPaymentMode(SubmitAction.BOOK)}
           className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
-            selectedPaymentMode === "book"
+            selectedPaymentMode === SubmitAction.BOOK
               ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
               : "border-slate-200 hover:border-slate-300 opacity-75"
           }`}
@@ -61,8 +62,8 @@ export function CheckoutPaymentModeSelector({
           <input
             type="radio"
             name="paymentMode"
-            checked={selectedPaymentMode === "book"}
-            onChange={() => setSelectedPaymentMode("book")}
+            checked={selectedPaymentMode === SubmitAction.BOOK}
+            onChange={() => setSelectedPaymentMode(SubmitAction.BOOK)}
             className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
           />
           <div className="space-y-0.5">

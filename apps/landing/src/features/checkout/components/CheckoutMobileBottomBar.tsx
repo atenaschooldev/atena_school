@@ -2,13 +2,13 @@
 
 import React from "react";
 import { ArrowRight, Spinner } from "@phosphor-icons/react";
-import type { SubmitAction } from "@/features/checkout/hooks/useCheckout";
+import { SubmitAction } from "@/constants";
 
 interface CheckoutMobileBottomBarProps {
   totalPrice: number;
-  selectedPaymentMode: "pay" | "book";
+  selectedPaymentMode: SubmitAction;
   actionRef: React.MutableRefObject<SubmitAction>;
-  submitting: false | "book" | "pay";
+  submitting: false | SubmitAction;
   isAnyFeeChecking: boolean;
 }
 
@@ -24,7 +24,7 @@ export function CheckoutMobileBottomBar({
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1" aria-live="polite" aria-atomic="true">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            {selectedPaymentMode === "pay" ? "Totale Checkout" : "Totale da Saldare"}
+            {selectedPaymentMode === SubmitAction.PAY ? "Totale Checkout" : "Totale da Saldare"}
           </p>
           <p className="text-xl font-black text-[#F8861D] leading-none">{totalPrice.toFixed(2)}€</p>
         </div>
@@ -37,14 +37,14 @@ export function CheckoutMobileBottomBar({
           }}
           disabled={!!submitting || isAnyFeeChecking}
           className={`px-5 py-3 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm shadow-lg active:scale-95 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
-            selectedPaymentMode === "pay"
+            selectedPaymentMode === SubmitAction.PAY
               ? "bg-[#F8861D] text-white shadow-[#F8861D]/30"
               : "bg-[#043569] text-white shadow-[#043569]/30"
           }`}
         >
           {submitting ? (
             <Spinner className="w-4 h-4 animate-spin text-white" />
-          ) : selectedPaymentMode === "pay" ? (
+          ) : selectedPaymentMode === SubmitAction.PAY ? (
             <>
               Paga Online
               <ArrowRight className="w-4 h-4" weight="bold" />

@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './dto/portal.dto';
 import { calculateLessonDates } from '@atena/utils';
 import { getDynamicMaxLessons } from '@atena/utils';
-import { BookingPaymentStatus, MembershipStatus, CourseScheduleType } from '@atena/api-types';
+import { BookingPaymentStatus, MembershipStatus, CourseScheduleType, parseCourseScheduleType } from '@atena/api-types';
 
 export interface PortalUser {
   id: string;
@@ -336,7 +336,7 @@ export class PortalService {
       const calculated = calculateLessonDates(
         bdate,
         course?.start_time || '10:00',
-        course?.category || 'general',
+        course?.category || undefined,
         course?.schedule_days || null,
         course?.lesson_duration_minutes || 60,
         course?.start_time || null,
@@ -353,7 +353,7 @@ export class PortalService {
       }));
     }
 
-    const isFixedSchedule = Number(course?.schedule_type) === CourseScheduleType.FIXED || course?.schedule_type === 'fixed';
+    const isFixedSchedule = parseCourseScheduleType(course?.schedule_type) === CourseScheduleType.FIXED;
     const maxLessons = booking.total_lessons_count != null
       ? booking.total_lessons_count
       : isFixedSchedule

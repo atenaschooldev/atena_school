@@ -15,7 +15,8 @@ import {
   Plus,
 } from "@phosphor-icons/react";
 import type { FieldErrors } from "react-hook-form";
-import type { CheckoutFormValues, FeeCheckStatus } from "@/features/checkout/hooks/useCheckout";
+import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
+import { FeeCheckStatus } from "@/constants";
 
 interface StudentItem {
   firstName: string;
@@ -82,19 +83,19 @@ export function CheckoutStudentsList({
 
                 <div className="flex items-center gap-2">
                   {/* Individual Fee Status Badge */}
-                  {studentFee === "checking" && (
+                  {studentFee === FeeCheckStatus.CHECKING && (
                     <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
                       <Spinner className="w-3 h-3 animate-spin text-[#043569]" />
                       Verifica quota...
                     </span>
                   )}
-                  {studentFee === "paid" && (
+                  {studentFee === FeeCheckStatus.PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
                       <CheckCircle className="w-3 h-3 text-emerald-600" weight="fill" />
                       Quota 2026/2027 saldata (0€)
                     </span>
                   )}
-                  {studentFee === "not_paid" && (
+                  {studentFee === FeeCheckStatus.NOT_PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
                       <Info className="w-3 h-3 text-amber-600" weight="bold" />
                       Quota annuale (+30€)

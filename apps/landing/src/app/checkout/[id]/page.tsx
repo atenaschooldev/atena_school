@@ -6,7 +6,7 @@ import { it as dateLocale } from "date-fns/locale";
 import { toast } from "sonner";
 import { useCheckout } from "@/features/checkout/hooks/useCheckout";
 import { useMounted } from "@/hooks/useMounted";
-import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
+import { ANNUAL_REGISTRATION_FEE_EUR, FeeCheckStatus, SubmitAction } from "@/constants";
 import {
   CheckoutHeader,
   CheckoutMobileSummary,
@@ -44,14 +44,14 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
   const isForChild = watch("isForChild");
   const includeRegistrationFee = watch("includeRegistrationFee");
   const mounted = useMounted();
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState<"pay" | "book">(
-    stripeEnabled ? "pay" : "book"
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState<SubmitAction>(
+    stripeEnabled ? SubmitAction.PAY : SubmitAction.BOOK
   );
   const [prevStripeEnabled, setPrevStripeEnabled] = useState(stripeEnabled);
 
   if (prevStripeEnabled !== stripeEnabled) {
     setPrevStripeEnabled(stripeEnabled);
-    setSelectedPaymentMode(stripeEnabled ? "pay" : "book");
+    setSelectedPaymentMode(stripeEnabled ? SubmitAction.PAY : SubmitAction.BOOK);
     setValue("includeRegistrationFee", stripeEnabled);
   }
 
@@ -72,13 +72,13 @@ function CheckoutContent({ params }: { params: Promise<{ id: string }> }) {
 
   // Calculate unpaid fees count
   const unpaidFeesCount = isForChild
-    ? studentsList.reduce((acc, _, idx) => acc + (studentFeeStatuses[idx] === "not_paid" ? 1 : 0), 0)
-    : (feeCheckStatus === "not_paid" ? 1 : 0);
+    ? studentsList.reduce((acc, _, idx) => acc + (studentFeeStatuses[idx] === FeeCheckStatus.NOT_PAID ? 1 : 0), 0)
+    : (feeCheckStatus === FeeCheckStatus.NOT_PAID ? 1 : 0);
 
   const hasAnyFeeDue = unpaidFeesCount > 0;
   const isAnyFeeChecking = isForChild
-    ? studentsList.some((s, idx) => (s.taxCode?.trim().length || 0) >= 11 && (studentFeeStatuses[idx] === "checking" || studentFeeStatuses[idx] === "initial")) || Object.values(studentFeeStatuses).some((status) => status === "checking")
-    : ((watch("taxCode")?.trim().length || 0) >= 11 && (feeCheckStatus === "checking" || feeCheckStatus === "initial")) || feeCheckStatus === "checking";
+    ? studentsList.some((s, idx) => (s.taxCode?.trim().length || 0) >= 11 && (studentFeeStatuses[idx] === FeeCheckStatus.CHECKING || studentFeeStatuses[idx] === FeeCheckStatus.INITIAL)) || Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
+    : ((watch("taxCode")?.trim().length || 0) >= 11 && (feeCheckStatus === FeeCheckStatus.CHECKING || feeCheckStatus === FeeCheckStatus.INITIAL)) || feeCheckStatus === FeeCheckStatus.CHECKING;
 
   const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false)
     ? unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR

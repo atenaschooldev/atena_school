@@ -25,10 +25,9 @@ const CF_PATTERN =
   /^([A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST]{1}[0-9LMNPQRSTUV]{2}[A-Z]{1}[0-9LMNPQRSTUV]{3}[A-Z]{1}|[0-9]{11})$/i;
 
 /**
- * Итальянский телефон: +39 333 1234567 | 0331 1234567 | 3331234567
+ * Телефон: принимает итальянские (+39, 3xx, 0xx) и международные номера (E.164: +1, +380, +44 и т.д.)
  */
-const PHONE_IT_PATTERN =
-  /^(\+?39[\s\-]?)?(0\d{1,4}[\s\-]?\d{4,8}|3\d{2}[\s\-]?\d{6,7})$/;
+const PHONE_PATTERN = /^\+?[0-9\s\-().]{7,25}$/;
 
 /** Codice SDI — ровно 7 буквенно-цифровых символов */
 const SDI_PATTERN = /^[A-Z0-9]{7}$/i;
@@ -36,13 +35,15 @@ const SDI_PATTERN = /^[A-Z0-9]{7}$/i;
 // ---------------------------------------------------------------------------
 
 export class CheckFeeDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Налоговый код (Codice Fiscale) для проверки статуса ежегодного членского взноса (€30)',
     example: 'RSSLCU10A01H501Z',
   })
   @IsOptional()
   @IsString()
+  @ValidateIf((o) => !!o.taxCode && o.taxCode.trim() !== '')
   @MinLength(11, { message: 'Codice Fiscale обязателен (минимум 11 символов)' })
+  @MaxLength(16, { message: 'Codice Fiscale не может быть длиннее 16 символов' })
   @Matches(CF_PATTERN, {
     message: 'Некорректный формат Codice Fiscale (напр. RSSMRA80A01H501T или 11 цифр P.IVA)',
   })
@@ -73,7 +74,7 @@ export class StudentItemDto {
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.phone && o.phone.trim() !== '')
-  @Matches(PHONE_IT_PATTERN, {
+  @Matches(PHONE_PATTERN, {
     message: 'Некорректный формат номера телефона студента',
   })
   phone?: string;
@@ -135,7 +136,7 @@ export class CreateReservationDto {
 
   @ApiProperty({ description: 'Телефон покупателя / родителя (WhatsApp)', example: '+39 375 605 2362' })
   @IsString()
-  @Matches(PHONE_IT_PATTERN, {
+  @Matches(PHONE_PATTERN, {
     message: 'Некорректный номер телефона (напр. +39 333 1234567)',
   })
   phone: string;
@@ -190,7 +191,7 @@ export class CreateReservationDto {
   @IsOptional()
   @IsString()
   @ValidateIf((o) => !!o.studentPhone && o.studentPhone.trim() !== '')
-  @Matches(PHONE_IT_PATTERN, {
+  @Matches(PHONE_PATTERN, {
     message: 'Некорректный номер телефона студента',
   })
   studentPhone?: string;
@@ -307,7 +308,7 @@ export class ContactFormDto {
   @ApiPropertyOptional({ description: 'Телефон отправителя', example: '+39 340 1234567' })
   @IsOptional()
   @ValidateIf((o) => !!o.telefono && o.telefono.trim() !== '')
-  @Matches(PHONE_IT_PATTERN, {
+  @Matches(PHONE_PATTERN, {
     message: 'Некорректный номер телефона (напр. +39 340 1234567)',
   })
   telefono?: string;

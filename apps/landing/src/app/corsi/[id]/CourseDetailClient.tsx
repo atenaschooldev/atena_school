@@ -25,7 +25,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useBooking } from "@/features/booking/hooks/useBooking";
 import { calculateLessonDates, formatCourseScheduleText } from "@/lib/utils/bookingScheduler";
-import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
+import { ANNUAL_REGISTRATION_FEE_EUR, CourseDetailTab } from "@/constants";
 
 interface CourseDetailClientProps {
   id: string;
@@ -33,7 +33,7 @@ interface CourseDetailClientProps {
   initialUser: any;
 }
 
-export default function CourseDetailClient({
+export function CourseDetailClient({
   id,
   initialCourse,
   initialUser,
@@ -54,7 +54,7 @@ export default function CourseDetailClient({
     handleContinue,
   } = useBooking("course", id, initialCourse, initialUser);
 
-  const [activeTab, setActiveTab] = useState<"info" | "included">("info");
+  const [activeTab, setActiveTab] = useState<CourseDetailTab>(CourseDetailTab.INFO);
   const [showFullCalendar, setShowFullCalendar] = useState(false);
 
   const formattedScheduleText = formatCourseScheduleText(
@@ -238,7 +238,7 @@ export default function CourseDetailClient({
             <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex-shrink-0">
               {/* Tab Bar */}
               <div className="flex border-b border-slate-100">
-                {(["info", "included"] as const).map((tab) => (
+                {([CourseDetailTab.INFO, CourseDetailTab.INCLUDED] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -248,10 +248,10 @@ export default function CourseDetailClient({
                         : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    {tab === "info" ? (
+                    {tab === CourseDetailTab.INFO ? (
                       <>
                         <BookOpen
-                          className={`w-4 h-4 ${activeTab === "info" ? "text-[#F8861D]" : ""}`}
+                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INFO ? "text-[#F8861D]" : ""}`}
                           weight="bold"
                         />
                         Informazioni
@@ -259,7 +259,7 @@ export default function CourseDetailClient({
                     ) : (
                       <>
                         <Trophy
-                          className={`w-4 h-4 ${activeTab === "included" ? "text-[#F8861D]" : ""}`}
+                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INCLUDED ? "text-[#F8861D]" : ""}`}
                           weight="bold"
                         />
                         Cosa è incluso
@@ -270,7 +270,7 @@ export default function CourseDetailClient({
               </div>
 
               <div className="p-4 sm:p-5">
-                {activeTab === "info" && (
+                {activeTab === CourseDetailTab.INFO && (
                   <p className="text-slate-600 leading-relaxed text-[15px] font-medium whitespace-pre-line">
                     {course?.description_it ||
                       course?.description ||
@@ -278,7 +278,7 @@ export default function CourseDetailClient({
                   </p>
                 )}
 
-                {activeTab === "included" && (
+                {activeTab === CourseDetailTab.INCLUDED && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       {
@@ -589,3 +589,5 @@ export default function CourseDetailClient({
     </main>
   );
 }
+
+export default CourseDetailClient;

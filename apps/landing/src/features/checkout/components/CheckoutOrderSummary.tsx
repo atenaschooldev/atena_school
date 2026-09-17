@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   Headset,
 } from "@phosphor-icons/react";
-import type { BookingItem, SubmitAction } from "@/features/checkout/hooks/useCheckout";
+import type { BookingItem } from "@/features/checkout/hooks/useCheckout";
+import { SubmitAction } from "@/constants";
 
 interface CheckoutOrderSummaryProps {
   item: BookingItem | null;
@@ -30,9 +31,9 @@ interface CheckoutOrderSummaryProps {
   formattedDateString: (dStr?: string | null) => string | null;
   formatCategoryName: (cat?: string) => string;
   mounted: boolean;
-  selectedPaymentMode: "pay" | "book";
+  selectedPaymentMode: SubmitAction;
   actionRef: React.MutableRefObject<SubmitAction>;
-  submitting: false | "book" | "pay";
+  submitting: false | SubmitAction;
   isAnyFeeChecking: boolean;
   stripeEnabled: boolean;
 }
@@ -169,7 +170,7 @@ export function CheckoutOrderSummary({
             }}
             disabled={!!submitting || isAnyFeeChecking}
             className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${
-              selectedPaymentMode === "pay"
+              selectedPaymentMode === SubmitAction.PAY
                 ? "bg-[#F8861D] text-white hover:bg-[#e8741a] shadow-[#F8861D]/20"
                 : "bg-[#043569] text-white hover:bg-[#032852] shadow-[#043569]/20"
             }`}
@@ -181,7 +182,7 @@ export function CheckoutOrderSummary({
                 <Spinner className="w-4 h-4 animate-spin text-white" />
                 Verifica quota in corso...
               </span>
-            ) : selectedPaymentMode === "pay" ? (
+            ) : selectedPaymentMode === SubmitAction.PAY ? (
               <>
                 <CreditCard className="w-4 h-4" weight="bold" />
                 Paga Online Ora ({totalPrice.toFixed(2)}€)

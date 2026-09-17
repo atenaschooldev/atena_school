@@ -23,6 +23,7 @@ import {
 } from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
 import { contactFormSchema } from "@atena/validators";
+import { api } from "@/lib/api";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -161,12 +162,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/landing/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const res = await response.json();
+      const res = await api.contact.submit(formData);
       if (res.success) {
         setSubmitted(true);
         setTimeout(() => {

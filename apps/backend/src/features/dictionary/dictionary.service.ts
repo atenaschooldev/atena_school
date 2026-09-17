@@ -19,6 +19,11 @@ import {
   COURSE_STATUS_DICTIONARY,
   COURSE_SCHEDULE_TYPE_DICTIONARY,
   COURSE_FORMAT_DICTIONARY,
+  COURSE_CATEGORY_DICTIONARY,
+  USER_ROLE_DICTIONARY,
+  ITEM_TYPE_DICTIONARY,
+  NOTIFICATION_TYPE_DICTIONARY,
+  ERROR_CODE_DICTIONARY,
   BookingPaymentStatus,
   BookingStatus,
   BookingSchedulingStatus,
@@ -38,6 +43,11 @@ import {
   CourseStatus,
   CourseScheduleType,
   CourseFormat,
+  CourseCategory,
+  UserRole,
+  ItemType,
+  NotificationType,
+  ErrorCode,
 } from '@atena/api-types';
 
 import { renderDictionaryHtml } from './dictionary.template';
@@ -216,6 +226,14 @@ export class DictionaryService {
         values: COURSE_FORMAT_DICTIONARY,
         codes: CourseFormat,
       },
+      category: {
+        column: 'category',
+        dbType: 'TEXT / SMALLINT',
+        name: 'CourseCategory',
+        description: 'Предметная категория курса (1=LANGUAGES, 2=ACADEMIC, 3=CERTIPASS, 4=OTHER)',
+        values: COURSE_CATEGORY_DICTIONARY,
+        codes: CourseCategory,
+      },
     };
 
     return {
@@ -302,9 +320,83 @@ export class DictionaryService {
     };
   }
 
+  getUsersDictionary() {
+    const columns = {
+      role: {
+        column: 'role',
+        dbType: 'TEXT / SMALLINT',
+        name: 'UserRole',
+        description: 'Системная роль пользователя (1=STUDENT, 2=TEACHER, 3=ADMIN, 4=PARENT)',
+        values: USER_ROLE_DICTIONARY,
+        codes: UserRole,
+      },
+    };
+
+    return {
+      table: 'users',
+      title: 'Пользователи и права доступа',
+      description:
+        'Таблица учетных записей платформы. Определяет доступ к личному кабинету студента, панели преподавателя или CRM администратора.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getNotificationsDictionary() {
+    const columns = {
+      type: {
+        column: 'type',
+        dbType: 'SMALLINT / TEXT',
+        name: 'NotificationType',
+        description: 'Тип системного уведомления (1=BOOKING_CONFIRMATION..5=CONTACT_FORM)',
+        values: NOTIFICATION_TYPE_DICTIONARY,
+        codes: NotificationType,
+      },
+      item_type: {
+        column: 'item_type',
+        dbType: 'SMALLINT / TEXT',
+        name: 'ItemType',
+        description: 'Тип бронируемой услуги/товара (1=COURSE, 2=SINGLE_LESSON, 3=PACKAGE, 4=CERTIFICATION)',
+        values: ITEM_TYPE_DICTIONARY,
+        codes: ItemType,
+      },
+    };
+
+    return {
+      table: 'notifications',
+      title: 'Системные уведомления и типы услуг',
+      description:
+        'Реестр типов системных почтовых транзакций (Resend) и категорий реализуемых образовательных услуг.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getErrorCodesDictionary() {
+    const columns = {
+      code: {
+        column: 'error_code',
+        dbType: 'INTEGER (5 DIGITS)',
+        name: 'ErrorCode',
+        description: 'Системный код ошибки API (400xx=Validation, 401xx=Auth, 404xx=NotFound, 409xx=Conflict, 402xx=Payment, 500xx=Server)',
+        values: ERROR_CODE_DICTIONARY,
+        codes: ErrorCode,
+      },
+    };
+
+    return {
+      table: 'error_codes',
+      title: 'Коды системных ошибок API (Error Codes)',
+      description:
+        'Стандартизированные 5-значные числовые коды ошибок для всех REST эндпоинтов и клиентских приложений.',
+      columns,
+      enums: columns,
+    };
+  }
+
   getAll() {
     return {
-      version: '1.5.0',
+      version: '1.7.0',
       description: 'Централизованный словарь перечислений и системных настроек Atena School',
       tables: {
         bookings: this.getBookingsDictionary(),
@@ -313,7 +405,10 @@ export class DictionaryService {
         courses: this.getCoursesDictionary(),
         students: this.getStudentsDictionary(),
         annual_memberships: this.getAnnualMembershipsDictionary(),
+        users: this.getUsersDictionary(),
+        notifications: this.getNotificationsDictionary(),
         app_settings: this.getAppSettingsDictionary(),
+        error_codes: this.getErrorCodesDictionary(),
       },
     };
   }

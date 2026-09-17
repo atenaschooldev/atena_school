@@ -38,8 +38,9 @@ export function useBooking(
     ? `${item.start_time}-${item.end_time}`
     : item?.start_time || "";
 
+  const isValidDateParam = Boolean(dateParam && !isNaN(Date.parse(dateParam)));
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    dateParam && dateParam !== "da_concordare" ? new Date(dateParam) : undefined
+    isValidDateParam && dateParam ? new Date(dateParam) : undefined
   );
   const [selectedTime, setSelectedTime] = useState<string | null>(timeParam || null);
 

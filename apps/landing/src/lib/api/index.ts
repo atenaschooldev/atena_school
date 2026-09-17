@@ -1,4 +1,4 @@
-import { createApiClient } from '@atena/api-client';
+import { createApiClient, ApiError, type ContactFormPayload } from '@atena/api-client';
 import type {
   FeeStatusResponse,
   ReservationResponse,
@@ -6,6 +6,8 @@ import type {
   CourseItem,
   BookingRecord,
 } from '@atena/api-types';
+
+export { ApiError };
 
 const backendUrl = typeof window !== 'undefined'
   ? (process.env.NEXT_PUBLIC_BACKEND_URL || '')
@@ -17,7 +19,7 @@ const baseClient = createApiClient(backendUrl);
  * Unified API Client for Atena School Landing
  * 
  * - In Vercel Serverless mode (NEXT_PUBLIC_BACKEND_URL=""): calls relative `/api/landing/*` endpoints.
- * - In NestJS mode (e.g. NEXT_PUBLIC_BACKEND_URL="http://localhost:4000"): calls NestJS backend controllers directly.
+ * - In NestJS mode (e.g. NEXT_PUBLIC_BACKEND_URL="http://localhost:4000"): calls NestJS `/api/v1/*` endpoints directly.
  */
 export const api = {
   courses: {
@@ -39,20 +41,16 @@ export const api = {
       baseClient.landing.bookings.getById(bookingId),
   },
   contact: {
-    submit: (payload: {
-      name?: string;
-      email: string;
-      phone?: string;
-      message?: string;
-      courseInterest?: string;
-    }) => baseClient.landing.contact.submit(payload),
+    submit: (payload: ContactFormPayload) => baseClient.landing.contact.submit(payload),
   },
   settings: {
     getPaymentGateway: () => baseClient.landing.settings.getPaymentGateway(),
   },
   auth: {
     async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
-      const endpoint = backendUrl ? `${backendUrl}/api/landing/auth/magic-link` : '/api/landing/auth/magic-link';
+      const endpoint = backendUrl && baseClient.isNest
+        ? `${backendUrl}/api/v1/auth/magic-link`
+        : (backendUrl ? `${backendUrl}/api/landing/auth/magic-link` : '/api/landing/auth/magic-link');
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
