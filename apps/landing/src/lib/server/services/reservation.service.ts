@@ -26,13 +26,17 @@ export async function generateAndSaveLessons(
   bookingId: string,
   course: SupabaseCourseRow | null,
   lessons: Array<{ startsAt: string; endsAt: string }>,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  studentId?: string | null
 ) {
   if (!lessons || lessons.length === 0) return;
   try {
     const teacherId = course?.teacher_id || null;
+    const courseId = course?.id || null;
     const lessonRows = lessons.map((l) => ({
       booking_id: bookingId,
+      course_id: courseId,
+      student_id: studentId || null,
       teacher_id: teacherId,
       starts_at: l.startsAt,
       ends_at: l.endsAt,
@@ -328,7 +332,7 @@ export async function createReservation(dto: CreateReservationParams) {
         supabase,
       });
 
-      await generateAndSaveLessons(booking.id, course, lessons, supabase);
+      await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
       await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure

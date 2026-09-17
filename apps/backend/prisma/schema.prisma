@@ -56,6 +56,7 @@ model Course {
 
   bookings              Booking[]
   courseTeachers        CourseTeacher[]
+  lessons               Lesson[]
 
   @@map("courses")
 }
@@ -140,26 +141,36 @@ model Booking {
 }
 
 model Lesson {
-  id              String    @id(map: "booking_lessons_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   bookingId       String    @map("booking_id") @db.Uuid
+  courseId        String?   @map("course_id") @db.Uuid
+  studentId       String?   @map("student_id") @db.Uuid
+  teacherId       String?   @map("teacher_id") @db.Uuid
   startsAt        DateTime  @map("starts_at") @db.Timestamptz(6)
   endsAt          DateTime  @map("ends_at") @db.Timestamptz(6)
   status          Int       @default(1)
-  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   attendance      Int       @default(1)
-  homework        String?
-  teacherNotes    String?   @map("teacher_notes")
-  teacherId       String?   @map("teacher_id") @db.Uuid
-  rescheduleCount Int       @default(0) @map("reschedule_count")
-  rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz(6)
   locationType    Int       @default(1) @map("location_type")
   meetingLink     String?   @map("meeting_link")
+  homework        String?
+  teacherNotes    String?   @map("teacher_notes")
+  rescheduleCount Int       @default(0) @map("reschedule_count")
+  rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz(6)
   updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking           Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  student           students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
   teacher           Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
   attendanceRecords AttendanceRecord[]
 
+  @@index([bookingId], map: "idx_lessons_booking_id")
+  @@index([courseId], map: "idx_lessons_course_id")
+  @@index([studentId], map: "idx_lessons_student_id")
+  @@index([teacherId], map: "idx_lessons_teacher_id")
+  @@index([startsAt], map: "idx_lessons_starts_at")
+  @@index([status], map: "idx_lessons_status")
   @@map("lessons")
 }
 
@@ -264,6 +275,7 @@ model students {
 
   payments          Payment[]
   annualMemberships AnnualMembership[]
+  lessons           Lesson[]
 }
 
 model AttendanceRecord {

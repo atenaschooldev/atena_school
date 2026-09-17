@@ -217,13 +217,21 @@ export class CheckoutCoreService {
   /**
    * Generates and inserts scheduled lessons into the Prisma `Lesson` table.
    */
-  async generateAndSaveLessons(bookingId: string, course: any, lessons: Array<{ startsAt: string; endsAt: string }>) {
+  async generateAndSaveLessons(
+    bookingId: string,
+    course: any,
+    lessons: Array<{ startsAt: string; endsAt: string }>,
+    studentId?: string | null
+  ) {
     if (!lessons || lessons.length === 0) return;
 
     try {
       const teacherId = (course as any)?.teacher_id || (course as any)?.teacherId || null;
+      const courseId = (course as any)?.id || null;
       const lessonRows = lessons.map((l) => ({
         bookingId: bookingId,
+        courseId: courseId,
+        studentId: studentId || null,
         teacherId: teacherId,
         startsAt: new Date(l.startsAt),
         endsAt: new Date(l.endsAt),
