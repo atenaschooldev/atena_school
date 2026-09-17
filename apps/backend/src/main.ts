@@ -35,7 +35,7 @@ async function bootstrap() {
     origin: allowedOrigins,
     credentials: true,
   });
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('v1');
 
   // Глобальный фильтр ошибок (совместимость с FastAPI для Flutter-клиента)
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -186,7 +186,7 @@ async function bootstrap() {
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
   console.log(`\n============================================================`);
-  console.log(`⚙️  Backend API:          http://localhost:${port}/api/v1`);
+  console.log(`⚙️  Backend API:          http://localhost:${port}/v1`);
   console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
   console.log(`📖 Data Dictionary (UI):  http://localhost:${port}/docs/dictionary`);
   console.log(`============================================================\n`);

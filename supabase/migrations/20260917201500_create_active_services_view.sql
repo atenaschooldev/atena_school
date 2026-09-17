@@ -2,8 +2,9 @@
 -- Date: 2026-09-17
 -- Description: Standard BigTech Virtual View for Active Enrollments / Active Services (Corsi Attivi)
 
--- 1. Create or Replace View: active_services
-CREATE OR REPLACE VIEW active_services AS
+-- 1. Create or Replace View: active_services (with security_invoker = true to respect RLS)
+CREATE OR REPLACE VIEW public.active_services 
+WITH (security_invoker = true) AS
 SELECT 
   b.id AS booking_id,
   b.student_id,

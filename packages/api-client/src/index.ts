@@ -109,11 +109,12 @@ export function createApiClient(config?: string | ApiClientConfig) {
   // Determine mode: if baseUrl points to external backend or mode is 'nest'
   const isNest = options.mode === "nest" || (options.mode !== "vercel" && (
     baseUrl.includes(":4000") ||
+    baseUrl.includes("/v1") ||
     baseUrl.includes("/api/v1") ||
     (baseUrl.startsWith("http") && !baseUrl.includes(typeof window !== "undefined" ? window.location.host : ""))
   ));
 
-  const prefix = isNest ? `${baseUrl}/api/v1` : (baseUrl ? `${baseUrl}/api/landing` : "/api/landing");
+  const prefix = isNest ? `${baseUrl}/v1` : (baseUrl ? `${baseUrl}/landing` : "/landing");
 
   const coursesService = {
     async getAll(): Promise<{ success: boolean; courses: CourseItem[] }> {

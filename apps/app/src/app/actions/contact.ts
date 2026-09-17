@@ -10,7 +10,7 @@ export async function submitContactForm(formData: {
 }) {
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL || "http://localhost:4000";
-    const res = await fetch(`${backendUrl}/api/v1/contact`, {
+    const res = await fetch(`${backendUrl}/v1/contact`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),

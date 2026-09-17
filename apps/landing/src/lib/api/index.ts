@@ -18,8 +18,8 @@ const baseClient = createApiClient(backendUrl);
 /**
  * Unified API Client for Atena School Landing
  * 
- * - In Vercel Serverless mode (NEXT_PUBLIC_BACKEND_URL=""): calls relative `/api/landing/*` endpoints.
- * - In NestJS mode (e.g. NEXT_PUBLIC_BACKEND_URL="http://localhost:4000"): calls NestJS `/api/v1/*` endpoints directly.
+ * - In Vercel Serverless mode (NEXT_PUBLIC_BACKEND_URL=""): calls relative `/landing/*` endpoints.
+ * - In NestJS mode (e.g. NEXT_PUBLIC_BACKEND_URL="http://localhost:4000"): calls NestJS `/v1/*` endpoints directly.
  */
 export const api = {
   courses: {
@@ -49,8 +49,8 @@ export const api = {
   auth: {
     async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
       const endpoint = backendUrl && baseClient.isNest
-        ? `${backendUrl}/api/v1/auth/magic-link`
-        : (backendUrl ? `${backendUrl}/api/landing/auth/magic-link` : '/api/landing/auth/magic-link');
+        ? `${backendUrl}/v1/auth/magic-link`
+        : (backendUrl ? `${backendUrl}/landing/auth/magic-link` : '/landing/auth/magic-link');
       try {
         const res = await fetch(endpoint, {
           method: 'POST',

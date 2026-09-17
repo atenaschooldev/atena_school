@@ -22,7 +22,7 @@ export function clearAdminToken(): void {
 
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAdminToken();
-  const res = await fetch(`${BACKEND_URL}/api/v1${path}`, {
+  const res = await fetch(`${BACKEND_URL}/v1${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

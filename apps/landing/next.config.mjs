@@ -87,6 +87,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/landing/:path*',
+        destination: '/landing/:path*',
+      },
+    ];
+  },
   async headers() {
     return [
       {
