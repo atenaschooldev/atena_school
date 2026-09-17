@@ -192,14 +192,14 @@ model Payment {
 
 model AnnualMembership {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   taxCode      String   @map("tax_code")
-  academicYear String   @default("2026/2027") @map("academic_year")
-  status       Int      @default(1)
   studentId    String?  @map("student_id") @db.Uuid
   userId       String?  @map("user_id") @db.Uuid
+  status       Int      @default(1)
+  academicYear String   @default("2026/2027") @map("academic_year")
   paidAt       DateTime @default(now()) @map("paid_at") @db.Timestamptz(6)
   expiresAt    DateTime @map("expires_at") @db.Timestamptz(6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   student   students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
 
