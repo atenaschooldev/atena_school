@@ -51,7 +51,8 @@ export async function recordPaymentLedger(
   regFee: number,
   paymentMethod: string | number,
   paymentStatus: string | number,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  studentId?: string | null
 ) {
   try {
     const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID
@@ -60,10 +61,11 @@ export async function recordPaymentLedger(
     const pMethod = parsePaymentMethod(paymentMethod) ?? PaymentMethod.CASH;
     const provider = pMethod === PaymentMethod.STRIPE ? PaymentProvider.STRIPE : PaymentProvider.MANUAL;
 
-    const paymentsToInsert: SupabasePaymentRow[] = [];
+    const paymentsToInsert: any[] = [];
     if (coursePrice > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
+        student_id: studentId || null,
         amount: coursePrice,
         currency: PaymentCurrency.EUR,
         status: pStatus,
@@ -75,6 +77,7 @@ export async function recordPaymentLedger(
     if (regFee > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
+        student_id: studentId || null,
         amount: regFee,
         currency: PaymentCurrency.EUR,
         status: pStatus,
@@ -315,7 +318,7 @@ export async function createReservation(dto: CreateReservationParams) {
     };
 
     try {
-      await processStudentAndBookingLinks({
+      const { studentId: createdStudentId } = await processStudentAndBookingLinks({
         dto: studentDto,
         bookingId: booking.id,
         feeStatus,
@@ -326,7 +329,7 @@ export async function createReservation(dto: CreateReservationParams) {
       });
 
       await generateAndSaveLessons(booking.id, course, lessons, supabase);
-      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase);
+      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure
       await supabase.from('bookings').delete().eq('id', booking.id);

@@ -313,7 +313,24 @@ export class PaymentsService {
     if (isRegistrationFee) {
       const noteMatch = (dto.notes || existing.notes || '').match(/\[membership_id:(.+?)\]/);
       const memId = noteMatch ? noteMatch[1] : null;
-      const sId = dto.studentId || existing.studentId || null;
+      let sId = dto.studentId || existing.studentId || null;
+
+      if (!sId && targetBookingId) {
+        const b = await this.prisma.booking.findUnique({ where: { id: targetBookingId } });
+        if (b?.student_id) {
+          sId = b.student_id;
+        } else if (b?.studentTaxCode || b?.studentEmail) {
+          const found = await this.prisma.students.findFirst({
+            where: {
+              OR: [
+                b.studentTaxCode ? { tax_code: { equals: b.studentTaxCode, mode: 'insensitive' } } : {},
+                b.studentEmail ? { email: { equals: b.studentEmail, mode: 'insensitive' } } : {},
+              ],
+            },
+          });
+          if (found) sId = found.id;
+        }
+      }
 
       if (isPaymentSucceeded) {
         if (sId) {
