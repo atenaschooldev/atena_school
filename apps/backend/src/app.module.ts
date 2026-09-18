@@ -22,6 +22,9 @@ import { StudentsModule } from './features/students/students.module';
 
 import { DictionaryModule } from './features/dictionary/dictionary.module';
 
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
+
 const businessModules = [
   DictionaryModule,
   AuthModule,
@@ -55,5 +58,12 @@ const businessModules = [
     ...businessModules,
   ],
   controllers: [HealthController],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ApiLoggingInterceptor,
+    },
+  ],
 })
 export class AppModule {}
+
