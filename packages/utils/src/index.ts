@@ -180,7 +180,10 @@ export function formatCourseDurationText(
   if (totalLessons && totalLessons > 0) {
     return `${totalLessons} lezioni`;
   }
-  return COURSE_SCHEDULE_TYPE_DICTIONARY[CourseScheduleType.FLEXIBLE].label_it;
+  if (lessonDurationMinutes && lessonDurationMinutes > 0) {
+    return `${lessonDurationMinutes} min / lezione`;
+  }
+  return "";
 }
 
 export function formatCourseScheduleText(
