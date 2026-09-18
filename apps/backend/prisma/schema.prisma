@@ -357,18 +357,20 @@ model students {
 model AttendanceRecord {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   markedAt  DateTime @default(now()) @map("marked_at") @db.Timestamptz(6)
   lessonId  String   @map("lesson_id") @db.Uuid
   bookingId String?  @map("booking_id") @db.Uuid
   studentId String?  @map("student_id") @db.Uuid
-  status    String   @default("present")
+  status    Int      @default(1) @db.SmallInt
   markedBy  String?  @map("marked_by")
   notes     String?  @db.Text
 
   lesson  Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  student students? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  student students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
 
+  @@unique([lessonId, studentId], map: "uq_attendance_lesson_student")
   @@index([lessonId], map: "idx_attendance_records_lesson_id")
   @@index([studentId], map: "idx_attendance_records_student_id")
   @@index([bookingId], map: "idx_attendance_records_booking_id")

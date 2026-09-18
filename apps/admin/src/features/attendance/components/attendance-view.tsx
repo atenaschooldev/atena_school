@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { BookingPaymentStatus, PaymentMethod, BillingScheme } from "@atena/api-types";
+import { BookingPaymentStatus, PaymentMethod, BillingScheme, LessonAttendance, parseLessonAttendance } from "@atena/api-types";
 import { useAttendance } from "../hooks/use-attendance";
 import { BookingDetailDialog } from "@/features/bookings/components/booking-detail-dialog";
 import { AttendanceMetrics } from "./attendance-metrics";
@@ -80,8 +80,14 @@ export function AttendanceView() {
   }, [lessons]);
 
   const totalCount = filteredLessons.length;
-  const presentCount = filteredLessons.filter((l) => l.attendance_record?.status === "present").length;
-  const absentCount = filteredLessons.filter((l) => l.attendance_record?.status === "absent").length;
+  const presentCount = filteredLessons.filter((l) => {
+    const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+    return s === LessonAttendance.PRESENT || s === LessonAttendance.LATE;
+  }).length;
+  const absentCount = filteredLessons.filter((l) => {
+    const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+    return s === LessonAttendance.ABSENT;
+  }).length;
   const pendingPaymentCount = filteredLessons.filter(
     (l) =>
       Number(l.payment_status) !== BookingPaymentStatus.PAID &&

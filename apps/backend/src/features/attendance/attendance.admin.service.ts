@@ -74,16 +74,22 @@ export class AttendanceService {
     });
 
     const total = lessonItems.length;
-    const present = lessonItems.filter(
-      (l) => l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late',
-    ).length;
-    const absent = lessonItems.filter((l) => l.attendance_record?.status === 'absent').length;
-    const pending = lessonItems.filter((l) => !l.attendance_record || l.status === LessonAttendance.PENDING).length;
-    const pendingPayment = lessonItems.filter(
-      (l) =>
-        (l.attendance_record?.status === 'present' || l.attendance_record?.status === 'late') &&
-        l.requires_payment_on_attendance,
-    ).length;
+    const present = lessonItems.filter((l) => {
+      const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+      return s === LessonAttendance.PRESENT || s === LessonAttendance.LATE;
+    }).length;
+    const absent = lessonItems.filter((l) => {
+      const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+      return s === LessonAttendance.ABSENT;
+    }).length;
+    const pending = lessonItems.filter((l) => {
+      const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+      return s === LessonAttendance.PENDING;
+    }).length;
+    const pendingPayment = lessonItems.filter((l) => {
+      const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+      return (s === LessonAttendance.PRESENT || s === LessonAttendance.LATE) && l.requires_payment_on_attendance;
+    }).length;
 
     return {
       lessons: lessonItems,
@@ -110,10 +116,14 @@ export class AttendanceService {
 
     const bookingId = dto.bookingId || lesson.bookingId;
     const studentId = dto.studentId || (lesson.booking as any)?.student_id || (lesson.booking as any)?.studentId;
+    const numericStatus = parseLessonAttendance(dto.status);
 
     // Create or update attendance record
     const existing = await this.prisma.attendanceRecord.findFirst({
-      where: { lessonId: dto.lessonId },
+      where: {
+        lessonId: dto.lessonId,
+        ...(studentId ? { studentId } : {}),
+      },
     });
 
     let record;
@@ -121,7 +131,7 @@ export class AttendanceService {
       record = await this.prisma.attendanceRecord.update({
         where: { id: existing.id },
         data: {
-          status: String(dto.status),
+          status: numericStatus,
           notes: dto.notes !== undefined ? dto.notes : existing.notes,
           markedBy: dto.markedBy || 'admin',
           markedAt: new Date(),
@@ -133,7 +143,7 @@ export class AttendanceService {
           lessonId: dto.lessonId,
           bookingId: bookingId || null,
           studentId: studentId || null,
-          status: String(dto.status),
+          status: numericStatus,
           notes: dto.notes,
           markedBy: dto.markedBy || 'admin',
           markedAt: new Date(),
@@ -142,12 +152,14 @@ export class AttendanceService {
     }
 
     // Update Lesson status and attendance
-    const attendanceNum = parseLessonAttendance(dto.status);
-    const isCompleted = attendanceNum === LessonAttendance.PRESENT || attendanceNum === LessonAttendance.LATE || attendanceNum === LessonAttendance.ABSENT;
+    const isCompleted =
+      numericStatus === LessonAttendance.PRESENT ||
+      numericStatus === LessonAttendance.LATE ||
+      numericStatus === LessonAttendance.ABSENT;
     await this.prisma.lesson.update({
       where: { id: dto.lessonId },
       data: {
-        attendance: attendanceNum,
+        attendance: numericStatus,
         status: isCompleted ? LessonStatus.COMPLETED : lesson.status,
       },
     });
@@ -161,9 +173,12 @@ export class AttendanceService {
     });
 
     const total = records.length;
-    const presentCount = records.filter((r) => r.status === 'present' || r.status === 'late').length;
-    const absentCount = records.filter((r) => r.status === 'absent').length;
-    const excusedCount = records.filter((r) => r.status === 'excused').length;
+    const presentCount = records.filter((r) => {
+      const s = parseLessonAttendance(r.status);
+      return s === LessonAttendance.PRESENT || s === LessonAttendance.LATE;
+    }).length;
+    const absentCount = records.filter((r) => parseLessonAttendance(r.status) === LessonAttendance.ABSENT).length;
+    const excusedCount = records.filter((r) => parseLessonAttendance(r.status) === LessonAttendance.EXCUSED).length;
     const rate = total > 0 ? Number(((presentCount / total) * 100).toFixed(1)) : 0;
 
     return {

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import type { LessonAttendanceItem } from "../types";
-import { LessonAttendance } from "@atena/api-types";
+import { LessonAttendance, parseLessonAttendance } from "@atena/api-types";
 
 export interface GetAttendanceTableColumnsProps {
   onMarkAttendance: (item: LessonAttendanceItem, status: number) => void;
@@ -22,10 +22,17 @@ export function getAttendanceTableColumns({
       accessorKey: "student_name",
       header: "Studente",
       cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-bold text-sm text-foreground">{row.original.student_name}</span>
-          <span className="text-xs text-muted-foreground">{row.original.course_name}</span>
+        <div>
+          <div className="font-semibold text-foreground">{row.original.student_name}</div>
+          <div className="text-xs text-muted-foreground">{row.original.course_name}</div>
         </div>
+      ),
+    },
+    {
+      accessorKey: "teacher_name",
+      header: "Docente",
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">{row.original.teacher_name || "Non assegnato"}</span>
       ),
     },
     {
@@ -38,17 +45,21 @@ export function getAttendanceTableColumns({
       header: "Presenza",
       cell: ({ row }) => {
         const item = row.original;
-        const currentStatus = item.attendance_record?.status;
+        const currentStatus = item.attendance_record
+          ? parseLessonAttendance(item.attendance_record.status)
+          : LessonAttendance.PENDING;
+        const isPresent = currentStatus === LessonAttendance.PRESENT || currentStatus === LessonAttendance.LATE;
+        const isAbsent = currentStatus === LessonAttendance.ABSENT;
 
         return (
           <div className="flex items-center gap-1.5">
             <Button
               type="button"
-              variant={currentStatus === "present" ? "default" : "outline"}
+              variant={isPresent ? "default" : "outline"}
               size="sm"
               onClick={() => onMarkAttendance(item, LessonAttendance.PRESENT)}
               className={`h-7 px-2 text-xs font-semibold cursor-pointer ${
-                currentStatus === "present"
+                isPresent
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                   : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
               }`}
@@ -58,11 +69,11 @@ export function getAttendanceTableColumns({
 
             <Button
               type="button"
-              variant={currentStatus === "absent" ? "default" : "outline"}
+              variant={isAbsent ? "default" : "outline"}
               size="sm"
               onClick={() => onMarkAttendance(item, LessonAttendance.ABSENT)}
               className={`h-7 px-2 text-xs font-semibold cursor-pointer ${
-                currentStatus === "absent"
+                isAbsent
                   ? "bg-rose-600 hover:bg-rose-700 text-white"
                   : "text-rose-600 hover:text-rose-700 hover:bg-rose-50"
               }`}

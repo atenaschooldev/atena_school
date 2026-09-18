@@ -1,6 +1,8 @@
+import { LessonAttendance } from "@atena/api-types";
+
 export interface AttendanceRecord {
   id: string;
-  status: "present" | "absent" | "excused" | "late";
+  status: LessonAttendance | number | string;
   marked_at: string;
   marked_by?: string;
   notes?: string;

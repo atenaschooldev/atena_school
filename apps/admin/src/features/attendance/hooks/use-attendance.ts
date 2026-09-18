@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { LessonAttendance, parseLessonAttendance } from "@atena/api-types";
 import type { LessonAttendanceItem } from "../types";
 
 import { apiFetch } from "@/lib/api";
@@ -40,9 +41,18 @@ export function useAttendance(selectedDateStr?: string) {
         lessons: lessonsArr,
         stats: {
           total: lessonsArr.length,
-          present: lessonsArr.filter((l: any) => l.attendance_record?.status === "present" || l.attendance_record?.status === "late").length,
-          absent: lessonsArr.filter((l: any) => l.attendance_record?.status === "absent").length,
-          pending: lessonsArr.filter((l: any) => !l.attendance_record).length,
+          present: lessonsArr.filter((l: any) => {
+            const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+            return s === LessonAttendance.PRESENT || s === LessonAttendance.LATE;
+          }).length,
+          absent: lessonsArr.filter((l: any) => {
+            const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+            return s === LessonAttendance.ABSENT;
+          }).length,
+          pending: lessonsArr.filter((l: any) => {
+            const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+            return s === LessonAttendance.PENDING;
+          }).length,
           pendingPayment: 0,
         },
       };
@@ -97,10 +107,16 @@ export function useAttendance(selectedDateStr?: string) {
       }
 
       if (statusFilter !== "all") {
-        const currentAtt = l.attendance_record?.status || "pending";
-        if (statusFilter === "marked" && currentAtt === "pending") return false;
-        if (statusFilter === "unmarked" && currentAtt !== "pending") return false;
-        if (statusFilter !== "marked" && statusFilter !== "unmarked" && currentAtt !== statusFilter) {
+        const currentAtt = l.attendance_record
+          ? parseLessonAttendance(l.attendance_record.status)
+          : LessonAttendance.PENDING;
+        if (statusFilter === "marked" && currentAtt === LessonAttendance.PENDING) return false;
+        if (statusFilter === "unmarked" && currentAtt !== LessonAttendance.PENDING) return false;
+        if (
+          statusFilter !== "marked" &&
+          statusFilter !== "unmarked" &&
+          currentAtt !== parseLessonAttendance(statusFilter)
+        ) {
           return false;
         }
       }

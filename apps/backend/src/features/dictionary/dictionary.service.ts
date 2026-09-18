@@ -509,14 +509,36 @@ export class DictionaryService {
     };
   }
 
+  getAttendanceRecordsDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'LessonAttendance',
+        description: 'Отметка посещаемости конкретного студента на занятии (1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED)',
+        values: LESSON_ATTENDANCE_DICTIONARY,
+        codes: LessonAttendance,
+      },
+    };
+
+    return {
+      table: 'attendance_records',
+      title: 'Журнал посещаемости (Attendance Records)',
+      description: 'Детализированный реестр отметок присутствия студентов на занятиях с фиксацией автора отметки, времени и заметок.',
+      columns,
+      enums: columns,
+    };
+  }
+
   getAll() {
     return {
-      version: '1.8.0',
+      version: '1.9.0',
       description: 'Централизованный словарь перечислений и системных настроек Atena School',
       tables: {
         bookings: this.getBookingsDictionary(),
         payments: this.getPaymentsDictionary(),
         lessons: this.getLessonsDictionary(),
+        attendance_records: this.getAttendanceRecordsDictionary(),
         courses: this.getCoursesDictionary(),
         students: this.getStudentsDictionary(),
         annual_memberships: this.getAnnualMembershipsDictionary(),

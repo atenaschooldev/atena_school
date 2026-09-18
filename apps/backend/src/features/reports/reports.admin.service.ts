@@ -6,6 +6,8 @@ import {
   PaymentRecordStatus,
   PaymentType,
   PAYMENT_METHOD_ID_TO_STRING,
+  LessonAttendance,
+  parseLessonAttendance,
 } from '@atena/api-types';
 
 @Injectable()
@@ -128,10 +130,11 @@ export class ReportsService {
     lessons.forEach((l) => {
       const rec = l.attendanceRecords[0];
       if (rec) {
-        if (rec.status === 'present') presentCount++;
-        else if (rec.status === 'absent') absentCount++;
-        else if (rec.status === 'excused') excusedCount++;
-        else if (rec.status === 'late') lateCount++;
+        const s = parseLessonAttendance(rec.status);
+        if (s === LessonAttendance.PRESENT) presentCount++;
+        else if (s === LessonAttendance.ABSENT) absentCount++;
+        else if (s === LessonAttendance.EXCUSED) excusedCount++;
+        else if (s === LessonAttendance.LATE) lateCount++;
       }
     });
 
