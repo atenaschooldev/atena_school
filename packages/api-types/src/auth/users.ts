@@ -1,25 +1,4 @@
-/**
- * ============================================================================
- * ATENA SCHOOL — USERS & ROLES DOMAIN
- * ============================================================================
- * @module @atena/api-types/auth/users
- * @description
- * Роли пользователей и профили доступа платформы (users table, auth guard, RBAC).
- * Числовые идентификаторы ролей (SMALLINT DEFAULT 1):
- * - 1: STUDENT    — Студент (личный кабинет, расписание, материалы)
- * - 2: TEACHER    — Преподаватель (журнал занятий, отметки посещаемости)
- * - 3: ADMIN      — Администратор (CRM, курсы, касса, управление бронями)
- * - 4: PARENT     — Родитель/опекун (оплата, контроль посещаемости ребёнка)
- * - 5: SECRETARY  — Секретариат (приём заявок, координация расписания)
- * - 6: SUPERADMIN — Главный администратор платформы (полный доступ)
- * ============================================================================
- */
-
 import { DictionaryEntry } from '../common/dictionary.types';
-
-// ----------------------------------------------------------------------------
-// 1. User Role Enum & Dictionary
-// ----------------------------------------------------------------------------
 
 export const UserRole = {
   STUDENT: 1,
@@ -82,9 +61,6 @@ export const USER_ROLE_DICTIONARY: Record<UserRole, DictionaryEntry> = {
   },
 };
 
-/**
- * Безопасный парсер роли пользователя из строки или числа
- */
 export function parseUserRole(val: any): UserRole {
   if (typeof val === 'number') {
     if (val >= 1 && val <= 6) return val as UserRole;
@@ -99,10 +75,6 @@ export function parseUserRole(val: any): UserRole {
   if (s === '6' || s === 'superadmin') return UserRole.SUPERADMIN;
   return UserRole.STUDENT;
 }
-
-// ----------------------------------------------------------------------------
-// 2. User Profile DTO Interface
-// ----------------------------------------------------------------------------
 
 export interface UserProfile {
   id: string;
