@@ -51,7 +51,7 @@ export function LoginForm1({
   async function onSubmit(values: LoginFormValues) {
     try {
       setLoading(true)
-      const res = await api.post<{ access_token: string; user?: any }>("/auth/login", values)
+      const res = await api.post<{ access_token: string; user?: any }>("/admin/auth/login", values)
       if (res.access_token) {
         setAdminToken(res.access_token)
         toast.success("Accesso effettuato con successo")

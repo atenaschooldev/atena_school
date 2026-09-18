@@ -9,7 +9,7 @@ export function TodayLessons() {
   const { t } = useTranslation()
   const { data: schedulesData, isLoading } = useQuery({
     queryKey: ["schedules", "list"],
-    queryFn: () => api.get<any[]>("/schedules"),
+    queryFn: () => api.get<any[]>("/admin/schedules"),
   })
 
   const lessonsList = Array.isArray(schedulesData) ? schedulesData : []

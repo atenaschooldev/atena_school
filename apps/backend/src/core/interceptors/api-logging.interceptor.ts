@@ -165,9 +165,18 @@ export class ApiLoggingInterceptor implements NestInterceptor {
     },
   ) {
     try {
+      let endpoint = (data.endpoint || '').replace(/^\/+/, '');
+      if (table === 'admin_api_logs' && !endpoint.startsWith('admin/')) {
+        endpoint = `admin/${endpoint}`;
+      } else if (table === 'app_api_logs' && !endpoint.startsWith('app/')) {
+        endpoint = `app/${endpoint}`;
+      } else if (table === 'landing_api_logs' && !endpoint.startsWith('landing/')) {
+        endpoint = `landing/${endpoint}`;
+      }
+
       const sanitizedData = {
         ...data,
-        endpoint: (data.endpoint || '').replace(/^\/+/, ''),
+        endpoint,
       };
 
       if (table === 'admin_api_logs') {

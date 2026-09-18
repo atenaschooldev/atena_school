@@ -17,7 +17,7 @@ export function useUsers() {
     queryKey: ["users", selectedRole],
     queryFn: async () => {
       const query = selectedRole !== "all" ? `?role=${selectedRole}` : "";
-      const data = await apiFetch<User[]>(`/users${query}`);
+      const data = await apiFetch<User[]>(`/admin/users${query}`);
       return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
@@ -25,7 +25,7 @@ export function useUsers() {
 
   const addMutation = useMutation({
     mutationFn: async (values: UserFormValues) => {
-      return apiFetch<User>("/users", {
+      return apiFetch<User>("/admin/users", {
         method: "POST",
         body: JSON.stringify(values),
       });
@@ -42,7 +42,7 @@ export function useUsers() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: Partial<User> }) => {
-      return apiFetch<User>(`/users/${id}`, {
+      return apiFetch<User>(`/admin/users/${id}`, {
         method: "PATCH",
         body: JSON.stringify(values),
       });
@@ -59,7 +59,7 @@ export function useUsers() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiFetch<{ success: boolean }>(`/users/${id}`, { method: "DELETE" });
+      return apiFetch<{ success: boolean }>(`/admin/users/${id}`, { method: "DELETE" });
     },
     onSuccess: () => {
       toast.success("Utente eliminato");

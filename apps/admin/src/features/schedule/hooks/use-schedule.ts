@@ -73,7 +73,7 @@ export function useSchedule() {
   const { data: fetchedLessons = [], isLoading } = useQuery<Lesson[]>({
     queryKey: ["schedules"],
     queryFn: async () => {
-      const data = await apiFetch<ScheduleApiResponse[]>("/schedules");
+      const data = await apiFetch<ScheduleApiResponse[]>("/admin/schedules");
       return Array.isArray(data) ? data.map(mapApiToLesson) : [];
     },
     staleTime: 1000 * 30, // 30s stale time for instant 0ms cached render
@@ -198,7 +198,7 @@ export function useSchedule() {
   const createMutation = useMutation({
     mutationFn: async (values: LessonFormValues) => {
       const payload = mapLessonToApiPayload(values);
-      return apiFetch<ScheduleApiResponse>("/schedules", {
+      return apiFetch<ScheduleApiResponse>("/admin/schedules", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -217,7 +217,7 @@ export function useSchedule() {
 
   const deleteMutation = useMutation({
     mutationFn: async (lessonId: string) => {
-      return apiFetch(`/schedules/${lessonId}`, { method: "DELETE" });
+      return apiFetch(`/admin/schedules/${lessonId}`, { method: "DELETE" });
     },
     onSuccess: () => {
       toast.success("Lezione eliminata.");
@@ -232,7 +232,7 @@ export function useSchedule() {
   const updateMutation = useMutation({
     mutationFn: async ({ id, values }: { id: string; values: LessonFormValues }) => {
       const payload = mapLessonToApiPayload(values);
-      return apiFetch<ScheduleApiResponse>(`/schedules/${id}`, {
+      return apiFetch<ScheduleApiResponse>(`/admin/schedules/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       });
