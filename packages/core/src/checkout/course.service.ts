@@ -51,6 +51,25 @@ export type GetPublicCoursesResult = {
   courses: CourseWithTeacher[];
 };
 
+function sanitizePublicCourse(
+  c: SupabaseCourseRow,
+  teacherName: string | null,
+  teacherPhotoUrl: string | null,
+): CourseWithTeacher {
+  const {
+    created_at,
+    updated_at,
+    teacher_id,
+    ...rest
+  } = c as any;
+
+  return {
+    ...rest,
+    teacher_name: teacherName || null,
+    teacher_photo_url: teacherPhotoUrl || null,
+  };
+}
+
 export async function getPublicCourses(supabase: SupabaseClient): Promise<GetPublicCoursesResult> {
   let { data: coursesData, error } = await supabase
     .from('courses')
@@ -72,11 +91,7 @@ export async function getPublicCourses(supabase: SupabaseClient): Promise<GetPub
 
   const courses: CourseWithTeacher[] = (coursesData || []).map((c) => {
     const teacher = c.teacher_id ? teacherMap.get(c.teacher_id) : null;
-    return {
-      ...c,
-      teacher_name: teacher?.full_name || null,
-      teacher_photo_url: teacher?.photo_url || null,
-    };
+    return sanitizePublicCourse(c, teacher?.full_name || null, teacher?.photo_url || null);
   });
 
   return { success: true, courses };
@@ -113,11 +128,7 @@ export async function getPublicCourseById(supabase: SupabaseClient, id: string):
     }
   }
 
-  const course: CourseWithTeacher = {
-    ...courseData,
-    teacher_name: teacherName,
-    teacher_photo_url: teacherPhotoUrl,
-  };
+  const course = sanitizePublicCourse(courseData, teacherName, teacherPhotoUrl);
 
   return { success: true, item: course, course };
 }
