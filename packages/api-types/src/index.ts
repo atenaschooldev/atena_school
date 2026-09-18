@@ -2470,3 +2470,17 @@ export const CONTACT_TOPIC_DICTIONARY: Record<ContactTopic, DictionaryEntry> = {
     description: 'Прочие вопросы, не вошедшие в другие категории',
   },
 };
+
+export interface ContactMessageRecord {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string | null;
+  interest?: string | null;
+  message: string;
+  status: string;
+  notes?: string | null;
+}

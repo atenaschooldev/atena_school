@@ -268,17 +268,23 @@ model AnnualMembership {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model contact_messages {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  created_at DateTime? @default(now()) @db.Timestamptz(6)
-  first_name String
-  last_name  String
-  email      String
-  phone      String?
-  interest   String?
-  message    String
-  status     String    @default("new")
-  notes      String?
+model ContactMessage {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String
+  phone     String?
+  interest  String?
+  message   String
+  status    String   @default("new")
+  notes     String?
+
+  @@index([createdAt(sort: Desc)], map: "idx_contact_messages_created_at")
+  @@index([status], map: "idx_contact_messages_status")
+  @@index([email], map: "idx_contact_messages_email")
+  @@map("contact_messages")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
