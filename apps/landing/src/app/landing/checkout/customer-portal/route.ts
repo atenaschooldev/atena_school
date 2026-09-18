@@ -3,10 +3,11 @@ import { createCustomerPortalSession } from '@/lib/server/checkout-service';
 import { customerPortalSchema } from '@atena/validators';
 import { checkRateLimit, getClientIp, rateLimitExceededResponse } from '@/lib/server/rate-limit';
 import { apiError, apiSuccess } from '@/lib/server/api-response';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   const ip = getClientIp(request);
   const rate = checkRateLimit(`customer-portal:${ip}`, { intervalMs: 60 * 1000, maxRequests: 20 });
   if (!rate.success) {
@@ -34,3 +35,8 @@ export async function POST(request: NextRequest) {
     return apiError(message, 400);
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: 'CheckoutPublicController',
+  action: 'createCustomerPortalSession',
+});

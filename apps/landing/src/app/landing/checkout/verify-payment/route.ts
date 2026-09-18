@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyPayment } from '@/lib/server/checkout-service';
 import { verifyPaymentSchema } from '@atena/validators';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   let body: unknown;
   try {
     body = await request.json();
@@ -37,3 +38,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: 'CheckoutPublicController',
+  action: 'verifyPayment',
+});

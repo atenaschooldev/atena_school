@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getPublicCourses } from '@/lib/server/checkout-service';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+async function handler() {
   try {
     const result = await getPublicCourses();
     return NextResponse.json(result);
@@ -14,3 +15,8 @@ export async function GET() {
     );
   }
 }
+
+export const GET = withLandingApiLog(handler, {
+  controller: 'CoursesPublicController',
+  action: 'getPublicCourses',
+});

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBookingDetails } from '@/lib/server/checkout-service';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
 
-export async function GET(
+async function handler(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -28,3 +29,8 @@ export async function GET(
     );
   }
 }
+
+export const GET = withLandingApiLog(handler, {
+  controller: 'BookingsPublicController',
+  action: 'getBookingDetails',
+});
