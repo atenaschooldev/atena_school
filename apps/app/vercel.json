@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "cd ../.. && pnpm --filter app build"
+  "buildCommand": "cd ../.. && npx turbo build --filter=app"
 }
