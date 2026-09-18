@@ -557,6 +557,7 @@ export async function handleStripeWebhook(
         if (coursePaid > 0) {
           await supabase.from('payments').insert({
             booking_id: bookingId,
+            user_id: updatedBooking.user_id || null,
             student_id: updatedBooking.student_id || null,
             amount: coursePaid,
             currency: PaymentCurrency.EUR,
@@ -572,6 +573,7 @@ export async function handleStripeWebhook(
         if (regFee > 0) {
           await supabase.from('payments').insert({
             booking_id: bookingId,
+            user_id: updatedBooking.user_id || null,
             student_id: updatedBooking.student_id || null,
             amount: regFee,
             currency: PaymentCurrency.EUR,
@@ -647,6 +649,8 @@ export async function handleStripeWebhook(
         const renewalAmount = Number(invoice.amount_paid || 0) / 100;
         await supabase.from('payments').insert({
           booking_id: booking.id,
+          user_id: booking.user_id || null,
+          student_id: booking.student_id || null,
           amount: renewalAmount,
           currency: PaymentCurrency.EUR,
           status: PaymentRecordStatus.SUCCEEDED,

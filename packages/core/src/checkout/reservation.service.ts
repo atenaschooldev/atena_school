@@ -59,7 +59,8 @@ export async function recordPaymentLedger(
   paymentStatus: string | number,
   supabase: SupabaseClient,
   studentId?: string | null,
-  studentTaxCode?: string | null
+  studentTaxCode?: string | null,
+  userId?: string | null
 ): Promise<void> {
   try {
     const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID
@@ -72,6 +73,7 @@ export async function recordPaymentLedger(
     if (coursePrice > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
+        user_id: userId || null,
         student_id: studentId || null,
         amount: coursePrice,
         currency: PaymentCurrency.EUR,
@@ -84,6 +86,7 @@ export async function recordPaymentLedger(
     if (regFee > 0) {
       paymentsToInsert.push({
         booking_id: bookingId,
+        user_id: userId || null,
         student_id: studentId || null,
         amount: regFee,
         currency: PaymentCurrency.EUR,
@@ -344,7 +347,7 @@ export async function createReservationWorkflow(
     };
 
     try {
-      const { studentId: createdStudentId } = await processStudentAndBookingLinks({
+      const { studentId: createdStudentId, linkedUserId } = await processStudentAndBookingLinks({
         dto: studentDto,
         bookingId: booking.id,
         feeStatus,
@@ -355,7 +358,7 @@ export async function createReservationWorkflow(
       });
 
       await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
-      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode);
+      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode, linkedUserId);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure
       await supabase.from('bookings').delete().eq('id', booking.id);
