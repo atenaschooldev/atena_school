@@ -127,3 +127,80 @@ export const NOTIFICATION_TYPE_DICTIONARY: Record<NotificationType, DictionaryEn
     description: 'Сообщение из формы обратной связи лендинга',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 3. Notification Channels & Statuses
+// ----------------------------------------------------------------------------
+
+export const NotificationChannel = {
+  EMAIL: 1,
+  TELEGRAM: 2,
+} as const;
+export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel];
+
+export const NotificationStatus = {
+  SENT: 1,
+  FAILED: 2,
+} as const;
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
+
+export const NOTIFICATION_STATUS_DICTIONARY: Record<NotificationStatus, DictionaryEntry> = {
+  [NotificationStatus.SENT]: {
+    id: 1,
+    code: 'SENT',
+    label_it: 'Inviato',
+    label_en: 'Sent',
+    label_ru: 'Отправлено',
+    description: 'Уведомление успешно доставлено / отправлено провайдеру',
+  },
+  [NotificationStatus.FAILED]: {
+    id: 2,
+    code: 'FAILED',
+    label_it: 'Fallito',
+    label_en: 'Failed',
+    label_ru: 'Ошибка отправки',
+    description: 'Ошибка при отправке уведомления через провайдера',
+  },
+};
+
+// ----------------------------------------------------------------------------
+// 4. Log Types / Interfaces
+// ----------------------------------------------------------------------------
+
+export interface ApiLog {
+  id: string;
+  created_at: string;
+  controller: string;
+  action: string;
+  http_method: string;
+  endpoint: string;
+  user_id?: string | null;
+  user_role?: number | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  request?: Record<string, any> | null;
+  response?: Record<string, any> | null;
+  status_code: number;
+}
+
+export interface EmailLog {
+  id: string;
+  created_at: string;
+  recipient: string;
+  notification_type: NotificationType;
+  subject?: string | null;
+  request: Record<string, any>;
+  response?: Record<string, any> | null;
+  status: NotificationStatus;
+}
+
+export interface TelegramLog {
+  id: string;
+  created_at: string;
+  chat_id: string;
+  notification_type: NotificationType;
+  message_text: string;
+  request?: Record<string, any> | null;
+  response?: Record<string, any> | null;
+  status: NotificationStatus;
+}

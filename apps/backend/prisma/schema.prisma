@@ -27,6 +27,7 @@ model User {
   teacher   Teacher?
   bookings  Booking[]
   payments  Payment[]
+  api_logs  api_logs[]
 
   @@index([role], map: "idx_users_role")
   @@index([taxCode], map: "idx_users_tax_code")
@@ -387,5 +388,64 @@ model AppSetting {
 
   @@map("app_settings")
 }
+
+model api_logs {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  controller String   @db.VarChar(100)
+  action     String   @db.VarChar(100)
+  httpMethod String   @map("http_method") @db.VarChar(10)
+  endpoint   String   @db.VarChar(255)
+  userId     String?  @map("user_id") @db.Uuid
+  userRole   Int?     @map("user_role") @db.SmallInt
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  request    Json?
+  response   Json?
+  statusCode Int      @map("status_code")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([controller, action], map: "idx_api_logs_controller_action")
+  @@index([userId], map: "idx_api_logs_user_id")
+  @@index([statusCode], map: "idx_api_logs_status_code")
+  @@index([createdAt(sort: Desc)], map: "idx_api_logs_created_at")
+  @@map("api_logs")
+}
+
+model email_logs {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  recipient        String   @db.VarChar(255)
+  notificationType Int      @map("notification_type") @db.SmallInt
+  subject          String?  @db.VarChar(255)
+  request          Json
+  response         Json?
+  status           Int      @db.SmallInt
+
+  @@index([recipient], map: "idx_email_logs_recipient")
+  @@index([notificationType], map: "idx_email_logs_notification_type")
+  @@index([status], map: "idx_email_logs_status")
+  @@index([createdAt(sort: Desc)], map: "idx_email_logs_created_at")
+  @@map("email_logs")
+}
+
+model telegram_logs {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  chatId           String   @map("chat_id") @db.VarChar(64)
+  notificationType Int      @map("notification_type") @db.SmallInt
+  messageText      String   @map("message_text") @db.Text
+  request          Json?
+  response         Json?
+  status           Int      @db.SmallInt
+
+  @@index([chatId], map: "idx_telegram_logs_chat_id")
+  @@index([notificationType], map: "idx_telegram_logs_notification_type")
+  @@index([status], map: "idx_telegram_logs_status")
+  @@index([createdAt(sort: Desc)], map: "idx_telegram_logs_created_at")
+  @@map("telegram_logs")
+}
+
 
 
