@@ -26,6 +26,7 @@
 
   "dependencies": {
     "@atena/api-types": "workspace:*",
+    "@atena/core": "workspace:*",
     "@atena/utils": "workspace:*",
     "@atena/validators": "workspace:*",
     "@fastify/helmet": "^11.1.1",

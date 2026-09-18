@@ -16,6 +16,12 @@ import { DictionaryEntry } from '../common/dictionary.types';
 // 1. Membership Status Enum & Dictionary
 // ----------------------------------------------------------------------------
 
+export const ACADEMIC_YEAR = {
+  CURRENT: '2026/2027',
+  NEXT: '2027/2028',
+  EXPIRY_DATE: '2027-08-31T23:59:59.000Z',
+} as const;
+
 export const MembershipStatus = {
   ACTIVE: 1,  // Active and valid membership / Attivo / Действительно
   PENDING: 2, // Awaiting payment or confirmation / In attesa / В ожидании

@@ -10,6 +10,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: [
+    '@atena/core',
     '@atena/api-types',
     '@atena/api-client',
     '@atena/utils',
