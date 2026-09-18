@@ -119,16 +119,36 @@ export function createApiClient(config?: string | ApiClientConfig) {
 
   const prefix = baseUrl ? `${baseUrl}/landing` : "/landing";
 
+  const getHeaders = (customHeaders?: HeadersInit): Record<string, string> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (typeof window !== "undefined") {
+      try {
+        let sid = sessionStorage.getItem("atena_session_id");
+        if (!sid) {
+          sid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+          sessionStorage.setItem("atena_session_id", sid);
+        }
+        headers["x-session-id"] = sid;
+      } catch {}
+    }
+    if (customHeaders && typeof customHeaders === "object" && !(customHeaders instanceof Headers)) {
+      return { ...headers, ...(customHeaders as Record<string, string>) };
+    }
+    return headers;
+  };
+
   const coursesService = {
     async getAll(): Promise<{ success: boolean; courses: CourseItem[] }> {
-      const res = await fetch(`${prefix}/courses`);
+      const res = await fetch(`${prefix}/courses`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; courses: CourseItem[] }>(res);
     },
     async getCourses(): Promise<{ success: boolean; courses: CourseItem[] }> {
       return coursesService.getAll();
     },
     async getById(id: string): Promise<{ success: boolean; item?: CourseItem; course?: CourseItem }> {
-      const res = await fetch(`${prefix}/courses/${id}`);
+      const res = await fetch(`${prefix}/courses/${id}`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; item?: CourseItem; course?: CourseItem }>(res);
     },
     async getCourse(id: string): Promise<{ success: boolean; item?: CourseItem; course?: CourseItem }> {
@@ -140,7 +160,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async checkFee(params: { taxCode: string }): Promise<FeeStatusResponse> {
       const res = await fetch(`${prefix}/checkout/check-fee`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(params),
       });
       return handleResponse<FeeStatusResponse>(res);
@@ -148,7 +168,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async checkFeeStatus(params: { taxCode?: string; email?: string; phone?: string }): Promise<FeeStatusResponse> {
       const res = await fetch(`${prefix}/checkout/check-fee`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(params),
       });
       return handleResponse<FeeStatusResponse>(res);
@@ -156,7 +176,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async reserve(payload: ReservationPayload | Record<string, unknown>): Promise<ReservationResponse> {
       const res = await fetch(`${prefix}/checkout/reserve`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(payload),
       });
       return handleResponse<ReservationResponse>(res);
@@ -167,7 +187,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async createStripeSession(payload: StripeSessionPayload | Record<string, unknown>): Promise<CheckoutSessionResponse> {
       const res = await fetch(`${prefix}/checkout/stripe-session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(payload),
       });
       return handleResponse<CheckoutSessionResponse>(res);
@@ -175,27 +195,27 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async verifyPayment(dto: { sessionId: string; bookingId: string }): Promise<{ success: boolean; booking: BookingRecord }> {
       const res = await fetch(`${prefix}/checkout/verify-payment`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(dto),
       });
       return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
     },
     async getItem(itemId: string): Promise<{ success: boolean; item: CourseItem }> {
-      const res = await fetch(`${prefix}/courses/${itemId}`);
+      const res = await fetch(`${prefix}/courses/${itemId}`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; item: CourseItem }>(res);
     },
     async getBookingDetails(bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> {
-      const res = await fetch(`${prefix}/bookings/${bookingId}`);
+      const res = await fetch(`${prefix}/bookings/${bookingId}`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
     },
     async getSettings(): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
-      const res = await fetch(`${prefix}/settings/payment-gateway`);
+      const res = await fetch(`${prefix}/settings/payment-gateway`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
     async updateSettings(data: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(data),
       });
       return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
@@ -204,7 +224,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
 
   const bookingsService = {
     async getById(bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> {
-      const res = await fetch(`${prefix}/bookings/${bookingId}`);
+      const res = await fetch(`${prefix}/bookings/${bookingId}`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
     },
     async getDetails(bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> {
@@ -216,7 +236,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     async submit(payload: ContactFormPayload): Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, string[]> }> {
       const res = await fetch(`${prefix}/contact`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(payload),
       });
       return handleResponse<{ success: boolean; message?: string; error?: string; details?: Record<string, string[]> }>(res);
@@ -225,13 +245,13 @@ export function createApiClient(config?: string | ApiClientConfig) {
 
   const settingsService = {
     async getPaymentGateway(): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
-      const res = await fetch(`${prefix}/settings/payment-gateway`);
+      const res = await fetch(`${prefix}/settings/payment-gateway`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
     },
     async updatePaymentGateway(data: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }): Promise<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }> {
       const res = await fetch(`${prefix}/settings/payment-gateway`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: getHeaders(),
         body: JSON.stringify(data),
       });
       return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);

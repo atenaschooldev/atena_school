@@ -88,6 +88,74 @@ export async function logNotification(params: LogNotificationParams): Promise<vo
 }
 
 
+async function resolveLogUser(
+  request: NextRequest,
+  requestBody: any,
+  queryParams: Record<string, string>,
+): Promise<{ userId: string | null; userRole: number | null }> {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    // 1. Try Bearer token
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user?.id) {
+        const { data: dbUser } = await supabase.from('users').select('id, role').eq('id', user.id).maybeSingle();
+        return { userId: user.id, userRole: dbUser?.role ?? null };
+      }
+    }
+
+    // 2. Try Supabase Auth cookie
+    const allCookies = request.cookies.getAll();
+    const authCookie = allCookies.find((c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
+    if (authCookie?.value) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(authCookie.value));
+        const token = Array.isArray(parsed) ? parsed[0] : parsed?.access_token;
+        if (token && typeof token === 'string') {
+          const { data: { user } } = await supabase.auth.getUser(token);
+          if (user?.id) {
+            const { data: dbUser } = await supabase.from('users').select('id, role').eq('id', user.id).maybeSingle();
+            return { userId: user.id, userRole: dbUser?.role ?? null };
+          }
+        }
+      } catch {}
+    }
+
+    // 3. Smart Guest Matching: Check email from body or query
+    const candidateEmail = requestBody?.email || requestBody?.purchaserEmail || requestBody?.studentEmail || queryParams?.email;
+    if (candidateEmail && typeof candidateEmail === 'string' && candidateEmail.includes('@')) {
+      const { data: userByEmail } = await supabase
+        .from('users')
+        .select('id, role')
+        .ilike('email', candidateEmail.trim())
+        .maybeSingle();
+      if (userByEmail?.id) {
+        return { userId: userByEmail.id, userRole: userByEmail.role ?? null };
+      }
+    }
+
+    // 4. Smart Guest Matching: Check tax code from body or query
+    const candidateTaxCode = requestBody?.taxCode || requestBody?.purchaserTaxCode || requestBody?.studentTaxCode || queryParams?.taxCode;
+    if (candidateTaxCode && typeof candidateTaxCode === 'string' && candidateTaxCode.trim().length >= 11) {
+      const { data: userByTax } = await supabase
+        .from('users')
+        .select('id, role')
+        .ilike('tax_code', candidateTaxCode.trim())
+        .maybeSingle();
+      if (userByTax?.id) {
+        return { userId: userByTax.id, userRole: userByTax.role ?? null };
+      }
+    }
+  } catch (err) {
+    // Non-blocking fallback
+  }
+
+  return { userId: null, userRole: null };
+}
+
 /**
  * Higher-order wrapper to automatically log Next.js Route Handler executions to landing_api_logs
  */
@@ -100,6 +168,7 @@ export function withLandingApiLog(
     const httpMethod = request.method;
     const ipAddress = request.headers.get('x-forwarded-for') || null;
     const userAgent = request.headers.get('user-agent') || null;
+    const sessionId = request.headers.get('x-session-id') || request.cookies.get('atena_session_id')?.value || null;
 
     let requestBody: any = null;
     try {
@@ -115,6 +184,14 @@ export function withLandingApiLog(
     request.nextUrl.searchParams.forEach((val, key) => {
       queryParams[key] = val;
     });
+
+    const { userId, userRole } = await resolveLogUser(request, requestBody, queryParams);
+
+    const requestPayload = {
+      body: requestBody,
+      query: Object.keys(queryParams).length ? queryParams : null,
+      sessionId: sessionId || undefined,
+    };
 
     try {
       const response = await handler(request, context);
@@ -136,9 +213,11 @@ export function withLandingApiLog(
         action: options.action,
         httpMethod,
         endpoint: url,
+        userId,
+        userRole,
         ipAddress,
         userAgent,
-        request: { body: requestBody, query: Object.keys(queryParams).length ? queryParams : null },
+        request: requestPayload,
         response: responseBody,
         statusCode,
       });
@@ -151,9 +230,11 @@ export function withLandingApiLog(
         action: options.action,
         httpMethod,
         endpoint: url,
+        userId,
+        userRole,
         ipAddress,
         userAgent,
-        request: { body: requestBody, query: Object.keys(queryParams).length ? queryParams : null },
+        request: requestPayload,
         response: { error: err?.message || 'Internal Server Error' },
         statusCode,
       });

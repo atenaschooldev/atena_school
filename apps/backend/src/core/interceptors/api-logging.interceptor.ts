@@ -24,9 +24,7 @@ export class ApiLoggingInterceptor implements NestInterceptor {
 
     const ipAddress = request.ip || request.headers?.['x-forwarded-for'] || request.socket?.remoteAddress || null;
     const userAgent = request.headers?.['user-agent'] || null;
-    const user = request.user || null;
-    const userId = user?.id || null;
-    const userRole = typeof user?.role === 'number' ? user.role : null;
+    const sessionId = request.headers?.['x-session-id'] || null;
 
     // Mask sensitive parameters in request payload
     const sanitize = (obj: any): any => {
@@ -55,13 +53,13 @@ export class ApiLoggingInterceptor implements NestInterceptor {
       params: sanitize(request.params),
       query: sanitize(request.query),
       body: sanitize(request.body),
+      sessionId: sessionId || undefined,
     };
-
-    const targetTable = this.resolveTargetTable(url, controllerName, userRole);
 
     return next.handle().pipe(
       tap({
-        next: (responseData) => {
+        next: async (responseData) => {
+          const { userId, userRole } = await this.resolveUserContext(request, requestPayload);
           const finalTable = this.resolveTargetTable(url, controllerName, userRole, responseData);
           const statusCode = response?.statusCode || 200;
           this.saveLog(finalTable, {
@@ -78,7 +76,9 @@ export class ApiLoggingInterceptor implements NestInterceptor {
             statusCode,
           });
         },
-        error: (err) => {
+        error: async (err) => {
+          const { userId, userRole } = await this.resolveUserContext(request, requestPayload);
+          const targetTable = this.resolveTargetTable(url, controllerName, userRole);
           const statusCode = err?.status || err?.statusCode || 500;
           const errorResponse = {
             message: err?.message || 'Internal server error',
@@ -101,6 +101,51 @@ export class ApiLoggingInterceptor implements NestInterceptor {
         },
       }),
     );
+  }
+
+  private async resolveUserContext(
+    request: any,
+    requestPayload: any,
+  ): Promise<{ userId: string | null; userRole: number | null }> {
+    if (request.user?.id) {
+      return {
+        userId: request.user.id,
+        userRole: typeof request.user.role === 'number' ? request.user.role : null,
+      };
+    }
+
+    try {
+      const body = requestPayload?.body;
+      const query = requestPayload?.query;
+
+      // 1. Match by Email from body or query
+      const candidateEmail = body?.email || body?.purchaserEmail || body?.studentEmail || query?.email;
+      if (candidateEmail && typeof candidateEmail === 'string' && candidateEmail.includes('@')) {
+        const user = await this.prisma.user.findFirst({
+          where: { email: { equals: candidateEmail.trim(), mode: 'insensitive' } },
+          select: { id: true, role: true },
+        });
+        if (user?.id) {
+          return { userId: user.id, userRole: typeof user.role === 'number' ? user.role : null };
+        }
+      }
+
+      // 2. Match by Tax Code from body or query
+      const candidateTaxCode = body?.taxCode || body?.purchaserTaxCode || body?.studentTaxCode || query?.taxCode;
+      if (candidateTaxCode && typeof candidateTaxCode === 'string' && candidateTaxCode.trim().length >= 11) {
+        const user = await this.prisma.user.findFirst({
+          where: { taxCode: { equals: candidateTaxCode.trim(), mode: 'insensitive' } },
+          select: { id: true, role: true },
+        });
+        if (user?.id) {
+          return { userId: user.id, userRole: typeof user.role === 'number' ? user.role : null };
+        }
+      }
+    } catch {
+      // Non-blocking lookup
+    }
+
+    return { userId: null, userRole: null };
   }
 
   private resolveTargetTable(
