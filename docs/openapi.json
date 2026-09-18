@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/v1/health": {
+    "/health": {
       "get": {
         "operationId": "HealthController_check",
         "parameters": [],
@@ -12,7 +12,7 @@
         }
       }
     },
-    "/api/v1/auth/login": {
+    "/auth/login": {
       "post": {
         "operationId": "AuthController_login",
         "summary": "Вход в систему (Supabase Auth)",
@@ -56,7 +56,139 @@
         ]
       }
     },
-    "/api/v1/auth/magic-link": {
+    "/landing/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Вход в систему (Supabase Auth)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный вход и возврат JWT-токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "token_type": "bearer",
+                    "expires_in": 3600,
+                    "user": {
+                      "id": "550e8400-e29b-41d4-a716-446655440000",
+                      "email": "admin@atenaschool.com",
+                      "role": "admin"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверные учетные данные"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/admin/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Вход в систему (Supabase Auth)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный вход и возврат JWT-токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "token_type": "bearer",
+                    "expires_in": 3600,
+                    "user": {
+                      "id": "550e8400-e29b-41d4-a716-446655440000",
+                      "email": "admin@atenaschool.com",
+                      "role": "admin"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверные учетные данные"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/app/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Вход в систему (Supabase Auth)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешный вход и возврат JWT-токена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                    "token_type": "bearer",
+                    "expires_in": 3600,
+                    "user": {
+                      "id": "550e8400-e29b-41d4-a716-446655440000",
+                      "email": "admin@atenaschool.com",
+                      "role": "admin"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверные учетные данные"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/magic-link": {
       "post": {
         "operationId": "AuthController_sendMagicLink",
         "summary": "Отправка Magic Link (Supabase OTP) для входа студента / родителя",
@@ -94,7 +226,121 @@
         ]
       }
     },
-    "/api/v1/admin/courses": {
+    "/landing/auth/magic-link": {
+      "post": {
+        "operationId": "AuthController_sendMagicLink",
+        "summary": "Отправка Magic Link (Supabase OTP) для входа студента / родителя",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link успешно отправлен на указанный email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true,
+                    "message": "Magic Link successfully dispatched to mario.rossi@gmail.com"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный email адрес"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/admin/auth/magic-link": {
+      "post": {
+        "operationId": "AuthController_sendMagicLink",
+        "summary": "Отправка Magic Link (Supabase OTP) для входа студента / родителя",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link успешно отправлен на указанный email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true,
+                    "message": "Magic Link successfully dispatched to mario.rossi@gmail.com"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный email адрес"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/app/auth/magic-link": {
+      "post": {
+        "operationId": "AuthController_sendMagicLink",
+        "summary": "Отправка Magic Link (Supabase OTP) для входа студента / родителя",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link успешно отправлен на указанный email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true,
+                    "message": "Magic Link successfully dispatched to mario.rossi@gmail.com"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Некорректный email адрес"
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/admin/courses": {
       "get": {
         "operationId": "CoursesController_listCourses",
         "summary": "Получить список курсов (с поддержкой фильтров)",
@@ -192,7 +438,7 @@
         ]
       }
     },
-    "/api/v1/admin/courses/teachers": {
+    "/admin/courses/teachers": {
       "get": {
         "operationId": "CoursesController_listTeachers",
         "summary": "Получить список преподавателей",
@@ -212,7 +458,7 @@
         ]
       }
     },
-    "/api/v1/admin/courses/{id}": {
+    "/admin/courses/{id}": {
       "get": {
         "operationId": "CoursesController_getCourse",
         "summary": "Получить детальную информацию о курсе",
@@ -319,7 +565,7 @@
         ]
       }
     },
-    "/api/v1/schedules": {
+    "/admin/schedules": {
       "get": {
         "operationId": "SchedulesController_listSchedules",
         "summary": "Получить список расписаний (с фильтрацией)",
@@ -384,7 +630,72 @@
         ]
       }
     },
-    "/api/v1/schedules/{id}": {
+    "/schedules": {
+      "get": {
+        "operationId": "SchedulesController_listSchedules",
+        "summary": "Получить список расписаний (с фильтрацией)",
+        "parameters": [
+          {
+            "name": "courseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "teacherId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "SchedulesController_createSchedule",
+        "summary": "Создать новый элемент расписания",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/schedules/{id}": {
       "patch": {
         "operationId": "SchedulesController_updateSchedule",
         "summary": "Обновить элемент расписания",
@@ -450,7 +761,73 @@
         ]
       }
     },
-    "/api/v1/schedules/{id}/generate-lessons": {
+    "/schedules/{id}": {
+      "patch": {
+        "operationId": "SchedulesController_updateSchedule",
+        "summary": "Обновить элемент расписания",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScheduleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SchedulesController_deleteSchedule",
+        "summary": "Удалить элемент расписания",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/schedules/{id}/generate-lessons": {
       "post": {
         "operationId": "SchedulesController_generateLessons",
         "summary": "Сгенерировать уроки на основе расписания",
@@ -495,7 +872,52 @@
         ]
       }
     },
-    "/api/v1/schedules/bulk-holiday-cancel": {
+    "/schedules/{id}/generate-lessons": {
+      "post": {
+        "operationId": "SchedulesController_generateLessons",
+        "summary": "Сгенерировать уроки на основе расписания",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endDate",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/schedules/bulk-holiday-cancel": {
       "post": {
         "operationId": "SchedulesController_cancelHolidayLessons",
         "summary": "Массовая отмена уроков на официальный праздник",
@@ -525,7 +947,37 @@
         ]
       }
     },
-    "/api/v1/schedules/substitute-teacher": {
+    "/schedules/bulk-holiday-cancel": {
+      "post": {
+        "operationId": "SchedulesController_cancelHolidayLessons",
+        "summary": "Массовая отмена уроков на официальный праздник",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkHolidayCancelDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/schedules/substitute-teacher": {
       "post": {
         "operationId": "SchedulesController_substituteTeacher",
         "summary": "Назначить заменяющего преподавателя на период",
@@ -555,7 +1007,37 @@
         ]
       }
     },
-    "/api/v1/mail/send": {
+    "/schedules/substitute-teacher": {
+      "post": {
+        "operationId": "SchedulesController_substituteTeacher",
+        "summary": "Назначить заменяющего преподавателя на период",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubstituteTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Schedules"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/send": {
       "post": {
         "operationId": "MailController_sendMail",
         "summary": "Отправить произвольное email-уведомление через Resend / SMTP",
@@ -585,7 +1067,67 @@
         ]
       }
     },
-    "/api/v1/mail/test": {
+    "/landing/mail/send": {
+      "post": {
+        "operationId": "MailController_sendMail",
+        "summary": "Отправить произвольное email-уведомление через Resend / SMTP",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email успешно отправлен"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/send": {
+      "post": {
+        "operationId": "MailController_sendMail",
+        "summary": "Отправить произвольное email-уведомление через Resend / SMTP",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email успешно отправлен"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/test": {
       "post": {
         "operationId": "MailController_sendTestMail",
         "summary": "Отправить тестовое письмо для проверки конфигурации почты",
@@ -615,7 +1157,67 @@
         ]
       }
     },
-    "/api/v1/mail/send-payment-reminder": {
+    "/landing/mail/test": {
+      "post": {
+        "operationId": "MailController_sendTestMail",
+        "summary": "Отправить тестовое письмо для проверки конфигурации почты",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Тестовое письмо отправлено"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/test": {
+      "post": {
+        "operationId": "MailController_sendTestMail",
+        "summary": "Отправить тестовое письмо для проверки конфигурации почты",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestMailDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Тестовое письмо отправлено"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/send-payment-reminder": {
       "post": {
         "operationId": "MailController_sendPaymentReminder",
         "summary": "Отправить напоминание об оплате по бронированию",
@@ -645,7 +1247,67 @@
         ]
       }
     },
-    "/api/v1/mail/send-membership-receipt": {
+    "/landing/mail/send-payment-reminder": {
+      "post": {
+        "operationId": "MailController_sendPaymentReminder",
+        "summary": "Отправить напоминание об оплате по бронированию",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/send-payment-reminder": {
+      "post": {
+        "operationId": "MailController_sendPaymentReminder",
+        "summary": "Отправить напоминание об оплате по бронированию",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/send-membership-receipt": {
       "post": {
         "operationId": "MailController_sendMembershipReceipt",
         "summary": "Повторно выслать квитанцию взноса €30 на e-mail",
@@ -675,7 +1337,67 @@
         ]
       }
     },
-    "/api/v1/mail/telegram/send": {
+    "/landing/mail/send-membership-receipt": {
+      "post": {
+        "operationId": "MailController_sendMembershipReceipt",
+        "summary": "Повторно выслать квитанцию взноса €30 на e-mail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembershipReceiptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/send-membership-receipt": {
+      "post": {
+        "operationId": "MailController_sendMembershipReceipt",
+        "summary": "Повторно выслать квитанцию взноса €30 на e-mail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MembershipReceiptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/telegram/send": {
       "post": {
         "operationId": "MailController_sendTelegramMessage",
         "summary": "Отправить произвольное сообщение в Telegram-чат администраторов",
@@ -705,7 +1427,67 @@
         ]
       }
     },
-    "/api/v1/mail/telegram/test": {
+    "/landing/mail/telegram/send": {
+      "post": {
+        "operationId": "MailController_sendTelegramMessage",
+        "summary": "Отправить произвольное сообщение в Telegram-чат администраторов",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTelegramDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сообщение успешно доставлено в Telegram"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/telegram/send": {
+      "post": {
+        "operationId": "MailController_sendTelegramMessage",
+        "summary": "Отправить произвольное сообщение в Telegram-чат администраторов",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTelegramDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сообщение успешно доставлено в Telegram"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/mail/telegram/test": {
       "post": {
         "operationId": "MailController_sendTelegramTest",
         "summary": "Отправить тестовое уведомление в Telegram-бот",
@@ -725,7 +1507,47 @@
         ]
       }
     },
-    "/api/v1/checkout/check-fee": {
+    "/landing/mail/telegram/test": {
+      "post": {
+        "operationId": "MailController_sendTelegramTest",
+        "summary": "Отправить тестовое уведомление в Telegram-бот",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Тестовое сообщение отправлено"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/mail/telegram/test": {
+      "post": {
+        "operationId": "MailController_sendTelegramTest",
+        "summary": "Отправить тестовое уведомление в Telegram-бот",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Тестовое сообщение отправлено"
+          }
+        },
+        "tags": [
+          "Admin — Notifications (Mail & Telegram)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/landing/checkout/check-fee": {
       "post": {
         "operationId": "CheckoutController_checkFee",
         "summary": "Проверка оплаты ежегодного взноса €30",
@@ -763,7 +1585,7 @@
         ]
       }
     },
-    "/api/v1/checkout/reserve": {
+    "/landing/checkout/reserve": {
       "post": {
         "operationId": "CheckoutController_createReservation",
         "summary": "Создание бронирования с оплатой в школе (Paga in Sede)",
@@ -805,7 +1627,7 @@
         ]
       }
     },
-    "/api/v1/checkout/stripe-session": {
+    "/landing/checkout/stripe-session": {
       "post": {
         "operationId": "CheckoutController_createStripeSession",
         "summary": "Инициализация сессии Stripe Checkout",
@@ -845,7 +1667,7 @@
         ]
       }
     },
-    "/api/v1/checkout/verify-payment": {
+    "/landing/checkout/verify-payment": {
       "post": {
         "operationId": "CheckoutController_verifyPayment",
         "summary": "Синхронное подтверждение оплаты Stripe",
@@ -890,7 +1712,7 @@
         ]
       }
     },
-    "/api/v1/checkout/customer-portal": {
+    "/landing/checkout/customer-portal": {
       "post": {
         "operationId": "CheckoutController_createCustomerPortalSession",
         "summary": "Создание сессии Stripe Customer Portal (Self-Service)",
@@ -929,7 +1751,7 @@
         ]
       }
     },
-    "/api/v1/courses": {
+    "/landing/courses": {
       "get": {
         "operationId": "CoursesPublicController_getPublicCourses",
         "summary": "Получить полный каталог активных курсов",
@@ -974,11 +1796,11 @@
           }
         },
         "tags": [
-          "Landing — Courses Catalog"
+          "Landing — Courses (Catalog)"
         ]
       }
     },
-    "/api/v1/courses/{id}": {
+    "/landing/courses/{id}": {
       "get": {
         "operationId": "CoursesPublicController_getItem",
         "summary": "Получить публичную информацию о курсе",
@@ -1032,11 +1854,11 @@
           }
         },
         "tags": [
-          "Landing — Courses Catalog"
+          "Landing — Courses (Catalog)"
         ]
       }
     },
-    "/api/v1/contact": {
+    "/landing/contact": {
       "post": {
         "operationId": "ContactPublicController_submitContact",
         "summary": "Отправка формы обратной связи / лида",
@@ -1072,89 +1894,41 @@
         ]
       }
     },
-    "/api/v1/bookings/{id}": {
+    "/landing/bookings/{id}": {
       "get": {
         "operationId": "BookingsPublicController_getBookingDetails",
-        "summary": "Получить детали квитанции бронирования",
-        "description": "Возвращает полную информацию о бронировании, платежах и сгенерированных уроках для экрана подтверждения заказа",
+        "summary": "Получить детали бронирования, квитанцию и график уроков",
+        "description": "Возвращает полный снимок бронирования: статус, финансовый расчёт (€30 ассоциативный взнос + стоимость курса), историю платежей и точные даты сгенерированных уроков. Используется на экране подтверждения заказа (checkout/success) и в кабинете студента.",
         "parameters": [
           {
             "name": "id",
             "required": true,
             "in": "path",
-            "description": "UUID бронирования",
+            "description": "UUID бронирования (таблица bookings)",
             "schema": {
-              "example": "550e8400-e29b-41d4-a716-446655440000",
+              "example": "2facd0ef-aa4d-4afc-be62-30b75c9f4c6a",
               "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Детали бронирования успешно получены",
+            "description": "Детали бронирования и расписание уроков успешно получены",
             "content": {
               "application/json": {
                 "schema": {
-                  "example": {
-                    "success": true,
-                    "booking": {
-                      "id": "550e8400-e29b-41d4-a716-446655440000",
-                      "course_id": "cor-inglese-a1",
-                      "course_name": "Inglese A1 Principianti",
-                      "purchaser_name": "Mario Rossi",
-                      "purchaser_email": "mario.rossi@gmail.com",
-                      "purchaser_phone": "+39 375 605 2362",
-                      "student_name": "Luca Rossi",
-                      "student_tax_code": "RSSLCU10A01H501Z",
-                      "amount_paid": 270,
-                      "registration_fee": 30,
-                      "course_price": 240,
-                      "payment_status": 1,
-                      "payment_method": 1,
-                      "billing_scheme": 4,
-                      "subscription_status": 1,
-                      "stripe_subscription_id": "sub_1Qxyz...",
-                      "start_date": "2026-10-01",
-                      "lessons_count": 8,
-                      "lessons": [
-                        {
-                          "id": "les_1",
-                          "starts_at": "2026-10-01T16:00:00Z",
-                          "ends_at": "2026-10-01T17:00:00Z",
-                          "status": 1
-                        }
-                      ],
-                      "payments": [
-                        {
-                          "id": "pay_1",
-                          "amount": 240,
-                          "type": 1,
-                          "status": 1,
-                          "payment_method": 1,
-                          "created_at": "2026-09-17T18:00:00Z"
-                        },
-                        {
-                          "id": "pay_2",
-                          "amount": 30,
-                          "type": 2,
-                          "status": 1,
-                          "payment_method": 1,
-                          "created_at": "2026-09-17T18:00:00Z"
-                        }
-                      ]
-                    }
-                  }
+                  "$ref": "#/components/schemas/BookingDetailsResponseDto"
                 }
               }
             }
           }
         },
         "tags": [
-          "Landing — Bookings & Receipts"
+          "Landing — Checkout & Bookings"
         ]
       }
     },
-    "/api/v1/settings/payment-gateway": {
+    "/landing/settings/payment-gateway": {
       "get": {
         "operationId": "SettingsPublicController_getPaymentGateway",
         "summary": "Получить настройки платежного шлюза",
@@ -1231,7 +2005,7 @@
         ]
       }
     },
-    "/api/v1/webhooks/stripe": {
+    "/landing/webhooks/stripe": {
       "post": {
         "operationId": "StripeWebhookController_handleStripeWebhook",
         "summary": "Обработчик входящих событий Stripe",
@@ -1288,7 +2062,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings": {
+    "/admin/bookings": {
       "get": {
         "operationId": "BookingsAdminController_listAllBookings",
         "summary": "Получить все бронирования (только для админа)",
@@ -1373,7 +2147,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/stats": {
+    "/admin/bookings/stats": {
       "get": {
         "operationId": "BookingsAdminController_getStats",
         "summary": "Получить агрегированную статистику по бронированиям",
@@ -1393,7 +2167,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/check-membership": {
+    "/admin/bookings/check-membership": {
       "get": {
         "operationId": "BookingsAdminController_checkMembership",
         "summary": "Проверить статус взноса по Codice Fiscale",
@@ -1429,7 +2203,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/{id}": {
+    "/admin/bookings/{id}": {
       "get": {
         "operationId": "BookingsAdminController_findOne",
         "summary": "Получить бронирование с финансовым резюме",
@@ -1526,7 +2300,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/lookup-client": {
+    "/admin/bookings/lookup-client": {
       "get": {
         "operationId": "BookingsAdminController_lookupClient",
         "summary": "Найти клиента по email / taxCode / phone",
@@ -1562,7 +2336,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/clients-list": {
+    "/admin/bookings/clients-list": {
       "get": {
         "operationId": "BookingsAdminController_listClients",
         "summary": "Получить список всех клиентов из базы",
@@ -1592,7 +2366,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/{id}/status": {
+    "/admin/bookings/{id}/status": {
       "patch": {
         "operationId": "BookingsAdminController_updateStatus",
         "summary": "Обновить статус оплаты / расписания бронирования",
@@ -1638,7 +2412,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/{id}/lessons": {
+    "/admin/bookings/{id}/lessons": {
       "get": {
         "operationId": "BookingsAdminController_getBookingLessons",
         "summary": "Получить уроки бронирования с финансовым статусом",
@@ -1667,7 +2441,7 @@
         ]
       }
     },
-    "/api/v1/admin/bookings/{id}/lessons/{lessonId}/complete": {
+    "/admin/bookings/{id}/lessons/{lessonId}/complete": {
       "patch": {
         "operationId": "BookingsAdminController_completeLesson",
         "summary": "Отметить урок как проведённый",
@@ -1704,7 +2478,7 @@
         ]
       }
     },
-    "/api/v1/portal/dashboard": {
+    "/app/dashboard": {
       "get": {
         "operationId": "PortalController_getDashboardData",
         "summary": "Получение обогащенного дашборда ученика/родителя",
@@ -1731,7 +2505,34 @@
         ]
       }
     },
-    "/api/v1/portal/bookings/{id}/lessons": {
+    "/portal/dashboard": {
+      "get": {
+        "operationId": "PortalController_getDashboardData",
+        "summary": "Получение обогащенного дашборда ученика/родителя",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Student & Parent Portal (LK)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/app/bookings/{id}/lessons": {
       "get": {
         "operationId": "PortalController_getBookingLessons",
         "summary": "Получение расписания уроков для курса",
@@ -1760,7 +2561,36 @@
         ]
       }
     },
-    "/api/v1/portal/bookings/{id}/schedule-lesson": {
+    "/portal/bookings/{id}/lessons": {
+      "get": {
+        "operationId": "PortalController_getBookingLessons",
+        "summary": "Получение расписания уроков для курса",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Student & Parent Portal (LK)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/app/bookings/{id}/schedule-lesson": {
       "post": {
         "operationId": "PortalController_scheduleNextLesson",
         "summary": "Запланировать следующий урок для бронирования",
@@ -1796,7 +2626,43 @@
         ]
       }
     },
-    "/api/v1/portal/profile": {
+    "/portal/bookings/{id}/schedule-lesson": {
+      "post": {
+        "operationId": "PortalController_scheduleNextLesson",
+        "summary": "Запланировать следующий урок для бронирования",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Student & Parent Portal (LK)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/app/profile": {
       "patch": {
         "operationId": "PortalController_updateProfile",
         "summary": "Обновление имени и телефона профиля",
@@ -1826,7 +2692,37 @@
         ]
       }
     },
-    "/api/v1/users": {
+    "/portal/profile": {
+      "patch": {
+        "operationId": "PortalController_updateProfile",
+        "summary": "Обновление имени и телефона профиля",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Student & Parent Portal (LK)"
+        ],
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ]
+      }
+    },
+    "/admin/users": {
       "get": {
         "operationId": "UsersController_findAll",
         "parameters": [
@@ -1882,7 +2778,63 @@
         }
       }
     },
-    "/api/v1/users/{id}": {
+    "/users": {
+      "get": {
+        "operationId": "UsersController_findAll",
+        "parameters": [
+          {
+            "name": "role",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{id}": {
       "get": {
         "operationId": "UsersController_findOne",
         "parameters": [
@@ -1962,7 +2914,87 @@
         }
       }
     },
-    "/api/v1/admin/payments": {
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_findOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/admin/payments": {
       "get": {
         "operationId": "PaymentsController_findAll",
         "summary": "Получить список транзакций / платежей",
@@ -2076,7 +3108,7 @@
         ]
       }
     },
-    "/api/v1/admin/payments/summary": {
+    "/admin/payments/summary": {
       "get": {
         "operationId": "PaymentsController_getSummary",
         "summary": "Получить сводку кассового аудита и финансовых показателей",
@@ -2103,7 +3135,7 @@
         ]
       }
     },
-    "/api/v1/admin/payments/{id}": {
+    "/admin/payments/{id}": {
       "get": {
         "operationId": "PaymentsController_findOne",
         "summary": "Получить информацию о конкретном платеже",
@@ -2210,7 +3242,7 @@
         ]
       }
     },
-    "/api/v1/admin/payments/pos-checkout": {
+    "/admin/payments/pos-checkout": {
       "post": {
         "operationId": "PaymentsController_posCheckout",
         "summary": "Универсальная кассовая регистрация оплаты (курс, взнос €30, урок)",
@@ -2240,7 +3272,7 @@
         ]
       }
     },
-    "/api/v1/admin/memberships": {
+    "/admin/memberships": {
       "get": {
         "operationId": "MembershipsController_findAll",
         "summary": "Получить список годовых членских взносов",
@@ -2313,7 +3345,7 @@
         ]
       }
     },
-    "/api/v1/admin/memberships/{id}": {
+    "/admin/memberships/{id}": {
       "get": {
         "operationId": "MembershipsController_findOne",
         "summary": "Получить взнос по ID",
@@ -2349,7 +3381,7 @@
         ]
       }
     },
-    "/api/v1/admin/memberships/{id}/status": {
+    "/admin/memberships/{id}/status": {
       "patch": {
         "operationId": "MembershipsController_updateStatus",
         "summary": "Обновить статус взноса (активный / отозванный)",
@@ -2395,7 +3427,7 @@
         ]
       }
     },
-    "/api/v1/admin/memberships/{id}/toggle-status": {
+    "/admin/memberships/{id}/toggle-status": {
       "patch": {
         "operationId": "MembershipsController_toggleStatus",
         "summary": "Тоггл статуса (активный → отозван, отозван → активный)",
@@ -2431,7 +3463,7 @@
         ]
       }
     },
-    "/api/v1/admin/memberships/stats": {
+    "/admin/memberships/stats": {
       "get": {
         "operationId": "MembershipsController_getStats",
         "summary": "Статистика по тессерам",
@@ -2451,7 +3483,7 @@
         ]
       }
     },
-    "/api/v1/admin/teachers": {
+    "/admin/teachers": {
       "get": {
         "operationId": "TeachersController_findAll",
         "summary": "Получить список преподавателей (с фильтрацией и поиском)",
@@ -2533,7 +3565,7 @@
         ]
       }
     },
-    "/api/v1/admin/teachers/{id}": {
+    "/admin/teachers/{id}": {
       "get": {
         "operationId": "TeachersController_findOne",
         "summary": "Получить информацию о преподавателе по ID",
@@ -2640,7 +3672,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance": {
+    "/admin/attendance": {
       "get": {
         "operationId": "AttendanceController_getDailyAttendance",
         "summary": "Получить журнал посещаемости на выбранную дату",
@@ -2677,7 +3709,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance/mark": {
+    "/admin/attendance/mark": {
       "post": {
         "operationId": "AttendanceController_markAttendance",
         "summary": "Отметить статус присутствия студента на уроке",
@@ -2707,7 +3739,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance/active-bookings": {
+    "/admin/attendance/active-bookings": {
       "get": {
         "operationId": "AttendanceController_getActiveBookings",
         "summary": "Получить список активных бронирований для выбора студента",
@@ -2727,7 +3759,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance/stats/{bookingId}": {
+    "/admin/attendance/stats/{bookingId}": {
       "get": {
         "operationId": "AttendanceController_getBookingStats",
         "summary": "Получить статистику посещаемости студента по курсу",
@@ -2756,7 +3788,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance/manual": {
+    "/admin/attendance/manual": {
       "post": {
         "operationId": "AttendanceController_createManualRecord",
         "summary": "Вручную внести внеплановый урок/присутствие",
@@ -2786,7 +3818,7 @@
         ]
       }
     },
-    "/api/v1/admin/attendance/{lessonId}": {
+    "/admin/attendance/{lessonId}": {
       "delete": {
         "operationId": "AttendanceController_deleteAttendance",
         "summary": "Удалить / сбросить запись посещаемости",
@@ -2815,7 +3847,7 @@
         ]
       }
     },
-    "/api/v1/admin/reports/revenue": {
+    "/admin/reports/revenue": {
       "get": {
         "operationId": "ReportsController_getRevenueReport",
         "summary": "Финансовый отчёт по выручке (периоды, форматы оплаты)",
@@ -2852,7 +3884,7 @@
         ]
       }
     },
-    "/api/v1/admin/reports/debtors": {
+    "/admin/reports/debtors": {
       "get": {
         "operationId": "ReportsController_getDebtorsReport",
         "summary": "Реестр задолженностей и неоплаченных бронирований",
@@ -2872,7 +3904,7 @@
         ]
       }
     },
-    "/api/v1/admin/reports/attendance-summary": {
+    "/admin/reports/attendance-summary": {
       "get": {
         "operationId": "ReportsController_getAttendanceSummary",
         "summary": "Сводный отчёт по посещаемости и загрузке",
@@ -2909,7 +3941,7 @@
         ]
       }
     },
-    "/api/v1/admin/audit-logs": {
+    "/admin/audit-logs": {
       "get": {
         "operationId": "AuditLogsController_findAll",
         "summary": "Просмотр журнала логов действий администраторов (Аудит)",
@@ -2970,7 +4002,7 @@
         ]
       }
     },
-    "/api/v1/admin/students": {
+    "/admin/students": {
       "get": {
         "operationId": "StudentsController_findAll",
         "summary": "Получить реестр студентов (поиск по Codice Fiscale, фильтры)",
@@ -3067,7 +4099,7 @@
         ]
       }
     },
-    "/api/v1/admin/students/{id}": {
+    "/admin/students/{id}": {
       "get": {
         "operationId": "StudentsController_findOne",
         "summary": "Получить детальную карточку студента по ID",
@@ -4199,6 +5231,228 @@
           "cognome",
           "email",
           "messaggio"
+        ]
+      },
+      "BookingLessonItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID урока в таблице lessons",
+            "example": "les_123"
+          },
+          "starts_at": {
+            "type": "string",
+            "description": "Дата и время начала урока (ISO 8601)",
+            "example": "2026-10-01T16:00:00Z"
+          },
+          "ends_at": {
+            "type": "string",
+            "description": "Дата и время окончания урока (ISO 8601)",
+            "example": "2026-10-01T17:15:00Z"
+          },
+          "status": {
+            "type": "number",
+            "description": "Статус урока (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)",
+            "example": 1
+          }
+        },
+        "required": [
+          "id",
+          "starts_at",
+          "ends_at",
+          "status"
+        ]
+      },
+      "BookingPaymentItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID платежа в таблице payments",
+            "example": "pay_123"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Сумма транзакции в EUR",
+            "example": 240
+          },
+          "type": {
+            "type": "number",
+            "description": "Тип платежа (1=COURSE_PAYMENT, 2=REGISTRATION_FEE)",
+            "example": 1
+          },
+          "status": {
+            "type": "number",
+            "description": "Статус платежа (1=PENDING, 2=PAID, 3=FAILED, 4=REFUNDED)",
+            "example": 2
+          },
+          "payment_method": {
+            "type": "number",
+            "description": "Метод оплаты (1=STRIPE, 2=CASH, 3=POS, 4=BONIFICO)",
+            "example": 1
+          },
+          "academic_year": {
+            "type": "string",
+            "description": "Учебный год взноса (напр. 2026/2027)",
+            "example": "2026/2027"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "Дата и время создания транзакции (ISO 8601)",
+            "example": "2026-09-17T18:00:00Z"
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "type",
+          "status",
+          "payment_method",
+          "created_at"
+        ]
+      },
+      "BookingDetailsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID бронирования",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "status": {
+            "type": "number",
+            "description": "Статус брони (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)",
+            "example": 1
+          },
+          "payment_status": {
+            "type": "number",
+            "description": "Статус оплаты (1=PENDING, 2=PAID, 3=PARTIALLY_PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED)",
+            "example": 2
+          },
+          "payment_method": {
+            "type": "number",
+            "description": "Метод оплаты (1=STRIPE, 2=CASH, 3=POS, 4=BONIFICO)",
+            "example": 1
+          },
+          "course_id": {
+            "type": "string",
+            "description": "ID курса",
+            "example": "cor-inglese-a1"
+          },
+          "course_name": {
+            "type": "string",
+            "description": "Название курса",
+            "example": "Inglese A1 Principianti"
+          },
+          "course_price": {
+            "type": "number",
+            "description": "Чистая стоимость курса в EUR",
+            "example": 240
+          },
+          "registration_fee": {
+            "type": "number",
+            "description": "Сумма ассоциативного взноса в EUR (€30 или 0)",
+            "example": 30
+          },
+          "total_price": {
+            "type": "number",
+            "description": "Итоговая стоимость заказа в EUR",
+            "example": 270
+          },
+          "amount_paid": {
+            "type": "number",
+            "description": "Фактически оплаченная сумма в EUR",
+            "example": 270
+          },
+          "purchaser_name": {
+            "type": "string",
+            "description": "ФИО плательщика / покупателя",
+            "example": "Mario Rossi"
+          },
+          "purchaser_email": {
+            "type": "string",
+            "description": "Email плательщика",
+            "example": "mario.rossi@gmail.com"
+          },
+          "purchaser_phone": {
+            "type": "string",
+            "description": "Телефон плательщика",
+            "example": "+39 375 605 2362"
+          },
+          "purchaser_tax_code": {
+            "type": "string",
+            "description": "Codice Fiscale плательщика",
+            "example": "RSSMRA80A01H501T"
+          },
+          "student_name": {
+            "type": "string",
+            "description": "Имя ученика",
+            "example": "Luca Rossi"
+          },
+          "student_tax_code": {
+            "type": "string",
+            "description": "Codice Fiscale ученика",
+            "example": "RSSLCU10A01H501Z"
+          },
+          "start_date": {
+            "type": "string",
+            "description": "Дата старта обучения (YYYY-MM-DD)",
+            "example": "2026-10-01"
+          },
+          "lessons_count": {
+            "type": "number",
+            "description": "Количество сгенерированных уроков",
+            "example": 8
+          },
+          "lessons": {
+            "description": "Список сгенерированных уроков",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingLessonItemDto"
+            }
+          },
+          "payments": {
+            "description": "Список связанных платежей",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingPaymentItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "payment_status",
+          "course_price",
+          "registration_fee",
+          "total_price",
+          "amount_paid",
+          "lessons_count",
+          "lessons",
+          "payments"
+        ]
+      },
+      "BookingDetailsResponseDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Флаг успешности запроса",
+            "example": true
+          },
+          "booking": {
+            "description": "Данные бронирования",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BookingDetailsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "booking"
         ]
       },
       "UpdateBookingStatusDto": {

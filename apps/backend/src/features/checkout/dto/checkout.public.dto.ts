@@ -383,4 +383,115 @@ export class CustomerPortalDto {
   returnUrl?: string;
 }
 
+// ---------------------------------------------------------------------------
+// Booking Details Response DTOs
+// ---------------------------------------------------------------------------
+
+export class BookingPaymentItemDto {
+  @ApiProperty({ description: 'ID платежа в таблице payments', example: 'pay_123' })
+  id: string;
+
+  @ApiProperty({ description: 'Сумма транзакции в EUR', example: 240 })
+  amount: number;
+
+  @ApiProperty({ description: 'Тип платежа (1=COURSE_PAYMENT, 2=REGISTRATION_FEE)', example: 1 })
+  type: number;
+
+  @ApiProperty({ description: 'Статус платежа (1=PENDING, 2=PAID, 3=FAILED, 4=REFUNDED)', example: 2 })
+  status: number;
+
+  @ApiProperty({ description: 'Метод оплаты (1=STRIPE, 2=CASH, 3=POS, 4=BONIFICO)', example: 1 })
+  payment_method: number;
+
+  @ApiPropertyOptional({ description: 'Учебный год взноса (напр. 2026/2027)', example: '2026/2027' })
+  academic_year?: string;
+
+  @ApiProperty({ description: 'Дата и время создания транзакции (ISO 8601)', example: '2026-09-17T18:00:00Z' })
+  created_at: string;
+}
+
+export class BookingLessonItemDto {
+  @ApiProperty({ description: 'ID урока в таблице lessons', example: 'les_123' })
+  id: string;
+
+  @ApiProperty({ description: 'Дата и время начала урока (ISO 8601)', example: '2026-10-01T16:00:00Z' })
+  starts_at: string;
+
+  @ApiProperty({ description: 'Дата и время окончания урока (ISO 8601)', example: '2026-10-01T17:15:00Z' })
+  ends_at: string;
+
+  @ApiProperty({ description: 'Статус урока (1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED)', example: 1 })
+  status: number;
+}
+
+export class BookingDetailsDto {
+  @ApiProperty({ description: 'UUID бронирования', example: '550e8400-e29b-41d4-a716-446655440000' })
+  id: string;
+
+  @ApiProperty({ description: 'Статус брони (1=ACTIVE, 2=COMPLETED, 3=CANCELLED)', example: 1 })
+  status: number;
+
+  @ApiProperty({ description: 'Статус оплаты (1=PENDING, 2=PAID, 3=PARTIALLY_PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED)', example: 2 })
+  payment_status: number;
+
+  @ApiPropertyOptional({ description: 'Метод оплаты (1=STRIPE, 2=CASH, 3=POS, 4=BONIFICO)', example: 1 })
+  payment_method?: number;
+
+  @ApiPropertyOptional({ description: 'ID курса', example: 'cor-inglese-a1' })
+  course_id?: string;
+
+  @ApiPropertyOptional({ description: 'Название курса', example: 'Inglese A1 Principianti' })
+  course_name?: string;
+
+  @ApiProperty({ description: 'Чистая стоимость курса в EUR', example: 240 })
+  course_price: number;
+
+  @ApiProperty({ description: 'Сумма ассоциативного взноса в EUR (€30 или 0)', example: 30 })
+  registration_fee: number;
+
+  @ApiProperty({ description: 'Итоговая стоимость заказа в EUR', example: 270 })
+  total_price: number;
+
+  @ApiProperty({ description: 'Фактически оплаченная сумма в EUR', example: 270 })
+  amount_paid: number;
+
+  @ApiPropertyOptional({ description: 'ФИО плательщика / покупателя', example: 'Mario Rossi' })
+  purchaser_name?: string;
+
+  @ApiPropertyOptional({ description: 'Email плательщика', example: 'mario.rossi@gmail.com' })
+  purchaser_email?: string;
+
+  @ApiPropertyOptional({ description: 'Телефон плательщика', example: '+39 375 605 2362' })
+  purchaser_phone?: string;
+
+  @ApiPropertyOptional({ description: 'Codice Fiscale плательщика', example: 'RSSMRA80A01H501T' })
+  purchaser_tax_code?: string;
+
+  @ApiPropertyOptional({ description: 'Имя ученика', example: 'Luca Rossi' })
+  student_name?: string;
+
+  @ApiPropertyOptional({ description: 'Codice Fiscale ученика', example: 'RSSLCU10A01H501Z' })
+  student_tax_code?: string;
+
+  @ApiPropertyOptional({ description: 'Дата старта обучения (YYYY-MM-DD)', example: '2026-10-01' })
+  start_date?: string;
+
+  @ApiProperty({ description: 'Количество сгенерированных уроков', example: 8 })
+  lessons_count: number;
+
+  @ApiProperty({ description: 'Список сгенерированных уроков', type: [BookingLessonItemDto] })
+  lessons: BookingLessonItemDto[];
+
+  @ApiProperty({ description: 'Список связанных платежей', type: [BookingPaymentItemDto] })
+  payments: BookingPaymentItemDto[];
+}
+
+export class BookingDetailsResponseDto {
+  @ApiProperty({ description: 'Флаг успешности запроса', example: true })
+  success: boolean;
+
+  @ApiProperty({ description: 'Данные бронирования', type: BookingDetailsDto })
+  booking: BookingDetailsDto;
+}
+
 
