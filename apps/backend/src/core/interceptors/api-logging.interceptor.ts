@@ -165,12 +165,17 @@ export class ApiLoggingInterceptor implements NestInterceptor {
     },
   ) {
     try {
+      const sanitizedData = {
+        ...data,
+        endpoint: (data.endpoint || '').replace(/^\/+/, ''),
+      };
+
       if (table === 'admin_api_logs') {
-        await this.prisma.admin_api_logs.create({ data });
+        await this.prisma.admin_api_logs.create({ data: sanitizedData });
       } else if (table === 'app_api_logs') {
-        await this.prisma.app_api_logs.create({ data });
+        await this.prisma.app_api_logs.create({ data: sanitizedData });
       } else {
-        await this.prisma.landing_api_logs.create({ data });
+        await this.prisma.landing_api_logs.create({ data: sanitizedData });
       }
     } catch {
       // Non-blocking logger failure

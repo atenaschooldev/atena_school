@@ -45,7 +45,7 @@ export async function logLandingApi(params: LogLandingApiParams): Promise<void> 
       controller: params.controller || 'LandingRouteHandler',
       action: params.action,
       http_method: params.httpMethod.toUpperCase(),
-      endpoint: params.endpoint,
+      endpoint: (params.endpoint || '').replace(/^\/+/, ''),
       user_id: params.userId || null,
       user_role: params.userRole || null,
       ip_address: params.ipAddress || null,
