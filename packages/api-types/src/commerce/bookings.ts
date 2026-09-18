@@ -571,12 +571,92 @@ export interface FeeStatusResponse {
   error?: string;
 }
 
+export interface BookingDto {
+  id: string;
+  courseId: string | null;
+  courseName: string;
+
+  // Purchaser
+  purchaserName: string | null;
+  purchaserEmail: string | null;
+  purchaserPhone: string | null;
+  purchaserTaxCode: string | null;
+
+  // Student
+  studentName: string;
+  studentEmail: string | null;
+  studentPhone: string | null;
+  studentTaxCode: string | null;
+  studentBirthDate: string | null;
+
+  // Financials
+  amountPaid: number;
+  registrationFee: number;
+  discountAmount: number;
+  promoCode: string | null;
+
+  // Statuses
+  bookingStatus: number;
+  paymentStatus: number;
+  paymentMethod: number;
+  billingScheme: number;
+  schedulingStatus: number;
+
+  // Schedule
+  startDate: string | null;
+  scheduleDays: number[];
+  startTime: string | null;
+  endTime: string | null;
+  totalLessonsCount: number | null;
+
+  // Notes & Metadata
+  notes: string | null;
+  createdAt: string;
+}
+
+export function formatBookingDto(b: Record<string, any>): BookingDto {
+  return {
+    id: b.id,
+    courseId: b.course_id || b.courseId || null,
+    courseName: b.course_name || b.courseName || 'Corso Atena School',
+
+    purchaserName: b.purchaser_name || b.purchaserName || null,
+    purchaserEmail: b.purchaser_email || b.purchaserEmail || null,
+    purchaserPhone: b.purchaser_phone || b.purchaserPhone || null,
+    purchaserTaxCode: b.purchaser_tax_code || b.purchaserTaxCode || null,
+
+    studentName: b.student_name || b.studentName || b.purchaser_name || b.purchaserName || '',
+    studentEmail: b.student_email || b.studentEmail || null,
+    studentPhone: b.student_phone || b.studentPhone || null,
+    studentTaxCode: b.student_tax_code || b.studentTaxCode || null,
+    studentBirthDate: b.student_birth_date ? String(b.student_birth_date).split('T')[0] : (b.studentBirthDate ? String(b.studentBirthDate).split('T')[0] : null),
+
+    amountPaid: Number(b.amount_paid != null ? b.amount_paid : (b.amountPaid != null ? b.amountPaid : 0)),
+    registrationFee: Number(b.registration_fee != null ? b.registration_fee : (b.registrationFee != null ? b.registrationFee : 0)),
+    discountAmount: Number(b.discount_amount != null ? b.discount_amount : (b.discountAmount != null ? b.discountAmount : 0)),
+    promoCode: b.promo_code || b.promoCode || null,
+
+    bookingStatus: Number(b.booking_status != null ? b.booking_status : (b.bookingStatus != null ? b.bookingStatus : 1)),
+    paymentStatus: Number(b.payment_status != null ? b.payment_status : (b.paymentStatus != null ? b.paymentStatus : 1)),
+    paymentMethod: Number(b.payment_method != null ? b.payment_method : (b.paymentMethod != null ? b.paymentMethod : 1)),
+    billingScheme: Number(b.billing_scheme != null ? b.billing_scheme : (b.billingScheme != null ? b.billingScheme : 1)),
+    schedulingStatus: Number(b.scheduling_status != null ? b.scheduling_status : (b.schedulingStatus != null ? b.schedulingStatus : 1)),
+
+    startDate: b.start_date ? String(b.start_date).split('T')[0] : (b.startDate ? String(b.startDate).split('T')[0] : null),
+    scheduleDays: Array.isArray(b.schedule_days) ? b.schedule_days : (Array.isArray(b.scheduleDays) ? b.scheduleDays : []),
+    startTime: b.start_time || b.startTime || null,
+    endTime: b.end_time || b.endTime || null,
+    totalLessonsCount: b.total_lessons_count != null ? Number(b.total_lessons_count) : (b.totalLessonsCount != null ? Number(b.totalLessonsCount) : null),
+
+    notes: b.notes || null,
+    createdAt: b.created_at ? new Date(b.created_at).toISOString() : (b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString()),
+  };
+}
+
 export interface ReservationResponse {
   success: boolean;
   bookingId?: string;
-  bookingIds?: string[];
-  booking?: BookingRecord;
-  bookings?: BookingRecord[];
+  booking?: BookingDto;
   error?: string;
   details?: Record<string, string[]>;
 }
@@ -585,10 +665,11 @@ export interface CheckoutSessionResponse {
   success: boolean;
   url?: string;
   bookingId?: string;
-  bookingIds?: string[];
+  booking?: BookingDto;
   error?: string;
   details?: Record<string, string[]>;
 }
+
 
 export interface SiteContentResponse {
   success: boolean;

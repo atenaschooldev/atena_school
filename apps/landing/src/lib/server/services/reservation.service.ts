@@ -14,7 +14,10 @@ import {
   SubscriptionStatus,
   CourseBillingType,
   parsePaymentMethod,
+  formatBookingDto,
+  ReservationResponse,
 } from '@atena/api-types';
+
 import { getSupabaseAdmin } from '../supabase-admin';
 import { checkFeeStatus } from '../fee-service';
 import { sendBookingNotificationEmails } from '../email-service';
@@ -174,12 +177,11 @@ export async function createReservation(dto: CreateReservationParams) {
       const b = existingBookings[0];
       return {
         success: true,
-        booking: b,
-        bookings: existingBookings,
         bookingId: b.id,
-        bookingIds: existingBookings.map((eb) => eb.id),
+        booking: formatBookingDto(b),
       };
     }
+
   }
 
   let course: SupabaseCourseRow | null = null;
@@ -362,8 +364,7 @@ export async function createReservation(dto: CreateReservationParams) {
   return {
     success: true,
     bookingId: primaryBooking.id,
-    bookingIds,
-    booking: primaryBooking,
-    bookings: createdBookings,
+    booking: formatBookingDto(primaryBooking),
   };
 }
+

@@ -447,10 +447,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         return;
       }
 
-      const bookingId = res.bookingId || res.booking?.id || (res.bookingIds && res.bookingIds[0]) || "";
+      const bookingId = res.bookingId || res.booking?.id || "";
       clearDraft();
       toast.success("Reservation completed successfully!");
       router.push(`/checkout/success?booking_id=${bookingId}&email=${encodeURIComponent(values.email)}`);
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unexpected error occurred";
       toast.error(msg);

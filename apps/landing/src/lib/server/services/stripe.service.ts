@@ -182,8 +182,9 @@ export async function createStripeSession(dto: CreateReservationParams) {
       : (course ? Number(course.price) : 73.2);
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    const b = reservationRes.booking;
 
-    for (const b of reservationRes.bookings) {
+    if (b) {
       if (isSubscription) {
         if (course?.stripe_monthly_price_id) {
           lineItems.push({
@@ -195,7 +196,7 @@ export async function createStripeSession(dto: CreateReservationParams) {
             price_data: {
               currency: 'eur',
               product_data: {
-                name: `${courseName} — Abbonamento Mensile (${b.student_name})`,
+                name: `${courseName} — Abbonamento Mensile (${b.studentName})`,
               },
               unit_amount: Math.round(coursePrice * 100),
               recurring: {
@@ -210,7 +211,7 @@ export async function createStripeSession(dto: CreateReservationParams) {
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `${courseName} — ${b.student_name}`,
+              name: `${courseName} — ${b.studentName}`,
             },
             unit_amount: Math.round(coursePrice * 100),
           },
@@ -218,13 +219,13 @@ export async function createStripeSession(dto: CreateReservationParams) {
         });
       }
 
-      const regFee = Number(b.registration_fee || 0);
+      const regFee = Number(b.registrationFee || 0);
       if (regFee > 0) {
         lineItems.push({
           price_data: {
             currency: 'eur',
             product_data: {
-              name: `Quota Iscrizione Annuale 2026/2027 — ${b.student_name}`,
+              name: `Quota Iscrizione Annuale 2026/2027 — ${b.studentName}`,
             },
             unit_amount: Math.round(regFee * 100),
           },
@@ -242,8 +243,7 @@ export async function createStripeSession(dto: CreateReservationParams) {
       success_url: `${siteUrl}/checkout/success/${reservationRes.bookingId}?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
       metadata: {
-        booking_id: reservationRes.bookingId,
-        booking_ids: reservationRes.bookingIds.join(','),
+        booking_id: reservationRes.bookingId || '',
         purchaser_tax_code: dto.purchaserTaxCode || '',
         billing_scheme: isSubscription ? String(BillingScheme.SUBSCRIPTION) : String(BillingScheme.FULL),
       },
@@ -251,8 +251,9 @@ export async function createStripeSession(dto: CreateReservationParams) {
       idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${reservationRes.bookingId}`,
     });
 
-    return { success: true, url: session.url, bookingId: reservationRes.bookingId };
+    return { success: true, url: session.url, bookingId: reservationRes.bookingId, booking: b };
   }
+
 
   // Direct Stripe SDK session creation for single student (Supports both One-time and Subscription)
   const reservationRes = await createReservation({
@@ -264,12 +265,16 @@ export async function createStripeSession(dto: CreateReservationParams) {
   });
 
   const booking = reservationRes.booking;
+  if (!booking) {
+    throw new Error('Failed to create reservation for Stripe checkout');
+  }
   const { data: course } = await supabase.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
-  const courseName = course?.name || course?.title_it || booking.course_name || 'Corso Atena School';
+  const courseName = course?.name || course?.title_it || booking.courseName || 'Corso Atena School';
   const coursePrice = isSubscription
     ? (course?.subscription_price != null ? Number(course.subscription_price) : (Number(course?.price) || 73.2))
-    : Number(booking.amount_paid) - Number(booking.registration_fee || 0);
-  const regFee = Number(booking.registration_fee || 0);
+    : Number(booking.amountPaid) - Number(booking.registrationFee || 0);
+  const regFee = Number(booking.registrationFee || 0);
+
 
   const stripe = getStripe();
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
@@ -338,8 +343,9 @@ export async function createStripeSession(dto: CreateReservationParams) {
     idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${booking.id}`,
   });
 
-  return { success: true, url: session.url, bookingId: booking.id };
+  return { success: true, url: session.url, bookingId: booking.id, booking };
 }
+
 
 export async function verifyPayment(params: VerifyPaymentParams) {
   const supabase = getSupabaseAdmin();
