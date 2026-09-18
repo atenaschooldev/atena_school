@@ -28,7 +28,7 @@ export function DebtorsAndRenewals() {
   const handleSendReminder = async (bookingId: string) => {
     setSendingId(bookingId)
     try {
-      await api.post("/mail/send-payment-reminder", { bookingId })
+      await api.post("/admin/mail/send-payment-reminder", { bookingId })
     } catch {
       // Non-blocking
     } finally {

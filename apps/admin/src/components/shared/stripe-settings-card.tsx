@@ -21,7 +21,7 @@ export function StripeSettingsCard() {
     async function loadSettings() {
       try {
         setLoading(true);
-        const res = await api.get<{ success: boolean; settings: { stripeEnabled: boolean } }>("/checkout/settings");
+        const res = await api.get<{ success: boolean; settings: { stripeEnabled: boolean } }>("/admin/settings/payment-gateway");
         if (isMounted && res?.settings) {
           setStripeEnabled(Boolean(res.settings.stripeEnabled));
         }
@@ -44,7 +44,7 @@ export function StripeSettingsCard() {
     setStripeEnabled(checked);
 
     try {
-      const res = await api.patch<{ success: boolean; settings: { stripeEnabled: boolean } }>("/checkout/settings", {
+      const res = await api.patch<{ success: boolean; settings: { stripeEnabled: boolean } }>("/admin/settings/payment-gateway", {
         stripeEnabled: checked,
       });
 

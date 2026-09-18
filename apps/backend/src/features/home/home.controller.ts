@@ -8,7 +8,7 @@ import { HomeService } from './home.service';
 @ApiTags('Admin — Dashboard / Home')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
-@Controller('home/dashboard')
+@Controller(['admin/home/dashboard', 'home/dashboard'])
 export class HomeController {
   constructor(private readonly homeService: HomeService) {}
 

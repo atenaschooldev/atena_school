@@ -9,8 +9,8 @@ import { formatCurrency } from "@atena/utils"
 
 export function TopProducts() {
   const { data: coursesData, isLoading } = useQuery({
-    queryKey: ["courses", "public"],
-    queryFn: () => api.get<any[]>("/checkout/courses"),
+    queryKey: ["courses", "admin"],
+    queryFn: () => api.get<any[]>("/admin/courses"),
   })
 
   const coursesList = Array.isArray(coursesData) ? coursesData : []

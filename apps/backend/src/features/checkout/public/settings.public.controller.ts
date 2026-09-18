@@ -2,12 +2,12 @@ import { Body, Controller, Get, Patch, HttpCode, HttpStatus } from '@nestjs/comm
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { CheckoutService } from './checkout.public.service';
 
-@ApiTags('Landing — Settings & Gateways')
-@Controller('landing/settings')
+@ApiTags('Settings & Gateways')
+@Controller(['admin/settings', 'landing/settings', 'checkout/settings', 'settings'])
 export class SettingsPublicController {
   constructor(private readonly checkoutService: CheckoutService) {}
 
-  @Get('payment-gateway')
+  @Get(['payment-gateway', ''])
   @ApiOperation({
     summary: 'Получить настройки платежного шлюза',
     description: 'Возвращает состояние платежного шлюза Stripe (включен/отключен) для отображения на форме чекаута лендинга',
@@ -29,7 +29,7 @@ export class SettingsPublicController {
     return { success: true, settings };
   }
 
-  @Patch('payment-gateway')
+  @Patch(['payment-gateway', ''])
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Обновить настройки платежного шлюза и подписок',
