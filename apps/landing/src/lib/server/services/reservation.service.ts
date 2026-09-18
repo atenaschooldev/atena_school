@@ -92,7 +92,18 @@ export async function recordPaymentLedger(
     }
 
     if (paymentsToInsert.length > 0) {
-      await supabase.from('payments').insert(paymentsToInsert);
+      const { data: insertedPayments } = await supabase
+        .from('payments')
+        .insert(paymentsToInsert)
+        .select('id, type');
+
+      const feePayment = insertedPayments?.find((p) => p.type === PaymentType.REGISTRATION_FEE);
+      if (feePayment && studentId) {
+        await supabase
+          .from('annual_memberships')
+          .update({ payment_id: feePayment.id })
+          .eq('student_id', studentId);
+      }
     }
   } catch (err) {
     console.warn('Payments ledger insert error:', err);

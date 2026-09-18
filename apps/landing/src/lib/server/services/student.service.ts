@@ -153,11 +153,21 @@ export async function processStudentAndBookingLinks(params: {
 
         const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : parsePaymentMethod(dto.paymentMethod) || 1;
 
+        const { count } = await supabase
+          .from('annual_memberships')
+          .select('id', { count: 'exact', head: true })
+          .eq('academic_year', ACADEMIC_YEAR.CURRENT)
+          .not('membership_number', 'is', null);
+
+        const yearPrefix = ACADEMIC_YEAR.CURRENT.split('/')[0] || '2026';
+        const nextMembershipNumber = `ATN-${yearPrefix}-${String((count || 0) + 1).padStart(4, '0')}`;
+
         if (existingMem) {
           await supabase
             .from('annual_memberships')
             .update({
               status: MembershipStatus.ACTIVE,
+              membership_number: (existingMem as any).membership_number || nextMembershipNumber,
               paid_at: new Date().toISOString(),
               student_id: studentId || undefined,
               user_id: linkedUserId || studentAuthUserId || undefined,
@@ -171,6 +181,7 @@ export async function processStudentAndBookingLinks(params: {
               tax_code: sTaxCode,
               academic_year: ACADEMIC_YEAR.CURRENT,
               status: MembershipStatus.ACTIVE,
+              membership_number: nextMembershipNumber,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
               amount: 30.00,

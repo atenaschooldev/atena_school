@@ -39,10 +39,20 @@ export function getCurrentAcademicYear(dateInput?: Date | string | null): {
 
   return {
     academicYear: `${startYear}/${endYear}`,
-    expiresAt: `${endYear}-08-31T23:59:59.000Z`,
+    expiresAt: new Date(Date.UTC(endYear, 7, 31, 23, 59, 59, 999)).toISOString(),
     startYear,
     endYear,
   };
+}
+
+/**
+ * Generates official Italian Association Membership Card Number (Numero Tessera Socio)
+ * Format: ATN-2026-0001
+ */
+export function generateMembershipNumber(academicYear?: string | null, sequenceNumber: number = 1): string {
+  const yearPrefix = (academicYear || "2026/2027").split("/")[0] || "2026";
+  const paddedSeq = String(Math.max(1, sequenceNumber || 1)).padStart(4, "0");
+  return `ATN-${yearPrefix}-${paddedSeq}`;
 }
 
 /**

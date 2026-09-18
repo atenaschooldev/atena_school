@@ -63,19 +63,79 @@ export class MembershipsService {
     const sTaxCode = existing.taxCode;
 
     if (numStatus === MembershipStatus.ACTIVE) {
+      // 1. Generate membership_number if not already assigned
+      let membershipNumber = existing.membershipNumber;
+      if (!membershipNumber) {
+        const count = await this.prisma.annualMembership.count({
+          where: {
+            academicYear: existing.academicYear,
+            membershipNumber: { not: null },
+          },
+        });
+        const yearPrefix = (existing.academicYear || '2026/2027').split('/')[0] || '2026';
+        membershipNumber = `ATN-${yearPrefix}-${String(count + 1).padStart(4, '0')}`;
+      }
+
+      // 2. Find or link payment record
+      let paymentId = existing.paymentId;
+      if (!paymentId) {
+        const feePayment = await this.prisma.payment.findFirst({
+          where: {
+            OR: [
+              ...(sId ? [{ studentId: sId, type: 2 }] : []),
+              { notes: { contains: `[membership_id:${id}]` } },
+            ],
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (feePayment) {
+          paymentId = feePayment.id;
+          await this.prisma.payment.update({
+            where: { id: feePayment.id },
+            data: {
+              status: PaymentRecordStatus.SUCCEEDED,
+              paidAt: new Date(),
+            },
+          });
+        } else {
+          const createdPayment = await this.prisma.payment.create({
+            data: {
+              amount: existing.amount || 30.0,
+              currency: 1,
+              type: 2, // REGISTRATION_FEE
+              status: PaymentRecordStatus.SUCCEEDED,
+              paymentMethod: existing.paymentMethod || 3,
+              studentId: sId || undefined,
+              paidAt: new Date(),
+              notes: `Quota associativa annuale ${existing.academicYear} [membership_id:${id}]`,
+            },
+          });
+          paymentId = createdPayment.id;
+        }
+      }
+
+      // 3. Update annual_memberships with membershipNumber and paymentId
+      await this.prisma.annualMembership.update({
+        where: { id },
+        data: {
+          status: MembershipStatus.ACTIVE,
+          membershipNumber,
+          paymentId,
+          paidAt: new Date(),
+        },
+      });
+
+      // 4. Update student status & annual_fee_paid
       if (sId) {
         await this.prisma.$executeRawUnsafe(
-          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE id = '${sId}'::uuid`
+          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW(), status = 1 WHERE id = '${sId}'::uuid`
         ).catch(() => null);
       } else if (sTaxCode) {
         await this.prisma.$executeRawUnsafe(
-          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE LOWER(tax_code) = LOWER('${sTaxCode}')`
+          `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW(), status = 1 WHERE LOWER(tax_code) = LOWER('${sTaxCode}')`
         ).catch(() => null);
       }
-
-      await this.prisma.$executeRawUnsafe(
-        `UPDATE payments SET status = ${PaymentRecordStatus.SUCCEEDED}, paid_at = NOW() WHERE notes LIKE '%[membership_id:${id}]%'`
-      ).catch(() => null);
     } else if (numStatus === MembershipStatus.REVOKED || numStatus === MembershipStatus.PENDING) {
       if (sId) {
         await this.prisma.$executeRawUnsafe(
@@ -94,7 +154,7 @@ export class MembershipsService {
       }
     }
 
-    return updated;
+    return this.findOne(id);
   }
 
   async toggleStatus(id: string) {
