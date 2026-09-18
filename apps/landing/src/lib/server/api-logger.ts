@@ -59,6 +59,35 @@ export async function logLandingApi(params: LogLandingApiParams): Promise<void> 
   }
 }
 
+export interface LogNotificationParams {
+
+  channel: number; // 1: EMAIL, 2: TELEGRAM
+  notificationType: number; // NotificationType
+  recipient: string;
+  subject?: string | null;
+  request: any;
+  response?: any;
+  status: number; // 1: SENT, 2: FAILED
+}
+
+export async function logNotification(params: LogNotificationParams): Promise<void> {
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('notification_logs').insert({
+      channel: params.channel,
+      notification_type: params.notificationType,
+      recipient: params.recipient,
+      subject: params.subject || null,
+      request: params.request || {},
+      response: params.response || null,
+      status: params.status,
+    });
+  } catch (err) {
+    console.error('[logNotification failure]:', err);
+  }
+}
+
+
 /**
  * Higher-order wrapper to automatically log Next.js Route Handler executions to landing_api_logs
  */

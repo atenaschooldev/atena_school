@@ -4,8 +4,10 @@ import {
   renderAdminBookingNotificationEmail,
 } from './email-templates';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from './checkout-service';
-import { BookingPaymentStatus } from '@atena/api-types';
+import { BookingPaymentStatus, NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
 import { formatCourseScheduleText } from '@atena/utils';
+import { logNotification } from './api-logger';
+
 
 export interface SendBookingEmailsParams {
   booking: SupabaseBookingRow;
@@ -88,9 +90,10 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
     return;
   }
 
-  const sendWithTimeout = async (to: string, subject: string, html: string) => {
+  const sendWithTimeout = async (to: string, subject: string, html: string, notificationType: number = NotificationType.BOOKING_CONFIRMATION) => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
+    let result: { success: boolean; id?: string; error?: any } = { success: false };
 
     try {
       const response = await fetch('https://api.resend.com/emails', {
@@ -113,25 +116,39 @@ export async function sendBookingNotificationEmails(params: SendBookingEmailsPar
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         console.error(`[EMAIL ERROR] Failed to send email to ${to}: status ${response.status} - ${errorText}`);
-        return { success: false, error: errorText };
+        result = { success: false, error: errorText };
+      } else {
+        const resData = await response.json().catch(() => ({}));
+        console.log(`[EMAIL SUCCESS] Sent email to ${to} for booking ${booking.id} (Resend ID: ${resData.id || 'ok'})`);
+        result = { success: true, id: resData.id };
       }
-
-      const resData = await response.json().catch(() => ({}));
-      console.log(`[EMAIL SUCCESS] Sent email to ${to} for booking ${booking.id} (Resend ID: ${resData.id || 'ok'})`);
-      return { success: true, id: resData.id };
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const isAbort = (err as Error)?.name === 'AbortError';
       console.error(`[EMAIL DISPATCH ERROR] ${isAbort ? 'Timeout after 5000ms' : 'Network/API error'} sending to ${to}:`, err);
-      return { success: false, error: err };
+      result = { success: false, error: err };
     }
+
+    // Async log to notification_logs
+    logNotification({
+      channel: NotificationChannel.EMAIL,
+      notificationType,
+      recipient: to,
+      subject,
+      request: { from: fromEmail, to, subject, bookingId: booking.id },
+      response: result,
+      status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+    }).catch(() => null);
+
+    return result;
   };
 
   try {
     const results = await Promise.allSettled([
-      sendWithTimeout(dto.email, clientEmail.subject, clientEmail.html),
-      sendWithTimeout(adminEmail, adminNotification.subject, adminNotification.html),
+      sendWithTimeout(dto.email, clientEmail.subject, clientEmail.html, NotificationType.BOOKING_CONFIRMATION),
+      sendWithTimeout(adminEmail, adminNotification.subject, adminNotification.html, NotificationType.BOOKING_CONFIRMATION),
     ]);
+
 
     console.log(`[EMAIL DISPATCH FINISHED] Booking ${booking.id}: client=${results[0].status}, admin=${results[1].status}`);
   } catch (err) {

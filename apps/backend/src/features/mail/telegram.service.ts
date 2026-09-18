@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
 
 export interface TelegramButton {
   text: string;
@@ -10,7 +12,10 @@ export interface TelegramButton {
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   private escapeHtml(text?: string | null): string {
     if (!text) return '';
@@ -20,7 +25,11 @@ export class TelegramService {
       .replace(/>/g, '&gt;');
   }
 
-  async sendMessage(htmlText: string, inlineKeyboard?: TelegramButton[][]): Promise<{ success: boolean; messageId?: number; error?: string }> {
+  async sendMessage(
+    htmlText: string,
+    inlineKeyboard?: TelegramButton[][],
+    notificationType: number = NotificationType.BOOKING_CONFIRMATION,
+  ): Promise<{ success: boolean; messageId?: number; error?: string }> {
     const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     const chatId = this.configService.get<string>('TELEGRAM_CHAT_ID');
 
@@ -42,6 +51,8 @@ export class TelegramService {
       };
     }
 
+    let result: { success: boolean; messageId?: number; error?: string };
+
     try {
       const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -53,17 +64,34 @@ export class TelegramService {
 
       if (!response.ok || !data.ok) {
         this.logger.error(`[TELEGRAM ERROR]: ${data.description || response.statusText}`);
-        return { success: false, error: data.description || 'Failed to send message' };
+        result = { success: false, error: data.description || 'Failed to send message' };
+      } else {
+        this.logger.log(`[TELEGRAM SUCCESS]: Notification sent, Msg ID: ${data.result?.message_id}`);
+        result = { success: true, messageId: data.result?.message_id };
       }
-
-      this.logger.log(`[TELEGRAM SUCCESS]: Notification sent, Msg ID: ${data.result?.message_id}`);
-      return { success: true, messageId: data.result?.message_id };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.logger.error(`[TELEGRAM NETWORK ERROR]: ${msg}`);
-      return { success: false, error: msg };
+      result = { success: false, error: msg };
     }
+
+    // Async log to notification_logs
+    this.prisma.notification_logs.create({
+      data: {
+        channel: NotificationChannel.TELEGRAM,
+        notificationType,
+        recipient: chatId,
+        subject: 'Telegram Bot Alert',
+        request: payload as any,
+        response: result as any,
+        status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+      },
+    }).catch(() => null);
+
+
+    return result;
   }
+
 
   private formatDisplayDate(dateStr?: string | null): string {
     if (!dateStr || dateStr.trim() === '') return 'Da concordare con la segreteria';

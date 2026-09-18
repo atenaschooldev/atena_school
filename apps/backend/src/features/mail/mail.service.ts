@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { PrismaService } from '../../core/prisma/prisma.service';
+import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -9,7 +11,10 @@ export class MailService implements OnModuleInit {
   private resendApiKey: string | null = null;
   private defaultFromEmail: string = 'Atena School <onboarding@resend.dev>';
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {}
 
   onModuleInit() {
     this.resendApiKey = this.configService.get<string>('RESEND_API_KEY') || null;
@@ -38,8 +43,15 @@ export class MailService implements OnModuleInit {
     }
   }
 
-  async sendEmail(to: string, subject: string, text: string, html?: string): Promise<{ success: boolean; id?: string; error?: string }> {
+  async sendEmail(
+    to: string,
+    subject: string,
+    text: string,
+    html?: string,
+    notificationType: number = NotificationType.BOOKING_CONFIRMATION,
+  ): Promise<{ success: boolean; id?: string; error?: string }> {
     const from = this.defaultFromEmail;
+    let result: { success: boolean; id?: string; error?: string } = { success: false };
 
     // 1. Resend API Dispatch (Primary if key configured)
     if (this.resendApiKey) {
@@ -63,20 +75,18 @@ export class MailService implements OnModuleInit {
 
         if (!response.ok) {
           this.logger.error(`[MAIL RESEND ERROR]: ${resData.message || response.statusText}`);
-          return { success: false, error: resData.message || response.statusText };
+          result = { success: false, error: resData.message || response.statusText };
+        } else {
+          this.logger.log(`[MAIL RESEND SUCCESS]: Письмо отправлено на ${to} (ID: ${resData.id})`);
+          result = { success: true, id: resData.id };
         }
-
-        this.logger.log(`[MAIL RESEND SUCCESS]: Письмо отправлено на ${to} (ID: ${resData.id})`);
-        return { success: true, id: resData.id };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.error(`[MAIL RESEND NETWORK ERROR]: ${msg}`);
-        return { success: false, error: msg };
+        result = { success: false, error: msg };
       }
-    }
-
-    // 2. SMTP Transporter
-    if (this.transporter) {
+    } else if (this.transporter) {
+      // 2. SMTP Transporter
       try {
         const info = await this.transporter.sendMail({
           from,
@@ -86,20 +96,32 @@ export class MailService implements OnModuleInit {
           html,
         });
         this.logger.log(`[MAIL SMTP SUCCESS]: Письмо отправлено на ${to}: ${subject}`);
-        return { success: true, id: info.messageId };
+        result = { success: true, id: info.messageId };
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.error(`[MAIL SMTP ERROR]: ${msg}`);
-        return { success: false, error: msg };
+        result = { success: false, error: msg };
       }
+    } else {
+      // 3. Fallback Mock Log
+      this.logger.log(`[MAIL MOCK]: Отправка письма на ${to}`);
+      result = { success: true, id: 'mock-id' };
     }
 
-    // 3. Fallback Mock Log
-    this.logger.log(`[MAIL MOCK]: Отправка письма на ${to}`);
-    this.logger.log(`Тема: ${subject}`);
-    this.logger.log(`Текст: ${text}`);
-    if (html) this.logger.log(`HTML: ${html.slice(0, 150)}...`);
+    // Async log to notification_logs
+    this.prisma.notification_logs.create({
+      data: {
+        channel: NotificationChannel.EMAIL,
+        notificationType,
+        recipient: to,
+        subject,
+        request: { from, to, subject, text, hasHtml: Boolean(html) },
+        response: result,
+        status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+      },
+    }).catch(() => null);
 
-    return { success: true, id: 'mock-id' };
+    return result;
   }
 }
+

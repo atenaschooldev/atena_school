@@ -1,4 +1,6 @@
 import { BookingEmailTemplateData, ContactEmailTemplateData } from './email-templates';
+import { logNotification } from './api-logger';
+import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
 
 /**
  * Escapes HTML characters for Telegram HTML parse mode
@@ -14,7 +16,11 @@ function escapeHtml(text?: string | null): string {
 /**
  * Sends a notification message to Telegram via the Telegram Bot API.
  */
-export async function sendTelegramMessage(htmlText: string, inlineKeyboard?: Array<Array<{ text: string; url: string }>>): Promise<boolean> {
+export async function sendTelegramMessage(
+  htmlText: string,
+  inlineKeyboard?: Array<Array<{ text: string; url: string }>>,
+  notificationType: number = NotificationType.BOOKING_CONFIRMATION,
+): Promise<boolean> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -36,6 +42,8 @@ export async function sendTelegramMessage(htmlText: string, inlineKeyboard?: Arr
     };
   }
 
+  let result: { success: boolean; data?: any; error?: any } = { success: false };
+
   try {
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
@@ -48,17 +56,31 @@ export async function sendTelegramMessage(htmlText: string, inlineKeyboard?: Arr
     if (!response.ok) {
       const errorText = await response.text().catch(() => '');
       console.error(`[TELEGRAM ERROR] Status ${response.status}:`, errorText);
-      return false;
+      result = { success: false, error: errorText };
+    } else {
+      const data = await response.json().catch(() => ({}));
+      console.log('[TELEGRAM SUCCESS] Sent notification (Msg ID:', (data as { result?: { message_id?: number } }).result?.message_id, ')');
+      result = { success: true, data };
     }
-
-    const data = await response.json().catch(() => ({}));
-    console.log('[TELEGRAM SUCCESS] Sent notification (Msg ID:', (data as { result?: { message_id?: number } }).result?.message_id, ')');
-    return true;
   } catch (err) {
     console.error('[TELEGRAM NETWORK ERROR]:', err);
-    return false;
+    result = { success: false, error: err };
   }
+
+  // Async log to notification_logs
+  logNotification({
+    channel: NotificationChannel.TELEGRAM,
+    notificationType,
+    recipient: String(chatId),
+    subject: 'Telegram Notification',
+    request: payload,
+    response: result,
+    status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+  }).catch(() => null);
+
+  return result.success;
 }
+
 
 function formatDisplayDate(dateStr?: string | null): string {
   if (!dateStr || dateStr.trim() === '') return 'Da concordare con la segreteria';
