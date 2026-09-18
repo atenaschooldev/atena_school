@@ -55,15 +55,6 @@ export function generateMembershipNumber(academicYear?: string | null, sequenceN
   return `ATN-${yearPrefix}-${paddedSeq}`;
 }
 
-/**
- * Generates a standard Italian association membership number (Libro Soci format).
- * E.g., SOC-2026-0042
- */
-export function formatMembershipNumber(year: number | string, sequence: number | string): string {
-  const yStr = String(year).slice(-4);
-  const sStr = String(sequence).padStart(4, "0");
-  return `SOC-${yStr}-${sStr}`;
-}
 
 /**
  * Format currency amount to EUR (e.g. €152.00)
