@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
       [{ text: '🌐 Apri Portale Admin', url: 'https://atena-school-admin.vercel.app' }],
     ];
 
-    const success = await sendTelegramMessage(text, buttons);
-    return NextResponse.json({ success, timestamp: new Date().toISOString() });
+    const result = await sendTelegramMessage({ text, inlineKeyboard: buttons });
+    return NextResponse.json({ success: result.success, timestamp: new Date().toISOString() });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json({ error: message }, { status: 500 });

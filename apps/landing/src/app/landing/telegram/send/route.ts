@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required field: text is required' }, { status: 400 });
     }
 
-    const success = await sendTelegramMessage(text, buttons);
-    return NextResponse.json({ success });
+    const result = await sendTelegramMessage({ text, inlineKeyboard: buttons });
+    return NextResponse.json({ success: result.success });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
     return NextResponse.json({ error: message }, { status: 500 });
