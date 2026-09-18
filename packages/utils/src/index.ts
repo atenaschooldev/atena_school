@@ -529,3 +529,63 @@ export function formatCourseFrequencyDetails(params: CourseFrequencyParams): {
   };
 }
 
+/**
+ * Sanitizes tax code by stripping whitespace, hyphens, dots and converting to uppercase.
+ */
+export function sanitizeTaxCode(input?: string | null): string {
+  if (!input) return "";
+  return input.replace(/[\s\-_.]/g, "").toUpperCase();
+}
+
+const CF_MONTHS: Record<string, string> = {
+  A: "01",
+  B: "02",
+  C: "03",
+  D: "04",
+  E: "05",
+  H: "06",
+  L: "07",
+  M: "08",
+  P: "09",
+  R: "10",
+  S: "11",
+  T: "12",
+};
+
+/**
+ * Extracts birth date (YYYY-MM-DD) from a 16-character Italian Codice Fiscale.
+ * Returns null if the format is invalid or cannot be parsed.
+ */
+export function extractBirthDateFromTaxCode(cf?: string | null): string | null {
+  if (!cf) return null;
+  const clean = sanitizeTaxCode(cf);
+  if (clean.length < 11) return null;
+
+  // Italian CF: positions 6-7 = year, 8 = month letter, 9-10 = day (+40 for females)
+  const yrStr = clean.slice(6, 8);
+  const mChar = clean.charAt(8);
+  const dayStr = clean.slice(9, 11);
+
+  if (!/^\d{2}$/.test(yrStr) || !/^\d{2}$/.test(dayStr)) return null;
+  const month = CF_MONTHS[mChar];
+  if (!month) return null;
+
+  const rawDay = parseInt(dayStr, 10);
+  const actualDay = rawDay > 40 ? rawDay - 40 : rawDay;
+  if (actualDay < 1 || actualDay > 31) return null;
+
+  const twoDigitYear = parseInt(yrStr, 10);
+  const currentYear = new Date().getFullYear();
+  const currentTwoDigit = currentYear % 100;
+
+  // If twoDigitYear <= currentTwoDigit, assume 2000s (e.g. 02 -> 2002, 24 -> 2024), else 1900s (e.g. 80 -> 1980)
+  const fullYear = twoDigitYear <= currentTwoDigit ? 2000 + twoDigitYear : 1900 + twoDigitYear;
+  const formattedDay = String(actualDay).padStart(2, "0");
+
+  const isoDate = `${fullYear}-${month}-${formattedDay}`;
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return null;
+
+  return isoDate;
+}
+

@@ -89,8 +89,8 @@ export function CheckoutView({ id }: CheckoutViewProps) {
 
   const hasAnyFeeDue = unpaidFeesCount > 0;
   const isAnyFeeChecking = isForChild
-    ? studentsList.some((s, idx) => (s.taxCode?.trim().length || 0) >= 11 && (studentFeeStatuses[idx] === FeeCheckStatus.CHECKING || studentFeeStatuses[idx] === FeeCheckStatus.INITIAL)) || Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
-    : ((watch("taxCode")?.trim().length || 0) >= 11 && (feeCheckStatus === FeeCheckStatus.CHECKING || feeCheckStatus === FeeCheckStatus.INITIAL)) || feeCheckStatus === FeeCheckStatus.CHECKING;
+    ? Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
+    : feeCheckStatus === FeeCheckStatus.CHECKING;
 
   const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false)
     ? unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR
@@ -157,6 +157,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               courseId={id}
               dateParam={dateParam}
               timeParam={timeParam}
+              feeCheckStatus={feeCheckStatus}
             />
 
             {isForChild && (

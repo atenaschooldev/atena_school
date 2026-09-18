@@ -9,11 +9,16 @@ import {
   IdentificationCard,
   Calendar as CalendarIcon,
   Receipt,
+  Spinner,
+  CheckCircle,
+  Info,
 } from "@phosphor-icons/react";
 import type { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { UserProfile } from "@atena/api-types";
+import { sanitizeTaxCode } from "@atena/utils";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
+import { FeeCheckStatus } from "@/constants";
 
 interface CheckoutPurchaserFieldsProps {
   register: UseFormRegister<CheckoutFormValues>;
@@ -23,6 +28,7 @@ interface CheckoutPurchaserFieldsProps {
   courseId: string;
   dateParam?: string | null;
   timeParam?: string | null;
+  feeCheckStatus?: FeeCheckStatus;
 }
 
 export function CheckoutPurchaserFields({
@@ -33,6 +39,7 @@ export function CheckoutPurchaserFields({
   courseId,
   dateParam,
   timeParam,
+  feeCheckStatus,
 }: CheckoutPurchaserFieldsProps) {
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");
@@ -187,7 +194,14 @@ export function CheckoutPurchaserFields({
         {/* Purchaser Tax Code (when parent) OR Personal Tax Code (when purchasing for self) */}
         {isForChild ? (
           <div className="min-w-0">
-            <label htmlFor="checkout-purchaserTaxCode" className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale Genitore *</label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="checkout-purchaserTaxCode" className="block text-xs font-bold text-slate-700">Codice Fiscale Genitore *</label>
+              {watch("purchaserTaxCode") && (watch("purchaserTaxCode")?.length || 0) < 16 && (
+                <span className="text-[10px] font-mono font-semibold text-slate-400">
+                  {watch("purchaserTaxCode")?.length}/16
+                </span>
+              )}
+            </div>
             <div className="relative min-w-0">
               <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
@@ -201,7 +215,7 @@ export function CheckoutPurchaserFields({
                 aria-describedby={errors.purchaserTaxCode ? "checkout-purchaserTaxCode-error" : undefined}
                 {...register("purchaserTaxCode", {
                   onChange: (e) => {
-                    e.target.value = e.target.value.toUpperCase().slice(0, 16);
+                    e.target.value = sanitizeTaxCode(e.target.value).slice(0, 16);
                   },
                 })}
                 placeholder="RSSMRA80A01H501Z"
@@ -233,7 +247,34 @@ export function CheckoutPurchaserFields({
             </div>
 
             <div className="min-w-0">
-              <label htmlFor="checkout-taxCode" className="block text-xs font-bold text-slate-700 mb-1">Codice Fiscale *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="checkout-taxCode" className="block text-xs font-bold text-slate-700">Codice Fiscale *</label>
+                <div className="flex items-center gap-1.5">
+                  {watch("taxCode") && (watch("taxCode")?.length || 0) < 16 && (
+                    <span className="text-[10px] font-mono font-semibold text-slate-400">
+                      {watch("taxCode")?.length}/16
+                    </span>
+                  )}
+                  {feeCheckStatus === FeeCheckStatus.CHECKING && (
+                    <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold bg-white px-1.5 py-0.5 rounded border border-slate-200">
+                      <Spinner className="w-3 h-3 animate-spin text-[#043569]" />
+                      Verifica quota...
+                    </span>
+                  )}
+                  {feeCheckStatus === FeeCheckStatus.PAID && (
+                    <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      <CheckCircle className="w-3 h-3 text-emerald-600" weight="fill" />
+                      Quota 2026/2027 saldata (0€)
+                    </span>
+                  )}
+                  {feeCheckStatus === FeeCheckStatus.NOT_PAID && (
+                    <span className="flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                      <Info className="w-3 h-3 text-amber-600" weight="bold" />
+                      Quota annuale (+30€)
+                    </span>
+                  )}
+                </div>
+              </div>
               <div className="relative min-w-0">
                 <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                 <input
@@ -247,7 +288,7 @@ export function CheckoutPurchaserFields({
                   aria-describedby={errors.taxCode ? "checkout-taxCode-error" : undefined}
                   {...register("taxCode", {
                     onChange: (e) => {
-                      e.target.value = e.target.value.toUpperCase().slice(0, 16);
+                      e.target.value = sanitizeTaxCode(e.target.value).slice(0, 16);
                     },
                   })}
                   placeholder="RSSMRA80A01H501Z"

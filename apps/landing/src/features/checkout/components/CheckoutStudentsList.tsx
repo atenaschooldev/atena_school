@@ -16,6 +16,7 @@ import {
 } from "@phosphor-icons/react";
 import type { FieldErrors } from "react-hook-form";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
+import { sanitizeTaxCode } from "@atena/utils";
 import { FeeCheckStatus } from "@/constants";
 
 interface StudentItem {
@@ -159,9 +160,16 @@ export function CheckoutStudentsList({
 
               {/* Student Tax Code */}
               <div className="min-w-0">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Codice Fiscale Studente *
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Codice Fiscale Studente *
+                  </label>
+                  {student.taxCode && student.taxCode.length < 16 && (
+                    <span className="text-[10px] font-mono font-semibold text-slate-400">
+                      {student.taxCode.length}/16
+                    </span>
+                  )}
+                </div>
                 <div className="relative min-w-0">
                   <IdentificationCard className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -171,7 +179,7 @@ export function CheckoutStudentsList({
                     autoCorrect="off"
                     spellCheck={false}
                     value={student.taxCode || ""}
-                    onChange={(e) => updateStudent(idx, "taxCode", e.target.value.toUpperCase().slice(0, 16))}
+                    onChange={(e) => updateStudent(idx, "taxCode", sanitizeTaxCode(e.target.value).slice(0, 16))}
                     placeholder="RSSLCU10A01H501Z"
                     className="w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium tracking-wider transition-all"
                   />

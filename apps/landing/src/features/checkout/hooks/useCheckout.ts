@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { decodeScheduleSlot, verifySlotSignature } from "@atena/utils";
+import { decodeScheduleSlot, verifySlotSignature, sanitizeTaxCode, extractBirthDateFromTaxCode } from "@atena/utils";
 import { checkoutFormSchema, isValidCodiceFiscale } from "@atena/validators";
 import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
@@ -264,7 +264,25 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     const current = formMethods.getValues("students") || [];
     const updated = [...current];
     if (updated[index]) {
-      updated[index] = { ...updated[index], [field]: value };
+      let finalVal = value;
+      if (field === "taxCode") {
+        finalVal = sanitizeTaxCode(value).slice(0, 16);
+      }
+      updated[index] = { ...updated[index], [field]: finalVal };
+
+      // Auto-extract birthDate from CF if not already filled
+      if (field === "taxCode" && finalVal.length === 16 && !updated[index].birthDate) {
+        const extractedBirth = extractBirthDateFromTaxCode(finalVal);
+        if (extractedBirth) {
+          updated[index].birthDate = extractedBirth;
+          formMethods.clearErrors(`students.${index}.birthDate` as FieldPath<CheckoutFormValues>);
+          if (index === 0) {
+            formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: false, shouldDirty: true });
+            formMethods.clearErrors("studentBirthDate");
+          }
+        }
+      }
+
       formMethods.setValue("students", updated, { shouldValidate: false, shouldDirty: true });
 
       // Clear errors on the field currently being typed into
@@ -272,27 +290,27 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       if (index === 0) {
         if (field === "firstName") {
-          formMethods.setValue("studentFirstName", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("studentFirstName", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentFirstName");
         }
         if (field === "lastName") {
-          formMethods.setValue("studentLastName", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("studentLastName", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentLastName");
         }
         if (field === "birthDate") {
-          formMethods.setValue("studentBirthDate", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("studentBirthDate", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentBirthDate");
         }
         if (field === "taxCode") {
-          formMethods.setValue("taxCode", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("taxCode", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("taxCode");
         }
         if (field === "email") {
-          formMethods.setValue("studentEmail", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("studentEmail", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentEmail");
         }
         if (field === "phone") {
-          formMethods.setValue("studentPhone", value, { shouldValidate: false, shouldDirty: true });
+          formMethods.setValue("studentPhone", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentPhone");
         }
       }
@@ -300,9 +318,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   };
 
   const feeCacheRef = useRef<Map<string, boolean>>(new Map());
+  const singleReqSeqRef = useRef<number>(0);
+  const studentReqSeqRef = useRef<Record<number, number>>({});
 
   const studentTaxCodesKey = (studentsList || [])
-    .map((s) => (s.taxCode || "").trim().toUpperCase())
+    .map((s) => sanitizeTaxCode(s.taxCode))
     .join(",");
 
   // Check fee status for each student in studentsList (when isForChild is true)
@@ -312,7 +332,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     const timers: NodeJS.Timeout[] = [];
 
     studentsList.forEach((s, idx) => {
-      const tax = (s.taxCode || "").trim().toUpperCase();
+      const tax = sanitizeTaxCode(s.taxCode);
 
       // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
       if (!isValidCodiceFiscale(tax)) {
@@ -329,17 +349,22 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
       setStudentFeeStatuses((prev) => (prev[idx] === FeeCheckStatus.CHECKING ? prev : { ...prev, [idx]: FeeCheckStatus.CHECKING }));
 
+      const currentSeq = (studentReqSeqRef.current[idx] || 0) + 1;
+      studentReqSeqRef.current[idx] = currentSeq;
+
       const timer = setTimeout(async () => {
         try {
           const res = await api.checkout.checkFee(tax);
+          if (studentReqSeqRef.current[idx] !== currentSeq) return; // Ignore stale responses
 
           const isPaid = Boolean(res.success && res.annualFeePaid);
           feeCacheRef.current.set(tax, isPaid);
           setStudentFeeStatuses((prev) => ({ ...prev, [idx]: isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID }));
         } catch {
+          if (studentReqSeqRef.current[idx] !== currentSeq) return;
           setStudentFeeStatuses((prev) => ({ ...prev, [idx]: FeeCheckStatus.NOT_PAID }));
         }
-      }, 400);
+      }, 300);
 
       timers.push(timer);
     });
@@ -353,7 +378,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   useEffect(() => {
     if (watchedIsForChild) return;
 
-    const targetTaxCode = (watchedTaxCode || watchedPurchaserTaxCode || "").trim().toUpperCase();
+    const targetTaxCode = sanitizeTaxCode(watchedTaxCode || watchedPurchaserTaxCode);
+
+    // Auto-extract birthDate for purchaser when taxCode reaches 16 characters and birthDate is empty
+    if (targetTaxCode.length === 16 && !formMethods.getValues("studentBirthDate")) {
+      const extractedBirth = extractBirthDateFromTaxCode(targetTaxCode);
+      if (extractedBirth) {
+        formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: true, shouldDirty: true });
+        formMethods.clearErrors("studentBirthDate");
+      }
+    }
 
     // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
     if (!isValidCodiceFiscale(targetTaxCode)) {
@@ -371,10 +405,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     }
 
     setFeeCheckStatus(FeeCheckStatus.CHECKING);
+    const currentSeq = ++singleReqSeqRef.current;
 
     const timer = setTimeout(async () => {
       try {
         const res = await api.checkout.checkFee(targetTaxCode);
+        if (singleReqSeqRef.current !== currentSeq) return; // Ignore stale response
 
         const isPaid = Boolean(res.success && res.annualFeePaid);
         feeCacheRef.current.set(targetTaxCode, isPaid);
@@ -382,9 +418,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         setFeeCheckStatus(isPaid ? FeeCheckStatus.PAID : FeeCheckStatus.NOT_PAID);
         formMethods.setValue("includeRegistrationFee", !isPaid);
       } catch {
+        if (singleReqSeqRef.current !== currentSeq) return;
         setFeeCheckStatus(FeeCheckStatus.NOT_PAID);
       }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [watchedTaxCode, watchedPurchaserTaxCode, watchedIsForChild, formMethods]);
