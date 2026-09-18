@@ -404,16 +404,25 @@ export class BookingsAdminService {
         if (sTaxCode) {
           const { data: existingMem } = await this.supabaseAdmin
             .from('annual_memberships')
-            .select('id')
+            .select('id, membership_number')
             .ilike('tax_code', sTaxCode)
             .eq('academic_year', '2026/2027')
             .maybeSingle();
+
+          const { count } = await this.supabaseAdmin
+            .from('annual_memberships')
+            .select('id', { count: 'exact', head: true })
+            .eq('academic_year', '2026/2027')
+            .not('membership_number', 'is', null);
+
+          const nextMembershipNumber = `ATN-2026-${String((count || 0) + 1).padStart(4, '0')}`;
 
           if (existingMem?.id) {
             await this.supabaseAdmin
               .from('annual_memberships')
               .update({
                 status: MembershipStatus.ACTIVE,
+                membership_number: existingMem.membership_number || nextMembershipNumber,
                 tax_code: sTaxCode,
                 student_id: (updatedBooking as any).student_id || null,
                 user_id: updatedBooking.userId || null,
@@ -427,6 +436,7 @@ export class BookingsAdminService {
                 student_id: (updatedBooking as any).student_id || null,
                 user_id: updatedBooking.userId || null,
                 tax_code: sTaxCode,
+                membership_number: nextMembershipNumber,
                 academic_year: '2026/2027',
                 status: MembershipStatus.ACTIVE,
                 paid_at: new Date().toISOString(),

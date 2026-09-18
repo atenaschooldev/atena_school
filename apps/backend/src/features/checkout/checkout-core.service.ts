@@ -181,11 +181,21 @@ export class CheckoutCoreService {
             if (mData) existingMem = mData;
           }
 
+          const { count } = await supabaseAdmin
+            .from('annual_memberships')
+            .select('id', { count: 'exact', head: true })
+            .eq('academic_year', academicYear)
+            .not('membership_number', 'is', null);
+
+          const yearPrefix = academicYear.split('/')[0] || '2026';
+          const nextMembershipNumber = `ATN-${yearPrefix}-${String((count || 0) + 1).padStart(4, '0')}`;
+
           if (existingMem) {
             await supabaseAdmin
               .from('annual_memberships')
               .update({
                 status: MembershipStatus.ACTIVE,
+                membership_number: (existingMem as any).membership_number || nextMembershipNumber,
                 paid_at: new Date().toISOString(),
                 student_id: studentId || undefined,
                 user_id: linkedUserId || studentAuthUserId || undefined,
@@ -198,6 +208,7 @@ export class CheckoutCoreService {
               tax_code: sTaxCode,
               academic_year: academicYear,
               status: MembershipStatus.ACTIVE,
+              membership_number: nextMembershipNumber,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
               amount: 30.00,

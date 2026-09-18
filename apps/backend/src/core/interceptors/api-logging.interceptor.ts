@@ -57,17 +57,14 @@ export class ApiLoggingInterceptor implements NestInterceptor {
       body: sanitize(request.body),
     };
 
-    const targetTable: 'admin_api_logs' | 'app_api_logs' | 'landing_api_logs' = url.startsWith('/admin')
-      ? 'admin_api_logs'
-      : url.startsWith('/app') || url.startsWith('/portal')
-        ? 'app_api_logs'
-        : 'landing_api_logs';
+    const targetTable = this.resolveTargetTable(url, controllerName, userRole);
 
     return next.handle().pipe(
       tap({
         next: (responseData) => {
+          const finalTable = this.resolveTargetTable(url, controllerName, userRole, responseData);
           const statusCode = response?.statusCode || 200;
-          this.saveLog(targetTable, {
+          this.saveLog(finalTable, {
             controller: controllerName,
             action: actionName,
             httpMethod,
@@ -104,6 +101,51 @@ export class ApiLoggingInterceptor implements NestInterceptor {
         },
       }),
     );
+  }
+
+  private resolveTargetTable(
+    url: string,
+    controllerName: string,
+    userRole: number | null,
+    responseData?: any,
+  ): 'admin_api_logs' | 'app_api_logs' | 'landing_api_logs' {
+    // 1. Explicit Landing endpoints & controllers
+    if (
+      url.startsWith('/landing') ||
+      url.startsWith('/api/landing') ||
+      controllerName.includes('Public') ||
+      controllerName === 'StripeWebhookController'
+    ) {
+      return 'landing_api_logs';
+    }
+
+    // 2. Explicit App / Student Portal endpoints & controllers
+    if (
+      url.startsWith('/app') ||
+      url.startsWith('/portal') ||
+      url.startsWith('/api/app') ||
+      url.startsWith('/api/portal') ||
+      controllerName.includes('Portal')
+    ) {
+      return 'app_api_logs';
+    }
+
+    // 3. Auth login dynamic role detection if available
+    if (url.includes('/auth/login') && responseData?.user?.role) {
+      const respRole = responseData.user.role;
+      if (respRole === 1 || respRole === 4 || respRole === 'student' || respRole === 'parent') {
+        return 'app_api_logs';
+      }
+      return 'admin_api_logs';
+    }
+
+    // 4. Role based check (Student / Parent -> App, Staff / Admin -> Admin)
+    if (userRole === 1 || userRole === 4) {
+      return 'app_api_logs';
+    }
+
+    // 5. Default fallback for backend CRM / Admin operations
+    return 'admin_api_logs';
   }
 
   private async saveLog(
