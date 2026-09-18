@@ -183,24 +183,15 @@ export interface ApiLog {
   status_code: number;
 }
 
-export interface EmailLog {
+export interface NotificationLog {
   id: string;
   created_at: string;
-  recipient: string;
+  channel: NotificationChannel;
   notification_type: NotificationType;
+  recipient: string;
   subject?: string | null;
   request: Record<string, any>;
   response?: Record<string, any> | null;
   status: NotificationStatus;
 }
 
-export interface TelegramLog {
-  id: string;
-  created_at: string;
-  chat_id: string;
-  notification_type: NotificationType;
-  message_text: string;
-  request?: Record<string, any> | null;
-  response?: Record<string, any> | null;
-  status: NotificationStatus;
-}

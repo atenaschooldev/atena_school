@@ -37,62 +37,33 @@ CREATE POLICY "Admins full access to api_logs"
         )
     );
 
--- 2. Email Logs (Resend / SMTP Notification Audit)
-CREATE TABLE IF NOT EXISTS email_logs (
+-- 2. Notification Logs (Unified Email & Telegram Notifications)
+DROP TABLE IF EXISTS email_logs;
+DROP TABLE IF EXISTS telegram_logs;
+
+CREATE TABLE IF NOT EXISTS notification_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    recipient VARCHAR(255) NOT NULL,
-    notification_type SMALLINT NOT NULL,
-    subject VARCHAR(255),
-    request JSONB NOT NULL,
-    response JSONB,
-    status SMALLINT NOT NULL
+    channel SMALLINT NOT NULL,          -- 1: EMAIL, 2: TELEGRAM
+    notification_type SMALLINT NOT NULL,-- 1: BOOKING_CONFIRMATION, 2: PAYMENT_RECEIPT, etc.
+    recipient VARCHAR(255) NOT NULL,    -- Email address or Telegram chat_id
+    subject VARCHAR(255),               -- Email subject or message title
+    request JSONB NOT NULL,             -- Request payload / template variables
+    response JSONB,                     -- Response from Resend / Telegram API
+    status SMALLINT NOT NULL            -- 1: SENT, 2: FAILED
 );
 
-CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient);
-CREATE INDEX IF NOT EXISTS idx_email_logs_notification_type ON email_logs(notification_type);
-CREATE INDEX IF NOT EXISTS idx_email_logs_status ON email_logs(status);
-CREATE INDEX IF NOT EXISTS idx_email_logs_created_at ON email_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_channel ON notification_logs(channel);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_recipient ON notification_logs(recipient);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_notification_type ON notification_logs(notification_type);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_status ON notification_logs(status);
+CREATE INDEX IF NOT EXISTS idx_notification_logs_created_at ON notification_logs(created_at DESC);
 
-ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins full access to email_logs"
-    ON email_logs
-    FOR ALL
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM users
-            WHERE users.id = auth.uid() AND users.role IN (1, 2)
-        )
-    );
-
--- 3. Telegram Logs (Telegram Bot Notifications Audit)
-CREATE TABLE IF NOT EXISTS telegram_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    chat_id VARCHAR(64) NOT NULL,
-    notification_type SMALLINT NOT NULL,
-    message_text TEXT NOT NULL,
-    request JSONB,
-    response JSONB,
-    status SMALLINT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_telegram_logs_chat_id ON telegram_logs(chat_id);
-CREATE INDEX IF NOT EXISTS idx_telegram_logs_notification_type ON telegram_logs(notification_type);
-CREATE INDEX IF NOT EXISTS idx_telegram_logs_status ON telegram_logs(status);
-CREATE INDEX IF NOT EXISTS idx_telegram_logs_created_at ON telegram_logs(created_at DESC);
-
-ALTER TABLE telegram_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins full access to telegram_logs"
-    ON telegram_logs
-    FOR ALL
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM users
-            WHERE users.id = auth.uid() AND users.role IN (1, 2)
-        )
-    );
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access to notification_logs' AND tablename = 'notification_logs') THEN
+        CREATE POLICY "Admins full access to notification_logs" ON notification_logs FOR ALL TO authenticated
+        USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN (1, 2)));
+    END IF;
+END $$;

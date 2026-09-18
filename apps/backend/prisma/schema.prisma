@@ -413,39 +413,25 @@ model api_logs {
   @@map("api_logs")
 }
 
-model email_logs {
+model notification_logs {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  recipient        String   @db.VarChar(255)
+  channel          Int      @db.SmallInt
   notificationType Int      @map("notification_type") @db.SmallInt
+  recipient        String   @db.VarChar(255)
   subject          String?  @db.VarChar(255)
   request          Json
   response         Json?
   status           Int      @db.SmallInt
 
-  @@index([recipient], map: "idx_email_logs_recipient")
-  @@index([notificationType], map: "idx_email_logs_notification_type")
-  @@index([status], map: "idx_email_logs_status")
-  @@index([createdAt(sort: Desc)], map: "idx_email_logs_created_at")
-  @@map("email_logs")
+  @@index([channel], map: "idx_notification_logs_channel")
+  @@index([recipient], map: "idx_notification_logs_recipient")
+  @@index([notificationType], map: "idx_notification_logs_notification_type")
+  @@index([status], map: "idx_notification_logs_status")
+  @@index([createdAt(sort: Desc)], map: "idx_notification_logs_created_at")
+  @@map("notification_logs")
 }
 
-model telegram_logs {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  chatId           String   @map("chat_id") @db.VarChar(64)
-  notificationType Int      @map("notification_type") @db.SmallInt
-  messageText      String   @map("message_text") @db.Text
-  request          Json?
-  response         Json?
-  status           Int      @db.SmallInt
-
-  @@index([chatId], map: "idx_telegram_logs_chat_id")
-  @@index([notificationType], map: "idx_telegram_logs_notification_type")
-  @@index([status], map: "idx_telegram_logs_status")
-  @@index([createdAt(sort: Desc)], map: "idx_telegram_logs_created_at")
-  @@map("telegram_logs")
-}
 
 
 
