@@ -1,3 +1,14 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — DICTIONARY SERVICE (ORCHESTRATOR)
+ * ============================================================================
+ * @module @atena/backend/features/dictionary/dictionary.service
+ * @description
+ * Центральный сервис справочников, предоставляющий метаданные для всех таблиц
+ * и эндпоинта генерации документации схемы `/api/dictionary`.
+ * ============================================================================
+ */
+
 import { Injectable } from '@nestjs/common';
 import { renderDictionaryHtml } from './dictionary.template';
 import {
@@ -25,7 +36,9 @@ import {
 
 @Injectable()
 export class DictionaryService {
-  // Commerce Domain
+  // --------------------------------------------------------------------------
+  // 1. Commerce Domain
+  // --------------------------------------------------------------------------
   getBookingsDictionary() {
     return getBookingsDictionary();
   }
@@ -42,7 +55,9 @@ export class DictionaryService {
     return getCertificationsDictionary();
   }
 
-  // Academic Domain
+  // --------------------------------------------------------------------------
+  // 2. Academic Domain
+  // --------------------------------------------------------------------------
   getCoursesDictionary() {
     return getCoursesDictionary();
   }
@@ -63,7 +78,9 @@ export class DictionaryService {
     return getAnnualMembershipsDictionary();
   }
 
-  // System & Platform Domain
+  // --------------------------------------------------------------------------
+  // 3. System & Platform Domain
+  // --------------------------------------------------------------------------
   getUsersDictionary() {
     return getUsersDictionary();
   }
@@ -92,6 +109,9 @@ export class DictionaryService {
     return getDaysOfWeekDictionary();
   }
 
+  // --------------------------------------------------------------------------
+  // 4. Aggregated Dictionary & HTML Renderer
+  // --------------------------------------------------------------------------
   getAll() {
     return {
       version: '2.0.0',

@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — SYSTEM & PLATFORM DICTIONARY REGISTRY
+ * ============================================================================
+ * @module @atena/backend/features/dictionary/registries/system.registry
+ * @description
+ * Реестр метаданных для системных и платформенных таблиц:
+ * - users (Пользователи и роли RBAC)
+ * - app_settings (Динамические настройки JSONB)
+ * - notifications (Типы почтовых уведомлений Resend и категории услуг)
+ * - contact_messages (Входящие обращения и лиды с сайта)
+ * - contact_topics (Темы формы обратной связи)
+ * - error_codes (Стандартизированные 5-значные коды ошибок API)
+ * - days_of_week (Дни недели ISO 8601)
+ * ============================================================================
+ */
+
 import {
   USER_ROLE_DICTIONARY,
   APP_SETTINGS_DICTIONARY,
@@ -17,6 +34,10 @@ import {
   DayOfWeek,
 } from '@atena/api-types';
 import { DictionaryTableDefinition } from './types';
+
+// ----------------------------------------------------------------------------
+// 1. Users Table Metadata (RBAC)
+// ----------------------------------------------------------------------------
 
 export function getUsersDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -40,6 +61,10 @@ export function getUsersDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 2. App Settings Metadata (JSONB Key-Value)
+// ----------------------------------------------------------------------------
+
 export function getAppSettingsDictionary(): DictionaryTableDefinition {
   const columns = {
     key: {
@@ -61,6 +86,10 @@ export function getAppSettingsDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 3. Notifications & Item Types Metadata
+// ----------------------------------------------------------------------------
 
 export function getNotificationsDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -92,6 +121,10 @@ export function getNotificationsDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 4. Contact Messages Metadata
+// ----------------------------------------------------------------------------
+
 export function getContactMessagesDictionary(): DictionaryTableDefinition {
   const columns = {
     status: {
@@ -112,6 +145,10 @@ export function getContactMessagesDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 5. Contact Topics Metadata
+// ----------------------------------------------------------------------------
 
 export function getContactTopicsDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -134,6 +171,10 @@ export function getContactTopicsDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 6. Error Codes Metadata
+// ----------------------------------------------------------------------------
+
 export function getErrorCodesDictionary(): DictionaryTableDefinition {
   const columns = {
     code: {
@@ -155,6 +196,10 @@ export function getErrorCodesDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 7. Days of Week Metadata (ISO)
+// ----------------------------------------------------------------------------
 
 export function getDaysOfWeekDictionary(): DictionaryTableDefinition {
   const columns = {

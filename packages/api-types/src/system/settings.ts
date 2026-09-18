@@ -1,20 +1,26 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — SYSTEM / APP SETTINGS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/system/settings
+ * @description
+ * Динамические настройки приложения (app_settings table, JSONB Key-Value):
+ * - stripe_enabled: переключатель приема онлайн-платежей через Stripe
+ * - subscriptions_enabled: переключатель помесячных абонементов/подписок
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
-/**
- * Keys for application system settings (app_settings table)
- */
+// ----------------------------------------------------------------------------
+// 1. App Setting Key Enum & Dictionary
+// ----------------------------------------------------------------------------
+
 export const AppSettingKey = {
   STRIPE_ENABLED: 'stripe_enabled',
   SUBSCRIPTIONS_ENABLED: 'subscriptions_enabled',
 } as const;
 export type AppSettingKey = (typeof AppSettingKey)[keyof typeof AppSettingKey];
-
-export interface AppSettingRecord<T = any> {
-  key: string;
-  value: T;
-  description?: string | null;
-  updated_at?: string | null;
-}
 
 export const APP_SETTINGS_DICTIONARY: Record<string, DictionaryEntry> = {
   [AppSettingKey.STRIPE_ENABLED]: {
@@ -34,3 +40,14 @@ export const APP_SETTINGS_DICTIONARY: Record<string, DictionaryEntry> = {
     description: 'Включение/отключение функционала ежемесячных подписок и абонементов на курсы на странице чекаута',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 2. App Setting Record DTO Interface
+// ----------------------------------------------------------------------------
+
+export interface AppSettingRecord<T = any> {
+  key: string;
+  value: T;
+  description?: string | null;
+  updated_at?: string | null;
+}

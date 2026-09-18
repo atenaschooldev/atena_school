@@ -1,10 +1,26 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / ANNUAL MEMBERSHIPS (€30 TESSERE) DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/memberships
+ * @description
+ * Статусы годового членского взноса ассоциации школы (€30 за учебный год):
+ * - MembershipStatus: 1=ACTIVE, 2=PENDING, 3=EXPIRED, 4=REVOKED
+ * Срок действия: 1 сентября — 31 августа учебного года.
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Membership Status Enum & Dictionary
+// ----------------------------------------------------------------------------
+
 export const MembershipStatus = {
-  ACTIVE: 1,  // Active and valid membership
-  PENDING: 2, // Awaiting payment or confirmation
-  EXPIRED: 3, // Membership term has ended
-  REVOKED: 4, // Revoked / cancelled by admin
+  ACTIVE: 1,  // Active and valid membership / Attivo / Действительно
+  PENDING: 2, // Awaiting payment or confirmation / In attesa / В ожидании
+  EXPIRED: 3, // Membership term has ended / Scaduto / Истекло
+  REVOKED: 4, // Revoked by admin / Revocato / Отозвано
 } as const;
 export type MembershipStatus = (typeof MembershipStatus)[keyof typeof MembershipStatus];
 
@@ -42,6 +58,10 @@ export const MEMBERSHIP_STATUS_DICTIONARY: Record<MembershipStatus, DictionaryEn
     description: 'Членство аннулировано или отозвано администрацией школы',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 2. Safe Parser
+// ----------------------------------------------------------------------------
 
 export function parseMembershipStatus(val: any): MembershipStatus {
   if (typeof val === 'number') {

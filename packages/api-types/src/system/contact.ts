@@ -1,12 +1,28 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — SYSTEM / CONTACT MESSAGES & TOPICS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/system/contact
+ * @description
+ * Входящие обращения с лендинга, темы запросов и статусы обработки лидов:
+ * - ContactTopic: 1=GENERAL_INFO, 2=COURSE_ENROLLMENT, 3=CORPORATE_TRAINING, 4=CERTIFICATIONS, 5=PLACEMENT_TEST, 6=OTHER
+ * - ContactMessageStatus: 1=NEW, 2=IN_PROGRESS, 3=RESOLVED, 4=ARCHIVED
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Contact Topics Enum & Dictionary
+// ----------------------------------------------------------------------------
+
 export const ContactTopic = {
-  GENERAL_INFO:       1, // General information about the school
-  COURSE_ENROLLMENT:  2, // Enrollment in a specific course
-  CORPORATE_TRAINING: 3, // Corporate / B2B language training
-  CERTIFICATIONS:     4, // Info about exams and certifications
-  PLACEMENT_TEST:     5, // Request a free placement test
-  OTHER:              6, // Other / not categorised
+  GENERAL_INFO:       1, // General information / Informazioni generali
+  COURSE_ENROLLMENT:  2, // Course enrollment / Iscrizione corso
+  CORPORATE_TRAINING: 3, // Corporate training / Formazione aziendale
+  CERTIFICATIONS:     4, // Exams & certifications / Esami e certificazioni
+  PLACEMENT_TEST:     5, // Free placement test / Test di livello gratuito
+  OTHER:              6, // Other questions / Altro
 } as const;
 export type ContactTopic = (typeof ContactTopic)[keyof typeof ContactTopic];
 
@@ -61,11 +77,15 @@ export const CONTACT_TOPIC_DICTIONARY: Record<ContactTopic, DictionaryEntry> = {
   },
 };
 
+// ----------------------------------------------------------------------------
+// 2. Contact Message Lifecycle Status
+// ----------------------------------------------------------------------------
+
 export const ContactMessageStatus = {
-  NEW: 1,
-  IN_PROGRESS: 2,
-  RESOLVED: 3,
-  ARCHIVED: 4,
+  NEW: 1,         // New incoming lead / Nuovo / Новая
+  IN_PROGRESS: 2, // Being processed by secretary / In corso / В обработке
+  RESOLVED: 3,    // Resolved and completed / Risolto / Закрыта
+  ARCHIVED: 4,    // Archived lead / Archiviato / В архиве
 } as const;
 export type ContactMessageStatus = (typeof ContactMessageStatus)[keyof typeof ContactMessageStatus];
 
@@ -116,6 +136,10 @@ export function parseContactMessageStatus(val: any): ContactMessageStatus {
   if (s === '4' || s === 'archived' || s === 'archiviato') return ContactMessageStatus.ARCHIVED;
   return ContactMessageStatus.NEW;
 }
+
+// ----------------------------------------------------------------------------
+// 3. Contact Message Record DTO Interface
+// ----------------------------------------------------------------------------
 
 export interface ContactMessageRecord {
   id: string;

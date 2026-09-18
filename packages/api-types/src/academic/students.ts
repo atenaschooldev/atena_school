@@ -1,11 +1,27 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / STUDENTS REGISTRY DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/students
+ * @description
+ * Реестр студентов и шкала уровней владения языком (CEFR):
+ * - StudentStatus: 1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED
+ * - LanguageLevel: 1=A1, 2=A2, 3=B1, 4=B2, 5=C1, 6=C2
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Student Enrollment Status
+// ----------------------------------------------------------------------------
+
 export const StudentStatus = {
-  ACTIVE: 1,    // Active student (Attivo)
-  INACTIVE: 2,  // Inactive / Awaiting payment (Inattivo / In attesa)
-  PAUSED: 3,    // On hold / Academic leave (In pausa)
-  GRADUATED: 4, // Graduated / Completed (Diplomato / Concluso)
-  ARCHIVED: 5,  // Archived (Archiviato)
+  ACTIVE: 1,    // Active student (Attivo / Активен)
+  INACTIVE: 2,  // Inactive / Awaiting payment (Inattivo / Неактивен)
+  PAUSED: 3,    // On hold / Academic leave (In pausa / На паузе)
+  GRADUATED: 4, // Graduated / Completed (Diplomato / Выпускник)
+  ARCHIVED: 5,  // Archived (Archiviato / В архиве)
 } as const;
 export type StudentStatus = (typeof StudentStatus)[keyof typeof StudentStatus];
 
@@ -52,13 +68,17 @@ export const STUDENT_STATUS_DICTIONARY: Record<StudentStatus, DictionaryEntry> =
   },
 };
 
+// ----------------------------------------------------------------------------
+// 2. CEFR Language Proficiency Levels
+// ----------------------------------------------------------------------------
+
 export const LanguageLevel = {
-  A1: 1, // A1 — Principiante (Beginner)
-  A2: 2, // A2 — Elementare (Elementary)
-  B1: 3, // B1 — Intermedio (Intermediate)
-  B2: 4, // B2 — Intermedio Superiore (Upper Intermediate)
-  C1: 5, // C1 — Avanzato (Advanced)
-  C2: 6, // C2 — Padronanza (Proficiency / Mastery)
+  A1: 1, // A1 — Principiante (Beginner / Начальный)
+  A2: 2, // A2 — Elementare (Elementary / Элементарный)
+  B1: 3, // B1 — Intermedio (Intermediate / Средний)
+  B2: 4, // B2 — Intermedio Superiore (Upper Intermediate / Выше среднего)
+  C1: 5, // C1 — Avanzato (Advanced / Продвинутый)
+  C2: 6, // C2 — Padronanza (Proficiency / Профессиональный)
 } as const;
 export type LanguageLevel = (typeof LanguageLevel)[keyof typeof LanguageLevel];
 
@@ -112,6 +132,10 @@ export const LANGUAGE_LEVEL_DICTIONARY: Record<LanguageLevel, DictionaryEntry> =
     description: 'CEFR C2: Свободное владение языком на уровне образованного носителя',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 3. Safe Parsers
+// ----------------------------------------------------------------------------
 
 export function parseStudentStatus(val: any): StudentStatus {
   if (typeof val === 'number') {

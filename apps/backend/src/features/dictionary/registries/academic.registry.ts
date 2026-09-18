@@ -1,3 +1,18 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC DICTIONARY REGISTRY
+ * ============================================================================
+ * @module @atena/backend/features/dictionary/registries/academic.registry
+ * @description
+ * Реестр метаданных для учебных и академических таблиц:
+ * - courses (Курсы, форматы, статусы публикации, категории)
+ * - lessons (Уроки в расписании, статусы проведения, форматы аудитория/онлайн)
+ * - attendance_records (Детализированный журнал посещаемости по студентам)
+ * - students (Реестр студентов, уровни владения языком CEFR A1..C2)
+ * - annual_memberships (Годовые членские карты ассоциации €30)
+ * ============================================================================
+ */
+
 import {
   COURSE_STATUS_DICTIONARY,
   COURSE_SCHEDULE_TYPE_DICTIONARY,
@@ -21,6 +36,10 @@ import {
   LanguageLevel,
 } from '@atena/api-types';
 import { DictionaryTableDefinition } from './types';
+
+// ----------------------------------------------------------------------------
+// 1. Courses Table Metadata
+// ----------------------------------------------------------------------------
 
 export function getCoursesDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -68,6 +87,10 @@ export function getCoursesDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 2. Lessons Table Metadata
+// ----------------------------------------------------------------------------
+
 export function getLessonsDictionary(): DictionaryTableDefinition {
   const columns = {
     status: {
@@ -106,6 +129,10 @@ export function getLessonsDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 3. Attendance Records Metadata
+// ----------------------------------------------------------------------------
+
 export function getAttendanceRecordsDictionary(): DictionaryTableDefinition {
   const columns = {
     status: {
@@ -126,6 +153,10 @@ export function getAttendanceRecordsDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 4. Students Registry Metadata
+// ----------------------------------------------------------------------------
 
 export function getStudentsDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -156,6 +187,10 @@ export function getStudentsDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 5. Annual Memberships Metadata (€30 Tessere)
+// ----------------------------------------------------------------------------
 
 export function getAnnualMembershipsDictionary(): DictionaryTableDefinition {
   const columns = {

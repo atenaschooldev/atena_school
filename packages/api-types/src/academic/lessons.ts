@@ -1,28 +1,29 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / LESSONS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/lessons
+ * @description
+ * Расписание уроков, статусы проведения и локации:
+ * - LessonStatus: 1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED
+ * - LessonAttendance: 1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED
+ * - LessonLocationType: 1=IN_PERSON, 2=ONLINE, 3=HYBRID
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Lesson Lifecycle Status
+// ----------------------------------------------------------------------------
+
 export const LessonStatus = {
-  SCHEDULED:   1, // Scheduled / Programmata
-  COMPLETED:   2, // Completed / Completata
-  CANCELLED:   3, // Cancelled / Annullata
-  RESCHEDULED: 4, // Rescheduled / Riprogrammata
+  SCHEDULED:   1, // Scheduled / Programmata / Запланирован
+  COMPLETED:   2, // Completed / Completata / Проведён
+  CANCELLED:   3, // Cancelled / Annullata / Отменён
+  RESCHEDULED: 4, // Rescheduled / Riprogrammata / Перенесён
 } as const;
 export type LessonStatus = (typeof LessonStatus)[keyof typeof LessonStatus];
-
-export const LessonAttendance = {
-  PENDING: 1, // Not yet recorded / Da registrare
-  PRESENT: 2, // Attended / Presente
-  ABSENT:  3, // Absent / Assente
-  LATE:    4, // Late / In ritardo
-  EXCUSED: 5, // Excused absence / Giustificato
-} as const;
-export type LessonAttendance = (typeof LessonAttendance)[keyof typeof LessonAttendance];
-
-export const LessonLocationType = {
-  IN_PERSON: 1, // In person / In presenza
-  ONLINE:    2, // Online
-  HYBRID:    3, // Hybrid / Ibrido
-} as const;
-export type LessonLocationType = (typeof LessonLocationType)[keyof typeof LessonLocationType];
 
 export const LESSON_STATUS_DICTIONARY: Record<LessonStatus, DictionaryEntry> = {
   [LessonStatus.SCHEDULED]: {
@@ -58,6 +59,19 @@ export const LESSON_STATUS_DICTIONARY: Record<LessonStatus, DictionaryEntry> = {
     description: 'Урок перенесён на другую дату/время',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 2. Lesson Attendance Status
+// ----------------------------------------------------------------------------
+
+export const LessonAttendance = {
+  PENDING: 1, // Not yet recorded / Da registrare / Не отмечено
+  PRESENT: 2, // Attended / Presente / Присутствовал
+  ABSENT:  3, // Absent / Assente / Отсутствовал
+  LATE:    4, // Late / In ritardo / Опоздал
+  EXCUSED: 5, // Excused absence / Giustificato / Уважительная причина
+} as const;
+export type LessonAttendance = (typeof LessonAttendance)[keyof typeof LessonAttendance];
 
 export const LESSON_ATTENDANCE_DICTIONARY: Record<LessonAttendance, DictionaryEntry> = {
   [LessonAttendance.PENDING]: {
@@ -102,6 +116,17 @@ export const LESSON_ATTENDANCE_DICTIONARY: Record<LessonAttendance, DictionaryEn
   },
 };
 
+// ----------------------------------------------------------------------------
+// 3. Lesson Location Format
+// ----------------------------------------------------------------------------
+
+export const LessonLocationType = {
+  IN_PERSON: 1, // In person / In presenza / Очно
+  ONLINE:    2, // Online / Дистанционно
+  HYBRID:    3, // Hybrid / Ibrido / Смешанный
+} as const;
+export type LessonLocationType = (typeof LessonLocationType)[keyof typeof LessonLocationType];
+
 export const LESSON_LOCATION_TYPE_DICTIONARY: Record<LessonLocationType, DictionaryEntry> = {
   [LessonLocationType.IN_PERSON]: {
     id: 1,
@@ -128,6 +153,10 @@ export const LESSON_LOCATION_TYPE_DICTIONARY: Record<LessonLocationType, Diction
     description: 'Часть студентов очно, часть подключается онлайн',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 4. Bi-directional Helper Mappings & Parsers
+// ----------------------------------------------------------------------------
 
 export const LESSON_STATUS_STRING_TO_ID: Record<string, LessonStatus> = {
   scheduled:   LessonStatus.SCHEDULED,

@@ -1,3 +1,16 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — DICTIONARY LOCALIZATION & i18n
+ * ============================================================================
+ * @module @atena/backend/features/dictionary/templates/dictionary.i18n
+ * @description
+ * Полная локализация документации схемы данных и словарей перечислений:
+ * - Русский (ru)
+ * - Итальянский (it)
+ * - Английский (en)
+ * ============================================================================
+ */
+
 export const DICTIONARY_I18N_RAW = {
   ru: {
     searchPlaceholder: 'Поиск по статусам, кодам (например, PAID, A1, STRIPE)...',
@@ -59,15 +72,60 @@ export const DICTIONARY_I18N_RAW = {
         desc: 'Журнал индивидуальных и групповых уроков в расписании. Отслеживает проведение занятий, посещаемость (присутствовал, отсутствовал, опоздал) и формат (очно/онлайн).',
         cardDesc: 'Уроки в расписании: статус проведения, отметки о посещаемости (present/absent), форматы.',
       },
+      attendance_records: {
+        title: 'Журнал посещаемости',
+        desc: 'Детализированный реестр отметок присутствия студентов на занятиях с фиксацией автора отметки, времени и заметок.',
+        cardDesc: 'Индивидуальные отметки посещаемости студентов: PENDING, PRESENT, ABSENT, LATE, EXCUSED.',
+      },
       annual_memberships: {
         title: 'Годовые членские взносы (€30)',
         desc: 'Обязательный ежегодный ассоциативный взнос €30 на каждого студента. Действует в рамках учебного года (1 сентября — 31 августа).',
-        cardDesc: 'Годовые членские карты ассоциации (€30 за учебный год): ACTIVE, PENDING, EXPIRED.',
+        cardDesc: 'Годовые членские карты ассоциации (€30 за учебный год): ACTIVE, PENDING, EXPIRED, REVOKED.',
+      },
+      users: {
+        title: 'Пользователи и права доступа',
+        desc: 'Учетные записи платформы: студент, преподаватель, администратор, родитель, секретариат, главный администратор.',
+        cardDesc: 'Пользователи системы и ролевая модель доступа RBAC (UserRole 1..6).',
+      },
+      contact_messages: {
+        title: 'Входящие обращения и лиды',
+        desc: 'Сообщения из формы обратной связи сайта для обработки секретариатом.',
+        cardDesc: 'Входящие лиды и сообщения с сайта: NEW, IN_PROGRESS, RESOLVED, ARCHIVED.',
+      },
+      notifications: {
+        title: 'Системные уведомления',
+        desc: 'Реестр типов почтовых транзакций Resend и категорий образовательных услуг.',
+        cardDesc: 'Шаблоны писем (квитанции, подтверждения) и типы продуктов (курс, пакет, экзамен).',
       },
       app_settings: {
         title: 'Системные настройки приложения',
-        desc: 'Глобальные параметры конфигурации в формате JSONB (включение/отключение сбора взноса, текущий учебный год, базовая ставка €30).',
+        desc: 'Глобальные параметры конфигурации в формате JSONB (включение Stripe, подписок и прочего).',
         cardDesc: 'Глобальные динамические системные конфигурации (JSONB Key-Value).',
+      },
+      discounts: {
+        title: 'Скидки и промо-акции',
+        desc: 'Типы скидок и специальных предложений для студентов и семей.',
+        cardDesc: 'Скидки: процентная, фиксированная, семейная (братья/сёстры), ранняя запись.',
+      },
+      exam_certifications: {
+        title: 'Экзамены и сертификации',
+        desc: 'Международные языковые и IT-сертификации (Cambridge, IELTS, TOEFL, Certipass, DELF/DALF, Goethe).',
+        cardDesc: 'Официальные экзамены и сертификации: Cambridge, IELTS, TOEFL, EIPASS и др.',
+      },
+      days_of_week: {
+        title: 'Дни недели (ISO 8601)',
+        desc: 'Числовые идентификаторы дней недели для расписания и планирования занятий.',
+        cardDesc: 'Дни недели ISO: 1 (Пн) .. 7 (Вс).',
+      },
+      error_codes: {
+        title: 'Коды системных ошибок API',
+        desc: 'Стандартизированные 5-значные числовые коды ошибок для всех REST эндпоинтов.',
+        cardDesc: 'Стандартные коды ошибок: 400xx, 401xx, 402xx, 403xx, 404xx, 409xx, 500xx.',
+      },
+      contact_topics: {
+        title: 'Темы формы обратной связи',
+        desc: 'Категории входящих обращений и заявок с лендинга.',
+        cardDesc: 'Темы обращений: общие вопросы, запись на курс, корпоративное обучение, экзамены.',
       },
     },
   },
@@ -131,15 +189,60 @@ export const DICTIONARY_I18N_RAW = {
         desc: "Registro delle singole lezioni a calendario. Gestisce lo svolgimento dell'ora di lezione, il registro presenze (presente, assente, ritardo) e la modalità (in presenza/online).",
         cardDesc: 'Lezioni a calendario: stato di svolgimento, presenze (presente/assente), formati aula/online.',
       },
+      attendance_records: {
+        title: 'Registro Presenze Dettagliato',
+        desc: 'Registro puntuale delle presenze degli studenti per ciascuna lezione.',
+        cardDesc: 'Presenze individuali: PENDING, PRESENT, ABSENT, LATE, EXCUSED.',
+      },
       annual_memberships: {
         title: 'Quote Associative Annuali (€30)',
         desc: "Tesseramento obbligatorio annuale di €30 per studente. Valido per l'anno scolastico in corso (1 settembre – 31 agosto).",
         cardDesc: 'Tessere associative annuali (€30 per anno accademico): ACTIVE, PENDING, EXPIRED.',
       },
+      users: {
+        title: 'Utenti e Permessi di Accesso',
+        desc: 'Account di sistema e ruoli di accesso (Student, Teacher, Admin, Parent, Secretary, Super Admin).',
+        cardDesc: 'Utenti di sistema e modello di controllo degli accessi RBAC.',
+      },
+      contact_messages: {
+        title: 'Messaggi di Contatto e Lead',
+        desc: 'Richieste inviate dal modulo contatti del sito per la gestione da parte della segreteria.',
+        cardDesc: 'Lead e richieste dal sito web: NEW, IN_PROGRESS, RESOLVED, ARCHIVED.',
+      },
+      notifications: {
+        title: 'Notifiche di Sistema',
+        desc: 'Tipologie di notifiche email (Resend) e categorie di servizi didattici.',
+        cardDesc: 'Modelli email (ricevute, conferme) e tipologie di prodotto.',
+      },
       app_settings: {
         title: 'Configurazioni e Parametri di Sistema',
-        desc: 'Parametri di sistema globali salvati in formato JSONB (es. quota iscrizione attiva/disattiva, anno scolastico corrente, importo standard €30).',
+        desc: 'Parametri di sistema globali salvati in formato JSONB (es. gateway Stripe, abbonamenti).',
         cardDesc: 'Configurazioni di sistema globali dinamiche (JSONB Key-Value).',
+      },
+      discounts: {
+        title: 'Sconti e Promozioni',
+        desc: 'Tipologie di agevolazioni tariffarie e sconti per famiglie e studenti.',
+        cardDesc: 'Sconti: percentuale, fisso, fratelli/sorelle, iscrizione anticipata.',
+      },
+      exam_certifications: {
+        title: 'Esami e Certificazioni',
+        desc: 'Certificazioni internazionali di lingua e informatica (Cambridge, IELTS, TOEFL, EIPASS, DELF/DALF, Goethe).',
+        cardDesc: 'Certificazioni ufficiali: Cambridge, IELTS, TOEFL, EIPASS, Goethe.',
+      },
+      days_of_week: {
+        title: 'Giorni della Settimana (ISO)',
+        desc: 'Identificatori numerici dei giorni della settimana per la programmazione.',
+        cardDesc: 'Giorni ISO: 1 (Lun) .. 7 (Dom).',
+      },
+      error_codes: {
+        title: 'Codici Errore API',
+        desc: 'Codici numerici standardizzati a 5 cifre per gli endpoint REST.',
+        cardDesc: 'Codici di errore standard: 400xx, 401xx, 402xx, 404xx, 500xx.',
+      },
+      contact_topics: {
+        title: 'Argomenti Modulo di Contatto',
+        desc: 'Tipologie di richieste inviate dal pubblico del sito web.',
+        cardDesc: 'Argomenti di contatto: informazioni generali, iscrizione corsi, concorsi.',
       },
     },
   },
@@ -203,15 +306,60 @@ export const DICTIONARY_I18N_RAW = {
         desc: 'Timetable lesson registry. Tracks class delivery, attendance status (present, absent, late, excused), and location format (in-person/online).',
         cardDesc: 'Scheduled classes: delivery status, attendance tracking (present/absent), formats.',
       },
+      attendance_records: {
+        title: 'Detailed Attendance Registry',
+        desc: 'Granular student attendance log for each scheduled lesson session.',
+        cardDesc: 'Individual student attendance: PENDING, PRESENT, ABSENT, LATE, EXCUSED.',
+      },
       annual_memberships: {
         title: 'Annual Memberships (€30)',
         desc: 'Mandatory €30 annual association membership per student. Valid for the current academic year (September 1 – August 31).',
         cardDesc: 'Annual association membership cards (€30 per academic year): ACTIVE, PENDING, EXPIRED.',
       },
+      users: {
+        title: 'Users & Access Roles',
+        desc: 'System accounts and role permissions (Student, Teacher, Admin, Parent, Secretary, Super Admin).',
+        cardDesc: 'Platform users and RBAC role-based access control (UserRole 1..6).',
+      },
+      contact_messages: {
+        title: 'Contact Messages & Leads',
+        desc: 'Inbound requests from landing page contact forms for reception processing.',
+        cardDesc: 'Inbound leads and messages: NEW, IN_PROGRESS, RESOLVED, ARCHIVED.',
+      },
+      notifications: {
+        title: 'System Notifications',
+        desc: 'Transactional email notification types (Resend) and catalog educational product types.',
+        cardDesc: 'Email templates (receipts, confirmations) and educational product types.',
+      },
       app_settings: {
         title: 'System Application Settings',
-        desc: 'Dynamic system-wide configuration keys stored in JSONB (e.g. registration fee active/inactive, current academic year, default €30 fee).',
+        desc: 'Dynamic system-wide configuration keys stored in JSONB (e.g. Stripe enabled, subscriptions enabled).',
         cardDesc: 'Dynamic global system configuration parameters (JSONB Key-Value).',
+      },
+      discounts: {
+        title: 'Discounts & Promotions',
+        desc: 'Tuition reduction rules and discounts for students and families.',
+        cardDesc: 'Discounts: percentage, fixed amount, sibling discount, early bird.',
+      },
+      exam_certifications: {
+        title: 'Exams & Certifications',
+        desc: 'International language and IT certifications (Cambridge, IELTS, TOEFL, EIPASS, DELF/DALF, Goethe).',
+        cardDesc: 'Official certification exams: Cambridge, IELTS, TOEFL, EIPASS, Goethe.',
+      },
+      days_of_week: {
+        title: 'Days of Week (ISO)',
+        desc: 'Numeric ISO identifiers for days of the week for timetable scheduling.',
+        cardDesc: 'ISO weekday numbers: 1 (Mon) .. 7 (Sun).',
+      },
+      error_codes: {
+        title: 'API Error Codes',
+        desc: 'Standardized 5-digit numeric error codes across all REST API endpoints.',
+        cardDesc: 'Standard API error codes: 400xx, 401xx, 402xx, 404xx, 500xx.',
+      },
+      contact_topics: {
+        title: 'Contact Form Topics',
+        desc: 'Categories for inquiries submitted via landing website contact forms.',
+        cardDesc: 'Contact categories: general info, enrollment, corporate training, exams.',
       },
     },
   },

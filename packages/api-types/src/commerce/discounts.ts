@@ -1,10 +1,26 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — COMMERCE / DISCOUNTS & CERTIFICATIONS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/commerce/discounts
+ * @description
+ * Типы скидок, промо-акций и официальных экзаменов/сертификаций:
+ * - DiscountType: 1=PERCENTAGE, 2=FIXED_AMOUNT, 3=SIBLING_DISCOUNT, 4=EARLY_BIRD
+ * - ExamCertificationType: 1=CAMBRIDGE, 2=IELTS, 3=TOEFL, 4=CERTIPASS_EIPASS, 5=DELF_DALF, 6=GOETHE
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Discount Types
+// ----------------------------------------------------------------------------
+
 export const DiscountType = {
-  PERCENTAGE:       1, // Percentage discount off the total price
-  FIXED_AMOUNT:     2, // Fixed euro amount deducted
-  SIBLING_DISCOUNT: 3, // Discount for siblings enrolled simultaneously
-  EARLY_BIRD:       4, // Early enrolment discount
+  PERCENTAGE:       1, // Percentage discount / Sconto Percentuale / В процентах
+  FIXED_AMOUNT:     2, // Fixed amount / Sconto Fisso (€) / Фиксированная
+  SIBLING_DISCOUNT: 3, // Sibling discount / Sconto Fratelli / Братья и сёстры
+  EARLY_BIRD:       4, // Early bird / Iscrizione Anticipata / Ранняя запись
 } as const;
 export type DiscountType = (typeof DiscountType)[keyof typeof DiscountType];
 
@@ -42,6 +58,10 @@ export const DISCOUNT_TYPE_DICTIONARY: Record<DiscountType, DictionaryEntry> = {
     description: 'Скидка при записи до начала учебного года',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 2. Exam and Official Certification Types
+// ----------------------------------------------------------------------------
 
 export const ExamCertificationType = {
   CAMBRIDGE:        1, // Cambridge English (PET, FCE, CAE, CPE)

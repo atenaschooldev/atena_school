@@ -1,49 +1,31 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — COMMERCE / PAYMENTS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/commerce/payments
+ * @description
+ * Финансовые перечисления, бухгалтерские проводки и транзакции (payments table):
+ * - PaymentMethod: 1=STRIPE (онлайн), 2=CASH (наличные в кассе), 3=POS (терминал), 4=BANK_TRANSFER (bonifico)
+ * - PaymentCurrency: 1=EUR, 2=USD, 3=GBP
+ * - PaymentType: 1=COURSE_PAYMENT, 2=REGISTRATION_FEE (€30), 3=INSTALLMENT, 4=SINGLE_LESSON, 5=EXAM_FEE, 6=CERTIFICATE_FEE, 7=MATERIAL_TEXTBOOK, 8=OTHER
+ * - PaymentRecordStatus: 1=PENDING, 2=SUCCEEDED, 3=FAILED, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=CANCELLED
+ * - PaymentProvider: 1=STRIPE, 2=MANUAL, 3=POS_TERMINAL, 4=BANK
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Payment Method Enum & Dictionary
+// ----------------------------------------------------------------------------
+
 export const PaymentMethod = {
-  STRIPE: 1,        // Online via Stripe
-  CASH: 2,          // Cash at the reception (Contanti)
-  POS: 3,           // Bank card at school POS terminal
-  BANK_TRANSFER: 4, // Bank transfer (Bonifico)
+  STRIPE: 1,        // Online via Stripe / Carta online
+  CASH: 2,          // Cash at the reception / Contanti in sede
+  POS: 3,           // Bank card at school POS / POS in sede
+  BANK_TRANSFER: 4, // Bank transfer / Bonifico bancario
 } as const;
 export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
-
-export const PaymentCurrency = {
-  EUR: 1, // Euro (€)
-  USD: 2, // US Dollar ($)
-  GBP: 3, // British Pound (£)
-} as const;
-export type PaymentCurrency = (typeof PaymentCurrency)[keyof typeof PaymentCurrency];
-
-export const PaymentType = {
-  COURSE_PAYMENT: 1,    // Course payment / Pagamento Corso
-  REGISTRATION_FEE: 2,  // Annual registration fee €30 / Quota Iscrizione
-  INSTALLMENT: 3,       // Installment payment / Rata Corso
-  SINGLE_LESSON: 4,     // Single lesson / Lezione Singola
-  EXAM_FEE: 5,          // Exam entry fee Cambridge/CELI / Quota Esame
-  CERTIFICATE_FEE: 6,   // Certificate issuance / Rilascio Certificato
-  MATERIAL_TEXTBOOK: 7, // Study materials and textbooks / Libro o Materiale Didattico
-  OTHER: 8,             // Other / Altro
-} as const;
-export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType];
-
-export const PaymentRecordStatus = {
-  PENDING: 1,            // Processing / In attesa
-  SUCCEEDED: 2,          // Successfully completed / Completato
-  FAILED: 3,             // Payment failed / Fallito
-  REFUNDED: 4,           // Full refund / Rimborsato
-  PARTIALLY_REFUNDED: 5, // Partial refund / Parzialmente rimborsato
-  CANCELLED: 6,          // Cancelled / Annullato
-} as const;
-export type PaymentRecordStatus = (typeof PaymentRecordStatus)[keyof typeof PaymentRecordStatus];
-
-export const PaymentProvider = {
-  STRIPE: 1,       // Stripe payment gateway
-  MANUAL: 2,       // Manual reception cash register
-  POS_TERMINAL: 3, // Physical bank POS terminal
-  BANK: 4,         // Direct bank transfer (IBAN)
-} as const;
-export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider];
 
 export const PAYMENT_METHOD_DICTIONARY: Record<PaymentMethod, DictionaryEntry> = {
   [PaymentMethod.STRIPE]: {
@@ -80,6 +62,17 @@ export const PAYMENT_METHOD_DICTIONARY: Record<PaymentMethod, DictionaryEntry> =
   },
 };
 
+// ----------------------------------------------------------------------------
+// 2. Payment Currency Enum & Dictionary
+// ----------------------------------------------------------------------------
+
+export const PaymentCurrency = {
+  EUR: 1, // Euro (€)
+  USD: 2, // US Dollar ($)
+  GBP: 3, // British Pound (£)
+} as const;
+export type PaymentCurrency = (typeof PaymentCurrency)[keyof typeof PaymentCurrency];
+
 export const PAYMENT_CURRENCY_DICTIONARY: Record<PaymentCurrency, DictionaryEntry> = {
   [PaymentCurrency.EUR]: {
     id: 1,
@@ -106,6 +99,22 @@ export const PAYMENT_CURRENCY_DICTIONARY: Record<PaymentCurrency, DictionaryEntr
     description: 'Британский фунт',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 3. Payment Type (Accounting Category)
+// ----------------------------------------------------------------------------
+
+export const PaymentType = {
+  COURSE_PAYMENT: 1,    // Course payment / Pagamento Corso
+  REGISTRATION_FEE: 2,  // Annual registration fee €30 / Quota Iscrizione
+  INSTALLMENT: 3,       // Installment payment / Rata Corso
+  SINGLE_LESSON: 4,     // Single lesson / Lezione Singola
+  EXAM_FEE: 5,          // Exam entry fee Cambridge/CELI / Quota Esame
+  CERTIFICATE_FEE: 6,   // Certificate issuance / Rilascio Certificato
+  MATERIAL_TEXTBOOK: 7, // Study materials and textbooks / Libro o Materiale Didattico
+  OTHER: 8,             // Other / Altro
+} as const;
+export type PaymentType = (typeof PaymentType)[keyof typeof PaymentType];
 
 export const PAYMENT_TYPE_DICTIONARY: Record<PaymentType, DictionaryEntry> = {
   [PaymentType.COURSE_PAYMENT]: {
@@ -174,6 +183,20 @@ export const PAYMENT_TYPE_DICTIONARY: Record<PaymentType, DictionaryEntry> = {
   },
 };
 
+// ----------------------------------------------------------------------------
+// 4. Payment Transaction Status
+// ----------------------------------------------------------------------------
+
+export const PaymentRecordStatus = {
+  PENDING: 1,            // Processing / In attesa / В обработке
+  SUCCEEDED: 2,          // Successfully completed / Completato / Успешно
+  FAILED: 3,             // Payment failed / Fallito / Ошибка
+  REFUNDED: 4,           // Full refund / Rimborsato / Возврат
+  PARTIALLY_REFUNDED: 5, // Partial refund / Parzialmente rimborsato / Частичный возврат
+  CANCELLED: 6,          // Cancelled / Annullato / Отменён
+} as const;
+export type PaymentRecordStatus = (typeof PaymentRecordStatus)[keyof typeof PaymentRecordStatus];
+
 export const PAYMENT_RECORD_STATUS_DICTIONARY: Record<PaymentRecordStatus, DictionaryEntry> = {
   [PaymentRecordStatus.PENDING]: {
     id: 1,
@@ -225,6 +248,18 @@ export const PAYMENT_RECORD_STATUS_DICTIONARY: Record<PaymentRecordStatus, Dicti
   },
 };
 
+// ----------------------------------------------------------------------------
+// 5. Payment Provider / Gateway
+// ----------------------------------------------------------------------------
+
+export const PaymentProvider = {
+  STRIPE: 1,       // Stripe payment gateway
+  MANUAL: 2,       // Manual reception cash register
+  POS_TERMINAL: 3, // Physical bank POS terminal
+  BANK: 4,         // Direct bank transfer (IBAN)
+} as const;
+export type PaymentProvider = (typeof PaymentProvider)[keyof typeof PaymentProvider];
+
 export const PAYMENT_PROVIDER_DICTIONARY: Record<PaymentProvider, DictionaryEntry> = {
   [PaymentProvider.STRIPE]: {
     id: 1,
@@ -259,6 +294,10 @@ export const PAYMENT_PROVIDER_DICTIONARY: Record<PaymentProvider, DictionaryEntr
     description: 'Прямой перевод на расчётный счёт школы',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 6. Bi-directional Helper Mappings
+// ----------------------------------------------------------------------------
 
 export const PAYMENT_METHOD_STRING_TO_ID: Record<string, PaymentMethod> = {
   stripe: PaymentMethod.STRIPE,
@@ -352,6 +391,10 @@ export const PAYMENT_PROVIDER_ID_TO_STRING: Record<PaymentProvider, string> = {
   [PaymentProvider.BANK]: 'bank',
 };
 
+// ----------------------------------------------------------------------------
+// 7. Safe Parsers
+// ----------------------------------------------------------------------------
+
 export function parsePaymentMethod(val: unknown): PaymentMethod {
   if (typeof val === 'number' && val in PAYMENT_METHOD_DICTIONARY) {
     return val as PaymentMethod;
@@ -431,6 +474,10 @@ export function parsePaymentProvider(val: unknown): PaymentProvider {
   }
   return PaymentProvider.MANUAL;
 }
+
+// ----------------------------------------------------------------------------
+// 8. Payment Record DTO Interface
+// ----------------------------------------------------------------------------
 
 export interface PaymentRecord {
   id: string;

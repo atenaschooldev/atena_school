@@ -1,4 +1,23 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / COURSES DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/courses
+ * @description
+ * Каталог учебных курсов, программ, расписаний и преподавательских ролей:
+ * - CourseStatus: 1=ACTIVE (опубликован), 2=DRAFT (черновик), 3=ARCHIVED (архив)
+ * - CourseScheduleType: 1=FIXED (фиксированные дни/время), 2=FLEXIBLE (по согласованию)
+ * - CourseFormat: 1=GROUP (в группе), 2=INDIVIDUAL (индивидуально), 3=ONLINE, 4=CERTIFICATION
+ * - CourseCategory: 1=LANGUAGES, 2=ACADEMIC (репетиторство), 3=CERTIPASS, 4=OTHER
+ * - CourseTeacherRole: 1=PRIMARY (основной), 2=ASSISTANT (ассистент), 3=SUBSTITUTE (замена)
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
+
+// ----------------------------------------------------------------------------
+// 1. Course Publication Status
+// ----------------------------------------------------------------------------
 
 export const CourseStatus = {
   ACTIVE: 1,   // Active / Published (Attivo / Pubblicato)
@@ -34,6 +53,10 @@ export const COURSE_STATUS_DICTIONARY: Record<CourseStatus, DictionaryEntry> = {
   },
 };
 
+// ----------------------------------------------------------------------------
+// 2. Schedule Type (Fixed Days vs Flexible Timetable)
+// ----------------------------------------------------------------------------
+
 export const CourseScheduleType = {
   FIXED: 1,    // Fixed schedule with set days and times (Fisso)
   FLEXIBLE: 2, // Flexible schedule / To be agreed (Flessibile / Da concordare)
@@ -58,6 +81,10 @@ export const COURSE_SCHEDULE_TYPE_DICTIONARY: Record<CourseScheduleType, Diction
     description: 'Индивидуальный график, время уроков согласуется со студентом',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 3. Course Delivery Format
+// ----------------------------------------------------------------------------
 
 export const CourseFormat = {
   GROUP: 1,         // Group lessons (Di Gruppo)
@@ -102,6 +129,10 @@ export const COURSE_FORMAT_DICTIONARY: Record<CourseFormat, DictionaryEntry> = {
   },
 };
 
+// ----------------------------------------------------------------------------
+// 4. Course Category
+// ----------------------------------------------------------------------------
+
 export const CourseCategory = {
   LANGUAGES: 1,  // Corsi di Lingua (Foreign languages)
   ACADEMIC: 2,   // Recupero Scolastico (School tutoring)
@@ -145,6 +176,10 @@ export const COURSE_CATEGORY_DICTIONARY: Record<CourseCategory, DictionaryEntry>
   },
 };
 
+// ----------------------------------------------------------------------------
+// 5. Course Teacher Role in Curriculum
+// ----------------------------------------------------------------------------
+
 export const CourseTeacherRole = {
   PRIMARY: 1,    // Main / Lead Teacher (Docente Principale)
   ASSISTANT: 2,  // Co-teacher / Assistant (Docente di Supporto / Assistente)
@@ -184,6 +219,10 @@ export const CourseDetailTab = {
   INCLUDED: 2,
 } as const;
 export type CourseDetailTab = (typeof CourseDetailTab)[keyof typeof CourseDetailTab];
+
+// ----------------------------------------------------------------------------
+// 6. Safe Parsing Helpers
+// ----------------------------------------------------------------------------
 
 export function parseCourseTeacherRole(val: any): CourseTeacherRole {
   if (typeof val === 'number') {
@@ -245,6 +284,10 @@ export function parseCourseFormat(val: any): CourseFormat {
   if (s === '4' || s === 'certification' || s === 'certificazione' || s === 'esame' || s === 'certipass') return CourseFormat.CERTIFICATION;
   return CourseFormat.GROUP;
 }
+
+// ----------------------------------------------------------------------------
+// 7. Course DTO / Item Interface
+// ----------------------------------------------------------------------------
 
 export interface CourseItem {
   id: string;

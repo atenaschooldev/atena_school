@@ -1,10 +1,30 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — COMMERCE / BOOKINGS & SUBSCRIPTIONS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/commerce/bookings
+ * @description
+ * Реестр бронирований курсов, помесячных подписок и сессий оформления:
+ * - BookingPaymentStatus: 1=PENDING, 2=RESERVED, 3=PAID, 4=REFUNDED, 5=PARTIALLY_REFUNDED, 6=FAILED, 7=CANCELLED
+ * - BookingStatus: 1=ACTIVE, 2=COMPLETED, 3=CANCELLED
+ * - BookingSchedulingStatus: 1=SCHEDULED, 2=PENDING_COORDINATION
+ * - BillingScheme: 1=FULL, 2=INSTALLMENTS, 3=PER_LESSON, 4=SUBSCRIPTION
+ * - SubscriptionStatus: 1=ACTIVE, 2=PENDING_RECEPTION_PAYMENT, 3=PAST_DUE, 4=PAUSED, 5=CANCELED, 6=EXPIRED
+ * - CourseBillingType: 1=ONE_TIME_ONLY, 2=SUBSCRIPTION_ONLY, 3=BOTH
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 import { PaymentMethod } from './payments';
+
+// ----------------------------------------------------------------------------
+// 1. Numeric Enums for Bookings & Subscriptions
+// ----------------------------------------------------------------------------
 
 export const BookingPaymentStatus = {
   PENDING: 1,            // Awaiting online payment (Stripe checkout)
   RESERVED: 2,           // Reserved with in-person payment (at the reception)
-  PAID: 3,               // Paid
+  PAID: 3,               // Paid in full
   REFUNDED: 4,           // Full refund issued
   PARTIALLY_REFUNDED: 5, // Partial refund issued
   FAILED: 6,             // Payment failed
@@ -49,6 +69,10 @@ export const CourseBillingType = {
   BOTH: 3,              // Both one-time purchase and monthly subscription available
 } as const;
 export type CourseBillingType = (typeof CourseBillingType)[keyof typeof CourseBillingType];
+
+// ----------------------------------------------------------------------------
+// 2. Metadata Dictionaries
+// ----------------------------------------------------------------------------
 
 export const BOOKING_PAYMENT_STATUS_DICTIONARY: Record<BookingPaymentStatus, DictionaryEntry> = {
   [BookingPaymentStatus.PENDING]: {
@@ -268,6 +292,10 @@ export const COURSE_BILLING_TYPE_DICTIONARY: Record<CourseBillingType, Dictionar
   },
 };
 
+// ----------------------------------------------------------------------------
+// 3. Helper Bi-directional Mappings
+// ----------------------------------------------------------------------------
+
 export const BOOKING_PAYMENT_STATUS_STRING_TO_ID: Record<string, BookingPaymentStatus> = {
   pending: BookingPaymentStatus.PENDING,
   pending_payment: BookingPaymentStatus.PENDING,
@@ -364,6 +392,10 @@ export const COURSE_BILLING_TYPE_ID_TO_STRING: Record<CourseBillingType, string>
   [CourseBillingType.BOTH]: 'both',
 };
 
+// ----------------------------------------------------------------------------
+// 4. Safe Parsers
+// ----------------------------------------------------------------------------
+
 export function parseBillingScheme(val: unknown): BillingScheme {
   if (typeof val === 'number' && val in BILLING_SCHEME_DICTIONARY) {
     return val as BillingScheme;
@@ -427,6 +459,10 @@ export function parseBookingPaymentStatus(val: unknown): BookingPaymentStatus {
   }
   return BookingPaymentStatus.PENDING;
 }
+
+// ----------------------------------------------------------------------------
+// 5. Booking Records & Response DTO Interfaces
+// ----------------------------------------------------------------------------
 
 export interface BookingRecord {
   id: string;

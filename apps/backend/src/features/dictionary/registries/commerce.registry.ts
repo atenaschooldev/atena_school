@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — COMMERCE DICTIONARY REGISTRY
+ * ============================================================================
+ * @module @atena/backend/features/dictionary/registries/commerce.registry
+ * @description
+ * Реестр метаданных для коммерческих таблиц и сущностей:
+ * - bookings (Бронирования, статусы оплаты, схемы платежей)
+ * - payments (Финансовые проводки, валюты, провайдеры, типы начислений)
+ * - discounts (Типы скидок: процентная, фиксированная, семейная, ранняя)
+ * - exam_certifications (Международные языковые и IT-экзамены)
+ * ============================================================================
+ */
+
 import {
   BOOKING_PAYMENT_STATUS_DICTIONARY,
   BOOKING_STATUS_DICTIONARY,
@@ -23,6 +37,10 @@ import {
   ExamCertificationType,
 } from '@atena/api-types';
 import { DictionaryTableDefinition } from './types';
+
+// ----------------------------------------------------------------------------
+// 1. Bookings Table Metadata
+// ----------------------------------------------------------------------------
 
 export function getBookingsDictionary(): DictionaryTableDefinition {
   const columns = {
@@ -78,6 +96,10 @@ export function getBookingsDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 2. Payments Table Metadata
+// ----------------------------------------------------------------------------
+
 export function getPaymentsDictionary(): DictionaryTableDefinition {
   const columns = {
     currency: {
@@ -132,6 +154,10 @@ export function getPaymentsDictionary(): DictionaryTableDefinition {
   };
 }
 
+// ----------------------------------------------------------------------------
+// 3. Discounts Metadata
+// ----------------------------------------------------------------------------
+
 export function getDiscountsDictionary(): DictionaryTableDefinition {
   const columns = {
     discount_type: {
@@ -152,6 +178,10 @@ export function getDiscountsDictionary(): DictionaryTableDefinition {
     enums: columns,
   };
 }
+
+// ----------------------------------------------------------------------------
+// 4. Certifications & Exams Metadata
+// ----------------------------------------------------------------------------
 
 export function getCertificationsDictionary(): DictionaryTableDefinition {
   const columns = {

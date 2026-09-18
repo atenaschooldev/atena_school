@@ -1,10 +1,26 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — SYSTEM / NOTIFICATIONS & ITEM TYPES DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/system/notifications
+ * @description
+ * Типы системных почтовых транзакций и категории образовательных услуг:
+ * - ItemType: 1=COURSE, 2=SINGLE_LESSON, 3=PACKAGE, 4=CERTIFICATION
+ * - NotificationType: 1=BOOKING_CONFIRMATION, 2=PAYMENT_RECEIPT, 3=PAYMENT_REMINDER, 4=MEMBERSHIP_CARD, 5=CONTACT_FORM
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
 
+// ----------------------------------------------------------------------------
+// 1. Item Types
+// ----------------------------------------------------------------------------
+
 export const ItemType = {
-  COURSE: 1,
-  SINGLE_LESSON: 2,
-  PACKAGE: 3,
-  CERTIFICATION: 4,
+  COURSE: 1,        // Standard regular course / Corso Standard / Стандартный курс
+  SINGLE_LESSON: 2, // Single lesson / Lezione Singola / Разовый урок
+  PACKAGE: 3,       // Hours package / Pacchetto Ore / Пакет часов
+  CERTIFICATION: 4, // Exam session / Esame Certificazione / Экзамен
 } as const;
 export type ItemType = (typeof ItemType)[keyof typeof ItemType];
 
@@ -56,12 +72,16 @@ export function parseItemType(val: any): ItemType {
   return ItemType.COURSE;
 }
 
+// ----------------------------------------------------------------------------
+// 2. Notification Types (Resend Transactional Emails)
+// ----------------------------------------------------------------------------
+
 export const NotificationType = {
-  BOOKING_CONFIRMATION: 1,
-  PAYMENT_RECEIPT: 2,
-  PAYMENT_REMINDER: 3,
-  MEMBERSHIP_CARD: 4,
-  CONTACT_FORM: 5,
+  BOOKING_CONFIRMATION: 1, // Booking confirmation email / Conferma prenotazione
+  PAYMENT_RECEIPT: 2,      // Payment receipt with breakdown / Ricevuta pagamento
+  PAYMENT_REMINDER: 3,     // Reception payment reminder / Promemoria saldo
+  MEMBERSHIP_CARD: 4,      // Annual membership card / Tessera associativa
+  CONTACT_FORM: 5,         // Contact request from landing / Richiesta contatto
 } as const;
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
