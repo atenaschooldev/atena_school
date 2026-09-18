@@ -167,7 +167,7 @@ export const NOTIFICATION_STATUS_DICTIONARY: Record<NotificationStatus, Dictiona
 // 4. Log Types / Interfaces
 // ----------------------------------------------------------------------------
 
-export interface ApiLog {
+export interface BaseApiLog {
   id: string;
   created_at: string;
   controller: string;
@@ -182,6 +182,12 @@ export interface ApiLog {
   response?: Record<string, any> | null;
   status_code: number;
 }
+
+export type LandingApiLog = BaseApiLog;
+export type AppApiLog = BaseApiLog;
+export type AdminApiLog = BaseApiLog;
+export type ApiLog = BaseApiLog;
+
 
 export interface NotificationLog {
   id: string;

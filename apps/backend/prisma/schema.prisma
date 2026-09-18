@@ -24,10 +24,12 @@ model User {
   avatarUrl String?  @map("avatar_url")
   notes     String?
 
-  teacher   Teacher?
-  bookings  Booking[]
-  payments  Payment[]
-  api_logs  api_logs[]
+  teacher          Teacher?
+  bookings         Booking[]
+  payments         Payment[]
+  landing_api_logs landing_api_logs[]
+  app_api_logs     app_api_logs[]
+  admin_api_logs   admin_api_logs[]
 
   @@index([role], map: "idx_users_role")
   @@index([taxCode], map: "idx_users_tax_code")
@@ -389,7 +391,7 @@ model AppSetting {
   @@map("app_settings")
 }
 
-model api_logs {
+model landing_api_logs {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   controller String   @db.VarChar(100)
@@ -406,12 +408,61 @@ model api_logs {
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
-  @@index([controller, action], map: "idx_api_logs_controller_action")
-  @@index([userId], map: "idx_api_logs_user_id")
-  @@index([statusCode], map: "idx_api_logs_status_code")
-  @@index([createdAt(sort: Desc)], map: "idx_api_logs_created_at")
-  @@map("api_logs")
+  @@index([controller, action], map: "idx_landing_api_logs_controller_action")
+  @@index([userId], map: "idx_landing_api_logs_user_id")
+  @@index([statusCode], map: "idx_landing_api_logs_status_code")
+  @@index([createdAt(sort: Desc)], map: "idx_landing_api_logs_created_at")
+  @@map("landing_api_logs")
 }
+
+model app_api_logs {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  controller String   @db.VarChar(100)
+  action     String   @db.VarChar(100)
+  httpMethod String   @map("http_method") @db.VarChar(10)
+  endpoint   String   @db.VarChar(255)
+  userId     String?  @map("user_id") @db.Uuid
+  userRole   Int?     @map("user_role") @db.SmallInt
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  request    Json?
+  response   Json?
+  statusCode Int      @map("status_code")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([controller, action], map: "idx_app_api_logs_controller_action")
+  @@index([userId], map: "idx_app_api_logs_user_id")
+  @@index([statusCode], map: "idx_app_api_logs_status_code")
+  @@index([createdAt(sort: Desc)], map: "idx_app_api_logs_created_at")
+  @@map("app_api_logs")
+}
+
+model admin_api_logs {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  controller String   @db.VarChar(100)
+  action     String   @db.VarChar(100)
+  httpMethod String   @map("http_method") @db.VarChar(10)
+  endpoint   String   @db.VarChar(255)
+  userId     String?  @map("user_id") @db.Uuid
+  userRole   Int?     @map("user_role") @db.SmallInt
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  request    Json?
+  response   Json?
+  statusCode Int      @map("status_code")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([controller, action], map: "idx_admin_api_logs_controller_action")
+  @@index([userId], map: "idx_admin_api_logs_user_id")
+  @@index([statusCode], map: "idx_admin_api_logs_status_code")
+  @@index([createdAt(sort: Desc)], map: "idx_admin_api_logs_created_at")
+  @@map("admin_api_logs")
+}
+
 
 model notification_logs {
   id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

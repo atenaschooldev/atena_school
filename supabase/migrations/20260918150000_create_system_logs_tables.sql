@@ -1,9 +1,12 @@
 -- ============================================================================
--- ATENA SCHOOL — SYSTEM LOGS TABLES (API, EMAIL, TELEGRAM)
+-- ATENA SCHOOL — SYSTEM LOGS TABLES (API LOGS BY APP & NOTIFICATIONS)
 -- ============================================================================
 
--- 1. API Logs (Backend Controllers & Actions Audit)
-CREATE TABLE IF NOT EXISTS api_logs (
+-- Drop old api_logs if exists
+DROP TABLE IF EXISTS api_logs;
+
+-- 1. Landing API Logs (Landing / Public API Audit)
+CREATE TABLE IF NOT EXISTS landing_api_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     controller VARCHAR(100) NOT NULL,
@@ -19,23 +22,81 @@ CREATE TABLE IF NOT EXISTS api_logs (
     status_code INT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_api_logs_controller_action ON api_logs(controller, action);
-CREATE INDEX IF NOT EXISTS idx_api_logs_user_id ON api_logs(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_api_logs_status_code ON api_logs(status_code);
-CREATE INDEX IF NOT EXISTS idx_api_logs_created_at ON api_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_landing_api_logs_controller_action ON landing_api_logs(controller, action);
+CREATE INDEX IF NOT EXISTS idx_landing_api_logs_user_id ON landing_api_logs(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_landing_api_logs_status_code ON landing_api_logs(status_code);
+CREATE INDEX IF NOT EXISTS idx_landing_api_logs_created_at ON landing_api_logs(created_at DESC);
 
-ALTER TABLE api_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE landing_api_logs ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admins full access to api_logs"
-    ON api_logs
-    FOR ALL
-    TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM users
-            WHERE users.id = auth.uid() AND users.role IN (1, 2)
-        )
-    );
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access to landing_api_logs' AND tablename = 'landing_api_logs') THEN
+        CREATE POLICY "Admins full access to landing_api_logs" ON landing_api_logs FOR ALL TO authenticated
+        USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN (1, 2)));
+    END IF;
+END $$;
+
+-- 2. App API Logs (Student / Client Portal API Audit)
+CREATE TABLE IF NOT EXISTS app_api_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    controller VARCHAR(100) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    http_method VARCHAR(10) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_role SMALLINT,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    request JSONB,
+    response JSONB,
+    status_code INT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_api_logs_controller_action ON app_api_logs(controller, action);
+CREATE INDEX IF NOT EXISTS idx_app_api_logs_user_id ON app_api_logs(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_app_api_logs_status_code ON app_api_logs(status_code);
+CREATE INDEX IF NOT EXISTS idx_app_api_logs_created_at ON app_api_logs(created_at DESC);
+
+ALTER TABLE app_api_logs ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access to app_api_logs' AND tablename = 'app_api_logs') THEN
+        CREATE POLICY "Admins full access to app_api_logs" ON app_api_logs FOR ALL TO authenticated
+        USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN (1, 2)));
+    END IF;
+END $$;
+
+-- 3. Admin API Logs (CRM / Staff API Audit)
+CREATE TABLE IF NOT EXISTS admin_api_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    controller VARCHAR(100) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    http_method VARCHAR(10) NOT NULL,
+    endpoint VARCHAR(255) NOT NULL,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    user_role SMALLINT,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    request JSONB,
+    response JSONB,
+    status_code INT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_api_logs_controller_action ON admin_api_logs(controller, action);
+CREATE INDEX IF NOT EXISTS idx_admin_api_logs_user_id ON admin_api_logs(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_admin_api_logs_status_code ON admin_api_logs(status_code);
+CREATE INDEX IF NOT EXISTS idx_admin_api_logs_created_at ON admin_api_logs(created_at DESC);
+
+ALTER TABLE admin_api_logs ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Admins full access to admin_api_logs' AND tablename = 'admin_api_logs') THEN
+        CREATE POLICY "Admins full access to admin_api_logs" ON admin_api_logs FOR ALL TO authenticated
+        USING (EXISTS (SELECT 1 FROM users WHERE users.id = auth.uid() AND users.role IN (1, 2)));
+    END IF;
+END $$;
 
 -- 2. Notification Logs (Unified Email & Telegram Notifications)
 DROP TABLE IF EXISTS email_logs;
