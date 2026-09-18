@@ -80,7 +80,7 @@ export class CoursesPublicController {
       },
     },
   })
-  async getItem(@Param('id') id: string) {
-    return this.checkoutService.getItem(id);
+  async getCourse(@Param('id') id: string) {
+    return this.checkoutService.getCourse(id);
   }
 }

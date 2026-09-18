@@ -22,7 +22,9 @@ export async function getPublicCourses(): Promise<GetPublicCoursesResult> {
   return getPublicCoursesCore(supabase);
 }
 
-export async function getItem(id: string): Promise<GetItemResult> {
+export async function getCourse(id: string): Promise<GetItemResult> {
   const supabase = getSupabaseAdmin();
   return getPublicCourseByIdCore(supabase, id);
 }
+
+export const getItem = getCourse;

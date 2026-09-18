@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getItem } from "@/lib/server/checkout-service";
+import { getCourse } from "@/lib/server/checkout-service";
 import { createClient } from "@/lib/supabase/server";
 import { CourseSchema, CourseDetailView } from "@/features/courses";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
@@ -11,7 +11,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params;
-  const res = await getItem(id);
+  const res = await getCourse(id);
 
   if (!res.success || !res.item) {
     return {
@@ -29,24 +29,21 @@ export async function generateMetadata({ params }: PageProps) {
   return {
     title,
     description,
-    alternates: {
-      canonical: `${siteUrl}/corsi/${courseSlug}`,
-    },
     openGraph: {
-      type: "website",
-      locale: "it_IT",
-      url: `${siteUrl}/corsi/${courseSlug}`,
-      siteName: "Atena School",
       title,
       description,
+      url: `${siteUrl}/corsi/${courseSlug}`,
+      siteName: "Atena School",
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: course.title_it || course.name,
+          alt: title,
         },
       ],
+      locale: "it_IT",
+      type: "article",
     },
     twitter: {
       card: "summary_large_image",
@@ -60,7 +57,7 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
   
-  const res = await getItem(id);
+  const res = await getCourse(id);
 
   if (!res.success || !res.item) {
     notFound();

@@ -86,12 +86,16 @@ export class CheckoutService {
     return getPublicCoursesCore(this.supabaseAdmin);
   }
 
+  async getCourse(id: string) {
+    return getPublicCourseByIdCore(this.supabaseAdmin, id);
+  }
+
   async getCourseById(id: string) {
     return getPublicCourseByIdCore(this.supabaseAdmin, id);
   }
 
   async getItem(id: string) {
-    return getPublicCourseByIdCore(this.supabaseAdmin, id);
+    return this.getCourse(id);
   }
 
   async getBookingDetails(id: string) {

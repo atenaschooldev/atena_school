@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getItem } from '@/lib/server/checkout-service';
+import { getCourse } from '@/lib/server/checkout-service';
 import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
@@ -17,7 +17,7 @@ async function handler(
         { status: 400 }
       );
     }
-    const result = await getItem(cleanId);
+    const result = await getCourse(cleanId);
     if (!result.success) {
       return NextResponse.json(result, { status: 404 });
     }
@@ -32,5 +32,5 @@ async function handler(
 
 export const GET = withLandingApiLog(handler, {
   controller: 'CoursesPublicController',
-  action: 'getItem',
+  action: 'getCourse',
 });

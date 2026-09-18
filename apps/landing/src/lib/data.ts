@@ -164,7 +164,7 @@ export const getTeachers = unstable_cache(
   { tags: [CACHE_TAGS.TEACHERS], revalidate: CACHE_TTL }
 );
 
-import { getPublicCourses, getItem } from './server/checkout-service';
+import { getPublicCourses, getCourse } from './server/checkout-service';
 
 export const getCourses = unstable_cache(
   async () => {
@@ -194,7 +194,7 @@ export const getCourses = unstable_cache(
 export const getSingleCourse = (id: string) => unstable_cache(
   async () => {
     try {
-      const res = await getItem(id);
+      const res = await getCourse(id);
       if (res.success && res.item) {
         const c = res.item;
         return {
