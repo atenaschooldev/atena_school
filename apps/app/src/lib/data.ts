@@ -167,9 +167,12 @@ export const getTeachers = unstable_cache(
   { tags: [CACHE_TAGS.TEACHERS], revalidate: CACHE_TTL }
 );
 
+import { getPublicCourses, getPublicCourseById } from '@atena/core';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
+
 export async function getCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-  if (backendUrl) {
+  if (backendUrl && backendUrl !== "http://localhost:4000") {
     try {
       const res = await fetch(`${backendUrl}/app/courses`);
       if (res.ok) {
@@ -192,23 +195,11 @@ export async function getCourses() {
     }
   }
 
-  const supabase = createClient();
-  let { data, error } = await supabase
-    .from('courses')
-    .select('*, teachers!courses_teacher_id_fkey(teacher_id, full_name)')
-    .in('status', ['active', 'published'])
-    .returns<CourseRow[]>();
-  
-  if (error || !data || data.length === 0) {
-    const fallback = await supabase
-      .from('courses')
-      .select('*')
-      .in('status', ['active', 'published'])
-      .returns<CourseRow[]>();
-    data = fallback.data;
-  }
+  const supabaseAdmin = getSupabaseAdmin();
+  const res = await getPublicCourses(supabaseAdmin);
+  const data = res.success ? res.courses : [];
 
-  return (data || []).map((c) => ({
+  return data.map((c: any) => ({
     ...c,
     slug: (c.slug as string) || slugify(c.name || ''),
     title_it: c.name || '',
@@ -217,7 +208,7 @@ export async function getCourses() {
     description_en: c.description || '',
     price: Number(c.price) || 0,
     price_eur: Number(c.price) || 0,
-    teacher_name: c.teachers?.full_name || undefined,
+    teacher_name: c.teacher_name || undefined,
   }));
 }
 
@@ -246,7 +237,7 @@ export const getBlogPosts = unstable_cache(
 
 export async function getSingleCourse(id: string) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
-  if (backendUrl) {
+  if (backendUrl && backendUrl !== "http://localhost:4000") {
     try {
       const res = await fetch(`${backendUrl}/app/courses/${id}`);
       if (res.ok) {
@@ -270,32 +261,22 @@ export async function getSingleCourse(id: string) {
     }
   }
 
-  const supabase = createClient();
-  let { data, error } = await supabase
-    .from('courses')
-    .select('*, teachers(teacher_id, full_name)')
-    .eq('id', id)
-    .single<CourseRow>();
-  
-  if (error || !data) {
-    const fallback = await supabase
-      .from('courses')
-      .select('*')
-      .eq('id', id)
-      .single<CourseRow>();
-    data = fallback.data;
+  const supabaseAdmin = getSupabaseAdmin();
+  const res = await getPublicCourseById(supabaseAdmin, id);
+  if (res.success && res.item) {
+    const c = res.item;
+    return {
+      ...c,
+      slug: (c.slug as string) || slugify(c.name || ''),
+      title_it: c.name || '',
+      title_en: c.name || '',
+      description_it: c.description || '',
+      description_en: c.description || '',
+      price: Number(c.price) || 0,
+      price_eur: Number(c.price) || 0,
+    };
   }
-
-  return data ? {
-    ...data,
-    title_it: data.name || '',
-    title_en: data.name || '',
-    description_it: data.description || '',
-    description_en: data.description || '',
-    price: Number(data.price) || 0,
-    price_eur: Number(data.price) || 0,
-    teacher_name: data.teachers?.full_name || undefined,
-  } : null;
+  return null;
 }
 
 export const getSingleBlogPost = (slug: string) => unstable_cache(
