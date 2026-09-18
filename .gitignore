@@ -34,6 +34,8 @@ build/
 .env.production
 *.env
 .dev.vars
+!.env.example
+!*.env.example
 
 # Certificates, Keys & Credentials
 *.pem

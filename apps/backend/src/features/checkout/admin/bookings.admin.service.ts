@@ -397,6 +397,14 @@ export class BookingsAdminService {
           data: { status: PaymentRecordStatus.SUCCEEDED, paidAt: new Date() },
         });
 
+        // Fetch the registration fee payment if exists
+        const regFeePayment = await this.prisma.payment.findFirst({
+          where: {
+            bookingId: id,
+            type: PaymentType.REGISTRATION_FEE,
+          },
+        });
+
         // Activate or create membership in annual_memberships table
         const sTaxCode = updatedBooking.studentTaxCode || updatedBooking.purchaserTaxCode || null;
         const sEmail = updatedBooking.studentEmail || updatedBooking.purchaserEmail || null;
@@ -426,6 +434,9 @@ export class BookingsAdminService {
                 tax_code: sTaxCode,
                 student_id: (updatedBooking as any).student_id || null,
                 user_id: updatedBooking.userId || null,
+                payment_id: regFeePayment?.id || undefined,
+                payment_method: updatedBooking.paymentMethod || undefined,
+                amount: regFeePayment ? Number(regFeePayment.amount) : 30.00,
                 paid_at: new Date().toISOString(),
               })
               .eq('id', existingMem.id);
@@ -439,6 +450,9 @@ export class BookingsAdminService {
                 membership_number: nextMembershipNumber,
                 academic_year: '2026/2027',
                 status: MembershipStatus.ACTIVE,
+                payment_id: regFeePayment?.id || null,
+                payment_method: updatedBooking.paymentMethod || 1,
+                amount: regFeePayment ? Number(regFeePayment.amount) : 30.00,
                 paid_at: new Date().toISOString(),
                 expires_at: '2027-08-31T23:59:59.000Z',
               });

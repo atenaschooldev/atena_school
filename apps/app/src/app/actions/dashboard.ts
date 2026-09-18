@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 import { BookingPaymentStatus } from "@atena/api-types";
+import { linkUserAccountWorkflow } from "@atena/core";
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -62,13 +64,18 @@ export async function getDashboardDataAction() {
   try {
     const cleanEmail = (user.email || "").trim().toLowerCase();
 
-    // Auto-link user_id to bookings if not already linked
+    // Auto-link user_id across bookings, students, memberships and payments using admin client
     if (cleanEmail) {
-      await supabase
-        .from("bookings")
-        .update({ user_id: user.id })
-        .or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`)
-        .is("user_id", null);
+      try {
+        const supabaseAdmin = getSupabaseAdmin();
+        await linkUserAccountWorkflow(supabaseAdmin, {
+          userId: user.id,
+          email: cleanEmail,
+          metadata: user.user_metadata,
+        });
+      } catch (linkErr) {
+        console.warn("Auto-link account error:", linkErr);
+      }
     }
 
     // Query user's bookings

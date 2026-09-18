@@ -58,7 +58,8 @@ export async function recordPaymentLedger(
   paymentMethod: string | number,
   paymentStatus: string | number,
   supabase: SupabaseClient,
-  studentId?: string | null
+  studentId?: string | null,
+  studentTaxCode?: string | null
 ): Promise<void> {
   try {
     const pStatus = Number(paymentStatus) === BookingPaymentStatus.PAID
@@ -100,11 +101,19 @@ export async function recordPaymentLedger(
         .select('id, type');
 
       const feePayment = insertedPayments?.find((p) => p.type === PaymentType.REGISTRATION_FEE);
-      if (feePayment && studentId) {
-        await supabase
-          .from('annual_memberships')
-          .update({ payment_id: feePayment.id })
-          .eq('student_id', studentId);
+      if (feePayment) {
+        if (studentId) {
+          await supabase
+            .from('annual_memberships')
+            .update({ payment_id: feePayment.id })
+            .eq('student_id', studentId);
+        }
+        if (studentTaxCode) {
+          await supabase
+            .from('annual_memberships')
+            .update({ payment_id: feePayment.id })
+            .ilike('tax_code', studentTaxCode.trim());
+        }
       }
     }
   } catch (err) {
@@ -346,7 +355,7 @@ export async function createReservationWorkflow(
       });
 
       await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
-      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId);
+      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure
       await supabase.from('bookings').delete().eq('id', booking.id);
