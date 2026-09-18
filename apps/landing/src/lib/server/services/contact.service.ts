@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from '../supabase-admin';
 import { ContactFormParams } from './types';
+import { ContactMessageStatus } from '@atena/api-types';
 
 export async function submitContact(dto: ContactFormParams) {
   const supabase = getSupabaseAdmin();
@@ -17,7 +18,7 @@ export async function submitContact(dto: ContactFormParams) {
     phone: phone,
     interest: interest,
     message: message,
-    status: 'new',
+    status: ContactMessageStatus.NEW,
   });
 
   if (error) {

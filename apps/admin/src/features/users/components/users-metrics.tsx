@@ -2,6 +2,7 @@
 
 import { Users, UserCheck, ShieldCheck, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { UserRole, parseUserRole } from "@atena/api-types";
 import type { User } from "../types";
 
 export interface UsersMetricsProps {
@@ -9,9 +10,12 @@ export interface UsersMetricsProps {
 }
 
 export function UsersMetrics({ users }: UsersMetricsProps) {
-  const adminCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "admin").length;
-  const teacherCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "teacher").length;
-  const studentCount = users.filter((u) => String(u.role ?? "").toLowerCase() === "student").length;
+  const adminCount = users.filter((u) => {
+    const r = parseUserRole(u.role);
+    return r === UserRole.ADMIN || r === UserRole.SUPERADMIN;
+  }).length;
+  const teacherCount = users.filter((u) => parseUserRole(u.role) === UserRole.TEACHER).length;
+  const studentCount = users.filter((u) => parseUserRole(u.role) === UserRole.STUDENT).length;
 
   const metrics = [
     {

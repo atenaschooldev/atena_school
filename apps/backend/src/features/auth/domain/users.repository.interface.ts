@@ -1,4 +1,5 @@
 import { UserEntity } from './user.entity';
+import { UserRole } from '@atena/api-types';
 
 export abstract class UsersRepository {
   abstract findById(id: string): Promise<UserEntity | null>;
@@ -9,7 +10,7 @@ export abstract class UsersRepository {
     fullName?: string;
     firstName?: string;
     lastName?: string;
-    role: string;
+    role?: UserRole | string | number;
   }): Promise<UserEntity>;
   abstract update(id: string, data: Partial<UserEntity>): Promise<UserEntity>;
 }

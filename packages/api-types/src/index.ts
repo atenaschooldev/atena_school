@@ -1824,6 +1824,8 @@ export const UserRole = {
   TEACHER: 2,
   ADMIN: 3,
   PARENT: 4,
+  SECRETARY: 5,
+  SUPERADMIN: 6,
 } as const;
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
@@ -1847,9 +1849,9 @@ export const USER_ROLE_DICTIONARY: Record<UserRole, DictionaryEntry> = {
   [UserRole.ADMIN]: {
     id: 3,
     code: 'ADMIN',
-    label_it: 'Amministratore / Segreteria',
-    label_en: 'Administrator / Secretary',
-    label_ru: 'Администратор / Секретариат',
+    label_it: 'Amministratore',
+    label_en: 'Administrator',
+    label_ru: 'Администратор',
     description: 'Полный доступ к управлению школой, CRM, кассе и студентам',
   },
   [UserRole.PARENT]: {
@@ -1860,18 +1862,36 @@ export const USER_ROLE_DICTIONARY: Record<UserRole, DictionaryEntry> = {
     label_ru: 'Родитель / Опекун',
     description: 'Законный представитель несовершеннолетнего ученика',
   },
+  [UserRole.SECRETARY]: {
+    id: 5,
+    code: 'SECRETARY',
+    label_it: 'Segreteria',
+    label_en: 'Secretary',
+    label_ru: 'Секретариат',
+    description: 'Сотрудник секретариата школы, управление расписанием и клиентами',
+  },
+  [UserRole.SUPERADMIN]: {
+    id: 6,
+    code: 'SUPERADMIN',
+    label_it: 'Super Admin',
+    label_en: 'Super Admin',
+    label_ru: 'Главный администратор',
+    description: 'Полный технический и финансовый доступ ко всей платформе',
+  },
 };
 
 export function parseUserRole(val: any): UserRole {
   if (typeof val === 'number') {
-    if (val >= 1 && val <= 4) return val as UserRole;
+    if (val >= 1 && val <= 6) return val as UserRole;
     return UserRole.STUDENT;
   }
   const s = String(val || '').toLowerCase().trim();
-  if (s === '1' || s === 'student' || s === 'studente' || s === 'allievo') return UserRole.STUDENT;
+  if (s === '1' || s === 'student' || s === 'studente' || s === 'allievo' || s === 'user') return UserRole.STUDENT;
   if (s === '2' || s === 'teacher' || s === 'docente' || s === 'insegnante') return UserRole.TEACHER;
-  if (s === '3' || s === 'admin' || s === 'administrator' || s === 'amministratore' || s === 'segreteria') return UserRole.ADMIN;
+  if (s === '3' || s === 'admin' || s === 'administrator' || s === 'amministratore') return UserRole.ADMIN;
   if (s === '4' || s === 'parent' || s === 'genitore' || s === 'tutore') return UserRole.PARENT;
+  if (s === '5' || s === 'secretary' || s === 'segreteria') return UserRole.SECRETARY;
+  if (s === '6' || s === 'superadmin') return UserRole.SUPERADMIN;
   return UserRole.STUDENT;
 }
 
@@ -2471,6 +2491,62 @@ export const CONTACT_TOPIC_DICTIONARY: Record<ContactTopic, DictionaryEntry> = {
   },
 };
 
+export const ContactMessageStatus = {
+  NEW: 1,
+  IN_PROGRESS: 2,
+  RESOLVED: 3,
+  ARCHIVED: 4,
+} as const;
+export type ContactMessageStatus = (typeof ContactMessageStatus)[keyof typeof ContactMessageStatus];
+
+export const CONTACT_MESSAGE_STATUS_DICTIONARY: Record<ContactMessageStatus, DictionaryEntry> = {
+  [ContactMessageStatus.NEW]: {
+    id: 1,
+    code: 'NEW',
+    label_it: 'Nuovo',
+    label_en: 'New',
+    label_ru: 'Новая',
+    description: 'Новая входящая заявка, ожидающая обработки',
+  },
+  [ContactMessageStatus.IN_PROGRESS]: {
+    id: 2,
+    code: 'IN_PROGRESS',
+    label_it: 'In Corso',
+    label_en: 'In Progress',
+    label_ru: 'В обработке',
+    description: 'Заявка взята в работу сотрудником школы',
+  },
+  [ContactMessageStatus.RESOLVED]: {
+    id: 3,
+    code: 'RESOLVED',
+    label_it: 'Risolto',
+    label_en: 'Resolved',
+    label_ru: 'Обработана / Закрыта',
+    description: 'Клиент получил ответ, консультация завершена',
+  },
+  [ContactMessageStatus.ARCHIVED]: {
+    id: 4,
+    code: 'ARCHIVED',
+    label_it: 'Archiviato',
+    label_en: 'Archived',
+    label_ru: 'В архиве',
+    description: 'Заявка отправлена в архив',
+  },
+};
+
+export function parseContactMessageStatus(val: any): ContactMessageStatus {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 4) return val as ContactMessageStatus;
+    return ContactMessageStatus.NEW;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'new' || s === 'nuovo') return ContactMessageStatus.NEW;
+  if (s === '2' || s === 'in_progress' || s === 'in corso' || s === 'processing') return ContactMessageStatus.IN_PROGRESS;
+  if (s === '3' || s === 'resolved' || s === 'risolto' || s === 'closed') return ContactMessageStatus.RESOLVED;
+  if (s === '4' || s === 'archived' || s === 'archiviato') return ContactMessageStatus.ARCHIVED;
+  return ContactMessageStatus.NEW;
+}
+
 export interface ContactMessageRecord {
   id: string;
   created_at: string;
@@ -2481,6 +2557,6 @@ export interface ContactMessageRecord {
   phone?: string | null;
   interest?: string | null;
   message: string;
-  status: string;
+  status: ContactMessageStatus;
   notes?: string | null;
 }

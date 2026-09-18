@@ -1,10 +1,12 @@
+import { UserRole } from '@atena/api-types';
+
 export interface UserEntity {
   id: string;
   email: string;
   fullName: string;
   firstName?: string;
   lastName?: string;
-  role: string;
+  role: number | string;
   isActive: boolean;
   phone?: string | null;
   taxCode?: string | null;
@@ -14,7 +16,7 @@ export interface UserEntity {
 }
 
 export abstract class UsersRepository {
-  abstract findAll(role?: string): Promise<UserEntity[]>;
+  abstract findAll(role?: string | number): Promise<UserEntity[]>;
   abstract findById(id: string): Promise<UserEntity | null>;
   abstract findByEmail(email: string): Promise<UserEntity | null>;
   abstract create(data: {
@@ -23,7 +25,7 @@ export abstract class UsersRepository {
     fullName?: string;
     firstName?: string;
     lastName?: string;
-    role?: string;
+    role?: number | string;
     isActive?: boolean;
   }): Promise<UserEntity>;
   abstract update(
@@ -32,7 +34,7 @@ export abstract class UsersRepository {
       fullName: string;
       firstName: string;
       lastName: string;
-      role: string;
+      role: number | string;
       isActive: boolean;
       phone: string;
       taxCode: string;

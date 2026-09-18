@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
+import { UserRole, parseUserRole } from '@atena/api-types';
 import { UserEntity } from '../domain/user.entity';
 import { UsersRepository } from '../domain/users.repository.interface';
 
@@ -12,7 +13,7 @@ function toAuthEntity(u: any): UserEntity {
     fullName,
     firstName: parts[0] || '',
     lastName: parts.slice(1).join(' ') || '',
-    role: u.role,
+    role: parseUserRole(u.role),
     isActive: u.isActive,
     createdAt: u.createdAt || u.created_at,
   };
@@ -42,19 +43,21 @@ export class PrismaUsersRepository implements UsersRepository {
     fullName?: string;
     firstName?: string;
     lastName?: string;
-    role: string;
+    role?: UserRole | string | number;
   }): Promise<UserEntity> {
     const fullName =
       data.fullName ||
       `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() ||
       'Utente';
 
+    const numericRole = parseUserRole(data.role ?? UserRole.STUDENT);
+
     const u = await this.prisma.user.create({
       data: {
         id: data.id,
         email: data.email,
         fullName,
-        role: data.role,
+        role: numericRole,
         isActive: true,
       },
     });
@@ -68,7 +71,7 @@ export class PrismaUsersRepository implements UsersRepository {
     } else if (data.firstName !== undefined || data.lastName !== undefined) {
       updateData.fullName = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim();
     }
-    if (data.role !== undefined) updateData.role = data.role;
+    if (data.role !== undefined) updateData.role = parseUserRole(data.role);
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
 
     const u = await this.prisma.user.update({

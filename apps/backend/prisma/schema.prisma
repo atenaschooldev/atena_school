@@ -15,7 +15,7 @@ model User {
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   email     String   @unique
   fullName  String   @map("full_name")
-  role      String   @default("user")
+  role      Int      @default(1) @db.SmallInt
   isActive  Boolean  @default(true) @map("is_active")
   phone     String?
   taxCode   String?  @map("tax_code")
@@ -286,7 +286,7 @@ model ContactMessage {
   phone     String?
   interest  String?
   message   String
-  status    String   @default("new")
+  status    Int      @default(1) @db.SmallInt
   notes     String?
 
   @@index([createdAt(sort: Desc)], map: "idx_contact_messages_created_at")

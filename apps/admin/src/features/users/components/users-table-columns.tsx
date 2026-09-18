@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
+import { UserRole, parseUserRole } from "@atena/api-types";
 import type { User } from "../types";
 
 export interface GetUsersTableColumnsProps {
@@ -91,18 +92,32 @@ export function getUsersTableColumns({
       accessorKey: "role",
       header: "Ruolo",
       cell: ({ row }) => {
-        const role = String(row.original.role ?? "").toLowerCase();
-        if (role === "admin") {
+        const role = parseUserRole(row.original.role);
+        if (role === UserRole.ADMIN || role === UserRole.SUPERADMIN) {
           return (
             <Badge variant="secondary" className="bg-purple-50 text-purple-700 dark:bg-purple-950/20 border border-purple-500/30 gap-1 text-xs">
               <Shield className="w-3 h-3 text-purple-500" /> Admin
             </Badge>
           );
         }
-        if (role === "teacher") {
+        if (role === UserRole.TEACHER) {
           return (
             <Badge variant="secondary" className="bg-sky-50 text-sky-700 dark:bg-sky-950/20 border border-sky-500/30 gap-1 text-xs">
               <UserIcon className="w-3 h-3 text-sky-500" /> Docente
+            </Badge>
+          );
+        }
+        if (role === UserRole.SECRETARY) {
+          return (
+            <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/20 border border-amber-500/30 gap-1 text-xs">
+              <UserIcon className="w-3 h-3 text-amber-500" /> Segreteria
+            </Badge>
+          );
+        }
+        if (role === UserRole.PARENT) {
+          return (
+            <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 border border-emerald-500/30 gap-1 text-xs">
+              <UserIcon className="w-3 h-3 text-emerald-500" /> Genitore
             </Badge>
           );
         }

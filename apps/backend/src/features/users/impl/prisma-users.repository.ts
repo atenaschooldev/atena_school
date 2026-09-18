@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { UsersRepository, UserEntity } from '../domain/users.repository.interface';
+import { UserRole, parseUserRole } from '@atena/api-types';
 
 function toEntity(u: any): UserEntity {
   const fullName = u.fullName || u.full_name || 'Utente';
@@ -25,9 +26,10 @@ function toEntity(u: any): UserEntity {
 export class PrismaUsersRepository implements UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(role?: string): Promise<UserEntity[]> {
+  async findAll(role?: string | number): Promise<UserEntity[]> {
+    const numericRole = role !== undefined && role !== null && role !== '' ? parseUserRole(role) : undefined;
     const users = await this.prisma.user.findMany({
-      where: role ? { role } : undefined,
+      where: numericRole !== undefined ? { role: numericRole } : undefined,
       orderBy: { createdAt: 'desc' },
     });
     return users.map(toEntity);
@@ -54,7 +56,7 @@ export class PrismaUsersRepository implements UsersRepository {
     fullName?: string;
     firstName?: string;
     lastName?: string;
-    role?: string;
+    role?: number | string;
     isActive?: boolean;
   }): Promise<UserEntity> {
     const fullName =
@@ -62,17 +64,19 @@ export class PrismaUsersRepository implements UsersRepository {
       `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() ||
       'Utente';
 
+    const numericRole = parseUserRole(data.role ?? UserRole.STUDENT);
+
     const user = await this.prisma.user.create({
       data: {
         id: data.id,
         email: data.email,
         fullName,
-        role: data.role ?? 'student',
+        role: numericRole,
         isActive: data.isActive ?? true,
       },
     });
 
-    if (user.role === 'teacher') {
+    if (user.role === UserRole.TEACHER) {
       await this.prisma.teacher
         .upsert({
           where: { teacherId: user.id },
@@ -98,7 +102,7 @@ export class PrismaUsersRepository implements UsersRepository {
       fullName: string;
       firstName: string;
       lastName: string;
-      role: string;
+      role: number | string;
       isActive: boolean;
       phone: string;
       taxCode: string;
@@ -110,7 +114,7 @@ export class PrismaUsersRepository implements UsersRepository {
     } else if (data.firstName !== undefined || data.lastName !== undefined) {
       updateData.fullName = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim();
     }
-    if (data.role !== undefined) updateData.role = data.role;
+    if (data.role !== undefined) updateData.role = parseUserRole(data.role);
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     if (data.phone !== undefined) updateData.phone = data.phone;
     if (data.taxCode !== undefined) updateData.taxCode = data.taxCode;
@@ -120,7 +124,7 @@ export class PrismaUsersRepository implements UsersRepository {
       data: updateData,
     });
 
-    if (user.role === 'teacher') {
+    if (user.role === UserRole.TEACHER) {
       await this.prisma.teacher
         .upsert({
           where: { teacherId: user.id },

@@ -26,6 +26,7 @@ import {
   CourseScheduleType,
   CourseBillingType,
   parseCourseScheduleType,
+  ContactMessageStatus,
 } from '@atena/api-types';
 
 import { PrismaService } from '../../../core/prisma/prisma.service';
@@ -1144,7 +1145,7 @@ export class CheckoutService {
         phone: phone,
         interest: interest,
         message: message,
-        status: 'new',
+        status: ContactMessageStatus.NEW,
       });
 
     if (error) {

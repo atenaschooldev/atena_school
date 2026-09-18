@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { UserRole } from '@atena/api-types';
 import { UsersRepository, UserEntity } from './domain/users.repository.interface';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 
@@ -86,7 +87,7 @@ export class UsersService {
       email: dto.email,
       firstName: dto.firstName,
       lastName: dto.lastName,
-      role: dto.role ?? 'student',
+      role: dto.role ?? UserRole.STUDENT,
     });
   }
 

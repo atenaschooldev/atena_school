@@ -28,6 +28,7 @@ import {
   DISCOUNT_TYPE_DICTIONARY,
   EXAM_CERTIFICATION_TYPE_DICTIONARY,
   CONTACT_TOPIC_DICTIONARY,
+  CONTACT_MESSAGE_STATUS_DICTIONARY,
   BookingPaymentStatus,
   BookingStatus,
   BookingSchedulingStatus,
@@ -56,6 +57,7 @@ import {
   DiscountType,
   ExamCertificationType,
   ContactTopic,
+  ContactMessageStatus,
 } from '@atena/api-types';
 
 import { renderDictionaryHtml } from './dictionary.template';
@@ -332,9 +334,9 @@ export class DictionaryService {
     const columns = {
       role: {
         column: 'role',
-        dbType: 'TEXT / SMALLINT',
+        dbType: 'SMALLINT / INTEGER',
         name: 'UserRole',
-        description: 'Системная роль пользователя (1=STUDENT, 2=TEACHER, 3=ADMIN, 4=PARENT)',
+        description: 'Системная роль пользователя (1=STUDENT, 2=TEACHER, 3=ADMIN, 4=PARENT, 5=SECRETARY, 6=SUPERADMIN)',
         values: USER_ROLE_DICTIONARY,
         codes: UserRole,
       },
@@ -342,9 +344,30 @@ export class DictionaryService {
 
     return {
       table: 'users',
-      title: 'Пользователи и права доступа',
+      title: 'Пользователи и права доступа (Users)',
       description:
         'Таблица учетных записей платформы. Определяет доступ к личному кабинету студента, панели преподавателя или CRM администратора.',
+      columns,
+      enums: columns,
+    };
+  }
+
+  getContactMessagesDictionary() {
+    const columns = {
+      status: {
+        column: 'status',
+        dbType: 'SMALLINT / INTEGER',
+        name: 'ContactMessageStatus',
+        description: 'Статус обработки входящего обращения/лида (1=NEW, 2=IN_PROGRESS, 3=RESOLVED, 4=ARCHIVED)',
+        values: CONTACT_MESSAGE_STATUS_DICTIONARY,
+        codes: ContactMessageStatus,
+      },
+    };
+
+    return {
+      table: 'contact_messages',
+      title: 'Входящие обращения и лиды (Contact Messages)',
+      description: 'Таблица входящих сообщений с веб-формы обратной связи для обработки секретариатом.',
       columns,
       enums: columns,
     };
@@ -498,6 +521,7 @@ export class DictionaryService {
         students: this.getStudentsDictionary(),
         annual_memberships: this.getAnnualMembershipsDictionary(),
         users: this.getUsersDictionary(),
+        contact_messages: this.getContactMessagesDictionary(),
         notifications: this.getNotificationsDictionary(),
         app_settings: this.getAppSettingsDictionary(),
         error_codes: this.getErrorCodesDictionary(),

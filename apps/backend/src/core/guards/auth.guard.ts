@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { parseUserRole } from '@atena/api-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -33,11 +34,13 @@ export class AuthGuard implements CanActivate {
         throw new UnauthorizedException('Невалидный или просроченный токен');
       }
 
-      const userRole = user.user_metadata?.role || user.user_metadata?.app_role || (user.role && user.role !== 'authenticated' ? user.role : 'admin');
+      const rawRole = user.user_metadata?.role || user.user_metadata?.app_role || (user.role && user.role !== 'authenticated' ? user.role : 'admin');
+      const numericRole = parseUserRole(rawRole);
 
       request.user = {
         id: user.id,
-        role: userRole,
+        role: numericRole,
+        rawRole,
         email: user.email,
         user_metadata: user.user_metadata,
       };
@@ -55,12 +58,12 @@ export class AuthGuard implements CanActivate {
             id: user.id,
             email: user.email || '',
             fullName,
-            role: userRole,
+            role: numericRole,
           },
           update: {
             email: user.email || '',
             fullName,
-            role: userRole,
+            role: numericRole,
           },
         });
       } catch (err: any) {
