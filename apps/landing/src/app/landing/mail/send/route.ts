@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateInternalAuth } from '@/lib/server/api-auth';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   const auth = validateInternalAuth(request);
   if (!auth.authorized) {
     return auth.errorResponse!;
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     if (!to || !subject || (!text && !html)) {
       return NextResponse.json(
-        { error: 'Missing required fields: to, subject, and text/html are required' },
+        { success: false, error: 'Missing required fields: to, subject, and text/html are required' },
         { status: 400 }
       );
     }
@@ -44,12 +45,17 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
 
     if (!response.ok) {
-      return NextResponse.json({ error: data.message || 'Resend error' }, { status: response.status });
+      return NextResponse.json({ success: false, error: data.message || 'Resend error' }, { status: response.status });
     }
 
     return NextResponse.json({ success: true, id: data.id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: 'MailController',
+  action: 'sendMail',
+});

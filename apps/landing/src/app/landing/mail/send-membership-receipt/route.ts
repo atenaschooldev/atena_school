@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateInternalAuth } from '@/lib/server/api-auth';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   const auth = validateInternalAuth(request);
   if (!auth.authorized) {
     return auth.errorResponse!;
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     const { membershipId } = body;
 
     if (!membershipId) {
-      return NextResponse.json({ error: 'Missing required field: membershipId' }, { status: 400 });
+      return NextResponse.json({ success: false, error: 'Missing required field: membershipId' }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -22,6 +23,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Internal Server Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: 'MailController',
+  action: 'sendMembershipReceipt',
+});
