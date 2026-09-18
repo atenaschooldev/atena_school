@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIp, rateLimitExceededResponse } from "@/lib/server/rate-limit";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
+import { withLandingApiLog } from "@/lib/server/api-logger";
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   try {
     const ip = getClientIp(req);
     const rateCheck = checkRateLimit(`magic-link:${ip}`, {
@@ -53,3 +54,8 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: "AuthController",
+  action: "sendMagicLink",
+});

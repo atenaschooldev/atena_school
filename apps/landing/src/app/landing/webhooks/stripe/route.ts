@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleStripeWebhook } from '@/lib/server/checkout-service';
+import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const signature = request.headers.get('stripe-signature') || '';
     const rawBody = await request.text();
@@ -16,3 +17,8 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withLandingApiLog(handler, {
+  controller: 'StripeWebhookController',
+  action: 'handleStripeWebhook',
+});
