@@ -1,4 +1,21 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / LESSONS DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/lessons
+ * @description
+ * Расписание занятий, статусы уроков, посещаемость и форматы локаций:
+ * - LessonStatus: 1=SCHEDULED, 2=COMPLETED, 3=CANCELLED, 4=RESCHEDULED
+ * - LessonAttendance: 1=PENDING, 2=PRESENT, 3=ABSENT, 4=LATE, 5=EXCUSED
+ * - LessonLocationType: 1=IN_PERSON, 2=ONLINE, 3=HYBRID
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
+
+// ----------------------------------------------------------------------------
+// 1. Lesson Lifecycle Status
+// ----------------------------------------------------------------------------
 
 export const LessonStatus = {
   SCHEDULED:   1, // Scheduled / Programmata

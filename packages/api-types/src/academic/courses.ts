@@ -1,4 +1,23 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / COURSES DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/courses
+ * @description
+ * Курсы, академические форматы, категории и расписания:
+ * - CourseStatus: 1=ACTIVE, 2=DRAFT, 3=ARCHIVED
+ * - CourseScheduleType: 1=FIXED, 2=FLEXIBLE
+ * - CourseCategory: 1=INDIVIDUAL, 2=GROUP, 3=INTENSIVE, 4=KIDS, 5=CORPORATE, 6=EXAM_PREP
+ * - CourseFormat: 1=ONLINE, 2=IN_PERSON, 3=HYBRID
+ * - CourseLevelCategory: 1=A1_A2, 2=B1_B2, 3=C1_C2, 4=ALL_LEVELS
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
+
+// ----------------------------------------------------------------------------
+// 1. Course Status Enum & Dictionary
+// ----------------------------------------------------------------------------
 
 export const CourseStatus = {
   ACTIVE: 1,   // Active / Published (Attivo / Pubblicato)

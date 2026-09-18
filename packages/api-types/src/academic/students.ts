@@ -1,4 +1,20 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / STUDENTS REGISTRY DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/students
+ * @description
+ * Реестр студентов и шкала уровней владения языком (CEFR):
+ * - StudentStatus: 1=ACTIVE, 2=INACTIVE, 3=PAUSED, 4=GRADUATED, 5=ARCHIVED
+ * - LanguageLevel: 1=A1, 2=A2, 3=B1, 4=B2, 5=C1, 6=C2
+ * ============================================================================
+ */
+
 import { DictionaryEntry } from '../common/dictionary.types';
+
+// ----------------------------------------------------------------------------
+// 1. Student Enrollment Status
+// ----------------------------------------------------------------------------
 
 export const StudentStatus = {
   ACTIVE: 1,    // Active student (Attivo)

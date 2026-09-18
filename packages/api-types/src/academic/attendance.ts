@@ -1,3 +1,15 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — ACADEMIC / ATTENDANCE DOMAIN
+ * ============================================================================
+ * @module @atena/api-types/academic/attendance
+ * @description
+ * Реестр посещаемости занятий студентами (attendance table):
+ * - AttendanceRecord DTO Interface
+ * - Ссылка на статусы посещаемости LessonAttendance
+ * ============================================================================
+ */
+
 import { LessonAttendance } from './lessons';
 
 export interface AttendanceRecord {
