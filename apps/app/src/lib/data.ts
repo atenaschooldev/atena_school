@@ -171,7 +171,7 @@ export async function getCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
   if (backendUrl) {
     try {
-      const res = await fetch(`${backendUrl}/landing/courses`);
+      const res = await fetch(`${backendUrl}/app/courses`);
       if (res.ok) {
         const bData = await res.json();
         if (bData.success && bData.courses) {
@@ -248,7 +248,7 @@ export async function getSingleCourse(id: string) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || process.env.BACKEND_URL;
   if (backendUrl) {
     try {
-      const res = await fetch(`${backendUrl}/landing/courses/${id}`);
+      const res = await fetch(`${backendUrl}/app/courses/${id}`);
       if (res.ok) {
         const bData = await res.json();
         const c = bData.item || bData.course;
