@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileDto } from './dto/portal.dto';
@@ -102,8 +102,6 @@ export class PortalService {
         await this.supabaseAdmin.from('users').upsert({
           id: user.id,
           email: cleanEmail,
-          first_name: firstName,
-          last_name: lastName,
           full_name: calculatedFullName,
           role: userRole,
           phone: phoneFromBooking || null,
@@ -271,7 +269,7 @@ export class PortalService {
       .maybeSingle();
 
     const pData = dbProfile as any;
-    const dbFullName = (pData?.full_name || (pData?.first_name ? `${pData.first_name} ${pData.last_name || ''}`.trim() : '')) || undefined;
+    const dbFullName = pData?.full_name || undefined;
 
     return {
       success: true,
@@ -368,10 +366,33 @@ export class PortalService {
     return { success: true, booking, course, lessons, max_lessons: maxLessons };
   }
 
+  async getProfile(user: any) {
+    const { data: dbProfile } = await this.supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const pData = dbProfile as any;
+    const meta = user.user_metadata || {};
+    const dbFullName = pData?.full_name || undefined;
+
+    return {
+      authenticated: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: dbFullName || meta.full_name || meta.name || user.email?.split('@')[0] || 'Utente',
+        phone: pData?.phone || meta.phone || null,
+        role: pData?.role || meta.role || 'student',
+      },
+    };
+  }
+
   async updateProfile(user: any, dto: UpdateProfileDto) {
-    const parts = dto.profileName.trim().split(' ');
-    const firstName = parts[0] || '';
-    const lastName = parts.slice(1).join(' ') || '';
+    if (!user || !user.id) {
+      throw new BadRequestException('User not authenticated');
+    }
 
     await this.supabaseAdmin
       .from('users')
@@ -379,8 +400,6 @@ export class PortalService {
         id: user.id,
         email: user.email,
         full_name: dto.profileName,
-        first_name: firstName,
-        last_name: lastName,
         phone: dto.profilePhone,
         updated_at: new Date().toISOString(),
       });

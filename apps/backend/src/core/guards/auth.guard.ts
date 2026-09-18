@@ -54,16 +54,12 @@ export class AuthGuard implements CanActivate {
           create: {
             id: user.id,
             email: user.email || '',
-            firstName: firstName,
-            lastName: lastName,
-            full_name: fullName,
+            fullName,
             role: userRole,
           },
           update: {
             email: user.email || '',
-            firstName: firstName,
-            lastName: lastName,
-            full_name: fullName,
+            fullName,
             role: userRole,
           },
         });

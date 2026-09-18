@@ -4,16 +4,19 @@ import { PrismaService } from '../../../core/prisma/prisma.service';
 import { TeachersRepository, TeacherEntity } from '../domain/teachers.repository.interface';
 
 function mapTeacher(t: any, lessonCount = 0, courseCount = 0): TeacherEntity {
+  const isActive = t.isActive ?? t.is_active ?? true;
   return {
     teacherId: t.teacherId,
     fullName: t.fullName,
     photoUrl: t.photoUrl,
-    status: t.status,
+    isActive,
+    status: isActive ? 'active' : 'inactive',
     experience: t.experience,
     hireDate: t.hireDate,
     birthDate: t.birthDate,
     colorValue: t.colorValue !== null && t.colorValue !== undefined ? Number(t.colorValue) : null,
     contractId: t.contractId,
+    createdAt: t.createdAt,
     updatedAt: t.updatedAt,
     lessonCount,
     courseCount,
@@ -55,12 +58,13 @@ export class PrismaTeachersRepository extends TeachersRepository {
     return mapTeacher(t);
   }
 
-  async create(data: { fullName: string; status?: string; experience?: string; photoUrl?: string }): Promise<TeacherEntity> {
+  async create(data: { fullName: string; isActive?: boolean; status?: string; experience?: string; photoUrl?: string }): Promise<TeacherEntity> {
+    const isActive = data.isActive !== undefined ? data.isActive : data.status !== 'inactive';
     const t = await this.prisma.teacher.create({
       data: {
         teacherId: randomUUID(),
         fullName: data.fullName,
-        status: data.status || 'active',
+        isActive,
         experience: data.experience || null,
         photoUrl: data.photoUrl || null,
       },
@@ -70,13 +74,14 @@ export class PrismaTeachersRepository extends TeachersRepository {
 
   async update(
     id: string,
-    data: Partial<Pick<TeacherEntity, 'fullName' | 'status' | 'photoUrl' | 'experience'>>,
+    data: Partial<Pick<TeacherEntity, 'fullName' | 'isActive' | 'status' | 'photoUrl' | 'experience'>>,
   ): Promise<TeacherEntity> {
+    const isActive = data.isActive !== undefined ? data.isActive : (data.status !== undefined ? data.status !== 'inactive' : undefined);
     const t = await this.prisma.teacher.update({
       where: { teacherId: id },
       data: {
         ...(data.fullName !== undefined && { fullName: data.fullName }),
-        ...(data.status !== undefined && { status: data.status }),
+        ...(isActive !== undefined && { isActive }),
         ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
         ...(data.experience !== undefined && { experience: data.experience }),
       },

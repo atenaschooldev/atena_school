@@ -2,99 +2,142 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { UsersRepository, UserEntity } from '../domain/users.repository.interface';
 
+function toEntity(u: any): UserEntity {
+  const fullName = u.fullName || u.full_name || 'Utente';
+  const parts = fullName.split(' ');
+  return {
+    id: u.id,
+    email: u.email,
+    fullName,
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' ') || '',
+    role: u.role,
+    isActive: u.isActive,
+    phone: u.phone,
+    taxCode: u.taxCode || u.tax_code,
+    avatarUrl: u.avatarUrl || u.avatar_url,
+    createdAt: u.createdAt || u.created_at,
+    updatedAt: u.updatedAt || u.updated_at,
+  };
+}
+
 @Injectable()
 export class PrismaUsersRepository implements UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(role?: string): Promise<UserEntity[]> {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       where: role ? { role } : undefined,
       orderBy: { createdAt: 'desc' },
     });
+    return users.map(toEntity);
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
     });
+    return user ? toEntity(user) : null;
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
     if (!email) return null;
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { email },
     });
+    return user ? toEntity(user) : null;
   }
 
   async create(data: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
     role?: string;
     isActive?: boolean;
   }): Promise<UserEntity> {
+    const fullName =
+      data.fullName ||
+      `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() ||
+      'Utente';
+
     const user = await this.prisma.user.create({
       data: {
         id: data.id,
         email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        fullName,
         role: data.role ?? 'student',
         isActive: data.isActive ?? true,
       },
     });
 
     if (user.role === 'teacher') {
-      const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Docente';
-      await this.prisma.teacher.upsert({
-        where: { teacherId: user.id },
-        create: {
-          teacherId: user.id,
-          fullName,
-          status: user.isActive ? 'active' : 'inactive',
-        },
-        update: {
-          fullName,
-          status: user.isActive ? 'active' : 'inactive',
-        },
-      }).catch((e) => console.warn('Could not sync teacher:', e));
+      await this.prisma.teacher
+        .upsert({
+          where: { teacherId: user.id },
+          create: {
+            teacherId: user.id,
+            fullName: user.fullName,
+            isActive: user.isActive,
+          },
+          update: {
+            fullName: user.fullName,
+            isActive: user.isActive,
+          },
+        })
+        .catch((e) => console.warn('Could not sync teacher:', e));
     }
 
-    return user;
+    return toEntity(user);
   }
 
   async update(
     id: string,
     data: Partial<{
+      fullName: string;
       firstName: string;
       lastName: string;
       role: string;
       isActive: boolean;
+      phone: string;
+      taxCode: string;
     }>,
   ): Promise<UserEntity> {
+    const updateData: any = {};
+    if (data.fullName !== undefined) {
+      updateData.fullName = data.fullName;
+    } else if (data.firstName !== undefined || data.lastName !== undefined) {
+      updateData.fullName = `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim();
+    }
+    if (data.role !== undefined) updateData.role = data.role;
+    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+    if (data.taxCode !== undefined) updateData.taxCode = data.taxCode;
+
     const user = await this.prisma.user.update({
       where: { id },
-      data,
+      data: updateData,
     });
 
     if (user.role === 'teacher') {
-      const fullName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'Docente';
-      await this.prisma.teacher.upsert({
-        where: { teacherId: user.id },
-        create: {
-          teacherId: user.id,
-          fullName,
-          status: user.isActive ? 'active' : 'inactive',
-        },
-        update: {
-          fullName,
-          status: user.isActive ? 'active' : 'inactive',
-        },
-      }).catch((e) => console.warn('Could not sync teacher update:', e));
+      await this.prisma.teacher
+        .upsert({
+          where: { teacherId: user.id },
+          create: {
+            teacherId: user.id,
+            fullName: user.fullName,
+            isActive: user.isActive,
+          },
+          update: {
+            fullName: user.fullName,
+            isActive: user.isActive,
+          },
+        })
+        .catch((e) => console.warn('Could not sync teacher update:', e));
     }
 
-    return user;
+    return toEntity(user);
   }
 
   async delete(id: string): Promise<void> {

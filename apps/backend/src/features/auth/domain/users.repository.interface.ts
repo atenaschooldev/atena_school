@@ -6,8 +6,9 @@ export abstract class UsersRepository {
   abstract create(data: {
     id: string;
     email: string;
-    firstName: string;
-    lastName: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
     role: string;
   }): Promise<UserEntity>;
   abstract update(id: string, data: Partial<UserEntity>): Promise<UserEntity>;

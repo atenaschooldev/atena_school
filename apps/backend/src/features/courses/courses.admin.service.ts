@@ -262,7 +262,7 @@ export class CoursesService {
 
   async listTeachers() {
     const teachers = await this.prisma.teacher.findMany({
-      where: { status: 'active' },
+      where: { isActive: true },
       select: { teacherId: true, fullName: true },
       orderBy: { fullName: 'asc' },
     });
