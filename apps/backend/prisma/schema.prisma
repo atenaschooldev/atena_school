@@ -343,6 +343,7 @@ model students {
   annualMemberships AnnualMembership[]
   lessons           Lesson[]
   bookings          Booking[]
+  attendanceRecords AttendanceRecord[]
 
   @@index([parent_id], map: "idx_students_parent_id")
   @@index([student_user_id], map: "idx_students_student_user_id")
@@ -355,21 +356,24 @@ model students {
 
 model AttendanceRecord {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  markedAt  DateTime @default(now()) @map("marked_at") @db.Timestamptz(6)
   lessonId  String   @map("lesson_id") @db.Uuid
   bookingId String?  @map("booking_id") @db.Uuid
   studentId String?  @map("student_id") @db.Uuid
   status    String   @default("present")
   markedBy  String?  @map("marked_by")
-  markedAt  DateTime @default(now()) @map("marked_at") @db.Timestamptz
   notes     String?  @db.Text
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  lesson  Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  lesson  Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  student students? @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
-  @@index([lessonId])
-  @@index([bookingId])
-  @@index([status])
+  @@index([lessonId], map: "idx_attendance_records_lesson_id")
+  @@index([studentId], map: "idx_attendance_records_student_id")
+  @@index([bookingId], map: "idx_attendance_records_booking_id")
+  @@index([status], map: "idx_attendance_records_status")
+  @@index([markedAt(sort: Desc)], map: "idx_attendance_records_marked_at")
   @@map("attendance_records")
 }
 
