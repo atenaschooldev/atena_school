@@ -9,6 +9,14 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: [
+    '@atena/api-types',
+    '@atena/api-client',
+    '@atena/utils',
+    '@atena/validators',
+    '@repo/api',
+    '@repo/design',
+  ],
   poweredByHeader: false,
   logging: {
     fetches: {
