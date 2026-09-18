@@ -43,8 +43,8 @@ export type CourseWithTeacher = SupabaseCourseRow & {
 };
 
 export type GetItemResult =
-  | { success: true; item: CourseWithTeacher; course: CourseWithTeacher; error?: never }
-  | { success: false; error: string; item?: never; course?: never };
+  | { success: true; item: CourseWithTeacher; error?: never }
+  | { success: false; error: string; item?: never };
 
 export type GetPublicCoursesResult = {
   success: boolean;
@@ -130,5 +130,5 @@ export async function getPublicCourseById(supabase: SupabaseClient, id: string):
 
   const course = sanitizePublicCourse(courseData, teacherName, teacherPhotoUrl);
 
-  return { success: true, item: course, course };
+  return { success: true, item: course };
 }

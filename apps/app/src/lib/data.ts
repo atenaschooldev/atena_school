@@ -251,7 +251,7 @@ export async function getSingleCourse(id: string) {
       const res = await fetch(`${backendUrl}/app/courses/${id}`);
       if (res.ok) {
         const bData = await res.json();
-        const c = bData.item || bData.course;
+        const c = bData.item;
         if (c) {
           return {
             ...c,

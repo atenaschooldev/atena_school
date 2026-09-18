@@ -107,13 +107,13 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     async function initCheckout() {
       try {
         const [itemRes, settingsRes] = await Promise.all([
-          api.courses.getById(id).catch(() => ({ success: false, item: undefined, course: undefined })),
+          api.courses.getById(id).catch(() => ({ success: false, item: undefined })),
           api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false, subscriptionsEnabled: false } })),
         ]);
 
         let fetchedItem: BookingItem | null = null;
-        if (itemRes.success && (itemRes.item || itemRes.course)) {
-          fetchedItem = (itemRes.item || itemRes.course) as unknown as BookingItem;
+        if (itemRes.success && itemRes.item) {
+          fetchedItem = itemRes.item as unknown as BookingItem;
           setItem(fetchedItem);
         }
 
