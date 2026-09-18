@@ -13,7 +13,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from '../common/dictionary.types';
+import { DictionaryEntry } from '../common/dictionary';
 
 // ----------------------------------------------------------------------------
 // 1. Course Status Enum & Dictionary

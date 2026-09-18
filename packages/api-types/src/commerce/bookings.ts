@@ -14,7 +14,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from '../common/dictionary.types';
+import { DictionaryEntry } from '../common/dictionary';
 import { PaymentMethod } from './payments';
 
 // ----------------------------------------------------------------------------

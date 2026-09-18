@@ -10,7 +10,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from '../common/dictionary.types';
+import { DictionaryEntry } from '../common/dictionary';
 
 // ----------------------------------------------------------------------------
 // 1. Membership Status Enum & Dictionary

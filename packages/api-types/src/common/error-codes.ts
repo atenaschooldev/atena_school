@@ -17,7 +17,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from './dictionary.types';
+import { DictionaryEntry } from './dictionary';
 
 export const ErrorCode = {
   // --------------------------------------------------------------------------

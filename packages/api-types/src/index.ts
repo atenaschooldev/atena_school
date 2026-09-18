@@ -16,7 +16,7 @@
 // ----------------------------------------------------------------------------
 // 1. Common Types & System Standards
 // ----------------------------------------------------------------------------
-export * from './common/dictionary.types';
+export * from './common/dictionary';
 export * from './common/days-of-week';
 export * from './common/error-codes';
 

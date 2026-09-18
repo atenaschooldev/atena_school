@@ -15,7 +15,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from '../common/dictionary.types';
+import { DictionaryEntry } from '../common/dictionary';
 
 // ----------------------------------------------------------------------------
 // 1. User Role Enum & Dictionary

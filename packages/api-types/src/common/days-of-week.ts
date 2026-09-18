@@ -9,7 +9,7 @@
  * ============================================================================
  */
 
-import { DictionaryEntry } from './dictionary.types';
+import { DictionaryEntry } from './dictionary';
 
 // ----------------------------------------------------------------------------
 // 1. ISO 8601 Day of Week (1 = Monday ... 7 = Sunday) — Основной стандарт
