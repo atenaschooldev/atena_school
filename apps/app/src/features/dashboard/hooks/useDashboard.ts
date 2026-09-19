@@ -20,8 +20,9 @@ export function useDashboard() {
         if (res.success && res.user) {
           setUser(res.user);
           const dbName = res.user.dbProfile?.full_name || (res.user.dbProfile?.first_name ? `${res.user.dbProfile.first_name} ${res.user.dbProfile.last_name || ""}`.trim() : "");
-          setProfileName(res.user.user_metadata?.full_name || dbName || "");
-          setProfilePhone(res.user.user_metadata?.phone || res.user.dbProfile?.phone || (res.user as any).phone || "");
+          const dbPhone = res.user.dbProfile?.phone || (res.user as any).phone || "";
+          setProfileName(dbName || res.user.user_metadata?.full_name || "");
+          setProfilePhone(dbPhone || res.user.user_metadata?.phone || "");
           setBookings(res.bookings || []);
         }
       } catch (err) {

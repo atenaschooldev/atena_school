@@ -75,7 +75,7 @@ export default function DashboardPage() {
               Pannello Studente
             </h1>
             <p className="text-xs sm:text-sm text-foreground/60 mt-1">
-              Benvenuto, {user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}
+              Benvenuto, {user.dbProfile?.full_name || user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
