@@ -293,7 +293,7 @@ export async function createReservationWorkflow(
       }
     }
 
-    const netCoursePrice = Math.max(0, effectiveCoursePrice - (dto.promoCode && promoId ? (discountAmount - (baseRegFee - effectiveRegFee)) : 0));
+    const netCoursePrice = Math.max(0, effectiveCoursePrice - (dto.promoCode && promoId ? discountAmount : 0));
     const totalPaidAmount = Math.max(0, netCoursePrice + effectiveRegFee);
 
     const pStatus = typeof dto.paymentStatus === 'number' ? dto.paymentStatus : BookingPaymentStatus.RESERVED;

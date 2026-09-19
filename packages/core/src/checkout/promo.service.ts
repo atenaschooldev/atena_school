@@ -59,11 +59,6 @@ export async function validatePromoCode(
     discountAmount = Math.min(coursePrice, discountValue);
   }
 
-  // If waiveFee is set, also reduce the registration fee
-  if (waiveFee && regFee > 0) {
-    discountAmount += regFee;
-  }
-
   return {
     valid: true,
     promo: {

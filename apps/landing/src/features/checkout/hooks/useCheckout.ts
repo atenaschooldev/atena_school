@@ -477,10 +477,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         code,
         courseId: id,
         coursePrice: Number(item?.price || 0),
-        registrationFee: 30,
+        registrationFee: registrationFeeAmount ?? 30,
       });
-      if (!res.success || !res.promo) {
-        toast.error(res.error || "Codice promozionale non valido o scaduto");
+      const isValid = Boolean(res?.valid || res?.success);
+      if (!isValid || !res?.promo) {
+        toast.error(res?.error || "Codice promozionale non valido o scaduto");
         return;
       }
       setAppliedPromo(res.promo);

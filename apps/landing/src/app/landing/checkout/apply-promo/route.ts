@@ -49,10 +49,13 @@ export const POST = withLandingApiLog(
         courseId: parsed.data.courseId,
       });
 
-      return NextResponse.json(result);
+      return NextResponse.json({
+        success: result.valid,
+        ...result,
+      });
     } catch (err: any) {
       return NextResponse.json(
-        { valid: false, error: err.message || 'Failed to validate promo code' },
+        { success: false, valid: false, error: err.message || 'Failed to validate promo code' },
         { status: 500 }
       );
     }
