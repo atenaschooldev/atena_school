@@ -205,7 +205,7 @@ export function CheckoutOrderSummary({
               />
               <button
                 type="button"
-                onClick={applyPromoCode}
+                onClick={() => applyPromoCode()}
                 disabled={applyingPromo || !promoCodeInput.trim()}
                 className="px-3 py-2 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
               >

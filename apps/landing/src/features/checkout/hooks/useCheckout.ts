@@ -465,8 +465,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const effectiveDate = (dateParam && !isNaN(Date.parse(dateParam))) ? dateParam : undefined;
   const effectiveTime = (timeParam && /^\d{1,2}:\d{2}/.test(timeParam)) ? timeParam : undefined;
 
-  const applyPromoCode = async (overrideCode?: string) => {
-    const code = (overrideCode || promoCodeInput).trim().toUpperCase();
+  const applyPromoCode = async (overrideCode?: unknown) => {
+    const rawCode = typeof overrideCode === "string" && overrideCode ? overrideCode : promoCodeInput;
+    const code = (rawCode || "").trim().toUpperCase();
     if (!code) {
       toast.error("Inserisci un codice promozionale valido");
       return;

@@ -201,6 +201,14 @@ export function createApiClient(config?: string | ApiClientConfig) {
       });
       return handleResponse<{ success: boolean; booking: BookingRecord }>(res);
     },
+    async validatePromo(dto: { code: string; courseId?: string; coursePrice?: number; registrationFee?: number }): Promise<{ success: boolean; valid?: boolean; promo?: any; error?: string }> {
+      const res = await fetch(`${prefix}/checkout/apply-promo`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(dto),
+      });
+      return handleResponse<{ success: boolean; valid?: boolean; promo?: any; error?: string }>(res);
+    },
     async getItem(itemId: string): Promise<{ success: boolean; item: CourseItem }> {
       const res = await fetch(`${prefix}/courses/${itemId}`, { headers: getHeaders() });
       return handleResponse<{ success: boolean; item: CourseItem }>(res);
