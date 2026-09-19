@@ -14,6 +14,7 @@ export interface StudentInfo {
   taxCode: string;
   studentTaxCode?: string;
   birthDate?: string;
+  birthPlace?: string;
 }
 
 export interface CreateReservationParams {
@@ -25,15 +26,18 @@ export interface CreateReservationParams {
   lastName: string;
   email: string;
   phone?: string;
+  birthPlace?: string;
   purchaserTaxCode?: string;
   students?: StudentInfo[];
   isForChild?: boolean;
   studentFirstName?: string;
   studentLastName?: string;
+  studentBirthPlace?: string;
   studentEmail?: string;
   studentPhone?: string;
   studentTaxCode?: string;
   studentBirthDate?: string;
+  promoCode?: string;
   includeRegistrationFee?: boolean;
   notes?: string;
   sdiCode?: string;
@@ -113,11 +117,20 @@ export interface SupabaseBookingRow {
   course_name?: string | null;
   purchaser_name?: string | null;
   purchaser_email?: string | null;
+  purchaser_phone?: string | null;
+  purchaser_tax_code?: string | null;
   student_name?: string | null;
   student_email?: string | null;
+  student_phone?: string | null;
   student_tax_code?: string | null;
+  student_birth_date?: string | null;
+  student_birth_place?: string | null;
+  birth_place?: string | null;
   amount_paid?: number | null;
   registration_fee?: number | null;
+  discount_amount?: number | null;
+  promo_code?: string | null;
+  promo_code_id?: string | null;
   payment_status?: number | null;
   payment_method?: number | null;
   billing_scheme?: number | null;

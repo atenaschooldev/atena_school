@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { Plus, Minus } from "@phosphor-icons/react";
+import { DEFAULT_SCHOOL_PROFILE, cleanStreetAddress } from "@atena/core";
+
+const school = DEFAULT_SCHOOL_PROFILE;
 
 const faqs = [
   {
-    q: "Dove si trova Atena School?",
-    a: "Atena School si trova in Via Matteotti 11 a Cittanova (RC), in Calabria. Offriamo corsi in presenza dal lunedì al venerdì, dalle 09:00 alle 18:00.",
+    q: `Dove si trova ${school.name}?`,
+    a: `${school.name} si trova in ${cleanStreetAddress(school.address)} a ${school.city} (${school.province}). Offriamo corsi in presenza dal lunedì al venerdì, dalle 09:00 alle 18:00.`,
   },
   {
     q: "Quali certificazioni offrite?",
@@ -14,11 +17,11 @@ const faqs = [
   },
   {
     q: "I corsi sono adatti anche ai bambini?",
-    a: "Sì. Organizziamo corsi di inglese per bambini, ragazzi e adulti, con percorsi personalizzati per ogni fascia d'età e livello di partenza.",
+    a: "Sì. Organizziamo corsi di lingua per bambini, ragazzi e adulti, con percorsi personalizzati per ogni fascia d'età e livello di partenza.",
   },
   {
     q: "Come posso iscrivermi?",
-    a: "Puoi compilare il modulo di contatto qui accanto, oppure chiamarci al +39 375 605 2362. Offriamo una consulenza gratuita per trovare il corso più adatto a te.",
+    a: `Puoi compilare il modulo di contatto qui accanto, oppure chiamarci al ${school.phone || school.whatsapp || '+39 375 605 2362'}. Offriamo una consulenza gratuita per trovare il corso più adatto a te.`,
   },
   {
     q: "Fate anche recupero scolastico?",

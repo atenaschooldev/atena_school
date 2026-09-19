@@ -6,14 +6,19 @@ import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
 import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, Phone, EnvelopeSimple, MapPin } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
+import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
-const Footer = () => {
+interface FooterProps {
+  school?: SchoolProfile;
+}
+
+const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
   const t = useTranslations("footer");
   const pathname = usePathname();
 
   if (pathname && (pathname.includes("/test-inglese") || pathname.includes("/checkout") || pathname.includes("/book") || /\/corsi\/.+/.test(pathname))) {
     return null;
-
   }
 
   return (
@@ -33,7 +38,7 @@ const Footer = () => {
               <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0 shadow-sm">
                 <Image
                   src={logo}
-                  alt="Atena School"
+                  alt={school.name}
                   width={36}
                   height={36}
                   className="object-contain"
@@ -41,15 +46,17 @@ const Footer = () => {
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-serif font-black text-lg tracking-wider uppercase text-white">
-                  Atena <span className="text-[#F8861D]">School</span>
+                  {school.name.split(' ')[0]} <span className="text-[#F8861D]">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                 </span>
-                <span className="text-[8px] tracking-widest uppercase text-white/50">
-                  civitatis ornamento
-                </span>
+                {school.tagline && (
+                  <span className="text-[8px] tracking-widest uppercase text-white/50">
+                    {school.tagline}
+                  </span>
+                )}
               </div>
             </div>
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              Via Matteotti 11, 89022 Cittanova (RC) <span className="text-white/20 mx-1">•</span> P.IVA / C.F. 03321620803
+              {formatFullSchoolAddress(school)} <span className="text-white/20 mx-1">•</span> {school.vat_code}
             </p>
           </div>
 
@@ -208,33 +215,37 @@ const Footer = () => {
               Contatti
             </h4>
             <ul className="space-y-3 text-xs text-white/85 font-medium">
-              <li className="flex items-center gap-2.5">
-                <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                <a href="tel:+393756052362" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
-                  +39 375 605 2362
-                </a>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                <a href="tel:0966447052" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
-                  0966 447052
-                </a>
-              </li>
+              {school.phone && (
+                <li className="flex items-center gap-2.5">
+                  <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
+                  <a href={`tel:${school.phone.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                    {school.phone}
+                  </a>
+                </li>
+              )}
+              {school.landline && (
+                <li className="flex items-center gap-2.5">
+                  <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
+                  <a href={`tel:${school.landline.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                    {school.landline}
+                  </a>
+                </li>
+              )}
               <li className="flex items-center gap-2.5">
                 <EnvelopeSimple size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                <a href="mailto:atenaschool20@gmail.com" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
-                  atenaschool20@gmail.com
+                <a href={`mailto:${school.secretariat_email || school.email}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  {school.secretariat_email || school.email}
                 </a>
               </li>
               <li className="flex items-start gap-2.5 pt-1">
                 <MapPin size={16} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
                 <a
-                  href="https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7"
+                  href={school.maps_url || `https://maps.google.com/?q=${encodeURIComponent(formatFullSchoolAddress(school))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5"
                 >
-                  Via Matteotti 11, 89022 Cittanova (RC)
+                  {formatFullSchoolAddress(school)}
                 </a>
               </li>
             </ul>
@@ -266,42 +277,50 @@ const Footer = () => {
 
           {/* Social Icons Row */}
           <div className="flex items-center gap-5 text-slate-400">
-            <a
-              href="https://www.facebook.com/CSAtena7"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white transition-colors duration-200"
-              aria-label="Facebook"
-            >
-              <FacebookLogo size={18} weight="bold" />
-            </a>
-            <a
-              href="https://www.instagram.com/atenaschool_srls/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white transition-colors duration-200"
-              aria-label="Instagram"
-            >
-              <InstagramLogo size={18} weight="bold" />
-            </a>
-            <a
-              href="https://wa.me/393756052362"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white transition-colors duration-200"
-              aria-label="WhatsApp"
-            >
-              <WhatsappLogo size={18} weight="bold" />
-            </a>
-            <a
-              href="https://www.linkedin.com/company/atena-school-srls/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-white transition-colors duration-200"
-              aria-label="LinkedIn"
-            >
-              <LinkedinLogo size={18} weight="bold" />
-            </a>
+            {school.socials?.facebook && (
+              <a
+                href={school.socials.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="Facebook"
+              >
+                <FacebookLogo size={18} weight="bold" />
+              </a>
+            )}
+            {school.socials?.instagram && (
+              <a
+                href={school.socials.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="Instagram"
+              >
+                <InstagramLogo size={18} weight="bold" />
+              </a>
+            )}
+            {school.whatsapp && (
+              <a
+                href={`https://wa.me/${school.whatsapp.replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="WhatsApp"
+              >
+                <WhatsappLogo size={18} weight="bold" />
+              </a>
+            )}
+            {school.socials?.linkedin && (
+              <a
+                href={school.socials.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="LinkedIn"
+              >
+                <LinkedinLogo size={18} weight="bold" />
+              </a>
+            )}
           </div>
         </div>
 

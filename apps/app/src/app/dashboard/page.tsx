@@ -155,7 +155,7 @@ export default function DashboardPage() {
                           {b.item_title || b.course_name || "Corso di Lingua"}
                         </h3>
                         <p className="text-xs text-foreground/60 font-medium">
-                          Docente: {b.teacher_name || "Elisabetta Sorrenti"}
+                          Docente: {b.teacher_name || "Docente Assegnato"}
                         </p>
                       </div>
                       <div className="text-right">

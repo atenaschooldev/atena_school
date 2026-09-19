@@ -94,6 +94,8 @@ export async function processStudentAndBookingLinks(params: {
       const isPaid = parseBookingPaymentStatus(dto.paymentStatus) === BookingPaymentStatus.PAID;
       const hasPaidMembership = feeStatus.annualFeePaid || (regFee > 0 && isPaid);
 
+      const sBirthPlace = (dto.isForChild ? (dto.studentBirthPlace || dto.birthPlace) : dto.birthPlace) || null;
+
       if (!existingStudent) {
         const { data: newStudent } = await supabase
           .from('students')
@@ -105,6 +107,7 @@ export async function processStudentAndBookingLinks(params: {
             phone: (dto.isForChild ? dto.studentPhone : dto.phone) || null,
             tax_code: sTaxCode || null,
             birth_date: dto.studentBirthDate || null,
+            birth_place: sBirthPlace,
             parent_id: linkedUserId || null,
             student_user_id: studentAuthUserId || null,
             language_level: LanguageLevel.A1,
@@ -128,6 +131,7 @@ export async function processStudentAndBookingLinks(params: {
             phone: (dto.isForChild ? dto.studentPhone : dto.phone) || undefined,
             tax_code: sTaxCode || undefined,
             birth_date: dto.studentBirthDate || undefined,
+            birth_place: sBirthPlace || undefined,
             parent_id: linkedUserId || undefined,
             student_user_id: studentAuthUserId || undefined,
             status: hasPaidMembership ? StudentStatus.ACTIVE : undefined,

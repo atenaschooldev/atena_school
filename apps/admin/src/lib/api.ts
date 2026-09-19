@@ -23,14 +23,28 @@ export function clearAdminToken(): void {
 export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const token = getAdminToken();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const res = await fetch(`${BACKEND_URL}${normalizedPath}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
-  });
+  
+  let res: Response;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    res = await fetch(`${BACKEND_URL}${normalizedPath}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options?.headers,
+      },
+    });
+    clearTimeout(timeoutId);
+  } catch (netErr: any) {
+    if (netErr?.name === 'AbortError') {
+      throw new Error(`Timeout di connessione con il backend (${BACKEND_URL}). Il server non risponde.`);
+    }
+    throw new Error(`Impossibile connettersi al backend (${BACKEND_URL}). Assicurati che il server backend sia attivo sulla porta 4000.`);
+  }
 
   if (!res.ok) {
     if (res.status === 401 && !path.startsWith("/auth/")) {
@@ -41,7 +55,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     }
 
     const text = await res.text();
-    let errorMessage = `Backend error ${res.status}`;
+    let errorMessage = `Errore server (${res.status})`;
     try {
       const parsed = JSON.parse(text);
       if (parsed) {

@@ -53,4 +53,25 @@ export class SettingsPublicController {
     const settings = await this.checkoutService.updateSettings(body);
     return { success: true, settings };
   }
+
+  @Get('school-profile')
+  @ApiOperation({
+    summary: 'Получить профиль и брендинг школы',
+    description: 'Возвращает текущие настройки школы, контакты, соцсети и размер взноса',
+  })
+  async getSchoolProfile() {
+    const profile = await this.checkoutService.getSchoolProfile();
+    return { success: true, profile };
+  }
+
+  @Patch('school-profile')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Обновить профиль и брендинг школы',
+    description: 'Обновляет профиль школы (White-Label настройки) в app_settings',
+  })
+  async updateSchoolProfile(@Body() body: any) {
+    const profile = await this.checkoutService.updateSchoolProfile(body);
+    return { success: true, profile };
+  }
 }

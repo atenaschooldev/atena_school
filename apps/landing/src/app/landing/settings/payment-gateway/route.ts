@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSystemSettings, updateSystemSettings } from '@/lib/server/checkout-service';
 import { withLandingApiLog } from '@/lib/server/api-logger';
+import { handleCorsOptions, withCors } from '@/lib/server/cors';
 
 export const runtime = 'nodejs';
+
+export async function OPTIONS() {
+  return handleCorsOptions();
+}
 
 async function getHandler() {
   try {
     const settings = await getSystemSettings();
-    return NextResponse.json({ success: true, settings });
+    return withCors(NextResponse.json({ success: true, settings }));
   } catch (err: any) {
     console.error('[GET /landing/settings/payment-gateway error]:', err);
-    return NextResponse.json(
-      { success: true, settings: { stripeEnabled: false, subscriptionsEnabled: false } },
-      { status: 500 }
+    return withCors(
+      NextResponse.json(
+        { success: true, settings: { stripeEnabled: false, subscriptionsEnabled: false } },
+        { status: 500 }
+      )
     );
   }
 }
@@ -25,12 +32,14 @@ async function patchHandler(request: NextRequest) {
     if (body.subscriptionsEnabled !== undefined) payload.subscriptionsEnabled = Boolean(body.subscriptionsEnabled);
 
     const updated = await updateSystemSettings(payload);
-    return NextResponse.json({ success: true, settings: updated });
+    return withCors(NextResponse.json({ success: true, settings: updated }));
   } catch (err: any) {
     console.error('[PATCH /landing/settings/payment-gateway error]:', err);
-    return NextResponse.json(
-      { success: false, error: err.message || 'Failed to update system settings' },
-      { status: 500 }
+    return withCors(
+      NextResponse.json(
+        { success: false, error: err.message || 'Failed to update system settings' },
+        { status: 500 }
+      )
     );
   }
 }
@@ -44,5 +53,6 @@ export const PATCH = withLandingApiLog(patchHandler, {
   controller: 'SettingsLandingController',
   action: 'updatePaymentGatewaySettings',
 });
+
 
 

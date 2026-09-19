@@ -19,6 +19,7 @@ import {
 } from '@atena/api-types';
 
 import { checkFeeStatus } from './fee.service';
+import { validatePromoCode, incrementPromoCodeUsage } from './promo.service';
 import { processStudentAndBookingLinks } from './student.service';
 import { extractCleanTime, computeEndTime, computeTotalLessonsCount } from './course.service';
 import { sendBookingNotificationEmails, EmailServiceConfig } from '../notifications/notification.service';
@@ -263,8 +264,33 @@ export async function createReservationWorkflow(
     });
 
     const isFeeRequired = feeStatus.annualFeePaid === false;
-    const regFee = isFeeRequired ? 30 : 0;
-    const totalPaidAmount = effectiveCoursePrice + regFee;
+    const baseRegFee = isFeeRequired ? 30 : 0;
+    let effectiveRegFee = baseRegFee;
+    let discountAmount = 0;
+    let promoId: string | null = null;
+
+    if (dto.promoCode) {
+      try {
+        const pRes = await validatePromoCode(supabase, {
+          code: dto.promoCode,
+          coursePrice: effectiveCoursePrice,
+          registrationFee: baseRegFee,
+          courseId,
+        });
+        if (pRes.valid && pRes.promo) {
+          promoId = pRes.promo.id;
+          discountAmount = pRes.promo.discountAmount;
+          if (pRes.promo.waiveRegistrationFee) {
+            effectiveRegFee = 0;
+          }
+        }
+      } catch (pErr) {
+        console.warn('Promo code validation warning in reservation:', pErr);
+      }
+    }
+
+    const netCoursePrice = Math.max(0, effectiveCoursePrice - (dto.promoCode && promoId ? (discountAmount - (baseRegFee - effectiveRegFee)) : 0));
+    const totalPaidAmount = Math.max(0, netCoursePrice + effectiveRegFee);
 
     const pStatus = typeof dto.paymentStatus === 'number' ? dto.paymentStatus : BookingPaymentStatus.RESERVED;
     const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : PaymentMethod.CASH;
@@ -312,6 +338,8 @@ export async function createReservationWorkflow(
       // Non-blocking group lookup
     }
 
+    const birthPlace = (dto.isForChild ? (dto.studentBirthPlace || dto.birthPlace) : dto.birthPlace) || student.birthPlace || null;
+
     const { data: booking, error } = await supabase
       .from('bookings')
       .insert({
@@ -328,6 +356,7 @@ export async function createReservationWorkflow(
         student_phone: student.phone || dto.phone,
         student_tax_code: studentTaxCode,
         student_birth_date: student.birthDate || null,
+        student_birth_place: birthPlace,
         start_date: dto.date || new Date().toISOString(),
         schedule_days: course?.schedule_days || null,
         start_time: resolvedStartTime,
@@ -339,7 +368,10 @@ export async function createReservationWorkflow(
         billing_scheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
         subscription_status: subStatus,
         amount_paid: totalPaidAmount,
-        registration_fee: regFee,
+        registration_fee: effectiveRegFee,
+        discount_amount: discountAmount > 0 ? discountAmount : null,
+        promo_code: dto.promoCode || null,
+        promo_code_id: promoId || null,
         total_lessons_count: computeTotalLessonsCount(course, lessons.length),
         subscription_starts_at: subStartsAt,
         subscription_ends_at: subEndsAt,
@@ -354,15 +386,21 @@ export async function createReservationWorkflow(
       throw new Error(error?.message || 'Failed to create reservation');
     }
 
+    if (promoId) {
+      await incrementPromoCodeUsage(supabase, promoId);
+    }
+
     const bookingWithGroup = { ...booking, group: assignedGroup };
     createdBookings.push(bookingWithGroup);
     bookingIds.push(booking.id);
 
-    const studentDto = {
+    const studentDto: CreateReservationParams = {
       ...dto,
       isForChild: true,
       studentFirstName: student.firstName,
       studentLastName: student.lastName,
+      studentBirthPlace: birthPlace || undefined,
+      birthPlace: birthPlace || undefined,
       studentEmail: student.email,
       studentPhone: student.phone,
       studentTaxCode: studentTaxCode,
@@ -374,7 +412,7 @@ export async function createReservationWorkflow(
         dto: studentDto,
         bookingId: booking.id,
         feeStatus,
-        regFee,
+        regFee: effectiveRegFee,
         purchaserName,
         studentName,
         supabase,
@@ -398,7 +436,7 @@ export async function createReservationWorkflow(
       }
 
       await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
-      await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode, linkedUserId);
+      await recordPaymentLedger(booking.id, effectiveCoursePrice, effectiveRegFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode, linkedUserId);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure
       await supabase.from('bookings').delete().eq('id', booking.id);

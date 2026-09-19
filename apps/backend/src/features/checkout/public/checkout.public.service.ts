@@ -18,7 +18,10 @@ import {
   getPublicCourseById as getPublicCourseByIdCore,
   getBookingDetails as getBookingDetailsCore,
   handleStripeWebhook as handleStripeWebhookCore,
+  getSchoolProfile as getSchoolProfileCore,
+  updateSchoolProfile as updateSchoolProfileCore,
 } from '@atena/core';
+import type { SchoolProfile } from '@atena/api-types';
 
 @Injectable()
 export class CheckoutService {
@@ -100,6 +103,14 @@ export class CheckoutService {
 
   async getBookingDetails(id: string) {
     return getBookingDetailsCore(this.supabaseAdmin, id);
+  }
+
+  async getSchoolProfile() {
+    return getSchoolProfileCore(this.supabaseAdmin);
+  }
+
+  async updateSchoolProfile(profile: Partial<SchoolProfile>) {
+    return updateSchoolProfileCore(this.supabaseAdmin, profile);
   }
 }
 

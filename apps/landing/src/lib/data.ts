@@ -4,6 +4,7 @@ import { CACHE_TAGS, CACHE_TTL } from './constants';
 import { slugify } from './utils';
 import type { SupabaseCourseRow } from './server/checkout-service';
 import type { CourseItem } from '@atena/api-types';
+import { getSchoolProfile } from '@atena/core';
 
 interface HeroRow {
   title_it?: string | null;
@@ -133,19 +134,29 @@ export const getTestimonials = unstable_cache(
 export const getContactData = unstable_cache(
   async () => {
     const supabase = createClient();
-    const { data } = await supabase.from('site_contact').select('*').single<ContactRow>();
+    const school = await getSchoolProfile(supabase);
+    const rawAddress = school.address || '';
+    const city = school.city || '';
+    const province = school.province || '';
+    const cap = school.cap || '';
+
+    const formattedAddress = rawAddress.toLowerCase().includes(city.toLowerCase())
+      ? rawAddress
+      : [rawAddress, [city, province ? `(${province})` : ''].filter(Boolean).join(' '), cap].filter(Boolean).join(', ');
+
     return {
-      address: data?.address || '',
-      phone: data?.phone || '',
-      landline: data?.landline || '',
-      email: data?.email || '',
-      vat: data?.vat || '',
-      whatsapp: data?.whatsapp || '',
-      id: data?.id || 1,
+      address: formattedAddress,
+      phone: school.phone || '',
+      landline: school.landline || '',
+      email: school.secretariat_email || school.email || '',
+      vat: school.vat_code || '',
+      whatsapp: school.whatsapp || '',
+      maps_url: school.maps_url || '',
+      id: 1,
     };
   },
   ['contact-data'],
-  { tags: [CACHE_TAGS.CONTACT], revalidate: CACHE_TTL }
+  { tags: [CACHE_TAGS.CONTACT], revalidate: 60 }
 );
 
 export const getTeachers = unstable_cache(

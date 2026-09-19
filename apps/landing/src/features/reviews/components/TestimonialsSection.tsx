@@ -6,12 +6,13 @@ import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Testimonial } from "@/features/home/services/homeService";
+import { DEFAULT_SCHOOL_PROFILE } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
 interface TestimonialsSectionProps {
   data?: Testimonial[];
+  school?: SchoolProfile;
 }
-
-const GOOGLE_MAPS_URL = "https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7";
 
 const GOOGLE_AVATAR_PALETTE = [
   "bg-[#8E24AA] text-white", // Purple
@@ -89,8 +90,9 @@ interface RawTranslationTestimonial {
   role_it?: string;
 }
 
-const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
+const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: TestimonialsSectionProps) => {
   const t = useTranslations("testimonials");
+  const googleMapsUrl = school.maps_url || "https://maps.google.com";
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40, slidesToScroll: 1 });
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState<Testimonial | null>(null);
@@ -194,13 +196,13 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
         </h2>
 
         <p className="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto">
-          Esperienze reali di studenti e genitori che hanno frequentato i nostri corsi a Cittanova e online.
+          Esperienze reali di studenti e genitori che hanno frequentato i nostri corsi a {school.city} e online.
         </p>
 
         {/* Link to Google Maps Place */}
         <div className="pt-1">
           <a
-            href={GOOGLE_MAPS_URL}
+            href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] transition-colors py-1 px-3 rounded-lg hover:bg-white/80"
@@ -362,7 +364,7 @@ const TestimonialsSection = ({ data }: TestimonialsSectionProps) => {
             {/* Footer with link */}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
               <a
-                href={GOOGLE_MAPS_URL}
+                href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] transition-colors"

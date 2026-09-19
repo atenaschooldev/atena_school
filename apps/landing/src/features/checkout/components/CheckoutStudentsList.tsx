@@ -10,6 +10,7 @@ import {
   User,
   IdentificationCard,
   Calendar as CalendarIcon,
+  MapPin,
   Envelope,
   Phone,
   Plus,
@@ -26,6 +27,7 @@ interface StudentItem {
   phone?: string;
   taxCode: string;
   birthDate?: string;
+  birthPlace?: string;
 }
 
 interface CheckoutStudentsListProps {
@@ -191,8 +193,8 @@ export function CheckoutStudentsList({
                 )}
               </div>
 
-              {/* Student Additional Info: Birth date, Email, Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 min-w-0">
+              {/* Student Additional Info: Birth date, Birth place, Email, Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 min-w-0">
                 <div className="min-w-0">
                   <label className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
                   <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
@@ -207,6 +209,25 @@ export function CheckoutStudentsList({
                   {(studentErrors?.birthDate || (idx === 0 && errors.studentBirthDate)) && (
                     <p className="text-[10px] text-red-500 mt-1 font-semibold">
                       {studentErrors?.birthDate?.message || (idx === 0 && errors.studentBirthDate?.message)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Luogo di Nascita *</label>
+                  <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
+                    <MapPin className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+                    <input
+                      type="text"
+                      value={student.birthPlace || ""}
+                      onChange={(e) => updateStudent(idx, "birthPlace", e.target.value)}
+                      placeholder="es. Roma (RM)"
+                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                    />
+                  </div>
+                  {(studentErrors?.birthPlace || (idx === 0 && errors.studentBirthPlace)) && (
+                    <p className="text-[10px] text-red-500 mt-1 font-semibold">
+                      {studentErrors?.birthPlace?.message || (idx === 0 && errors.studentBirthPlace?.message)}
                     </p>
                   )}
                 </div>
@@ -235,7 +256,6 @@ export function CheckoutStudentsList({
                     <input
                       type="tel"
                       value={student.phone || ""}
-
                       onChange={(e) => updateStudent(idx, "phone", e.target.value)}
                       placeholder="+39 340 0000000"
                       className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"

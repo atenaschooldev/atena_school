@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 import { BookingPaymentStatus } from "@atena/api-types";
-import { linkUserAccountWorkflow } from "@atena/core";
+import { linkUserAccountWorkflow, DEFAULT_SCHOOL_PROFILE } from "@atena/core";
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -126,10 +126,10 @@ export async function getDashboardDataAction() {
     const enrichedBookings = bookingsList.map((b: any) => {
       const cid = b.course_id || b.item_id;
       const c = coursesMap.get(cid);
-      const title = c?.name || b.course_name || "Corso Atena School";
+      const title = c?.name || b.course_name || `Corso ${DEFAULT_SCHOOL_PROFILE.name}`;
       const coursePrice = c?.price ? Number(c.price) : Number(b.amount_paid || 0);
       const totalAmount = Number(b.amount_paid || coursePrice || 0);
-      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || "Atena School" : "Elisabetta Sorrenti";
+      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || DEFAULT_SCHOOL_PROFILE.name : (c?.teacher_name || `Docente ${DEFAULT_SCHOOL_PROFILE.name}`);
 
       const bdateStr = b.start_date || b.created_at;
       let isFuture = true;

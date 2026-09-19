@@ -4,26 +4,30 @@ import { createClient } from "@/lib/supabase/server";
 import { CourseSchema, CourseDetailView } from "@/features/courses";
 import BreadcrumbSchema from "@/components/seo/BreadcrumbSchema";
 import { env } from "@/config/env";
+import { getSchoolProfile } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps) {
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const { id } = await params;
   const res = await getCourse(id);
 
   if (!res.success || !res.item) {
     return {
-      title: "Corso non trovato | Atena School",
+      title: `Corso non trovato | ${school.name}`,
     };
   }
 
   const course = res.item;
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const courseSlug = course.slug || id;
-  const title = `${course.title_it || course.name} | Atena School`;
-  const description = course.description || `Scopri il corso di ${course.title_it || course.name} presso Atena School a Cittanova.`;
+  const title = `${course.title_it || course.name} | ${school.name}`;
+  const description = course.description || `Scopri il corso di ${course.title_it || course.name} presso ${school.name} a ${school.city}.`;
   const imageUrl = course.photo_url || `${siteUrl}/icon.png`;
 
   return {
@@ -33,7 +37,7 @@ export async function generateMetadata({ params }: PageProps) {
       title,
       description,
       url: `${siteUrl}/corsi/${courseSlug}`,
-      siteName: "Atena School",
+      siteName: school.name,
       images: [
         {
           url: imageUrl,

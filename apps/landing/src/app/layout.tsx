@@ -26,17 +26,21 @@ const nunito = Nunito({
 });
 
 import { env } from '@/config/env';
+import { getSchoolProfile } from '@atena/core';
+import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
-  const title = 'Atena School — Scuola di Lingua a Cittanova';
-  const description = 'Corsi di inglese, recupero scolastico e preparazione universitaria a Cittanova, Calabria. Lezioni individuali e di gruppo, online e in presenza.';
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
+  const title = `${school.name} — Scuola di Lingue e Formazione a ${school.city}`;
+  const description = `Corsi di lingua, recupero scolastico e certificazioni a ${school.city} (${school.province}). Lezioni individuali e di gruppo, online e in presenza.`;
 
   return {
     title: {
       default: title,
-      template: `%s | Atena School`,
+      template: `%s | ${school.name}`,
     },
     description,
     metadataBase: new URL(siteUrl),
@@ -72,18 +76,16 @@ export async function generateMetadata() {
       type: 'website',
       locale: 'it_IT',
       url: siteUrl,
-      siteName: 'Atena School',
+      siteName: school.name,
       title,
       description,
-      images: [{ url: `${siteUrl}/og-default.webp`, width: 1200, height: 630, alt: 'Atena School' }],
+      images: [{ url: `${siteUrl}/og-default.webp`, width: 1200, height: 630, alt: school.name }],
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
       images: [`${siteUrl}/og-default.webp`],
-      site: '@atenaschool',
-      creator: '@atenaschool',
     },
   };
 }
@@ -96,6 +98,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const messages = await getMessages();
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
 
   return (
     <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`} data-scroll-behavior="smooth">
@@ -110,32 +114,24 @@ export default async function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "EducationalOrganization",
-              "name": "Atena School",
+              "name": school.name,
+              "legalName": school.legal_name,
               "url": siteUrl,
               "logo": `${siteUrl}/logo-192.png`,
               "image": `${siteUrl}/og-default.webp`,
-              "description": "Corsi di lingua inglese, recupero scolastico e certificazioni EIPASS e Cambridge a Cittanova, Calabria.",
+              "description": `Corsi di lingua, recupero scolastico e certificazioni a ${school.city} (${school.province}).`,
               "address": {
                 "@type": "PostalAddress",
-                "streetAddress": "Via Matteotti 11",
-                "addressLocality": "Cittanova",
-                "addressRegion": "RC",
-                "postalCode": "89022",
+                "streetAddress": school.address,
+                "addressLocality": school.city,
+                "addressRegion": school.province,
+                "postalCode": school.cap,
                 "addressCountry": "IT",
               },
-              "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": 38.3541,
-                "longitude": 16.0805,
-              },
-              "telephone": ["+393756052362", "+390966447052"],
-              "email": "atenaschool20@gmail.com",
+              "telephone": [school.phone, school.landline].filter(Boolean),
+              "email": school.secretariat_email || school.email,
               "priceRange": "€€",
-              "sameAs": [
-                "https://www.facebook.com/CSAtena7",
-                "https://www.instagram.com/atenaschool_srls/",
-                "https://www.linkedin.com/company/atena-school-srls/",
-              ],
+              "sameAs": Object.values(school.socials || {}).filter(Boolean),
             }).replace(/</g, "\\u003c"),
           }}
         />
@@ -144,9 +140,9 @@ export default async function RootLayout({
         <NextIntlClientProvider locale="it" messages={messages}>
           <ScrollAnimateProvider>
             <div className="flex flex-col min-h-screen">
-              <Navbar />
+              <Navbar school={school} />
               <main className="flex-grow flex flex-col">{children}</main>
-              <Footer />
+              <Footer school={school} />
               <CookieBanner />
             </div>
             <ScrollToTop />

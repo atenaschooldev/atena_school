@@ -52,6 +52,8 @@ export async function logNotification(
   }
 }
 
+import { getSchoolProfile } from '../system/school-profile.service';
+
 export interface EmailServiceConfig {
   resendApiKey?: string;
   fromEmail?: string;
@@ -68,8 +70,7 @@ export async function sendEmailViaResend(options: {
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const apiKey = options.apiKey || process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn('[EMAIL WARNING] RESEND_API_KEY not configured.');
-    return { success: false, error: 'RESEND_API_KEY not configured' };
+    return { success: false, error: 'RESEND_API_KEY is not configured' };
   }
 
   try {
@@ -107,13 +108,14 @@ export async function sendBookingNotificationEmails(params: {
   config?: EmailServiceConfig;
 }): Promise<void> {
   const { supabase, booking, course, dto, config } = params;
-  const courseName = course?.name || course?.title_it || 'Corso Atena School';
+  const schoolProfile = await getSchoolProfile(supabase);
+  const courseName = course?.name || course?.title_it || `Corso ${schoolProfile.name}`;
   const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
   const studentName = dto.isForChild
     ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
     : purchaserName;
-  const adminEmail = config?.adminEmail || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'atenaschool20@gmail.com';
-  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <onboarding@resend.dev>';
+  const adminEmail = config?.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
+  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || `${schoolProfile.name} <${schoolProfile.email || 'info@atenaschool.com'}>`;
   const appUrl = config?.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://atena-school-app.vercel.app';
   const apiKey = config?.resendApiKey || process.env.RESEND_API_KEY;
 
@@ -147,11 +149,15 @@ export async function sendBookingNotificationEmails(params: {
     purchaserEmail: dto.email,
     purchaserPhone: dto.phone,
     purchaserTaxCode: dto.purchaserTaxCode,
+    birthPlace: dto.birthPlace,
     isForChild: dto.isForChild,
     studentEmail: dto.studentEmail,
     studentPhone: dto.studentPhone,
     studentTaxCode: dto.studentTaxCode,
     studentBirthDate: dto.studentBirthDate,
+    studentBirthPlace: dto.studentBirthPlace || dto.birthPlace || undefined,
+    promoCode: dto.promoCode || booking.promo_code || undefined,
+    discountAmount: booking.discount_amount ? String(booking.discount_amount) : undefined,
     date: dto.date,
     time: dto.time,
     lessonSchedule,
@@ -164,6 +170,7 @@ export async function sendBookingNotificationEmails(params: {
     bookingId: booking.id,
     notes: dto.notes,
     appUrl,
+    schoolProfile,
     pecEmail: dto.pecEmail,
     sdiCode: dto.sdiCode,
     needsCompanyInvoice: dto.needsCompanyInvoice,
@@ -234,10 +241,12 @@ export async function sendContactFormNotificationEmail(params: {
   config?: EmailServiceConfig;
 }): Promise<void> {
   const { supabase, data, config } = params;
-  const adminEmail = config?.adminEmail || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'atenaschool20@gmail.com';
-  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || process.env.SMTP_FROM || 'Atena School <onboarding@resend.dev>';
+  const schoolProfile = await getSchoolProfile(supabase);
+  const adminEmail = config?.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
+  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || `${schoolProfile.name} <${schoolProfile.email || 'info@atenaschool.com'}>`;
   const apiKey = config?.resendApiKey || process.env.RESEND_API_KEY;
 
+  data.schoolProfile = schoolProfile;
   const senderName = `${data.firstName} ${data.lastName}`.trim();
   const contactRendered = renderContactFormAdminEmail(data);
 

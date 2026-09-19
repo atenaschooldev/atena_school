@@ -178,188 +178,29 @@ export async function createStripeSession(
     }
   }
 
-  // Multi-student payload
-  if (dto.students && dto.students.length > 0) {
-    const reservationRes = await createReservationWorkflow(supabase, {
-      ...dto,
-      paymentMethod: PaymentMethod.STRIPE,
-      paymentStatus: BookingPaymentStatus.PENDING,
-      billingScheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
-    });
-
-    const { data: course } = await supabase.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
-    const courseName = course?.name || course?.title_it || 'Corso Atena School';
-    const coursePrice = isSubscription
-      ? (course?.subscription_price != null ? Number(course.subscription_price) : (Number(course?.price) || 73.2))
-      : (course ? Number(course.price) : 73.2);
-
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
-    const b = reservationRes.booking;
-
-    if (b) {
-      if (isSubscription) {
-        if (course?.stripe_monthly_price_id) {
-          lineItems.push({
-            price: course.stripe_monthly_price_id,
-            quantity: 1,
-          });
-        } else {
-          lineItems.push({
-            price_data: {
-              currency: 'eur',
-              product_data: {
-                name: `${courseName} — Abbonamento Mensile (${b.studentName})`,
-              },
-              unit_amount: Math.round(coursePrice * 100),
-              recurring: { interval: 'month' },
-            },
-            quantity: 1,
-          });
-        }
-      } else {
-        lineItems.push({
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `${courseName} — Iscrizione (${b.studentName})`,
-            },
-            unit_amount: Math.round(coursePrice * 100),
-          },
-          quantity: 1,
-        });
-      }
-
-      if (Number(b.registrationFee || 0) > 0) {
-        lineItems.push({
-          price_data: {
-            currency: 'eur',
-            product_data: {
-              name: `Quota Associativa Annuale 2026/2027 (${b.studentName})`,
-            },
-            unit_amount: 3000,
-          },
-          quantity: 1,
-        });
-      }
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      mode: isSubscription ? 'subscription' : 'payment',
-      customer_email: dto.email,
-      success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${reservationRes.bookingId}`,
-      cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
-      metadata: {
-        booking_id: reservationRes.bookingId || '',
-        purchaser_tax_code: dto.purchaserTaxCode || '',
-        billing_scheme: isSubscription ? String(BillingScheme.SUBSCRIPTION) : String(BillingScheme.FULL),
-      },
-    }, {
-      idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${reservationRes.bookingId}`,
-    });
-
-    return {
-      success: true,
-      url: session.url,
-      bookingId: reservationRes.bookingId,
-      booking: reservationRes.booking,
-    };
-  }
-
-  // Single student legacy payload
-  const studentTaxCode = dto.isForChild
-    ? (dto.studentTaxCode ? dto.studentTaxCode.trim().toUpperCase() : '')
-    : (dto.purchaserTaxCode ? dto.purchaserTaxCode.trim().toUpperCase() : '');
-
-  const feeStatus = await checkFeeStatus(supabase, {
-    taxCode: studentTaxCode,
-    email: dto.email,
-    phone: dto.phone,
+  const reservationRes = await createReservationWorkflow(supabase, {
+    ...dto,
+    paymentMethod: PaymentMethod.STRIPE,
+    paymentStatus: BookingPaymentStatus.PENDING,
+    billingScheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
   });
 
-  const isFeeRequired = feeStatus.annualFeePaid === false;
-  const regFee = isFeeRequired ? 30 : 0;
+  if (!reservationRes.success || !reservationRes.booking) {
+    throw new Error(reservationRes.error || 'Failed to initialize booking for payment');
+  }
 
   const { data: course } = await supabase.from('courses').select('*').eq('id', resolvedItemId).maybeSingle();
   const courseName = course?.name || course?.title_it || 'Corso Atena School';
-  const coursePrice = isSubscription
+  const baseCoursePrice = isSubscription
     ? (course?.subscription_price != null ? Number(course.subscription_price) : (Number(course?.price) || 73.2))
     : (course ? Number(course.price) : 73.2);
 
-  const studentName = dto.isForChild
-    ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || `${dto.firstName} ${dto.lastName}`
-    : `${dto.firstName} ${dto.lastName}`;
-
-  const resolvedStartTime = course?.start_time || extractCleanTime(dto.time) || null;
-  let resolvedEndTime = course?.end_time || null;
-  if (!resolvedEndTime && dto.time) {
-    const intervalMatch = dto.time.match(/\d{1,2}:\d{2}\s*-\s*(\d{1,2}:\d{2})/);
-    if (intervalMatch) resolvedEndTime = intervalMatch[1];
-  }
-  if (!resolvedEndTime && resolvedStartTime && course?.lesson_duration_minutes && course.lesson_duration_minutes > 0) {
-    resolvedEndTime = computeEndTime(resolvedStartTime, course.lesson_duration_minutes);
-  }
-
-  const lessons = calculateLessonDates(
-    dto.date || new Date().toISOString(),
-    dto.time || '10:00',
-    course?.category || undefined,
-    course?.schedule_days || null,
-    course?.lesson_duration_minutes || 60,
-    course?.start_time || null,
-    course?.end_time || null,
-    course?.schedule_type || null
-  );
-
-  const subStartsAt = lessons.length > 0 ? lessons[0].startsAt : new Date().toISOString();
-  const subEndsAtDate = new Date(subStartsAt);
-  subEndsAtDate.setMonth(subEndsAtDate.getMonth() + 1);
-  const subEndsAt = subEndsAtDate.toISOString();
-
-  // Create initial booking in PENDING payment status
-  const { data: booking, error: bError } = await supabase
-    .from('bookings')
-    .insert({
-      course_id: resolvedItemId,
-      course_name: courseName,
-      session_id: dto.idempotencyKey || null,
-      purchaser_name: `${dto.firstName} ${dto.lastName}`,
-      purchaser_email: dto.email,
-      purchaser_phone: dto.phone || null,
-      purchaser_tax_code: dto.purchaserTaxCode || studentTaxCode || '',
-      student_name: studentName,
-      student_email: dto.studentEmail || dto.email,
-      student_phone: dto.studentPhone || dto.phone || null,
-      student_tax_code: studentTaxCode,
-      student_birth_date: dto.studentBirthDate || null,
-      start_date: dto.date || new Date().toISOString(),
-      schedule_days: course?.schedule_days || null,
-      start_time: resolvedStartTime,
-      end_time: resolvedEndTime,
-      amount_paid: coursePrice + regFee,
-      registration_fee: regFee,
-      payment_status: BookingPaymentStatus.PENDING,
-      payment_method: PaymentMethod.STRIPE,
-      billing_scheme: isSubscription ? BillingScheme.SUBSCRIPTION : BillingScheme.FULL,
-      total_lessons_count: computeTotalLessonsCount(course, lessons.length),
-      subscription_status: isSubscription ? SubscriptionStatus.PENDING_RECEPTION_PAYMENT : null,
-      subscription_starts_at: subStartsAt,
-      subscription_ends_at: subEndsAt,
-      notes: dto.notes || '',
-      sdi_code: dto.sdiCode || null,
-      pec_email: dto.pecEmail || null,
-    })
-    .select('*')
-    .single();
-
-  if (bError || !booking) {
-    throw new Error(bError?.message || 'Failed to initialize booking for payment');
-  }
-
-  await generateAndSaveLessons(booking.id, course, lessons, supabase);
-
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+  const b = reservationRes.booking;
+
+  const discount = Number(b.discountAmount || (b as any).discount_amount || 0);
+  const discountedPrice = Math.max(0, baseCoursePrice - discount);
+
   if (isSubscription) {
     if (course?.stripe_monthly_price_id) {
       lineItems.push({
@@ -371,9 +212,9 @@ export async function createStripeSession(
         price_data: {
           currency: 'eur',
           product_data: {
-            name: `${courseName} — Abbonamento Mensile`,
+            name: `${courseName} — Abbonamento Mensile (${b.studentName || `${dto.firstName} ${dto.lastName}`})`,
           },
-          unit_amount: Math.round(coursePrice * 100),
+          unit_amount: Math.round(discountedPrice * 100),
           recurring: { interval: 'month' },
         },
         quantity: 1,
@@ -384,20 +225,20 @@ export async function createStripeSession(
       price_data: {
         currency: 'eur',
         product_data: {
-          name: `${courseName} — Iscrizione Corso`,
+          name: `${courseName} — Iscrizione (${b.studentName || `${dto.firstName} ${dto.lastName}`})${b.promoCode ? ` [${b.promoCode}]` : ''}`,
         },
-        unit_amount: Math.round(coursePrice * 100),
+        unit_amount: Math.round(discountedPrice * 100),
       },
       quantity: 1,
     });
   }
 
-  if (regFee > 0) {
+  if (Number(b.registrationFee || (b as any).registration_fee || 0) > 0) {
     lineItems.push({
       price_data: {
         currency: 'eur',
         product_data: {
-          name: 'Quota Associativa Annuale 2026/2027',
+          name: `Quota Associativa Annuale 2026/2027 (${b.studentName || `${dto.firstName} ${dto.lastName}`})`,
         },
         unit_amount: 3000,
       },
@@ -410,19 +251,24 @@ export async function createStripeSession(
     line_items: lineItems,
     mode: isSubscription ? 'subscription' : 'payment',
     customer_email: dto.email,
-    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${booking.id}`,
+    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${reservationRes.bookingId}`,
     cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
     metadata: {
-      booking_id: booking.id,
+      booking_id: reservationRes.bookingId || '',
       purchaser_tax_code: dto.purchaserTaxCode || '',
       student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
       billing_scheme: isSubscription ? String(BillingScheme.SUBSCRIPTION) : String(BillingScheme.FULL),
     },
   }, {
-    idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${booking.id}`,
+    idempotencyKey: dto.idempotencyKey ? `stripe_sess_${dto.idempotencyKey}` : `stripe_sess_${reservationRes.bookingId}`,
   });
 
-  return { success: true, url: session.url, bookingId: booking.id, booking };
+  return {
+    success: true,
+    url: session.url,
+    bookingId: reservationRes.bookingId,
+    booking: reservationRes.booking,
+  };
 }
 
 export async function verifyPayment(

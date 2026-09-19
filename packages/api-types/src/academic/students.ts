@@ -157,3 +157,25 @@ export function parseLanguageLevel(val: any): LanguageLevel {
   if (s === '6' || s === 'C2') return LanguageLevel.C2;
   return LanguageLevel.A1;
 }
+
+export interface StudentRecord {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  tax_code?: string | null;
+  birth_date?: string | null;
+  birth_place?: string | null;
+  parent_id?: string | null;
+  student_user_id?: string | null;
+  status: StudentStatus;
+  language_level: LanguageLevel;
+  annual_fee_paid?: boolean | null;
+  annual_fee_paid_at?: string | null;
+  registration_date?: string | null;
+  photo_url?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}

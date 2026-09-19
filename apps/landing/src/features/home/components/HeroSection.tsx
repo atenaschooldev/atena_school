@@ -8,12 +8,15 @@ import { Link } from "@/i18n/routing";
 import studentImg from "@/assets/hero.webp";
 import logo from "@/assets/logo.webp";
 import { HeroData } from "@/features/home/services/homeService";
+import { DEFAULT_SCHOOL_PROFILE } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
 interface HeroSectionProps {
   data?: HeroData;
+  school?: SchoolProfile;
 }
 
-const HeroSection = ({ data }: HeroSectionProps) => {
+const HeroSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: HeroSectionProps) => {
   const t = useTranslations("hero");
 
   return (
@@ -76,7 +79,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
           <div className="space-y-2">
             <div className="flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider text-slate-600">
               <MapPin size={13} className="text-[#F8861D] shrink-0" weight="bold" />
-              <span>Cittanova (RC) • In Presenza e Online</span>
+              <span>{school.city} ({school.province}) • In Presenza e Online</span>
             </div>
 
             <h1 className="font-serif text-[1.85rem] xs:text-[2.1rem] font-black text-[#043569] leading-[1.12] tracking-tight">
@@ -84,7 +87,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             </h1>
 
             <p className="text-slate-600 text-xs xs:text-[13px] font-medium leading-relaxed">
-              Con <strong className="font-extrabold text-[#043569]">ATENA <span className="text-[#F8861D]">SCHOOL</span></strong> impara l&apos;inglese, preparati agli esami <strong className="font-bold text-[#D9232D]">Cambridge University</strong> e <strong className="font-bold text-[#6C207E]">Trinity College</strong> ed ottieni certificazioni ufficiali <strong className="font-bold text-[#0056B3]">EIPASS</strong>. Percorsi riconosciuti per scuola, università e lavoro — in sede e online in tutta&nbsp;Italia.
+              Impara le lingue, preparati agli esami ufficiali <span className="text-[#D9232D] font-bold">Cambridge</span>, <span className="text-[#6C207E] font-bold">Trinity</span> &amp; <span className="text-[#0056B3] font-bold">EIPASS</span> ed ottieni certificazioni riconosciute per scuola, università e lavoro — in sede a {school.city} e online in tutta&nbsp;Italia.
             </p>
           </div>
 
@@ -155,7 +158,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
             <div className="space-y-2 [@media(min-width:1024px)_and_(min-height:850px)]:space-y-4">
               <div className="flex items-center gap-1.5 text-xs [@media(min-width:1024px)_and_(min-height:850px)]:text-sm font-semibold uppercase tracking-widest text-slate-600">
                 <MapPin size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                <span>Cittanova (RC) • In Presenza e Online</span>
+                <span>{school.city} ({school.province}) • In Presenza e Online</span>
               </div>
               <h1 className="font-serif text-3xl lg:text-4xl xl:text-5xl [@media(min-width:1024px)_and_(min-height:850px)]:text-[4.75rem] font-black text-[#043569] leading-[1.08] tracking-tight">
                 Corsi di Lingua e Certificazioni in Presenza e Online
@@ -164,7 +167,7 @@ const HeroSection = ({ data }: HeroSectionProps) => {
 
             {/* Subtitle / Description */}
             <p className="text-slate-600 text-sm lg:text-base xl:text-lg [@media(min-width:1024px)_and_(min-height:850px)]:text-2xl font-medium leading-relaxed max-w-2xl [@media(min-width:1024px)_and_(min-height:850px)]:max-w-4xl">
-              Con <strong className="font-extrabold text-[#043569]">ATENA <span className="text-[#F8861D]">SCHOOL</span></strong> impara l&apos;inglese, preparati agli esami <strong className="font-bold text-[#D9232D]">Cambridge University</strong> e <strong className="font-bold text-[#6C207E]">Trinity College</strong> ed ottieni certificazioni ufficiali <strong className="font-bold text-[#0056B3]">EIPASS</strong>. Percorsi riconosciuti per scuola, università e lavoro — in sede e online in tutta&nbsp;Italia.
+              Impara le lingue, preparati agli esami ufficiali <span className="text-[#D9232D] font-bold">Cambridge</span>, <span className="text-[#6C207E] font-bold">Trinity</span> &amp; <span className="text-[#0056B3] font-bold">EIPASS</span> ed ottieni certificazioni riconosciute per scuola, università e lavoro — in sede a {school.city} e online in tutta&nbsp;Italia.
             </p>
 
             {/* CTA Buttons */}

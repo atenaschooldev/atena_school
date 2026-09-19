@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
+import { SchoolProfileCard } from "@/components/shared/school-profile-card"
 import { useTranslation } from "@/i18n/context"
 
 const accountFormSchema = z.object({
@@ -60,6 +61,9 @@ export default function AccountSettings() {
             {t("settings.subtitle")}
           </p>
         </div>
+
+        {/* School Profile & Brand Configuration */}
+        <SchoolProfileCard />
 
         {/* Master Stripe Toggle */}
         <StripeSettingsCard />

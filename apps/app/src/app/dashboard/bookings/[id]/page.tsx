@@ -20,6 +20,7 @@ import { Link } from "@/i18n/routing";
 import { useBookingDetail, TIME_SLOTS } from "@/features/dashboard/hooks/useBookingDetail";
 import { formatCourseScheduleText } from "@atena/utils";
 import { BookingPaymentStatus } from "@atena/api-types";
+import { SCHOOL_INFO } from "@/constants/school";
 
 export default function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -144,6 +145,9 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     {booking.student_birth_date && (
                       <p className="text-[11px] text-foreground/50">Nato/a il: {format(new Date(booking.student_birth_date), "dd/MM/yyyy")}</p>
                     )}
+                    {(booking.student_birth_place || booking.birth_place) && (
+                      <p className="text-[11px] text-foreground/50">Nato/a a: {booking.student_birth_place || booking.birth_place}</p>
+                    )}
                   </div>
                 </div>
 
@@ -189,7 +193,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Sede Lezioni</p>
-                    <p className="text-sm font-bold text-foreground">Atena School, Via Matteotti 11</p>
+                    <p className="text-sm font-bold text-foreground">{SCHOOL_INFO.NAME}, {SCHOOL_INFO.ADDRESS}</p>
                   </div>
                 </div>
 
@@ -210,6 +214,12 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   <div className="flex items-center justify-between text-xs text-foreground/60">
                     <span>Quota iscrizione annuale</span>
                     <span>€{Number(booking.registration_fee).toFixed(2)}</span>
+                  </div>
+                )}
+                {booking.promo_code && (
+                  <div className="flex items-center justify-between text-xs text-emerald-600 font-semibold">
+                    <span>Sconto Promo ({booking.promo_code})</span>
+                    <span>-{Number(booking.discount_amount) > 0 ? `€${Number(booking.discount_amount).toFixed(2)}` : 'Applicato'}</span>
                   </div>
                 )}
                 <div className="pt-2 border-t border-border flex items-center justify-between">

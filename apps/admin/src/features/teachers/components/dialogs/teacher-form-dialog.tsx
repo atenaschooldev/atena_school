@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Teacher } from "../types";
+import type { Teacher } from "../../types";
 
 export interface TeacherFormDialogProps {
   open: boolean;

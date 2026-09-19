@@ -68,6 +68,8 @@ import {
   Copy,
   Check,
   Printer,
+  MapPin,
+  Tag,
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -348,6 +350,12 @@ export function BookingDetailDialog({
                       }</strong></span>
                     </p>
                   )}
+                  {(booking.student_birth_place || booking.birth_place) && (
+                    <p className="text-muted-foreground flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <span>Luogo di nascita: <strong className="text-foreground">{booking.student_birth_place || booking.birth_place}</strong></span>
+                    </p>
+                  )}
                   {booking.student_tax_code && (
                     <button
                       type="button"
@@ -421,6 +429,13 @@ export function BookingDetailDialog({
                     </p>
                   </div>
                 </div>
+
+                {booking.promo_code && (
+                  <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                    <Tag className="w-4 h-4 shrink-0" />
+                    <span>Codice Promozionale Applicato: <strong className="font-mono font-bold">{booking.promo_code}</strong> {Number(booking.discount_amount) > 0 ? `(Sconto: -€${Number(booking.discount_amount).toFixed(2)})` : ''}</span>
+                  </div>
+                )}
 
                 {remaining > 0 && (
                   <div className="pt-2 flex justify-end border-t border-border/50">

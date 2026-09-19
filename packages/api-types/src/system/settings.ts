@@ -19,6 +19,7 @@ import { DictionaryEntry } from '../common/dictionary';
 export const AppSettingKey = {
   STRIPE_ENABLED: 'stripe_enabled',
   SUBSCRIPTIONS_ENABLED: 'subscriptions_enabled',
+  SCHOOL_PROFILE: 'school_profile',
 } as const;
 export type AppSettingKey = (typeof AppSettingKey)[keyof typeof AppSettingKey];
 
@@ -39,10 +40,84 @@ export const APP_SETTINGS_DICTIONARY: Record<string, DictionaryEntry> = {
     label_ru: 'Функционал ежемесячных подписок',
     description: 'Включение/отключение функционала ежемесячных подписок и абонементов на курсы на странице чекаута',
   },
+  [AppSettingKey.SCHOOL_PROFILE]: {
+    id: 3,
+    code: AppSettingKey.SCHOOL_PROFILE,
+    label_it: 'Profilo della Scuola',
+    label_en: 'School Profile',
+    label_ru: 'Профиль школы (White-label брендинг)',
+    description: 'Данные школы: название, юридическое наименование, адрес, контакты, сайт',
+  },
 };
 
 // ----------------------------------------------------------------------------
-// 2. App Setting Record DTO Interface
+// 2. School Profile Interface
+// ----------------------------------------------------------------------------
+
+export interface SchoolSocials {
+  instagram?: string;
+  facebook?: string;
+  linkedin?: string;
+  youtube?: string;
+  tiktok?: string;
+}
+
+export interface SchoolProfile {
+  name: string;
+  legal_name?: string;
+  tagline?: string;
+  address?: string;
+  city?: string;
+  cap?: string;
+  province?: string;
+  country?: string;
+  phone?: string;
+  landline?: string;
+  whatsapp?: string;
+  email?: string;
+  secretariat_email?: string;
+  support_email?: string;
+  website?: string;
+  vat_code?: string;
+  secretariat_hours?: string;
+  registration_fee_eur?: number;
+  logo_url?: string;
+  maps_url?: string;
+  founders?: string;
+  socials?: SchoolSocials;
+}
+
+export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
+  name: 'Atena School',
+  legal_name: 'Atena School S.r.l.s.',
+  tagline: 'civitatis ornamento',
+  address: 'Via Matteotti 11',
+  city: 'Cittanova',
+  cap: '89022',
+  province: 'RC',
+  country: 'Italia',
+  phone: '+39 375 605 2362',
+  landline: '0966 447052',
+  whatsapp: '+39 375 605 2362',
+  email: 'info@atenaschool.com',
+  secretariat_email: 'atenaschool20@gmail.com',
+  support_email: 'supporto@atenaschool.com',
+  website: 'https://atenaschool.com',
+  vat_code: 'P.IVA/C.F. 03321620803',
+  secretariat_hours: 'Martedì e Giovedì dalle ore 15:00 alle ore 18:00',
+  registration_fee_eur: 30,
+  logo_url: '/assets/logo.webp',
+  maps_url: 'https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7',
+  founders: 'ELISABETTA & MARIA, FONDATRICI',
+  socials: {
+    instagram: 'https://instagram.com/atenaschool',
+    facebook: 'https://facebook.com/atenaschool',
+    linkedin: 'https://linkedin.com/company/atenaschool',
+  },
+};
+
+// ----------------------------------------------------------------------------
+// 3. App Setting Record DTO Interface
 // ----------------------------------------------------------------------------
 
 export interface AppSettingRecord<T = any> {

@@ -4,14 +4,17 @@ import CourseSchema from "@/features/courses/components/CourseSchema";
 import CoursesCatalog from "@/features/courses/components/CoursesCatalog";
 import { getResolvedCourseSections } from "@/features/courses/services/coursesService";
 import { env } from "@/config/env";
+import { getSchoolProfile } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 export const revalidate = 60;
 
-
 export async function generateMetadata() {
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
-  const title = 'Corsi di lingua';
-  const description = 'Scopri tutti i corsi di inglese, recupero scolastico, preparazione universitaria e certificazioni EIPASS di Atena School a Cittanova.';
+  const title = 'Corsi di Lingua e Formazione';
+  const description = `Scopri tutti i corsi di lingua, recupero scolastico e certificazioni di ${school.name} a ${school.city}.`;
 
   return {
     title,
@@ -27,7 +30,7 @@ export async function generateMetadata() {
       type: 'website',
       locale: 'it_IT',
       url: `${siteUrl}/corsi`,
-      siteName: 'Atena School',
+      siteName: school.name,
       title,
       description,
     },

@@ -21,6 +21,8 @@ import {
 } from "@phosphor-icons/react";
 import { useLocale } from "next-intl";
 import { useContactForm } from "@/features/contact/hooks/useContactForm";
+import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
 interface ContactSectionProps {
   data?: {
@@ -30,9 +32,10 @@ interface ContactSectionProps {
     email?: string;
     vat?: string;
   };
+  school?: SchoolProfile;
 }
 
-const ContactSection = ({ data }: ContactSectionProps) => {
+const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: ContactSectionProps) => {
   const locale = useLocale();
   const {
     formData,
@@ -46,10 +49,10 @@ const ContactSection = ({ data }: ContactSectionProps) => {
     resetForm,
   } = useContactForm();
 
-  const address = data?.address || "Via Matteotti 11, Cittanova (RC) 89022";
-  const phone = data?.phone || "+39 375 605 2362";
-  const landline = data?.landline || "0966 447052";
-  const email = data?.email || "atenaschool20@gmail.com";
+  const address = formatFullSchoolAddress(school) || data?.address || "";
+  const phone = school.phone || data?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";
+  const landline = school.landline || data?.landline || DEFAULT_SCHOOL_PROFILE.landline || "0966 447052";
+  const email = school.secretariat_email || school.email || data?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
 
   return (
     <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-slate-50/70 overflow-hidden">
@@ -86,7 +89,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
                     Contatta
                   </h3>
                   <span className="text-2xl 2xl:text-4xl font-black text-[#00328F] block text-left">
-                    Atena School
+                    {school.name}
                   </span>
                 </div>
 
@@ -147,7 +150,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
                   </span>
                   <div className="flex gap-2">
                     <a
-                      href="https://www.instagram.com/atenaschool_srls/"
+                      href={school.socials?.instagram || "https://instagram.com"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
@@ -155,7 +158,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
                       <InstagramLogo className="w-4 h-4" weight="bold" />
                     </a>
                     <a
-                      href="https://www.facebook.com/CSAtena7"
+                      href={school.socials?.facebook || "https://facebook.com"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
@@ -175,7 +178,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
 
                 {/* Mini Map Card */}
                 <a
-                  href="https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7"
+                  href={school.maps_url || `https://maps.google.com/?q=${encodeURIComponent(address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group/map bg-gray-50 hover:bg-gray-100/80 border border-gray-200/80 rounded-2xl p-3 flex items-center gap-3 transition-all duration-300 cursor-pointer text-left"
@@ -190,7 +193,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
                     <MapPin className="w-6 h-6 text-[#F8861D] relative z-10 group-hover/map:scale-110 transition-transform duration-300" weight="fill" />
                   </div>
                   <div className="text-left flex-1 min-w-0">
-                    <p className="text-xs font-black text-gray-800">Atena School</p>
+                    <p className="text-xs font-black text-gray-800">{school.name}</p>
                     <p className="text-[10px] text-gray-500 truncate mt-0.5">{address}</p>
                     <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#F8861D] mt-1">
                       Apri in Google Maps →
@@ -400,7 +403,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
               {/* Why Us Highlights */}
               <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-widest text-[#00328F]">
-                  Perché scegliere Atena?
+                  Perché sceglierci?
                 </h4>
                 <div className="w-8 h-0.5 bg-[#00328F]/40" />
 
@@ -467,7 +470,7 @@ const ContactSection = ({ data }: ContactSectionProps) => {
                   ))}
                 </ul>
                 <p className="text-[9.5px] text-gray-400 leading-relaxed pt-2">
-                  Scuola di lingua e informatica a Cittanova (RC).
+                  Scuola di formazione a {school.city} ({school.province}).
                 </p>
               </div>
             </div>

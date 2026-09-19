@@ -19,9 +19,14 @@ export interface BookingOrder {
   student_phone?: string | null;
   student_tax_code?: string | null;
   student_birth_date?: string | null;
+  student_birth_place?: string | null;
+  birth_place?: string | null;
   is_for_child?: boolean;
   amount_paid: number;
   registration_fee: number;
+  discount_amount?: number | null;
+  promo_code?: string | null;
+  promo_code_id?: string | null;
   payment_status: BookingPaymentStatus | number | string;
   payment_status_id?: number;
   payment_method?: PaymentMethod | number | string;

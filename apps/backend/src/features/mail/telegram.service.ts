@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
+import { DEFAULT_SCHOOL_PROFILE } from '@atena/core';
 
 export interface TelegramButton {
   text: string;
@@ -174,13 +175,13 @@ export class TelegramService {
       : (data.time || 'Da concordare con la segreteria');
 
     const lines: string[] = [
-      `🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>`,
+      `🏛️ <b>NUOVA ISCRIZIONE — ${DEFAULT_SCHOOL_PROFILE.name.toUpperCase()}</b>`,
       `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
       ``,
       `📚 <b>Corso:</b> ${this.escapeHtml(data.courseName)}`,
       `🗓 <b>Data di Inizio:</b> <code>${this.escapeHtml(startDateFormatted)}</code>`,
       `⏰ <b>Orario & Giorni:</b> ${this.escapeHtml(scheduleFormatted)}`,
-      `📍 <b>Sede:</b> In Presenza (Cittanova)`,
+      `📍 <b>Sede:</b> In Presenza (${DEFAULT_SCHOOL_PROFILE.city})`,
       ``,
       `👤 <b>ACQUIRENTE / GENITORE:</b>`,
       `• Nome: <b>${this.escapeHtml(data.purchaserName)}</b>`,

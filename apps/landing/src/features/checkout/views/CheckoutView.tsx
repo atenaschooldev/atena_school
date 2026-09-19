@@ -41,6 +41,12 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     addStudent,
     removeStudent,
     updateStudent,
+    appliedPromo,
+    promoCodeInput,
+    setPromoCodeInput,
+    applyingPromo,
+    applyPromoCode,
+    removePromoCode,
     user,
     dateParam,
     timeParam,
@@ -92,11 +98,12 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     ? Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
     : feeCheckStatus === FeeCheckStatus.CHECKING;
 
-  const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false)
+  const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false && !appliedPromo?.waiveRegistrationFee)
     ? unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR
     : 0;
 
-  const totalPrice = totalCoursePrice + totalRegistrationFees;
+  const discountAmount = appliedPromo?.discountAmount ? Number(appliedPromo.discountAmount) : 0;
+  const totalPrice = Math.max(0, totalCoursePrice + totalRegistrationFees - discountAmount);
   const title = item?.title_it || item?.name || "Corso Atena School";
 
   const formatCategoryName = (cat?: string): string => {
@@ -139,6 +146,13 @@ export function CheckoutView({ id }: CheckoutViewProps) {
           formattedDateString={formattedDateString}
           formatCategoryName={formatCategoryName}
           mounted={mounted}
+          appliedPromo={appliedPromo}
+          promoCodeInput={promoCodeInput}
+          setPromoCodeInput={setPromoCodeInput}
+          applyingPromo={applyingPromo}
+          applyPromoCode={applyPromoCode}
+          removePromoCode={removePromoCode}
+          discountAmount={discountAmount}
         />
 
         {/* Main Form Grid */}
@@ -223,6 +237,13 @@ export function CheckoutView({ id }: CheckoutViewProps) {
             isAnyFeeChecking={isAnyFeeChecking}
             stripeEnabled={stripeEnabled}
             isSubscription={isSubscription}
+            appliedPromo={appliedPromo}
+            promoCodeInput={promoCodeInput}
+            setPromoCodeInput={setPromoCodeInput}
+            applyingPromo={applyingPromo}
+            applyPromoCode={applyPromoCode}
+            removePromoCode={removePromoCode}
+            discountAmount={discountAmount}
           />
 
           <CheckoutMobileBottomBar

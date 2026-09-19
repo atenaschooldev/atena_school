@@ -7,12 +7,15 @@ import aboutStudying from "@/assets/about-studying.webp";
 import aboutClassroom from "@/assets/about-classroom.webp";
 
 import { AboutData } from "@/features/home/services/homeService";
+import { DEFAULT_SCHOOL_PROFILE } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
 interface AboutSectionProps {
   data?: AboutData;
+  school?: SchoolProfile;
 }
 
-const AboutSection = ({ data }: AboutSectionProps) => {
+const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionProps) => {
   const t = useTranslations("about");
 
   const p1 = data?.content || t("p1");
@@ -43,7 +46,7 @@ const AboutSection = ({ data }: AboutSectionProps) => {
                 Unire la ricchezza della cultura classica con il mondo moderno e le sue sfide.
               </h2>
               <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest leading-none pt-1">
-                — ELISABETTA & MARIA, FONDATRICI
+                {school.founders ? `— ${school.founders}` : "— LA NOSTRA MISSION"}
               </p>
             </div>
 

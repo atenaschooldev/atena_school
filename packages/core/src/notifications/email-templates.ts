@@ -1,3 +1,6 @@
+import type { SchoolProfile } from '@atena/api-types';
+import { DEFAULT_SCHOOL_PROFILE } from '../system/school-profile.service';
+
 export interface BookingEmailTemplateData {
   courseName: string;
   purchaserName: string;
@@ -5,11 +8,15 @@ export interface BookingEmailTemplateData {
   purchaserEmail: string;
   purchaserPhone?: string;
   purchaserTaxCode?: string;
+  birthPlace?: string;
   isForChild?: boolean;
   studentEmail?: string;
   studentPhone?: string;
   studentTaxCode?: string;
   studentBirthDate?: string;
+  studentBirthPlace?: string;
+  promoCode?: string;
+  discountAmount?: string;
   date?: string;
   time?: string;
   lessonSchedule?: string;
@@ -22,6 +29,7 @@ export interface BookingEmailTemplateData {
   bookingId: string;
   notes?: string;
   appUrl: string;
+  schoolProfile?: SchoolProfile;
   // Invoicing fields
   pecEmail?: string;
   sdiCode?: string;
@@ -41,15 +49,17 @@ export interface ContactEmailTemplateData {
   interest?: string;
   message: string;
   createdAt?: string;
+  schoolProfile?: SchoolProfile;
 }
 
 /**
  * 1. Client Booking Confirmation Email Template (Landing Page Grid Aesthetics)
  */
 export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateData): { subject: string; html: string } {
+  const school = data.schoolProfile || DEFAULT_SCHOOL_PROFILE;
   const subject = data.isPaidOnline
-    ? `Conferma Iscrizione e Pagamento: ${data.courseName} • Atena School`
-    : `Conferma Prenotazione: ${data.courseName} • Atena School`;
+    ? `Conferma Iscrizione e Pagamento: ${data.courseName} • ${school.name}`
+    : `Conferma Prenotazione: ${data.courseName} • ${school.name}`;
 
   const isChild = Boolean(data.isForChild);
   const portalUrl = `${data.appUrl || 'https://app.atenaschool.com'}`;
@@ -94,10 +104,10 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
                 <tr>
                   <td align="center">
                     <div style="font-size: 26px; font-weight: 900; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">
-                      ATENA <span style="color: #F8861D;">SCHOOL</span>
+                      ${school.name}
                     </div>
                     <div style="font-size: 11px; font-weight: 600; color: #94a3b8; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;">
-                      Cittanova • Scuola di Lingue & Formazione
+                      ${school.city} • ${school.tagline || 'Scuola di Lingue & Formazione'}
                     </div>
                   </td>
                 </tr>
@@ -183,7 +193,20 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
                         <td align="right" style="padding: 7px 0; font-size: 13px; font-weight: 700; color: #1e293b;">${data.studentBirthDate}</td>
                       </tr>
                       ` : ''}
+                      ${data.studentBirthPlace || data.birthPlace ? `
+                      <tr>
+                        <td style="padding: 7px 0; font-size: 13px; color: #64748b; font-weight: 600;">Luogo di nascita:</td>
+                        <td align="right" style="padding: 7px 0; font-size: 13px; font-weight: 700; color: #1e293b;">${data.studentBirthPlace || data.birthPlace}</td>
+                      </tr>
                       ` : ''}
+                      ` : `
+                      ${data.birthPlace ? `
+                      <tr>
+                        <td style="padding: 7px 0; font-size: 13px; color: #64748b; font-weight: 600;">Luogo di nascita:</td>
+                        <td align="right" style="padding: 7px 0; font-size: 13px; font-weight: 700; color: #1e293b;">${data.birthPlace}</td>
+                      </tr>
+                      ` : ''}
+                      `}
 
                       <!-- Date & Schedule -->
                       <tr>
@@ -203,6 +226,14 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
                       <tr>
                         <td style="padding: 7px 0; font-size: 13px; color: #64748b; font-weight: 600;">Quota associativa annuale:</td>
                         <td align="right" style="padding: 7px 0; font-size: 13px; font-weight: 700; color: #1e293b;">€${data.regFeeEur}</td>
+                      </tr>
+                      ` : ''}
+
+                      <!-- Promo Code Discount -->
+                      ${data.promoCode ? `
+                      <tr>
+                        <td style="padding: 7px 0; font-size: 13px; color: #10b981; font-weight: 700;">Promozione (${data.promoCode}):</td>
+                        <td align="right" style="padding: 7px 0; font-size: 13px; font-weight: 800; color: #10b981;">-${Number(data.discountAmount) > 0 ? `€${data.discountAmount}` : 'Applicata'}</td>
                       </tr>
                       ` : ''}
 
@@ -245,7 +276,7 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
                       📍 Sede delle lezioni & Segreteria:
                     </div>
                     <div style="font-size: 12px; line-height: 1.55; color: #9a3412;">
-                      Le lezioni si tengono presso la nostra sede in <strong>Via Matteotti 11, Cittanova (RC)</strong>. Per qualsiasi variazione di orario o richiesta di materiale didattico, puoi contattarci direttamente su WhatsApp al <strong>+39 375 605 2362</strong>.
+                      Le lezioni si tengono presso la nostra sede in <strong>${school.address}, ${school.city} (${school.province})</strong>. Per qualsiasi variazione di orario o richiesta di materiale didattico, puoi contattarci direttamente su WhatsApp al <strong>${school.whatsapp || school.phone}</strong>.
                     </div>
                   </td>
                 </tr>
@@ -259,21 +290,21 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
             </td>
           </tr>
 
-          <!-- Footer with Clean Atena Branding -->
+          <!-- Footer with Clean School Branding -->
           <tr>
             <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 32px; text-align: center;">
               
               <div style="font-size: 14px; font-weight: 900; color: #043569; letter-spacing: 0.5px; margin-bottom: 6px;">
-                Atena School S.r.l.s.
+                ${school.legal_name || school.name}
               </div>
               
               <div style="font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">
-                Via Matteotti 11, 89022 Cittanova (RC), Italia<br>
-                Tel: +39 375 605 2362 • Fisso: 0966 447052 • Email: <a href="mailto:atenaschool20@gmail.com" style="color: #043569; font-weight: 700; text-decoration: underline;">atenaschool20@gmail.com</a>
+                ${school.address}, ${school.cap} ${school.city} (${school.province}), ${school.country}<br>
+                Tel: ${school.phone}${school.landline ? ` • Fisso: ${school.landline}` : ''} • Email: <a href="mailto:${school.secretariat_email || school.email}" style="color: #043569; font-weight: 700; text-decoration: underline;">${school.secretariat_email || school.email}</a>
               </div>
 
               <div style="font-size: 11px; color: #94a3b8; font-weight: 600;">
-                © 2026 Atena School. Tutti i diritti riservati. Centro Autorizzato Cambridge & EIPASS.
+                © ${new Date().getFullYear()} ${school.name}. Tutti i diritti riservati.
               </div>
 
             </td>
@@ -294,6 +325,7 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
  * 2. Admin Booking Notification Email Template (Complete CRM & Stripe Report)
  */
 export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateData): { subject: string; html: string } {
+  const school = data.schoolProfile || DEFAULT_SCHOOL_PROFILE;
   const subject = `🚨 [Nuova Iscrizione] ${data.courseName} • ${data.studentName} (€${data.totalEur} - ${data.paymentStatusText})`;
 
   const cleanPhone = (data.purchaserPhone || '').replace(/[^0-9+]/g, '');
@@ -322,7 +354,7 @@ export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateDa
                 <tr>
                   <td>
                     <div style="font-size: 11px; font-weight: 800; color: #F8861D; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">
-                      Notifica Segreteria Atena CRM
+                      Notifica Segreteria ${school.name} CRM
                     </div>
                     <div style="font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: -0.3px;">
                       📋 Nuova Iscrizione Corso Ricevuta
@@ -343,145 +375,151 @@ export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateDa
             <td style="padding: 32px;">
 
               <!-- SECTION 1: Corso & Orari -->
-              <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #043569; margin-bottom: 8px; border-bottom: 2px solid #043569; padding-bottom: 4px;">
-                📚 1. Dettagli del Corso & Calendario
-              </div>
-
-              <table width="100%" cellpadding="8" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse; margin-bottom: 20px;">
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 700; width: 38%; color: #64748b;">Corso Richiesto:</td>
-                  <td style="font-weight: 900; color: #043569; font-size: 14px;">${data.courseName}</td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Data Primo Incontro:</td>
-                  <td><strong>${data.date || 'Da concordare con la segreteria'}</strong></td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 700; color: #64748b;">Orario & Frequenza:</td>
-                  <td><strong>${data.lessonSchedule || data.time || 'Non specificato'}</strong></td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Sede / Modalità:</td>
-                  <td><span style="font-weight: 700; color: #043569;">In Presenza (Sede Cittanova, Via Matteotti 11)</span></td>
-                </tr>
-              </table>
-
-              <!-- SECTION 2: Dati Acquirente / Referente -->
-              <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #043569; margin-bottom: 8px; border-bottom: 2px solid #043569; padding-bottom: 4px;">
-                👤 2. Anagrafica Acquirente (Contatti & Fiscale)
-              </div>
-
-              <table width="100%" cellpadding="8" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse; margin-bottom: 20px;">
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 700; width: 38%; color: #64748b;">Nome e Cognome:</td>
-                  <td style="font-weight: 800; color: #1e293b;">${data.purchaserName}</td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Email di Contatto:</td>
-                  <td><a href="mailto:${data.purchaserEmail}" style="color: #0284c7; font-weight: 700; text-decoration: underline;">${data.purchaserEmail}</a></td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 700; color: #64748b;">Telefono / Cellulare:</td>
-                  <td>
-                    <a href="tel:${cleanPhone}" style="color: #0284c7; font-weight: 800;">${data.purchaserPhone || 'Non indicato'}</a>
-                    ${whatsappUrl ? `&nbsp;•&nbsp;<a href="${whatsappUrl}" target="_blank" style="color: #16a34a; font-weight: 800; text-decoration: none;">💬 Apri WhatsApp</a>` : ''}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Codice Fiscale Acquirente:</td>
-                  <td><code style="font-family: monospace; font-weight: 800; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #334155;">${data.purchaserTaxCode || 'N/D'}</code></td>
-                </tr>
-                ${data.needsCompanyInvoice ? `
-                <tr style="background: #fefce8;">
-                  <td style="font-weight: 700; color: #854d0e;">Fattura Aziendale Richiesta:</td>
-                  <td style="color: #854d0e; font-weight: 700;">PEC: <code>${data.pecEmail || 'N/D'}</code> • Codice SDI: <code>${data.sdiCode || 'N/D'}</code></td>
-                </tr>
-                ` : ''}
-              </table>
-
-              <!-- SECTION 3: Studente (se per minore / terzi) -->
-              ${data.isForChild ? `
-              <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #1e40af; margin-bottom: 8px; border-bottom: 2px solid #3b82f6; padding-bottom: 4px;">
-                👶 3. Dati Studente (Minore / Allievo)
-              </div>
-
-              <table width="100%" cellpadding="8" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse; margin-bottom: 20px; background: #f0f7ff; border-radius: 12px; overflow: hidden; border: 1px solid #bfdbfe;">
-                <tr>
-                  <td style="font-weight: 700; width: 38%; color: #1e40af;">Nome Studente:</td>
-                  <td style="font-weight: 900; color: #1e40af; font-size: 14px;">${data.studentName}</td>
-                </tr>
-                <tr style="background: #e0f2fe;">
-                  <td style="font-weight: 700; color: #1e40af;">Codice Fiscale Studente:</td>
-                  <td><code style="font-family: monospace; font-weight: 800; color: #0369a1;">${data.studentTaxCode || 'N/D'}</code></td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #1e40af;">Data di Nascita Allievo:</td>
-                  <td><strong>${data.studentBirthDate || 'N/D'}</strong></td>
-                </tr>
-              </table>
-              ` : ''}
-
-              <!-- SECTION 4: Riepilogo Economico -->
-              <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #043569; margin-bottom: 8px; border-bottom: 2px solid #043569; padding-bottom: 4px;">
-                💰 4. Riepilogo Economico & Pagamento
-              </div>
-
-              <table width="100%" cellpadding="8" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse; margin-bottom: 20px;">
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 700; width: 38%; color: #64748b;">Quota Corso:</td>
-                  <td>€${data.courseFeeEur || (Number(data.totalEur) - Number(data.regFeeEur)).toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Quota Iscrizione Annuale (€30):</td>
-                  <td>€${data.regFeeEur}</td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td style="font-weight: 800; color: #043569; font-size: 14px;">Totale ${data.isPaidOnline ? 'Incassato' : 'Da Incassare'}:</td>
-                  <td style="font-size: 18px; font-weight: 900; color: #F8861D;">€${data.totalEur}</td>
-                </tr>
-                <tr>
-                  <td style="font-weight: 700; color: #64748b;">Stato & Metodo di Pagamento:</td>
-                  <td><strong>${data.paymentStatusText}</strong> ${data.paymentMethodText ? `(${data.paymentMethodText})` : ''}</td>
-                </tr>
-              </table>
-
-              <!-- SECTION 5: Stripe & Dati Tecnici CRM -->
-              ${data.isPaidOnline ? `
-              <div style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #6366f1; margin-bottom: 8px; border-bottom: 2px solid #6366f1; padding-bottom: 4px;">
-                💳 5. Dati Transazione Stripe & Webhook
-              </div>
-
-              <table width="100%" cellpadding="8" cellspacing="0" style="font-size: 12px; line-height: 1.5; border-collapse: collapse; margin-bottom: 20px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px;">
-                <tr>
-                  <td style="font-weight: 700; width: 38%; color: #6b21a8;">Payment Intent ID:</td>
-                  <td><code style="font-family: monospace; font-size: 11px;">${data.stripePaymentIntentId || 'pi_auto_generated'}</code></td>
-                </tr>
-                ${data.stripeSessionId ? `
-                <tr style="background: #f3e8ff;">
-                  <td style="font-weight: 700; color: #6b21a8;">Checkout Session ID:</td>
-                  <td><code style="font-family: monospace; font-size: 11px;">${data.stripeSessionId}</code></td>
-                </tr>
-                ` : ''}
-                <tr>
-                  <td style="font-weight: 700; color: #6b21a8;">Dashboard Stripe:</td>
-                  <td>
-                    ${stripeDashboardUrl ? `
-                    <a href="${stripeDashboardUrl}" target="_blank" style="color: #6366f1; font-weight: 800; text-decoration: underline;">
-                      ↗ Apri Pagamento su Stripe Dashboard
-                    </a>
-                    ` : '<span style="color: #94a3b8;">N/D</span>'}
-                  </td>
-                </tr>
-              </table>
-              ` : ''}
-
-              <!-- SECTION 6: Note & Richieste del Cliente -->
-              ${data.notes ? `
-              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 16px; margin-bottom: 24px;">
-                <div style="font-size: 11px; font-weight: 900; text-transform: uppercase; color: #991b1b; letter-spacing: 0.5px; margin-bottom: 4px;">
-                  📝 Note & Richieste Speciali del Cliente:
+              <div style="margin-bottom: 24px;">
+                <div style="font-size: 11px; font-weight: 900; color: #043569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                  1. Dettagli Corso & Lezioni
                 </div>
-                <div style="font-size: 13px; line-height: 1.5; color: #7f1d1d; font-style: italic;">
+                <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse;">
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; width: 35%; color: #64748b;">Nome Corso:</td>
+                    <td style="font-weight: 900; color: #043569;">${data.courseName}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Data Inizio:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.date || 'Da concordare'}</td>
+                  </tr>
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #64748b;">Orario & Frequenza:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.lessonSchedule || data.time || 'Standard da calendario'}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- SECTION 2: Anagrafica Studente & Acquirente -->
+              <div style="margin-bottom: 24px;">
+                <div style="font-size: 11px; font-weight: 900; color: #043569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                  2. Anagrafica ${data.isForChild ? 'Studente (Minore) & Genitore' : 'Studente'}
+                </div>
+                <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse;">
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; width: 35%; color: #64748b;">Studente:</td>
+                    <td style="font-weight: 900; color: #043569;">${data.studentName}</td>
+                  </tr>
+                  ${data.studentTaxCode ? `
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Codice Fiscale Studente:</td>
+                    <td style="font-weight: 800; color: #1e293b; font-family: monospace;">${data.studentTaxCode}</td>
+                  </tr>
+                  ` : ''}
+                  ${data.studentBirthDate ? `
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #64748b;">Data di Nascita:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.studentBirthDate}</td>
+                  </tr>
+                  ` : ''}
+                  ${data.studentBirthPlace ? `
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Luogo di Nascita Studente:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.studentBirthPlace}</td>
+                  </tr>
+                  ` : ''}
+                  ${data.isForChild ? `
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #64748b;">Genitore / Tutore:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.purchaserName}</td>
+                  </tr>
+                  ` : ''}
+                  ${data.purchaserTaxCode ? `
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">C.F. Acquirente:</td>
+                    <td style="font-weight: 800; color: #1e293b; font-family: monospace;">${data.purchaserTaxCode}</td>
+                  </tr>
+                  ` : ''}
+                  ${!data.isForChild && data.birthPlace ? `
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #64748b;">Luogo di Nascita:</td>
+                    <td style="font-weight: 800; color: #1e293b;">${data.birthPlace}</td>
+                  </tr>
+                  ` : ''}
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #64748b;">Email:</td>
+                    <td><a href="mailto:${data.purchaserEmail}" style="color: #0284c7; font-weight: 700; text-decoration: underline;">${data.purchaserEmail}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Telefono:</td>
+                    <td>
+                      ${data.purchaserPhone ? `
+                      <a href="tel:${cleanPhone}" style="color: #0284c7; font-weight: 800;">${data.purchaserPhone}</a>
+                      ${whatsappUrl ? `&nbsp;•&nbsp;<a href="${whatsappUrl}" target="_blank" style="color: #16a34a; font-weight: 800; text-decoration: none;">💬 WhatsApp</a>` : ''}
+                      ` : '<span style="color: #94a3b8;">Non indicato</span>'}
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- SECTION 3: Contabilità & Pagamento -->
+              <div style="margin-bottom: 24px;">
+                <div style="font-size: 11px; font-weight: 900; color: #043569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+                  3. Contabilità & Dettaglio Importi
+                </div>
+                <table width="100%" cellpadding="6" cellspacing="0" style="font-size: 13px; line-height: 1.5; border-collapse: collapse;">
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; width: 35%; color: #64748b;">Quota Corso:</td>
+                    <td style="font-weight: 800; color: #1e293b;">€${data.courseFeeEur || (Number(data.totalEur) - Number(data.regFeeEur)).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Quota Iscrizione/Assicurazione:</td>
+                    <td style="font-weight: 800; color: #1e293b;">€${data.regFeeEur}</td>
+                  </tr>
+                  ${data.promoCode ? `
+                  <tr style="background: #f8fafc;">
+                    <td style="font-weight: 700; color: #10b981;">Codice Promozionale (${data.promoCode}):</td>
+                    <td style="font-weight: 800; color: #10b981;">-${Number(data.discountAmount) > 0 ? `€${data.discountAmount}` : 'Applicato'}</td>
+                  </tr>
+                  ` : ''}
+                  <tr style="background: #fff5eb; border-top: 1px dashed #fed7aa; border-bottom: 1px dashed #fed7aa;">
+                    <td style="font-weight: 900; color: #c2410c;">Totale ${data.isPaidOnline ? 'Incassato' : 'Da Incassare'}:</td>
+                    <td style="font-weight: 900; font-size: 16px; color: #c2410c;">€${data.totalEur}</td>
+                  </tr>
+                  ${stripeDashboardUrl ? `
+                  <tr>
+                    <td style="font-weight: 700; color: #64748b;">Transazione Stripe:</td>
+                    <td>
+                      <a href="${stripeDashboardUrl}" target="_blank" style="color: #6366f1; font-weight: 800; text-decoration: underline;">
+                        Apri Pagamento su Stripe Dashboard →
+                      </a>
+                    </td>
+                  </tr>
+                  ` : ''}
+                </table>
+              </div>
+
+              ${data.needsCompanyInvoice ? `
+              <!-- SECTION 4: Dati Fatturazione Elettronica -->
+              <div style="margin-bottom: 24px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 16px;">
+                <div style="font-size: 11px; font-weight: 900; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                  🏢 Richiesta Fattura Elettronica
+                </div>
+                <table width="100%" cellpadding="4" cellspacing="0" style="font-size: 12px; line-height: 1.4;">
+                  <tr>
+                    <td style="font-weight: 700; color: #1e40af; width: 35%;">Codice SDI / Destinatario:</td>
+                    <td style="font-weight: 800; color: #1e3a8a; font-family: monospace;">${data.sdiCode || '0000000'}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-weight: 700; color: #1e40af;">Indirizzo PEC:</td>
+                    <td style="font-weight: 800; color: #1e3a8a;">${data.pecEmail || 'Non specificata'}</td>
+                  </tr>
+                </table>
+              </div>
+              ` : ''}
+
+              ${data.notes ? `
+              <!-- SECTION 5: Note Cliente -->
+              <div style="margin-bottom: 24px; background: #fffaf5; border: 1px solid #fed7aa; border-radius: 12px; padding: 14px 16px;">
+                <div style="font-size: 11px; font-weight: 900; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                  📝 Note inserite dal cliente:
+                </div>
+                <div style="font-size: 12px; color: #7c2d12; font-style: italic;">
                   "${data.notes}"
                 </div>
               </div>
@@ -496,7 +534,7 @@ export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateDa
                       💬 Contatta Subito su WhatsApp (+${waNumber}) →
                     </a>
                     ` : ''}
-                    <a href="mailto:${data.purchaserEmail}?subject=Conferma%20Iscrizione%20Corso%20${encodeURIComponent(data.courseName)}%20-%20Atena%20School" style="display: block; width: 100%; box-sizing: border-box; background: #043569; color: #ffffff; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none; padding: 14px 20px; border-radius: 12px;">
+                    <a href="mailto:${data.purchaserEmail}?subject=Conferma%20Iscrizione%20Corso%20${encodeURIComponent(data.courseName)}%20-%20${encodeURIComponent(school.name)}" style="display: block; width: 100%; box-sizing: border-box; background: #043569; color: #ffffff; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none; padding: 14px 20px; border-radius: 12px;">
                       ✉️ Invia Email al Cliente (${data.purchaserEmail}) →
                     </a>
                   </td>
@@ -505,7 +543,7 @@ export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateDa
 
               <!-- Footer CRM ID -->
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; font-size: 11px; color: #64748b;">
-                ID Prenotazione CRM: <code style="font-weight: 800; color: #043569;">${data.bookingId}</code> • Registrato in Atena School Database
+                ID Prenotazione CRM: <code style="font-weight: 800; color: #043569;">${data.bookingId}</code> • Registrato in ${school.name} Database
               </div>
 
             </td>
@@ -526,6 +564,7 @@ export function renderAdminBookingNotificationEmail(data: BookingEmailTemplateDa
  * 3. Contact Form Submission Notification Email (Landing Page Grid Aesthetics)
  */
 export function renderContactFormAdminEmail(data: ContactEmailTemplateData): { subject: string; html: string } {
+  const school = data.schoolProfile || DEFAULT_SCHOOL_PROFILE;
   const subject = `💬 Nuovo Messaggio dal Sito: ${data.firstName} ${data.lastName} [${data.interest || 'Informazioni'}]`;
   const cleanPhone = (data.phone || '').replace(/[^0-9+]/g, '');
   const waNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : (cleanPhone.startsWith('39') ? cleanPhone : `39${cleanPhone}`);
@@ -552,7 +591,7 @@ export function renderContactFormAdminEmail(data: ContactEmailTemplateData): { s
                 <tr>
                   <td>
                     <div style="font-size: 11px; font-weight: 800; color: #F8861D; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">
-                      Modulo di Contatto Online
+                      Modulo di Contatto Online • ${school.name}
                     </div>
                     <div style="font-size: 20px; font-weight: 900; color: #ffffff;">
                       ✉️ Nuova Richiesta Informazioni
@@ -610,7 +649,7 @@ export function renderContactFormAdminEmail(data: ContactEmailTemplateData): { s
                       💬 Rispondi su WhatsApp (+${waNumber}) →
                     </a>
                     ` : ''}
-                    <a href="mailto:${data.email}?subject=Re:%20Richiesta%20informazioni%20Atena%20School" style="display: block; box-sizing: border-box; background: #043569; color: #ffffff; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none;">
+                    <a href="mailto:${data.email}?subject=Re:%20Richiesta%20informazioni%20${encodeURIComponent(school.name)}" style="display: block; box-sizing: border-box; background: #043569; color: #ffffff; padding: 14px 20px; border-radius: 12px; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none;">
                       ✉️ Rispondi via Email (${data.email}) →
                     </a>
                   </td>

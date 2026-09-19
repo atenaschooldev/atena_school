@@ -130,6 +130,7 @@ export const studentItemSchema = z.object({
     .min(1, "L'email dello studente è obbligatoria")
     .email("Email dello studente non valida"),
   phone: phoneField("Il numero di telefono dello studente è obbligatorio"),
+  birthPlace: z.string().max(100, "Il luogo di nascita è troppo lungo").optional(),
 
   taxCode: z
     .string()
@@ -148,14 +149,23 @@ export const studentItemSchema = z.object({
   birthDate: z
     .string()
     .min(1, "La data di nascita dello studente è obbligatoria")
-
     .refine(isValidBirthDate, {
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),
 });
 
-
 export type StudentItemInput = z.infer<typeof studentItemSchema>;
+
+// ---------------------------------------------------------------------------
+// Promo Code schema
+// ---------------------------------------------------------------------------
+export const applyPromoCodeSchema = z.object({
+  code: z.string().min(1, "Inserisci un codice promozionale").max(50),
+  courseId: z.string().optional(),
+  coursePrice: z.number().min(0),
+  registrationFee: z.number().min(0).default(30),
+});
+export type ApplyPromoCodeInput = z.infer<typeof applyPromoCodeSchema>;
 
 // ---------------------------------------------------------------------------
 // CreateReservation schema — full booking schema for the API
@@ -179,6 +189,7 @@ const reservationBaseObject = z.object({
     .max(50, "Il cognome è troppo lungo"),
   email: z.string().email("Inserisci un indirizzo email valido"),
   phone: phoneField(),
+  birthPlace: z.string().max(100, "Il luogo di nascita è troppo lungo").optional(),
   purchaserTaxCode: optionalCodiceFiscale(
     "Codice Fiscale del genitore/acquirente non valido"
   ),
@@ -190,6 +201,7 @@ const reservationBaseObject = z.object({
   isForChild: z.boolean().optional(),
   studentFirstName: z.string().max(50).optional(),
   studentLastName: z.string().max(50).optional(),
+  studentBirthPlace: z.string().max(100, "Il luogo di nascita è troppo lungo").optional(),
   studentEmail: z
     .string()
     .email("Email dello studente non valida")
@@ -203,6 +215,9 @@ const reservationBaseObject = z.object({
       message: "Data di nascita non valida (deve essere nel passato, max 100 anni)",
     }),
   studentTaxCode: optionalCodiceFiscale("Codice Fiscale dello studente non valido"),
+
+  // Promo code
+  promoCode: z.string().max(50).optional(),
 
   // Fattura aziendale
   needsCompanyInvoice: z.boolean().optional(),

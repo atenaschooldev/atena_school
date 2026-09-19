@@ -8,6 +8,7 @@ import {
   Phone,
   IdentificationCard,
   Calendar as CalendarIcon,
+  MapPin,
   Receipt,
   Spinner,
   CheckCircle,
@@ -227,23 +228,44 @@ export function CheckoutPurchaserFields({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 min-w-0">
-            <div className="min-w-0">
-              <label htmlFor="checkout-studentBirthDate" className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
-              <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
-                <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
-                <input
-                  id="checkout-studentBirthDate"
-                  type="date"
-                  aria-invalid={!!errors.studentBirthDate}
-                  aria-describedby={errors.studentBirthDate ? "checkout-studentBirthDate-error" : undefined}
-                  {...register("studentBirthDate")}
-                  className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
-                />
+          <div className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 min-w-0">
+              <div className="min-w-0">
+                <label htmlFor="checkout-studentBirthDate" className="block text-xs font-bold text-slate-700 mb-1">Data di Nascita *</label>
+                <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
+                  <CalendarIcon className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+                  <input
+                    id="checkout-studentBirthDate"
+                    type="date"
+                    aria-invalid={!!errors.studentBirthDate}
+                    aria-describedby={errors.studentBirthDate ? "checkout-studentBirthDate-error" : undefined}
+                    {...register("studentBirthDate")}
+                    className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                  />
+                </div>
+                {errors.studentBirthDate && (
+                  <p id="checkout-studentBirthDate-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentBirthDate.message}</p>
+                )}
               </div>
-              {errors.studentBirthDate && (
-                <p id="checkout-studentBirthDate-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.studentBirthDate.message}</p>
-              )}
+
+              <div className="min-w-0">
+                <label htmlFor="checkout-birthPlace" className="block text-xs font-bold text-slate-700 mb-1">Luogo di Nascita *</label>
+                <div className="relative min-w-0 w-full overflow-hidden rounded-xl">
+                  <MapPin className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+                  <input
+                    id="checkout-birthPlace"
+                    type="text"
+                    aria-invalid={!!errors.birthPlace}
+                    aria-describedby={errors.birthPlace ? "checkout-birthPlace-error" : undefined}
+                    {...register("birthPlace")}
+                    placeholder="es. Milano (MI)"
+                    className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                  />
+                </div>
+                {errors.birthPlace && (
+                  <p id="checkout-birthPlace-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.birthPlace.message}</p>
+                )}
+              </div>
             </div>
 
             <div className="min-w-0">

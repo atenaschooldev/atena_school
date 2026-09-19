@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { format, isFuture, parseISO, startOfDay, isBefore } from "date-fns";
 import { getBookingLessonsAction, scheduleNextLessonAction } from "@/app/actions/dashboard";
 import { toast } from "sonner";
+import { DEFAULT_SCHOOL_PROFILE } from "@atena/core";
 
 export interface Lesson {
   id: string;
@@ -58,7 +59,7 @@ export function useBookingDetail(bookingId: string) {
   }, [bookingId, refreshTrigger]);
 
   const courseTitle = course?.name || course?.title_it || "Corso di Lingua";
-  const teacherName = course?.teacher_name || "Staff Atena";
+  const teacherName = course?.teacher_name || `Docente ${DEFAULT_SCHOOL_PROFILE.name}`;
   const rawCoursePrice = course?.price
     ? parseFloat(String(course.price).replace(/[^0-9.,]/g, "").replace(",", "."))
     : 0;

@@ -1,11 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { env } from "@/config/env";
+import { getSchoolProfile } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const title = 'Informativa sulla Privacy';
-  const description = 'Informativa sulla privacy e sul trattamento dei dati personali di Atena School, ai sensi del GDPR.';
+  const description = `Informativa sulla privacy e sul trattamento dei dati personali di ${school.name}, ai sensi del GDPR.`;
   const url = `${siteUrl}/privacy`;
 
   return {
@@ -19,7 +23,7 @@ export async function generateMetadata() {
       type: 'website',
       locale: 'it_IT',
       url,
-      siteName: 'Atena School',
+      siteName: school.name,
       title,
       description,
     },
@@ -28,7 +32,9 @@ export async function generateMetadata() {
 
 export default async function PrivacyPolicy() {
   const t = await getTranslations("privacy");
-  const locale = 'it';
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
+  const contactEmail = school.secretariat_email || school.email || "info@atenaschool.com";
 
   // Get sections manually as next-intl handles arrays differently in v3+
   // Assuming 4 sections based on it.json/en.json
@@ -68,7 +74,7 @@ export default async function PrivacyPolicy() {
             <h2 className="text-xl font-bold mb-4">Contatti</h2>
             <p className="text-sm text-muted-foreground">
               Per qualsiasi domanda relativa alla presente informativa sulla privacy o al trattamento dei vostri dati,
-              potete contattarci all'indirizzo <a href="mailto:atenaschool20@gmail.com" className="text-primary hover:underline">atenaschool20@gmail.com</a>.
+              potete contattarci all'indirizzo <a href={`mailto:${contactEmail}`} className="text-primary hover:underline">{contactEmail}</a>.
             </p>
           </section>
         </div>

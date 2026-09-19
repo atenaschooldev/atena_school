@@ -22,11 +22,11 @@ export interface TelegramButton {
 
 export const TELEGRAM_I18N = {
   it: {
-    header: '🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>',
+    header: '🏛️ <b>NUOVA ISCRIZIONE</b>',
     course: '📚 <b>Corso:</b>',
     startDate: '🗓 <b>Data di Inizio:</b>',
     schedule: '⏰ <b>Orario & Giorni:</b>',
-    location: '📍 <b>Sede:</b> In Presenza (Cittanova)',
+    location: '📍 <b>Sede:</b> In Presenza',
     purchaserHeader: '👤 <b>ACQUIRENTE / GENITORE:</b>',
     name: '• Nome:',
     email: '• 📧 Email:',
@@ -35,6 +35,7 @@ export const TELEGRAM_I18N = {
     electronicInvoice: '• 💼 Fattura Elettronica: PEC <code>{pec}</code> • SDI <code>{sdi}</code>',
     studentHeader: '👶 <b>DATI STUDENTE (MINORE):</b>',
     birthDate: '• 🎂 Data di Nascita:',
+    birthPlace: '• 📍 Luogo di Nascita:',
     studentEmail: '• 📧 Email Studente:',
     studentPhone: '• 📱 Tel Studente:',
     notIndicated: 'Non indicato',
@@ -42,6 +43,8 @@ export const TELEGRAM_I18N = {
     financialSummary: '💶 <b>RIEPILOGO ECONOMICO:</b>',
     courseFee: '• Quota Corso:',
     regFee: '• Quota Associativa Annuale:',
+    promoApplied: '• 🏷️ Promo Code:',
+    promoDiscount: '• 🏷️ Sconto Promo:',
     totalPaid: '• 💳 <b>Totale Incassato:</b>',
     totalDue: '• 💳 <b>Totale Da Saldare:</b>',
     paymentStatus: '• Stato Pagamento:',
@@ -77,11 +80,11 @@ export const TELEGRAM_I18N = {
     bookingNotFoundToast: '❌ Prenotazione non trovata',
   },
   en: {
-    header: '🏛️ <b>NEW REGISTRATION — ATENA SCHOOL</b>',
+    header: '🏛️ <b>NEW REGISTRATION</b>',
     course: '📚 <b>Course:</b>',
     startDate: '🗓 <b>Start Date:</b>',
     schedule: '⏰ <b>Schedule & Hours:</b>',
-    location: '📍 <b>Location:</b> In-Person (Cittanova)',
+    location: '📍 <b>Location:</b> In-Person',
     purchaserHeader: '👤 <b>PURCHASER / PARENT:</b>',
     name: '• Name:',
     email: '• 📧 Email:',
@@ -90,6 +93,7 @@ export const TELEGRAM_I18N = {
     electronicInvoice: '• 💼 Electronic Invoice: PEC <code>{pec}</code> • SDI <code>{sdi}</code>',
     studentHeader: '👶 <b>STUDENT DETAILS (MINOR):</b>',
     birthDate: '• 🎂 Date of Birth:',
+    birthPlace: '• 📍 Place of Birth:',
     studentEmail: '• 📧 Student Email:',
     studentPhone: '• 📱 Student Phone:',
     notIndicated: 'Not specified',
@@ -97,6 +101,8 @@ export const TELEGRAM_I18N = {
     financialSummary: '💶 <b>FINANCIAL SUMMARY:</b>',
     courseFee: '• Course Fee:',
     regFee: '• Annual Membership Fee:',
+    promoApplied: '• 🏷️ Promo Code:',
+    promoDiscount: '• 🏷️ Promo Discount:',
     totalPaid: '• 💳 <b>Total Received:</b>',
     totalDue: '• 💳 <b>Total Due:</b>',
     paymentStatus: '• Payment Status:',
@@ -263,9 +269,11 @@ export function formatBookingTelegramHtml(data: {
   purchaserEmail: string;
   purchaserPhone?: string | null;
   purchaserTaxCode?: string | null;
+  birthPlace?: string | null;
   studentName?: string | null;
   studentTaxCode?: string | null;
   studentBirthDate?: string | null;
+  studentBirthPlace?: string | null;
   studentEmail?: string | null;
   studentPhone?: string | null;
   isForChild?: boolean;
@@ -278,6 +286,8 @@ export function formatBookingTelegramHtml(data: {
   totalEur: string | number;
   courseFeeEur?: string | number;
   regFeeEur?: string | number;
+  discountAmount?: string | number | null;
+  promoCode?: string | null;
   isPaidOnline?: boolean;
   paymentStatusText?: string;
   bookingId: string;
@@ -315,6 +325,10 @@ export function formatBookingTelegramHtml(data: {
     `${i18n.taxCode} <code>${escapeHtml(data.purchaserTaxCode || i18n.notIndicated)}</code>`,
   ];
 
+  if (!data.isForChild && data.birthPlace) {
+    lines.push(`${i18n.birthPlace} <code>${escapeHtml(data.birthPlace)}</code>`);
+  }
+
   if (data.needsCompanyInvoice) {
     lines.push(
       i18n.electronicInvoice
@@ -329,6 +343,9 @@ export function formatBookingTelegramHtml(data: {
     lines.push(`${i18n.name} <b>${escapeHtml(data.studentName || data.purchaserName)}</b>`);
     if (birthDateFormatted) {
       lines.push(`${i18n.birthDate} <code>${escapeHtml(birthDateFormatted)}</code>`);
+    }
+    if (data.studentBirthPlace || data.birthPlace) {
+      lines.push(`${i18n.birthPlace} <code>${escapeHtml(data.studentBirthPlace || data.birthPlace)}</code>`);
     }
     lines.push(`${i18n.taxCode} <code>${escapeHtml(data.studentTaxCode || i18n.notIndicated)}</code>`);
     if (data.studentEmail) {
@@ -346,6 +363,9 @@ export function formatBookingTelegramHtml(data: {
   lines.push(`${i18n.courseFee} <b>€${escapeHtml(String(data.courseFeeEur || '0.00'))}</b>`);
   if (Number(data.regFeeEur) > 0) {
     lines.push(`${i18n.regFee} <b>€${escapeHtml(String(data.regFeeEur))}</b>`);
+  }
+  if (data.promoCode) {
+    lines.push(`${i18n.promoApplied} <code>${escapeHtml(data.promoCode)}</code>${Number(data.discountAmount) > 0 ? ` (-€${escapeHtml(String(data.discountAmount))})` : ''}`);
   }
   lines.push(
     `${isPaid ? i18n.totalPaid : i18n.totalDue} <b>€${escapeHtml(String(data.totalEur))}</b>`
@@ -418,9 +438,11 @@ export async function sendBookingNotificationTelegram(params: {
     purchaserEmail: dto.email || booking.purchaser_email,
     purchaserPhone: dto.phone || booking.purchaser_phone,
     purchaserTaxCode: dto.purchaserTaxCode || booking.purchaser_tax_code,
+    birthPlace: dto.birthPlace || booking.birth_place,
     studentName,
     studentTaxCode: dto.studentTaxCode || booking.student_tax_code,
     studentBirthDate: dto.studentBirthDate || booking.student_birth_date,
+    studentBirthPlace: dto.studentBirthPlace || booking.student_birth_place || booking.birth_place,
     studentEmail: dto.studentEmail || booking.student_email,
     studentPhone: dto.studentPhone || booking.student_phone,
     isForChild: dto.isForChild,
@@ -432,6 +454,8 @@ export async function sendBookingNotificationTelegram(params: {
     totalEur,
     courseFeeEur,
     regFeeEur,
+    discountAmount: booking.discount_amount,
+    promoCode: dto.promoCode || booking.promo_code,
     isPaidOnline,
     paymentStatusText,
     bookingId: booking.id,

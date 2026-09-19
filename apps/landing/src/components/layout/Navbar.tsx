@@ -10,8 +10,14 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { useMounted } from "@/hooks/useMounted";
 import { env } from "@/config/env";
+import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
-const Navbar = () => {
+interface NavbarProps {
+  school?: SchoolProfile;
+}
+
+const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
   const [open, setOpen] = useState(false);
   const mounted = useMounted();
   const t = useTranslations("nav");
@@ -91,6 +97,17 @@ const Navbar = () => {
 
   const handleLinkClick = (href: string) => {
     setOpen(false);
+    if (href.startsWith("/#")) {
+      const id = href.replace("/#", "");
+      if (pathname === "/") {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth" });
+        }
+      } else {
+        router.push(href);
+      }
+    }
   };
 
   const navLinks = [
@@ -126,7 +143,7 @@ const Navbar = () => {
               <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-9 h-9 md:w-12 md:h-12">
                 <Image
                   src={logo}
-                  alt="Atena School"
+                  alt={school.name}
                   width={48}
                   height={48}
                   className="w-full h-full object-contain"
@@ -134,14 +151,16 @@ const Navbar = () => {
               </div>
               <div className="flex flex-col items-center leading-tight" translate="no">
                 <span className="font-serif font-black text-sm xs:text-base md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
-                  Atena <span style={{ color: '#FAA904' }}>School</span>
+                  {school.name.split(' ')[0]} <span style={{ color: '#FAA904' }}>{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                 </span>
-                <span
-                  className="text-[8px] md:text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5"
-                  style={{ color: isLightHeader ? 'rgba(255, 255, 255, 0.6)' : '#9FA2AC' }}
-                >
-                  civitatis ornamento
-                </span>
+                {school.tagline && (
+                  <span
+                    className="text-[8px] md:text-[9px] tracking-widest uppercase select-none whitespace-nowrap transition-all duration-300 mt-0.5"
+                    style={{ color: isLightHeader ? 'rgba(255, 255, 255, 0.6)' : '#9FA2AC' }}
+                  >
+                    {school.tagline}
+                  </span>
+                )}
               </div>
             </Link>
           </div>
@@ -375,26 +394,32 @@ const Navbar = () => {
                 {/* Socials & Contacts */}
                 <div className="border-t border-gray-100 pt-6 flex items-center justify-between text-[11px] text-[#9FA2AC] leading-relaxed">
                   <div className="space-y-0.5">
-                    <p className="font-bold text-gray-800">Viale G. Matteotti 11, Cittanova</p>
-                    <p className="text-gray-500">Tel: +39 375 605 2362</p>
+                    <p className="font-bold text-gray-800">{formatFullSchoolAddress(school)}</p>
+                    <p className="text-gray-500">Tel: {school.phone}</p>
                   </div>
                   <div className="flex gap-2">
-                    <a
-                      href="https://www.instagram.com/atenaschool_srls/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
-                    >
-                      <InstagramLogo className="w-5 h-5" />
-                    </a>
-                    <a
-                      href="https://www.facebook.com/CSAtena7"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
-                    >
-                      <FacebookLogo className="w-5 h-5" />
-                    </a>
+                    {school.socials?.instagram && (
+                      <a
+                        href={school.socials.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                        aria-label="Instagram"
+                      >
+                        <InstagramLogo className="w-5 h-5" />
+                      </a>
+                    )}
+                    {school.socials?.facebook && (
+                      <a
+                        href={school.socials.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                        aria-label="Facebook"
+                      >
+                        <FacebookLogo className="w-5 h-5" />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

@@ -13,9 +13,13 @@ const nunito = Nunito({
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+import { DEFAULT_SCHOOL_PROFILE } from '@atena/core';
+
+const school = DEFAULT_SCHOOL_PROFILE;
+
 export const metadata = {
-  title: 'Pannello Studente — Atena School',
-  description: 'Area riservata e личный кабинет студентов и преподавателей Atena School',
+  title: `Pannello Studente — ${school.name}`,
+  description: `Area riservata e portale studenti di ${school.name}`,
   robots: {
     index: false,
     follow: false,

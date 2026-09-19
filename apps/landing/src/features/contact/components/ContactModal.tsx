@@ -24,6 +24,8 @@ import {
 import { useLocale } from "next-intl";
 import { contactFormSchema } from "@atena/validators";
 import { api } from "@/lib/api";
+import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -35,6 +37,7 @@ interface ContactModalProps {
     email?: string;
     vat?: string;
   };
+  school?: SchoolProfile;
 }
 
 const FALLBACK_AVATARS = [
@@ -42,7 +45,7 @@ const FALLBACK_AVATARS = [
   "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=256&h=256",
 ];
 
-const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
+const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PROFILE }: ContactModalProps) => {
   const locale = useLocale();
   const [formData, setFormData] = useState({
     nome: "",
@@ -57,6 +60,11 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const address = formatFullSchoolAddress(school) || contactData?.address || "";
+  const phone = school.phone || contactData?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";
+  const landline = school.landline || contactData?.landline || DEFAULT_SCHOOL_PROFILE.landline || "0966 447052";
+  const email = school.secretariat_email || school.email || contactData?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
   // Disable body scroll when modal is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (isOpen) {
@@ -199,11 +207,6 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
     }
   };
 
-  const address = contactData?.address || "Via Matteotti 11, Cittanova (RC) 89022";
-  const phone = contactData?.phone || "+39 375 605 2362";
-  const landline = contactData?.landline || "0966 447052";
-  const email = contactData?.email || "atenaschool20@gmail.com";
-
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-0 md:p-4 overflow-visible md:overflow-y-auto"
@@ -248,7 +251,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     Contatta
                   </h3>
                   <span className="text-2xl font-black text-[#00328F] block text-left">
-                    Atena School
+                    {school.name}
                   </span>
                 </div>
 
@@ -309,7 +312,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                   </span>
                   <div className="flex gap-2">
                     <a
-                      href="https://www.instagram.com/atenaschool_srls/"
+                      href={school.socials?.instagram || "https://instagram.com"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300"
@@ -317,7 +320,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                       <InstagramLogo className="w-4 h-4" weight="bold" />
                     </a>
                     <a
-                      href="https://www.facebook.com/CSAtena7"
+                      href={school.socials?.facebook || "https://facebook.com"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300"
@@ -346,10 +349,10 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
                     <MapPin className="w-6 h-6 text-[#F8861D] relative z-10 animate-bounce" weight="fill" />
                   </div>
                   <div className="text-left flex-1 min-w-0">
-                    <p className="text-xs font-black text-gray-800 truncate">Atena School</p>
+                    <p className="text-xs font-black text-gray-800 truncate">{school.name}</p>
                     <p className="text-[10px] text-gray-500 truncate mt-0.5">{address}</p>
                     <a
-                      href={`https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7`}
+                      href={school.maps_url || `https://maps.google.com/?q=${encodeURIComponent(address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block text-[10px] font-bold text-[#F8861D] hover:underline mt-1.5"
@@ -551,7 +554,7 @@ const ContactModal = ({ isOpen, onClose, contactData }: ContactModalProps) => {
               {/* Why Us Highlights */}
               <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-widest text-[#F8861D]">
-                  Perché scegliere Atena School?
+                  Perché sceglierci?
                 </h4>
                 <div className="w-8 h-0.5 bg-[#F8861D]/55" />
 

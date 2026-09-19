@@ -107,6 +107,22 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/landing/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, x-session-id, sentry-trace, baggage, accept' },
+        ],
+      },
+      {
+        source: '/api/landing/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, x-session-id, sentry-trace, baggage, accept' },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           {

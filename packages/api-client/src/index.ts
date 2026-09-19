@@ -9,6 +9,7 @@ import type {
   BookingPaymentStatus,
   PaymentMethod,
   BillingScheme,
+  SchoolProfile,
 } from "@atena/api-types";
 
 declare const process: { env?: Record<string, string | undefined> } | undefined;
@@ -255,6 +256,18 @@ export function createApiClient(config?: string | ApiClientConfig) {
         body: JSON.stringify(data),
       });
       return handleResponse<{ success: boolean; settings: { stripeEnabled: boolean; subscriptionsEnabled?: boolean } }>(res);
+    },
+    async getSchoolProfile(): Promise<{ success: boolean; profile: SchoolProfile }> {
+      const res = await fetch(`${prefix}/settings/school-profile`, { headers: getHeaders() });
+      return handleResponse<{ success: boolean; profile: SchoolProfile }>(res);
+    },
+    async updateSchoolProfile(data: Partial<SchoolProfile>): Promise<{ success: boolean; profile: SchoolProfile }> {
+      const res = await fetch(`${prefix}/settings/school-profile`, {
+        method: "PATCH",
+        headers: getHeaders(),
+        body: JSON.stringify(data),
+      });
+      return handleResponse<{ success: boolean; profile: SchoolProfile }>(res);
     },
   };
 

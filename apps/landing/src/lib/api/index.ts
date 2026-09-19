@@ -35,6 +35,17 @@ export const api = {
       baseClient.landing.checkout.createStripeSession(payload),
     verifyPayment: (dto: { sessionId: string; bookingId: string }): Promise<{ success: boolean; booking: BookingRecord }> =>
       baseClient.landing.checkout.verifyPayment(dto),
+    validatePromo: async (dto: { code: string; courseId?: string; coursePrice?: number; registrationFee?: number }) => {
+      const endpoint = backendUrl && baseClient.isNest
+        ? `${backendUrl}/v1/checkout/apply-promo`
+        : (backendUrl ? `${backendUrl}/landing/checkout/apply-promo` : '/landing/checkout/apply-promo');
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dto),
+      });
+      return await res.json();
+    },
   },
   bookings: {
     getById: (bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> =>

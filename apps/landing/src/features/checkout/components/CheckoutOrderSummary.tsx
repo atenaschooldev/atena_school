@@ -11,6 +11,9 @@ import {
   Spinner,
   ShieldCheck,
   Headset,
+  Tag,
+  CheckCircle,
+  X,
 } from "@phosphor-icons/react";
 import type { BookingItem } from "@/features/checkout/hooks/useCheckout";
 import { SubmitAction } from "@/constants";
@@ -37,6 +40,21 @@ interface CheckoutOrderSummaryProps {
   isAnyFeeChecking: boolean;
   stripeEnabled: boolean;
   isSubscription?: boolean;
+  appliedPromo?: {
+    id: string;
+    code: string;
+    discountType: number;
+    discountValue: number;
+    discountAmount: number;
+    waiveRegistrationFee: boolean;
+    description?: string;
+  } | null;
+  promoCodeInput: string;
+  setPromoCodeInput: (v: string) => void;
+  applyingPromo: boolean;
+  applyPromoCode: () => void;
+  removePromoCode: () => void;
+  discountAmount?: number;
 }
 
 export function CheckoutOrderSummary({
@@ -61,6 +79,13 @@ export function CheckoutOrderSummary({
   isAnyFeeChecking,
   stripeEnabled,
   isSubscription,
+  appliedPromo,
+  promoCodeInput,
+  setPromoCodeInput,
+  applyingPromo,
+  applyPromoCode,
+  removePromoCode,
+  discountAmount = 0,
 }: CheckoutOrderSummaryProps) {
   return (
     <div className="hidden lg:block lg:sticky lg:top-24 bg-white rounded-2xl border border-slate-200 shadow-lg p-4 sm:p-5 space-y-4">
@@ -130,8 +155,66 @@ export function CheckoutOrderSummary({
           </div>
         )}
 
+        {/* Promo Code Input Section */}
+        <div className="pt-2 border-t border-slate-100 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+              Codice Promozionale
+            </span>
+          </div>
+
+          {appliedPromo ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" weight="fill" />
+                <div>
+                  <span className="font-black text-emerald-900 tracking-wider block font-mono">
+                    {appliedPromo.code}
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-medium">
+                    {appliedPromo.description || `Sconto applicato`}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={removePromoCode}
+                className="text-slate-400 hover:text-red-600 p-1 rounded-md hover:bg-white/80 transition-colors"
+                title="Rimuovi promo"
+              >
+                <X className="w-4 h-4" weight="bold" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoCodeInput}
+                onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    applyPromoCode();
+                  }
+                }}
+                placeholder="es. FAMIGLIA10"
+                className="flex-1 min-w-0 px-3 py-2 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
+              />
+              <button
+                type="button"
+                onClick={applyPromoCode}
+                disabled={applyingPromo || !promoCodeInput.trim()}
+                className="px-3 py-2 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
+              >
+                {applyingPromo ? <Spinner className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Price Breakdown */}
-        <div className="space-y-2 text-xs">
+        <div className="space-y-2 text-xs pt-2 border-t border-slate-100">
           <div className="flex items-center justify-between">
             <span className="text-slate-600 font-medium">
               {isSubscription ? "Abbonamento Mensile (1° mese)" : "Prezzo Corso"}{" "}
@@ -145,8 +228,26 @@ export function CheckoutOrderSummary({
               <span className="text-slate-600 font-medium">
                 Quota iscrizione annuale {unpaidFeesCount > 1 ? `(${unpaidFeesCount}x 30€)` : ""}
               </span>
-              <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                +{totalRegistrationFees.toFixed(2)}€
+              {appliedPromo?.waiveRegistrationFee ? (
+                <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  Gratuita (Promo)
+                </span>
+              ) : (
+                <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                  +{totalRegistrationFees.toFixed(2)}€
+                </span>
+              )}
+            </div>
+          )}
+
+          {discountAmount > 0 && (
+            <div className="flex items-center justify-between text-xs py-0.5">
+              <span className="text-emerald-700 font-bold flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5" weight="bold" />
+                Sconto promozionale ({appliedPromo?.code})
+              </span>
+              <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                -{discountAmount.toFixed(2)}€
               </span>
             </div>
           )}

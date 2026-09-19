@@ -60,6 +60,18 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   );
 
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{
+    id: string;
+    code: string;
+    discountType: number;
+    discountValue: number;
+    discountAmount: number;
+    waiveRegistrationFee: boolean;
+    description?: string;
+  } | null>(null);
+  const [applyingPromo, setApplyingPromo] = useState(false);
+
   const formMethods = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema as never),
     defaultValues: {
@@ -68,16 +80,19 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       email: "",
       phone: "",
       purchaserTaxCode: "",
+      birthPlace: "",
       isForChild: false,
       students: [
-        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "" },
+        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" },
       ],
       studentFirstName: "",
       studentLastName: "",
       studentEmail: "",
       studentPhone: "",
       studentBirthDate: "",
+      studentBirthPlace: "",
       taxCode: "",
+      promoCode: "",
       needsCompanyInvoice: false,
       sdiCode: "",
       pecEmail: "",
@@ -245,7 +260,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       "students",
       [
         ...current,
-        { firstName: "", lastName: "", taxCode: "", email: "", phone: "", birthDate: "" },
+        { firstName: "", lastName: "", taxCode: "", email: "", phone: "", birthDate: "", birthPlace: "" },
       ],
       { shouldValidate: false, shouldDirty: true }
     );
@@ -283,7 +298,6 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         }
       }
 
-
       formMethods.setValue("students", updated, { shouldValidate: false, shouldDirty: true });
 
       // Clear errors on the field currently being typed into
@@ -301,6 +315,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         if (field === "birthDate") {
           formMethods.setValue("studentBirthDate", finalVal, { shouldValidate: false, shouldDirty: true });
           formMethods.clearErrors("studentBirthDate");
+        }
+        if (field === "birthPlace") {
+          formMethods.setValue("studentBirthPlace", finalVal, { shouldValidate: false, shouldDirty: true });
+          formMethods.clearErrors("studentBirthPlace");
         }
         if (field === "taxCode") {
           formMethods.setValue("taxCode", finalVal, { shouldValidate: false, shouldDirty: true });
@@ -435,6 +453,42 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const effectiveDate = (dateParam && !isNaN(Date.parse(dateParam))) ? dateParam : undefined;
   const effectiveTime = (timeParam && /^\d{1,2}:\d{2}/.test(timeParam)) ? timeParam : undefined;
 
+  const applyPromoCode = async (overrideCode?: string) => {
+    const code = (overrideCode || promoCodeInput).trim().toUpperCase();
+    if (!code) {
+      toast.error("Inserisci un codice promozionale valido");
+      return;
+    }
+    setApplyingPromo(true);
+    try {
+      const res = await api.checkout.validatePromo({
+        code,
+        courseId: id,
+        coursePrice: Number(item?.price || 0),
+        registrationFee: 30,
+      });
+      if (!res.success || !res.promo) {
+        toast.error(res.error || "Codice promozionale non valido o scaduto");
+        return;
+      }
+      setAppliedPromo(res.promo);
+      formMethods.setValue("promoCode", res.promo.code);
+      toast.success(`Promozione ${res.promo.code} applicata con successo!`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Errore durante la verifica del promo code";
+      toast.error(msg);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setPromoCodeInput("");
+    formMethods.setValue("promoCode", "");
+    toast.info("Codice promo rimosso");
+  };
+
   const buildReservationPayload = (values: CheckoutFormValues) => {
     const isForChild = Boolean(values.isForChild);
     const purchaserTaxCode = (values.purchaserTaxCode || values.taxCode || "").trim().toUpperCase();
@@ -452,6 +506,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       email: (values.email || "").trim().toLowerCase(),
       phone: (values.phone || "").trim(),
       purchaserTaxCode: purchaserTaxCode,
+      birthPlace: (values.birthPlace || "").trim() || undefined,
       isForChild: isForChild,
       studentFirstName: isForChild ? (values.studentFirstName || "").trim() : undefined,
       studentLastName: isForChild ? (values.studentLastName || "").trim() : undefined,
@@ -459,8 +514,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       studentPhone: isForChild ? (values.studentPhone || "").trim() : undefined,
       studentTaxCode: studentTaxCode,
       studentBirthDate: isForChild ? values.studentBirthDate : undefined,
+      studentBirthPlace: isForChild
+        ? (values.studentBirthPlace || "").trim() || undefined
+        : (values.birthPlace || "").trim() || undefined,
       students: isForChild && studentsList.length > 0 ? studentsList : undefined,
-      includeRegistrationFee: Boolean(values.includeRegistrationFee),
+      promoCode: appliedPromo?.code || values.promoCode || undefined,
+      includeRegistrationFee: appliedPromo?.waiveRegistrationFee ? false : Boolean(values.includeRegistrationFee),
       notes: values.notes || undefined,
       needsCompanyInvoice: Boolean(values.needsCompanyInvoice),
       sdiCode: values.sdiCode || undefined,
@@ -554,6 +613,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     addStudent,
     removeStudent,
     updateStudent,
+    appliedPromo,
+    promoCodeInput,
+    setPromoCodeInput,
+    applyingPromo,
+    applyPromoCode,
+    removePromoCode,
     user,
     dateParam,
     timeParam,

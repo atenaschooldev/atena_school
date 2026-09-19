@@ -59,6 +59,34 @@ export const DISCOUNT_TYPE_DICTIONARY: Record<DiscountType, DictionaryEntry> = {
   },
 };
 
+export interface PromoCode {
+  id: string;
+  code: string;
+  description?: string | null;
+  discount_type: DiscountType;
+  discount_value: number;
+  waive_registration_fee: boolean;
+  max_uses?: number | null;
+  used_count: number;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  is_active: boolean;
+}
+
+export interface ValidatePromoCodeResponse {
+  valid: boolean;
+  promo?: {
+    id: string;
+    code: string;
+    description?: string | null;
+    discountType: DiscountType;
+    discountValue: number;
+    waiveRegistrationFee: boolean;
+    discountAmount: number;
+  };
+  error?: string;
+}
+
 // ----------------------------------------------------------------------------
 // 2. Exam and Official Certification Types
 // ----------------------------------------------------------------------------
