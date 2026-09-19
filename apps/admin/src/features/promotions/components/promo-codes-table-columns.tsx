@@ -17,22 +17,24 @@ interface PromoColumnsProps {
   onEdit: (item: PromoCodeItem) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;
+  t: (k: string) => string;
 }
 
 export function getPromoCodesTableColumns({
   onEdit,
   onDelete,
   onToggleStatus,
+  t,
 }: PromoColumnsProps): ColumnDef<PromoCodeItem>[] {
   return [
     {
       accessorKey: "code",
-      header: "Codice Promo",
+      header: t("promotions.promoCode"),
       cell: ({ row }) => {
         const item = row.original;
         const copyToClipboard = () => {
           navigator.clipboard.writeText(item.code);
-          toast.success(`Codice "${item.code}" copiato negli appunti!`);
+          toast.success(`${t("promotions.copiedToClipboard")}: "${item.code}"`);
         };
 
         return (
@@ -48,7 +50,7 @@ export function getPromoCodesTableColumns({
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={copyToClipboard}
-              title="Copia codice"
+              title={t("promotions.copiedToClipboard")}
             >
               <Copy className="w-3.5 h-3.5" />
             </Button>
@@ -58,7 +60,7 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "discount_value",
-      header: "Sconto Applicato",
+      header: t("promotions.discountApplied"),
       cell: ({ row }) => {
         const item = row.original;
         const isPercentage = Number(item.discount_type) === 1;
@@ -89,7 +91,7 @@ export function getPromoCodesTableColumns({
                 variant="outline"
                 className="text-[10px] text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-amber-500/30 font-medium w-fit"
               >
-                + Quota 30€ azzerata
+                + {t("promotions.waiveRegistrationFee")}
               </Badge>
             )}
           </div>
@@ -98,19 +100,19 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "description",
-      header: "Descrizione",
+      header: t("promotions.description"),
       cell: ({ row }) => {
         const desc = row.original.description;
         return (
           <span className="text-xs text-muted-foreground line-clamp-2 max-w-[240px]">
-            {desc || <span className="italic opacity-60">Nessuna descrizione</span>}
+            {desc || <span className="italic opacity-60">{t("common.noData")}</span>}
           </span>
         );
       },
     },
     {
       accessorKey: "used_count",
-      header: "Utilizzi Effettivi",
+      header: t("promotions.actualUses"),
       cell: ({ row }) => {
         const item = row.original;
         const used = item.used_count || 0;
@@ -142,7 +144,7 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "valid_until",
-      header: "Validità",
+      header: t("promotions.validity"),
       cell: ({ row }) => {
         const item = row.original;
         const now = new Date();
@@ -153,7 +155,7 @@ export function getPromoCodesTableColumns({
         const isFuture = from && from > now;
 
         if (!from && !until) {
-          return <span className="text-xs text-muted-foreground font-medium">Sempre valido</span>;
+          return <span className="text-xs text-muted-foreground font-medium">{t("promotions.alwaysValid")}</span>;
         }
 
         return (
@@ -161,7 +163,7 @@ export function getPromoCodesTableColumns({
             {from && (
               <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-muted-foreground/70" />
-                Dal {from.toLocaleDateString("it-IT")}
+                {t("promotions.validFrom")} {from.toLocaleDateString()}
               </span>
             )}
             {until && (
@@ -171,7 +173,7 @@ export function getPromoCodesTableColumns({
                 }`}
               >
                 <Calendar className="w-3 h-3 text-muted-foreground/70" />
-                Fino al {until.toLocaleDateString("it-IT")}
+                {t("promotions.validUntil")} {until.toLocaleDateString()}
               </span>
             )}
             {isExpired && (
@@ -179,7 +181,7 @@ export function getPromoCodesTableColumns({
                 variant="outline"
                 className="text-[9px] bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 border-rose-500/30 w-fit"
               >
-                Scaduto
+                {t("promotions.expired")}
               </Badge>
             )}
             {isFuture && (
@@ -187,7 +189,7 @@ export function getPromoCodesTableColumns({
                 variant="outline"
                 className="text-[9px] bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-500/30 w-fit"
               >
-                Programmato
+                {t("promotions.scheduled")}
               </Badge>
             )}
           </div>
@@ -196,7 +198,7 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "is_active",
-      header: "Stato",
+      header: t("common.status"),
       cell: ({ row }) => {
         const item = row.original;
         return (
@@ -212,7 +214,7 @@ export function getPromoCodesTableColumns({
                   : "text-muted-foreground"
               }`}
             >
-              {item.is_active ? "Attivo" : "Disattivo"}
+              {item.is_active ? t("common.active") : t("common.inactive")}
             </span>
           </div>
         );
@@ -228,21 +230,21 @@ export function getPromoCodesTableColumns({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
-                  <span className="sr-only">Menu azioni</span>
+                  <span className="sr-only">{t("common.actions")}</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
                   <Edit className="mr-2 h-3.5 w-3.5" />
-                  Modifica
+                  {t("common.edit")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item.id)}
                   className="text-destructive focus:text-destructive cursor-pointer"
                 >
                   <Trash2 className="mr-2 h-3.5 w-3.5" />
-                  Elimina
+                  {t("common.delete")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

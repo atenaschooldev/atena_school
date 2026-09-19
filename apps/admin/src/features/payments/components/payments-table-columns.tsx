@@ -121,7 +121,19 @@ export function getPaymentsTableColumns({
             </Badge>
           );
         }
-        const label = PAYMENT_TYPE_DICTIONARY[type as PaymentType]?.label_it || PAYMENT_TYPE_DICTIONARY[type as PaymentType]?.it || desc || t("payments.typeTuition");
+        let label = t("payments.typeTuition");
+        if (type === PaymentType.COURSE_PAYMENT) {
+          label = t("payments.typeTuition");
+        } else if (type === PaymentType.DEPOSIT) {
+          label = t("payments.typeDeposit");
+        } else if (type === PaymentType.INSTALLMENT) {
+          label = t("payments.typeInstallment");
+        } else if (type === PaymentType.REFUND) {
+          label = t("payments.typeRefund");
+        } else if (desc) {
+          label = desc;
+        }
+
         return (
           <div className="flex flex-col text-xs">
             <span className="font-medium text-foreground">{label}</span>

@@ -21,6 +21,8 @@ import {
 import { Sparkles, Tag, Percent, Euro } from "lucide-react";
 import type { PromoCodeItem, CreatePromoCodeInput } from "../types";
 
+import { useTranslation } from "@/i18n/context";
+
 interface CreatePromoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +36,7 @@ export function CreatePromoDialog({
   onSubmit,
   initialData,
 }: CreatePromoDialogProps) {
+  const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [discountType, setDiscountType] = useState<number>(1); // 1 = PERCENTAGE, 2 = FIXED_AMOUNT
@@ -117,7 +120,7 @@ export function CreatePromoDialog({
             </div>
             <div>
               <DialogTitle>
-                {initialData ? "Modifica Codice Promozionale" : "Nuovo Codice Promozionale"}
+                {initialData ? t("promotions.editPromo") : t("promotions.newPromo")}
               </DialogTitle>
             </div>
           </div>
@@ -127,7 +130,7 @@ export function CreatePromoDialog({
           {/* Promo Code string */}
           <div className="space-y-1.5">
             <Label htmlFor="code" className="text-xs font-bold uppercase tracking-wider">
-              Codice Promo *
+              {t("promotions.promoCode")} *
             </Label>
             <div className="flex gap-2">
               <Input
@@ -143,7 +146,7 @@ export function CreatePromoDialog({
                 variant="outline"
                 size="icon"
                 onClick={generateRandomCode}
-                title="Genera codice casuale"
+                title={t("promotions.newPromo")}
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
               </Button>
@@ -153,7 +156,7 @@ export function CreatePromoDialog({
           {/* Description */}
           <div className="space-y-1.5">
             <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">
-              Descrizione (facoltativa)
+              {t("promotions.description")}
             </Label>
             <Textarea
               id="description"
@@ -169,26 +172,26 @@ export function CreatePromoDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-wider">
-                Tipo di Sconto
+                {t("promotions.discountType")}
               </Label>
               <Select
                 value={String(discountType)}
                 onValueChange={(val) => setDiscountType(Number(val))}
               >
-                <SelectTrigger className="text-xs font-medium">
+                <SelectTrigger className="text-xs font-medium cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">
+                  <SelectItem value="1" className="cursor-pointer">
                     <div className="flex items-center gap-1.5">
                       <Percent className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Percentuale (%)</span>
+                      <span>{t("promotions.percentage")}</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="2">
+                  <SelectItem value="2" className="cursor-pointer">
                     <div className="flex items-center gap-1.5">
                       <Euro className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Importo Fisso (€)</span>
+                      <span>{t("promotions.fixedAmount")}</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -197,7 +200,7 @@ export function CreatePromoDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="discountValue" className="text-xs font-bold uppercase tracking-wider">
-                Valore Sconto {discountType === 1 ? "(%)" : "(€)"} *
+                {t("promotions.discountValue")} {discountType === 1 ? "(%)" : "(€)"} *
               </Label>
               <Input
                 id="discountValue"
@@ -217,10 +220,10 @@ export function CreatePromoDialog({
           <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-3">
             <div className="space-y-0.5">
               <Label className="text-xs font-bold text-amber-900 dark:text-amber-300 cursor-pointer">
-                Azzera Quota Associativa Annuale (30 €)
+                {t("promotions.waiveRegistrationFee")}
               </Label>
               <p className="text-[11px] text-amber-700 dark:text-amber-400">
-                Se attivo, il corsista non pagherà la quota di 30€ anche se dovuta.
+                {t("promotions.waiveRegistrationFeeDesc")}
               </p>
             </div>
             <Switch
@@ -234,10 +237,10 @@ export function CreatePromoDialog({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-xs font-bold text-foreground">
-                  Limite Numero Utilizzi
+                  {t("promotions.maxUsesLimit")}
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Imposta un numero massimo di volte che il codice può essere usato.
+                  {t("promotions.maxUsesLimitDesc")}
                 </p>
               </div>
               <Switch
@@ -264,10 +267,10 @@ export function CreatePromoDialog({
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label className="text-xs font-bold text-foreground">
-                  Periodo di Validità
+                  {t("promotions.validityPeriod")}
                 </Label>
                 <p className="text-[11px] text-muted-foreground">
-                  Imposta data di inizio e scadenza (facoltativo).
+                  {t("promotions.validityPeriodDesc")}
                 </p>
               </div>
               <Switch
@@ -279,7 +282,7 @@ export function CreatePromoDialog({
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
-                    Valido dal
+                    {t("promotions.validFrom")}
                   </Label>
                   <Input
                     type="date"
@@ -290,7 +293,7 @@ export function CreatePromoDialog({
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">
-                    Valido fino al
+                    {t("promotions.validUntil")}
                   </Label>
                   <Input
                     type="date"
@@ -307,10 +310,10 @@ export function CreatePromoDialog({
           <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
             <div className="space-y-0.5">
               <Label className="text-xs font-bold text-foreground">
-                Stato Attivo
+                {t("promotions.activeStatus")}
               </Label>
               <p className="text-[11px] text-muted-foreground">
-                Disattiva se vuoi sospendere temporaneamente l'accettazione del codice.
+                {t("promotions.activeStatusDesc")}
               </p>
             </div>
             <Switch
@@ -326,10 +329,10 @@ export function CreatePromoDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Annulla
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Salvataggio..." : initialData ? "Salva Modifiche" : "Crea Codice Promo"}
+              {loading ? t("common.saving") : initialData ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </form>

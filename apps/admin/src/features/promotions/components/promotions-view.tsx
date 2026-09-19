@@ -8,6 +8,7 @@ import { CreatePromoDialog } from "./create-promo-dialog";
 import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { useTranslation } from "@/i18n/context";
 import {
   Table,
   TableBody,
@@ -28,6 +29,7 @@ import {
 import type { PromoCodeItem, CreatePromoCodeInput } from "../types";
 
 export function PromotionsView() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -79,8 +81,9 @@ export function PromotionsView() {
         onEdit: handleEdit,
         onDelete: deletePromoCode,
         onToggleStatus: togglePromoCode,
+        t,
       }),
-    [deletePromoCode, togglePromoCode]
+    [deletePromoCode, togglePromoCode, t]
   );
 
   const table = useReactTable({
@@ -103,21 +106,21 @@ export function PromotionsView() {
 
   const metrics = [
     {
-      title: "Totale Codici Promo",
+      title: t("promotions.totalPromoCodes"),
       value: stats.total,
-      description: "Codici creati nel sistema",
+      description: t("promotions.totalPromoCodes"),
       icon: Tag,
     },
     {
-      title: "Codici Attivi",
+      title: t("promotions.activePromoCodes"),
       value: stats.active,
-      description: "Attualmente utilizzabili",
+      description: t("promotions.activePromoCodes"),
       icon: CheckCircle2,
     },
     {
-      title: "Utilizzi Totali",
+      title: t("promotions.totalUses"),
       value: stats.totalUses,
-      description: "Applicati nelle iscrizioni",
+      description: t("promotions.totalUses"),
       icon: Sparkles,
     },
   ];
@@ -148,16 +151,16 @@ export function PromotionsView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca codice o descrizione..."
+          searchPlaceholder={t("common.search")}
           filters={[
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato",
+              placeholder: t("common.status"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "active", label: "Solo Attivi" },
-                { value: "inactive", label: "Solo Disattivi" },
+                { value: "all", label: t("common.all") },
+                { value: "active", label: t("common.active") },
+                { value: "inactive", label: t("common.inactive") },
               ],
             },
           ]}
@@ -170,7 +173,7 @@ export function PromotionsView() {
               className="font-medium cursor-pointer shadow-sm text-xs"
             >
               <Plus className="mr-1.5 h-4 w-4" />
-              Nuovo Codice Promo
+              {t("promotions.newPromo")}
             </Button>
           }
         />

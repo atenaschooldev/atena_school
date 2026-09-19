@@ -74,13 +74,25 @@ export const COURSE_FORMAT_OPTIONS = [
   { value: 4, label: "Certificazione" },
 ] as const;
 
-export function formatCourseFormatLabel(fmt?: string | number | null): string {
-  if (fmt === null || fmt === undefined || fmt === "") return "Di Gruppo";
+export function formatCourseFormatLabel(fmt?: string | number | null, t?: (k: string) => string): string {
+  if (fmt === null || fmt === undefined || fmt === "") {
+    return t ? t("courses.group") : "Di Gruppo";
+  }
   const str = String(fmt).toLowerCase().trim();
-  if (str === "1" || str === "group" || str === "gruppo" || str === "di gruppo" || str === "in sede") return "Di Gruppo";
-  if (str === "2" || str === "private" || str === "individual" || str === "individuale" || str === "privato") return "Individuale";
-  if (str === "3" || str === "online") return "Online";
-  if (str === "4" || str === "certification" || str === "certificazione" || str === "esame" || str === "certipass") return "Certificazione";
-  if (str === "ibrido" || str === "hybrid") return "Ibrido";
+  if (str === "1" || str === "group" || str === "gruppo" || str === "di gruppo" || str === "in sede") {
+    return t ? t("courses.group") : "Di Gruppo";
+  }
+  if (str === "2" || str === "private" || str === "individual" || str === "individuale" || str === "privato") {
+    return t ? t("courses.individual") : "Individuale";
+  }
+  if (str === "3" || str === "online") {
+    return t ? t("courses.online") : "Online";
+  }
+  if (str === "4" || str === "certification" || str === "certificazione" || str === "esame" || str === "certipass") {
+    return t ? t("courses.certification") : "Certificazione";
+  }
+  if (str === "ibrido" || str === "hybrid") {
+    return t ? t("courses.hybrid") : "Ibrido";
+  }
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

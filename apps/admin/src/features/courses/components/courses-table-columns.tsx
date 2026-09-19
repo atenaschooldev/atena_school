@@ -95,7 +95,7 @@ export function getCoursesTableColumns({
       accessorKey: "courseFormat",
       header: t("courses.format"),
       cell: ({ row }) => {
-        const label = formatCourseFormatLabel(row.original.courseFormat);
+        const label = formatCourseFormatLabel(row.original.courseFormat, t);
         return (
           <Badge variant="outline" className="text-xs font-medium">
             {label}
