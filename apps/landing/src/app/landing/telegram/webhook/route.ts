@@ -45,15 +45,24 @@ async function handler(request: NextRequest) {
       const text = (update.message.text || '').trim();
       const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
-      if (botToken && chatId && (text === '/start' || text === '/help' || text === '/ping')) {
+      if (botToken && chatId && (text.startsWith('/start') || text.startsWith('/help') || text.startsWith('/ping') || text.startsWith('/lang'))) {
         const welcomeText =
           `👋 <b>Atena School Management Bot</b>\n\n` +
-          `Questo bot è attivo per inviare notifiche in tempo reale e gestire i pagamenti e le iscrizioni della scuola.\n\n` +
+          `🇮🇹 <b>Italiano:</b>\n` +
+          `Questo bot invia notifiche in tempo reale e permette di gestire pagamenti e iscrizioni.\n` +
           `• 💶 <b>Salda Quota:</b> Registra il versamento della quota associativa di €30\n` +
-          `• 🎓 <b>Salda Corso:</b> Conferma il saldo del corso (in contanti o POS)\n` +
+          `• 🎓 <b>Salda Corso:</b> Conferma il saldo del corso\n` +
           `• ✅ <b>Salda Tutto:</b> Conferma sia quota che corso in un solo click\n` +
-          `• ❌ <b>Annulla:</b> Annulla la prenotazione e le relative lezioni\n\n` +
-          `Chat ID attuale: <code>${chatId}</code>`;
+          `• ❌ <b>Annulla:</b> Annulla la prenotazione\n` +
+          `• 🌐 <b>Tasto Lingua:</b> Cambia al volo tra Italiano e Inglese\n\n` +
+          `🇬🇧 <b>English:</b>\n` +
+          `This bot delivers real-time notifications and allows managing student payments and enrollments.\n` +
+          `• 💶 <b>Settle Fee:</b> Record receipt of the €30 annual registration fee\n` +
+          `• 🎓 <b>Settle Course:</b> Confirm course fee balance\n` +
+          `• ✅ <b>Settle All:</b> Confirm both course & annual fee in one click\n` +
+          `• ❌ <b>Cancel:</b> Cancel the registration\n` +
+          `• 🌐 <b>Language Button:</b> Switch between Italian and English on the fly\n\n` +
+          `Chat ID: <code>${chatId}</code>`;
 
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',

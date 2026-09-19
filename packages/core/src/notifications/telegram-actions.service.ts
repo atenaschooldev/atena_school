@@ -11,11 +11,126 @@ import {
   NotificationType,
 } from '@atena/api-types';
 
+export type TelegramLocale = 'it' | 'en';
+
 export interface TelegramButton {
   text: string;
   url?: string;
   callback_data?: string;
 }
+
+export const TELEGRAM_I18N = {
+  it: {
+    header: '🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>',
+    course: '📚 <b>Corso:</b>',
+    startDate: '🗓 <b>Data di Inizio:</b>',
+    schedule: '⏰ <b>Orario & Giorni:</b>',
+    location: '📍 <b>Sede:</b> In Presenza (Cittanova)',
+    purchaserHeader: '👤 <b>ACQUIRENTE / GENITORE:</b>',
+    name: '• Nome:',
+    email: '• 📧 Email:',
+    phone: '• 📱 Telefono:',
+    taxCode: '• 🧾 Codice Fiscale:',
+    electronicInvoice: '• 💼 Fattura Elettronica: PEC <code>{pec}</code> • SDI <code>{sdi}</code>',
+    studentHeader: '👶 <b>DATI STUDENTE (MINORE):</b>',
+    birthDate: '• 🎂 Data di Nascita:',
+    studentEmail: '• 📧 Email Studente:',
+    studentPhone: '• 📱 Tel Studente:',
+    notIndicated: 'Non indicato',
+    toBeAgreed: 'Da concordare con la segreteria',
+    financialSummary: '💶 <b>RIEPILOGO ECONOMICO:</b>',
+    courseFee: '• Quota Corso:',
+    regFee: '• Quota Associativa Annuale:',
+    totalPaid: '• 💳 <b>Totale Incassato:</b>',
+    totalDue: '• 💳 <b>Totale Da Saldare:</b>',
+    paymentStatus: '• Stato Pagamento:',
+    paidOnline: 'Pagato Online con Carta (Stripe)',
+    reservedAtVenue: 'Prenotato con Saldo in Sede (In attesa)',
+    settledAtVenue: 'Saldato in Sede (Confermato)',
+    cancelledStatus: 'Annullata',
+    notesHeader: '📝 <b>Note del Cliente:</b>',
+    updateHeader: '⚡ <b>Aggiornamento:</b>',
+    bookingId: '🆔 <b>ID Prenotazione:</b>',
+    // Buttons
+    btnSettleFee: '💶 Salda Quota €30',
+    btnSettleCourse: '🎓 Salda Corso',
+    btnSettleAll: '✅ Salda Tutto',
+    btnCancel: '❌ Annulla Iscrizione',
+    btnWhatsApp: '💬 WhatsApp',
+    btnStripe: '💳 Stripe',
+    btnAdminCrm: '🌐 Admin CRM',
+    btnLangEn: '🇬🇧 English',
+    btnLangIt: '🇮🇹 Italiano',
+    // Callbacks / Toasts
+    feeSettledToast: '💶 Quota associativa €30 registrata!',
+    feeSettledLog: '✅ <i>Quota €30 registrata alle {time} da @{user}</i>',
+    courseSettledToast: '🎓 Quota corso confermata!',
+    courseSettledLog: '✅ <i>Corso saldato alle {time} da @{user}</i>',
+    allSettledToast: '✅ Saldo completo confermato!',
+    allSettledLog: '✅ <i>Saldo totale confermato alle {time} da @{user}</i>',
+    cancelledToast: '❌ Prenotazione annullata.',
+    cancelledLog: '❌ <i>Iscrizione annullata alle {time} da @{user}</i>',
+    langSwitchedToast: '🇮🇹 Lingua impostata su Italiano',
+    unauthorizedToast: '⛔ Accesso non autorizzato',
+    invalidActionToast: '⚠️ Azione non valida',
+    bookingNotFoundToast: '❌ Prenotazione non trovata',
+  },
+  en: {
+    header: '🏛️ <b>NEW REGISTRATION — ATENA SCHOOL</b>',
+    course: '📚 <b>Course:</b>',
+    startDate: '🗓 <b>Start Date:</b>',
+    schedule: '⏰ <b>Schedule & Hours:</b>',
+    location: '📍 <b>Location:</b> In-Person (Cittanova)',
+    purchaserHeader: '👤 <b>PURCHASER / PARENT:</b>',
+    name: '• Name:',
+    email: '• 📧 Email:',
+    phone: '• 📱 Phone:',
+    taxCode: '• 🧾 Tax Code (CF):',
+    electronicInvoice: '• 💼 Electronic Invoice: PEC <code>{pec}</code> • SDI <code>{sdi}</code>',
+    studentHeader: '👶 <b>STUDENT DETAILS (MINOR):</b>',
+    birthDate: '• 🎂 Date of Birth:',
+    studentEmail: '• 📧 Student Email:',
+    studentPhone: '• 📱 Student Phone:',
+    notIndicated: 'Not specified',
+    toBeAgreed: 'To be agreed with administration',
+    financialSummary: '💶 <b>FINANCIAL SUMMARY:</b>',
+    courseFee: '• Course Fee:',
+    regFee: '• Annual Membership Fee:',
+    totalPaid: '• 💳 <b>Total Received:</b>',
+    totalDue: '• 💳 <b>Total Due:</b>',
+    paymentStatus: '• Payment Status:',
+    paidOnline: 'Paid Online via Card (Stripe)',
+    reservedAtVenue: 'Reserved with On-site Payment (Pending)',
+    settledAtVenue: 'Settled On-site (Confirmed)',
+    cancelledStatus: 'Cancelled',
+    notesHeader: '📝 <b>Customer Notes:</b>',
+    updateHeader: '⚡ <b>Update:</b>',
+    bookingId: '🆔 <b>Booking ID:</b>',
+    // Buttons
+    btnSettleFee: '💶 Settle Fee €30',
+    btnSettleCourse: '🎓 Settle Course',
+    btnSettleAll: '✅ Settle All',
+    btnCancel: '❌ Cancel Booking',
+    btnWhatsApp: '💬 WhatsApp',
+    btnStripe: '💳 Stripe',
+    btnAdminCrm: '🌐 Admin CRM',
+    btnLangEn: '🇬🇧 English',
+    btnLangIt: '🇮🇹 Italiano',
+    // Callbacks / Toasts
+    feeSettledToast: '💶 Annual fee €30 recorded!',
+    feeSettledLog: '✅ <i>Fee €30 recorded at {time} by @{user}</i>',
+    courseSettledToast: '🎓 Course fee confirmed!',
+    courseSettledLog: '✅ <i>Course fee settled at {time} by @{user}</i>',
+    allSettledToast: '✅ Full payment confirmed!',
+    allSettledLog: '✅ <i>Full payment confirmed at {time} by @{user}</i>',
+    cancelledToast: '❌ Booking cancelled.',
+    cancelledLog: '❌ <i>Booking cancelled at {time} by @{user}</i>',
+    langSwitchedToast: '🇬🇧 Language switched to English',
+    unauthorizedToast: '⛔ Unauthorized access',
+    invalidActionToast: '⚠️ Invalid action',
+    bookingNotFoundToast: '❌ Booking not found',
+  },
+};
 
 function escapeHtml(text?: string | null): string {
   if (!text) return '';
@@ -25,8 +140,9 @@ function escapeHtml(text?: string | null): string {
     .replace(/>/g, '&gt;');
 }
 
-function formatDisplayDate(dateStr?: string | null): string {
-  if (!dateStr || dateStr.trim() === '') return 'Da concordare con la segreteria';
+function formatDisplayDate(dateStr?: string | null, locale: TelegramLocale = 'it'): string {
+  const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
+  if (!dateStr || dateStr.trim() === '') return i18n.toBeAgreed;
   try {
     const raw = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
     const parts = raw.split('-');
@@ -35,7 +151,9 @@ function formatDisplayDate(dateStr?: string | null): string {
       const month = parseInt(parts[1], 10);
       const day = parseInt(parts[2], 10);
       const d = new Date(year, month - 1, day);
-      const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+      const dayNamesIt = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+      const dayNamesEn = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayNames = locale === 'en' ? dayNamesEn : dayNamesIt;
       const formattedDay = String(day).padStart(2, '0');
       const formattedMonth = String(month).padStart(2, '0');
       return `${formattedDay}/${formattedMonth}/${year} (${dayNames[d.getDay()]})`;
@@ -74,28 +192,31 @@ export function buildBookingTelegramKeyboard(params: {
   phone?: string | null;
   adminUrl?: string;
   stripePaymentIntentId?: string | null;
+  locale?: TelegramLocale;
 }): TelegramButton[][] {
   const { bookingId, hasUnpaidFee, isCourseUnpaid, isCancelled, phone, adminUrl, stripePaymentIntentId } = params;
+  const locale = params.locale || 'it';
+  const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
   const keyboard: TelegramButton[][] = [];
 
   if (!isCancelled) {
     const actionRow1: TelegramButton[] = [];
     if (hasUnpaidFee) {
-      actionRow1.push({ text: '💶 Salda Quota €30', callback_data: `fee:${bookingId}` });
+      actionRow1.push({ text: i18n.btnSettleFee, callback_data: `fee:${bookingId}:${locale}` });
     }
     if (isCourseUnpaid) {
-      actionRow1.push({ text: '🎓 Salda Corso', callback_data: `course:${bookingId}` });
+      actionRow1.push({ text: i18n.btnSettleCourse, callback_data: `course:${bookingId}:${locale}` });
     }
     if (actionRow1.length > 0) {
       keyboard.push(actionRow1);
     }
 
     if (hasUnpaidFee && isCourseUnpaid) {
-      keyboard.push([{ text: '✅ Salda Tutto', callback_data: `all:${bookingId}` }]);
+      keyboard.push([{ text: i18n.btnSettleAll, callback_data: `all:${bookingId}:${locale}` }]);
     }
 
     if (hasUnpaidFee || isCourseUnpaid) {
-      keyboard.push([{ text: '❌ Annulla Iscrizione', callback_data: `cancel:${bookingId}` }]);
+      keyboard.push([{ text: i18n.btnCancel, callback_data: `cancel:${bookingId}:${locale}` }]);
     }
   }
 
@@ -109,20 +230,25 @@ export function buildBookingTelegramKeyboard(params: {
         ? cleanPhone
         : `39${cleanPhone}`;
     if (waNumber.length > 5) {
-      linksRow.push({ text: '💬 WhatsApp', url: `https://wa.me/${waNumber}` });
+      linksRow.push({ text: i18n.btnWhatsApp, url: `https://wa.me/${waNumber}` });
     }
   }
 
   if (stripePaymentIntentId) {
-    linksRow.push({ text: '💳 Stripe', url: `https://dashboard.stripe.com/payments/${stripePaymentIntentId}` });
+    linksRow.push({ text: i18n.btnStripe, url: `https://dashboard.stripe.com/payments/${stripePaymentIntentId}` });
   }
 
   const crmUrl = adminUrl || process.env.ADMIN_URL || 'https://atena-school-admin.vercel.app';
-  linksRow.push({ text: '🌐 Admin CRM', url: `${crmUrl}/prenotazioni` });
+  linksRow.push({ text: i18n.btnAdminCrm, url: `${crmUrl}/prenotazioni` });
 
   if (linksRow.length > 0) {
     keyboard.push(linksRow);
   }
+
+  // Language switch toggle row
+  const nextLocale: TelegramLocale = locale === 'it' ? 'en' : 'it';
+  const langButtonText = locale === 'it' ? i18n.btnLangEn : i18n.btnLangIt;
+  keyboard.push([{ text: langButtonText, callback_data: `lang:${nextLocale}:${bookingId}` }]);
 
   return keyboard;
 }
@@ -152,71 +278,78 @@ export function formatBookingTelegramHtml(data: {
   courseFeeEur?: string | number;
   regFeeEur?: string | number;
   isPaidOnline?: boolean;
-  paymentStatusText: string;
+  paymentStatusText?: string;
   bookingId: string;
   notes?: string | null;
   stripePaymentIntentId?: string | null;
   actionLog?: string | null;
+  locale?: TelegramLocale;
 }): string {
+  const locale = data.locale || 'it';
+  const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
   const isPaid = Boolean(data.isPaidOnline);
   const statusEmoji = isPaid ? '✅' : '⏳';
-  const startDateFormatted = formatDisplayDate(data.date);
+  const startDateFormatted = formatDisplayDate(data.date, locale);
   const birthDateFormatted = formatBirthDate(data.studentBirthDate);
   const scheduleFormatted =
     data.lessonSchedule && data.lessonSchedule !== 'N/D' && data.lessonSchedule !== 'Da concordare'
       ? data.lessonSchedule
-      : data.time || 'Da concordare con la segreteria';
+      : data.time || i18n.toBeAgreed;
+
+  const resolvedPaymentStatus = data.paymentStatusText || (isPaid ? i18n.paidOnline : i18n.reservedAtVenue);
 
   const lines: string[] = [
-    `🏛️ <b>NUOVA ISCRIZIONE — ATENA SCHOOL</b>`,
+    i18n.header,
     `━━━━━━━━━━━━━━━━━━━━━━━━━━`,
     ``,
-    `📚 <b>Corso:</b> ${escapeHtml(data.courseName)}`,
-    `🗓 <b>Data di Inizio:</b> <code>${escapeHtml(startDateFormatted)}</code>`,
-    `⏰ <b>Orario & Giorni:</b> ${escapeHtml(scheduleFormatted)}`,
-    `📍 <b>Sede:</b> In Presenza (Cittanova)`,
+    `${i18n.course} ${escapeHtml(data.courseName)}`,
+    `${i18n.startDate} <code>${escapeHtml(startDateFormatted)}</code>`,
+    `${i18n.schedule} ${escapeHtml(scheduleFormatted)}`,
+    i18n.location,
     ``,
-    `👤 <b>ACQUIRENTE / GENITORE:</b>`,
-    `• Nome: <b>${escapeHtml(data.purchaserName)}</b>`,
-    `• 📧 Email: <a href="mailto:${escapeHtml(data.purchaserEmail)}">${escapeHtml(data.purchaserEmail)}</a>`,
-    `• 📱 Telefono: <code>${escapeHtml(data.purchaserPhone || 'Non indicato')}</code>`,
-    `• 🧾 Codice Fiscale: <code>${escapeHtml(data.purchaserTaxCode || 'Non indicato')}</code>`,
+    i18n.purchaserHeader,
+    `${i18n.name} <b>${escapeHtml(data.purchaserName)}</b>`,
+    `${i18n.email} <a href="mailto:${escapeHtml(data.purchaserEmail)}">${escapeHtml(data.purchaserEmail)}</a>`,
+    `${i18n.phone} <code>${escapeHtml(data.purchaserPhone || i18n.notIndicated)}</code>`,
+    `${i18n.taxCode} <code>${escapeHtml(data.purchaserTaxCode || i18n.notIndicated)}</code>`,
   ];
 
   if (data.needsCompanyInvoice) {
     lines.push(
-      `• 💼 Fattura Elettronica: PEC <code>${escapeHtml(data.pecEmail || 'N/D')}</code> • SDI <code>${escapeHtml(data.sdiCode || 'N/D')}</code>`
+      i18n.electronicInvoice
+        .replace('{pec}', escapeHtml(data.pecEmail || 'N/D'))
+        .replace('{sdi}', escapeHtml(data.sdiCode || 'N/D'))
     );
   }
 
   if (data.isForChild) {
     lines.push(``);
-    lines.push(`👶 <b>DATI STUDENTE (MINORE):</b>`);
-    lines.push(`• Nome: <b>${escapeHtml(data.studentName || data.purchaserName)}</b>`);
+    lines.push(i18n.studentHeader);
+    lines.push(`${i18n.name} <b>${escapeHtml(data.studentName || data.purchaserName)}</b>`);
     if (birthDateFormatted) {
-      lines.push(`• 🎂 Data di Nascita: <code>${escapeHtml(birthDateFormatted)}</code>`);
+      lines.push(`${i18n.birthDate} <code>${escapeHtml(birthDateFormatted)}</code>`);
     }
-    lines.push(`• 🧾 Codice Fiscale: <code>${escapeHtml(data.studentTaxCode || 'Non indicato')}</code>`);
+    lines.push(`${i18n.taxCode} <code>${escapeHtml(data.studentTaxCode || i18n.notIndicated)}</code>`);
     if (data.studentEmail) {
       lines.push(
-        `• 📧 Email Studente: <a href="mailto:${escapeHtml(data.studentEmail)}">${escapeHtml(data.studentEmail)}</a>`
+        `${i18n.studentEmail} <a href="mailto:${escapeHtml(data.studentEmail)}">${escapeHtml(data.studentEmail)}</a>`
       );
     }
     if (data.studentPhone) {
-      lines.push(`• 📱 Tel Studente: <code>${escapeHtml(data.studentPhone)}</code>`);
+      lines.push(`${i18n.studentPhone} <code>${escapeHtml(data.studentPhone)}</code>`);
     }
   }
 
   lines.push(``);
-  lines.push(`💶 <b>RIEPILOGO ECONOMICO:</b>`);
-  lines.push(`• Quota Corso: <b>€${escapeHtml(String(data.courseFeeEur || '0.00'))}</b>`);
+  lines.push(i18n.financialSummary);
+  lines.push(`${i18n.courseFee} <b>€${escapeHtml(String(data.courseFeeEur || '0.00'))}</b>`);
   if (Number(data.regFeeEur) > 0) {
-    lines.push(`• Quota Associativa Annuale: <b>€${escapeHtml(String(data.regFeeEur))}</b>`);
+    lines.push(`${i18n.regFee} <b>€${escapeHtml(String(data.regFeeEur))}</b>`);
   }
   lines.push(
-    `• 💳 <b>Totale ${isPaid ? 'Incassato' : 'Da Saldare'}:</b> <b>€${escapeHtml(String(data.totalEur))}</b>`
+    `${isPaid ? i18n.totalPaid : i18n.totalDue} <b>€${escapeHtml(String(data.totalEur))}</b>`
   );
-  lines.push(`• Stato Pagamento: ${statusEmoji} <b>${escapeHtml(data.paymentStatusText)}</b>`);
+  lines.push(`${i18n.paymentStatus} ${statusEmoji} <b>${escapeHtml(resolvedPaymentStatus)}</b>`);
 
   if (isPaid && data.stripePaymentIntentId) {
     lines.push(`• Stripe Intent ID: <code>${escapeHtml(data.stripePaymentIntentId)}</code>`);
@@ -224,19 +357,19 @@ export function formatBookingTelegramHtml(data: {
 
   if (data.notes) {
     lines.push(``);
-    lines.push(`📝 <b>Note del Cliente:</b>`);
+    lines.push(i18n.notesHeader);
     lines.push(`<i>"${escapeHtml(data.notes)}"</i>`);
   }
 
   if (data.actionLog) {
     lines.push(``);
-    lines.push(`⚡ <b>Aggiornamento:</b>`);
+    lines.push(i18n.updateHeader);
     lines.push(data.actionLog);
   }
 
   lines.push(``);
   lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-  lines.push(`🆔 <b>ID Prenotazione:</b> <code>${escapeHtml(data.bookingId)}</code>`);
+  lines.push(`${i18n.bookingId} <code>${escapeHtml(data.bookingId)}</code>`);
 
   return lines.join('\n');
 }
@@ -252,10 +385,13 @@ export async function sendBookingNotificationTelegram(params: {
   botToken?: string;
   chatId?: string;
   adminUrl?: string;
+  locale?: TelegramLocale;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
   const { supabase, booking, course, dto, botToken, chatId, adminUrl } = params;
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   const chat = chatId || process.env.TELEGRAM_CHAT_ID;
+  const locale: TelegramLocale = params.locale || (process.env.TELEGRAM_LOCALE as TelegramLocale) || 'it';
+  const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
 
   if (!token || !chat) {
     return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
@@ -268,9 +404,7 @@ export async function sendBookingNotificationTelegram(params: {
     : booking.student_name || purchaserName;
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
-  const paymentStatusText = isPaidOnline
-    ? 'Pagato Online con Carta (Stripe)'
-    : 'Prenotato con Saldo in Sede (In attesa)';
+  const paymentStatusText = isPaidOnline ? i18n.paidOnline : i18n.reservedAtVenue;
 
   const totalEur = Number(booking.amount_paid || 0).toFixed(2);
   const regFeeEur = Number(booking.registration_fee || 0).toFixed(2);
@@ -302,6 +436,7 @@ export async function sendBookingNotificationTelegram(params: {
     bookingId: booking.id,
     notes: dto.notes || booking.notes,
     stripePaymentIntentId,
+    locale,
   });
 
   const hasUnpaidFee = !isPaidOnline && Number(regFeeEur) > 0;
@@ -311,14 +446,15 @@ export async function sendBookingNotificationTelegram(params: {
     bookingId: booking.id,
     hasUnpaidFee,
     isCourseUnpaid,
+    isCancelled: false,
     phone: dto.phone || booking.purchaser_phone,
     adminUrl,
     stripePaymentIntentId,
+    locale,
   });
 
   try {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const res = await fetch(url, {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -326,7 +462,9 @@ export async function sendBookingNotificationTelegram(params: {
         text: htmlText,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
-        reply_markup: { inline_keyboard: keyboard },
+        reply_markup: {
+          inline_keyboard: keyboard,
+        },
       }),
     });
 
@@ -347,7 +485,7 @@ export async function sendBookingNotificationTelegram(params: {
         booking_id: booking.id,
         provider: 'telegram',
         message_id: msgId ? String(msgId) : null,
-        request_payload: { bookingId: booking.id, courseName },
+        request_payload: { bookingId: booking.id, courseName, locale },
         response_payload: json,
       });
     } catch {
@@ -378,7 +516,7 @@ export async function handleTelegramCallbackAction(params: {
   }
 
   const queryId = callbackQuery.id;
-  const data = callbackQuery.data as string; // format: "action:bookingId"
+  const data = callbackQuery.data as string; // format: "action:bookingId[:locale]" or "lang:locale:bookingId"
   const msg = callbackQuery.message;
   const fromUser = callbackQuery.from;
   const chatId = msg?.chat?.id;
@@ -391,17 +529,32 @@ export async function handleTelegramCallbackAction(params: {
     const isChatAllowed = allowedChatIds.includes(String(chatId));
     const isUserAllowed = allowedChatIds.includes(String(fromUser?.id));
     if (!isChatAllowed && !isUserAllowed) {
-      await answerCallbackQuery(token, queryId, '⛔ Accesso non autorizzato', true);
+      await answerCallbackQuery(token, queryId, '⛔ Accesso non autorizzato / Unauthorized', true);
       return { success: false, message: 'Unauthorized chat/user' };
     }
   }
 
   if (!data || !data.includes(':')) {
-    await answerCallbackQuery(token, queryId, '⚠️ Azione non valida', false);
+    await answerCallbackQuery(token, queryId, '⚠️ Azione non valida / Invalid action', false);
     return { success: false, message: 'Invalid callback data format' };
   }
 
-  const [action, bookingId] = data.split(':');
+  const parts = data.split(':');
+  let action = parts[0];
+  let bookingId = '';
+  let currentLocale: TelegramLocale = 'it';
+
+  if (action === 'lang') {
+    // format: "lang:<locale>:<bookingId>"
+    currentLocale = (parts[1] as TelegramLocale) || 'it';
+    bookingId = parts[2] || '';
+  } else {
+    // format: "<action>:<bookingId>[:<locale>]"
+    bookingId = parts[1] || '';
+    currentLocale = (parts[2] as TelegramLocale) || 'it';
+  }
+
+  const i18n = TELEGRAM_I18N[currentLocale] || TELEGRAM_I18N.it;
 
   // 1. Fetch booking details
   const { data: booking, error: bookingErr } = await supabase
@@ -411,7 +564,7 @@ export async function handleTelegramCallbackAction(params: {
     .maybeSingle();
 
   if (bookingErr || !booking) {
-    await answerCallbackQuery(token, queryId, '❌ Prenotazione non trovata', true);
+    await answerCallbackQuery(token, queryId, i18n.bookingNotFoundToast, true);
     return { success: false, message: 'Booking not found' };
   }
 
@@ -425,9 +578,14 @@ export async function handleTelegramCallbackAction(params: {
   let actionLogText = '';
 
   const nowIso = new Date().toISOString();
-  const timeFormatted = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const timeFormatted = new Date().toLocaleTimeString(currentLocale === 'en' ? 'en-GB' : 'it-IT', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-  if (action === 'fee') {
+  if (action === 'lang') {
+    toastMessage = i18n.langSwitchedToast;
+  } else if (action === 'fee') {
     // Settle Quota Associativa €30
     const feePayment = payments?.find((p) => p.type === PaymentType.REGISTRATION_FEE);
     if (feePayment) {
@@ -468,8 +626,10 @@ export async function handleTelegramCallbackAction(params: {
       );
     }
 
-    toastMessage = '💶 Quota associativa €30 registrata!';
-    actionLogText = `✅ <i>Quota €30 registrata alle ${timeFormatted} da @${escapeHtml(senderName)}</i>`;
+    toastMessage = i18n.feeSettledToast;
+    actionLogText = i18n.feeSettledLog
+      .replace('{time}', timeFormatted)
+      .replace('{user}', escapeHtml(senderName));
   } else if (action === 'course') {
     // Settle Course Payment
     const coursePayment = payments?.find((p) => p.type === PaymentType.COURSE_PAYMENT);
@@ -486,8 +646,10 @@ export async function handleTelegramCallbackAction(params: {
       .update({ payment_status: BookingPaymentStatus.PAID })
       .eq('id', bookingId);
 
-    toastMessage = '🎓 Quota corso confermata!';
-    actionLogText = `✅ <i>Corso saldato alle ${timeFormatted} da @${escapeHtml(senderName)}</i>`;
+    toastMessage = i18n.courseSettledToast;
+    actionLogText = i18n.courseSettledLog
+      .replace('{time}', timeFormatted)
+      .replace('{user}', escapeHtml(senderName));
   } else if (action === 'all') {
     // Settle both course and fee
     if (payments && payments.length > 0) {
@@ -527,8 +689,10 @@ export async function handleTelegramCallbackAction(params: {
       .update({ payment_status: BookingPaymentStatus.PAID })
       .eq('id', bookingId);
 
-    toastMessage = '✅ Saldo completo confermato!';
-    actionLogText = `✅ <i>Saldo totale confermato alle ${timeFormatted} da @${escapeHtml(senderName)}</i>`;
+    toastMessage = i18n.allSettledToast;
+    actionLogText = i18n.allSettledLog
+      .replace('{time}', timeFormatted)
+      .replace('{user}', escapeHtml(senderName));
   } else if (action === 'cancel') {
     // Cancel booking and lessons
     await supabase
@@ -544,14 +708,16 @@ export async function handleTelegramCallbackAction(params: {
       .update({ status: LessonStatus.CANCELLED })
       .eq('booking_id', bookingId);
 
-    toastMessage = '❌ Prenotazione annullata.';
-    actionLogText = `❌ <i>Iscrizione annullata alle ${timeFormatted} da @${escapeHtml(senderName)}</i>`;
+    toastMessage = i18n.cancelledToast;
+    actionLogText = i18n.cancelledLog
+      .replace('{time}', timeFormatted)
+      .replace('{user}', escapeHtml(senderName));
   }
 
   // 3. Send Toast answer to Telegram
   await answerCallbackQuery(token, queryId, toastMessage, false);
 
-  // 4. Update the original Telegram Message with updated statuses and buttons
+  // 4. Update the original Telegram Message with updated statuses and buttons in selected locale
   try {
     const { data: updatedBooking } = await supabase
       .from('bookings')
@@ -574,10 +740,10 @@ export async function handleTelegramCallbackAction(params: {
     const isCourseUnpaid = !isCancelled && !isPaid && courseP?.status !== PaymentRecordStatus.SUCCEEDED;
 
     const paymentStatusText = isCancelled
-      ? 'Annullato'
+      ? i18n.cancelledStatus
       : isPaid
-        ? 'Saldato in Sede (Confermato)'
-        : 'In attesa di saldo';
+        ? i18n.settledAtVenue
+        : i18n.reservedAtVenue;
 
     const newHtml = formatBookingTelegramHtml({
       courseName: updatedBooking?.course_name || 'Corso Atena School',
@@ -599,7 +765,8 @@ export async function handleTelegramCallbackAction(params: {
       paymentStatusText,
       bookingId: bookingId,
       notes: updatedBooking?.notes,
-      actionLog: actionLogText,
+      actionLog: actionLogText || undefined,
+      locale: currentLocale,
     });
 
     const updatedKeyboard = buildBookingTelegramKeyboard({
@@ -608,6 +775,7 @@ export async function handleTelegramCallbackAction(params: {
       isCourseUnpaid,
       isCancelled,
       phone: updatedBooking?.purchaser_phone,
+      locale: currentLocale,
     });
 
     await editMessageText(token, chatId, messageId, newHtml, updatedKeyboard);
