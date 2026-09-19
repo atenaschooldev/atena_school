@@ -97,3 +97,30 @@ export async function incrementPromoCodeUsage(supabase: SupabaseClient, promoCod
     console.warn('Failed to increment promo code usage count:', err);
   }
 }
+
+/**
+ * Atomically decrements the usage counter for a promo code (minimum 0)
+ */
+export async function decrementPromoCodeUsage(supabase: SupabaseClient, promoCodeId: string): Promise<void> {
+  try {
+    const { data: current } = await supabase
+      .from('promo_codes')
+      .select('used_count')
+      .eq('id', promoCodeId)
+      .maybeSingle();
+
+    if (current) {
+      const nextCount = Math.max(0, (Number(current.used_count) || 0) - 1);
+      await supabase
+        .from('promo_codes')
+        .update({
+          used_count: nextCount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', promoCodeId);
+    }
+  } catch (err) {
+    console.warn('Failed to decrement promo code usage count:', err);
+  }
+}
+
