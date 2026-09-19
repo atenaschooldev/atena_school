@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Tag, Percent, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,32 +33,32 @@ export function PromotionsView() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PromoCodeItem | null>(null);
 
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleSearchChange = useCallback((q: string) => {
-    setSearchQuery(q);
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => setDebouncedSearch(q), 300);
-  }, []);
-
-  useEffect(() => () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); }, []);
-
   const {
-    promoCodes,
+    promoCodes: allPromoCodes,
     loading,
     createPromoCode,
     updatePromoCode,
     togglePromoCode,
     deletePromoCode,
-  } = usePromoCodes({
-    search: debouncedSearch,
-    status: statusFilter,
-  });
+  } = usePromoCodes();
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "code", desc: false },
   ]);
+
+  const filteredPromoCodes = useMemo(() => {
+    return allPromoCodes.filter((p) => {
+      const q = searchQuery.toLowerCase().trim();
+      if (q) {
+        const matchCode = (p.code || "").toLowerCase().includes(q);
+        const matchDesc = (p.description || "").toLowerCase().includes(q);
+        if (!matchCode && !matchDesc) return false;
+      }
+      if (statusFilter === "active" && !p.is_active) return false;
+      if (statusFilter === "inactive" && p.is_active) return false;
+      return true;
+    });
+  }, [allPromoCodes, searchQuery, statusFilter]);
 
   const handleEdit = (item: PromoCodeItem) => {
     setEditingItem(item);
@@ -84,7 +84,7 @@ export function PromotionsView() {
   );
 
   const table = useReactTable({
-    data: promoCodes,
+    data: filteredPromoCodes,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -95,11 +95,11 @@ export function PromotionsView() {
   });
 
   const stats = useMemo(() => {
-    const total = promoCodes.length;
-    const active = promoCodes.filter((p) => p.is_active).length;
-    const totalUses = promoCodes.reduce((acc, p) => acc + (p.used_count || 0), 0);
+    const total = allPromoCodes.length;
+    const active = allPromoCodes.filter((p) => p.is_active).length;
+    const totalUses = allPromoCodes.reduce((acc, p) => acc + (p.used_count || 0), 0);
     return { total, active, totalUses };
-  }, [promoCodes]);
+  }, [allPromoCodes]);
 
   const metrics = [
     {
@@ -147,7 +147,7 @@ export function PromotionsView() {
       <div className="@container/main px-4 lg:px-6 space-y-4">
         <DataViewToolbar
           searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
+          onSearchChange={setSearchQuery}
           searchPlaceholder="Cerca codice o descrizione..."
           filters={[
             {

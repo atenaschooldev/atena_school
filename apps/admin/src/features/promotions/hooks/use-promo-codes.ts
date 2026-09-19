@@ -3,37 +3,18 @@ import { toast } from "sonner";
 import type { PromoCodeItem, CreatePromoCodeInput } from "../types";
 import { apiFetch } from "@/lib/api";
 
-export function usePromoCodes(filters?: { search?: string; status?: string }) {
+export function usePromoCodes() {
   const queryClient = useQueryClient();
-  const search = filters?.search;
-  const status = filters?.status;
 
   const {
     data: promoCodes = [],
     isLoading,
     refetch,
   } = useQuery<PromoCodeItem[]>({
-    queryKey: ["promo-codes", search, status],
+    queryKey: ["promo-codes"],
     queryFn: async () => {
       const data = await apiFetch<PromoCodeItem[]>("/admin/promo-codes");
-      let list = Array.isArray(data) ? data : [];
-
-      if (search && search.trim()) {
-        const q = search.trim().toLowerCase();
-        list = list.filter(
-          (p) =>
-            p.code.toLowerCase().includes(q) ||
-            (p.description && p.description.toLowerCase().includes(q))
-        );
-      }
-
-      if (status === "active") {
-        list = list.filter((p) => p.is_active);
-      } else if (status === "inactive") {
-        list = list.filter((p) => !p.is_active);
-      }
-
-      return list;
+      return Array.isArray(data) ? data : [];
     },
     staleTime: 1000 * 30,
   });
