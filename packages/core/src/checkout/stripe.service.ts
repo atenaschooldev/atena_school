@@ -253,6 +253,7 @@ export async function createStripeSession(
     payment_method_types: ['card'],
     line_items: lineItems,
     mode: isSubscription ? 'subscription' : 'payment',
+    customer_creation: isSubscription ? undefined : 'always',
     customer_email: dto.email,
     success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${reservationRes.bookingId}`,
     cancel_url: `${siteUrl}/checkout/${dto.itemId}`,
