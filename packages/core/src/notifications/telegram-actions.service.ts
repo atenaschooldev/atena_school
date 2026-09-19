@@ -9,6 +9,7 @@ import {
   NotificationChannel,
   NotificationStatus,
   NotificationType,
+  ACADEMIC_YEAR,
 } from '@atena/api-types';
 
 export type TelegramLocale = 'it' | 'en';
@@ -616,11 +617,11 @@ export async function handleTelegramCallbackAction(params: {
       await supabase.from('annual_memberships').upsert(
         {
           tax_code: studentTaxCode.trim().toUpperCase(),
-          academic_year: '2026/2027',
+          academic_year: ACADEMIC_YEAR.CURRENT,
           status: MembershipStatus.ACTIVE,
           student_id: studentId || null,
           paid_at: nowIso,
-          expires_at: '2027-08-31T23:59:59+00:00',
+          expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
         },
         { onConflict: 'tax_code,academic_year' }
       );
@@ -674,11 +675,11 @@ export async function handleTelegramCallbackAction(params: {
       await supabase.from('annual_memberships').upsert(
         {
           tax_code: studentTaxCode.trim().toUpperCase(),
-          academic_year: '2026/2027',
+          academic_year: ACADEMIC_YEAR.CURRENT,
           status: MembershipStatus.ACTIVE,
           student_id: studentId || null,
           paid_at: nowIso,
-          expires_at: '2027-08-31T23:59:59+00:00',
+          expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
         },
         { onConflict: 'tax_code,academic_year' }
       );

@@ -11,6 +11,7 @@ import {
   PaymentType,
   PaymentCurrency,
   PaymentProvider,
+  ACADEMIC_YEAR,
 } from '@atena/api-types';
 import { calculateLessonDates } from '@atena/utils';
 import { CreateReservationParams, VerifyPaymentParams } from '../types';
@@ -567,7 +568,7 @@ export async function handleStripeWebhook(
             payment_method: PaymentMethod.STRIPE,
             provider: PaymentProvider.STRIPE,
             provider_transaction_id: session.payment_intent as string || null,
-            academic_year: '2026/2027',
+            academic_year: ACADEMIC_YEAR.CURRENT,
           });
         }
 
@@ -583,7 +584,7 @@ export async function handleStripeWebhook(
             payment_method: PaymentMethod.STRIPE,
             provider: PaymentProvider.STRIPE,
             provider_transaction_id: session.payment_intent as string || null,
-            academic_year: '2026/2027',
+            academic_year: ACADEMIC_YEAR.CURRENT,
           });
         }
 
@@ -676,7 +677,7 @@ export async function handleStripeWebhook(
           type: PaymentType.COURSE_PAYMENT,
           payment_method: PaymentMethod.STRIPE,
           provider: PaymentProvider.STRIPE,
-          academic_year: '2026/2027',
+          academic_year: ACADEMIC_YEAR.CURRENT,
         });
 
         // Update booking subscription status and period
