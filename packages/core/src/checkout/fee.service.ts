@@ -48,11 +48,11 @@ export async function checkFeeStatus(
     return { success: true, annualFeePaid: true, userFound: true, requiresFee: false };
   }
 
-  // 3. Check if fee is reserved in an existing booking by Codice Fiscale
+  // 3. Check if fee is reserved in an existing booking by Student's Codice Fiscale
   const { data: pendingBooking } = await supabase
     .from('bookings')
     .select('id')
-    .or(`student_tax_code.ilike.${cleanTax},purchaser_tax_code.ilike.${cleanTax}`)
+    .ilike('student_tax_code', cleanTax)
     .gt('registration_fee', 0)
     .limit(1)
     .maybeSingle();
