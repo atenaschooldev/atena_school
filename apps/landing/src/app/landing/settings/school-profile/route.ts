@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSchoolProfile, updateSchoolProfile } from '@atena/core';
 import type { SchoolProfile } from '@atena/api-types';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
@@ -32,6 +33,13 @@ async function patchHandler(request: NextRequest) {
     const body = (await request.json()) as Partial<SchoolProfile>;
     const supabase = getSupabaseAdmin();
     const updated = await updateSchoolProfile(supabase, body);
+    try {
+      revalidatePath('/', 'layout');
+      revalidatePath('/');
+      revalidatePath('/corsi');
+    } catch (revErr) {
+      console.warn('[SchoolProfile PATCH] revalidatePath warning:', revErr);
+    }
     return withCors(NextResponse.json({ success: true, profile: updated }));
   } catch (err: any) {
     console.error('[PATCH /landing/settings/school-profile error]:', err);

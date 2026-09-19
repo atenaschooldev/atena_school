@@ -6,6 +6,8 @@ import { env } from "@/config/env";
 import { getSchoolProfile } from "@atena/core";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
+export const revalidate = 60;
+
 export async function generateMetadata() {
   const supabase = getSupabaseAdmin();
   const school = await getSchoolProfile(supabase);

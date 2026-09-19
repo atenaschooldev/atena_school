@@ -13,6 +13,8 @@ import '@/index.css';
 import { Nunito } from 'next/font/google';
 import type { Viewport } from 'next';
 
+export const revalidate = 60;
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
