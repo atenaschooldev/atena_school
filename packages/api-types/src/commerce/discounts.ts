@@ -67,7 +67,7 @@ export interface PromoCode {
   discount_value: number;
   waive_registration_fee: boolean;
   max_uses?: number | null;
-  used_count: number;
+  used_count?: number;
   valid_from?: string | null;
   valid_until?: string | null;
   is_active: boolean;
