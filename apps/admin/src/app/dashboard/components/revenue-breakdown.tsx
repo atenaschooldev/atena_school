@@ -148,7 +148,7 @@ export function RevenueBreakdown() {
                               y={viewBox.cy}
                               className="fill-foreground text-3xl font-bold"
                             >
-                              ${(revenueData[activeIndex].amount / 1000).toFixed(0)}K
+                              ${((revenueData[activeIndex]?.amount ?? 0) / 1000).toFixed(0)}K
                             </tspan>
                             <tspan
                               x={viewBox.cx}
