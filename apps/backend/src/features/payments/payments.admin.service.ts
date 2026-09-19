@@ -351,13 +351,13 @@ export class PaymentsService {
 
         if (memId) {
           await this.prisma.$executeRawUnsafe(
-            `UPDATE annual_memberships SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW() WHERE id = '${memId}'::uuid`
+            `UPDATE annual_memberships SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = '${id}'::uuid WHERE id = '${memId}'::uuid`
           ).catch(() => null);
         } else if (studentTaxCode) {
           await this.prisma.$executeRawUnsafe(`
-            INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, paid_at, expires_at)
-            VALUES (gen_random_uuid(), '${studentTaxCode}', '2026/2027', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
-            ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id);
+            INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, payment_id, paid_at, expires_at)
+            VALUES (gen_random_uuid(), '${studentTaxCode}', '2026/2027', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${id}'::uuid, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
+            ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = EXCLUDED.payment_id, student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id);
           `).catch(() => null);
         }
       } else {
