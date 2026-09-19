@@ -127,10 +127,10 @@ export const studentItemSchema = z.object({
     .max(50, "Il cognome è troppo lungo"),
   email: z
     .string()
-    .email("Email dello studente non valida")
-    .optional()
-    .or(z.literal("")),
-  phone: optionalPhone("Numero di telefono dello studente non valido"),
+    .min(1, "L'email dello studente è obbligatoria")
+    .email("Email dello studente non valida"),
+  phone: phoneField("Il numero di telefono dello studente è obbligatorio"),
+
   taxCode: z
     .string()
     .min(11, "Il Codice Fiscale dello studente è obbligatorio")
@@ -241,7 +241,10 @@ function applyReservationRefinements<T extends {
   studentFirstName?: string;
   studentLastName?: string;
   studentBirthDate?: string;
+  studentEmail?: string;
+  studentPhone?: string;
   purchaserTaxCode?: string;
+
   needsCompanyInvoice?: boolean;
   sdiCode?: string;
   pecEmail?: string;
@@ -270,7 +273,22 @@ function applyReservationRefinements<T extends {
           message: "La data di nascita dello studente è obbligatoria",
         });
       }
+      if (!data.studentEmail || !data.studentEmail.includes("@")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["studentEmail"],
+          message: "L'email dello studente è obbligatoria",
+        });
+      }
+      if (!data.studentPhone || !isValidPhone(data.studentPhone)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["studentPhone"],
+          message: "Il numero di telefono dello studente è obbligatorio",
+        });
+      }
     }
+
     if (
       !data.purchaserTaxCode ||
       !CODICE_FISCALE_RE.test(data.purchaserTaxCode.trim())
