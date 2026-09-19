@@ -176,7 +176,7 @@ export function PaymentsView() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      Nessun incasso trovato.
+                      {t("payments.noPaymentsFound")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -219,8 +219,8 @@ export function PaymentsView() {
       <DeleteConfirmDialog
         open={!!deletingPaymentId}
         onOpenChange={(v) => !v && setDeletingPaymentId(null)}
-        title="Elimina Pagamento"
-        description="Sei sicuro di voler eliminare questo incasso? L'operazione non può essere annullata."
+        title={t("payments.deletePaymentTitle")}
+        description={t("payments.deletePaymentDesc")}
         onConfirm={async () => {
           if (deletingPaymentId) {
             await deletePayment(deletingPaymentId);

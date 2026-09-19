@@ -137,9 +137,9 @@ export default function AccountSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Change Password</CardTitle>
+                <CardTitle>{t("settings.changePassword")}</CardTitle>
                 <CardDescription>
-                  Update your password to keep your account secure.
+                  {t("settings.changePasswordDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -148,9 +148,9 @@ export default function AccountSettings() {
                   name="currentPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Current Password</FormLabel>
+                      <FormLabel>{t("settings.currentPassword")}</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter current password" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -161,9 +161,9 @@ export default function AccountSettings() {
                   name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>New Password</FormLabel>
+                      <FormLabel>{t("settings.newPassword")}</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Enter new password" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -174,9 +174,9 @@ export default function AccountSettings() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
+                      <FormLabel>{t("settings.confirmPassword")}</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="Confirm new password" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -187,22 +187,22 @@ export default function AccountSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Danger Zone</CardTitle>
+                <CardTitle>{t("settings.dangerZone")}</CardTitle>
                 <CardDescription>
-                  Irreversible and destructive actions.
+                  {t("settings.dangerZoneDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Separator />
                 <div className="flex flex-wrap gap-2 items-center justify-between">
                   <div>
-                    <h4 className="font-semibold">Delete Account</h4>
+                    <h4 className="font-semibold">{t("settings.deleteAccount")}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Permanently delete your account and all associated data.
+                      {t("settings.deleteAccountDesc")}
                     </p>
                   </div>
                   <Button variant="destructive" type="button" className="cursor-pointer">
-                    Delete Account
+                    {t("settings.deleteAccount")}
                   </Button>
                 </div>
               </CardContent>

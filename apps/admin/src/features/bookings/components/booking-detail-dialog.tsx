@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Booking } from "../types/booking";
 import {
   BookingPaymentStatus,
@@ -14,7 +14,7 @@ import {
   parsePaymentType,
 } from "@atena/api-types";
 import { usePayments } from "@/features/payments/hooks/use-payments";
-import { api } from "@/lib/api";
+import { useTranslation } from "@/i18n/context";
 import {
   Dialog,
   DialogContent,
@@ -54,17 +54,11 @@ import {
   Clock,
   CheckCircle2,
   FileText,
-  Building2,
   GraduationCap,
   Sparkles,
   Trash2,
   ExternalLink,
-  AlertCircle,
-  Plus,
   Receipt,
-  PlayCircle,
-  Coins,
-  BookOpen,
   Copy,
   Check,
   Printer,
@@ -72,15 +66,29 @@ import {
   Tag,
 } from "lucide-react";
 import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { it as dateLocaleIt, enUS as dateLocaleEn } from "date-fns/locale";
 
-const DAYS_IT = ["", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"];
-
-function formatScheduleText(days?: number[] | null, startTime?: string | null, endTime?: string | null) {
+function formatScheduleText(
+  days?: number[] | null,
+  startTime?: string | null,
+  endTime?: string | null,
+  t?: (k: string) => string
+) {
   if (!days || days.length === 0 || !startTime) {
-    return "Flessibile / Da concordare";
+    return t ? t("bookings.flexibleAgreed") : "Flexible / To be agreed";
   }
-  const dayNames = days.map((d) => DAYS_IT[d] || `Giorno ${d}`).join(" e ");
+  const dayKeys: Record<number, string> = {
+    1: "mon",
+    2: "tue",
+    3: "wed",
+    4: "thu",
+    5: "fri",
+    6: "sat",
+    7: "sun",
+  };
+  const dayNames = days
+    .map((d) => (t && dayKeys[d] ? t(`weekdays.${dayKeys[d]}`) : `Day ${d}`))
+    .join(", ");
   if (endTime) {
     return `${dayNames} ${startTime}-${endTime}`;
   }
@@ -102,6 +110,7 @@ export function BookingDetailDialog({
   onUpdateStatus,
   onDelete,
 }: BookingDetailDialogProps) {
+  const { t, locale } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
@@ -109,7 +118,7 @@ export function BookingDetailDialog({
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedField(text);
-    toast.success(`${label} copiato!`);
+    toast.success(`${label} ${t("common.saved")}`);
     setTimeout(() => setCopiedField(null), 2000);
   };
   const [deleting, setDeleting] = useState(false);
@@ -123,25 +132,25 @@ export function BookingDetailDialog({
 
   const queryClient = useQueryClient();
 
-  const { payments, loading: paymentsLoading, createPayment, updatePayment, refresh: refreshPayments } = usePayments(
+  const { payments, loading: paymentsLoading, createPayment, refresh: refreshPayments } = usePayments(
     booking?.id,
   );
 
   if (!booking) return null;
 
-  const isCompleted = Number(booking.payment_status) === BookingPaymentStatus.PAID || booking.payment_status === "completed" || booking.payment_status === "paid";
-  const isReserved = Number(booking.payment_status) === BookingPaymentStatus.RESERVED || booking.payment_status === "reserved";
   const isDifferentStudent = booking.student_name && booking.purchaser_name !== booking.student_name;
 
   const formattedSchedule = formatScheduleText(
     booking.schedule_days,
     booking.start_time,
     booking.end_time,
+    t
   );
 
+  const activeDateLocale = locale === "it" ? dateLocaleIt : dateLocaleEn;
   const formattedDate = booking.created_at
-    ? format(new Date(booking.created_at), "d MMMM yyyy 'alle' HH:mm", { locale: it })
-    : "N/D";
+    ? format(new Date(booking.created_at), "d MMMM yyyy HH:mm", { locale: activeDateLocale })
+    : t("common.noData");
 
   const handleAddPayment = async () => {
     if (!newPaymentAmount || Number(newPaymentAmount) <= 0) return;
@@ -166,16 +175,16 @@ export function BookingDetailDialog({
       <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
         {/* Header Bar */}
         <div className="p-6 pb-4 border-b bg-muted/20 space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono text-xs text-muted-foreground bg-background">
-                #{booking.id.slice(0, 8)}
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="font-mono text-xs text-muted-foreground bg-background">
+              #{booking.id.slice(0, 8)}
+            </Badge>
+            {isDifferentStudent && (
+              <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 font-medium">
+                {t("bookings.forChildOrThirdParty")}
               </Badge>
-              {isDifferentStudent && (
-                <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 font-medium">
-                  Acquisto per figlio / terzi
-                </Badge>
-              )}
-            </div>
+            )}
+          </div>
 
           <div>
             <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
@@ -183,7 +192,7 @@ export function BookingDetailDialog({
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
               <Calendar className="w-3.5 h-3.5" />
-              <span>Ordinato il {formattedDate}</span>
+              <span>{t("bookings.orderedOn", { date: formattedDate })}</span>
             </DialogDescription>
           </div>
         </div>
@@ -196,20 +205,20 @@ export function BookingDetailDialog({
             <div className="rounded-lg border p-4 bg-card space-y-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <User className="w-4 h-4 text-primary" />
-                <span>Acquirente / Genitore</span>
+                <span>{t("bookings.purchaserParent")}</span>
               </div>
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-[11px] text-muted-foreground block">Nome e Cognome</span>
-                  <p className="font-semibold text-sm text-foreground">{booking.purchaser_name || "N/D"}</p>
+                  <span className="text-[11px] text-muted-foreground block">{t("users.fullName")}</span>
+                  <p className="font-semibold text-sm text-foreground">{booking.purchaser_name || t("common.noData")}</p>
                 </div>
                 <div className="grid grid-cols-1 gap-1.5 pt-1 border-t">
                   {booking.purchaser_email && (
                     <button
                       type="button"
-                      onClick={() => handleCopy(booking.purchaser_email!, "Email acquirente")}
+                      onClick={() => handleCopy(booking.purchaser_email!, "Email")}
                       className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
-                      title="Clicca per copiare l'email"
+                      title={t("common.copy")}
                     >
                       <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
@@ -226,9 +235,9 @@ export function BookingDetailDialog({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => handleCopy(booking.purchaser_phone!, "Telefono acquirente")}
+                        onClick={() => handleCopy(booking.purchaser_phone!, "Phone")}
                         className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
-                        title="Clicca per copiare il telefono"
+                        title={t("common.copy")}
                       >
                         <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
@@ -245,7 +254,7 @@ export function BookingDetailDialog({
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 gap-0.5 shrink-0"
-                        title="Apri chat WhatsApp"
+                        title="WhatsApp"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <span>WA</span>
@@ -256,13 +265,13 @@ export function BookingDetailDialog({
                   {booking.purchaser_tax_code && (
                     <button
                       type="button"
-                      onClick={() => handleCopy(booking.purchaser_tax_code!, "Codice fiscale")}
+                      onClick={() => handleCopy(booking.purchaser_tax_code!, "CF")}
                       className="text-muted-foreground hover:text-primary flex items-center gap-2 font-mono transition-colors cursor-pointer text-left w-fit"
-                      title="Clicca per copiare il CF"
+                      title={t("common.copy")}
                     >
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>
-                        CF: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.purchaser_tax_code}</strong>
+                        {t("bookings.taxCode")}: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.purchaser_tax_code}</strong>
                       </span>
                       {copiedField === booking.purchaser_tax_code ? (
                         <Check className="w-3 h-3 text-emerald-500 shrink-0" />
@@ -279,22 +288,22 @@ export function BookingDetailDialog({
             <div className="rounded-lg border p-4 bg-card space-y-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <GraduationCap className="w-4 h-4 text-primary" />
-                <span>Studente / Alunno</span>
+                <span>{t("bookings.studentChild")}</span>
               </div>
               <div className="space-y-2 text-xs">
                 <div>
-                  <span className="text-[11px] text-muted-foreground block">Nome e Cognome</span>
+                  <span className="text-[11px] text-muted-foreground block">{t("users.fullName")}</span>
                   <p className="font-semibold text-sm text-foreground">
-                    {booking.student_name || booking.purchaser_name || "N/D"}
+                    {booking.student_name || booking.purchaser_name || t("common.noData")}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 gap-1.5 pt-1 border-t">
                   {(booking.student_email || booking.purchaser_email) && (
                     <button
                       type="button"
-                      onClick={() => handleCopy((booking.student_email || booking.purchaser_email)!, "Email studente")}
+                      onClick={() => handleCopy((booking.student_email || booking.purchaser_email)!, "Email")}
                       className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
-                      title="Clicca per copiare l'email"
+                      title={t("common.copy")}
                     >
                       <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
@@ -311,9 +320,9 @@ export function BookingDetailDialog({
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => handleCopy(booking.student_phone!, "Telefono studente")}
+                        onClick={() => handleCopy(booking.student_phone!, "Phone")}
                         className="text-muted-foreground hover:text-primary flex items-center gap-2 transition-colors cursor-pointer text-left w-fit"
-                        title="Clicca per copiare il telefono"
+                        title={t("common.copy")}
                       >
                         <Phone className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span className="font-medium text-foreground underline decoration-dashed underline-offset-2">
@@ -330,7 +339,7 @@ export function BookingDetailDialog({
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 gap-0.5 shrink-0"
-                        title="Apri chat WhatsApp"
+                        title="WhatsApp"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <span>WA</span>
@@ -341,8 +350,8 @@ export function BookingDetailDialog({
                   {booking.student_birth_date && (
                     <p className="text-muted-foreground flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>Nato il: <strong className="text-foreground">{
-                        new Date(booking.student_birth_date).toLocaleDateString("it-IT", {
+                      <span>{t("bookings.birthDate")}: <strong className="text-foreground">{
+                        new Date(booking.student_birth_date).toLocaleDateString(locale === "it" ? "it-IT" : "en-US", {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
@@ -353,19 +362,19 @@ export function BookingDetailDialog({
                   {(booking.student_birth_place || booking.birth_place) && (
                     <p className="text-muted-foreground flex items-center gap-2">
                       <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span>Luogo di nascita: <strong className="text-foreground">{booking.student_birth_place || booking.birth_place}</strong></span>
+                      <span>{t("bookings.birthPlace")}: <strong className="text-foreground">{booking.student_birth_place || booking.birth_place}</strong></span>
                     </p>
                   )}
                   {booking.student_tax_code && (
                     <button
                       type="button"
-                      onClick={() => handleCopy(booking.student_tax_code!, "CF studente")}
+                      onClick={() => handleCopy(booking.student_tax_code!, "CF")}
                       className="text-muted-foreground hover:text-primary flex items-center gap-2 font-mono transition-colors cursor-pointer text-left w-fit"
-                      title="Clicca per copiare il CF"
+                      title={t("common.copy")}
                     >
                       <FileText className="w-3.5 h-3.5 text-primary shrink-0" />
                       <span>
-                        CF: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.student_tax_code}</strong>
+                        {t("bookings.taxCode")}: <strong className="text-foreground underline decoration-dashed underline-offset-2">{booking.student_tax_code}</strong>
                       </span>
                       {copiedField === booking.student_tax_code ? (
                         <Check className="w-3 h-3 text-emerald-500 shrink-0" />
@@ -381,7 +390,6 @@ export function BookingDetailDialog({
 
           {/* Section 2: Financial Balance Summary */}
           {(() => {
-            // Values now come pre-computed from the backend via booking.financial_summary
             const fs = (booking as any).financial_summary;
             const paidSum = fs?.paid_sum ?? payments
               .filter((p) => p.status === PaymentRecordStatus.SUCCEEDED || p.status === "succeeded" || String(p.status) === "2")
@@ -396,36 +404,36 @@ export function BookingDetailDialog({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     <CreditCard className="w-4 h-4 text-primary" />
-                    <span>Bilancio Finanziario Ordine</span>
+                    <span>{t("bookings.financialBalance")}</span>
                   </div>
                   {remaining > 0 ? (
                     <Badge variant="secondary" className="bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 font-medium">
-                      Debito: €{remaining.toFixed(2)}
+                      {t("common.overdue")}: €{remaining.toFixed(2)}
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium">
-                      ✓ Saldo Completo
+                      {t("bookings.fullSettled")}
                     </Badge>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-xs">
                   <div className="p-2.5 rounded-lg bg-muted/40 border space-y-1">
-                    <span className="text-[10px] text-muted-foreground block font-medium uppercase">Totale Ordine</span>
+                    <span className="text-[10px] text-muted-foreground block font-medium uppercase">{t("bookings.totalAmount")}</span>
                     <p className="font-bold text-sm font-mono text-foreground">€{totalTarget.toFixed(2)}</p>
                   </div>
                   <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 space-y-1">
-                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-medium uppercase">Già Pagato</span>
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block font-medium uppercase">{t("bookings.paidSum")}</span>
                     <p className="font-bold text-sm font-mono text-emerald-600 dark:text-emerald-400">€{paidSum.toFixed(2)}</p>
                   </div>
                   <div className={`p-2.5 rounded-lg border space-y-1 ${remaining > 0 ? "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400" : "bg-muted/40 text-muted-foreground"}`}>
-                    <span className="text-[10px] block font-medium uppercase">Da Saldare</span>
+                    <span className="text-[10px] block font-medium uppercase">{t("bookings.remainingToPay")}</span>
                     <p className="font-bold text-sm font-mono">€{remaining.toFixed(2)}</p>
                   </div>
                   <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
-                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">Quota €30</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">{t("courses.registrationFee")} €30</span>
                     <p className="font-bold text-xs font-mono text-amber-600 dark:text-amber-400 truncate">
-                      {registrationFeePaid ? "€30.00 (✓ Pagata)" : "€30.00 (In attesa)"}
+                      {registrationFeePaid ? t("bookings.feePaid") : t("bookings.feePending")}
                     </p>
                   </div>
                 </div>
@@ -433,7 +441,7 @@ export function BookingDetailDialog({
                 {booking.promo_code && (
                   <div className="flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-200 dark:border-emerald-800">
                     <Tag className="w-4 h-4 shrink-0" />
-                    <span>Codice Promozionale Applicato: <strong className="font-mono font-bold">{booking.promo_code}</strong> {Number(booking.discount_amount) > 0 ? `(Sconto: -€${Number(booking.discount_amount).toFixed(2)})` : ''}</span>
+                    <span>{t("bookings.promoApplied")} <strong className="font-mono font-bold">{booking.promo_code}</strong> {Number(booking.discount_amount) > 0 ? `(${t("bookings.discount")}: -€${Number(booking.discount_amount).toFixed(2)})` : ''}</span>
                   </div>
                 )}
 
@@ -448,7 +456,7 @@ export function BookingDetailDialog({
                       }}
                     >
                       <CreditCard className="w-4 h-4" />
-                      <span>Registra Incasso €{remaining.toFixed(2)}</span>
+                      <span>{t("bookings.recordPaymentAmount", { amount: remaining.toFixed(2) })}</span>
                     </Button>
                   </div>
                 )}
@@ -461,7 +469,7 @@ export function BookingDetailDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Clock className="w-4 h-4 text-primary" />
-                <span>Orario e Calendario</span>
+                <span>{t("bookings.scheduleAndCalendar")}</span>
               </div>
               <Button
                 variant="outline"
@@ -473,31 +481,31 @@ export function BookingDetailDialog({
                 }}
               >
                 <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
-                <span>Vedi Lezioni & Presenze</span>
+                <span>{t("bookings.viewLessonsAndAttendance")}</span>
               </Button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="space-y-0.5">
-                <span className="text-muted-foreground">Stato schedulazione</span>
+                <span className="text-muted-foreground">{t("bookings.schedulingStatus")}</span>
                 <p className="font-semibold text-foreground">
                   {booking.scheduling_status === "confirmed" || booking.scheduling_status === "scheduled"
-                    ? "Confermato"
-                    : "Da concordare"}
+                    ? t("common.confirmed")
+                    : t("bookings.flexibleAgreed")}
                 </p>
               </div>
               <div className="space-y-0.5">
-                <span className="text-muted-foreground">Frequenza oraria</span>
+                <span className="text-muted-foreground">{t("bookings.timeFrequency")}</span>
                 <p className="font-semibold text-foreground">{formattedSchedule}</p>
               </div>
             </div>
           </div>
 
-          {/* Section 3: Payments Table & History (Supabase `payments`) */}
+          {/* Section 4: Payments Table & History (Supabase `payments`) */}
           <div className="rounded-lg border p-4 bg-card space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Receipt className="w-4 h-4 text-primary" />
-                <span>Storico Transazioni & Pagamenti</span>
+                <span>{t("bookings.transactionHistory")}</span>
               </div>
 
               <Button
@@ -509,13 +517,13 @@ export function BookingDetailDialog({
                   window.location.href = "/pagamenti";
                 }}
               >
-                Gestisci in Pagamenti ↗
+                {t("bookings.manageInPayments")} ↗
               </Button>
             </div>
 
             {paymentsLoading ? (
               <div className="py-4 text-center text-xs text-muted-foreground">
-                Caricamento transazioni...
+                {t("bookings.loadingTransactions")}
               </div>
             ) : payments.length > 0 ? (
               <div className="space-y-2 border-t pt-3">
@@ -523,15 +531,23 @@ export function BookingDetailDialog({
                   const pMethod = p.paymentMethod ?? p.payment_method;
                   const parsedMethod = parsePaymentMethod(pMethod);
                   const pMethodLabel =
-                    PAYMENT_METHOD_DICTIONARY[parsedMethod]?.label_it ||
-                    PAYMENT_METHOD_DICTIONARY[parsedMethod]?.it ||
-                    String(pMethod || "Contanti");
+                    locale === "it"
+                      ? PAYMENT_METHOD_DICTIONARY[parsedMethod]?.label_it || "Contanti"
+                      : PAYMENT_METHOD_DICTIONARY[parsedMethod]?.label_en || "Cash";
 
                   const parsedType = parsePaymentType(p.type);
                   const pTypeLabel =
-                    PAYMENT_TYPE_DICTIONARY[parsedType]?.label_it ||
-                    PAYMENT_TYPE_DICTIONARY[parsedType]?.it ||
-                    (p.type === "registration_fee" ? "Quota Iscrizione" : "Pagamento Corso");
+                    parsedType === PaymentType.REGISTRATION_FEE
+                      ? t("payments.typeMembership")
+                      : parsedType === PaymentType.SINGLE_LESSON
+                        ? t("courses.individual")
+                        : parsedType === PaymentType.DEPOSIT
+                          ? t("payments.typeDeposit")
+                          : parsedType === PaymentType.INSTALLMENT
+                            ? t("payments.typeInstallment")
+                            : parsedType === PaymentType.REFUND
+                              ? t("payments.typeRefund")
+                              : t("payments.typeTuition");
 
                   const isSucceeded =
                     p.status === PaymentRecordStatus.SUCCEEDED ||
@@ -542,12 +558,10 @@ export function BookingDetailDialog({
                     p.status === "pending" ||
                     String(p.status) === "1";
                   const statusLabel = isSucceeded
-                    ? "✓ Completato"
+                    ? `✓ ${t("common.completed")}`
                     : isPending
-                      ? "⏳ Sospeso"
-                      : PAYMENT_RECORD_STATUS_DICTIONARY[Number(p.status) as PaymentRecordStatus]?.label_it ||
-                        PAYMENT_RECORD_STATUS_DICTIONARY[Number(p.status) as PaymentRecordStatus]?.it ||
-                        String(p.status);
+                      ? `⏳ ${t("common.pending")}`
+                      : t("common.failed");
 
                   const dateVal = p.createdAt || p.created_at;
                   const txId = p.providerTransactionId || p.provider_transaction_id;
@@ -577,14 +591,14 @@ export function BookingDetailDialog({
                           <span>•</span>
                           <span>
                             {dateVal
-                              ? new Date(dateVal).toLocaleDateString("it-IT", {
+                              ? new Date(dateVal).toLocaleDateString(locale === "it" ? "it-IT" : "en-US", {
                                 day: "2-digit",
                                 month: "short",
                                 year: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })
-                              : "N/D"}
+                              : t("common.noData")}
                           </span>
                           {p.notes && (
                             <>
@@ -617,17 +631,17 @@ export function BookingDetailDialog({
               </div>
             ) : (
               <div className="py-4 text-center text-xs text-muted-foreground border-t pt-3">
-                Nessuna transazione registrata nel database per questa prenotazione.
+                {t("bookings.noTransactionsFound")}
               </div>
             )}
           </div>
 
-          {/* Section 4: Notes */}
+          {/* Section 5: Notes */}
           {booking.notes && (
             <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30 p-3.5 text-xs space-y-1">
               <p className="font-semibold text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Note allegate:</span>
+                <span>{t("bookings.attachedNotes")}</span>
               </p>
               <p className="text-amber-900 dark:text-amber-300 leading-relaxed">{booking.notes}</p>
             </div>
@@ -670,7 +684,7 @@ export function BookingDetailDialog({
                 }}
               >
                 <Printer className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>Stampa Ricevuta</span>
+                <span>{t("bookings.printReceipt")}</span>
               </Button>
             )}
           </div>
@@ -684,11 +698,11 @@ export function BookingDetailDialog({
                 onClick={() => setConfirmOpen(true)}
               >
                 <Trash2 className="w-4 h-4 mr-1.5" />
-                Elimina
+                {t("common.delete")}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={onClose} className="font-medium text-xs cursor-pointer h-9">
-              Chiudi
+              {t("common.close")}
             </Button>
           </div>
         </div>
@@ -698,19 +712,19 @@ export function BookingDetailDialog({
       <Dialog open={addPaymentOpen} onOpenChange={setAddPaymentOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Registra Pagamento Manuale</DialogTitle>
+            <DialogTitle>{t("payments.recordManualPayment")}</DialogTitle>
             <DialogDescription>
-              Aggiungi una transazione effettuata in sede per questo ordine.
+              {t("payments.recordManualPaymentDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Importo (€)</Label>
+              <Label className="text-xs font-medium">{t("payments.amountEuro")}</Label>
               <Input
                 type="number"
                 step="0.01"
-                placeholder="Es. 150.00"
+                placeholder="150.00"
                 value={newPaymentAmount}
                 onChange={(e) => setNewPaymentAmount(e.target.value)}
               />
@@ -718,38 +732,38 @@ export function BookingDetailDialog({
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Metodo</Label>
+                <Label className="text-xs font-medium">{t("payments.paymentMethod")}</Label>
                 <Select value={newPaymentMethod} onValueChange={setNewPaymentMethod}>
                   <SelectTrigger className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={String(PaymentMethod.CASH)}>Contanti</SelectItem>
-                    <SelectItem value={String(PaymentMethod.POS)}>Carta (POS)</SelectItem>
-                    <SelectItem value={String(PaymentMethod.BANK_TRANSFER)}>Bonifico</SelectItem>
+                    <SelectItem value={String(PaymentMethod.CASH)}>{t("common.cash")}</SelectItem>
+                    <SelectItem value={String(PaymentMethod.POS)}>{t("common.card")}</SelectItem>
+                    <SelectItem value={String(PaymentMethod.BANK_TRANSFER)}>{t("common.transfer")}</SelectItem>
                     <SelectItem value={String(PaymentMethod.STRIPE)}>Stripe Online</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-xs font-medium">Tipo</Label>
+                <Label className="text-xs font-medium">{t("payments.paymentType")}</Label>
                 <Select value={newPaymentType} onValueChange={setNewPaymentType}>
                   <SelectTrigger className="cursor-pointer">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>Pagamento Corso</SelectItem>
-                    <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>Quota Iscrizione</SelectItem>
+                    <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>{t("payments.typeTuition")}</SelectItem>
+                    <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>{t("payments.typeMembership")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-medium">Note (opzionale)</Label>
+              <Label className="text-xs font-medium">{t("payments.optionalNotes")}</Label>
               <Input
-                placeholder="Es. Saldo in contanti consegnato in segreteria"
+                placeholder="..."
                 value={newPaymentNotes}
                 onChange={(e) => setNewPaymentNotes(e.target.value)}
               />
@@ -758,10 +772,10 @@ export function BookingDetailDialog({
 
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setAddPaymentOpen(false)}>
-              Annulla
+              {t("common.cancel")}
             </Button>
             <Button size="sm" onClick={handleAddPayment} className="cursor-pointer">
-              Salva Pagamento
+              {t("payments.savePayment")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -771,13 +785,13 @@ export function BookingDetailDialog({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminare la prenotazione?</AlertDialogTitle>
+            <AlertDialogTitle>{t("bookings.deleteBookingTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Verranno eliminati lezioni e storico collegati. L&apos;azione non può essere annullata.
+              {t("bookings.deleteBookingDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Annulla</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -790,7 +804,7 @@ export function BookingDetailDialog({
                 if (ok) setConfirmOpen(false);
               }}
             >
-              {deleting ? "Eliminazione..." : "Elimina"}
+              {deleting ? t("common.loading") : t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,3 +1,5 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  User,
   GraduationCap,
   Calendar,
   MoreVertical,
@@ -18,13 +19,12 @@ import {
   AlertCircle,
   Eye,
   Trash2,
-  CreditCard,
-  Phone,
-  Mail,
   ChevronDown,
 } from "lucide-react";
 import { BookingPaymentStatus } from "@atena/api-types";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { PaymentMethodBadge } from "@/components/shared/payment-method-badge";
+import { useTranslation } from "@/i18n/context";
 import type { Booking } from "../types/booking";
 
 interface BookingCardProps {
@@ -40,11 +40,12 @@ export function BookingCard({
   onDelete,
   onToggleStatus,
 }: BookingCardProps) {
+  const { t, locale } = useTranslation();
   const isCompleted = Number(booking.payment_status) === BookingPaymentStatus.PAID || booking.payment_status === "completed" || booking.payment_status === "paid" || booking.payment_status === "succeeded";
   const isPartiallyPaid = Number(booking.payment_status) === BookingPaymentStatus.PARTIALLY_REFUNDED || booking.payment_status === "partially_paid";
   const isOverdue = Number(booking.payment_status) === BookingPaymentStatus.FAILED || booking.payment_status === "overdue" || booking.payment_status === "scaduto";
 
-  const purchaserName = booking.purchaser_name || "N/D";
+  const purchaserName = booking.purchaser_name || t("common.noData");
   const studentName = booking.student_name || purchaserName;
   const isDifferentStudent = studentName !== purchaserName;
 
@@ -80,34 +81,10 @@ export function BookingCard({
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
-                    className="cursor-pointer transition-all hover:opacity-85 active:scale-95 text-left inline-flex items-center"
+                    className="cursor-pointer transition-all hover:opacity-85 active:scale-95 text-left inline-flex items-center gap-1"
                   >
-                    <Badge
-                      variant="secondary"
-                      className={
-                        isCompleted
-                          ? "text-emerald-700 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40 text-[11px] font-semibold gap-1.5 border border-emerald-500/30 shadow-2xs cursor-pointer"
-                          : isPartiallyPaid
-                            ? "text-amber-700 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40 text-[11px] font-semibold gap-1.5 border border-amber-500/30 shadow-2xs cursor-pointer"
-                            : isOverdue
-                              ? "text-rose-700 bg-rose-50 dark:text-rose-400 dark:bg-rose-950/40 text-[11px] font-semibold gap-1.5 border border-rose-500/30 shadow-2xs cursor-pointer"
-                              : "text-sky-700 bg-sky-50 dark:text-sky-400 dark:bg-sky-950/40 text-[11px] font-semibold gap-1.5 border border-sky-500/30 shadow-2xs cursor-pointer"
-                      }
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-3 h-3 text-muted-foreground shrink-0" />
-                      )}
-                      {isCompleted
-                        ? "Pagato"
-                        : isPartiallyPaid
-                          ? "Parzialmente Saldato"
-                          : isOverdue
-                            ? "Scaduto / Debito"
-                            : "Da Saldare in Sede"}
-                      <ChevronDown className="w-3 h-3 text-muted-foreground/70 ml-0.5" />
-                    </Badge>
+                    <StatusBadge status={booking.payment_status} />
+                    <ChevronDown className="w-3 h-3 text-muted-foreground/70" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52">
@@ -119,7 +96,7 @@ export function BookingCard({
                     }}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mr-2" />
-                    Pagato Completo
+                    {t("common.paid")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer font-medium text-xs"
@@ -129,7 +106,7 @@ export function BookingCard({
                     }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 text-amber-500 mr-2" />
-                    Parzialmente Saldato
+                    {t("common.partial")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer font-medium text-xs"
@@ -139,7 +116,7 @@ export function BookingCard({
                     }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 text-sky-500 mr-2" />
-                    Da Saldare in Sede
+                    {t("common.reserved")}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer font-medium text-xs text-rose-600 focus:text-rose-600"
@@ -149,7 +126,7 @@ export function BookingCard({
                     }}
                   >
                     <AlertCircle className="w-3.5 h-3.5 text-rose-500 mr-2" />
-                    Scaduto / Debito
+                    {t("common.overdue")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -176,7 +153,7 @@ export function BookingCard({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem className="cursor-pointer" onClick={() => onSelect(booking)}>
                   <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Vedi Dettagli
+                  {t("bookings.viewDetails")}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -190,12 +167,12 @@ export function BookingCard({
                   {isCompleted ? (
                     <>
                       <AlertCircle className="mr-2 h-4 w-4 text-amber-500" />
-                      Segna Da Saldare
+                      {t("bookings.markReserved")}
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
-                      Segna Come Pagato
+                      {t("bookings.markPaid")}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -206,7 +183,7 @@ export function BookingCard({
                   onClick={() => onDelete(booking.id)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Elimina Ordine
+                  {t("bookings.deleteOrder")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -235,7 +212,7 @@ export function BookingCard({
             <div className="flex items-center gap-2 rounded-md bg-muted/50 px-2.5 py-1.5 text-xs text-muted-foreground">
               <GraduationCap className="h-3.5 w-3.5 text-primary shrink-0" />
               <span className="truncate">
-                Studente: <strong className="text-foreground font-medium">{studentName}</strong>
+                {t("common.student")}: <strong className="text-foreground font-medium">{studentName}</strong>
               </span>
             </div>
           )}
@@ -248,7 +225,7 @@ export function BookingCard({
         <div className="flex items-center gap-1.5">
           <Calendar className="h-3.5 w-3.5 shrink-0" />
           <span>
-            {new Date(booking.created_at).toLocaleDateString("it-IT", {
+            {new Date(booking.created_at).toLocaleDateString(locale === "it" ? "it-IT" : "en-US", {
               day: "2-digit",
               month: "short",
               year: "numeric",

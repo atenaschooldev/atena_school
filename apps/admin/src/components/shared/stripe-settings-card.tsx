@@ -172,12 +172,12 @@ export function StripeSettingsCard() {
               {subscriptionsEnabled ? (
                 <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-700 text-[10px] font-bold border-emerald-300/50 py-0.5">
                   <CheckCircle2 className="h-2.5 w-2.5 mr-1 text-emerald-600" />
-                  Attivo
+                  {t("common.active")}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="bg-muted/50 text-muted-foreground text-[10px] py-0.5">
                   <XCircle className="h-2.5 w-2.5 mr-1 text-muted-foreground" />
-                  Disattivato
+                  {t("common.inactive")}
                 </Badge>
               )}
             </div>

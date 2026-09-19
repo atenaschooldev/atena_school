@@ -13,16 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Banknote,
   CreditCard,
   Building2,
   CheckCircle2,
-  AlertCircle,
   User,
-  Plus,
   Receipt,
   FileText,
 } from "lucide-react";
@@ -34,6 +31,7 @@ import {
   PaymentMethod,
   PaymentType,
 } from "@atena/api-types";
+import { useTranslation } from "@/i18n/context";
 
 interface UniversalPosCheckoutModalProps {
   open: boolean;
@@ -55,6 +53,7 @@ export function UniversalPosCheckoutModal({
   defaultFeeOnly = false,
   preselectedBooking,
 }: UniversalPosCheckoutModalProps) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,12 +114,12 @@ export function UniversalPosCheckoutModal({
           setCourseAmount(outstanding);
           setPayCourse(true);
         }
-        toast.success("Anagrafica cliente trovata!");
+        toast.success(t("payments.clientFound"));
       } else {
-        toast.error("Nessun cliente trovato con questi parametri.");
+        toast.error(t("payments.clientNotFound"));
       }
     } catch (e: any) {
-      toast.error(e.message || "Errore durante la ricerca");
+      toast.error(e.message || "Error");
     } finally {
       setSearching(false);
     }
@@ -132,11 +131,11 @@ export function UniversalPosCheckoutModal({
 
   const handleSubmitCheckout = async () => {
     if (!selectedClient && !searchQuery.trim()) {
-      toast.error("Seleziona o cerca prima un cliente");
+      toast.error(t("payments.lookupClient"));
       return;
     }
     if (totalPayable <= 0) {
-      toast.error("Seleziona almeno una voce di pagamento");
+      toast.error("0");
       return;
     }
 
@@ -148,15 +147,15 @@ export function UniversalPosCheckoutModal({
           type: PaymentType.COURSE_PAYMENT,
           amount: courseAmount,
           description: selectedClient?.courseName
-            ? `Quota Corso: ${selectedClient.courseName}`
-            : "Quota Corso",
+            ? `${t("payments.typeTuition")}: ${selectedClient.courseName}`
+            : t("payments.typeTuition"),
         });
       }
       if (payRegistrationFee) {
         items.push({
           type: PaymentType.REGISTRATION_FEE,
           amount: registrationFeeAmount,
-          description: "Quota Iscrizione Annuale €30",
+          description: t("payments.typeMembership"),
         });
       }
 
@@ -170,7 +169,7 @@ export function UniversalPosCheckoutModal({
         notes,
       });
 
-      toast.success("Incasso registrato con successo!");
+      toast.success(t("payments.recordPaymentSuccess"));
       queryClient.invalidateQueries({ queryKey: ["payments"] });
       queryClient.invalidateQueries({ queryKey: ["payments-summary"] });
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
@@ -181,7 +180,7 @@ export function UniversalPosCheckoutModal({
       setSearchQuery("");
       setNotes("");
     } catch (e: any) {
-      toast.error(e.message || "Errore nella registrazione dell'incasso");
+      toast.error(e.message || "Error");
     } finally {
       setSubmitting(false);
     }
@@ -196,9 +195,9 @@ export function UniversalPosCheckoutModal({
               <Receipt className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-base font-bold">Registrazione Incasso in Sede</DialogTitle>
+              <DialogTitle className="text-base font-bold">{t("payments.posCheckout")}</DialogTitle>
               <DialogDescription className="text-xs">
-                Emissione scontrino e registrazione pagamenti per corsi, tessere e lezioni
+                {t("payments.recordManualPaymentDesc")}
               </DialogDescription>
             </div>
           </div>
@@ -208,7 +207,7 @@ export function UniversalPosCheckoutModal({
           {/* STEP 1: CLIENT LOOKUP */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-primary" /> 1. Cliente / Studente
+              <User className="w-3.5 h-3.5 text-primary" /> 1. {t("common.student")} / {t("common.purchaser")}
             </Label>
 
             {selectedClient ? (
@@ -220,7 +219,7 @@ export function UniversalPosCheckoutModal({
                   </p>
                   {selectedClient.courseName && (
                     <p className="text-[11px] text-primary font-medium mt-0.5">
-                      Corso: {selectedClient.courseName}
+                      {t("common.course")}: {selectedClient.courseName}
                     </p>
                   )}
                 </div>
@@ -231,13 +230,13 @@ export function UniversalPosCheckoutModal({
                   className="text-xs h-7 text-muted-foreground hover:text-foreground cursor-pointer"
                   onClick={() => setSelectedClient(null)}
                 >
-                  Cambia
+                  {t("common.edit")}
                 </Button>
               </div>
             ) : (
               <div className="flex gap-2">
                 <Input
-                  placeholder="Nome, Email o Codice Fiscale del cliente..."
+                  placeholder={t("payments.searchClientPlaceholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => {
@@ -257,7 +256,7 @@ export function UniversalPosCheckoutModal({
                   className="h-9 px-3 text-xs cursor-pointer"
                 >
                   <Search className="w-3.5 h-3.5 mr-1" />
-                  Cerca
+                  {t("common.search")}
                 </Button>
               </div>
             )}
@@ -266,7 +265,7 @@ export function UniversalPosCheckoutModal({
           {/* STEP 2: ITEMS SELECTOR (CHECKBOXES) */}
           <div className="space-y-3">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-primary" /> 2. Voci dello Scontrino
+              <FileText className="w-3.5 h-3.5 text-primary" /> 2. {t("payments.paymentType")}
             </Label>
 
             <div className="space-y-2 border rounded-xl p-3 bg-card/60">
@@ -280,8 +279,8 @@ export function UniversalPosCheckoutModal({
                   />
                   <label htmlFor="item-course" className="text-xs font-semibold cursor-pointer">
                     {selectedClient?.courseName
-                      ? `Quota Corso: ${selectedClient.courseName}`
-                      : "Quota Corso"}
+                      ? `${t("payments.typeTuition")}: ${selectedClient.courseName}`
+                      : t("payments.typeTuition")}
                   </label>
                 </div>
                 {payCourse && (
@@ -306,7 +305,7 @@ export function UniversalPosCheckoutModal({
                     onCheckedChange={(v) => setPayRegistrationFee(Boolean(v))}
                   />
                   <label htmlFor="item-fee" className="text-xs font-semibold cursor-pointer">
-                    Quota Annuale Iscrizione (€30.00)
+                    {t("payments.typeMembership")} (€30.00)
                   </label>
                 </div>
                 <span className="font-bold font-mono text-xs text-emerald-600 dark:text-emerald-400">
@@ -319,7 +318,7 @@ export function UniversalPosCheckoutModal({
           {/* STEP 3: PAYMENT METHOD */}
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
-              <Banknote className="w-3.5 h-3.5 text-primary" /> 3. Metodo di Pagamento
+              <Banknote className="w-3.5 h-3.5 text-primary" /> 3. {t("payments.paymentMethod")}
             </Label>
             <div className="grid grid-cols-3 gap-2">
               <Button
@@ -328,7 +327,7 @@ export function UniversalPosCheckoutModal({
                 className="h-10 text-xs font-bold cursor-pointer"
                 onClick={() => setPaymentMethod(PaymentMethod.CASH)}
               >
-                <Banknote className="w-3.5 h-3.5 mr-1" /> Contanti
+                <Banknote className="w-3.5 h-3.5 mr-1" /> {t("common.cash")}
               </Button>
               <Button
                 type="button"
@@ -336,7 +335,7 @@ export function UniversalPosCheckoutModal({
                 className="h-10 text-xs font-bold cursor-pointer"
                 onClick={() => setPaymentMethod(PaymentMethod.POS)}
               >
-                <CreditCard className="w-3.5 h-3.5 mr-1" /> Carta / POS
+                <CreditCard className="w-3.5 h-3.5 mr-1" /> {t("common.card")}
               </Button>
               <Button
                 type="button"
@@ -344,14 +343,14 @@ export function UniversalPosCheckoutModal({
                 className="h-10 text-xs font-bold cursor-pointer"
                 onClick={() => setPaymentMethod(PaymentMethod.BANK_TRANSFER)}
               >
-                <Building2 className="w-3.5 h-3.5 mr-1" /> Bonifico
+                <Building2 className="w-3.5 h-3.5 mr-1" /> {t("common.transfer")}
               </Button>
             </div>
           </div>
 
           {/* TOTAL PAYABLE SUMMARY BOX */}
           <div className="p-4 bg-gradient-to-br from-primary/10 via-muted/30 to-muted/20 border border-primary/20 rounded-xl flex items-center justify-between">
-            <span className="font-bold text-sm text-foreground">Totale da Incassare:</span>
+            <span className="font-bold text-sm text-foreground">{t("payments.totalToCollect")}:</span>
             <span className="text-xl font-extrabold font-mono text-primary">
               {formatCurrency(totalPayable)}
             </span>
@@ -359,9 +358,9 @@ export function UniversalPosCheckoutModal({
 
           {/* NOTES */}
           <div className="space-y-1">
-            <Label className="text-[11px] text-muted-foreground">Note interne (opzionale)</Label>
+            <Label className="text-[11px] text-muted-foreground">{t("payments.optionalNotes")}</Label>
             <Textarea
-              placeholder="Note su sconto, scontrino o numero ricevuta..."
+              placeholder="..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="h-16 text-xs bg-background"
@@ -377,7 +376,7 @@ export function UniversalPosCheckoutModal({
             className="text-xs cursor-pointer font-semibold"
             onClick={() => onOpenChange(false)}
           >
-            Annulla
+            {t("common.cancel")}
           </Button>
 
           <Button
@@ -387,7 +386,7 @@ export function UniversalPosCheckoutModal({
             className="text-xs font-bold bg-primary text-primary-foreground px-5 cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4 mr-1.5" />
-            {submitting ? "Elaborazione..." : `Registra Incasso (${formatCurrency(totalPayable)})`}
+            {submitting ? t("common.loading") : `${t("payments.confirmAndPrint")} (${formatCurrency(totalPayable)})`}
           </Button>
         </div>
       </DialogContent>

@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { formatCurrency } from "@atena/utils"
 import { useTranslation } from "@/i18n/context"
+import { formatCategoryLabel } from "@/features/courses/utils"
 
 export function TopProducts() {
   const { t } = useTranslation()
@@ -51,7 +52,7 @@ export function TopProducts() {
                   <div className="flex items-center space-x-2">
                     <p className="text-sm font-medium truncate">{course.title_it || course.name || t("common.course")}</p>
                     <Badge variant="outline" className="text-xs">
-                      {course.category || "General"}
+                      {formatCategoryLabel(course.category, t)}
                     </Badge>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">

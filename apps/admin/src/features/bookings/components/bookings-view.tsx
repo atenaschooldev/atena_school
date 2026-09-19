@@ -192,7 +192,7 @@ export function BookingsView() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        Nessun ordine trovato.
+                        {t("bookings.noBookingsFound")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -225,7 +225,7 @@ export function BookingsView() {
 
             {bookings.length === 0 && (
               <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                Nessun ordine trovato.
+                {t("bookings.noBookingsFound")}
               </div>
             )}
           </div>
@@ -250,8 +250,8 @@ export function BookingsView() {
       <DeleteConfirmDialog
         open={!!deletingBookingId}
         onOpenChange={(v) => !v && setDeletingBookingId(null)}
-        title="Elimina Ordine"
-        description="Sei sicuro di voler eliminare questo ordine? Questa azione non può essere annullata."
+        title={t("bookings.deleteOrder")}
+        description={t("bookings.deleteBookingDesc")}
         onConfirm={async () => {
           if (deletingBookingId) {
             await deleteBooking(deletingBookingId);

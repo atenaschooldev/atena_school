@@ -10,7 +10,7 @@ import { CellCurrency } from "@/components/shared/cell-currency";
 import type { Course } from "../types";
 
 import { formatCourseFrequencyDetails } from "@atena/utils";
-import { formatCourseFormatLabel } from "../utils";
+import { formatCourseFormatLabel, formatCategoryLabel } from "../utils";
 
 export interface GetCoursesTableColumnsProps {
   onEdit: (c: Course) => void;
@@ -85,7 +85,9 @@ export function getCoursesTableColumns({
           <div className="flex flex-col gap-0.5 min-w-0">
             <span className="font-bold text-sm text-foreground truncate">{row.original.nome}</span>
             {row.original.categoria && (
-              <span className="text-xs text-muted-foreground truncate">{row.original.categoria}</span>
+              <span className="text-xs text-muted-foreground truncate">
+                {formatCategoryLabel(row.original.categoria, t)}
+              </span>
             )}
           </div>
         </div>

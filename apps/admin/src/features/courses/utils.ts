@@ -1,4 +1,5 @@
 import type { Level } from "./types";
+import { CourseCategory, parseCourseCategory } from "@atena/api-types";
 
 export function levelColor(l: Level | string): string {
   switch (l) {
@@ -39,32 +40,45 @@ export function levelColorSolid(l: Level | string): string {
 }
 
 export const COURSE_CATEGORIES = [
-  { value: "Certipass", label: "Certipass" },
-  { value: "languages", label: "Lingue" },
+  { value: "languages", label: "Corsi di Lingua" },
+  { value: "academic", label: "Recupero Scolastico" },
+  { value: "Certipass", label: "Certificazioni EIPASS" },
+  { value: "other", label: "Generale / Altro" },
 ] as const;
 
-export function formatCategoryLabel(category?: string | null): string {
-  if (!category) return "Generale";
-  const lower = category.toLowerCase().trim();
-  if (lower.includes("certipass")) return "Certipass";
-  if (lower.includes("lang") || lower.includes("lingu")) return "Lingue";
-  if (lower.includes("acad")) return "Accademico";
-  return category;
+export function formatCategoryLabel(category?: string | number | null, t?: (k: string) => string): string {
+  if (category === null || category === undefined || String(category).trim() === "") {
+    return t ? t("courses.categories.general") : "Generale";
+  }
+
+  const parsed = parseCourseCategory(category);
+  switch (parsed) {
+    case CourseCategory.LANGUAGES:
+      return t ? t("courses.categories.languages") : "Corsi di Lingua";
+    case CourseCategory.ACADEMIC:
+      return t ? t("courses.categories.academic") : "Recupero Scolastico";
+    case CourseCategory.CERTIPASS:
+      return t ? t("courses.categories.certipass") : "Certificazioni EIPASS";
+    case CourseCategory.OTHER:
+    default:
+      return t ? t("courses.categories.general") : "Generale";
+  }
 }
 
-export function categoryColor(category?: string | null): string {
+export function categoryColor(category?: string | number | null): string {
   if (!category) return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200/60";
-  const lower = category.toLowerCase().trim();
-  if (lower.includes("certipass")) {
-    return "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border-sky-200/60";
+  const parsed = parseCourseCategory(category);
+  switch (parsed) {
+    case CourseCategory.CERTIPASS:
+      return "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 border-sky-200/60";
+    case CourseCategory.LANGUAGES:
+      return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/60";
+    case CourseCategory.ACADEMIC:
+      return "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200/60";
+    case CourseCategory.OTHER:
+    default:
+      return "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60";
   }
-  if (lower.includes("lang") || lower.includes("lingu")) {
-    return "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/60";
-  }
-  if (lower.includes("acad")) {
-    return "bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border-purple-200/60";
-  }
-  return "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60";
 }
 
 export const COURSE_FORMAT_OPTIONS = [
@@ -93,6 +107,9 @@ export function formatCourseFormatLabel(fmt?: string | number | null, t?: (k: st
   }
   if (str === "ibrido" || str === "hybrid") {
     return t ? t("courses.hybrid") : "Ibrido";
+  }
+  if (str === "kids" || str === "ragazzi" || str === "bambini") {
+    return t ? t("courses.kids") : "Bambini & Ragazzi";
   }
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

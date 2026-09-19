@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { COURSE_CATEGORIES, COURSE_FORMAT_OPTIONS } from "../utils";
+import { useTranslation } from "@/i18n/context";
+import { api } from "@/lib/api";
 
 export interface CourseFormProps {
   initialValues: CourseFormValues;
@@ -25,19 +27,6 @@ export interface CourseFormProps {
   onCancel: () => void;
   submitLabel: string;
 }
-
-const STATUS_OPTIONS = [
-  { value: "attivo", label: "Attivo" },
-  { value: "in-programmazione", label: "In Programmazione" },
-  { value: "concluso", label: "Concluso" },
-  { value: "archiviato", label: "Archiviato" },
-];
-
-const DAYS_OF_WEEK = [
-  "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica",
-];
-
-import { api } from "@/lib/api";
 
 function slugify(str: string): string {
   return str.toLowerCase().trim()
@@ -55,15 +44,33 @@ function calcEndTime(startTime: string, durationMin: number): string {
 }
 
 export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: CourseFormProps) {
+  const { t } = useTranslation();
   const [form, setForm] = useState<CourseFormValues>(initialValues);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [slugManual, setSlugManual] = useState(!!initialValues.slug);
+
+  const STATUS_OPTIONS = [
+    { value: "attivo", label: t("common.active") },
+    { value: "in-programmazione", label: t("courses.inPlanning") },
+    { value: "concluso", label: t("common.completed") },
+    { value: "archiviato", label: t("groups.archived") },
+  ];
+
+  const DAYS_OF_WEEK = [
+    { key: "Lunedì", label: t("weekdays.monday") },
+    { key: "Martedì", label: t("weekdays.tuesday") },
+    { key: "Mercoledì", label: t("weekdays.wednesday") },
+    { key: "Giovedì", label: t("weekdays.thursday") },
+    { key: "Venerdì", label: t("weekdays.friday") },
+    { key: "Sabato", label: t("weekdays.saturday") },
+    { key: "Domenica", label: t("weekdays.sunday") },
+  ];
 
   useEffect(() => {
     api.get<any[]>("/admin/teachers")
       .then((data) => {
         if (Array.isArray(data)) {
-          setTeachers(data.map((t) => ({ ...t, id: t.teacherId || t.id, fullName: t.fullName })));
+          setTeachers(data.map((teacher) => ({ ...teacher, id: teacher.teacherId || teacher.id, fullName: teacher.fullName })));
         }
       })
       .catch(() => {});
@@ -80,14 +87,14 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     onSubmit(form);
   };
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (dayKey: string) => {
     const limit = form.lessonsPerWeek;
     setForm((f) => {
-      if (f.scheduleDays.includes(day)) {
-        return { ...f, scheduleDays: f.scheduleDays.filter((d) => d !== day) };
+      if (f.scheduleDays.includes(dayKey)) {
+        return { ...f, scheduleDays: f.scheduleDays.filter((d) => d !== dayKey) };
       }
       if (limit && f.scheduleDays.length >= limit) return f;
-      return { ...f, scheduleDays: [...f.scheduleDays, day] };
+      return { ...f, scheduleDays: [...f.scheduleDays, dayKey] };
     });
   };
 
@@ -131,12 +138,12 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
                 </button>
               </>
             ) : (
-              <span className="text-[11px] font-semibold text-muted-foreground">Nessuna</span>
+              <span className="text-[11px] font-semibold text-muted-foreground">{t("common.noData")}</span>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <Label className={L}>Foto Copertina</Label>
-            <Input placeholder="URL Foto (https://...)" value={form.foto || ""}
+            <Label className={L}>{t("teachers.photoUrl")}</Label>
+            <Input placeholder="URL (https://...)" value={form.foto || ""}
               onChange={(e) => setForm({ ...form, foto: e.target.value })}
               className="h-9 text-xs rounded-xl" />
           </div>
@@ -144,8 +151,8 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
 
         {/* ── Nome + Slug ── */}
         <div>
-          <Label className={L}>Nome Corso *</Label>
-          <Input placeholder="Es. B2 First, Lezioni Private..." value={form.nome} required
+          <Label className={L}>{t("courses.courseName")} *</Label>
+          <Input placeholder="Es. B2 First, General English..." value={form.nome} required
             onChange={(e) => setForm({ ...form, nome: e.target.value })}
             className="h-9 text-xs rounded-xl" />
         </div>
@@ -158,20 +165,21 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
 
         {/* ── Categoria + Formato ── */}
         <div>
-          <Label className={L}>Categoria</Label>
+          <Label className={L}>{t("courses.allCategories")}</Label>
           <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v })}>
-            <SelectTrigger className="h-9 text-xs rounded-xl">
-              <SelectValue placeholder="Seleziona categoria..." />
+            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
+              <SelectValue placeholder={t("courses.allCategories")} />
             </SelectTrigger>
             <SelectContent>
-              {COURSE_CATEGORIES.map(({ value, label }) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
+              <SelectItem value="languages" className="cursor-pointer">{t("courses.categories.languages")}</SelectItem>
+              <SelectItem value="academic" className="cursor-pointer">{t("courses.categories.academic")}</SelectItem>
+              <SelectItem value="Certipass" className="cursor-pointer">{t("courses.categories.certipass")}</SelectItem>
+              <SelectItem value="other" className="cursor-pointer">{t("courses.categories.general")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label className={L}>Formato *</Label>
+          <Label className={L}>{t("courses.format")} *</Label>
           <Select value={fmt}
             onValueChange={(f) => {
               setForm((prev) => ({
@@ -187,33 +195,34 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
                 lessonDurationMinutes: f === "certification" ? null : prev.lessonDurationMinutes,
               }));
             }}>
-            <SelectTrigger className="h-9 text-xs rounded-xl">
-              <SelectValue placeholder="Seleziona formato..." />
+            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
+              <SelectValue placeholder={t("courses.format")} />
             </SelectTrigger>
             <SelectContent>
-              {COURSE_FORMAT_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
+              <SelectItem value="group" className="cursor-pointer">{t("courses.group")}</SelectItem>
+              <SelectItem value="private" className="cursor-pointer">{t("courses.individual")}</SelectItem>
+              <SelectItem value="online" className="cursor-pointer">{t("courses.online")}</SelectItem>
+              <SelectItem value="certification" className="cursor-pointer">{t("courses.certification")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* ── Stato + Prezzo ── */}
         <div>
-          <Label className={L}>Stato</Label>
+          <Label className={L}>{t("common.status")}</Label>
           <Select value={form.stato} onValueChange={(v) => setForm({ ...form, stato: v as any })}>
-            <SelectTrigger className="h-9 text-xs rounded-xl">
-              <SelectValue placeholder="Seleziona stato..." />
+            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
+              <SelectValue placeholder={t("common.status")} />
             </SelectTrigger>
             <SelectContent>
               {STATUS_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
+                <SelectItem key={value} value={value} className="cursor-pointer">{label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label className={L}>Prezzo (€) *</Label>
+          <Label className={L}>{t("courses.price")} *</Label>
           <Input type="number" placeholder="0.00" step="0.01" min="0" required
             value={form.prezzo?.toString() ?? ""}
             onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
@@ -222,19 +231,19 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
 
         {/* ── Insegnante ── */}
         <div>
-          <Label className={L}>Insegnante</Label>
+          <Label className={L}>{t("courses.assignedTeacher")}</Label>
           <Select
             value={form.insegnanteIds[0] || "none"}
             onValueChange={(v) => setForm({ ...form, insegnanteIds: v === "none" ? [] : [v] })}
           >
-            <SelectTrigger className="h-9 text-xs rounded-xl">
-              <SelectValue placeholder="— Nessun insegnante —" />
+            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
+              <SelectValue placeholder={`— ${t("groups.unassigned")} —`} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Nessun insegnante —</SelectItem>
+              <SelectItem value="none" className="cursor-pointer">— {t("groups.unassigned")} —</SelectItem>
               {teachers.length > 0
-                ? teachers.map((t) => <SelectItem key={t.id} value={t.id}>{t.fullName}</SelectItem>)
-                : <SelectItem value="loading" disabled>Caricamento...</SelectItem>}
+                ? teachers.map((teacher) => <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">{teacher.fullName}</SelectItem>)
+                : <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>}
             </SelectContent>
           </Select>
         </div>
@@ -243,37 +252,37 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
         {isGroup && (
           <>
             <div className="col-span-2">
-              <Label className={L}>Tipo Schedulazione</Label>
+              <Label className={L}>{t("courses.scheduleType")}</Label>
               <Select
                 value={form.scheduleType || "fixed"}
-                onValueChange={(t) =>
+                onValueChange={(sType) =>
                   setForm((f) => ({
                     ...f,
-                    scheduleType: t,
-                    scheduleDays: t === "flexible" ? [] : f.scheduleDays,
-                    startTime: t === "flexible" ? "" : f.startTime,
-                    endTime: t === "flexible" ? "" : f.endTime,
+                    scheduleType: sType,
+                    scheduleDays: sType === "flexible" ? [] : f.scheduleDays,
+                    startTime: sType === "flexible" ? "" : f.startTime,
+                    endTime: sType === "flexible" ? "" : f.endTime,
                   }))
                 }
               >
-                <SelectTrigger className="h-9 text-xs rounded-xl">
+                <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fixed">Fisso (orario definito)</SelectItem>
-                  <SelectItem value="flexible">Flessibile (da concordare)</SelectItem>
+                  <SelectItem value="fixed" className="cursor-pointer">{t("courses.fixed")}</SelectItem>
+                  <SelectItem value="flexible" className="cursor-pointer">{t("courses.flexible")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label className={L}>Durata Lezione (min)</Label>
+              <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
               <Input type="number" placeholder="75" min="15" step="5"
                 value={form.lessonDurationMinutes?.toString() ?? ""}
                 onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
                 className="h-9 text-xs rounded-xl" />
             </div>
             <div>
-              <Label className={L}>Lezioni a Settimana</Label>
+              <Label className={L}>{t("courses.lessonsCount")}</Label>
               <Input type="number" placeholder="2" min="1"
                 value={form.lessonsPerWeek?.toString() ?? ""}
                 onChange={(e) => setForm({ ...form, lessonsPerWeek: parseInt(e.target.value) || null })}
@@ -287,40 +296,40 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
           <>
             <div className="col-span-2 bg-muted/40 p-3.5 rounded-2xl border border-border/60 space-y-2">
               <div className="flex items-center justify-between">
-                <Label className={L}>Giorni di Lezione</Label>
+                <Label className={L}>{t("courses.scheduleDays")}</Label>
                 {form.lessonsPerWeek && (
                   <span className="text-xs text-muted-foreground">
-                    {form.scheduleDays.length}/{form.lessonsPerWeek} selezionati
+                    {form.scheduleDays.length}/{form.lessonsPerWeek} {t("courses.enrolledStudents").toLowerCase()}
                   </span>
                 )}
               </div>
               <div className="flex gap-4 flex-wrap pt-1">
-                {DAYS_OF_WEEK.map((day) => {
-                  const isSelected = form.scheduleDays.includes(day);
+                {DAYS_OF_WEEK.map(({ key, label }) => {
+                  const isSelected = form.scheduleDays.includes(key);
                   const limitReached = !!form.lessonsPerWeek && form.scheduleDays.length >= form.lessonsPerWeek;
                   const isDisabled = !isSelected && limitReached;
                   return (
-                    <label key={day}
+                    <label key={key}
                       className={`flex items-center gap-2 select-none text-xs font-medium ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
-                      <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => toggleDay(day)} />
-                      <span>{day}</span>
+                      <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => toggleDay(key)} />
+                      <span>{label}</span>
                     </label>
                   );
                 })}
               </div>
             </div>
             <div>
-              <Label className={L}>Orario Inizio</Label>
+              <Label className={L}>{t("courses.startTime")}</Label>
               <Input type="time" value={form.startTime || ""}
                 onChange={(e) => updateStartTime(e.target.value)}
                 className="h-9 text-xs rounded-xl" />
             </div>
             <div>
               <Label className={L}>
-                Orario Fine <span className="text-muted-foreground font-normal normal-case">(calcolato)</span>
+                {t("courses.endTime")}
               </Label>
               <div className={readOnly}>
-                {form.endTime || <span className="text-muted-foreground">Inserisci orario e durata</span>}
+                {form.endTime || <span className="text-muted-foreground">{t("courses.schedule")}</span>}
               </div>
             </div>
           </>
@@ -330,14 +339,14 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
         {isPrivate && (
           <>
             <div>
-              <Label className={L}>Durata Lezione (min)</Label>
+              <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
               <Input type="number" placeholder="60" min="15" step="5"
                 value={form.lessonDurationMinutes?.toString() ?? ""}
                 onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
                 className="h-9 text-xs rounded-xl" />
             </div>
             <div>
-              <Label className={L}>N° Lezioni nel Pacchetto</Label>
+              <Label className={L}>{t("courses.lessonsCount")}</Label>
               <Input type="number" placeholder="10" min="1"
                 value={form.totalLessons?.toString() ?? ""}
                 onChange={(e) => setForm({ ...form, totalLessons: parseInt(e.target.value) || null })}
@@ -349,7 +358,7 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
         {/* ══ CERTIFICATION ══════════════════════════════════════════════════ */}
         {isCertification && (
           <div>
-            <Label className={L}>Totale Ore</Label>
+            <Label className={L}>{t("courses.totalLessonsEst")}</Label>
             <Input type="number" placeholder="30" min="0" step="0.5"
               value={form.totalHours?.toString() ?? ""}
               onChange={(e) => setForm({ ...form, totalHours: parseFloat(e.target.value) || null })}
@@ -359,8 +368,8 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
 
         {/* ── Descrizione ── */}
         <div className="col-span-2">
-          <Label className={L}>Descrizione</Label>
-          <Textarea placeholder="Descrivi gli argomenti e gli obiettivi del corso..."
+          <Label className={L}>{t("promotions.description")}</Label>
+          <Textarea placeholder="..."
             value={form.descrizione}
             onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
             className="min-h-[80px] rounded-xl text-xs" />
@@ -368,8 +377,12 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
       </div>
 
       <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
-        <Button type="button" variant="ghost" onClick={onCancel} className="font-semibold">Annulla</Button>
-        <Button type="submit" className="font-semibold rounded-xl">{submitLabel}</Button>
+        <Button type="button" variant="ghost" onClick={onCancel} className="font-semibold cursor-pointer">
+          {t("common.cancel")}
+        </Button>
+        <Button type="submit" className="font-semibold rounded-xl cursor-pointer">
+          {submitLabel}
+        </Button>
       </div>
     </form>
   );

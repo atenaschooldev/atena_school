@@ -1,3 +1,5 @@
+"use client";
+
 import type { Payment } from "../types";
 import {
   PaymentMethod,
@@ -21,30 +23,30 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
   Receipt,
-  CreditCard,
   Calendar,
   ExternalLink,
-  Tag,
-  CheckCircle2,
   FileText,
   ShoppingBag,
   ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { it as dateLocaleIt, enUS as dateLocaleEn } from "date-fns/locale";
+import { useTranslation } from "@/i18n/context";
 
 interface PaymentDetailDialogProps {
   payment: Payment | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export function PaymentDetailDialog({
   payment,
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
 }: PaymentDetailDialogProps) {
   const navigate = useNavigate();
+  const { t, locale } = useTranslation();
+
   if (!payment) return null;
 
   const isSucceeded = Number(payment.status) === PaymentRecordStatus.SUCCEEDED;
@@ -53,12 +55,37 @@ export function PaymentDetailDialog({
   const pTxId = payment.providerTransactionId || payment.provider_transaction_id;
   const bId = payment.bookingId || payment.booking_id;
 
+  const activeDateLocale = locale === "it" ? dateLocaleIt : dateLocaleEn;
   const formattedDate = dateVal
-    ? format(new Date(dateVal), "d MMMM yyyy 'alle' HH:mm", { locale: it })
-    : "N/D";
+    ? format(new Date(dateVal), "d MMMM yyyy HH:mm", { locale: activeDateLocale })
+    : t("common.noData");
+
+  const pTypeNum = Number(payment.type) as PaymentType;
+  const typeLabel =
+    pTypeNum === PaymentType.REGISTRATION_FEE
+      ? t("payments.typeMembership")
+      : pTypeNum === PaymentType.SINGLE_LESSON
+        ? t("courses.individual")
+        : pTypeNum === PaymentType.DEPOSIT
+          ? t("payments.typeDeposit")
+          : pTypeNum === PaymentType.INSTALLMENT
+            ? t("payments.typeInstallment")
+            : pTypeNum === PaymentType.REFUND
+              ? t("payments.typeRefund")
+              : t("payments.typeTuition");
+
+  const methodLabel =
+    locale === "it"
+      ? PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.label_it || "Contanti"
+      : PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.label_en || "Cash";
+
+  const providerLabel =
+    locale === "it"
+      ? PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.label_it || "Manuale"
+      : PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.label_en || "Manual";
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
         <div className="p-6 pb-4 border-b bg-muted/20 space-y-3">
           <div className="flex items-center justify-between gap-2">
@@ -75,23 +102,19 @@ export function PaymentDetailDialog({
               }
             >
               {isSucceeded
-                ? "Completato"
-                : (PAYMENT_RECORD_STATUS_DICTIONARY[Number(payment.status) as PaymentRecordStatus]?.label_it ||
-                   PAYMENT_RECORD_STATUS_DICTIONARY[Number(payment.status) as PaymentRecordStatus]?.it || "In attesa")}
+                ? t("common.paid")
+                : t("common.pending")}
             </Badge>
           </div>
 
           <div>
             <DialogTitle className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <Receipt className="w-5 h-5 text-primary shrink-0" />
-              <span>
-                {PAYMENT_TYPE_DICTIONARY[Number(payment.type) as PaymentType]?.label_it ||
-                 PAYMENT_TYPE_DICTIONARY[Number(payment.type) as PaymentType]?.it || "Pagamento"}
-              </span>
+              <span>{typeLabel}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1">
               <Calendar className="w-3.5 h-3.5" />
-              <span>Registrato il {formattedDate}</span>
+              <span>{t("payments.registeredOn", { date: formattedDate })}</span>
             </DialogDescription>
           </div>
         </div>
@@ -99,7 +122,7 @@ export function PaymentDetailDialog({
         <div className="p-6 space-y-4 text-xs">
           <div className="rounded-lg border p-4 bg-card space-y-3">
             <div className="flex justify-between items-center border-b pb-2">
-              <span className="text-muted-foreground">Importo Transazione</span>
+              <span className="text-muted-foreground">{t("payments.transactionAmount")}</span>
               <span className="font-bold text-lg text-primary font-mono">
                 €{Number(payment.amount).toFixed(2)}
               </span>
@@ -107,17 +130,15 @@ export function PaymentDetailDialog({
 
             <div className="space-y-1.5 pt-1">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Metodo di Pagamento:</span>
+                <span className="text-muted-foreground">{t("payments.paymentMethod")}:</span>
                 <span className="font-semibold text-foreground capitalize">
-                  {PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.label_it ||
-                   PAYMENT_METHOD_DICTIONARY[Number(pMethod) as PaymentMethod]?.it || String(pMethod || "N/D")}
+                  {methodLabel}
                 </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Provider:</span>
                 <span className="font-semibold text-foreground capitalize">
-                  {PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.label_it ||
-                   PAYMENT_PROVIDER_DICTIONARY[Number(payment.provider) as PaymentProvider]?.it || String(payment.provider || "Manuale")}
+                  {providerLabel}
                 </span>
               </div>
               {pTxId && (
@@ -136,7 +157,7 @@ export function PaymentDetailDialog({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 font-medium text-foreground">
                   <ShoppingBag className="w-4 h-4 text-primary shrink-0" />
-                  <span>Ordine di Riferimento</span>
+                  <span>{t("payments.referenceOrder")}</span>
                 </div>
                 <span className="font-mono text-xs font-bold text-primary">#{bId.slice(0, 8)}</span>
               </div>
@@ -145,11 +166,11 @@ export function PaymentDetailDialog({
                 size="sm"
                 className="w-full text-xs h-8 cursor-pointer gap-1.5 mt-1"
                 onClick={() => {
-                  onClose();
+                  onOpenChange(false);
                   navigate(`/prenotazioni?id=${bId}`);
                 }}
               >
-                Vedi Dettagli Ordine <ArrowRight className="w-3.5 h-3.5" />
+                {t("payments.viewOrderDetails")} <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           )}
@@ -158,7 +179,7 @@ export function PaymentDetailDialog({
             <div className="rounded-lg border bg-muted/40 p-3 space-y-1">
               <span className="font-semibold text-foreground flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-primary" />
-                Note:
+                {t("payments.optionalNotes")}:
               </span>
               <p className="text-muted-foreground leading-relaxed">{payment.notes}</p>
             </div>
@@ -181,8 +202,8 @@ export function PaymentDetailDialog({
             <div />
           )}
 
-          <Button variant="outline" size="sm" onClick={onClose} className="font-medium text-xs cursor-pointer">
-            Chiudi
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="font-medium text-xs cursor-pointer">
+            {t("common.close")}
           </Button>
         </div>
       </DialogContent>

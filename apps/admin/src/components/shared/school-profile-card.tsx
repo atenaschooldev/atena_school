@@ -7,7 +7,6 @@ import { z } from "zod";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -23,16 +22,12 @@ import {
   Building2,
   MapPin,
   Phone,
-  Mail,
   Euro,
   Share2,
   Sparkles,
   Save,
   RotateCcw,
   Loader2,
-  CheckCircle2,
-  Globe,
-  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -40,7 +35,7 @@ import { useTranslation } from "@/i18n/context";
 import { DEFAULT_SCHOOL_PROFILE, type SchoolProfile } from "@atena/api-types";
 
 const schoolProfileSchema = z.object({
-  name: z.string().min(1, "Il nome della scuola è obbligatorio"),
+  name: z.string().min(1, "School name is required"),
   legal_name: z.string().optional(),
   tagline: z.string().optional(),
   founders: z.string().optional(),
@@ -57,9 +52,9 @@ const schoolProfileSchema = z.object({
   phone: z.string().optional(),
   landline: z.string().optional(),
   whatsapp: z.string().optional(),
-  email: z.string().email("Email non valida").or(z.literal("")).optional(),
-  secretariat_email: z.string().email("Email non valida").or(z.literal("")).optional(),
-  support_email: z.string().email("Email non valida").or(z.literal("")).optional(),
+  email: z.string().email("Invalid email").or(z.literal("")).optional(),
+  secretariat_email: z.string().email("Invalid email").or(z.literal("")).optional(),
+  support_email: z.string().email("Invalid email").or(z.literal("")).optional(),
   secretariat_hours: z.string().optional(),
   // Fiscale & Quota & Bonifico
   vat_code: z.string().optional(),
@@ -106,115 +101,111 @@ export function SchoolProfileCard() {
       support_email: DEFAULT_SCHOOL_PROFILE.support_email || "",
       secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
       vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
-      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur || 30,
+      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur ?? 30,
       academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
       iban: DEFAULT_SCHOOL_PROFILE.iban || "",
       bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
       account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
-      instagram: DEFAULT_SCHOOL_PROFILE.socials?.instagram || "",
-      facebook: DEFAULT_SCHOOL_PROFILE.socials?.facebook || "",
-      linkedin: DEFAULT_SCHOOL_PROFILE.socials?.linkedin || "",
-      youtube: DEFAULT_SCHOOL_PROFILE.socials?.youtube || "",
-      tiktok: DEFAULT_SCHOOL_PROFILE.socials?.tiktok || "",
+      instagram: DEFAULT_SCHOOL_PROFILE.instagram || "",
+      facebook: DEFAULT_SCHOOL_PROFILE.facebook || "",
+      linkedin: DEFAULT_SCHOOL_PROFILE.linkedin || "",
+      youtube: DEFAULT_SCHOOL_PROFILE.youtube || "",
+      tiktok: DEFAULT_SCHOOL_PROFILE.tiktok || "",
     },
   });
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     async function loadProfile() {
       try {
         setLoading(true);
-        const res = await api.get<{ success: boolean; profile: SchoolProfile }>("/admin/settings/school-profile");
-        if (isMounted && res?.profile) {
-          const p = res.profile;
-          const cleanAddress = (p.address || "").replace(/,\s*[A-Za-zÀ-ÿ\s'-]+(?:\s*\([A-Za-z]{2}\))?(?:\s*\d{5})?$/i, '').trim() || p.address || "";
+        const data = await api.get<SchoolProfile>("/school-profile");
+        if (mounted && data) {
           form.reset({
-            name: p.name || DEFAULT_SCHOOL_PROFILE.name,
-            legal_name: p.legal_name || "",
-            tagline: p.tagline || "",
-            founders: p.founders || "",
-            logo_url: p.logo_url || "",
-            website: p.website || "",
-            address: cleanAddress,
-            city: p.city || "",
-            cap: p.cap || "",
-            province: p.province || "",
-            country: p.country || "Italia",
-            maps_url: p.maps_url || "",
-            phone: p.phone || "",
-            landline: p.landline || "",
-            whatsapp: p.whatsapp || "",
-            email: p.email || "",
-            secretariat_email: p.secretariat_email || "",
-            support_email: p.support_email || "",
-            secretariat_hours: p.secretariat_hours || "",
-            vat_code: p.vat_code || "",
-            registration_fee_eur: p.registration_fee_eur ?? 30,
-            academic_year: p.academic_year || "2026/2027",
-            iban: p.iban || "",
-            bank_name: p.bank_name || "",
-            account_holder: p.account_holder || "",
-            instagram: p.socials?.instagram || "",
-            facebook: p.socials?.facebook || "",
-            linkedin: p.socials?.linkedin || "",
-            youtube: p.socials?.youtube || "",
-            tiktok: p.socials?.tiktok || "",
+            name: data.name || DEFAULT_SCHOOL_PROFILE.name,
+            legal_name: data.legal_name || "",
+            tagline: data.tagline || "",
+            founders: data.founders || "",
+            logo_url: data.logo_url || "",
+            website: data.website || "",
+            address: data.address || "",
+            city: data.city || "",
+            cap: data.cap || "",
+            province: data.province || "",
+            country: data.country || "Italia",
+            maps_url: data.maps_url || "",
+            phone: data.phone || "",
+            landline: data.landline || "",
+            whatsapp: data.whatsapp || "",
+            email: data.email || "",
+            secretariat_email: data.secretariat_email || "",
+            support_email: data.support_email || "",
+            secretariat_hours: data.secretariat_hours || "",
+            vat_code: data.vat_code || "",
+            registration_fee_eur: data.registration_fee_eur ?? 30,
+            academic_year: data.academic_year || "2026/2027",
+            iban: data.iban || "",
+            bank_name: data.bank_name || "",
+            account_holder: data.account_holder || "",
+            instagram: data.instagram || "",
+            facebook: data.facebook || "",
+            linkedin: data.linkedin || "",
+            youtube: data.youtube || "",
+            tiktok: data.tiktok || "",
           });
         }
       } catch (err) {
         console.warn("[SchoolProfileCard] Failed to fetch profile:", err);
       } finally {
-        if (isMounted) setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
+
     loadProfile();
-  }, []);
+    return () => {
+      mounted = false;
+    };
+  }, [form]);
 
   const onSubmit = async (values: SchoolProfileFormValues) => {
     try {
       setSaving(true);
-      const cleanAddress = (values.address || "").replace(/,\s*[A-Za-zÀ-ÿ\s'-]+(?:\s*\([A-Za-z]{2}\))?(?:\s*\d{5})?$/i, '').trim() || values.address;
-      const payload: Partial<SchoolProfile> = {
-        name: values.name,
-        legal_name: values.legal_name,
-        tagline: values.tagline,
-        founders: values.founders,
-        logo_url: values.logo_url,
-        website: values.website,
-        address: cleanAddress,
-        city: values.city,
-        cap: values.cap,
-        province: values.province,
-        country: values.country,
-        maps_url: values.maps_url,
-        phone: values.phone,
-        landline: values.landline,
-        whatsapp: values.whatsapp,
-        email: values.email,
-        secretariat_email: values.secretariat_email,
-        support_email: values.support_email,
-        secretariat_hours: values.secretariat_hours,
-        vat_code: values.vat_code,
-        registration_fee_eur: Number(values.registration_fee_eur),
-        academic_year: values.academic_year,
-        iban: values.iban,
-        bank_name: values.bank_name,
-        account_holder: values.account_holder,
-        socials: {
-          instagram: values.instagram,
-          facebook: values.facebook,
-          linkedin: values.linkedin,
-          youtube: values.youtube,
-          tiktok: values.tiktok,
-        },
-      };
-
-      const res = await api.patch<{ success: boolean; profile: SchoolProfile }>("/admin/settings/school-profile", payload);
-      if (res?.success) {
-        toast.success("Profilo e brand della scuola salvati con successo!");
-      }
+      const updated = await api.put<SchoolProfile>("/school-profile", values);
+      form.reset({
+        name: updated.name || values.name,
+        legal_name: updated.legal_name || "",
+        tagline: updated.tagline || "",
+        founders: updated.founders || "",
+        logo_url: updated.logo_url || "",
+        website: updated.website || "",
+        address: updated.address || "",
+        city: updated.city || "",
+        cap: updated.cap || "",
+        province: updated.province || "",
+        country: updated.country || "Italia",
+        maps_url: updated.maps_url || "",
+        phone: updated.phone || "",
+        landline: updated.landline || "",
+        whatsapp: updated.whatsapp || "",
+        email: updated.email || "",
+        secretariat_email: updated.secretariat_email || "",
+        support_email: updated.support_email || "",
+        secretariat_hours: updated.secretariat_hours || "",
+        vat_code: updated.vat_code || "",
+        registration_fee_eur: updated.registration_fee_eur ?? 30,
+        academic_year: updated.academic_year || "2026/2027",
+        iban: updated.iban || "",
+        bank_name: updated.bank_name || "",
+        account_holder: updated.account_holder || "",
+        instagram: updated.instagram || "",
+        facebook: updated.facebook || "",
+        linkedin: updated.linkedin || "",
+        youtube: updated.youtube || "",
+        tiktok: updated.tiktok || "",
+      });
+      toast.success(t("schoolProfile.profileSaved"));
     } catch (err: any) {
-      toast.error(err?.message || "Errore durante il salvataggio");
+      toast.error(err.message || "Error saving profile");
     } finally {
       setSaving(false);
     }
@@ -242,18 +233,18 @@ export function SchoolProfileCard() {
       support_email: DEFAULT_SCHOOL_PROFILE.support_email || "",
       secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
       vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
-      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur || 30,
+      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur ?? 30,
       academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
       iban: DEFAULT_SCHOOL_PROFILE.iban || "",
       bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
       account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
-      instagram: DEFAULT_SCHOOL_PROFILE.socials?.instagram || "",
-      facebook: DEFAULT_SCHOOL_PROFILE.socials?.facebook || "",
-      linkedin: DEFAULT_SCHOOL_PROFILE.socials?.linkedin || "",
-      youtube: DEFAULT_SCHOOL_PROFILE.socials?.youtube || "",
-      tiktok: DEFAULT_SCHOOL_PROFILE.socials?.tiktok || "",
+      instagram: DEFAULT_SCHOOL_PROFILE.instagram || "",
+      facebook: DEFAULT_SCHOOL_PROFILE.facebook || "",
+      linkedin: DEFAULT_SCHOOL_PROFILE.linkedin || "",
+      youtube: DEFAULT_SCHOOL_PROFILE.youtube || "",
+      tiktok: DEFAULT_SCHOOL_PROFILE.tiktok || "",
     });
-    toast.info("Valori predefiniti ripristinati. Ricordati di salvare le modifiche.");
+    toast.info(t("schoolProfile.resetConfirmDesc"));
   };
 
   return (
@@ -266,13 +257,13 @@ export function SchoolProfileCard() {
             </div>
             <div>
               <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <span>Profilo & White-Label Brand della Scuola</span>
+                <span>{t("schoolProfile.title")}</span>
                 <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold">
-                  White-Label Ready
+                  {t("schoolProfile.whiteLabelReady")}
                 </Badge>
               </CardTitle>
               <CardDescription>
-                Personalizza l'identità, i contatti, la sede e i dati fiscali visibili sul sito, nel portale studenti e nelle email.
+                {t("schoolProfile.subtitle")}
               </CardDescription>
             </div>
           </div>
@@ -286,7 +277,7 @@ export function SchoolProfileCard() {
               className="cursor-pointer text-xs"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              Predefiniti
+              {t("schoolProfile.resetDefaults")}
             </Button>
             <Button
               type="button"
@@ -298,12 +289,12 @@ export function SchoolProfileCard() {
               {saving ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Salvataggio...
+                  {t("schoolProfile.saving")}
                 </>
               ) : (
                 <>
                   <Save className="h-3.5 w-3.5 mr-1.5" />
-                  Salva Modifiche
+                  {t("schoolProfile.saveChanges")}
                 </>
               )}
             </Button>
@@ -316,25 +307,25 @@ export function SchoolProfileCard() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="identity" className="w-full">
               <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full h-auto p-1 bg-muted/60">
-                <TabsTrigger value="identity" className="flex items-center gap-1.5 text-xs py-2">
+                <TabsTrigger value="identity" className="flex items-center gap-1.5 text-xs py-2 cursor-pointer">
                   <Sparkles className="h-3.5 w-3.5" />
-                  Identità & Brand
+                  {t("schoolProfile.tabIdentity")}
                 </TabsTrigger>
-                <TabsTrigger value="address" className="flex items-center gap-1.5 text-xs py-2">
+                <TabsTrigger value="address" className="flex items-center gap-1.5 text-xs py-2 cursor-pointer">
                   <MapPin className="h-3.5 w-3.5" />
-                  Sede & Indirizzo
+                  {t("schoolProfile.tabAddress")}
                 </TabsTrigger>
-                <TabsTrigger value="contacts" className="flex items-center gap-1.5 text-xs py-2">
+                <TabsTrigger value="contacts" className="flex items-center gap-1.5 text-xs py-2 cursor-pointer">
                   <Phone className="h-3.5 w-3.5" />
-                  Contatti & Orari
+                  {t("schoolProfile.tabContacts")}
                 </TabsTrigger>
-                <TabsTrigger value="finance" className="flex items-center gap-1.5 text-xs py-2">
+                <TabsTrigger value="finance" className="flex items-center gap-1.5 text-xs py-2 cursor-pointer">
                   <Euro className="h-3.5 w-3.5" />
-                  Fiscale & Quota
+                  {t("schoolProfile.tabFinance")}
                 </TabsTrigger>
-                <TabsTrigger value="socials" className="flex items-center gap-1.5 text-xs py-2">
+                <TabsTrigger value="socials" className="flex items-center gap-1.5 text-xs py-2 cursor-pointer">
                   <Share2 className="h-3.5 w-3.5" />
-                  Social Media
+                  {t("schoolProfile.tabSocials")}
                 </TabsTrigger>
               </TabsList>
 
@@ -346,12 +337,12 @@ export function SchoolProfileCard() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Nome Commerciale Scuola *</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.schoolName")} *</FormLabel>
                         <FormControl>
                           <Input placeholder="Es. Atena School" {...field} />
                         </FormControl>
                         <FormDescription className="text-[11px]">
-                          Nome visualizzato su header, footer, email e ricevute.
+                          {t("schoolProfile.schoolNameDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -362,12 +353,12 @@ export function SchoolProfileCard() {
                     name="legal_name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Ragione Sociale (Società)</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.legalName")}</FormLabel>
                         <FormControl>
                           <Input placeholder="Es. Atena School S.r.l.s." {...field} />
                         </FormControl>
                         <FormDescription className="text-[11px]">
-                          Denominazione giuridica usata nei documenti contrattuali.
+                          {t("schoolProfile.legalNameDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -381,7 +372,7 @@ export function SchoolProfileCard() {
                     name="tagline"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Motto / Slogan</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.tagline")}</FormLabel>
                         <FormControl>
                           <Input placeholder="Es. civitatis ornamento" {...field} />
                         </FormControl>
@@ -394,9 +385,9 @@ export function SchoolProfileCard() {
                     name="founders"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Fondatori / Direzione</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.founders")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Es. ELISABETTA & MARIA, FONDATRICI" {...field} />
+                          <Input placeholder="Es. Elisabetta & Maria" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -410,9 +401,9 @@ export function SchoolProfileCard() {
                     name="logo_url"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">URL Logo</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="/assets/logo.webp o URL esterno" {...field} />
+                          <Input placeholder="/assets/logo.webp" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -423,7 +414,7 @@ export function SchoolProfileCard() {
                     name="website"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Sito Web Principale</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.website")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://atenaschool.com" {...field} />
                         </FormControl>
@@ -443,7 +434,7 @@ export function SchoolProfileCard() {
                   </div>
                   <div className="text-xs">
                     <span className="text-slate-400 font-semibold block text-[10px] uppercase tracking-wider">
-                      Anteprima indirizzo completo visibile sul sito:
+                      {t("schoolProfile.addressPreview")}
                     </span>
                     <span className="font-bold text-white text-xs sm:text-sm">
                       {[
@@ -461,12 +452,12 @@ export function SchoolProfileCard() {
                       name="address"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Via e Numero Civico</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.streetAndNumber")}</FormLabel>
                           <FormControl>
                             <Input placeholder="Es. Via Matteotti 11" {...field} />
                           </FormControl>
                           <FormDescription className="text-[11px]">
-                            Solo il nome della via e civico (es. <em>Via Roma 15</em>). Non inserire città o CAP qui.
+                            {t("schoolProfile.streetAndNumberDesc")}
                           </FormDescription>
                           <FormMessage />
                         </FormItem>
@@ -479,9 +470,9 @@ export function SchoolProfileCard() {
                       name="cap"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">C.A.P. (Codice Postale)</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.zipCode")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. 89022" {...field} />
+                            <Input placeholder="89022" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -497,9 +488,9 @@ export function SchoolProfileCard() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Città / Comune</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.city")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. Polistena" {...field} />
+                            <Input placeholder="Polistena" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -512,9 +503,9 @@ export function SchoolProfileCard() {
                       name="province"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Provincia (Sigla)</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.province")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. RC" maxLength={4} {...field} />
+                            <Input placeholder="RC" maxLength={4} {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -527,7 +518,7 @@ export function SchoolProfileCard() {
                       name="country"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Paese / Nazione</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.country")}</FormLabel>
                           <FormControl>
                             <Input placeholder="Italia" {...field} />
                           </FormControl>
@@ -543,12 +534,12 @@ export function SchoolProfileCard() {
                   name="maps_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold">Link Google Maps / Scheda Attività</FormLabel>
+                      <FormLabel className="text-xs font-bold">{t("schoolProfile.mapsUrl")}</FormLabel>
                       <FormControl>
                         <Input placeholder="https://maps.app.goo.gl/..." {...field} />
                       </FormControl>
                       <FormDescription className="text-[11px]">
-                        Link aperto dal pulsante "Apri in Google Maps" e nelle recensioni sul sito.
+                        {t("schoolProfile.mapsUrlDesc")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -564,7 +555,7 @@ export function SchoolProfileCard() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Cellulare Principale</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.primaryPhone")}</FormLabel>
                         <FormControl>
                           <Input placeholder="+39 375 605 2362" {...field} />
                         </FormControl>
@@ -577,7 +568,7 @@ export function SchoolProfileCard() {
                     name="landline"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Telefono Fisso Sede</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.landline")}</FormLabel>
                         <FormControl>
                           <Input placeholder="0966 447052" {...field} />
                         </FormControl>
@@ -590,7 +581,7 @@ export function SchoolProfileCard() {
                     name="whatsapp"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Numero WhatsApp</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.whatsapp")}</FormLabel>
                         <FormControl>
                           <Input placeholder="+39 375 605 2362" {...field} />
                         </FormControl>
@@ -606,7 +597,7 @@ export function SchoolProfileCard() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Email Pubblica Info</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.generalEmail")}</FormLabel>
                         <FormControl>
                           <Input placeholder="info@atenaschool.com" {...field} />
                         </FormControl>
@@ -619,7 +610,7 @@ export function SchoolProfileCard() {
                     name="secretariat_email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Email Segreteria (Notifiche)</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.secretariatEmail")}</FormLabel>
                         <FormControl>
                           <Input placeholder="segreteria@atenaschool.com" {...field} />
                         </FormControl>
@@ -632,7 +623,7 @@ export function SchoolProfileCard() {
                     name="support_email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Email Supporto Tecnico</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.supportEmail")}</FormLabel>
                         <FormControl>
                           <Input placeholder="supporto@atenaschool.com" {...field} />
                         </FormControl>
@@ -647,12 +638,12 @@ export function SchoolProfileCard() {
                   name="secretariat_hours"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-bold">Orari Apertura Segreteria</FormLabel>
+                      <FormLabel className="text-xs font-bold">{t("schoolProfile.secretariatHours")}</FormLabel>
                       <FormControl>
                         <Input placeholder="Martedì e Giovedì dalle ore 15:00 alle ore 18:00" {...field} />
                       </FormControl>
                       <FormDescription className="text-[11px]">
-                        Visualizzato nelle email automatiche e nel footer del sito.
+                        {t("schoolProfile.secretariatHoursDesc")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -668,12 +659,12 @@ export function SchoolProfileCard() {
                     name="vat_code"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">P.IVA / Codice Fiscale Scuola</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.vatCode")}</FormLabel>
                         <FormControl>
                           <Input placeholder="P.IVA/C.F. 03321620803" {...field} />
                         </FormControl>
                         <FormDescription className="text-[11px]">
-                          Inserito a piè di pagina del sito e sulle ricevute.
+                          {t("schoolProfile.vatCode")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -684,12 +675,12 @@ export function SchoolProfileCard() {
                     name="registration_fee_eur"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Quota Associativa Annuale (€)</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.registrationFee")}</FormLabel>
                         <FormControl>
                           <Input type="number" min={0} max={500} step={1} {...field} />
                         </FormControl>
                         <FormDescription className="text-[11px]">
-                          Importo della quota associativa annuale (default standard: €30).
+                          {t("schoolProfile.registrationFeeDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -700,12 +691,12 @@ export function SchoolProfileCard() {
                     name="academic_year"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Anno Accademico</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.academicYear")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Es. 2026/2027" {...field} />
+                          <Input placeholder="2026/2027" {...field} />
                         </FormControl>
                         <FormDescription className="text-[11px]">
-                          Visualizzato nel badge della quota associativa al checkout.
+                          {t("schoolProfile.academicYearDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -714,9 +705,9 @@ export function SchoolProfileCard() {
                 </div>
 
                 <div className="pt-2 border-t border-border">
-                  <h4 className="text-xs font-bold text-foreground mb-1">Coordinate Bancarie per Pagamenti Bonifico</h4>
+                  <h4 className="text-xs font-bold text-foreground mb-1">{t("schoolProfile.iban")}</h4>
                   <p className="text-[11px] text-muted-foreground mb-3">
-                    Dati bancari inseriti automaticamente nelle email di conferma ordine per chi sceglie di saldare via bonifico.
+                    {t("schoolProfile.ibanDesc")}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FormField
@@ -724,9 +715,9 @@ export function SchoolProfileCard() {
                       name="iban"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">IBAN Conto Corrente</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.iban")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. IT60X0542811101000000123456" {...field} />
+                            <Input placeholder="IT60X..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -737,9 +728,9 @@ export function SchoolProfileCard() {
                       name="bank_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Nome Banca / Istituto</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.bankName")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. Banca Popolare / Intesa Sanpaolo" {...field} />
+                            <Input placeholder="Banca..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -750,9 +741,9 @@ export function SchoolProfileCard() {
                       name="account_holder"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs font-bold">Intestatario Conto</FormLabel>
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.accountHolder")}</FormLabel>
                           <FormControl>
-                            <Input placeholder="Es. Atena School S.r.l.s." {...field} />
+                            <Input placeholder="Atena School" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -770,7 +761,7 @@ export function SchoolProfileCard() {
                     name="instagram"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Instagram URL</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.instagram")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://instagram.com/atenaschool" {...field} />
                         </FormControl>
@@ -783,7 +774,7 @@ export function SchoolProfileCard() {
                     name="facebook"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">Facebook URL</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.facebook")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://facebook.com/atenaschool" {...field} />
                         </FormControl>
@@ -799,7 +790,7 @@ export function SchoolProfileCard() {
                     name="linkedin"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">LinkedIn URL</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.linkedin")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://linkedin.com/company/atenaschool" {...field} />
                         </FormControl>
@@ -812,7 +803,7 @@ export function SchoolProfileCard() {
                     name="youtube"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">YouTube URL</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.youtube")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://youtube.com/@atenaschool" {...field} />
                         </FormControl>
@@ -825,7 +816,7 @@ export function SchoolProfileCard() {
                     name="tiktok"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs font-bold">TikTok URL</FormLabel>
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.tiktok")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://tiktok.com/@atenaschool" {...field} />
                         </FormControl>
