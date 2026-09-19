@@ -37,13 +37,16 @@ export function getPromoCodesTableColumns({
 
         return (
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-xs sm:text-sm px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 tracking-wider">
+            <Badge
+              variant="outline"
+              className="font-mono font-bold text-xs sm:text-sm px-2.5 py-1 tracking-wider bg-muted/40 border-border text-foreground"
+            >
               {item.code}
-            </span>
+            </Badge>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-400 hover:text-slate-700"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={copyToClipboard}
               title="Copia codice"
             >
@@ -61,24 +64,33 @@ export function getPromoCodesTableColumns({
         const isPercentage = Number(item.discount_type) === 1;
 
         return (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5">
               {isPercentage ? (
-                <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-200 font-bold text-xs gap-1">
+                <Badge
+                  variant="secondary"
+                  className="font-semibold text-xs gap-1 text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/20 border border-blue-500/30"
+                >
                   <Percent className="w-3 h-3" />
                   -{item.discount_value}%
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold text-xs gap-1">
+                <Badge
+                  variant="secondary"
+                  className="font-semibold text-xs gap-1 text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 border border-emerald-500/30"
+                >
                   <Euro className="w-3 h-3" />
                   -{Number(item.discount_value).toFixed(2)} €
                 </Badge>
               )}
             </div>
             {item.waive_registration_fee && (
-              <span className="text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded w-fit">
+              <Badge
+                variant="outline"
+                className="text-[10px] text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 border-amber-500/30 font-medium w-fit"
+              >
                 + Quota 30€ azzerata
-              </span>
+              </Badge>
             )}
           </div>
         );
@@ -90,8 +102,8 @@ export function getPromoCodesTableColumns({
       cell: ({ row }) => {
         const desc = row.original.description;
         return (
-          <span className="text-xs text-slate-600 line-clamp-2 max-w-[240px]">
-            {desc || <span className="text-slate-400 italic">Nessuna descrizione</span>}
+          <span className="text-xs text-muted-foreground line-clamp-2 max-w-[240px]">
+            {desc || <span className="italic opacity-60">Nessuna descrizione</span>}
           </span>
         );
       },
@@ -107,18 +119,18 @@ export function getPromoCodesTableColumns({
         return (
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5">
-              <span className="font-mono text-xs font-bold text-slate-800">
+              <span className="font-mono text-xs font-bold text-foreground">
                 {used}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 / {max != null ? max : "∞"}
               </span>
             </div>
             {max != null && max > 0 && (
-              <div className="w-20 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div className="w-20 bg-muted rounded-full h-1.5 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    used >= max ? "bg-red-500" : "bg-primary"
+                    used >= max ? "bg-destructive" : "bg-primary"
                   }`}
                   style={{ width: `${Math.min(100, (used / max) * 100)}%` }}
                 />
@@ -141,30 +153,40 @@ export function getPromoCodesTableColumns({
         const isFuture = from && from > now;
 
         if (!from && !until) {
-          return <span className="text-xs text-slate-500 font-medium">Sempre valido</span>;
+          return <span className="text-xs text-muted-foreground font-medium">Sempre valido</span>;
         }
 
         return (
           <div className="flex flex-col gap-0.5">
             {from && (
-              <span className="text-[11px] text-slate-600 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-slate-400" />
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-muted-foreground/70" />
                 Dal {from.toLocaleDateString("it-IT")}
               </span>
             )}
             {until && (
-              <span className={`text-[11px] flex items-center gap-1 font-medium ${isExpired ? "text-red-600 font-bold" : "text-slate-600"}`}>
-                <Calendar className="w-3 h-3 text-slate-400" />
+              <span
+                className={`text-[11px] flex items-center gap-1 font-medium ${
+                  isExpired ? "text-rose-600 dark:text-rose-400 font-bold" : "text-muted-foreground"
+                }`}
+              >
+                <Calendar className="w-3 h-3 text-muted-foreground/70" />
                 Fino al {until.toLocaleDateString("it-IT")}
               </span>
             )}
             {isExpired && (
-              <Badge variant="outline" className="text-[9px] bg-red-50 text-red-700 border-red-200 w-fit">
+              <Badge
+                variant="outline"
+                className="text-[9px] bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400 border-rose-500/30 w-fit"
+              >
                 Scaduto
               </Badge>
             )}
             {isFuture && (
-              <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-700 border-blue-200 w-fit">
+              <Badge
+                variant="outline"
+                className="text-[9px] bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-500/30 w-fit"
+              >
                 Programmato
               </Badge>
             )}
@@ -183,7 +205,13 @@ export function getPromoCodesTableColumns({
               checked={item.is_active}
               onCheckedChange={() => onToggleStatus(item.id)}
             />
-            <span className={`text-xs font-semibold ${item.is_active ? "text-emerald-700" : "text-slate-400"}`}>
+            <span
+              className={`text-xs font-semibold ${
+                item.is_active
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-muted-foreground"
+              }`}
+            >
               {item.is_active ? "Attivo" : "Disattivo"}
             </span>
           </div>
@@ -199,19 +227,19 @@ export function getPromoCodesTableColumns({
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
+                <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
                   <span className="sr-only">Menu azioni</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onEdit(item)}>
+                <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
                   <Edit className="mr-2 h-3.5 w-3.5" />
                   Modifica
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item.id)}
-                  className="text-red-600 focus:text-red-600"
+                  className="text-destructive focus:text-destructive cursor-pointer"
                 >
                   <Trash2 className="mr-2 h-3.5 w-3.5" />
                   Elimina

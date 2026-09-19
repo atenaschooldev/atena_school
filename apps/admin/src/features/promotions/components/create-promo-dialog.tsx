@@ -214,12 +214,12 @@ export function CreatePromoDialog({
           </div>
 
           {/* Waive Registration Fee switch */}
-          <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50/60 p-3">
+          <div className="flex items-center justify-between rounded-lg border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-3">
             <div className="space-y-0.5">
-              <Label className="text-xs font-bold text-amber-900 cursor-pointer">
+              <Label className="text-xs font-bold text-amber-900 dark:text-amber-300 cursor-pointer">
                 Azzera Quota Associativa Annuale (30 €)
               </Label>
-              <p className="text-[11px] text-amber-700">
+              <p className="text-[11px] text-amber-700 dark:text-amber-400">
                 Se attivo, il corsista non pagherà la quota di 30€ anche se dovuta.
               </p>
             </div>
@@ -230,13 +230,13 @@ export function CreatePromoDialog({
           </div>
 
           {/* Max Uses Limit */}
-          <div className="space-y-2 rounded-xl border border-slate-200 p-3 bg-slate-50/50">
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-xs font-bold text-slate-800">
+                <Label className="text-xs font-bold text-foreground">
                   Limite Numero Utilizzi
                 </Label>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-muted-foreground">
                   Imposta un numero massimo di volte che il codice può essere usato.
                 </p>
               </div>
@@ -260,13 +260,13 @@ export function CreatePromoDialog({
           </div>
 
           {/* Validity Period */}
-          <div className="space-y-2 rounded-xl border border-slate-200 p-3 bg-slate-50/50">
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label className="text-xs font-bold text-slate-800">
+                <Label className="text-xs font-bold text-foreground">
                   Periodo di Validità
                 </Label>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-muted-foreground">
                   Imposta data di inizio e scadenza (facoltativo).
                 </p>
               </div>
@@ -278,7 +278,7 @@ export function CreatePromoDialog({
             {hasValidDates && (
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase text-slate-500">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
                     Valido dal
                   </Label>
                   <Input
@@ -289,7 +289,7 @@ export function CreatePromoDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase text-slate-500">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">
                     Valido fino al
                   </Label>
                   <Input
@@ -304,12 +304,12 @@ export function CreatePromoDialog({
           </div>
 
           {/* Active status */}
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 p-3">
+          <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
             <div className="space-y-0.5">
-              <Label className="text-xs font-bold text-slate-800">
+              <Label className="text-xs font-bold text-foreground">
                 Stato Attivo
               </Label>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-muted-foreground">
                 Disattiva se vuoi sospendere temporaneamente l'accettazione del codice.
               </p>
             </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Plus, Tag, Percent, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { usePromoCodes } from "../hooks/use-promo-codes";
 import { getPromoCodesTableColumns } from "./promo-codes-table-columns";
 import { CreatePromoDialog } from "./create-promo-dialog";
@@ -100,50 +101,46 @@ export function PromotionsView() {
     return { total, active, totalUses };
   }, [promoCodes]);
 
+  const metrics = [
+    {
+      title: "Totale Codici Promo",
+      value: stats.total,
+      description: "Codici creati nel sistema",
+      icon: Tag,
+    },
+    {
+      title: "Codici Attivi",
+      value: stats.active,
+      description: "Attualmente utilizzabili",
+      icon: CheckCircle2,
+    },
+    {
+      title: "Utilizzi Totali",
+      value: stats.totalUses,
+      description: "Applicati nelle iscrizioni",
+      icon: Sparkles,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-4">
       {/* Metric summary banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-4 lg:px-6">
-        <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-            <Tag className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Totale Codici Promo
-            </span>
-            <span className="text-xl font-black text-slate-900 font-mono">
-              {stats.total}
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Codici Attivi
-            </span>
-            <span className="text-xl font-black text-emerald-600 font-mono">
-              {stats.active}
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Utilizzi Totali nei Corsi
-            </span>
-            <span className="text-xl font-black text-amber-600 font-mono">
-              {stats.totalUses}
-            </span>
-          </div>
+      <div className="@container/main px-4 lg:px-6">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {metrics.map((metric, index) => (
+            <Card key={index} className="border">
+              <CardContent className="space-y-4 pt-6">
+                <div className="flex items-center justify-between">
+                  <metric.icon className="text-muted-foreground size-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-sm font-medium">{metric.title}</p>
+                  <div className="text-2xl font-bold">{metric.value}</div>
+                  <div className="text-muted-foreground text-xs">{metric.description}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
 
@@ -170,22 +167,21 @@ export function PromotionsView() {
                 setEditingItem(null);
                 setCreateDialogOpen(true);
               }}
-              size="sm"
-              className="gap-1.5 font-bold shadow-sm"
+              className="font-medium cursor-pointer shadow-sm text-xs"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="mr-1.5 h-4 w-4" />
               Nuovo Codice Promo
             </Button>
           }
         />
 
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+        <div className="rounded-md border bg-card overflow-hidden">
           <Table>
-            <TableHeader className="bg-slate-50/80">
+            <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+                    <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -199,13 +195,13 @@ export function PromotionsView() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableSkeletonRows columns={6} rows={5} />
+                <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
               ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-slate-50/60 transition-colors"
+                    className="hover:bg-muted/50 transition-all duration-200"
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
@@ -221,7 +217,7 @@ export function PromotionsView() {
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-32 text-center text-slate-400 text-xs font-medium"
+                    className="h-32 text-center text-muted-foreground text-xs font-medium"
                   >
                     Nessun codice promozionale trovato.
                   </TableCell>
