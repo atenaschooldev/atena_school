@@ -373,7 +373,7 @@ export async function createReservationWorkflow(
         subscription_status: subStatus,
         amount_paid: totalPaidAmount,
         registration_fee: effectiveRegFee,
-        discount_amount: discountAmount > 0 ? discountAmount : null,
+        discount_amount: discountAmount > 0 ? discountAmount : 0,
         promo_code: dto.promoCode || null,
         promo_code_id: promoId || null,
         total_lessons_count: computeTotalLessonsCount(course, lessons.length),
