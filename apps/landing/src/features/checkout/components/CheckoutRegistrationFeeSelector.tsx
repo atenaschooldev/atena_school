@@ -13,6 +13,7 @@ interface CheckoutRegistrationFeeSelectorProps {
   includeRegistrationFee?: boolean;
   setValue: UseFormSetValue<CheckoutFormValues>;
   registrationFeeAmount?: number;
+  academicYear?: string;
 }
 
 export function CheckoutRegistrationFeeSelector({
@@ -22,6 +23,7 @@ export function CheckoutRegistrationFeeSelector({
   includeRegistrationFee,
   setValue,
   registrationFeeAmount = ANNUAL_REGISTRATION_FEE_EUR,
+  academicYear = "2026/2027",
 }: CheckoutRegistrationFeeSelectorProps) {
   if (!stripeEnabled || !hasAnyFeeDue) {
     return null;
@@ -33,7 +35,7 @@ export function CheckoutRegistrationFeeSelector({
     <div className="bg-[#FFFBEB] rounded-xl p-3 sm:p-3.5 border border-[#FDE68A] space-y-2">
       <div className="space-y-0.5">
         <span className="bg-[#FEF3C7] text-[#92400E] text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full inline-block">
-          Anno Accademico 2026/2027
+          Anno Accademico {academicYear}
         </span>
         <h3 className="text-xs font-black text-[#78350F]">
           Quota d'iscrizione annuale ({registrationFeeAmount.toFixed(2)} €

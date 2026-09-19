@@ -61,9 +61,13 @@ const schoolProfileSchema = z.object({
   secretariat_email: z.string().email("Email non valida").or(z.literal("")).optional(),
   support_email: z.string().email("Email non valida").or(z.literal("")).optional(),
   secretariat_hours: z.string().optional(),
-  // Fiscale & Quota
+  // Fiscale & Quota & Bonifico
   vat_code: z.string().optional(),
   registration_fee_eur: z.coerce.number().min(0).max(500),
+  academic_year: z.string().optional(),
+  iban: z.string().optional(),
+  bank_name: z.string().optional(),
+  account_holder: z.string().optional(),
   // Socials
   instagram: z.string().optional(),
   facebook: z.string().optional(),
@@ -103,6 +107,10 @@ export function SchoolProfileCard() {
       secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
       vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
       registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur || 30,
+      academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
+      iban: DEFAULT_SCHOOL_PROFILE.iban || "",
+      bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
+      account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
       instagram: DEFAULT_SCHOOL_PROFILE.socials?.instagram || "",
       facebook: DEFAULT_SCHOOL_PROFILE.socials?.facebook || "",
       linkedin: DEFAULT_SCHOOL_PROFILE.socials?.linkedin || "",
@@ -142,6 +150,10 @@ export function SchoolProfileCard() {
             secretariat_hours: p.secretariat_hours || "",
             vat_code: p.vat_code || "",
             registration_fee_eur: p.registration_fee_eur ?? 30,
+            academic_year: p.academic_year || "2026/2027",
+            iban: p.iban || "",
+            bank_name: p.bank_name || "",
+            account_holder: p.account_holder || "",
             instagram: p.socials?.instagram || "",
             facebook: p.socials?.facebook || "",
             linkedin: p.socials?.linkedin || "",
@@ -184,6 +196,10 @@ export function SchoolProfileCard() {
         secretariat_hours: values.secretariat_hours,
         vat_code: values.vat_code,
         registration_fee_eur: Number(values.registration_fee_eur),
+        academic_year: values.academic_year,
+        iban: values.iban,
+        bank_name: values.bank_name,
+        account_holder: values.account_holder,
         socials: {
           instagram: values.instagram,
           facebook: values.facebook,
@@ -227,6 +243,10 @@ export function SchoolProfileCard() {
       secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
       vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
       registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur || 30,
+      academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
+      iban: DEFAULT_SCHOOL_PROFILE.iban || "",
+      bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
+      account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
       instagram: DEFAULT_SCHOOL_PROFILE.socials?.instagram || "",
       facebook: DEFAULT_SCHOOL_PROFILE.socials?.facebook || "",
       linkedin: DEFAULT_SCHOOL_PROFILE.socials?.linkedin || "",
@@ -642,7 +662,7 @@ export function SchoolProfileCard() {
 
               {/* 4. FISCALE & QUOTA */}
               <TabsContent value="finance" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
                     name="vat_code"
@@ -675,6 +695,70 @@ export function SchoolProfileCard() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="academic_year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold">Anno Accademico</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Es. 2026/2027" {...field} />
+                        </FormControl>
+                        <FormDescription className="text-[11px]">
+                          Visualizzato nel badge della quota associativa al checkout.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-border">
+                  <h4 className="text-xs font-bold text-foreground mb-1">Coordinate Bancarie per Pagamenti Bonifico</h4>
+                  <p className="text-[11px] text-muted-foreground mb-3">
+                    Dati bancari inseriti automaticamente nelle email di conferma ordine per chi sceglie di saldare via bonifico.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="iban"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold">IBAN Conto Corrente</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Es. IT60X0542811101000000123456" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bank_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold">Nome Banca / Istituto</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Es. Banca Popolare / Intesa Sanpaolo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="account_holder"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-bold">Intestatario Conto</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Es. Atena School S.r.l.s." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               </TabsContent>
 

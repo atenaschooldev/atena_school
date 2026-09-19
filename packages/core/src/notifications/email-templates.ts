@@ -95,7 +95,7 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
                 <tr>
                   <td align="center" style="padding-bottom: 16px;">
                     <div style="display: inline-block; padding: 5px 14px; border-radius: 9999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); font-size: 11px; font-weight: 800; letter-spacing: 0.5px; color: #ffffff;">
-                      <span style="color: #F8861D;">★ 4.9/5</span> • Cambridge, Trinity & EIPASS
+                      <span style="color: #F8861D;">★ 4.9/5</span> • ${school.tagline || 'Scuola di Formazione'}
                     </div>
                   </td>
                 </tr>
@@ -269,6 +269,26 @@ export function renderClientBookingConfirmationEmail(data: BookingEmailTemplateD
               </table>
 
               <!-- Next Steps Notice Box -->
+              ${!data.isPaidOnline && school.iban ? `
+              <!-- Bank Transfer Coordinates Box -->
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 16px 18px; margin-bottom: 20px;">
+                <tr>
+                  <td>
+                    <div style="font-size: 13px; font-weight: 800; color: #166534; margin-bottom: 6px;">
+                      🏦 Coordinate per Saldo tramite Bonifico Bancario:
+                    </div>
+                    <div style="font-size: 12px; line-height: 1.6; color: #14532d;">
+                      Se preferisci saldare con bonifico prima dell'inizio delle lezioni:<br>
+                      • <strong>IBAN:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-family: monospace; border: 1px solid #bbf7d0;">${school.iban}</code><br>
+                      ${school.bank_name ? `• <strong>Banca:</strong> ${school.bank_name}<br>` : ''}
+                      ${school.account_holder ? `• <strong>Intestatario:</strong> ${school.account_holder}<br>` : ''}
+                      • <strong>Causale:</strong> Saldo Corso ${data.courseName} - ${data.purchaserName} (ID: ${data.bookingId})
+                    </div>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+
               <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #fffaf5; border: 1px solid #fed7aa; border-radius: 16px; padding: 16px 18px; margin-bottom: 24px;">
                 <tr>
                   <td>

@@ -66,8 +66,8 @@ export const TELEGRAM_I18N = {
     btnLangEn: '🇬🇧 English',
     btnLangIt: '🇮🇹 Italiano',
     // Callbacks / Toasts
-    feeSettledToast: '💶 Quota associativa €30 registrata!',
-    feeSettledLog: '✅ <i>Quota €30 registrata alle {time} da @{user}</i>',
+    feeSettledToast: '💶 Quota associativa registrata!',
+    feeSettledLog: '✅ <i>Quota associativa registrata alle {time} da @{user}</i>',
     courseSettledToast: '🎓 Quota corso confermata!',
     courseSettledLog: '✅ <i>Corso saldato alle {time} da @{user}</i>',
     allSettledToast: '✅ Saldo completo confermato!',
@@ -124,8 +124,8 @@ export const TELEGRAM_I18N = {
     btnLangEn: '🇬🇧 English',
     btnLangIt: '🇮🇹 Italiano',
     // Callbacks / Toasts
-    feeSettledToast: '💶 Annual fee €30 recorded!',
-    feeSettledLog: '✅ <i>Fee €30 recorded at {time} by @{user}</i>',
+    feeSettledToast: '💶 Annual membership fee recorded!',
+    feeSettledLog: '✅ <i>Annual membership fee recorded at {time} by @{user}</i>',
     courseSettledToast: '🎓 Course fee confirmed!',
     courseSettledLog: '✅ <i>Course fee settled at {time} by @{user}</i>',
     allSettledToast: '✅ Full payment confirmed!',
@@ -200,8 +200,9 @@ export function buildBookingTelegramKeyboard(params: {
   adminUrl?: string;
   stripePaymentIntentId?: string | null;
   locale?: TelegramLocale;
+  regFeeEur?: string | number;
 }): TelegramButton[][] {
-  const { bookingId, hasUnpaidFee, isCourseUnpaid, isCancelled, phone, adminUrl, stripePaymentIntentId } = params;
+  const { bookingId, hasUnpaidFee, isCourseUnpaid, isCancelled, phone, adminUrl, stripePaymentIntentId, regFeeEur } = params;
   const locale = params.locale || 'it';
   const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
   const keyboard: TelegramButton[][] = [];
@@ -209,7 +210,10 @@ export function buildBookingTelegramKeyboard(params: {
   if (!isCancelled) {
     const actionRow1: TelegramButton[] = [];
     if (hasUnpaidFee) {
-      actionRow1.push({ text: i18n.btnSettleFee, callback_data: `fee:${bookingId}:${locale}` });
+      const feeLabel = regFeeEur
+        ? (locale === 'it' ? `💶 Salda Quota €${Number(regFeeEur).toFixed(0)}` : `💶 Settle Fee €${Number(regFeeEur).toFixed(0)}`)
+        : i18n.btnSettleFee;
+      actionRow1.push({ text: feeLabel, callback_data: `fee:${bookingId}:${locale}` });
     }
     if (isCourseUnpaid) {
       actionRow1.push({ text: i18n.btnSettleCourse, callback_data: `course:${bookingId}:${locale}` });
@@ -476,6 +480,7 @@ export async function sendBookingNotificationTelegram(params: {
     adminUrl,
     stripePaymentIntentId,
     locale,
+    regFeeEur,
   });
 
   try {
@@ -801,6 +806,7 @@ export async function handleTelegramCallbackAction(params: {
       isCancelled,
       phone: updatedBooking?.purchaser_phone,
       locale: currentLocale,
+      regFeeEur: Number(updatedBooking?.registration_fee || 0).toFixed(2),
     });
 
     await editMessageText(token, chatId, messageId, newHtml, updatedKeyboard);

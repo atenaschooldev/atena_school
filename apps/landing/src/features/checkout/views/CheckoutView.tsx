@@ -36,6 +36,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     setBillingScheme,
     submitting,
     registrationFeeAmount,
+    academicYear,
     feeCheckStatus,
     studentsList,
     studentFeeStatuses,
@@ -201,6 +202,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               includeRegistrationFee={includeRegistrationFee}
               setValue={setValue}
               registrationFeeAmount={registrationFeeAmount}
+              academicYear={academicYear}
             />
 
             <CheckoutPaymentModeSelector

@@ -43,6 +43,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [registrationFeeAmount, setRegistrationFeeAmount] = useState<number>(30);
+  const [academicYear, setAcademicYear] = useState<string>("2026/2027");
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>(FeeCheckStatus.INITIAL);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
     0: FeeCheckStatus.INITIAL,
@@ -134,8 +135,13 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setItem(fetchedItem);
         }
 
-        if (profileRes?.success && profileRes.profile?.registration_fee_eur != null) {
-          setRegistrationFeeAmount(Number(profileRes.profile.registration_fee_eur));
+        if (profileRes?.success && profileRes.profile) {
+          if (profileRes.profile.registration_fee_eur != null) {
+            setRegistrationFeeAmount(Number(profileRes.profile.registration_fee_eur));
+          }
+          if (profileRes.profile.academic_year) {
+            setAcademicYear(profileRes.profile.academic_year);
+          }
         }
 
         if (settingsRes?.success && settingsRes.settings) {
@@ -613,6 +619,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     submitting,
     hasPaidAnnualFee,
     registrationFeeAmount,
+    academicYear,
     feeCheckStatus,
     isAnyFeeChecking,
     studentsList,

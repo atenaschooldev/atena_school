@@ -81,6 +81,10 @@ export interface SchoolProfile {
   vat_code?: string;
   secretariat_hours?: string;
   registration_fee_eur?: number;
+  academic_year?: string;
+  iban?: string;
+  bank_name?: string;
+  account_holder?: string;
   logo_url?: string;
   maps_url?: string;
   founders?: string;
@@ -106,6 +110,10 @@ export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   vat_code: 'P.IVA/C.F. 03321620803',
   secretariat_hours: 'Martedì e Giovedì dalle ore 15:00 alle ore 18:00',
   registration_fee_eur: 30,
+  academic_year: '2026/2027',
+  iban: 'IT60X0542811101000000123456',
+  bank_name: 'Banca Popolare',
+  account_holder: 'Atena School S.r.l.s.',
   logo_url: '/assets/logo.webp',
   maps_url: 'https://maps.app.goo.gl/4Vmvrk9hxz5EC5gM7',
   founders: 'ELISABETTA & MARIA, FONDATRICI',
