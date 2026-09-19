@@ -38,6 +38,15 @@ export async function processStudentAndBookingLinks(params: {
 
   if (linkedUserId) {
     await supabase.from('bookings').update({ user_id: linkedUserId }).eq('id', bookingId);
+    if (purchaserName || dto.phone) {
+      await supabase
+        .from('users')
+        .update({
+          full_name: purchaserName || undefined,
+          phone: dto.phone || undefined,
+        })
+        .eq('id', linkedUserId);
+    }
   }
 
   const sEmail = dto.isForChild ? (dto.studentEmail || null) : (dto.email || null);

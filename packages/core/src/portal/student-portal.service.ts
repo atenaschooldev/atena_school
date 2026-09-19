@@ -110,17 +110,22 @@ export async function linkUserAccountWorkflow(
 
   // 2. Ensure public.users row exists
   const meta = params.metadata || {};
-  const fallbackFullName =
+  const bookingPurchaser = bookingList.find((b) => b.purchaser_email?.trim().toLowerCase() === cleanEmail);
+  const bookingStudent = bookingList.find((b) => b.student_email?.trim().toLowerCase() === cleanEmail);
+
+  const officialFullName =
+    (isParent ? bookingPurchaser?.purchaser_name : (bookingStudent?.student_name || bookingPurchaser?.purchaser_name)) ||
+    bookingPurchaser?.purchaser_name ||
+    bookingStudent?.student_name ||
     meta.full_name ||
     meta.name ||
-    bookingList.find((b) => b.student_email?.trim().toLowerCase() === cleanEmail)?.student_name ||
-    bookingList.find((b) => b.purchaser_email?.trim().toLowerCase() === cleanEmail)?.purchaser_name ||
     cleanEmail.split('@')[0];
 
-  const fallbackPhone =
+  const officialPhone =
+    (isParent ? bookingPurchaser?.purchaser_phone : (bookingStudent?.student_phone || bookingPurchaser?.purchaser_phone)) ||
+    bookingPurchaser?.purchaser_phone ||
+    bookingStudent?.student_phone ||
     meta.phone ||
-    bookingList.find((b) => b.student_email?.trim().toLowerCase() === cleanEmail)?.student_phone ||
-    bookingList.find((b) => b.purchaser_email?.trim().toLowerCase() === cleanEmail)?.purchaser_phone ||
     null;
 
   await supabaseAdmin
@@ -129,9 +134,9 @@ export async function linkUserAccountWorkflow(
       {
         id: userId,
         email: cleanEmail,
-        full_name: fallbackFullName,
+        full_name: officialFullName,
         role: isParent ? 4 : 1,
-        phone: fallbackPhone,
+        phone: officialPhone,
         is_active: true,
       },
       { onConflict: 'id' }
