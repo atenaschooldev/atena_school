@@ -243,3 +243,188 @@ export async function linkUserAccountWorkflow(
   };
 }
 
+export interface SavedPurchaserProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  purchaserTaxCode: string;
+  taxCode?: string;
+  birthPlace?: string;
+  needsCompanyInvoice?: boolean;
+  sdiCode?: string;
+  pecEmail?: string;
+}
+
+export interface SavedStudentProfile {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  taxCode?: string;
+  birthDate?: string;
+  birthPlace?: string;
+}
+
+export interface UserLatestProfileResult {
+  success: boolean;
+  purchaser: SavedPurchaserProfile | null;
+  students: SavedStudentProfile[];
+}
+
+export async function getUserLatestProfile(
+  supabase: SupabaseClient,
+  params: {
+    userId?: string | null;
+    email?: string | null;
+    taxCode?: string | null;
+  }
+): Promise<UserLatestProfileResult> {
+  const cleanEmail = params.email?.trim().toLowerCase() || null;
+  const cleanTax = params.taxCode?.trim().toUpperCase() || null;
+  const userId = params.userId || null;
+
+  if (!cleanEmail && !cleanTax && !userId) {
+    return { success: true, purchaser: null, students: [] };
+  }
+
+  // 1. Fetch user record if userId / email exists
+  let userRow: any = null;
+  if (userId || cleanEmail) {
+    let userQuery = supabase.from('users').select('*');
+    if (userId) {
+      userQuery = userQuery.eq('id', userId);
+    } else if (cleanEmail) {
+      userQuery = userQuery.ilike('email', cleanEmail);
+    }
+    const { data: uData } = await userQuery.maybeSingle();
+    userRow = uData;
+  }
+
+  // 2. Fetch latest bookings to get accurate recent purchaser and student data
+  let bQuery = supabase
+    .from('bookings')
+    .select('*, students:student_id(*)')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (userId) {
+    bQuery = bQuery.eq('user_id', userId);
+  } else if (cleanEmail) {
+    bQuery = bQuery.or(`purchaser_email.ilike.${cleanEmail},student_email.ilike.${cleanEmail}`);
+  } else if (cleanTax) {
+    bQuery = bQuery.or(`purchaser_tax_code.ilike.${cleanTax},student_tax_code.ilike.${cleanTax}`);
+  }
+
+  const { data: bookings } = await bQuery;
+  const bookingList = bookings || [];
+
+  // Determine purchaser
+  let purchaser: SavedPurchaserProfile | null = null;
+  const latestPurchaserBooking = bookingList.find((b) => b.purchaser_email || b.purchaser_name || b.purchaser_tax_code) || bookingList[0];
+
+  const fullName =
+    latestPurchaserBooking?.purchaser_name ||
+    userRow?.full_name ||
+    latestPurchaserBooking?.student_name ||
+    '';
+  const nameParts = fullName.trim().split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  const email =
+    latestPurchaserBooking?.purchaser_email ||
+    userRow?.email ||
+    latestPurchaserBooking?.student_email ||
+    cleanEmail ||
+    '';
+
+  const phone =
+    latestPurchaserBooking?.purchaser_phone ||
+    userRow?.phone ||
+    latestPurchaserBooking?.student_phone ||
+    '';
+
+  const purchaserTaxCode =
+    latestPurchaserBooking?.purchaser_tax_code ||
+    userRow?.tax_code ||
+    (latestPurchaserBooking?.student_tax_code && !latestPurchaserBooking?.purchaser_tax_code
+      ? latestPurchaserBooking?.student_tax_code
+      : '') ||
+    cleanTax ||
+    '';
+
+  if (email || fullName || phone || purchaserTaxCode) {
+    purchaser = {
+      firstName,
+      lastName,
+      email,
+      phone,
+      purchaserTaxCode,
+      taxCode: purchaserTaxCode,
+      birthPlace: latestPurchaserBooking?.birth_place || '',
+      needsCompanyInvoice: Boolean(latestPurchaserBooking?.sdi_code || latestPurchaserBooking?.pec_email || userRow?.sdi_code || userRow?.pec_email),
+      sdiCode: latestPurchaserBooking?.sdi_code || userRow?.sdi_code || '',
+      pecEmail: latestPurchaserBooking?.pec_email || userRow?.pec_email || '',
+    };
+  }
+
+  // Extract unique students
+  const studentMap = new Map<string, SavedStudentProfile>();
+
+  // Add students from bookings
+  for (const b of bookingList) {
+    const sName = b.student_name || (b.students ? `${b.students.first_name || ''} ${b.students.last_name || ''}`.trim() : '');
+    const sTax = (b.student_tax_code || b.students?.tax_code || '').trim().toUpperCase();
+    const sEmail = (b.student_email || b.students?.email || '').trim().toLowerCase();
+
+    const key = sTax || sEmail || sName;
+    if (key && !studentMap.has(key)) {
+      const sParts = sName.split(' ');
+      const sFirst = b.students?.first_name || sParts[0] || '';
+      const sLast = b.students?.last_name || sParts.slice(1).join(' ') || '';
+      studentMap.set(key, {
+        firstName: sFirst,
+        lastName: sLast,
+        email: b.student_email || b.students?.email || '',
+        phone: b.student_phone || b.students?.phone || '',
+        taxCode: sTax,
+        birthDate: b.student_birth_date || b.students?.birth_date || '',
+        birthPlace: b.student_birth_place || b.students?.birth_place || '',
+      });
+    }
+  }
+
+  // Also query students table if parent_id is set
+  if (userId) {
+    const { data: dbStudents } = await supabase
+      .from('students')
+      .select('*')
+      .eq('parent_id', userId);
+
+    if (dbStudents) {
+      for (const ds of dbStudents) {
+        const key = (ds.tax_code || ds.email || `${ds.first_name} ${ds.last_name}`).trim().toUpperCase();
+        if (key && !studentMap.has(key)) {
+          studentMap.set(key, {
+            firstName: ds.first_name || '',
+            lastName: ds.last_name || '',
+            email: ds.email || '',
+            phone: ds.phone || '',
+            taxCode: ds.tax_code || '',
+            birthDate: ds.birth_date || '',
+            birthPlace: ds.birth_place || '',
+          });
+        }
+      }
+    }
+  }
+
+  return {
+    success: true,
+    purchaser,
+    students: Array.from(studentMap.values()),
+  };
+}
+
+

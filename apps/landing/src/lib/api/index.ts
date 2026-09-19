@@ -37,6 +37,27 @@ export const api = {
       baseClient.landing.checkout.verifyPayment(dto),
     validatePromo: (dto: { code: string; courseId?: string; coursePrice?: number; registrationFee?: number }) =>
       baseClient.landing.checkout.validatePromo(dto),
+    lookupProfile: async (params: { email?: string; taxCode?: string; userId?: string }): Promise<{
+      success: boolean;
+      purchaser: any;
+      students: any[];
+      error?: string;
+    }> => {
+      const endpoint = backendUrl && baseClient.isNest
+        ? `${backendUrl}/v1/checkout/lookup-profile`
+        : (backendUrl ? `${backendUrl}/landing/checkout/lookup-profile` : '/landing/checkout/lookup-profile');
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params),
+        });
+        return await res.json();
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Network error';
+        return { success: false, purchaser: null, students: [], error: msg };
+      }
+    },
   },
   bookings: {
     getById: (bookingId: string): Promise<{ success: boolean; booking: BookingRecord }> =>

@@ -13,6 +13,7 @@ import {
   Spinner,
   CheckCircle,
   Info,
+  Sparkle,
 } from "@phosphor-icons/react";
 import type { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -30,6 +31,9 @@ interface CheckoutPurchaserFieldsProps {
   dateParam?: string | null;
   timeParam?: string | null;
   feeCheckStatus?: FeeCheckStatus;
+  savedProfileSource?: "local" | "account" | "draft" | null;
+  onClearSavedProfile?: () => void;
+  onOpenAuthModal?: () => void;
 }
 
 export function CheckoutPurchaserFields({
@@ -41,6 +45,9 @@ export function CheckoutPurchaserFields({
   dateParam,
   timeParam,
   feeCheckStatus,
+  savedProfileSource,
+  onClearSavedProfile,
+  onOpenAuthModal,
 }: CheckoutPurchaserFieldsProps) {
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");
@@ -70,17 +77,82 @@ export function CheckoutPurchaserFields({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {!user && (
-            <a
-              href={loginRedirectUrl}
-              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-[#043569] hover:text-[#F8861D] bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded-lg transition-colors"
+          {!user ? (
+            <button
+              type="button"
+              onClick={onOpenAuthModal}
+              className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-[#043569] hover:text-[#F8861D] bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
             >
               <SignIn className="w-3.5 h-3.5" />
               Accedi
-            </a>
+            </button>
+          ) : (
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+              Account Connesso
+            </span>
           )}
         </div>
       </div>
+
+      {/* Returning Client / Saved Profile Banners */}
+      {!user && !savedProfileSource && onOpenAuthModal && (
+        <div className="bg-gradient-to-r from-[#043569]/5 via-amber-500/5 to-[#043569]/5 border border-[#043569]/15 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <Sparkle className="w-4 h-4 text-[#F8861D] shrink-0" weight="fill" />
+            <p className="text-xs font-semibold text-slate-700 leading-snug">
+              Sei già nostro corsista o genitore?
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenAuthModal}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#043569] hover:bg-[#032850] text-white text-xs font-bold transition-all shadow-sm shrink-0 cursor-pointer"
+          >
+            <SignIn className="w-3.5 h-3.5" weight="bold" />
+            Accedi per autocompilare
+          </button>
+        </div>
+      )}
+
+      {savedProfileSource === "local" && (
+        <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" weight="fill" />
+            <span className="text-[11px] sm:text-xs font-medium text-emerald-900">
+              Dati caricati automaticamente da questo dispositivo.
+            </span>
+          </div>
+          {onClearSavedProfile && (
+            <button
+              type="button"
+              onClick={onClearSavedProfile}
+              className="text-[10px] sm:text-[11px] font-bold text-emerald-700 hover:text-emerald-900 underline whitespace-nowrap cursor-pointer"
+            >
+              Azzera dati
+            </button>
+          )}
+        </div>
+      )}
+
+      {savedProfileSource === "account" && (
+        <div className="bg-blue-50 border border-blue-200/80 rounded-xl p-2.5 sm:p-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-[#043569] shrink-0" weight="fill" />
+            <span className="text-[11px] sm:text-xs font-medium text-[#043569]">
+              Dati caricati dal tuo account Atena School.
+            </span>
+          </div>
+          {onClearSavedProfile && (
+            <button
+              type="button"
+              onClick={onClearSavedProfile}
+              className="text-[10px] sm:text-[11px] font-bold text-[#043569] hover:text-[#F8861D] underline whitespace-nowrap cursor-pointer"
+            >
+              Pulisci
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Checkbox: Parent purchasing for child */}
       <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80">

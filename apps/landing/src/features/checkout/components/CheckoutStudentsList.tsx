@@ -30,6 +30,16 @@ interface StudentItem {
   birthPlace?: string;
 }
 
+export interface SavedStudentItem {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  taxCode?: string;
+  birthDate?: string;
+  birthPlace?: string;
+}
+
 interface CheckoutStudentsListProps {
   studentsList: StudentItem[];
   studentFeeStatuses: Record<number, FeeCheckStatus>;
@@ -38,6 +48,8 @@ interface CheckoutStudentsListProps {
   addStudent: () => void;
   removeStudent: (index: number) => void;
   updateStudent: (index: number, field: keyof StudentItem, value: string) => void;
+  availableSavedStudents?: SavedStudentItem[];
+  onSelectSavedStudent?: (student: SavedStudentItem, targetIndex?: number) => void;
 }
 
 export function CheckoutStudentsList({
@@ -48,6 +60,8 @@ export function CheckoutStudentsList({
   addStudent,
   removeStudent,
   updateStudent,
+  availableSavedStudents,
+  onSelectSavedStudent,
 }: CheckoutStudentsListProps) {
   return (
     <div className="space-y-4 pt-3 border-t border-slate-100">
@@ -62,6 +76,28 @@ export function CheckoutStudentsList({
           {studentsList.length} {studentsList.length === 1 ? "Studente" : "Studenti"}
         </span>
       </div>
+
+      {/* Quick selection chips for previously registered students */}
+      {availableSavedStudents && availableSavedStudents.length > 0 && (
+        <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-2.5 space-y-1.5">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+            Studenti salvati in precedenza (clicca per inserire):
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {availableSavedStudents.map((s, sIdx) => (
+              <button
+                key={sIdx}
+                type="button"
+                onClick={() => onSelectSavedStudent?.(s, 0)}
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#043569] bg-white border border-slate-200 hover:border-[#043569] px-2.5 py-1 rounded-lg transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+              >
+                <User className="w-3 h-3 text-[#F8861D]" weight="bold" />
+                <span>{s.firstName} {s.lastName}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-3">
         {studentsList.map((student, idx) => {

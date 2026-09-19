@@ -126,6 +126,43 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       colors: ["#F8861D", "#043569", "#FFFFFF"],
     });
 
+    if (bookingData) {
+      try {
+        const b = bookingData as any;
+        const isChild = Boolean(b.is_for_child || b.isForChild);
+        const pFullName = b.purchaser_name || "";
+        const pParts = pFullName.split(" ");
+        const saved = {
+          savedAt: Date.now(),
+          purchaser: {
+            firstName: pParts[0] || "",
+            lastName: pParts.slice(1).join(" ") || "",
+            email: bookingData.purchaser_email || "",
+            phone: bookingData.purchaser_phone || "",
+            purchaserTaxCode: bookingData.purchaser_tax_code || "",
+            taxCode: bookingData.purchaser_tax_code || "",
+            birthPlace: (bookingData as any).purchaser_birth_place || "",
+          },
+          isForChild: isChild,
+          students: isChild && bookingData.student_name ? [
+            {
+              firstName: bookingData.student_name.split(" ")[0] || "",
+              lastName: bookingData.student_name.split(" ").slice(1).join(" ") || "",
+              email: bookingData.student_email || "",
+              phone: bookingData.student_phone || "",
+              taxCode: bookingData.student_tax_code || "",
+              birthDate: (bookingData as any).student_birth_date || "",
+            }
+          ] : undefined,
+        };
+        if (saved.purchaser.email) {
+          localStorage.setItem("atena_client_profile", JSON.stringify(saved));
+        }
+      } catch {
+        // Safe failover
+      }
+    }
+
     if (isPaid && bookingId && !purchaseTrackedRef.current) {
       purchaseTrackedRef.current = true;
       const bookingAmount = Number(bookingData?.amount_paid || bookingData?.course_price || 0);

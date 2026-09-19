@@ -24,6 +24,24 @@ export { checkoutFormSchema as checkoutSchema } from "@atena/validators";
 import { FeeCheckStatus, SubmitAction } from "@/constants";
 export { FeeCheckStatus, SubmitAction };
 
+export interface SavedClientProfile {
+  savedAt: number;
+  purchaser: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    purchaserTaxCode: string;
+    taxCode?: string;
+    birthPlace?: string;
+    needsCompanyInvoice?: boolean;
+    sdiCode?: string;
+    pecEmail?: string;
+  };
+  isForChild?: boolean;
+  students?: StudentItemInput[];
+}
+
 export function useCheckout(typeOrId: string, optionalId?: string) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -55,6 +73,16 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
   const [billingScheme, setBillingScheme] = useState<BillingScheme>(BillingScheme.FULL);
   const [submitting, setSubmitting] = useState<false | SubmitAction>(false);
   const [user, setUser] = useState<User | UserProfile | null>(null);
+  const [savedProfileSource, setSavedProfileSource] = useState<"local" | "account" | "draft" | null>(null);
+  const [availableSavedStudents, setAvailableSavedStudents] = useState<Array<{
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    taxCode?: string;
+    birthDate?: string;
+    birthPlace?: string;
+  }>>([]);
   const actionRef = useRef<SubmitAction>(SubmitAction.BOOK);
   const idempotencyKeyRef = useRef<string>(
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -103,9 +131,10 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     },
   });
 
-  const { reset } = formMethods;
+  const { reset, setValue, getValues } = formMethods;
   const initFetchedRef = useRef<string | null>(null);
   const DRAFT_STORAGE_KEY = `atena_checkout_draft_${id}`;
+  const SAVED_PROFILE_KEY = "atena_client_profile";
 
   const clearDraft = () => {
     if (typeof window !== "undefined") {
@@ -115,6 +144,161 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         // Safe failover
       }
     }
+  };
+
+  const saveToLocalStorageProfile = (values: Partial<CheckoutFormValues>) => {
+    if (typeof window === "undefined") return;
+    try {
+      const profile = {
+        savedAt: Date.now(),
+        purchaser: {
+          firstName: values.firstName || "",
+          lastName: values.lastName || "",
+          email: values.email || "",
+          phone: values.phone || "",
+          purchaserTaxCode: values.purchaserTaxCode || values.taxCode || "",
+          taxCode: values.taxCode || values.purchaserTaxCode || "",
+          birthPlace: values.birthPlace || "",
+          needsCompanyInvoice: Boolean(values.needsCompanyInvoice),
+          sdiCode: values.sdiCode || "",
+          pecEmail: values.pecEmail || "",
+        },
+        isForChild: Boolean(values.isForChild),
+        students: values.students && values.students.length > 0 ? values.students : undefined,
+      };
+      localStorage.setItem(SAVED_PROFILE_KEY, JSON.stringify(profile));
+    } catch {
+      // Ignore quota or private mode issues
+    }
+  };
+
+  const clearSavedProfile = () => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(SAVED_PROFILE_KEY);
+        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {
+        // Safe failover
+      }
+    }
+    setSavedProfileSource(null);
+    setAvailableSavedStudents([]);
+    reset({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      purchaserTaxCode: "",
+      birthPlace: "",
+      isForChild: false,
+      students: [
+        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" },
+      ],
+      studentFirstName: "",
+      studentLastName: "",
+      studentEmail: "",
+      studentPhone: "",
+      studentBirthDate: "",
+      studentBirthPlace: "",
+      taxCode: "",
+      promoCode: "",
+      needsCompanyInvoice: false,
+      sdiCode: "",
+      pecEmail: "",
+      includeRegistrationFee: true,
+      notes: "",
+    });
+    toast.info("Dati rimossi da questo dispositivo.");
+  };
+
+  const loadProfileFromAccount = async (authenticatedUser: User) => {
+    setUser(authenticatedUser);
+    try {
+      const lookup = await api.checkout.lookupProfile({
+        userId: authenticatedUser.id,
+        email: authenticatedUser.email,
+      });
+
+      if (lookup?.success && lookup.purchaser) {
+        const p = lookup.purchaser;
+        const currentVals = getValues();
+        const newVals: CheckoutFormValues = {
+          ...currentVals,
+          firstName: p.firstName || currentVals.firstName,
+          lastName: p.lastName || currentVals.lastName,
+          email: p.email || authenticatedUser.email || currentVals.email,
+          phone: p.phone || currentVals.phone,
+          purchaserTaxCode: p.purchaserTaxCode || currentVals.purchaserTaxCode,
+          taxCode: p.taxCode || p.purchaserTaxCode || currentVals.taxCode,
+          birthPlace: p.birthPlace || currentVals.birthPlace,
+          needsCompanyInvoice: Boolean(p.needsCompanyInvoice),
+          sdiCode: p.sdiCode || "",
+          pecEmail: p.pecEmail || "",
+        };
+
+        if (lookup.students && lookup.students.length > 0) {
+          setAvailableSavedStudents(lookup.students);
+        }
+
+        reset(newVals);
+        setSavedProfileSource("account");
+        saveToLocalStorageProfile(newVals);
+        toast.success(`Bentornato ${p.firstName || ""}! I tuoi dati sono stati caricati.`);
+      } else {
+        const meta = authenticatedUser.user_metadata || {};
+        const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
+        const parts = fullName.split(" ");
+        setValue("firstName", meta.first_name || parts[0] || "");
+        setValue("lastName", meta.last_name || parts.slice(1).join(" ") || "");
+        setValue("email", authenticatedUser.email || "");
+        if (meta.phone || authenticatedUser.phone) setValue("phone", meta.phone || authenticatedUser.phone);
+        if (meta.tax_code) {
+          setValue("taxCode", meta.tax_code);
+          setValue("purchaserTaxCode", meta.tax_code);
+        }
+        setSavedProfileSource("account");
+        toast.success("Accesso effettuato!");
+      }
+    } catch (err) {
+      console.warn("Error loading account profile:", err);
+    }
+  };
+
+  const selectSavedStudent = (savedStudent: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    taxCode?: string;
+    birthDate?: string;
+    birthPlace?: string;
+  }, targetIndex = 0) => {
+    const currentStudents = [...(getValues("students") || [])];
+    const updatedStudent = {
+      firstName: savedStudent.firstName || "",
+      lastName: savedStudent.lastName || "",
+      email: savedStudent.email || "",
+      phone: savedStudent.phone || "",
+      taxCode: savedStudent.taxCode || "",
+      birthDate: savedStudent.birthDate || "",
+      birthPlace: savedStudent.birthPlace || "",
+    };
+
+    if (currentStudents[targetIndex]) {
+      currentStudents[targetIndex] = updatedStudent;
+    } else {
+      currentStudents.push(updatedStudent);
+    }
+
+    setValue("students", currentStudents, { shouldValidate: true });
+    setValue("studentFirstName", savedStudent.firstName || "");
+    setValue("studentLastName", savedStudent.lastName || "");
+    setValue("studentEmail", savedStudent.email || "");
+    setValue("studentPhone", savedStudent.phone || "");
+    setValue("taxCode", savedStudent.taxCode || "");
+    setValue("studentBirthDate", savedStudent.birthDate || "");
+    setValue("studentBirthPlace", savedStudent.birthPlace || "");
+    toast.success(`Dati studente ${savedStudent.firstName} inseriti`);
   };
 
   useEffect(() => {
@@ -155,6 +339,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           }
         }
 
+        // 1. Check if course-specific draft exists in sessionStorage
         let draftValues: Partial<CheckoutFormValues> | null = null;
         if (typeof window !== "undefined") {
           try {
@@ -167,10 +352,78 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           }
         }
 
+        // 2. Check if permanent profile exists in localStorage
+        let localSavedProfile: SavedClientProfile | null = null;
+        if (typeof window !== "undefined") {
+          try {
+            const localRaw = localStorage.getItem(SAVED_PROFILE_KEY);
+            if (localRaw) {
+              localSavedProfile = JSON.parse(localRaw);
+            }
+          } catch {
+            localSavedProfile = null;
+          }
+        }
+
         const supabase = createClient();
         const { data: { user: currentUser } } = await supabase.auth.getUser();
+
         if (currentUser) {
           setUser(currentUser);
+          try {
+            const lookup = await api.checkout.lookupProfile({
+              userId: currentUser.id,
+              email: currentUser.email,
+            });
+
+            if (lookup?.success && lookup.purchaser) {
+              const p = lookup.purchaser;
+              if (lookup.students && lookup.students.length > 0) {
+                setAvailableSavedStudents(lookup.students);
+              }
+
+              reset({
+                firstName: draftValues?.firstName || p.firstName || "",
+                lastName: draftValues?.lastName || p.lastName || "",
+                email: draftValues?.email || p.email || currentUser.email || "",
+                phone: draftValues?.phone || p.phone || "",
+                taxCode: draftValues?.taxCode || p.taxCode || p.purchaserTaxCode || "",
+                purchaserTaxCode: draftValues?.purchaserTaxCode || p.purchaserTaxCode || "",
+                birthPlace: draftValues?.birthPlace || p.birthPlace || "",
+                isForChild: draftValues?.isForChild ?? (localSavedProfile?.isForChild ?? false),
+                studentFirstName: draftValues?.studentFirstName || "",
+                studentLastName: draftValues?.studentLastName || "",
+                studentEmail: draftValues?.studentEmail || "",
+                studentPhone: draftValues?.studentPhone || "",
+                studentBirthDate: draftValues?.studentBirthDate || "",
+                studentBirthPlace: draftValues?.studentBirthPlace || "",
+                includeRegistrationFee: true,
+                students: draftValues?.students && draftValues.students.length > 0
+                  ? draftValues.students
+                  : (lookup.students && lookup.students.length > 0
+                      ? lookup.students.map((s) => ({
+                          firstName: s.firstName || "",
+                          lastName: s.lastName || "",
+                          email: s.email || "",
+                          phone: s.phone || "",
+                          taxCode: s.taxCode || "",
+                          birthDate: s.birthDate || "",
+                          birthPlace: s.birthPlace || "",
+                        }))
+                      : [{ firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" }]),
+                needsCompanyInvoice: draftValues?.needsCompanyInvoice ?? Boolean(p.needsCompanyInvoice),
+                sdiCode: draftValues?.sdiCode || p.sdiCode || "",
+                pecEmail: draftValues?.pecEmail || p.pecEmail || "",
+                notes: draftValues?.notes || "",
+              });
+              setSavedProfileSource("account");
+              return;
+            }
+          } catch (e) {
+            console.warn("Failed to lookup profile for auth user:", e);
+          }
+
+          // Fallback user metadata
           const meta = currentUser.user_metadata || {};
           const fullName = meta.custom_full_name || meta.full_name || `${meta.first_name || ""} ${meta.last_name || ""}`.trim();
           const parts = fullName.split(" ");
@@ -200,12 +453,38 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
             pecEmail: draftValues?.pecEmail || "",
             notes: draftValues?.notes || "",
           });
+          setSavedProfileSource("account");
         } else if (draftValues) {
           reset({
             ...formMethods.getValues(),
             ...draftValues,
             includeRegistrationFee: true,
           });
+          setSavedProfileSource("draft");
+        } else if (localSavedProfile?.purchaser) {
+          const p = localSavedProfile.purchaser;
+          if (localSavedProfile.students && localSavedProfile.students.length > 0) {
+            setAvailableSavedStudents(localSavedProfile.students);
+          }
+          reset({
+            ...formMethods.getValues(),
+            firstName: p.firstName || "",
+            lastName: p.lastName || "",
+            email: p.email || "",
+            phone: p.phone || "",
+            taxCode: p.taxCode || p.purchaserTaxCode || "",
+            purchaserTaxCode: p.purchaserTaxCode || p.taxCode || "",
+            birthPlace: p.birthPlace || "",
+            isForChild: localSavedProfile.isForChild ?? false,
+            needsCompanyInvoice: Boolean(p.needsCompanyInvoice),
+            sdiCode: p.sdiCode || "",
+            pecEmail: p.pecEmail || "",
+            students: localSavedProfile.students && localSavedProfile.students.length > 0
+              ? localSavedProfile.students
+              : [{ firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" }],
+            includeRegistrationFee: true,
+          });
+          setSavedProfileSource("local");
         }
       } catch (err: unknown) {
         console.error("initCheckout error:", err);
@@ -218,7 +497,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, DRAFT_STORAGE_KEY]);
 
-  // BigTech pattern: debounced auto-save form draft to sessionStorage
+  // BigTech pattern: debounced auto-save form draft to sessionStorage and localStorage
   useEffect(() => {
     if (typeof window === "undefined" || !id) return;
 
@@ -240,6 +519,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         try {
           if (hasData) {
             sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(values));
+            if (values.firstName && values.email) {
+              saveToLocalStorageProfile(values);
+            }
           }
         } catch {
           // Safe failover
@@ -636,6 +918,11 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     applyPromoCode,
     removePromoCode,
     user,
+    savedProfileSource,
+    availableSavedStudents,
+    loadProfileFromAccount,
+    clearSavedProfile,
+    selectSavedStudent,
     dateParam,
     timeParam,
     actionRef,

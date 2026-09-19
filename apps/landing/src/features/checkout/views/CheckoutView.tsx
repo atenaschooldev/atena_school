@@ -18,6 +18,7 @@ import {
   CheckoutNotesAndGdpr,
   CheckoutOrderSummary,
   CheckoutMobileBottomBar,
+  CheckoutAuthModal,
 } from "@/features/checkout/components";
 import { BillingScheme } from "@atena/api-types";
 
@@ -50,11 +51,18 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     applyPromoCode,
     removePromoCode,
     user,
+    savedProfileSource,
+    availableSavedStudents,
+    loadProfileFromAccount,
+    clearSavedProfile,
+    selectSavedStudent,
     dateParam,
     timeParam,
     actionRef,
     onSubmit,
   } = useCheckout(id);
+
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = formMethods;
   const isForChild = watch("isForChild");
@@ -174,6 +182,9 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               dateParam={dateParam}
               timeParam={timeParam}
               feeCheckStatus={feeCheckStatus}
+              savedProfileSource={savedProfileSource}
+              onClearSavedProfile={clearSavedProfile}
+              onOpenAuthModal={() => setAuthModalOpen(true)}
             />
 
             {isForChild && (
@@ -185,6 +196,8 @@ export function CheckoutView({ id }: CheckoutViewProps) {
                 addStudent={addStudent}
                 removeStudent={removeStudent}
                 updateStudent={updateStudent}
+                availableSavedStudents={availableSavedStudents}
+                onSelectSavedStudent={selectSavedStudent}
               />
             )}
 
@@ -261,6 +274,13 @@ export function CheckoutView({ id }: CheckoutViewProps) {
         </form>
 
       </div>
+
+      <CheckoutAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onLoginSuccess={loadProfileFromAccount}
+        courseId={id}
+      />
     </main>
   );
 }
