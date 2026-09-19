@@ -13,6 +13,7 @@ import {
   GraduationCap,
   CheckCircle2,
   Globe,
+  Tag,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -92,6 +93,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: t("nav.teachers"),
           url: "/insegnanti",
           icon: GraduationCap,
+        },
+        {
+          title: t("nav.promotions") || "Codici Promo",
+          url: "/promozioni",
+          icon: Tag,
         },
         {
           title: t("nav.schedule"),

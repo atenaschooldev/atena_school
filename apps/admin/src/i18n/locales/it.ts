@@ -13,6 +13,7 @@ export const it = {
     annualMemberships: "Iscrizioni Annuali",
     teachers: "Docenti",
     schedule: "Orari & Calendario",
+    promotions: "Codici Promo",
     users: "Utenti & Studenti",
     settings: "Impostazioni",
     accountSettings: "Profilo & Gateway Stripe",
