@@ -41,8 +41,16 @@ export async function validatePromoCode(
     return { valid: false, error: 'Questo codice promozionale è scaduto' };
   }
 
-  if (promo.max_uses != null && Number(promo.used_count) >= Number(promo.max_uses)) {
-    return { valid: false, error: 'Limite di utilizzi per questo codice promozionale raggiunto' };
+  if (promo.max_uses != null && Number(promo.max_uses) > 0) {
+    const { count: actualUses } = await supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .ilike('promo_code', cleanCode)
+      .neq('booking_status', 3); // 3=CANCELLED
+
+    if (actualUses != null && actualUses >= Number(promo.max_uses)) {
+      return { valid: false, error: 'Limite di utilizzi per questo codice promozionale raggiunto' };
+    }
   }
 
   const coursePrice = Number(params.coursePrice) || 0;
@@ -74,53 +82,13 @@ export async function validatePromoCode(
 }
 
 /**
- * Atomically increments the usage counter for a promo code
+ * Legacy counter compatibility stubs (dynamic count from bookings is used instead)
  */
-export async function incrementPromoCodeUsage(supabase: SupabaseClient, promoCodeId: string): Promise<void> {
-  try {
-    const { data: current } = await supabase
-      .from('promo_codes')
-      .select('used_count')
-      .eq('id', promoCodeId)
-      .maybeSingle();
-
-    if (current) {
-      await supabase
-        .from('promo_codes')
-        .update({
-          used_count: (Number(current.used_count) || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', promoCodeId);
-    }
-  } catch (err) {
-    console.warn('Failed to increment promo code usage count:', err);
-  }
+export async function incrementPromoCodeUsage(_supabase: SupabaseClient, _promoCodeId: string): Promise<void> {
+  // No-op: usage is derived dynamically from public.bookings
 }
 
-/**
- * Atomically decrements the usage counter for a promo code (minimum 0)
- */
-export async function decrementPromoCodeUsage(supabase: SupabaseClient, promoCodeId: string): Promise<void> {
-  try {
-    const { data: current } = await supabase
-      .from('promo_codes')
-      .select('used_count')
-      .eq('id', promoCodeId)
-      .maybeSingle();
-
-    if (current) {
-      const nextCount = Math.max(0, (Number(current.used_count) || 0) - 1);
-      await supabase
-        .from('promo_codes')
-        .update({
-          used_count: nextCount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', promoCodeId);
-    }
-  } catch (err) {
-    console.warn('Failed to decrement promo code usage count:', err);
-  }
+export async function decrementPromoCodeUsage(_supabase: SupabaseClient, _promoCodeId: string): Promise<void> {
+  // No-op: usage is derived dynamically from public.bookings
 }
 
