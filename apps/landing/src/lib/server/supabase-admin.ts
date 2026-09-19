@@ -14,10 +14,7 @@ export function getSupabaseAdmin(): SupabaseClient {
   }
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_KEY) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is required in production. Admin operations cannot proceed without it.');
-    }
-    console.warn('[DEV ONLY] SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to anon key — RLS may block admin operations.');
+    console.warn('[SupabaseAdmin] SUPABASE_SERVICE_ROLE_KEY is not set. Falling back to anon/public key.');
   }
 
   return createClient(url, serviceKey);
