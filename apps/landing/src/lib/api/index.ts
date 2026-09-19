@@ -56,6 +56,7 @@ export const api = {
   },
   settings: {
     getPaymentGateway: () => baseClient.landing.settings.getPaymentGateway(),
+    getSchoolProfile: () => baseClient.landing.settings.getSchoolProfile(),
   },
   auth: {
     async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {

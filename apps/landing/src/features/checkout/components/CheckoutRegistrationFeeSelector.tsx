@@ -12,6 +12,7 @@ interface CheckoutRegistrationFeeSelectorProps {
   unpaidFeesCount: number;
   includeRegistrationFee?: boolean;
   setValue: UseFormSetValue<CheckoutFormValues>;
+  registrationFeeAmount?: number;
 }
 
 export function CheckoutRegistrationFeeSelector({
@@ -20,6 +21,7 @@ export function CheckoutRegistrationFeeSelector({
   unpaidFeesCount,
   includeRegistrationFee,
   setValue,
+  registrationFeeAmount = ANNUAL_REGISTRATION_FEE_EUR,
 }: CheckoutRegistrationFeeSelectorProps) {
   if (!stripeEnabled || !hasAnyFeeDue) {
     return null;
@@ -34,8 +36,8 @@ export function CheckoutRegistrationFeeSelector({
           Anno Accademico 2026/2027
         </span>
         <h3 className="text-xs font-black text-[#78350F]">
-          Quota d'iscrizione annuale (30,00 €
-          {unpaidFeesCount > 1 ? ` × ${unpaidFeesCount} = ${(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} €` : ""})
+          Quota d'iscrizione annuale ({registrationFeeAmount.toFixed(2)} €
+          {unpaidFeesCount > 1 ? ` × ${unpaidFeesCount} = ${(unpaidFeesCount * registrationFeeAmount).toFixed(2)} €` : ""})
         </h3>
         <p className="text-[11px] text-[#92400E] font-medium leading-tight">
           La quota associativa è obbligatoria per tutti i nuovi corsisti. Scegli come preferisci saldarla:
@@ -65,7 +67,7 @@ export function CheckoutRegistrationFeeSelector({
               <span>Paga ora online</span>
             </div>
             <p className="text-[10px] text-slate-500 font-medium leading-tight">
-              Aggiungi +{(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} € al totale.
+              Aggiungi +{(unpaidFeesCount * registrationFeeAmount).toFixed(2)} € al totale.
             </p>
           </div>
         </div>
@@ -92,7 +94,7 @@ export function CheckoutRegistrationFeeSelector({
               <span>Paga in sede alla prima lezione</span>
             </div>
             <p className="text-[10px] text-slate-500 font-medium leading-tight">
-              Salderai {(unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR).toFixed(2)} € a scuola.
+              Salderai {(unpaidFeesCount * registrationFeeAmount).toFixed(2)} € a scuola.
             </p>
           </div>
         </div>

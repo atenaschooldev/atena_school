@@ -35,6 +35,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     billingScheme,
     setBillingScheme,
     submitting,
+    registrationFeeAmount,
     feeCheckStatus,
     studentsList,
     studentFeeStatuses,
@@ -99,7 +100,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     : feeCheckStatus === FeeCheckStatus.CHECKING;
 
   const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false && !appliedPromo?.waiveRegistrationFee)
-    ? unpaidFeesCount * ANNUAL_REGISTRATION_FEE_EUR
+    ? unpaidFeesCount * (registrationFeeAmount ?? ANNUAL_REGISTRATION_FEE_EUR)
     : 0;
 
   const discountAmount = appliedPromo?.discountAmount ? Number(appliedPromo.discountAmount) : 0;
@@ -199,6 +200,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               unpaidFeesCount={unpaidFeesCount}
               includeRegistrationFee={includeRegistrationFee}
               setValue={setValue}
+              registrationFeeAmount={registrationFeeAmount}
             />
 
             <CheckoutPaymentModeSelector
@@ -237,6 +239,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
             isAnyFeeChecking={isAnyFeeChecking}
             stripeEnabled={stripeEnabled}
             isSubscription={isSubscription}
+            registrationFeeAmount={registrationFeeAmount}
             appliedPromo={appliedPromo}
             promoCodeInput={promoCodeInput}
             setPromoCodeInput={setPromoCodeInput}

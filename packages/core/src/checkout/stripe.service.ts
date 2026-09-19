@@ -233,14 +233,15 @@ export async function createStripeSession(
     });
   }
 
-  if (Number(b.registrationFee || (b as any).registration_fee || 0) > 0) {
+  const bookingRegFee = Number(b.registrationFee || (b as any).registration_fee || 0);
+  if (bookingRegFee > 0) {
     lineItems.push({
       price_data: {
         currency: 'eur',
         product_data: {
           name: `Quota Associativa Annuale 2026/2027 (${b.studentName || `${dto.firstName} ${dto.lastName}`})`,
         },
-        unit_amount: 3000,
+        unit_amount: Math.round(bookingRegFee * 100),
       },
       quantity: 1,
     });

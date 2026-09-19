@@ -72,6 +72,8 @@ export default async function CourseDetailPage({ params }: PageProps) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  const school = await getSchoolProfile(supabase);
+
   const title = course.title_it || course.name || "Corso Atena School";
   const description = course.description || "";
   const price = course.price ? `${Number(course.price).toFixed(2)}€` : undefined;
@@ -95,6 +97,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
         id={id}
         initialCourse={course}
         initialUser={user}
+        initialSchoolProfile={school}
       />
     </>
   );

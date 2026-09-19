@@ -55,6 +55,7 @@ interface CheckoutOrderSummaryProps {
   applyPromoCode: () => void;
   removePromoCode: () => void;
   discountAmount?: number;
+  registrationFeeAmount?: number;
 }
 
 export function CheckoutOrderSummary({
@@ -86,6 +87,7 @@ export function CheckoutOrderSummary({
   applyPromoCode,
   removePromoCode,
   discountAmount = 0,
+  registrationFeeAmount = 30,
 }: CheckoutOrderSummaryProps) {
   return (
     <div className="hidden lg:block lg:sticky lg:top-24 bg-white rounded-2xl border border-slate-200 shadow-lg p-4 sm:p-5 space-y-4">
@@ -226,7 +228,7 @@ export function CheckoutOrderSummary({
           {hasAnyFeeDue && includeRegistrationFee !== false && (
             <div className="flex items-center justify-between text-xs py-0.5">
               <span className="text-slate-600 font-medium">
-                Quota iscrizione annuale {unpaidFeesCount > 1 ? `(${unpaidFeesCount}x 30€)` : ""}
+                Quota iscrizione annuale {unpaidFeesCount > 1 ? `(${unpaidFeesCount}x ${registrationFeeAmount.toFixed(0)}€)` : ""}
               </span>
               {appliedPromo?.waiveRegistrationFee ? (
                 <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">

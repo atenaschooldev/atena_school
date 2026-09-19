@@ -33,12 +33,14 @@ interface CourseDetailClientProps {
   id: string;
   initialCourse: any;
   initialUser: any;
+  initialSchoolProfile?: any;
 }
 
 export function CourseDetailClient({
   id,
   initialCourse,
   initialUser,
+  initialSchoolProfile,
 }: CourseDetailClientProps) {
   const dateLocale = it;
 
@@ -394,7 +396,7 @@ export function CourseDetailClient({
                   <Info className="w-3.5 h-3.5 text-[#043569] shrink-0 mt-0.5" weight="fill" />
                   <span>
                     Quota iscrizione annuale{" "}
-                    <strong className="text-slate-700">{ANNUAL_REGISTRATION_FEE_EUR}€</strong> selezionabile al checkout (valida 12 mesi).
+                    <strong className="text-slate-700">{(initialSchoolProfile?.registration_fee_eur ?? ANNUAL_REGISTRATION_FEE_EUR)}€</strong> selezionabile al checkout (valida 12 mesi).
                   </span>
                 </div>
               </div>

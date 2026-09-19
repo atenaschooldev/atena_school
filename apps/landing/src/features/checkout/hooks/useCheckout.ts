@@ -42,6 +42,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     : decodeScheduleSlot(null, null, null);
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
+  const [registrationFeeAmount, setRegistrationFeeAmount] = useState<number>(30);
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>(FeeCheckStatus.INITIAL);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
     0: FeeCheckStatus.INITIAL,
@@ -121,15 +122,20 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     async function initCheckout() {
       try {
-        const [itemRes, settingsRes] = await Promise.all([
+        const [itemRes, settingsRes, profileRes] = await Promise.all([
           api.courses.getById(id).catch(() => ({ success: false, item: undefined })),
           api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false, subscriptionsEnabled: false } })),
+          api.settings.getSchoolProfile().catch(() => ({ success: false, profile: undefined })),
         ]);
 
         let fetchedItem: BookingItem | null = null;
         if (itemRes.success && itemRes.item) {
           fetchedItem = itemRes.item as unknown as BookingItem;
           setItem(fetchedItem);
+        }
+
+        if (profileRes?.success && profileRes.profile?.registration_fee_eur != null) {
+          setRegistrationFeeAmount(Number(profileRes.profile.registration_fee_eur));
         }
 
         if (settingsRes?.success && settingsRes.settings) {
@@ -606,6 +612,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     setBillingScheme,
     submitting,
     hasPaidAnnualFee,
+    registrationFeeAmount,
     feeCheckStatus,
     isAnyFeeChecking,
     studentsList,

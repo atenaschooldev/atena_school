@@ -24,6 +24,7 @@ import { processStudentAndBookingLinks } from './student.service';
 import { extractCleanTime, computeEndTime, computeTotalLessonsCount } from './course.service';
 import { sendBookingNotificationEmails, EmailServiceConfig } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
+import { getSchoolProfile } from '../system/school-profile.service';
 import type { CreateReservationParams, SupabaseCourseRow, SupabaseBookingRow } from '../types';
 
 export async function generateAndSaveLessons(
@@ -253,6 +254,9 @@ export async function createReservationWorkflow(
   const createdBookings: any[] = [];
   const bookingIds: string[] = [];
 
+  const schoolProfile = await getSchoolProfile(supabase);
+  const defaultFeeEur = schoolProfile?.registration_fee_eur != null ? Number(schoolProfile.registration_fee_eur) : 30;
+
   for (const student of rawStudents) {
     const studentName = `${student.firstName} ${student.lastName}`.trim();
     const studentTaxCode = student.taxCode ? student.taxCode.trim().toUpperCase() : '';
@@ -264,7 +268,7 @@ export async function createReservationWorkflow(
     });
 
     const isFeeRequired = feeStatus.annualFeePaid === false;
-    const baseRegFee = isFeeRequired ? 30 : 0;
+    const baseRegFee = isFeeRequired ? defaultFeeEur : 0;
     let effectiveRegFee = baseRegFee;
     let discountAmount = 0;
     let promoId: string | null = null;
