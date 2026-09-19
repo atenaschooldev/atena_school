@@ -252,7 +252,7 @@ const reservationBaseObject = z.object({
  */
 function applyReservationRefinements<T extends {
   isForChild?: boolean;
-  students?: Array<StudentItemInput>;
+  students?: Array<Partial<StudentItemInput>>;
   studentFirstName?: string;
   studentLastName?: string;
   studentBirthDate?: string;
@@ -265,8 +265,21 @@ function applyReservationRefinements<T extends {
   pecEmail?: string;
 }>(data: T, ctx: z.RefinementCtx) {
   if (data.isForChild) {
-    const hasMultipleStudents = data.students && data.students.length > 0;
-    if (!hasMultipleStudents) {
+    const rawStudents = data.students as Array<StudentItemInput> | undefined;
+    const hasMultipleStudents = rawStudents && rawStudents.length > 0;
+    if (hasMultipleStudents) {
+      rawStudents.forEach((s, idx) => {
+        const parsed = studentItemSchema.safeParse(s);
+        if (!parsed.success) {
+          parsed.error.issues.forEach((issue) => {
+            ctx.addIssue({
+              ...issue,
+              path: ["students", idx, ...issue.path],
+            });
+          });
+        }
+      });
+    } else {
       if (!data.studentFirstName || data.studentFirstName.trim().length < 2) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
@@ -343,10 +356,11 @@ export type CreateReservationInput = z.infer<typeof createReservationSchema>;
 // ---------------------------------------------------------------------------
 
 export const checkoutFormSchema = reservationBaseObject
-  .omit({ studentTaxCode: true, itemId: true })
+  .omit({ studentTaxCode: true, itemId: true, students: true })
   .extend({
     itemId: z.string().optional(),
     taxCode: optionalCodiceFiscale("Codice Fiscale non valido (es. RSSMRA80A01H501T)"),
+    students: z.array(studentItemSchema.partial()).optional(),
   })
   .superRefine((data, ctx) => {
     // When purchasing for self (isForChild === false/undefined), taxCode is mandatory
