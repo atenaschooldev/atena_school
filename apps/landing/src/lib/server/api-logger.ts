@@ -8,6 +8,8 @@ export interface LogLandingApiParams {
   endpoint: string;
   userId?: string | null;
   userRole?: number | null;
+  sessionId?: string | null;
+  guestIdentifier?: string | null;
   ipAddress?: string | null;
   userAgent?: string | null;
   request?: any;
@@ -41,7 +43,7 @@ export async function logLandingApi(params: LogLandingApiParams): Promise<void> 
       }
     };
 
-    await supabase.from('landing_api_logs').insert({
+    const insertPayload: Record<string, any> = {
       controller: params.controller || 'LandingRouteHandler',
       action: params.action,
       http_method: params.httpMethod.toUpperCase(),
@@ -50,14 +52,29 @@ export async function logLandingApi(params: LogLandingApiParams): Promise<void> 
       user_role: params.userRole || null,
       ip_address: params.ipAddress || null,
       user_agent: params.userAgent || null,
-      request: sanitize(params.request),
+      request: sanitize({
+        ...params.request,
+        sessionId: params.sessionId || params.request?.sessionId || undefined,
+        guestIdentifier: params.guestIdentifier || undefined,
+      }),
       response: sanitize(params.response),
       status_code: params.statusCode,
-    });
+    };
+
+    if (params.sessionId) {
+      insertPayload.session_id = params.sessionId;
+    }
+    if (params.guestIdentifier) {
+      insertPayload.guest_identifier = params.guestIdentifier;
+    }
+
+    await supabase.from('landing_api_logs').insert(insertPayload);
+
   } catch (err) {
     console.error('[logLandingApi failure]:', err);
   }
 }
+
 
 export interface LogNotificationParams {
 
@@ -187,10 +204,16 @@ export function withLandingApiLog(
 
     const { userId, userRole } = await resolveLogUser(request, requestBody, queryParams);
 
+    // Extract guest identifier (email, tax code or phone) if user is not logged in
+    const candidateEmail = requestBody?.email || requestBody?.purchaserEmail || requestBody?.studentEmail || queryParams?.email;
+    const candidateTaxCode = requestBody?.taxCode || requestBody?.purchaserTaxCode || requestBody?.studentTaxCode || queryParams?.taxCode;
+    const guestIdentifier = candidateEmail || candidateTaxCode || null;
+
     const requestPayload = {
       body: requestBody,
       query: Object.keys(queryParams).length ? queryParams : null,
       sessionId: sessionId || undefined,
+      guestIdentifier: guestIdentifier || undefined,
     };
 
     try {
@@ -208,13 +231,15 @@ export function withLandingApiLog(
         // Ignore response body parse errors
       }
 
-      logLandingApi({
+      await logLandingApi({
         controller: options.controller || 'LandingRouteHandler',
         action: options.action,
         httpMethod,
         endpoint: url,
         userId,
         userRole,
+        sessionId,
+        guestIdentifier,
         ipAddress,
         userAgent,
         request: requestPayload,
@@ -225,13 +250,15 @@ export function withLandingApiLog(
       return response;
     } catch (err: any) {
       const statusCode = 500;
-      logLandingApi({
+      await logLandingApi({
         controller: options.controller || 'LandingRouteHandler',
         action: options.action,
         httpMethod,
         endpoint: url,
         userId,
         userRole,
+        sessionId,
+        guestIdentifier,
         ipAddress,
         userAgent,
         request: requestPayload,
@@ -240,5 +267,6 @@ export function withLandingApiLog(
       });
       throw err;
     }
+
   };
 }

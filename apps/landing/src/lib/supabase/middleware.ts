@@ -29,6 +29,18 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Ensure persistent Guest / Fingerprint Session ID cookie
+  const existingSessionId = request.cookies.get('atena_session_id')?.value;
+  if (!existingSessionId) {
+    const newSessionId = `anon_${crypto.randomUUID().replace(/-/g, '')}`;
+    supabaseResponse.cookies.set('atena_session_id', newSessionId, {
+      path: '/',
+      httpOnly: false,
+      sameSite: 'lax',
+      maxAge: 365 * 24 * 60 * 60, // 1 year
+    });
+  }
+
   // Protect dashboard routes
   const isProtectedRoute = request.nextUrl.pathname.includes('/dashboard');
 
@@ -45,3 +57,4 @@ export async function updateSession(request: NextRequest) {
 
   return supabaseResponse
 }
+
