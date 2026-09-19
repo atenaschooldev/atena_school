@@ -291,11 +291,32 @@ export async function createReservationWorkflow(
       resolvedEndTime = computeEndTime(resolvedStartTime, course.lesson_duration_minutes);
     }
 
+    // Group assignment lookup for group courses
+    let assignedGroupId: string | null = null;
+    let assignedGroup: any = null;
+    try {
+      const { data: matchedGroup } = await supabase
+        .from('groups')
+        .select('id, name, room, schedule_days, start_time, end_time, max_students')
+        .eq('course_id', courseId)
+        .eq('status', 1) // 1=RECRUITING
+        .limit(1)
+        .maybeSingle();
+
+      if (matchedGroup) {
+        assignedGroupId = matchedGroup.id;
+        assignedGroup = matchedGroup;
+      }
+    } catch {
+      // Non-blocking group lookup
+    }
+
     const { data: booking, error } = await supabase
       .from('bookings')
       .insert({
         course_id: courseId,
         course_name: course?.name || course?.title_it || 'Corso Atena School',
+        group_id: assignedGroupId,
         session_id: dto.idempotencyKey || null,
         purchaser_name: purchaserName,
         purchaser_email: dto.email,
@@ -332,7 +353,8 @@ export async function createReservationWorkflow(
       throw new Error(error?.message || 'Failed to create reservation');
     }
 
-    createdBookings.push(booking);
+    const bookingWithGroup = { ...booking, group: assignedGroup };
+    createdBookings.push(bookingWithGroup);
     bookingIds.push(booking.id);
 
     const studentDto = {
@@ -356,6 +378,23 @@ export async function createReservationWorkflow(
         studentName,
         supabase,
       });
+
+      // If assigned to a group, enroll student into group_members
+      if (assignedGroupId && createdStudentId) {
+        try {
+          await supabase.from('group_members').upsert(
+            {
+              group_id: assignedGroupId,
+              student_id: createdStudentId,
+              booking_id: booking.id,
+              status: 1, // ACTIVE
+            },
+            { onConflict: 'group_id,student_id' }
+          );
+        } catch {
+          // Non-blocking member insertion
+        }
+      }
 
       await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
       await recordPaymentLedger(booking.id, effectiveCoursePrice, regFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode, linkedUserId);

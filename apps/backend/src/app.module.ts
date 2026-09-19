@@ -19,6 +19,7 @@ import { AttendanceModule } from './features/attendance/attendance.module';
 import { ReportsModule } from './features/reports/reports.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 import { StudentsModule } from './features/students/students.module';
+import { GroupsModule } from './features/groups/groups.module';
 
 import { DictionaryModule } from './features/dictionary/dictionary.module';
 
@@ -29,6 +30,7 @@ const businessModules = [
   DictionaryModule,
   AuthModule,
   CoursesModule,
+  GroupsModule,
   SchedulesModule,
   MailModule,
   CheckoutModule,

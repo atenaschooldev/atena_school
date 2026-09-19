@@ -609,6 +609,17 @@ export interface BookingDto {
   endTime: string | null;
   totalLessonsCount: number | null;
 
+  // Group / Class Cohort
+  groupId?: string | null;
+  group?: {
+    id: string;
+    name: string;
+    room?: string | null;
+    scheduleDays?: number[];
+    startTime?: string | null;
+    endTime?: string | null;
+  } | null;
+
   // Notes & Metadata
   notes: string | null;
   createdAt: string;
@@ -619,6 +630,18 @@ export function formatBookingDto(b: Record<string, any>): BookingDto {
     id: b.id,
     courseId: b.course_id || b.courseId || null,
     courseName: b.course_name || b.courseName || 'Corso Atena School',
+
+    groupId: b.group_id || b.groupId || null,
+    group: b.group
+      ? {
+          id: b.group.id,
+          name: b.group.name,
+          room: b.group.room || null,
+          scheduleDays: b.group.schedule_days || b.group.scheduleDays || [],
+          startTime: b.group.start_time || b.group.startTime || null,
+          endTime: b.group.end_time || b.group.endTime || null,
+        }
+      : null,
 
     purchaserName: b.purchaser_name || b.purchaserName || null,
     purchaserEmail: b.purchaser_email || b.purchaserEmail || null,

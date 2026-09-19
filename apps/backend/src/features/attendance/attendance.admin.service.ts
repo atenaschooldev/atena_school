@@ -22,23 +22,73 @@ export class AttendanceService {
           gte: startOfDay,
           lte: endOfDay,
         },
-        ...(courseId ? { booking: { courseId } } : {}),
+        ...(courseId
+          ? {
+              OR: [
+                { courseId },
+                { booking: { courseId } },
+                { group: { courseId } },
+              ],
+            }
+          : {}),
       },
       include: {
         booking: true,
         teacher: true,
-        attendanceRecords: true,
+        group: {
+          include: {
+            course: true,
+            members: {
+              include: {
+                student: true,
+                booking: true,
+              },
+            },
+          },
+        },
+        attendanceRecords: {
+          include: {
+            student: true,
+          },
+        },
       },
       orderBy: { startsAt: 'asc' },
     });
 
     const lessonItems = lessons.map((l) => {
-      const record = l.attendanceRecords[0] || null;
+      const isGroup = !!l.groupId;
       const b = l.booking;
-      const bookingPaymentStatus = b?.paymentStatus ?? BookingPaymentStatus.RESERVED;
+      const grp = l.group;
 
-      // Business rule: show quick payment dialog when student attended but hasn't paid
-      const requiresPaymentOnAttendance = bookingPaymentStatus !== BookingPaymentStatus.PAID;
+      const record = l.attendanceRecords[0] || null;
+      const bookingPaymentStatus = b?.paymentStatus ?? BookingPaymentStatus.PAID;
+
+      // Business rule: show quick payment dialog when student attended but hasn't paid (for individual)
+      const requiresPaymentOnAttendance = !isGroup && bookingPaymentStatus !== BookingPaymentStatus.PAID;
+
+      // Build group members attendance list if group lesson
+      const groupMembersList = isGroup && grp?.members
+        ? grp.members.map((m) => {
+            const studentRecord = l.attendanceRecords.find((ar) => ar.studentId === m.studentId) || null;
+            const studentPaymentStatus = m.booking?.paymentStatus ?? BookingPaymentStatus.PAID;
+            return {
+              student_id: m.studentId,
+              student_name: m.student?.full_name || `${m.student?.first_name || ''} ${m.student?.last_name || ''}`.trim() || 'Studente',
+              student_email: m.student?.email || '',
+              student_phone: m.student?.phone || '',
+              booking_id: m.bookingId,
+              payment_status: studentPaymentStatus,
+              attendance_status: studentRecord ? studentRecord.status : LessonAttendance.PENDING,
+              attendance_record_id: studentRecord?.id || null,
+              notes: studentRecord?.notes || null,
+            };
+          })
+        : [];
+
+      const courseName = grp?.course?.name || grp?.name || b?.courseName || 'Lezione';
+      const studentDisplayName = isGroup
+        ? `${grp?.name || 'Gruppo'} (${groupMembersList.length} studenti)`
+        : (b?.studentName || b?.purchaserName || 'Studente');
 
       return {
         id: l.id,
@@ -50,8 +100,11 @@ export class AttendanceService {
         teacher_id: l.teacherId,
         teacher_name: l.teacher?.fullName || 'Docente',
         booking_id: l.bookingId,
-        course_name: b?.courseName || 'Lezione individuale',
-        student_name: b?.studentName || b?.purchaserName || 'Studente',
+        group_id: l.groupId,
+        group_name: grp?.name || null,
+        is_group: isGroup,
+        course_name: courseName,
+        student_name: studentDisplayName,
         student_email: b?.studentEmail || b?.purchaserEmail || '',
         student_phone: b?.studentPhone || b?.purchaserPhone || '',
         purchaser_name: b?.purchaserName || '',
@@ -61,6 +114,7 @@ export class AttendanceService {
         billing_scheme: b?.billingScheme || 'full',
         booking_payment_status: bookingPaymentStatus,
         requires_payment_on_attendance: requiresPaymentOnAttendance,
+        group_members: groupMembersList,
         attendance_record: record
           ? {
               id: record.id,

@@ -67,6 +67,7 @@ model Course {
   bookings              Booking[]
   courseTeachers        CourseTeacher[]
   lessons               Lesson[]
+  groups                Group[]
 
   @@index([slug], map: "idx_courses_slug")
   @@index([status], map: "idx_courses_status")
@@ -91,6 +92,7 @@ model Teacher {
   user           User?     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   lessons        Lesson[]
   courseTeachers CourseTeacher[]
+  groups         Group[]
 
   @@index([isActive], map: "idx_teachers_is_active")
   @@index([hireDate], map: "idx_teachers_hire_date")
@@ -121,6 +123,7 @@ model Booking {
   userId               String?   @map("user_id") @db.Uuid
   studentId            String?   @map("student_id") @db.Uuid
   courseId             String?   @map("course_id") @db.Uuid
+  groupId              String?   @map("group_id") @db.Uuid
   courseName           String?   @map("course_name")
 
   studentName          String    @map("student_name")
@@ -164,13 +167,16 @@ model Booking {
   course               Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
   student              students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
   user                 User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  group                Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
   lessons              Lesson[]
   payments             Payment[]
   attendanceRecords    AttendanceRecord[]
+  groupMembers         GroupMember[]
 
   @@index([userId], map: "idx_bookings_user_id")
   @@index([studentId], map: "idx_bookings_student_id")
   @@index([courseId], map: "idx_bookings_course_id")
+  @@index([groupId], map: "idx_bookings_group_id")
   @@index([sessionId], map: "idx_bookings_session_id")
   @@index([createdAt], map: "idx_bookings_created_at")
   @@index([paymentStatus], map: "idx_bookings_payment_status")
@@ -186,7 +192,8 @@ model Booking {
 model Lesson {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  bookingId       String    @map("booking_id") @db.Uuid
+  bookingId       String?   @map("booking_id") @db.Uuid
+  groupId         String?   @map("group_id") @db.Uuid
   courseId        String?   @map("course_id") @db.Uuid
   studentId       String?   @map("student_id") @db.Uuid
   teacherId       String?   @map("teacher_id") @db.Uuid
@@ -202,13 +209,15 @@ model Lesson {
   rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz(6)
   updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  booking           Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  group             Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
   course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
   student           students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
   teacher           Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
   attendanceRecords AttendanceRecord[]
 
   @@index([bookingId], map: "idx_lessons_booking_id")
+  @@index([groupId], map: "idx_lessons_group_id")
   @@index([courseId], map: "idx_lessons_course_id")
   @@index([studentId], map: "idx_lessons_student_id")
   @@index([teacherId], map: "idx_lessons_teacher_id")
@@ -347,6 +356,7 @@ model students {
   lessons           Lesson[]
   bookings          Booking[]
   attendanceRecords AttendanceRecord[]
+  groupMembers      GroupMember[]
 
   @@index([parent_id], map: "idx_students_parent_id")
   @@index([student_user_id], map: "idx_students_student_user_id")
@@ -355,6 +365,56 @@ model students {
   @@index([email], map: "idx_students_email")
   @@index([created_at(sort: Desc)], map: "idx_students_created_at")
   @@map("students")
+}
+
+model Group {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name          String
+  courseId      String    @map("course_id") @db.Uuid
+  teacherId     String?   @map("teacher_id") @db.Uuid
+  room          String?
+  maxStudents   Int       @default(8) @map("max_students")
+  status        Int       @default(1) @db.SmallInt
+  startDate     DateTime? @map("start_date") @db.Date
+  endDate       DateTime? @map("end_date") @db.Date
+  scheduleDays  Int[]     @map("schedule_days")
+  startTime     String?   @map("start_time")
+  endTime       String?   @map("end_time")
+  notes         String?
+
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher       Teacher?      @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
+  members       GroupMember[]
+  lessons       Lesson[]
+  bookings      Booking[]
+
+  @@index([courseId], map: "idx_groups_course_id")
+  @@index([teacherId], map: "idx_groups_teacher_id")
+  @@index([status], map: "idx_groups_status")
+  @@map("groups")
+}
+
+model GroupMember {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  groupId   String   @map("group_id") @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  bookingId String?  @map("booking_id") @db.Uuid
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+  status    Int      @default(1) @db.SmallInt
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student   students @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, studentId], map: "uq_group_student")
+  @@index([groupId], map: "idx_group_members_group_id")
+  @@index([studentId], map: "idx_group_members_student_id")
+  @@index([bookingId], map: "idx_group_members_booking_id")
+  @@map("group_members")
 }
 
 model AttendanceRecord {

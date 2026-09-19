@@ -29,6 +29,7 @@ export * from './auth/users';
 // 3. Academic Domain (Courses, Curricula, Lessons, Attendance, Students)
 // ----------------------------------------------------------------------------
 export * from './academic/courses';
+export * from './academic/groups';
 export * from './academic/lessons';
 export * from './academic/attendance';
 export * from './academic/students';

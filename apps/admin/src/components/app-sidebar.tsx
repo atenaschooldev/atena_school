@@ -4,6 +4,7 @@ import * as React from "react"
 import {
   LayoutDashboard,
   CheckSquare,
+  Layers,
   Calendar,
   Settings,
   CreditCard,
@@ -61,6 +62,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: t("nav.courses"),
           url: "/corsi",
           icon: CheckSquare,
+        },
+        {
+          title: t("nav.groups") || "Gruppi Classi",
+          url: "/gruppi",
+          icon: Layers,
         },
         {
           title: t("nav.bookings"),

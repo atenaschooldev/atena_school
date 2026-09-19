@@ -32,16 +32,28 @@ erDiagram
     users ||--o| teachers : "has profile (PK/FK)"
     users ||--o{ students : "parent of (parent_id)"
     users ||--o| students : "student account (student_user_id)"
-    users ||--o{ bookings : "purchased by (purchaser_id/email)"
+    users ||--o{ bookings : "purchased by (user_id)"
+    users ||--o{ payments : "ledger owner (user_id)"
+    users ||--o{ landing_api_logs : "audit trace (user_id)"
+    users ||--o{ app_api_logs : "audit trace (user_id)"
+    users ||--o{ admin_api_logs : "audit trace (user_id)"
     
     courses ||--o{ course_teachers : "taught by"
     teachers ||--o{ course_teachers : "assigned to"
     
+    courses ||--o{ groups : "has cohorts"
+    teachers ||--o{ groups : "leads group"
+    groups ||--o{ group_members : "enrolled students (1:N)"
+    students ||--o{ group_members : "member of"
+    bookings ||--o{ group_members : "booking link"
+    
     courses ||--o{ bookings : "booked in"
     students ||--o{ bookings : "enrolled in"
+    groups ||--o{ bookings : "assigned group"
     
     bookings ||--o{ payments : "paid via (1:N)"
-    bookings ||--o{ lessons : "generates (1:N)"
+    bookings ||--o{ lessons : "individual lessons"
+    groups ||--o{ lessons : "group lessons"
     courses ||--o{ lessons : "course template"
     teachers ||--o{ lessons : "instructs"
     

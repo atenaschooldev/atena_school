@@ -6,6 +6,7 @@ export const en = {
     website: "Website (Landing)",
     schoolManagement: "School Management",
     courses: "Courses",
+    groups: "Class Groups",
     bookings: "Bookings & Orders",
     payments: "Payments & Invoices",
     attendance: "Attendance & Register",

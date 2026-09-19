@@ -88,6 +88,17 @@ export class BookingsAdminService {
       total_lessons_count: b.totalLessonsCount ?? null,
       subscription_starts_at: b.subscriptionStartsAt ? (b.subscriptionStartsAt instanceof Date ? b.subscriptionStartsAt.toISOString() : b.subscriptionStartsAt) : null,
       subscription_ends_at: b.subscriptionEndsAt ? (b.subscriptionEndsAt instanceof Date ? b.subscriptionEndsAt.toISOString() : b.subscriptionEndsAt) : null,
+      group_id: b.groupId ?? b.group_id ?? null,
+      group: b.group
+        ? {
+            id: b.group.id,
+            name: b.group.name,
+            room: b.group.room ?? null,
+            schedule_days: b.group.scheduleDays ?? [],
+            start_time: b.group.startTime ?? null,
+            end_time: b.group.endTime ?? null,
+          }
+        : null,
       created_at: b.createdAt ? (b.createdAt instanceof Date ? b.createdAt.toISOString() : b.createdAt) : new Date().toISOString(),
     };
     if (payments !== undefined) {
@@ -133,7 +144,10 @@ export class BookingsAdminService {
   }
 
   async getBookingById(id: string) {
-    const booking = await this.prisma.booking.findUnique({ where: { id } });
+    const booking = await this.prisma.booking.findUnique({
+      where: { id },
+      include: { group: true },
+    });
     if (!booking) throw new NotFoundException(`Booking ${id} not found`);
 
     const payments = await this.prisma.payment.findMany({
@@ -174,6 +188,7 @@ export class BookingsAdminService {
         this.prisma.booking.count({ where }),
         this.prisma.booking.findMany({
           where,
+          include: { group: true },
           orderBy: { createdAt: 'desc' },
           skip,
           take: limit,
@@ -190,6 +205,7 @@ export class BookingsAdminService {
 
     const bookings = await this.prisma.booking.findMany({
       where,
+      include: { group: true },
       orderBy: { createdAt: 'desc' },
     });
     return bookings.map((b) => this.mapBookingToResponse(b));

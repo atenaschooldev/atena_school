@@ -6,6 +6,7 @@ export const it = {
     website: "Sito Web (Landing)",
     schoolManagement: "Gestione Scuola",
     courses: "Corsi",
+    groups: "Gruppi Classi",
     bookings: "Prenotazioni & Ordini",
     payments: "Pagamenti",
     attendance: "Presenze & Registro",

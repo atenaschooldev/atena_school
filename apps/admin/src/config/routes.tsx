@@ -6,6 +6,7 @@ const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
 const Users = lazy(() => import('@/app/users/page'))
 const Corsi = lazy(() => import('@/app/corsi/page'))
+const Gruppi = lazy(() => import('@/app/gruppi/page'))
 const Prenotazioni = lazy(() => import('@/app/prenotazioni/page'))
 const Pagamenti = lazy(() => import('@/app/pagamenti/page'))
 const Presenze = lazy(() => import('@/app/presenze/page'))
@@ -70,6 +71,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/corsi",
     element: <Corsi />
+  },
+  {
+    path: "/gruppi",
+    element: <Gruppi />
   },
   {
     path: "/prenotazioni",
