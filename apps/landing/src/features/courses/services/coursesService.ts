@@ -1,9 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { getCourses } from "@/lib/data";
+import { getPublicCourses } from "@/lib/server/checkout-service";
 import { slugify } from "@/lib/utils";
-
-
-
 import { CourseItem, CourseCategory, COURSE_CATEGORY_DICTIONARY, parseCourseCategory } from "@atena/api-types";
 
 export interface ResolvedCourse {
@@ -37,10 +35,27 @@ export interface ResolvedSection {
 export async function getResolvedCourseSections(): Promise<ResolvedSection[]> {
   const t = await getTranslations("coursesPage");
 
-  // Fetch courses from Supabase
-  const supabaseCourses = await getCourses();
+  // Fetch courses from Supabase with safe fallback
+  let supabaseCourses: any[] = [];
+  try {
+    supabaseCourses = await getCourses();
+  } catch (cacheErr) {
+    console.warn("getCourses cache miss or error, attempting direct query:", cacheErr);
+  }
+
+  if (!supabaseCourses || supabaseCourses.length === 0) {
+    try {
+      const direct = await getPublicCourses();
+      if (direct.success && direct.courses) {
+        supabaseCourses = direct.courses;
+      }
+    } catch (directErr) {
+      console.error("Direct getPublicCourses also failed:", directErr);
+    }
+  }
 
   let courseSections: Array<{ id: string; title: string; courses: CourseItem[] }> = [];
+
 
   if (supabaseCourses && supabaseCourses.length > 0) {
     const categoriesMap: Record<number, CourseItem[]> = {};

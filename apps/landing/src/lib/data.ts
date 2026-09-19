@@ -168,53 +168,46 @@ import { getPublicCourses, getCourse } from './server/checkout-service';
 
 export const getCourses = unstable_cache(
   async () => {
-    try {
-      const res = await getPublicCourses();
-      if (res.success && res.courses) {
-        return res.courses.map((c: SupabaseCourseRow) => ({
-          ...c,
-          slug: (c.slug as string) || slugify(c.name || ''),
-          title_it: c.name || '',
-          title_en: c.name || '',
-          description_it: c.description || '',
-          description_en: c.description || '',
-          price: Number(c.price) || 0,
-          price_eur: Number(c.price) || 0,
-        }));
-      }
-    } catch (bErr) {
-      console.error("getCourses error:", bErr);
+    const res = await getPublicCourses();
+    if (!res.success || !res.courses || res.courses.length === 0) {
+      throw new Error('No courses returned from Supabase database');
     }
-    return [];
+    return res.courses.map((c: SupabaseCourseRow) => ({
+      ...c,
+      slug: (c.slug as string) || slugify(c.name || ''),
+      title_it: c.name || '',
+      title_en: c.name || '',
+      description_it: c.description || '',
+      description_en: c.description || '',
+      price: Number(c.price) || 0,
+      price_eur: Number(c.price) || 0,
+    }));
   },
   ['courses-data'],
-  { tags: [CACHE_TAGS.COURSES], revalidate: CACHE_TTL }
+  { tags: [CACHE_TAGS.COURSES], revalidate: 60 }
 );
 
 export const getSingleCourse = (id: string) => unstable_cache(
   async () => {
-    try {
-      const res = await getCourse(id);
-      if (res.success && res.item) {
-        const c = res.item;
-        return {
-          ...c,
-          slug: c.slug || slugify(c.name || ''),
-          title_it: c.name || '',
-          title_en: c.name || '',
-          description_it: c.description || '',
-          description_en: c.description || '',
-          price: Number(c.price) || 0,
-          price_eur: Number(c.price) || 0,
-        };
-      }
-    } catch (bErr) {
-      console.error("getSingleCourse error:", bErr);
+    const res = await getCourse(id);
+    if (!res.success || !res.item) {
+      throw new Error(`Course with id ${id} not found`);
     }
-    return null;
+    const c = res.item;
+    return {
+      ...c,
+      slug: c.slug || slugify(c.name || ''),
+      title_it: c.name || '',
+      title_en: c.name || '',
+      description_it: c.description || '',
+      description_en: c.description || '',
+      price: Number(c.price) || 0,
+      price_eur: Number(c.price) || 0,
+    };
   },
   [`course-${id}`],
-  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: CACHE_TTL }
+  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: 60 }
 )();
+
 
 

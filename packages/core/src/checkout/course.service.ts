@@ -78,10 +78,15 @@ export async function getPublicCourses(supabase: SupabaseClient): Promise<GetPub
     .order('name')
     .returns<SupabaseCourseRow[]>();
 
-  if (error || !coursesData) {
-    const { data: fallbackData } = await supabase.from('courses').select('*').returns<SupabaseCourseRow[]>();
+  if (error || !coursesData || coursesData.length === 0) {
+    const { data: fallbackData } = await supabase
+      .from('courses')
+      .select('*')
+      .neq('status', CourseStatus.ARCHIVED)
+      .returns<SupabaseCourseRow[]>();
     coursesData = fallbackData || [];
   }
+
 
   const { data: teachersData } = await supabase
     .from('teachers')
