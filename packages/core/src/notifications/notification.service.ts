@@ -36,16 +36,20 @@ export async function logNotification(
   try {
     await supabase.from('notification_logs').insert({
       channel: data.channel,
-      type: data.type,
+      notification_type: data.type,
       recipient: data.recipient,
       subject: data.subject || null,
+      request: {
+        payload: data.payload || null,
+        userId: data.userId || null,
+        bookingId: data.bookingId || null,
+        provider: data.provider || null,
+      },
+      response: {
+        error: data.error || null,
+        messageId: data.messageId || null,
+      },
       status: data.status,
-      user_id: data.userId || null,
-      booking_id: data.bookingId || null,
-      payload: data.payload || null,
-      error: data.error || null,
-      provider: data.provider || null,
-      message_id: data.messageId || null,
     });
   } catch (err) {
     console.warn('Failed to log notification:', err);

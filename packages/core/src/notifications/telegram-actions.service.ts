@@ -511,12 +511,10 @@ export async function sendBookingNotificationTelegram(params: {
         channel: NotificationChannel.TELEGRAM,
         notification_type: NotificationType.BOOKING_CONFIRMATION,
         recipient: chat,
+        subject: `Telegram Booking Notification #${booking.id}`,
+        request: { bookingId: booking.id, courseName, locale },
+        response: json,
         status: NotificationStatus.SENT,
-        booking_id: booking.id,
-        provider: 'telegram',
-        message_id: msgId ? String(msgId) : null,
-        request_payload: { bookingId: booking.id, courseName, locale },
-        response_payload: json,
       });
     } catch {
       // Non-blocking log failure
