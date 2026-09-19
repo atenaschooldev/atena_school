@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/i18n/context";
 import type { Teacher } from "../../types";
 
 export interface TeacherFormDialogProps {
@@ -34,6 +35,7 @@ export function TeacherFormDialog({
   initialValues,
   onSubmit,
 }: TeacherFormDialogProps) {
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [status, setStatus] = useState("active");
   const [photoUrl, setPhotoUrl] = useState("");
@@ -78,12 +80,12 @@ export function TeacherFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{initialValues ? "Modifica Docente" : "Nuovo Docente"}</DialogTitle>
+          <DialogTitle>{initialValues ? t("teachers.editTeacher") : t("teachers.newTeacher")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Nome e Cognome</Label>
+            <Label className="text-xs font-semibold">{t("teachers.teacherName")}</Label>
             <Input
               placeholder="es. Mario Rossi"
               value={fullName}
@@ -94,20 +96,20 @@ export function TeacherFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Stato</Label>
+            <Label className="text-xs font-semibold">{t("common.status")}</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger className="h-9 text-xs cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">Attivo</SelectItem>
-                <SelectItem value="inactive">Inattivo</SelectItem>
+                <SelectItem value="active" className="cursor-pointer">{t("common.active")}</SelectItem>
+                <SelectItem value="inactive" className="cursor-pointer">{t("common.inactive")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">URL Foto Profilo (opzionale)</Label>
+            <Label className="text-xs font-semibold">{t("teachers.photoUrl")} ({t("common.details")})</Label>
             <Input
               placeholder="https://..."
               value={photoUrl}
@@ -117,9 +119,9 @@ export function TeacherFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Esperienza / Bio (opzionale)</Label>
+            <Label className="text-xs font-semibold">{t("teachers.experience")}</Label>
             <Textarea
-              placeholder="es. Madrelingua inglese, 10 anni di esperienza..."
+              placeholder="..."
               value={experience}
               onChange={(e) => setExperience(e.target.value)}
               className="h-20 text-xs"
@@ -133,14 +135,14 @@ export function TeacherFormDialog({
               onClick={() => onOpenChange(false)}
               className="text-xs cursor-pointer"
             >
-              Annulla
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               disabled={submitting || !fullName.trim()}
               className="text-xs font-bold bg-primary text-primary-foreground cursor-pointer"
             >
-              {submitting ? "Salvataggio..." : initialValues ? "Salva Modifiche" : "Crea Docente"}
+              {submitting ? t("common.saving") : initialValues ? t("common.save") : t("common.create")}
             </Button>
           </DialogFooter>
         </form>

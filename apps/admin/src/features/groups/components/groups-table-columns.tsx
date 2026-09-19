@@ -3,20 +3,34 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Users, Trash2, Eye, Calendar, Clock, MapPin } from "lucide-react";
-import { GroupStatus, GROUP_STATUS_DICTIONARY, WEEKDAY_DICTIONARY } from "@atena/api-types";
+import { GroupStatus, WEEKDAY_DICTIONARY, Weekday } from "@atena/api-types";
+import { StatusBadge } from "@/components/shared/status-badge";
 import type { Group } from "../types";
+
+const WEEKDAY_KEYS: Record<number, string> = {
+  1: "monday",
+  2: "tuesday",
+  3: "wednesday",
+  4: "thursday",
+  5: "friday",
+  6: "saturday",
+  0: "sunday",
+  7: "sunday",
+};
 
 export function getGroupsTableColumns({
   onViewDetails,
   onDeleteGroup,
+  t,
 }: {
   onViewDetails: (group: Group) => void;
   onDeleteGroup: (groupId: string) => void;
+  t: (k: string) => string;
 }): ColumnDef<Group>[] {
   return [
     {
       accessorKey: "name",
-      header: "Gruppo / Corso",
+      header: t("groups.groupName"),
       cell: ({ row }) => {
         const g = row.original;
         return (
@@ -26,7 +40,7 @@ export function getGroupsTableColumns({
             </div>
             <div>
               <p className="font-semibold text-foreground text-sm">{g.name}</p>
-              <p className="text-xs text-muted-foreground">{g.courseName || "Corso di Gruppo"}</p>
+              <p className="text-xs text-muted-foreground">{g.courseName || t("groups.defaultGroupCourse")}</p>
               {g.room && (
                 <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground mt-0.5">
                   <MapPin className="w-3 h-3" /> {g.room}
@@ -39,26 +53,31 @@ export function getGroupsTableColumns({
     },
     {
       accessorKey: "teacherName",
-      header: "Docente",
+      header: t("groups.teacher"),
       cell: ({ row }) => {
         const teacher = row.original.teacherName;
         return (
           <span className="text-xs font-medium text-foreground">
-            {teacher || <span className="text-muted-foreground italic">Non assegnato</span>}
+            {teacher || <span className="text-muted-foreground italic">{t("groups.unassigned")}</span>}
           </span>
         );
       },
     },
     {
       accessorKey: "schedule",
-      header: "Orario & Giorni",
+      header: t("groups.schedule"),
       cell: ({ row }) => {
         const g = row.original;
         const days = g.scheduleDays || [];
         const daysText =
           days.length > 0
-            ? days.map((d) => WEEKDAY_DICTIONARY[d % 7]?.label_it || String(d)).join(" e ")
-            : "Flessibile";
+            ? days
+                .map((d) => {
+                  const key = WEEKDAY_KEYS[d % 7] || "monday";
+                  return t(`weekdays.${key}`);
+                })
+                .join(` ${t("weekdays.and")} `)
+            : t("common.flexible");
         const timeText = g.startTime ? `${g.startTime}${g.endTime ? ` - ${g.endTime}` : ""}` : "";
 
         return (
@@ -79,7 +98,7 @@ export function getGroupsTableColumns({
     },
     {
       accessorKey: "enrolled",
-      header: "Capienza / Iscritti",
+      header: t("groups.capacity"),
       cell: ({ row }) => {
         const g = row.original;
         const current = g.currentEnrolledCount || g.members?.length || 0;
@@ -89,7 +108,7 @@ export function getGroupsTableColumns({
         return (
           <div className="w-32 space-y-1">
             <div className="flex justify-between text-xs font-medium">
-              <span className="text-foreground">{current} / {max} posti</span>
+              <span className="text-foreground">{current} / {max} {t("groups.spots")}</span>
               <span className="text-muted-foreground text-[11px]">{percent}%</span>
             </div>
             <Progress value={percent} className="h-1.5" />
@@ -99,30 +118,15 @@ export function getGroupsTableColumns({
     },
     {
       accessorKey: "status",
-      header: "Stato",
+      header: t("common.status"),
       cell: ({ row }) => {
         const status = row.original.status || GroupStatus.RECRUITING;
-        const dict = GROUP_STATUS_DICTIONARY[status as GroupStatus];
-
-        let badgeClass = "bg-blue-500/10 text-blue-600 border-blue-500/20";
-        if (status === GroupStatus.IN_PROGRESS) {
-          badgeClass = "bg-emerald-500/10 text-emerald-600 border-emerald-500/20";
-        } else if (status === GroupStatus.COMPLETED) {
-          badgeClass = "bg-purple-500/10 text-purple-600 border-purple-500/20";
-        } else if (status === GroupStatus.ARCHIVED) {
-          badgeClass = "bg-muted text-muted-foreground border-border";
-        }
-
-        return (
-          <Badge variant="outline" className={`text-[11px] ${badgeClass}`}>
-            {dict?.label_it || "Attivo"}
-          </Badge>
-        );
+        return <StatusBadge status={status} />;
       },
     },
     {
       id: "actions",
-      header: "",
+      header: t("common.actions"),
       cell: ({ row }) => {
         const g = row.original;
         return (
@@ -130,22 +134,22 @@ export function getGroupsTableColumns({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1 text-xs"
+              className="h-8 gap-1 text-xs cursor-pointer"
               onClick={() => onViewDetails(g)}
             >
               <Eye className="w-3.5 h-3.5" />
-              Dettagli
+              {t("common.details")}
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive cursor-pointer"
               onClick={() => {
-                if (confirm(`Sei sicuro di voler eliminare il gruppo "${g.name}"?`)) {
+                if (confirm(`${t("groups.deleteConfirmTitle")} "${g.name}"?`)) {
                   onDeleteGroup(g.id);
                 }
               }}
-              title="Elimina gruppo"
+              title={t("common.delete")}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </Button>

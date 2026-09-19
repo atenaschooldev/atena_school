@@ -10,7 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useTeachers } from "@/features/teachers/hooks/use-teachers";
-import { GroupStatus, WEEKDAY_DICTIONARY, Weekday } from "@atena/api-types";
+import { GroupStatus, Weekday } from "@atena/api-types";
+import { useTranslation } from "@/i18n/context";
 import type { CreateGroupFormValues } from "../types";
 import { toast } from "sonner";
 
@@ -25,6 +26,7 @@ export function CreateGroupDialog({
   onOpenChange,
   onSubmit,
 }: CreateGroupDialogProps) {
+  const { t } = useTranslation();
   const { allCourses = [] } = useCourses();
   const { teachers = [] } = useTeachers();
 
@@ -54,22 +56,22 @@ export function CreateGroupDialog({
     setCourseId(selectedCourseId);
     const found = allCourses.find((c) => c.id === selectedCourseId);
     if (found && !name) {
-      setName(`Gruppo ${found.title} - ${startTime}`);
+      setName(`${found.title} - ${startTime}`);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      toast.error("Inserisci il nome del gruppo");
+      toast.error(t("groups.groupName"));
       return;
     }
     if (!courseId) {
-      toast.error("Seleziona il corso di riferimento");
+      toast.error(t("groups.selectCourse"));
       return;
     }
     if (selectedDays.length === 0) {
-      toast.error("Seleziona almeno un giorno della settimana");
+      toast.error(t("groups.classDays"));
       return;
     }
 
@@ -89,6 +91,7 @@ export function CreateGroupDialog({
         notes: notes || undefined,
         generateLessons,
       });
+      toast.success(t("groups.createdSuccess"));
       onOpenChange(false);
       // Reset form
       setName("");
@@ -103,34 +106,34 @@ export function CreateGroupDialog({
   };
 
   const weekdays = [
-    { day: Weekday.MONDAY, label: "Lunedì" },
-    { day: Weekday.TUESDAY, label: "Martedì" },
-    { day: Weekday.WEDNESDAY, label: "Mercoledì" },
-    { day: Weekday.THURSDAY, label: "Giovedì" },
-    { day: Weekday.FRIDAY, label: "Venerdì" },
-    { day: Weekday.SATURDAY, label: "Sabato" },
+    { day: Weekday.MONDAY, label: t("weekdays.monday") },
+    { day: Weekday.TUESDAY, label: t("weekdays.tuesday") },
+    { day: Weekday.WEDNESDAY, label: t("weekdays.wednesday") },
+    { day: Weekday.THURSDAY, label: t("weekdays.thursday") },
+    { day: Weekday.FRIDAY, label: t("weekdays.friday") },
+    { day: Weekday.SATURDAY, label: t("weekdays.saturday") },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Crea Nuovo Gruppo / Classe</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{t("groups.newGroup")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Corso */}
           <div className="space-y-1.5">
             <Label htmlFor="courseId" className="text-sm font-semibold">
-              Corso di Riferimento *
+              {t("groups.selectCourse")} *
             </Label>
             <Select value={courseId} onValueChange={handleCourseChange}>
-              <SelectTrigger id="courseId">
-                <SelectValue placeholder="Seleziona un corso..." />
+              <SelectTrigger id="courseId" className="cursor-pointer">
+                <SelectValue placeholder={t("groups.selectCourse")} />
               </SelectTrigger>
               <SelectContent>
                 {allCourses.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
+                  <SelectItem key={c.id} value={c.id} className="cursor-pointer">
                     {c.title}
                   </SelectItem>
                 ))}
@@ -141,11 +144,11 @@ export function CreateGroupDialog({
           {/* Nome Gruppo */}
           <div className="space-y-1.5">
             <Label htmlFor="groupName" className="text-sm font-semibold">
-              Nome Gruppo / Classe *
+              {t("groups.groupName")} *
             </Label>
             <Input
               id="groupName"
-              placeholder="es. Inglese B1 - Mar/Gio 18:00"
+              placeholder="es. English B1 - 18:00"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -156,16 +159,16 @@ export function CreateGroupDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="teacherId" className="text-sm font-semibold">
-                Docente Assegnato
+                {t("groups.teacher")}
               </Label>
               <Select value={teacherId} onValueChange={setTeacherId}>
-                <SelectTrigger id="teacherId">
-                  <SelectValue placeholder="Seleziona docente..." />
+                <SelectTrigger id="teacherId" className="cursor-pointer">
+                  <SelectValue placeholder={t("groups.selectTeacher")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {teachers.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.fullName}
+                  {teachers.map((tItem) => (
+                    <SelectItem key={tItem.id} value={tItem.id} className="cursor-pointer">
+                      {tItem.fullName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -174,11 +177,11 @@ export function CreateGroupDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="room" className="text-sm font-semibold">
-                Aula / Sede
+                {t("groups.classroom")}
               </Label>
               <Input
                 id="room"
-                placeholder="es. Aula 1 / Online Zoom"
+                placeholder="Aula 1 / Online"
                 value={room}
                 onChange={(e) => setRoom(e.target.value)}
               />
@@ -189,7 +192,7 @@ export function CreateGroupDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="maxStudents" className="text-sm font-semibold">
-                Capienza Massima (Posti)
+                {t("groups.maxStudents")}
               </Label>
               <Input
                 id="maxStudents"
@@ -203,7 +206,7 @@ export function CreateGroupDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="startDate" className="text-sm font-semibold">
-                Data di Inizio Corso
+                {t("groups.startDate")}
               </Label>
               <Input
                 id="startDate"
@@ -216,7 +219,7 @@ export function CreateGroupDialog({
 
           {/* Giorni della settimana */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Giorni di Lezione *</Label>
+            <Label className="text-sm font-semibold">{t("groups.classDays")} *</Label>
             <div className="grid grid-cols-3 gap-2">
               {weekdays.map(({ day, label }) => {
                 const isSelected = selectedDays.includes(day);
@@ -225,7 +228,7 @@ export function CreateGroupDialog({
                     type="button"
                     key={day}
                     onClick={() => toggleDay(day)}
-                    className={`px-3 py-2 text-xs font-medium rounded-lg border transition-colors text-left flex items-center justify-between ${
+                    className={`px-3 py-2 text-xs font-medium rounded-lg border transition-colors text-left flex items-center justify-between cursor-pointer ${
                       isSelected
                         ? "bg-primary text-primary-foreground border-primary"
                         : "bg-muted/40 hover:bg-muted text-foreground border-border"
@@ -243,7 +246,7 @@ export function CreateGroupDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="startTime" className="text-sm font-semibold">
-                Orario Inizio *
+                {t("groups.startTime")} *
               </Label>
               <Input
                 id="startTime"
@@ -256,7 +259,7 @@ export function CreateGroupDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="endTime" className="text-sm font-semibold">
-                Orario Fine
+                {t("groups.endTime")}
               </Label>
               <Input
                 id="endTime"
@@ -270,11 +273,11 @@ export function CreateGroupDialog({
           {/* Note */}
           <div className="space-y-1.5">
             <Label htmlFor="notes" className="text-sm font-semibold">
-              Note interne
+              {t("groups.notes")}
             </Label>
             <Textarea
               id="notes"
-              placeholder="Note sul livello del gruppo o requisiti..."
+              placeholder="..."
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -289,7 +292,7 @@ export function CreateGroupDialog({
               onCheckedChange={(checked) => setGenerateLessons(!!checked)}
             />
             <Label htmlFor="generateLessons" className="text-xs text-muted-foreground cursor-pointer">
-              Genera automaticamente il calendario delle lezioni in base ai giorni e all'orario
+              {t("groups.generateLessons")}
             </Label>
           </div>
 
@@ -299,11 +302,12 @@ export function CreateGroupDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="cursor-pointer"
             >
-              Annulla
+              {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creazione in corso..." : "Crea Gruppo"}
+            <Button type="submit" disabled={isSubmitting} className="cursor-pointer">
+              {isSubmitting ? t("common.saving") : t("common.create")}
             </Button>
           </DialogFooter>
         </form>

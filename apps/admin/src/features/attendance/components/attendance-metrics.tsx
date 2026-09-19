@@ -2,6 +2,7 @@
 
 import { Users, UserCheck, FileX, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n/context";
 
 export interface AttendanceMetricsProps {
   totalCount: number;
@@ -16,29 +17,31 @@ export function AttendanceMetrics({
   absentCount,
   pendingPaymentCount,
 }: AttendanceMetricsProps) {
+  const { t } = useTranslation();
+
   const metrics = [
     {
-      title: "Studenti in Registro",
+      title: t("attendance.studentsInRegister"),
       value: totalCount,
-      description: "Totale presenze a calendario",
+      description: t("attendance.totalScheduled"),
       icon: Users,
     },
     {
-      title: "Presenti Oggi",
+      title: t("attendance.presentToday"),
       value: presentCount,
-      description: "Presenze confermate",
+      description: t("attendance.confirmedAttendance"),
       icon: UserCheck,
     },
     {
-      title: "Assenti",
+      title: t("attendance.absentCount"),
       value: absentCount,
-      description: "Assenze registrate",
+      description: t("attendance.absencesRecorded"),
       icon: FileX,
     },
     {
-      title: "Da Saldare",
+      title: t("attendance.pendingPayment"),
       value: pendingPaymentCount,
-      description: "Lezioni o quote non saldate",
+      description: t("attendance.pendingPaymentDesc"),
       icon: AlertTriangle,
     },
   ];

@@ -77,9 +77,7 @@ export function DebtorsAndRenewals() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm">{d.purchaserName || t("common.purchaser")}</span>
-                      <Badge variant="outline" className="text-[10px] uppercase tracking-wider">
-                        {d.paymentStatus}
-                      </Badge>
+                      <StatusBadge status={d.paymentStatus} />
                     </div>
                     <p className="text-xs text-muted-foreground">{d.courseName || t("common.course")}</p>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">

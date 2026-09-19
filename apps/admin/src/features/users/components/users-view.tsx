@@ -9,6 +9,7 @@ import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { useTranslation } from "@/i18n/context";
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import {
 import type { User } from "../types";
 
 export function UsersView() {
+  const { t } = useTranslation();
   const { users, loading, selectedRole, setSelectedRole, addUser, deleteUser } = useUsers();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,8 +56,9 @@ export function UsersView() {
           // Edit handler
         },
         onDelete: (id) => setDeletingUserId(id),
+        t,
       }),
-    []
+    [t]
   );
 
   const table = useReactTable({
@@ -77,17 +80,17 @@ export function UsersView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca utente per nome, email..."
+          searchPlaceholder={t("users.searchPlaceholder")}
           filters={[
             {
               value: selectedRole,
               onChange: setSelectedRole,
-              placeholder: "Ruolo Utente",
+              placeholder: t("users.role"),
               options: [
-                { value: "all", label: "Tutti i ruoli" },
-                { value: "admin", label: "Amministratore" },
-                { value: "teacher", label: "Docente" },
-                { value: "student", label: "Studente" },
+                { value: "all", label: t("users.allRoles") },
+                { value: "admin", label: t("roles.admin") },
+                { value: "teacher", label: t("roles.teacher") },
+                { value: "student", label: t("roles.student") },
               ],
             },
           ]}
@@ -126,7 +129,7 @@ export function UsersView() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      Nessun utente trovato.
+                      {t("users.noUsersFound")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -141,8 +144,8 @@ export function UsersView() {
       <DeleteConfirmDialog
         open={!!deletingUserId}
         onOpenChange={(v) => !v && setDeletingUserId(null)}
-        title="Elimina Utente"
-        description="Sei sicuro di voler eliminare questo utente? L'operazione non può essere annullata."
+        title={t("users.deleteConfirmTitle")}
+        description={t("users.deleteConfirmDesc")}
         onConfirm={async () => {
           if (deletingUserId) {
             await deleteUser(deletingUserId);

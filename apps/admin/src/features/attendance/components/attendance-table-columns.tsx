@@ -11,16 +11,18 @@ import { LessonAttendance, parseLessonAttendance } from "@atena/api-types";
 export interface GetAttendanceTableColumnsProps {
   onMarkAttendance: (item: LessonAttendanceItem, status: number) => void;
   onViewBookingDetail: (item: LessonAttendanceItem) => void;
+  t: (k: string) => string;
 }
 
 export function getAttendanceTableColumns({
   onMarkAttendance,
   onViewBookingDetail,
+  t,
 }: GetAttendanceTableColumnsProps): ColumnDef<LessonAttendanceItem>[] {
   return [
     {
       accessorKey: "student_name",
-      header: "Studente",
+      header: t("common.student"),
       cell: ({ row }) => (
         <div>
           <div className="font-semibold text-foreground">{row.original.student_name}</div>
@@ -30,19 +32,19 @@ export function getAttendanceTableColumns({
     },
     {
       accessorKey: "teacher_name",
-      header: "Docente",
+      header: t("common.teacher"),
       cell: ({ row }) => (
-        <span className="text-sm font-medium">{row.original.teacher_name || "Non assegnato"}</span>
+        <span className="text-sm font-medium">{row.original.teacher_name || t("common.unassigned")}</span>
       ),
     },
     {
       accessorKey: "starts_at",
-      header: "Orario",
+      header: t("common.time"),
       cell: ({ row }) => <CellFormattedDate dateValue={row.original.starts_at} />,
     },
     {
       accessorKey: "attendance_record",
-      header: "Presenza",
+      header: t("attendance.title"),
       cell: ({ row }) => {
         const item = row.original;
         const currentStatus = item.attendance_record
@@ -64,7 +66,7 @@ export function getAttendanceTableColumns({
                   : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
               }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Presente
+              <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> {t("attendance.present")}
             </Button>
 
             <Button
@@ -78,7 +80,7 @@ export function getAttendanceTableColumns({
                   : "text-rose-600 hover:text-rose-700 hover:bg-rose-50"
               }`}
             >
-              <XCircle className="w-3.5 h-3.5 mr-1" /> Assente
+              <XCircle className="w-3.5 h-3.5 mr-1" /> {t("attendance.absentBtn")}
             </Button>
           </div>
         );
@@ -86,7 +88,7 @@ export function getAttendanceTableColumns({
     },
     {
       accessorKey: "payment_status",
-      header: "Stato Pagamento Corso",
+      header: t("attendance.coursePaymentStatus"),
       cell: ({ row }) => {
         const item = row.original;
         const bookingStatus = item.booking_payment_status || item.payment_status || "pending";
@@ -95,14 +97,14 @@ export function getAttendanceTableColumns({
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       cell: ({ row }) => (
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
           onClick={() => onViewBookingDetail(row.original)}
-          title="Vedi Ordine"
+          title={t("attendance.viewBooking")}
         >
           <Eye className="h-4 w-4" />
         </Button>

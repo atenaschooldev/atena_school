@@ -28,9 +28,11 @@ import {
 } from "@tanstack/react-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { useTranslation } from "@/i18n/context";
 import type { Group } from "../types";
 
 export function GroupsView() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -74,8 +76,9 @@ export function GroupsView() {
       getGroupsTableColumns({
         onViewDetails: handleViewDetails,
         onDeleteGroup: deleteGroup,
+        t,
       }),
-    [deleteGroup]
+    [deleteGroup, t]
   );
 
   const table = useReactTable({
@@ -103,10 +106,10 @@ export function GroupsView() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Users className="w-6 h-6 text-primary" />
-            Gruppi e Classi
+            {t("groups.title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
-            Gestisci la composizione delle classi, capienza dei gruppi e orari condivisi
+            {t("groups.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -114,18 +117,18 @@ export function GroupsView() {
             variant="outline"
             size="sm"
             onClick={() => refetch()}
-            className="h-9 gap-1.5 text-xs"
+            className="h-9 gap-1.5 text-xs cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Aggiorna
+            {t("common.refresh")}
           </Button>
           <Button
             size="sm"
             onClick={() => setIsCreateOpen(true)}
-            className="h-9 gap-1.5 text-xs shadow-sm"
+            className="h-9 gap-1.5 text-xs shadow-xs cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Nuovo Gruppo
+            {t("groups.newGroup")}
           </Button>
         </div>
       </div>
@@ -138,7 +141,7 @@ export function GroupsView() {
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Cerca gruppo, corso o docente..."
+            placeholder={t("groups.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8 text-xs h-9"
@@ -148,19 +151,19 @@ export function GroupsView() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs h-9 px-3 rounded-lg border border-input bg-background text-foreground"
+            className="text-xs h-9 px-3 rounded-lg border border-input bg-background text-foreground cursor-pointer"
           >
-            <option value="all">Tutti gli stati</option>
-            <option value="1">Iscrizioni aperte</option>
-            <option value="2">In corso</option>
-            <option value="3">Completato</option>
-            <option value="4">Archiviato</option>
+            <option value="all">{t("groups.allStatuses")}</option>
+            <option value="1">{t("groups.recruiting")}</option>
+            <option value="2">{t("groups.inProgress")}</option>
+            <option value="3">{t("groups.completed")}</option>
+            <option value="4">{t("groups.archived")}</option>
           </select>
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-xs">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -191,7 +194,7 @@ export function GroupsView() {
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-32 text-center text-xs text-muted-foreground">
-                  Nessun gruppo trovato.
+                  {t("groups.noGroupsFound")}
                 </TableCell>
               </TableRow>
             )}

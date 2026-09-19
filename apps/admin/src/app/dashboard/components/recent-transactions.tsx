@@ -10,8 +10,11 @@ import { assetUrl } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { formatCurrency, formatDateItalian } from "@atena/utils"
+import { useTranslation } from "@/i18n/context"
+import { StatusBadge } from "@/components/shared/status-badge"
 
 export function RecentTransactions() {
+  const { t, locale } = useTranslation()
   const { data: revenueData, isLoading } = useQuery({
     queryKey: ["reports", "revenue"],
     queryFn: () => api.get<any>("/admin/reports/revenue"),
@@ -23,29 +26,30 @@ export function RecentTransactions() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle>Ultime Transazioni</CardTitle>
-          <CardDescription>Pagamenti e quote registrate nel database</CardDescription>
+          <CardTitle>{t("dashboard.recentTransactionsTitle")}</CardTitle>
+          <CardDescription>{t("dashboard.recentTransactionsSubtitle")}</CardDescription>
         </div>
         <Badge variant="outline" className="text-xs">
-          Totale transazioni: {realList.length}
+          {t("common.total")}: {realList.length}
         </Badge>
       </CardHeader>
       <CardContent className="space-y-4">
         {isLoading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">Caricamento ultime transazioni...</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">{t("common.loading")}</div>
         ) : realList.length === 0 ? (
           <div className="p-8 border border-dashed rounded-xl text-center space-y-2 bg-card/40">
             <FileX className="w-8 h-8 text-muted-foreground mx-auto" />
-            <p className="font-semibold text-sm">Nessuna transazione trovata</p>
-            <p className="text-xs text-muted-foreground">Nessun pagamento registrato a sistema.</p>
+            <p className="font-semibold text-sm">{t("common.noData")}</p>
+            <p className="text-xs text-muted-foreground">{t("dashboard.noTransactionsFound")}</p>
           </div>
         ) : (
           realList.slice(0, 5).map((transaction: any, idx: number) => {
-            const name = transaction.purchaserName || "Cliente Atena"
+            const name = transaction.purchaserName || t("common.purchaser")
             const email = transaction.purchaserEmail || transaction.paymentMethod || "Stripe"
             const amount = formatCurrency(transaction.amount ?? 0)
-            const status = transaction.status === "succeeded" ? "completed" : (transaction.status || "completed")
-            const date = formatDateItalian(transaction.createdAt)
+            const date = locale === "en"
+              ? new Date(transaction.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+              : formatDateItalian(transaction.createdAt)
 
             return (
               <div key={transaction.id || idx}>
@@ -62,12 +66,7 @@ export function RecentTransactions() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Badge
-                        variant={status === "completed" || status === "succeeded" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {status}
-                      </Badge>
+                      <StatusBadge status={transaction.status} />
                       <div className="text-right">
                         <p className="text-sm font-medium">{amount}</p>
                         <p className="text-xs text-muted-foreground">{date}</p>
@@ -79,7 +78,7 @@ export function RecentTransactions() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem className="cursor-pointer">Dettagli</DropdownMenuItem>
+                          <DropdownMenuItem className="cursor-pointer">{t("common.details")}</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>

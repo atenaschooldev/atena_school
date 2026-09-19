@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { useTranslation } from "@/i18n/context";
 import {
   Table,
   TableBody,
@@ -32,6 +33,7 @@ import type { LessonAttendanceItem } from "../types";
 import type { Booking } from "@/features/bookings/types";
 
 export function AttendanceView() {
+  const { t, locale } = useTranslation();
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
@@ -114,8 +116,9 @@ export function AttendanceView() {
             created_at: item.starts_at,
           } as Booking);
         },
+        t,
       }),
-    []
+    [t]
   );
 
   const table = useReactTable({
@@ -129,13 +132,15 @@ export function AttendanceView() {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const dateLocale = locale === "en" ? "en-US" : "it-IT";
+
   return (
     <div className="space-y-6">
       <AttendanceMetrics
-        total={totalCount}
-        present={presentCount}
-        absent={absentCount}
-        pendingPayment={pendingPaymentCount}
+        totalCount={totalCount}
+        presentCount={presentCount}
+        absentCount={absentCount}
+        pendingPaymentCount={pendingPaymentCount}
       />
 
       <div className="space-y-4">
@@ -154,7 +159,7 @@ export function AttendanceView() {
             <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border text-xs font-semibold">
               <CalendarIcon className="w-4 h-4 text-primary" />
               <span>
-                {new Date(selectedDate).toLocaleDateString("it-IT", {
+                {new Date(selectedDate).toLocaleDateString(dateLocale, {
                   weekday: "short",
                   year: "numeric",
                   month: "short",
@@ -178,19 +183,19 @@ export function AttendanceView() {
               className="h-8 text-xs cursor-pointer"
               onClick={() => setSelectedDate(new Date().toISOString().split("T")[0])}
             >
-              Oggi
+              {t("dashboard.upcomingLessons").split(" ")[0]}
             </Button>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {courseOptions.length > 0 && (
               <select
-                aria-label="Filtra per corso"
+                aria-label={t("courses.allCategories")}
                 value={courseFilter}
                 onChange={(e) => setCourseFilter(e.target.value)}
                 className="h-8 text-xs rounded-lg border bg-background px-2.5 font-medium cursor-pointer"
               >
-                <option value="all">Tutti i Corsi ({courseOptions.length})</option>
+                <option value="all">{t("attendance.allCourses")} ({courseOptions.length})</option>
                 {courseOptions.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -201,64 +206,61 @@ export function AttendanceView() {
           </div>
         </div>
 
-        {/* Data Table */}
-        <div className="space-y-4">
-          <DataViewToolbar
-            searchPlaceholder="Cerca per studente, corso o docente..."
-            searchValue={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
+        <DataViewToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder={t("attendance.searchPlaceholder")}
+        />
 
-          <div className="rounded-md border bg-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id} className="bg-muted/30">
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+        <div className="rounded-md border bg-card">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnCount={columns.length} rowCount={5} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      Nessuna lezione trovata per questa data.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                    {t("attendance.noAttendanceFound")}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
+
+        <DataTablePagination table={table} />
       </div>
 
-      <BookingDetailDialog
-        booking={selectedBookingForDetail}
-        isOpen={!!selectedBookingForDetail}
-        onClose={() => setSelectedBookingForDetail(null)}
-        onUpdateStatus={() => {}}
-        onDelete={async () => false}
-      />
+      {selectedBookingForDetail && (
+        <BookingDetailDialog
+          booking={selectedBookingForDetail}
+          open={!!selectedBookingForDetail}
+          onOpenChange={(v) => !v && setSelectedBookingForDetail(null)}
+        />
+      )}
     </div>
   );
 }

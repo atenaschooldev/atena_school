@@ -16,11 +16,10 @@ import {
   GraduationCap,
   Trash2,
   UserPlus,
-  BookOpen,
 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
-import { WEEKDAY_DICTIONARY } from "@atena/api-types";
+import { useTranslation } from "@/i18n/context";
 import type { Group } from "../types";
 
 interface GroupDetailDialogProps {
@@ -31,6 +30,17 @@ interface GroupDetailDialogProps {
   onRemoveMember: (groupId: string, studentId: string) => Promise<any>;
 }
 
+const WEEKDAY_KEYS: Record<number, string> = {
+  1: "monday",
+  2: "tuesday",
+  3: "wednesday",
+  4: "thursday",
+  5: "friday",
+  6: "saturday",
+  0: "sunday",
+  7: "sunday",
+};
+
 export function GroupDetailDialog({
   group,
   open,
@@ -38,6 +48,7 @@ export function GroupDetailDialog({
   onAddMember,
   onRemoveMember,
 }: GroupDetailDialogProps) {
+  const { t, locale } = useTranslation();
   const [activeTab, setActiveTab] = useState("students");
   const [availableStudents, setAvailableStudents] = useState<any[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -70,12 +81,13 @@ export function GroupDetailDialog({
 
   const handleAddStudent = async () => {
     if (!selectedStudentId) {
-      toast.error("Seleziona uno studente");
+      toast.error(t("groups.selectStudent"));
       return;
     }
     try {
       setIsAdding(true);
       await onAddMember(group.id, { studentId: selectedStudentId });
+      toast.success(t("groups.memberAddedSuccess"));
       setSelectedStudentId("");
     } catch (err) {
       // Error handled in mutation
@@ -85,14 +97,20 @@ export function GroupDetailDialog({
   };
 
   const handleRemoveStudent = async (studentId: string) => {
-    if (confirm("Sei sicuro di voler rimuovere lo studente dal gruppo?")) {
+    if (confirm(t("groups.removeStudentConfirm"))) {
       await onRemoveMember(group.id, studentId);
+      toast.success(t("groups.memberRemovedSuccess"));
     }
   };
 
   const formatScheduleDays = (days?: number[]) => {
-    if (!days || days.length === 0) return "Flessibile";
-    return days.map((d) => WEEKDAY_DICTIONARY[d % 7]?.label_it || String(d)).join(" e ");
+    if (!days || days.length === 0) return t("common.flexible");
+    return days
+      .map((d) => {
+        const key = WEEKDAY_KEYS[d % 7] || "monday";
+        return t(`weekdays.${key}`);
+      })
+      .join(` ${t("weekdays.and")} `);
   };
 
   return (
@@ -106,11 +124,11 @@ export function GroupDetailDialog({
                 {group.name}
               </DialogTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {group.courseName || "Corso di Gruppo"}
+                {group.courseName || t("groups.defaultGroupCourse")}
               </p>
             </div>
             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-              {currentCount} / {maxCount} Posti Occupati
+              {currentCount} / {maxCount} {t("groups.spotsOccupied")}
             </Badge>
           </div>
         </DialogHeader>
@@ -119,21 +137,21 @@ export function GroupDetailDialog({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-xl border border-border/50 text-xs">
           <div className="space-y-0.5">
             <span className="text-muted-foreground flex items-center gap-1">
-              <GraduationCap className="w-3.5 h-3.5" /> Docente
+              <GraduationCap className="w-3.5 h-3.5" /> {t("groups.teacher")}
             </span>
-            <p className="font-semibold text-foreground truncate">{group.teacherName || "Non assegnato"}</p>
+            <p className="font-semibold text-foreground truncate">{group.teacherName || t("groups.unassigned")}</p>
           </div>
 
           <div className="space-y-0.5">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> Giorni
+              <Calendar className="w-3.5 h-3.5" /> {t("courses.scheduleDays")}
             </span>
             <p className="font-semibold text-foreground truncate">{formatScheduleDays(group.scheduleDays)}</p>
           </div>
 
           <div className="space-y-0.5">
             <span className="text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> Orario
+              <Clock className="w-3.5 h-3.5" /> {t("common.time")}
             </span>
             <p className="font-semibold text-foreground">
               {group.startTime || "18:00"}{group.endTime ? ` - ${group.endTime}` : ""}
@@ -142,7 +160,7 @@ export function GroupDetailDialog({
 
           <div className="space-y-0.5">
             <span className="text-muted-foreground flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" /> Aula
+              <MapPin className="w-3.5 h-3.5" /> {t("groups.classroom")}
             </span>
             <p className="font-semibold text-foreground truncate">{group.room || "Aula 1"}</p>
           </div>
@@ -151,7 +169,7 @@ export function GroupDetailDialog({
         {/* Capacity Bar */}
         <div className="space-y-1.5 pt-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Riempimento Classe</span>
+            <span>{t("groups.fillRate")}</span>
             <span className="font-semibold text-foreground">{fillPercent}%</span>
           </div>
           <Progress value={fillPercent} className="h-2" />
@@ -161,10 +179,10 @@ export function GroupDetailDialog({
         <Tabs value={activeTab} onValueChange={setActiveTab} className="pt-2">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="students" className="text-xs">
-              Studenti Iscritti ({currentCount})
+              {t("groups.members")} ({currentCount})
             </TabsTrigger>
             <TabsTrigger value="lessons" className="text-xs">
-              Lezioni Programmate ({group.lessons?.length || 0})
+              {t("groups.lessonsList")} ({group.lessons?.length || 0})
             </TabsTrigger>
           </TabsList>
 
@@ -174,7 +192,7 @@ export function GroupDetailDialog({
             <div className="p-3.5 bg-muted/20 border border-border/60 rounded-xl space-y-2.5">
               <Label className="text-xs font-semibold flex items-center gap-1.5">
                 <UserPlus className="w-4 h-4 text-primary" />
-                Aggiungi Studente al Gruppo
+                {t("groups.addStudent")}
               </Label>
               <div className="flex gap-2">
                 <Select
@@ -182,20 +200,20 @@ export function GroupDetailDialog({
                   onValueChange={setSelectedStudentId}
                   disabled={currentCount >= maxCount || isLoadingStudents}
                 >
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger className="text-xs cursor-pointer">
                     <SelectValue
                       placeholder={
                         currentCount >= maxCount
-                          ? "Gruppo al completo"
+                          ? t("groups.spotsOccupied")
                           : isLoadingStudents
-                          ? "Caricamento studenti..."
-                          : "Seleziona studente da inserire..."
+                          ? t("common.loading")
+                          : t("groups.selectStudent")
                       }
                     />
                   </SelectTrigger>
                   <SelectContent className="max-h-56">
                     {selectableStudents.map((s) => (
-                      <SelectItem key={s.id} value={s.id} className="text-xs">
+                      <SelectItem key={s.id} value={s.id} className="text-xs cursor-pointer">
                         {s.full_name || `${s.first_name || ""} ${s.last_name || ""}`.trim() || s.email} {s.tax_code ? `(${s.tax_code})` : ""}
                       </SelectItem>
                     ))}
@@ -205,9 +223,9 @@ export function GroupDetailDialog({
                   size="sm"
                   onClick={handleAddStudent}
                   disabled={!selectedStudentId || isAdding || currentCount >= maxCount}
-                  className="shrink-0"
+                  className="shrink-0 cursor-pointer"
                 >
-                  {isAdding ? "Aggiunta..." : "Aggiungi"}
+                  {isAdding ? t("common.saving") : t("common.create")}
                 </Button>
               </div>
             </div>
@@ -222,7 +240,7 @@ export function GroupDetailDialog({
                   >
                     <div>
                       <h5 className="font-semibold text-foreground text-sm">
-                        {m.student?.fullName || "Studente"}
+                        {m.student?.fullName || t("common.student")}
                       </h5>
                       <div className="flex flex-wrap gap-x-3 text-muted-foreground mt-0.5">
                         {m.student?.email && <span>{m.student.email}</span>}
@@ -233,9 +251,9 @@ export function GroupDetailDialog({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="text-muted-foreground hover:text-destructive shrink-0"
+                      className="text-muted-foreground hover:text-destructive shrink-0 cursor-pointer"
                       onClick={() => handleRemoveStudent(m.studentId)}
-                      title="Rimuovi dal gruppo"
+                      title={t("groups.removeStudent")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -244,7 +262,7 @@ export function GroupDetailDialog({
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground text-xs">
-                Nessuno studente ancora iscritto a questa classe.
+                {t("groups.noGroupsFound")}
               </div>
             )}
           </TabsContent>
@@ -255,6 +273,7 @@ export function GroupDetailDialog({
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {group.lessons.map((l, idx) => {
                   const startDate = new Date(l.startsAt);
+                  const dateLocale = locale === "en" ? "en-US" : "it-IT";
                   return (
                     <div
                       key={l.id}
@@ -266,15 +285,15 @@ export function GroupDetailDialog({
                         </span>
                         <div>
                           <p className="font-semibold text-foreground">
-                            {startDate.toLocaleDateString("it-IT", {
-                              weekday: "long",
+                            {startDate.toLocaleDateString(dateLocale, {
+                              weekday: "short",
                               day: "numeric",
-                              month: "long",
+                              month: "short",
                               year: "numeric",
                             })}
                           </p>
                           <p className="text-muted-foreground text-[11px]">
-                            {startDate.toLocaleTimeString("it-IT", {
+                            {startDate.toLocaleTimeString(dateLocale, {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -282,7 +301,7 @@ export function GroupDetailDialog({
                         </div>
                       </div>
                       <Badge variant="outline" className="text-[10px]">
-                        {l.status === 2 ? "Completata" : "Programmata"}
+                        {l.status === 2 ? t("groups.lessonCompleted") : t("groups.lessonScheduled")}
                       </Badge>
                     </div>
                   );
@@ -290,7 +309,7 @@ export function GroupDetailDialog({
               </div>
             ) : (
               <div className="py-8 text-center text-muted-foreground text-xs">
-                Nessuna lezione programmata nel calendario.
+                {t("bookings.noLessonsFound")}
               </div>
             )}
           </TabsContent>

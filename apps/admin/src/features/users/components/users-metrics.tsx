@@ -3,6 +3,7 @@
 import { Users, UserCheck, ShieldCheck, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserRole, parseUserRole } from "@atena/api-types";
+import { useTranslation } from "@/i18n/context";
 import type { User } from "../types";
 
 export interface UsersMetricsProps {
@@ -10,6 +11,7 @@ export interface UsersMetricsProps {
 }
 
 export function UsersMetrics({ users }: UsersMetricsProps) {
+  const { t } = useTranslation();
   const adminCount = users.filter((u) => {
     const r = parseUserRole(u.role);
     return r === UserRole.ADMIN || r === UserRole.SUPERADMIN;
@@ -19,27 +21,27 @@ export function UsersMetrics({ users }: UsersMetricsProps) {
 
   const metrics = [
     {
-      title: "Utenti Totali",
+      title: t("users.totalUsers"),
       value: users.length,
-      description: "Account registrati a sistema",
+      description: t("users.registeredAccounts"),
       icon: Users,
     },
     {
-      title: "Amministratori",
+      title: t("users.administrators"),
       value: adminCount,
-      description: "Accesso completo CRM",
+      description: t("users.fullAccess"),
       icon: ShieldCheck,
     },
     {
-      title: "Docenti",
+      title: t("roles.teacher"),
       value: teacherCount,
-      description: "Profili insegnanti",
+      description: t("users.facultyProfiles"),
       icon: UserCheck,
     },
     {
-      title: "Studenti / Clienti",
+      title: t("users.studentsAndClients"),
       value: studentCount,
-      description: "Iscritti ai corsi",
+      description: t("users.enrolledInCourses"),
       icon: Clock,
     },
   ];

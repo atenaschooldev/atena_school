@@ -11,6 +11,7 @@ import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { useTranslation } from "@/i18n/context";
 import {
   Table,
   TableBody,
@@ -31,6 +32,7 @@ import {
 import type { Teacher } from "../types";
 
 export function TeachersView() {
+  const { t } = useTranslation();
   const { teachers, loading, createTeacher, updateTeacher, deleteTeacher } = useTeachers();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,14 +43,14 @@ export function TeachersView() {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const filteredTeachers = useMemo(() => {
-    return teachers.filter((t) => {
+    return teachers.filter((teacher) => {
       const q = searchQuery.toLowerCase().trim();
       if (q) {
-        const name = (t.fullName || `${t.nome || ""} ${t.cognome || ""}`).toLowerCase();
-        const email = (t.email || "").toLowerCase();
+        const name = (teacher.fullName || `${teacher.nome || ""} ${teacher.cognome || ""}`).toLowerCase();
+        const email = (teacher.email || "").toLowerCase();
         if (!name.includes(q) && !email.includes(q)) return false;
       }
-      if (statusFilter !== "all" && (t.status || "active") !== statusFilter) return false;
+      if (statusFilter !== "all" && (teacher.status || "active") !== statusFilter) return false;
       return true;
     });
   }, [teachers, searchQuery, statusFilter]);
@@ -56,13 +58,14 @@ export function TeachersView() {
   const columns = useMemo(
     () =>
       getTeachersTableColumns({
-        onEdit: (t) => {
-          setEditingTeacher(t);
+        onEdit: (teacher) => {
+          setEditingTeacher(teacher);
           setFormDialogOpen(true);
         },
         onDelete: (id) => setDeletingTeacherId(id),
+        t,
       }),
-    []
+    [t]
   );
 
   const table = useReactTable({
@@ -84,16 +87,16 @@ export function TeachersView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca docente per nome, email..."
+          searchPlaceholder={t("teachers.searchPlaceholder")}
           filters={[
             {
               value: statusFilter,
               onChange: setStatusFilter,
-              placeholder: "Stato Docente",
+              placeholder: t("teachers.teacherStatus"),
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "active", label: "Attivo" },
-                { value: "inactive", label: "Inattivo" },
+                { value: "all", label: t("common.all") },
+                { value: "active", label: t("common.active") },
+                { value: "inactive", label: t("common.inactive") },
               ],
             },
           ]}
@@ -103,9 +106,9 @@ export function TeachersView() {
                 setEditingTeacher(null);
                 setFormDialogOpen(true);
               }}
-              className="font-medium cursor-pointer shadow-sm text-xs"
+              className="font-medium cursor-pointer shadow-xs text-xs"
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Nuovo Docente
+              <Plus className="mr-1.5 h-4 w-4" /> {t("teachers.newTeacher")}
             </Button>
           }
         />
@@ -128,7 +131,7 @@ export function TeachersView() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                  <TableSkeletonRows columnsCount={columns.length} rowsCount={6} />
                 ) : table.getRowModel().rows?.length ? (
                   table.getRowModel().rows.map((row) => (
                     <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
@@ -142,7 +145,7 @@ export function TeachersView() {
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      Nessun docente trovato.
+                      {t("teachers.noTeachersFound")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -170,8 +173,8 @@ export function TeachersView() {
       <DeleteConfirmDialog
         open={!!deletingTeacherId}
         onOpenChange={(v) => !v && setDeletingTeacherId(null)}
-        title="Elimina Docente"
-        description="Sei sicuro di voler eliminare questo docente? L'operazione non può essere annullata."
+        title={t("teachers.deleteConfirmTitle")}
+        description={t("teachers.deleteConfirmDesc")}
         onConfirm={async () => {
           if (deletingTeacherId) {
             await deleteTeacher(deletingTeacherId);

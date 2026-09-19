@@ -13,11 +13,13 @@ import type { User } from "../types";
 export interface GetUsersTableColumnsProps {
   onEdit: (u: User) => void;
   onDelete: (id: string) => void;
+  t: (k: string) => string;
 }
 
 export function getUsersTableColumns({
   onEdit,
   onDelete,
+  t,
 }: GetUsersTableColumnsProps): ColumnDef<User>[] {
   return [
     {
@@ -30,7 +32,7 @@ export function getUsersTableColumns({
               (table.getIsSomePageRowsSelected() && "indeterminate")
             }
             onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Seleziona tutti"
+            aria-label={t("common.selectAll")}
           />
         </div>
       ),
@@ -39,7 +41,7 @@ export function getUsersTableColumns({
           <Checkbox
             checked={row.getIsSelected()}
             onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Seleziona riga"
+            aria-label={t("common.selectRow")}
           />
         </div>
       ),
@@ -55,7 +57,7 @@ export function getUsersTableColumns({
           className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          <span>Utente</span>
+          <span>{t("users.studentProfile")}</span>
           {column.getIsSorted() === "desc" ? (
             <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
           ) : column.getIsSorted() === "asc" ? (
@@ -67,7 +69,7 @@ export function getUsersTableColumns({
       ),
       cell: ({ row }) => {
         const u = row.original;
-        const name = u.name || "Utente";
+        const name = u.name || t("common.student");
         const initials = name
           .split(" ")
           .map((n) => n[0])
@@ -90,52 +92,52 @@ export function getUsersTableColumns({
     },
     {
       accessorKey: "role",
-      header: "Ruolo",
+      header: t("users.role"),
       cell: ({ row }) => {
         const role = parseUserRole(row.original.role);
         if (role === UserRole.ADMIN || role === UserRole.SUPERADMIN) {
           return (
             <Badge variant="secondary" className="bg-purple-50 text-purple-700 dark:bg-purple-950/20 border border-purple-500/30 gap-1 text-xs">
-              <Shield className="w-3 h-3 text-purple-500" /> Admin
+              <Shield className="w-3 h-3 text-purple-500" /> {t("roles.admin")}
             </Badge>
           );
         }
         if (role === UserRole.TEACHER) {
           return (
             <Badge variant="secondary" className="bg-sky-50 text-sky-700 dark:bg-sky-950/20 border border-sky-500/30 gap-1 text-xs">
-              <UserIcon className="w-3 h-3 text-sky-500" /> Docente
+              <UserIcon className="w-3 h-3 text-sky-500" /> {t("roles.teacher")}
             </Badge>
           );
         }
         if (role === UserRole.SECRETARY) {
           return (
             <Badge variant="secondary" className="bg-amber-50 text-amber-700 dark:bg-amber-950/20 border border-amber-500/30 gap-1 text-xs">
-              <UserIcon className="w-3 h-3 text-amber-500" /> Segreteria
+              <UserIcon className="w-3 h-3 text-amber-500" /> {t("roles.secretary")}
             </Badge>
           );
         }
         if (role === UserRole.PARENT) {
           return (
             <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 border border-emerald-500/30 gap-1 text-xs">
-              <UserIcon className="w-3 h-3 text-emerald-500" /> Genitore
+              <UserIcon className="w-3 h-3 text-emerald-500" /> {t("roles.parent")}
             </Badge>
           );
         }
         return (
           <Badge variant="outline" className="text-xs">
-            Studente
+            {t("roles.student")}
           </Badge>
         );
       },
     },
     {
       accessorKey: "createdAt",
-      header: "Data Creazione",
+      header: t("users.creationDate"),
       cell: ({ row }) => <CellFormattedDate dateValue={row.original.createdAt || row.original.created_at} />,
     },
     {
       id: "actions",
-      header: "Azioni",
+      header: t("common.actions"),
       enableHiding: false,
       cell: ({ row }) => {
         const u = row.original;
@@ -146,7 +148,7 @@ export function getUsersTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(u)}
-              title="Modifica Utente"
+              title={t("users.editUser")}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -155,7 +157,7 @@ export function getUsersTableColumns({
               size="icon"
               className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
               onClick={() => onDelete(u.id)}
-              title="Elimina Utente"
+              title={t("users.deleteUser")}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

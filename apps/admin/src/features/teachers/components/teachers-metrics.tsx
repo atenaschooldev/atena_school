@@ -2,6 +2,7 @@
 
 import { Users, CheckCircle2, GraduationCap, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/i18n/context";
 import type { Teacher } from "../types";
 
 export interface TeachersMetricsProps {
@@ -9,36 +10,37 @@ export interface TeachersMetricsProps {
 }
 
 export function TeachersMetrics({ teachers }: TeachersMetricsProps) {
-  const activeCount = teachers.filter((t) => {
-    const s = String(t.status ?? "").toLowerCase();
-    return s === "active" || s === "attivo" || Number(t.status) === 1;
+  const { t } = useTranslation();
+  const activeCount = teachers.filter((teacher) => {
+    const s = String(teacher.status ?? "").toLowerCase();
+    return s === "active" || s === "attivo" || Number(teacher.status) === 1;
   }).length;
-  const totalLessons = teachers.reduce((acc, t) => acc + (t.lessonCount || 0), 0);
-  const totalCourses = teachers.reduce((acc, t) => acc + (t.courseCount || 0), 0);
+  const totalLessons = teachers.reduce((acc, teacher) => acc + (teacher.lessonCount || 0), 0);
+  const totalCourses = teachers.reduce((acc, teacher) => acc + (teacher.courseCount || 0), 0);
 
   const metrics = [
     {
-      title: "Docenti Registrati",
+      title: t("teachers.registeredTeachers"),
       value: teachers.length,
-      description: "Corpo docente scuola",
+      description: t("teachers.schoolFaculty"),
       icon: Users,
     },
     {
-      title: "Docenti Attivi",
+      title: t("teachers.activeTeachers"),
       value: activeCount,
-      description: "Insegnanti con corsi attivi",
+      description: t("teachers.teachersWithCourses"),
       icon: CheckCircle2,
     },
     {
-      title: "Corsi Assegnati",
+      title: t("teachers.assignedCourses"),
       value: totalCourses,
-      description: "Corsi gestiti dai docenti",
+      description: t("teachers.coursesManaged"),
       icon: GraduationCap,
     },
     {
-      title: "Lezioni Svolte",
+      title: t("teachers.lessonsCompleted"),
       value: totalLessons,
-      description: "Ore и lezioni erogate",
+      description: t("teachers.hoursDelivered"),
       icon: Award,
     },
   ];

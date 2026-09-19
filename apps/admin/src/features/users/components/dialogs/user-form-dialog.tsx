@@ -31,13 +31,14 @@ import { Plus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "@/i18n/context";
 import type { UserFormValues } from "@/features/users/types";
 
 const userFormSchema = z.object({
-  firstName: z.string().min(2, { message: "Nome richiesto (min 2 caract)." }),
-  lastName: z.string().min(2, { message: "Cognome richiesto (min 2 caract)." }),
-  email: z.string().email({ message: "Inserisci un email valida." }),
-  role: z.string().min(1, { message: "Seleziona un ruolo." }),
+  firstName: z.string().min(1, { message: "First name is required" }),
+  lastName: z.string().min(1, { message: "Last name is required" }),
+  email: z.string().email({ message: "Invalid email" }),
+  role: z.string().min(1, { message: "Role is required" }),
   password: z.string().optional(),
 });
 
@@ -46,6 +47,7 @@ interface UserFormDialogProps {
 }
 
 export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const form = useForm<UserFormValues>({
@@ -72,15 +74,15 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer font-medium shadow-sm text-xs">
-          <Plus className="mr-1.5 h-4 w-4" /> Nuovo Utente
+        <Button className="cursor-pointer font-medium shadow-xs text-xs">
+          <Plus className="mr-1.5 h-4 w-4" /> {t("users.newUser")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Nuovo Utente</DialogTitle>
+          <DialogTitle>{t("users.newUser")}</DialogTitle>
           <DialogDescription>
-            Inserisci i dettagli per creare un nuovo profilo utente a sistema.
+            {t("users.subtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -92,7 +94,7 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Nome</FormLabel>
+                    <FormLabel className="text-xs">{t("teachers.firstName")}</FormLabel>
                     <FormControl>
                       <Input placeholder="es. Mario" className="h-9 text-xs" {...field} />
                     </FormControl>
@@ -106,7 +108,7 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Cognome</FormLabel>
+                    <FormLabel className="text-xs">{t("teachers.lastName")}</FormLabel>
                     <FormControl>
                       <Input placeholder="es. Rossi" className="h-9 text-xs" {...field} />
                     </FormControl>
@@ -121,7 +123,7 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Email</FormLabel>
+                  <FormLabel className="text-xs">{t("common.email")}</FormLabel>
                   <FormControl>
                     <Input placeholder="mario.rossi@example.com" className="h-9 text-xs" {...field} />
                   </FormControl>
@@ -135,17 +137,17 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Ruolo</FormLabel>
+                  <FormLabel className="text-xs">{t("users.role")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-9 text-xs cursor-pointer">
-                        <SelectValue placeholder="Seleziona un ruolo" />
+                        <SelectValue placeholder={t("users.role")} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="admin">Amministratore</SelectItem>
-                      <SelectItem value="teacher">Docente</SelectItem>
-                      <SelectItem value="student">Studente</SelectItem>
+                      <SelectItem value="admin" className="cursor-pointer">{t("roles.admin")}</SelectItem>
+                      <SelectItem value="teacher" className="cursor-pointer">{t("roles.teacher")}</SelectItem>
+                      <SelectItem value="student" className="cursor-pointer">{t("roles.student")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -155,10 +157,10 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
 
             <DialogFooter className="pt-2">
               <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="text-xs cursor-pointer">
-                Annulla
+                {t("common.cancel")}
               </Button>
               <Button type="submit" className="text-xs font-bold bg-primary text-primary-foreground cursor-pointer">
-                Crea Utente
+                {t("common.create")}
               </Button>
             </DialogFooter>
           </form>
