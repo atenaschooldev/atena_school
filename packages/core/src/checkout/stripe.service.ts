@@ -17,6 +17,7 @@ import { CreateReservationParams, VerifyPaymentParams } from '../types';
 import { createReservationWorkflow, generateAndSaveLessons } from './reservation.service';
 import { checkFeeStatus } from './fee.service';
 import { sendBookingNotificationEmails } from '../notifications/notification.service';
+import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
 import { computeTotalLessonsCount, computeEndTime, extractCleanTime } from './course.service';
 
 export function getStripeClient(secretKey?: string): Stripe {
@@ -604,9 +605,27 @@ export async function handleStripeWebhook(
             studentTaxCode: updatedBooking.student_tax_code || undefined,
           },
         }).catch((err) => console.warn('Async webhook confirmation email warning:', err));
+
+        sendBookingNotificationTelegram({
+          supabase,
+          booking: updatedBooking,
+          course: course || null,
+          dto: {
+            itemId: updatedBooking.course_id,
+            firstName: updatedBooking.purchaser_name?.split(' ')[0] || '',
+            lastName: updatedBooking.purchaser_name?.split(' ').slice(1).join(' ') || '',
+            email: updatedBooking.purchaser_email || '',
+            phone: updatedBooking.purchaser_phone || undefined,
+            studentFirstName: updatedBooking.student_name?.split(' ')[0] || '',
+            studentLastName: updatedBooking.student_name?.split(' ').slice(1).join(' ') || '',
+            studentEmail: updatedBooking.student_email || undefined,
+            studentTaxCode: updatedBooking.student_tax_code || undefined,
+          },
+        }).catch((err) => console.warn('Async webhook telegram notification warning:', err));
       }
     }
   }
+
 
   // 2. Invoice Paid (Subscription Monthly Renewal)
   if (event.type === 'invoice.paid') {

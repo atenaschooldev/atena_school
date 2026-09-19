@@ -22,6 +22,7 @@ import { checkFeeStatus } from './fee.service';
 import { processStudentAndBookingLinks } from './student.service';
 import { extractCleanTime, computeEndTime, computeTotalLessonsCount } from './course.service';
 import { sendBookingNotificationEmails, EmailServiceConfig } from '../notifications/notification.service';
+import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
 import type { CreateReservationParams, SupabaseCourseRow, SupabaseBookingRow } from '../types';
 
 export async function generateAndSaveLessons(
@@ -407,9 +408,13 @@ export async function createReservationWorkflow(
 
   const primaryBooking = createdBookings[0];
 
-  // Send transactional email notifications
+  // Send transactional email & telegram notifications
   sendBookingNotificationEmails({ supabase, booking: primaryBooking, course, dto, config: emailConfig }).catch((err) => {
     console.warn('Async sendBookingNotificationEmails error:', err);
+  });
+
+  sendBookingNotificationTelegram({ supabase, booking: primaryBooking, course, dto }).catch((err) => {
+    console.warn('Async sendBookingNotificationTelegram error:', err);
   });
 
   return {
@@ -418,3 +423,4 @@ export async function createReservationWorkflow(
     booking: formatBookingDto(primaryBooking),
   };
 }
+
