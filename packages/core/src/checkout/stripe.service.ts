@@ -12,11 +12,13 @@ import {
   PaymentCurrency,
   PaymentProvider,
   ACADEMIC_YEAR,
+  MembershipStatus,
 } from '@atena/api-types';
 import { calculateLessonDates } from '@atena/utils';
 import { CreateReservationParams, VerifyPaymentParams } from '../types';
 import { createReservationWorkflow, generateAndSaveLessons } from './reservation.service';
 import { checkFeeStatus } from './fee.service';
+import { generateNextMembershipNumber } from '../memberships/number-generator';
 import { sendBookingNotificationEmails } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
 import { computeTotalLessonsCount, computeEndTime, extractCleanTime } from './course.service';
@@ -420,7 +422,7 @@ export async function handleStripeWebhook(
         }
 
         if (regFee > 0) {
-          await supabase.from('payments').insert({
+          const { data: feePayment } = await supabase.from('payments').insert({
             booking_id: bookingId,
             user_id: updatedBooking.user_id || null,
             student_id: updatedBooking.student_id || null,
@@ -430,9 +432,38 @@ export async function handleStripeWebhook(
             type: PaymentType.REGISTRATION_FEE,
             payment_method: PaymentMethod.STRIPE,
             provider: PaymentProvider.STRIPE,
-            provider_transaction_id: session.payment_intent as string || null,
+            provider_transaction_id: (session.payment_intent as string) || null,
             academic_year: ACADEMIC_YEAR.CURRENT,
-          });
+          }).select('id').maybeSingle();
+
+          const studentTaxCode = (updatedBooking.student_tax_code || updatedBooking.purchaser_tax_code || '').trim().toUpperCase();
+          if (studentTaxCode) {
+            const nextMembershipNumber = await generateNextMembershipNumber(supabase, ACADEMIC_YEAR.CURRENT);
+            await supabase.from('annual_memberships').upsert(
+              {
+                tax_code: studentTaxCode,
+                academic_year: ACADEMIC_YEAR.CURRENT,
+                status: MembershipStatus.ACTIVE,
+                membership_number: nextMembershipNumber,
+                student_id: updatedBooking.student_id || null,
+                user_id: updatedBooking.user_id || null,
+                payment_id: feePayment?.id || null,
+                amount: regFee,
+                payment_method: PaymentMethod.STRIPE,
+                paid_at: new Date().toISOString(),
+                expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
+              },
+              { onConflict: 'tax_code,academic_year' }
+            );
+
+            if (updatedBooking.student_id) {
+              await supabase.from('students').update({
+                annual_fee_paid: true,
+                annual_fee_paid_at: new Date().toISOString(),
+                status: 1,
+              }).eq('id', updatedBooking.student_id);
+            }
+          }
         }
 
         // Send confirmation email

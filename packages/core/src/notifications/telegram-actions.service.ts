@@ -647,6 +647,7 @@ export async function handleTelegramCallbackAction(params: {
           academic_year: ACADEMIC_YEAR.CURRENT,
           status: MembershipStatus.ACTIVE,
           student_id: studentId || null,
+          payment_id: feePayment?.id || null,
           paid_at: nowIso,
           expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
         },
@@ -698,6 +699,7 @@ export async function handleTelegramCallbackAction(params: {
         .update({ annual_fee_paid: true, annual_fee_paid_at: nowIso, status: 1 })
         .eq('id', studentId);
     }
+    const feePayment = payments?.find((p) => p.type === PaymentType.REGISTRATION_FEE);
     if (studentTaxCode) {
       await supabase.from('annual_memberships').upsert(
         {
@@ -705,6 +707,7 @@ export async function handleTelegramCallbackAction(params: {
           academic_year: ACADEMIC_YEAR.CURRENT,
           status: MembershipStatus.ACTIVE,
           student_id: studentId || null,
+          payment_id: feePayment?.id || null,
           paid_at: nowIso,
           expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
         },
