@@ -270,18 +270,19 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       }
       updated[index] = { ...updated[index], [field]: finalVal };
 
-      // Auto-extract birthDate from CF if not already filled
-      if (field === "taxCode" && finalVal.length === 16 && !updated[index].birthDate) {
+      // Auto-extract and sync birthDate whenever taxCode reaches 16 characters
+      if (field === "taxCode" && finalVal.length === 16) {
         const extractedBirth = extractBirthDateFromTaxCode(finalVal);
         if (extractedBirth) {
           updated[index].birthDate = extractedBirth;
           formMethods.clearErrors(`students.${index}.birthDate` as FieldPath<CheckoutFormValues>);
           if (index === 0) {
-            formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: false, shouldDirty: true });
+            formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: true, shouldDirty: true });
             formMethods.clearErrors("studentBirthDate");
           }
         }
       }
+
 
       formMethods.setValue("students", updated, { shouldValidate: false, shouldDirty: true });
 
@@ -380,14 +381,15 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     const targetTaxCode = sanitizeTaxCode(watchedTaxCode || watchedPurchaserTaxCode);
 
-    // Auto-extract birthDate for purchaser when taxCode reaches 16 characters and birthDate is empty
-    if (targetTaxCode.length === 16 && !formMethods.getValues("studentBirthDate")) {
+    // Auto-extract and sync birthDate whenever taxCode reaches 16 characters
+    if (targetTaxCode.length === 16) {
       const extractedBirth = extractBirthDateFromTaxCode(targetTaxCode);
       if (extractedBirth) {
         formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: true, shouldDirty: true });
         formMethods.clearErrors("studentBirthDate");
       }
     }
+
 
     // Only check when fully valid Codice Fiscale (16 chars or 11 digits)
     if (!isValidCodiceFiscale(targetTaxCode)) {
