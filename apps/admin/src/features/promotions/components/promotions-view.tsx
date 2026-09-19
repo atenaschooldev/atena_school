@@ -164,7 +164,7 @@ export function PromotionsView() {
               ],
             },
           ]}
-          actions={
+          actionElement={
             <Button
               onClick={() => {
                 setEditingItem(null);
