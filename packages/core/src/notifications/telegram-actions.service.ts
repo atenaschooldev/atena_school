@@ -12,6 +12,7 @@ import {
   ACADEMIC_YEAR,
 } from '@atena/api-types';
 import { renderTelegramFromBlocks, getDefaultBlocksForTemplate } from './block-compiler';
+import { getTelegramCredentials } from '../system/integration-secrets.service';
 
 export type TelegramLocale = 'it' | 'en';
 
@@ -414,9 +415,10 @@ export async function sendBookingNotificationTelegram(params: {
   locale?: TelegramLocale;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
   const { supabase, booking, course, dto, botToken, chatId, adminUrl } = params;
-  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  const chat = chatId || process.env.TELEGRAM_CHAT_ID;
-  const locale: TelegramLocale = params.locale || (process.env.TELEGRAM_LOCALE as TelegramLocale) || 'it';
+  const tgCreds = await getTelegramCredentials(supabase);
+  const token = botToken || tgCreds.botToken || process.env.TELEGRAM_BOT_TOKEN;
+  const chat = chatId || tgCreds.chatId || process.env.TELEGRAM_CHAT_ID;
+  const locale: TelegramLocale = params.locale || (tgCreds.locale as TelegramLocale) || (process.env.TELEGRAM_LOCALE as TelegramLocale) || 'it';
   const i18n = TELEGRAM_I18N[locale] || TELEGRAM_I18N.it;
 
   if (!token || !chat) {
@@ -586,7 +588,8 @@ export async function handleTelegramCallbackAction(params: {
   allowedChatIds?: string[];
 }): Promise<{ success: boolean; message: string }> {
   const { callbackQuery, supabase, botToken, allowedChatIds } = params;
-  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  const tgCreds = await getTelegramCredentials(supabase);
+  const token = botToken || tgCreds.botToken || process.env.TELEGRAM_BOT_TOKEN;
 
   if (!token) {
     return { success: false, message: 'Telegram BOT_TOKEN not configured' };

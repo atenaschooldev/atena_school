@@ -22,6 +22,7 @@ import { generateNextMembershipNumber } from '../memberships/number-generator';
 import { sendBookingNotificationEmails } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
 import { computeTotalLessonsCount, computeEndTime, extractCleanTime } from './course.service';
+import { getStripeCredentials } from '../system/integration-secrets.service';
 
 export function getStripeClient(secretKey?: string): Stripe {
   const key = secretKey || process.env.STRIPE_SECRET_KEY || '';
@@ -340,8 +341,9 @@ export async function handleStripeWebhook(
   signature: string,
   webhookSecret?: string
 ) {
-  const stripe = getStripeClient();
-  const secret = webhookSecret || process.env.STRIPE_WEBHOOK_SECRET || '';
+  const creds = await getStripeCredentials(supabase);
+  const stripe = getStripeClient(creds.secretKey);
+  const secret = webhookSecret || creds.webhookSecret || process.env.STRIPE_WEBHOOK_SECRET || '';
 
   let event: Stripe.Event;
   try {

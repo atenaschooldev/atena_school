@@ -23,6 +23,7 @@ import { GroupsModule } from './features/groups/groups.module';
 
 import { DictionaryModule } from './features/dictionary/dictionary.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
+import { IntegrationsModule } from './features/integrations/integrations.module';
 
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
@@ -30,6 +31,7 @@ import { ApiLoggingInterceptor } from './core/interceptors/api-logging.intercept
 const businessModules = [
   DictionaryModule,
   NotificationsModule,
+  IntegrationsModule,
   AuthModule,
   CoursesModule,
   GroupsModule,

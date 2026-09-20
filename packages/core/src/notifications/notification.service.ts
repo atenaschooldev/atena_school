@@ -92,6 +92,7 @@ export async function logNotification(
 }
 
 import { getSchoolProfile } from '../system/school-profile.service';
+import { getResendCredentials, getTelegramCredentials } from '../system/integration-secrets.service';
 
 export interface EmailServiceConfig {
   resendApiKey?: string;
@@ -148,15 +149,16 @@ export async function sendBookingNotificationEmails(params: {
 }): Promise<void> {
   const { supabase, booking, course, dto, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
+  const resendCreds = await getResendCredentials(supabase);
   const courseName = course?.name || course?.title_it || `Corso ${schoolProfile.name}`;
   const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
   const studentName = dto.isForChild
     ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
     : purchaserName;
-  const adminEmail = config?.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
-  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || `${schoolProfile.name} <${schoolProfile.email || 'info@atenaschool.com'}>`;
+  const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
+  const fromEmail = config?.fromEmail || resendCreds.fromEmail;
   const appUrl = config?.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://atena-school-app.vercel.app';
-  const apiKey = config?.resendApiKey || process.env.RESEND_API_KEY;
+  const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
   const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta (Stripe)' : 'Prenotato con Saldo in Sede';
@@ -390,9 +392,10 @@ export async function sendContactFormNotificationEmail(params: {
 }): Promise<void> {
   const { supabase, data, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
-  const adminEmail = config?.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || process.env.SCHOOL_ADMIN_EMAIL || process.env.ADMIN_EMAIL || 'info@atenaschool.com';
-  const fromEmail = config?.fromEmail || process.env.RESEND_FROM_EMAIL || `${schoolProfile.name} <${schoolProfile.email || 'info@atenaschool.com'}>`;
-  const apiKey = config?.resendApiKey || process.env.RESEND_API_KEY;
+  const resendCreds = await getResendCredentials(supabase);
+  const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
+  const fromEmail = config?.fromEmail || resendCreds.fromEmail;
+  const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   data.schoolProfile = schoolProfile;
   const senderName = `${data.firstName} ${data.lastName}`.trim();
@@ -516,8 +519,17 @@ export async function sendTelegramMessage(params: {
   bookingId?: string | null;
   notificationType?: NotificationType;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
-  const token = params.botToken || process.env.TELEGRAM_BOT_TOKEN;
-  const chat = params.chatId || process.env.TELEGRAM_CHAT_ID;
+  let token = params.botToken;
+  let chat = params.chatId;
+
+  if ((!token || !chat) && params.supabase) {
+    const tgCreds = await getTelegramCredentials(params.supabase);
+    token = token || tgCreds.botToken;
+    chat = chat || tgCreds.chatId;
+  }
+
+  token = token || process.env.TELEGRAM_BOT_TOKEN;
+  chat = chat || process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chat) {
     return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
