@@ -64,10 +64,11 @@ export async function getDashboardDataAction() {
   try {
     const cleanEmail = (user.email || "").trim().toLowerCase();
 
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Auto-link user_id across bookings, students, memberships and payments using admin client
     if (cleanEmail) {
       try {
-        const supabaseAdmin = getSupabaseAdmin();
         await linkUserAccountWorkflow(supabaseAdmin, {
           userId: user.id,
           email: cleanEmail,
@@ -78,14 +79,14 @@ export async function getDashboardDataAction() {
       }
     }
 
-    // Query user's bookings
+    // Query user's bookings (by user_id, student_email, purchaser_email)
     const filterConditions = [`user_id.eq.${user.id}`];
     if (cleanEmail) {
       filterConditions.push(`student_email.ilike.${cleanEmail}`);
       filterConditions.push(`purchaser_email.ilike.${cleanEmail}`);
     }
 
-    const { data: rawBookings } = await supabase
+    const { data: rawBookings } = await supabaseAdmin
       .from("bookings")
       .select("*")
       .or(filterConditions.join(","))
@@ -97,7 +98,7 @@ export async function getDashboardDataAction() {
     
     let coursesMap = new Map<string, any>();
     if (courseIds.length > 0) {
-      const { data: cData } = await supabase
+      const { data: cData } = await supabaseAdmin
         .from("courses")
         .select("id, name, price, photo_url, schedule_days, start_time, end_time, course_format, teacher_id")
         .in("id", courseIds);
@@ -111,7 +112,7 @@ export async function getDashboardDataAction() {
     const teacherIds = Array.from(new Set(Array.from(coursesMap.values()).map(c => c.teacher_id).filter(Boolean)));
     let teachersMap = new Map<string, string>();
     if (teacherIds.length > 0) {
-      const { data: tData } = await supabase
+      const { data: tData } = await supabaseAdmin
         .from("teachers")
         .select("teacher_id, full_name")
         .in("teacher_id", teacherIds);
@@ -157,7 +158,7 @@ export async function getDashboardDataAction() {
     });
 
     // Get public.users DB profile
-    const { data: dbProfile } = await supabase
+    const { data: dbProfile } = await supabaseAdmin
       .from("users")
       .select("*")
       .eq("id", user.id)
@@ -232,7 +233,8 @@ export async function getBookingLessonsAction(bookingId: string) {
 
   // 2. Autonomous Supabase SSR execution
   try {
-    const { data: booking, error: bErr } = await supabase
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: booking, error: bErr } = await supabaseAdmin
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
@@ -243,7 +245,7 @@ export async function getBookingLessonsAction(bookingId: string) {
     let course: any = null;
     const cid = booking.course_id || booking.item_id;
     if (cid) {
-      const { data: cData } = await supabase
+      const { data: cData } = await supabaseAdmin
         .from("courses")
         .select("*, teachers(full_name)")
         .eq("id", cid)
@@ -251,7 +253,7 @@ export async function getBookingLessonsAction(bookingId: string) {
       course = cData;
     }
 
-    const { data: lessons, error: lErr } = await supabase
+    const { data: lessons, error: lErr } = await supabaseAdmin
       .from("lessons")
       .select("*")
       .eq("booking_id", bookingId)
