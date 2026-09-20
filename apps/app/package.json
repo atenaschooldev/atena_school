@@ -9,7 +9,8 @@
     "dev:turbo": "next dev -p 3002 --turbo",
     "build": "next build",
     "start": "next start -p 3002",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
     "@atena/api-client": "workspace:*",
@@ -74,13 +75,19 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^22.16.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.1.2",
     "eslint": "^10.7.0",
     "eslint-config-next": "^16.2.10",
+    "jsdom": "^30.1.0",
     "postcss": "^8.5.17",
     "tailwindcss": "^4.3.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.0"
   }
 }
