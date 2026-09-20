@@ -141,38 +141,44 @@ export function WhiteLabelIntegrations() {
   const [savingStripe, setSavingStripe] = useState(false);
   const [testingStripe, setTestingStripe] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (initial: boolean = false) => {
     try {
-      setLoading(true);
+      if (initial) {
+        setLoading(true);
+      }
       const data = await api.get<Record<string, MaskedIntegrationSecretRecord>>("/admin/integrations");
       if (data) {
         setIntegrations(data);
-        if (data.resend?.credentials) {
-          setResendKey(String(data.resend.credentials.apiKey || ""));
-          setResendFrom(String(data.resend.credentials.fromEmail || ""));
-          setResendAdminEmail(String(data.resend.credentials.adminEmail || ""));
-        }
-        if (data.telegram?.credentials) {
-          setTgToken(String(data.telegram.credentials.botToken || ""));
-          setTgChatId(String(data.telegram.credentials.chatId || ""));
-          setTgLocale((data.telegram.credentials.locale as any) || "it");
-        }
-        if (data.stripe?.credentials) {
-          setStripeSecret(String(data.stripe.credentials.secretKey || ""));
-          setStripePublishable(String(data.stripe.credentials.publishableKey || ""));
-          setStripeWebhook(String(data.stripe.credentials.webhookSecret || ""));
+        if (initial) {
+          if (data.resend?.credentials) {
+            setResendKey(String(data.resend.credentials.apiKey || ""));
+            setResendFrom(String(data.resend.credentials.fromEmail || ""));
+            setResendAdminEmail(String(data.resend.credentials.adminEmail || ""));
+          }
+          if (data.telegram?.credentials) {
+            setTgToken(String(data.telegram.credentials.botToken || ""));
+            setTgChatId(String(data.telegram.credentials.chatId || ""));
+            setTgLocale((data.telegram.credentials.locale as any) || "it");
+          }
+          if (data.stripe?.credentials) {
+            setStripeSecret(String(data.stripe.credentials.secretKey || ""));
+            setStripePublishable(String(data.stripe.credentials.publishableKey || ""));
+            setStripeWebhook(String(data.stripe.credentials.webhookSecret || ""));
+          }
         }
       }
     } catch (err: any) {
       console.warn("Failed to load integrations:", err);
       toast.error(err.message || "Errore durante il caricamento delle integrazioni");
     } finally {
-      setLoading(false);
+      if (initial) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
   }, []);
 
   // Handlers for Resend
@@ -193,7 +199,7 @@ export function WhiteLabelIntegrations() {
         timestamp: now,
       });
       toast.success("Credenziali Resend salvate nel Database!");
-      await loadData();
+      await loadData(false);
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       setResendStatus({
@@ -263,7 +269,7 @@ export function WhiteLabelIntegrations() {
         timestamp: now,
       });
       toast.success("Credenziali Telegram salvate nel Database!");
-      await loadData();
+      await loadData(false);
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       setTgStatus({
@@ -367,7 +373,7 @@ export function WhiteLabelIntegrations() {
         timestamp: now,
       });
       toast.success("Credenziali Stripe salvate nel Database!");
-      await loadData();
+      await loadData(false);
     } catch (err: any) {
       const errMsg = err?.message || String(err);
       setStripeStatus({
@@ -504,6 +510,7 @@ export function WhiteLabelIntegrations() {
 
           <div className="flex items-center justify-between pt-2">
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={handleTestResend}
@@ -517,7 +524,7 @@ export function WhiteLabelIntegrations() {
               )}
               Invia Email di Test
             </Button>
-            <Button size="sm" onClick={handleSaveResend} disabled={savingResend} className="cursor-pointer">
+            <Button type="button" size="sm" onClick={handleSaveResend} disabled={savingResend} className="cursor-pointer">
               {savingResend && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Resend
             </Button>
@@ -585,6 +592,7 @@ export function WhiteLabelIntegrations() {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div className="flex items-center space-x-2">
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleTestTelegram}
@@ -599,6 +607,7 @@ export function WhiteLabelIntegrations() {
                 Invia Test Telegram
               </Button>
               <Button
+                type="button"
                 variant="secondary"
                 size="sm"
                 onClick={handleSetTelegramWebhook}
@@ -613,7 +622,7 @@ export function WhiteLabelIntegrations() {
                 Registra Webhook Bot
               </Button>
             </div>
-            <Button size="sm" onClick={handleSaveTelegram} disabled={savingTg} className="cursor-pointer">
+            <Button type="button" size="sm" onClick={handleSaveTelegram} disabled={savingTg} className="cursor-pointer">
               {savingTg && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Telegram
             </Button>
@@ -692,6 +701,7 @@ export function WhiteLabelIntegrations() {
 
           <div className="flex items-center justify-between pt-2">
             <Button
+              type="button"
               variant="outline"
               size="sm"
               onClick={handleTestStripe}
@@ -705,7 +715,7 @@ export function WhiteLabelIntegrations() {
               )}
               Verifica Connessione Stripe
             </Button>
-            <Button size="sm" onClick={handleSaveStripe} disabled={savingStripe} className="cursor-pointer">
+            <Button type="button" size="sm" onClick={handleSaveStripe} disabled={savingStripe} className="cursor-pointer">
               {savingStripe && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Stripe
             </Button>
