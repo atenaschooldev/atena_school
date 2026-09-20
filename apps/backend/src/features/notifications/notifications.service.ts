@@ -293,11 +293,15 @@ export class NotificationsService {
       }
 
       const compiledBody = compileTemplate(tgText || '', sampleData);
+      const customChat = recipient && (recipient.startsWith('-') || /^\d+$/.test(recipient) || recipient.startsWith('@'))
+        ? recipient
+        : undefined;
 
       const tgRes = await this.telegramService.sendMessage(
         `<b>[TEST NOTIFICA ATENA SCHOOL]</b>\n\n${compiledBody}`,
         undefined,
         template.notification_type || NotificationType.BOOKING_CONFIRMATION,
+        customChat,
       );
 
       if (!tgRes.success) {

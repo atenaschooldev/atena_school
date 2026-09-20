@@ -30,22 +30,27 @@ export class TelegramService {
     htmlText: string,
     inlineKeyboard?: TelegramButton[][],
     notificationType: number = NotificationType.BOOKING_CONFIRMATION,
+    customChatId?: string,
   ): Promise<{ success: boolean; messageId?: number; error?: string }> {
     const creds = await getTelegramCredentials();
     const botToken = creds.botToken || this.configService.get<string>('TELEGRAM_BOT_TOKEN');
-    const chatId = creds.chatId || this.configService.get<string>('TELEGRAM_CHAT_ID');
+    const defaultChatId = creds.chatId || this.configService.get<string>('TELEGRAM_CHAT_ID');
 
-    // Extract all target chat IDs (multi-admin support)
+    // Extract all target chat IDs (multi-admin support or single custom chat)
     const targetChats: string[] = [];
-    if (creds.chatIds && creds.chatIds.length > 0) {
-      for (const c of creds.chatIds) {
-        const parts = String(c).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+    if (customChatId && customChatId.trim()) {
+      targetChats.push(customChatId.trim());
+    } else {
+      if (creds.chatIds && creds.chatIds.length > 0) {
+        for (const c of creds.chatIds) {
+          const parts = String(c).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+          targetChats.push(...parts);
+        }
+      }
+      if (defaultChatId) {
+        const parts = String(defaultChatId).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
         targetChats.push(...parts);
       }
-    }
-    if (chatId) {
-      const parts = String(chatId).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
-      targetChats.push(...parts);
     }
     const uniqueChats = Array.from(new Set(targetChats));
 
