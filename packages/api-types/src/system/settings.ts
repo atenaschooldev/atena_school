@@ -78,6 +78,9 @@ export interface SchoolProfile {
   secretariat_email?: string;
   support_email?: string;
   website?: string;
+  site_url?: string;
+  app_url?: string;
+  admin_url?: string;
   vat_code?: string;
   secretariat_hours?: string;
   registration_fee_eur?: number;
@@ -107,6 +110,9 @@ export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   secretariat_email: 'atenaschool20@gmail.com',
   support_email: 'supporto@atenaschool.com',
   website: 'https://atenaschool.com',
+  site_url: 'https://atenaschool.com',
+  app_url: 'https://app.atenaschool.com',
+  admin_url: 'https://atena-school-admin.vercel.app',
   vat_code: 'P.IVA/C.F. 03321620803',
   secretariat_hours: 'Martedì e Giovedì dalle ore 15:00 alle ore 18:00',
   registration_fee_eur: 30,

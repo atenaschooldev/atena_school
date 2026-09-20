@@ -5,6 +5,7 @@ import {
   TelegramCredentials,
   StripeCredentials,
   AnalyticsCredentials,
+  DomainsCredentials,
   IntegrationSecretRecord,
   MaskedIntegrationSecretRecord,
 } from '@atena/api-types';
@@ -156,6 +157,36 @@ export async function getAnalyticsCredentials(
 }
 
 /**
+ * Fetch official domains and app URLs from DB with ENV fallback
+ */
+export async function getDomainsCredentials(
+  supabase?: SupabaseClient | null
+): Promise<DomainsCredentials> {
+  const dbCreds = await getSecretFromDb<DomainsCredentials>(
+    supabase,
+    IntegrationProvider.DOMAINS
+  );
+
+  return {
+    siteUrl:
+      dbCreds?.siteUrl ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.SITE_URL ||
+      'https://atenaschool.com',
+    appUrl:
+      dbCreds?.appUrl ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      'https://app.atenaschool.com',
+    adminUrl:
+      dbCreds?.adminUrl ||
+      process.env.NEXT_PUBLIC_ADMIN_URL ||
+      process.env.ADMIN_URL ||
+      'https://atena-school-admin.vercel.app',
+  };
+}
+
+/**
  * Returns masked representation of integration configs for Admin CRM UI
  */
 export async function getMaskedIntegrationsSummary(
@@ -168,7 +199,7 @@ export async function getMaskedIntegrationsSummary(
       const { data } = await supabase.from('integration_secrets').select('*');
       if (data) dbRows = data as IntegrationSecretRecord[];
     } catch (e) {
-      console.warn('[IntegrationSecrets] Failed to list secrets for admin:', e);
+      console.warn('[IntegrationSecrets] Failed to fetch summary from DB:', e);
     }
   }
 
@@ -203,6 +234,13 @@ export async function getMaskedIntegrationsSummary(
   const analyticsRaw = analyticsDb?.credentials as Partial<AnalyticsCredentials> | undefined;
   const analyticsSource: 'database' | 'env' = (analyticsRaw?.gaId || analyticsRaw?.gtmId || analyticsRaw?.clarityId || analyticsRaw?.metaPixelId) ? 'database' : 'env';
   const analyticsCreds = await getAnalyticsCredentials(supabase);
+
+  // Domains
+  const domainsDb = dbMap.get(IntegrationProvider.DOMAINS);
+  const domainsActive = domainsDb?.is_active ?? true;
+  const domainsRaw = domainsDb?.credentials as Partial<DomainsCredentials> | undefined;
+  const domainsSource: 'database' | 'env' = (domainsRaw?.siteUrl || domainsRaw?.appUrl || domainsRaw?.adminUrl) ? 'database' : 'env';
+  const domainsCreds = await getDomainsCredentials(supabase);
 
   return {
     [IntegrationProvider.RESEND]: {
@@ -258,6 +296,18 @@ export async function getMaskedIntegrationsSummary(
       is_configured: Boolean(analyticsCreds.gaId || analyticsCreds.gtmId || analyticsCreds.clarityId),
       source: analyticsSource,
       updated_at: analyticsDb?.updated_at || null,
+    },
+    [IntegrationProvider.DOMAINS]: {
+      provider: IntegrationProvider.DOMAINS,
+      credentials: {
+        siteUrl: domainsCreds.siteUrl || '',
+        appUrl: domainsCreds.appUrl || '',
+        adminUrl: domainsCreds.adminUrl || '',
+      },
+      is_active: domainsActive,
+      is_configured: Boolean(domainsCreds.siteUrl && domainsCreds.appUrl),
+      source: domainsSource,
+      updated_at: domainsDb?.updated_at || null,
     },
   };
 }

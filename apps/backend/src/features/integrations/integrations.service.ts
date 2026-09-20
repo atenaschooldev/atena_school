@@ -12,6 +12,7 @@ import {
   getTelegramCredentials,
   getStripeCredentials,
   getAnalyticsCredentials,
+  getDomainsCredentials,
   clearSecretsCache,
   sendEmailViaResend,
   sendTelegramMessage,
@@ -62,6 +63,7 @@ export class IntegrationsService {
       IntegrationProvider.TELEGRAM,
       IntegrationProvider.STRIPE,
       IntegrationProvider.ANALYTICS,
+      IntegrationProvider.DOMAINS,
     ];
 
     if (!validProviders.includes(provider as any)) {
@@ -283,6 +285,46 @@ export class IntegrationsService {
       return {
         success: true,
         message: `Configurazione Analytics valida: ${configured.join(', ')}`,
+        details: creds,
+      };
+    }
+
+    if (provider === IntegrationProvider.DOMAINS) {
+      const creds = await getDomainsCredentials(this.supabase);
+      const errors: string[] = [];
+
+      const validateUrl = (label: string, urlStr?: string) => {
+        if (!urlStr) {
+          errors.push(`${label}: mancante`);
+          return;
+        }
+        try {
+          const parsed = new URL(urlStr);
+          if (!['http:', 'https:'].includes(parsed.protocol)) {
+            errors.push(`${label}: il protocollo deve essere http:// o https://`);
+          }
+        } catch {
+          errors.push(`${label}: URL '${urlStr}' non è valido`);
+        }
+      };
+
+      validateUrl('Sito Web (siteUrl)', creds.siteUrl);
+      validateUrl('Portale Studenti (appUrl)', creds.appUrl);
+      if (creds.adminUrl) {
+        validateUrl('Portale CRM Admin (adminUrl)', creds.adminUrl);
+      }
+
+      if (errors.length > 0) {
+        return {
+          success: false,
+          message: 'Errori di validazione URL domini',
+          details: { errors },
+        };
+      }
+
+      return {
+        success: true,
+        message: `Domini e URL configurati e validi: Sito (${creds.siteUrl}), Portale (${creds.appUrl}), CRM (${creds.adminUrl || 'default'})`,
         details: creds,
       };
     }

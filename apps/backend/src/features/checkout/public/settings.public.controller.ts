@@ -84,4 +84,14 @@ export class SettingsPublicController {
     const analytics = await this.checkoutService.getAnalyticsSettings();
     return { success: true, analytics };
   }
+
+  @Get('domains')
+  @ApiOperation({
+    summary: 'Получить официальные домены и URL школы',
+    description: 'Возвращает siteUrl, appUrl, adminUrl для ссылок и переходов между приложениями',
+  })
+  async getDomainsSettings() {
+    const domains = await this.checkoutService.getDomainsSettings();
+    return { success: true, domains };
+  }
 }

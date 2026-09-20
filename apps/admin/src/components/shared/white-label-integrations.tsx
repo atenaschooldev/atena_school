@@ -22,6 +22,7 @@ import {
   Eye,
   EyeOff,
   Bell,
+  Globe,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -126,6 +127,7 @@ export function WhiteLabelIntegrations() {
   const [tgStatus, setTgStatus] = useState<StatusFeedback | null>(null);
   const [stripeStatus, setStripeStatus] = useState<StatusFeedback | null>(null);
   const [analyticsStatus, setAnalyticsStatus] = useState<StatusFeedback | null>(null);
+  const [domainsStatus, setDomainsStatus] = useState<StatusFeedback | null>(null);
 
   // Form states
   const [resendKey, setResendKey] = useState("");
@@ -163,6 +165,12 @@ export function WhiteLabelIntegrations() {
   const [savingAnalytics, setSavingAnalytics] = useState(false);
   const [testingAnalytics, setTestingAnalytics] = useState(false);
 
+  const [siteUrl, setSiteUrl] = useState("");
+  const [appUrl, setAppUrl] = useState("");
+  const [adminUrl, setAdminUrl] = useState("");
+  const [savingDomains, setSavingDomains] = useState(false);
+  const [testingDomains, setTestingDomains] = useState(false);
+
   const loadData = async (initial: boolean = false) => {
     try {
       if (initial) {
@@ -196,6 +204,11 @@ export function WhiteLabelIntegrations() {
             setGtmId(String(data.analytics.credentials.gtmId || ""));
             setClarityId(String(data.analytics.credentials.clarityId || ""));
             setMetaPixelId(String(data.analytics.credentials.metaPixelId || ""));
+          }
+          if (data.domains?.credentials) {
+            setSiteUrl(String(data.domains.credentials.siteUrl || ""));
+            setAppUrl(String(data.domains.credentials.appUrl || ""));
+            setAdminUrl(String(data.domains.credentials.adminUrl || ""));
           }
         }
       }
@@ -536,6 +549,75 @@ export function WhiteLabelIntegrations() {
     }
   };
 
+  // Handlers for Domains
+  const handleSaveDomains = async () => {
+    setSavingDomains(true);
+    try {
+      await api.patch("/admin/integrations/domains", {
+        credentials: {
+          siteUrl,
+          appUrl,
+          adminUrl,
+        },
+      });
+      const now = new Date().toLocaleTimeString("it-IT");
+      setDomainsStatus({
+        type: "success",
+        message: "Domini e URL della scuola salvati con successo nel Database!",
+        timestamp: now,
+      });
+      toast.success("Domini e URL della scuola salvati nel Database!");
+      await loadData(false);
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      setDomainsStatus({
+        type: "error",
+        message: "Impossibile salvare la configurazione dei domini",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
+    } finally {
+      setSavingDomains(false);
+    }
+  };
+
+  const handleTestDomains = async () => {
+    setTestingDomains(true);
+    try {
+      const res = await api.post<TestIntegrationResult>("/admin/integrations/test/domains", {});
+      const now = new Date().toLocaleTimeString("it-IT");
+      if (res.success) {
+        setDomainsStatus({
+          type: "success",
+          message: res.message,
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
+        toast.success(res.message);
+      } else {
+        setDomainsStatus({
+          type: "error",
+          message: res.message || "Verifica URL fallita",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      setDomainsStatus({
+        type: "error",
+        message: "Errore durante la verifica dei domini",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
+    } finally {
+      setTestingDomains(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12 text-muted-foreground">
@@ -549,6 +631,7 @@ export function WhiteLabelIntegrations() {
   const tgInfo = integrations.telegram;
   const stripeInfo = integrations.stripe;
   const analyticsInfo = integrations.analytics;
+  const domainsInfo = integrations.domains;
 
   return (
     <div className="space-y-6">
@@ -1079,6 +1162,108 @@ export function WhiteLabelIntegrations() {
             <Button type="button" size="sm" onClick={handleSaveAnalytics} disabled={savingAnalytics} className="cursor-pointer">
               {savingAnalytics && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Configurazione Analytics
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Official Domains & URLs Card */}
+      <Card className="border-border shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                <Globe className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Domini & URL Ufficiali (White-Label)</CardTitle>
+                <CardDescription>
+                  Indirizzi web della scuola per pulsanti email (Resend), link del bot Telegram e navigazione tra portali
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant={domainsInfo?.source === "database" ? "default" : "secondary"}>
+                {domainsInfo?.source === "database" ? "Database (White-label)" : "ENV Fallback"}
+              </Badge>
+              <Badge variant={domainsInfo?.is_configured ? "outline" : "destructive"}>
+                {domainsInfo?.is_configured ? "Configurato" : "Mancante"}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="siteUrl">URL Sito Web / Vetrina</Label>
+              <Input
+                id="siteUrl"
+                type="url"
+                value={siteUrl}
+                onChange={(e) => setSiteUrl(e.target.value)}
+                placeholder="https://atenaschool.com"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Dominio pubblico del catalogo corsi e della vetrina
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="appUrl">URL Portale Studenti</Label>
+              <Input
+                id="appUrl"
+                type="url"
+                value={appUrl}
+                onChange={(e) => setAppUrl(e.target.value)}
+                placeholder="https://app.atenaschool.com"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Usato nei pulsanti &quot;Accedi al tuo account&quot; nelle email di conferma
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="adminUrl">URL Portale CRM Admin</Label>
+              <Input
+                id="adminUrl"
+                type="url"
+                value={adminUrl}
+                onChange={(e) => setAdminUrl(e.target.value)}
+                placeholder="https://atena-school-admin.vercel.app"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Usato nei pulsanti &quot;Admin CRM&quot; delle notifiche del bot Telegram
+              </p>
+            </div>
+          </div>
+
+          <FeedbackBanner
+            status={domainsStatus}
+            onClear={() => setDomainsStatus(null)}
+          />
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTestDomains}
+              disabled={testingDomains}
+              className="text-xs cursor-pointer"
+            >
+              {testingDomains ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <Globe className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Verifica URL & Connessione
+            </Button>
+            <Button type="button" size="sm" onClick={handleSaveDomains} disabled={savingDomains} className="cursor-pointer">
+              {savingDomains && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              Salva Domini & URL
             </Button>
           </div>
         </CardContent>

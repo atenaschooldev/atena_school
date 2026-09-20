@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
-import { DEFAULT_SCHOOL_PROFILE, getTelegramCredentials } from '@atena/core';
+import { DEFAULT_SCHOOL_PROFILE, getTelegramCredentials, getDomainsCredentials } from '@atena/core';
 
 export interface TelegramButton {
   text: string;
@@ -209,7 +209,8 @@ export class TelegramService {
     const waNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : (cleanPhone.startsWith('39') ? cleanPhone : `39${cleanPhone}`);
     const whatsappUrl = cleanPhone ? `https://wa.me/${waNumber}` : null;
     const stripeDashboardUrl = data.stripeDashboardUrl || (data.stripePaymentIntentId ? `https://dashboard.stripe.com/payments/${data.stripePaymentIntentId}` : null);
-    const adminCrmUrl = this.configService.get<string>('ADMIN_URL') || 'https://atena-school-admin.vercel.app';
+    const domainsCreds = await getDomainsCredentials();
+    const adminCrmUrl = domainsCreds.adminUrl || this.configService.get<string>('ADMIN_URL') || 'https://atena-school-admin.vercel.app';
 
     const startDateFormatted = this.formatDisplayDate(data.date);
     const birthDateFormatted = this.formatBirthDate(data.studentBirthDate);

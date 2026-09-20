@@ -22,6 +22,7 @@ import {
   updateSchoolProfile as updateSchoolProfileCore,
   getStripeCredentials,
   getAnalyticsCredentials,
+  getDomainsCredentials,
 } from '@atena/core';
 import type { SchoolProfile } from '@atena/api-types';
 
@@ -133,6 +134,10 @@ export class CheckoutService {
 
   async getAnalyticsSettings() {
     return getAnalyticsCredentials(this.supabaseAdmin);
+  }
+
+  async getDomainsSettings() {
+    return getDomainsCredentials(this.supabaseAdmin);
   }
 }
 

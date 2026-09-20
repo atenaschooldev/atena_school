@@ -22,6 +22,7 @@ export const IntegrationProvider = {
   TELEGRAM: 'telegram',
   STRIPE: 'stripe',
   ANALYTICS: 'analytics',
+  DOMAINS: 'domains',
 } as const;
 export type IntegrationProvider = (typeof IntegrationProvider)[keyof typeof IntegrationProvider];
 
@@ -57,6 +58,14 @@ export const INTEGRATION_PROVIDERS_DICTIONARY: Record<string, DictionaryEntry> =
     label_en: 'Web Analytics & Tracking',
     label_ru: 'Веб-аналитика и трекинг',
     description: 'ID для Google Analytics 4, Google Tag Manager, Microsoft Clarity и Meta Pixel',
+  },
+  [IntegrationProvider.DOMAINS]: {
+    id: 5,
+    code: IntegrationProvider.DOMAINS,
+    label_it: 'Domini & URL Ufficiali',
+    label_en: 'Official Domains & URLs',
+    label_ru: 'Официальные домены и URL школы',
+    description: 'URL витрины сайта, личного кабинета ученика и CRM-панели для ссылок в письмах и боте',
   },
 };
 
@@ -95,11 +104,18 @@ export interface AnalyticsCredentials {
   metaPixelId?: string;
 }
 
+export interface DomainsCredentials {
+  siteUrl?: string;
+  appUrl?: string;
+  adminUrl?: string;
+}
+
 export type AnyIntegrationCredentials =
   | ResendCredentials
   | TelegramCredentials
   | StripeCredentials
   | AnalyticsCredentials
+  | DomainsCredentials
   | Record<string, any>;
 
 // ----------------------------------------------------------------------------

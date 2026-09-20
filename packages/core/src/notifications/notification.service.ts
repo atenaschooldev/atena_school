@@ -92,7 +92,11 @@ export async function logNotification(
 }
 
 import { getSchoolProfile } from '../system/school-profile.service';
-import { getResendCredentials, getTelegramCredentials } from '../system/integration-secrets.service';
+import {
+  getResendCredentials,
+  getTelegramCredentials,
+  getDomainsCredentials,
+} from '../system/integration-secrets.service';
 
 export interface EmailServiceConfig {
   resendApiKey?: string;
@@ -150,6 +154,7 @@ export async function sendBookingNotificationEmails(params: {
   const { supabase, booking, course, dto, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
   const resendCreds = await getResendCredentials(supabase);
+  const domainsCreds = await getDomainsCredentials(supabase);
   const courseName = course?.name || course?.title_it || `Corso ${schoolProfile.name}`;
   const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
   const studentName = dto.isForChild
@@ -157,7 +162,7 @@ export async function sendBookingNotificationEmails(params: {
     : purchaserName;
   const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
   const fromEmail = config?.fromEmail || resendCreds.fromEmail;
-  const appUrl = config?.appUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://atena-school-app.vercel.app';
+  const appUrl = config?.appUrl || domainsCreds.appUrl || schoolProfile.app_url || process.env.NEXT_PUBLIC_APP_URL || 'https://app.atenaschool.com';
   const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
@@ -393,6 +398,7 @@ export async function sendContactFormNotificationEmail(params: {
   const { supabase, data, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
   const resendCreds = await getResendCredentials(supabase);
+  const domainsCreds = await getDomainsCredentials(supabase);
   const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
   const fromEmail = config?.fromEmail || resendCreds.fromEmail;
   const apiKey = config?.resendApiKey || resendCreds.apiKey;
@@ -414,7 +420,7 @@ export async function sendContactFormNotificationEmail(params: {
     message: data.message,
     message_body: data.message,
     messageBody: data.message,
-    admin_url: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
+    admin_url: domainsCreds.adminUrl || schoolProfile.admin_url || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
   };
 
   const leadTmpl = await getNotificationTemplateByCode(supabase, 'contact_lead_admin');
@@ -487,7 +493,8 @@ async function sendTelegramLeadAlert(
     const inlineKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
     const rawPhone = leadVariables.sender_phone || leadVariables.phone || '';
     const cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
-    const crmUrl = process.env.ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
+    const domainsCreds = await getDomainsCredentials(supabase);
+    const crmUrl = domainsCreds.adminUrl || process.env.ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
     const actionRow: Array<{ text: string; url?: string }> = [];
 
     if (cleanPhone) {
