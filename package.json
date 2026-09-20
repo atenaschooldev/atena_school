@@ -13,7 +13,8 @@
     "push:prod": "git push prod main",
     "push:all": "git push all main",
     "use:dev": "cp apps/backend/.env.dev apps/backend/.env && cp apps/landing/.env.dev apps/landing/.env && cp apps/app/.env.dev apps/app/.env && cp apps/admin/.env.dev apps/admin/.env && echo '✓ All apps switched to DEV environment'",
-    "use:prod": "cp apps/backend/.env.prod apps/backend/.env && cp apps/landing/.env.prod apps/landing/.env && cp apps/app/.env.prod apps/app/.env && cp apps/admin/.env.prod apps/admin/.env && echo '✓ All apps switched to PROD environment'"
+    "use:prod": "cp apps/backend/.env.prod apps/backend/.env && cp apps/landing/.env.prod apps/landing/.env && cp apps/app/.env.prod apps/app/.env && cp apps/admin/.env.prod apps/admin/.env && echo '✓ All apps switched to PROD environment'",
+    "dev:prod": "pnpm use:prod && pnpm --filter backend --filter admin dev"
   },
   "devDependencies": {
     "prettier": "^3.7.3",
