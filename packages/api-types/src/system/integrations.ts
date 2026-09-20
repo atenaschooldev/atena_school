@@ -21,6 +21,7 @@ export const IntegrationProvider = {
   RESEND: 'resend',
   TELEGRAM: 'telegram',
   STRIPE: 'stripe',
+  ANALYTICS: 'analytics',
 } as const;
 export type IntegrationProvider = (typeof IntegrationProvider)[keyof typeof IntegrationProvider];
 
@@ -49,6 +50,14 @@ export const INTEGRATION_PROVIDERS_DICTIONARY: Record<string, DictionaryEntry> =
     label_ru: 'Платежный шлюз Stripe',
     description: 'Secret key, Publishable key и Webhook secret для обработки платежей картами',
   },
+  [IntegrationProvider.ANALYTICS]: {
+    id: 4,
+    code: IntegrationProvider.ANALYTICS,
+    label_it: 'Web Analytics & Tracking',
+    label_en: 'Web Analytics & Tracking',
+    label_ru: 'Веб-аналитика и трекинг',
+    description: 'ID для Google Analytics 4, Google Tag Manager, Microsoft Clarity и Meta Pixel',
+  },
 };
 
 // ----------------------------------------------------------------------------
@@ -74,10 +83,18 @@ export interface StripeCredentials {
   isLive?: boolean;
 }
 
+export interface AnalyticsCredentials {
+  gaId?: string;
+  gtmId?: string;
+  clarityId?: string;
+  metaPixelId?: string;
+}
+
 export type AnyIntegrationCredentials =
   | ResendCredentials
   | TelegramCredentials
   | StripeCredentials
+  | AnalyticsCredentials
   | Record<string, any>;
 
 // ----------------------------------------------------------------------------

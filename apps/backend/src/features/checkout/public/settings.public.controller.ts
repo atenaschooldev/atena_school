@@ -74,4 +74,14 @@ export class SettingsPublicController {
     const profile = await this.checkoutService.updateSchoolProfile(body);
     return { success: true, profile };
   }
+
+  @Get('analytics')
+  @ApiOperation({
+    summary: 'Получить активные трекинговые ID веб-аналитики',
+    description: 'Возвращает публичные ID GA4, GTM, Clarity и Meta Pixel для подключения на лендинге',
+  })
+  async getAnalyticsSettings() {
+    const analytics = await this.checkoutService.getAnalyticsSettings();
+    return { success: true, analytics };
+  }
 }

@@ -4,6 +4,7 @@ import {
   ResendCredentials,
   TelegramCredentials,
   StripeCredentials,
+  AnalyticsCredentials,
   IntegrationSecretRecord,
   MaskedIntegrationSecretRecord,
 } from '@atena/api-types';
@@ -131,6 +132,25 @@ export async function getStripeCredentials(
 }
 
 /**
+ * Fetch Analytics credentials (GA4, GTM, Clarity, Meta Pixel) from DB with ENV fallback
+ */
+export async function getAnalyticsCredentials(
+  supabase?: SupabaseClient | null
+): Promise<AnalyticsCredentials> {
+  const dbCreds = await getSecretFromDb<AnalyticsCredentials>(
+    supabase,
+    IntegrationProvider.ANALYTICS
+  );
+
+  return {
+    gaId: dbCreds?.gaId || process.env.NEXT_PUBLIC_GA_ID || '',
+    gtmId: dbCreds?.gtmId || process.env.NEXT_PUBLIC_GTM_ID || '',
+    clarityId: dbCreds?.clarityId || process.env.NEXT_PUBLIC_CLARITY_ID || '',
+    metaPixelId: dbCreds?.metaPixelId || process.env.NEXT_PUBLIC_META_PIXEL_ID || '',
+  };
+}
+
+/**
  * Returns masked representation of integration configs for Admin CRM UI
  */
 export async function getMaskedIntegrationsSummary(
@@ -172,6 +192,13 @@ export async function getMaskedIntegrationsSummary(
   const stripeSource: 'database' | 'env' = stripeRaw?.secretKey ? 'database' : 'env';
   const stripeCreds = await getStripeCredentials(supabase);
 
+  // Analytics
+  const analyticsDb = dbMap.get(IntegrationProvider.ANALYTICS);
+  const analyticsActive = analyticsDb?.is_active ?? true;
+  const analyticsRaw = analyticsDb?.credentials as Partial<AnalyticsCredentials> | undefined;
+  const analyticsSource: 'database' | 'env' = (analyticsRaw?.gaId || analyticsRaw?.gtmId || analyticsRaw?.clarityId || analyticsRaw?.metaPixelId) ? 'database' : 'env';
+  const analyticsCreds = await getAnalyticsCredentials(supabase);
+
   return {
     [IntegrationProvider.RESEND]: {
       provider: IntegrationProvider.RESEND,
@@ -209,6 +236,19 @@ export async function getMaskedIntegrationsSummary(
       is_configured: Boolean(stripeCreds.secretKey),
       source: stripeSource,
       updated_at: stripeDb?.updated_at || null,
+    },
+    [IntegrationProvider.ANALYTICS]: {
+      provider: IntegrationProvider.ANALYTICS,
+      credentials: {
+        gaId: analyticsCreds.gaId || '',
+        gtmId: analyticsCreds.gtmId || '',
+        clarityId: analyticsCreds.clarityId || '',
+        metaPixelId: analyticsCreds.metaPixelId || '',
+      },
+      is_active: analyticsActive,
+      is_configured: Boolean(analyticsCreds.gaId || analyticsCreds.gtmId || analyticsCreds.clarityId),
+      source: analyticsSource,
+      updated_at: analyticsDb?.updated_at || null,
     },
   };
 }

@@ -18,6 +18,7 @@ import {
   Copy,
   Check,
   X,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -120,6 +121,7 @@ export function WhiteLabelIntegrations() {
   const [resendStatus, setResendStatus] = useState<StatusFeedback | null>(null);
   const [tgStatus, setTgStatus] = useState<StatusFeedback | null>(null);
   const [stripeStatus, setStripeStatus] = useState<StatusFeedback | null>(null);
+  const [analyticsStatus, setAnalyticsStatus] = useState<StatusFeedback | null>(null);
 
   // Form states
   const [resendKey, setResendKey] = useState("");
@@ -140,6 +142,13 @@ export function WhiteLabelIntegrations() {
   const [stripeWebhook, setStripeWebhook] = useState("");
   const [savingStripe, setSavingStripe] = useState(false);
   const [testingStripe, setTestingStripe] = useState(false);
+
+  const [gaId, setGaId] = useState("");
+  const [gtmId, setGtmId] = useState("");
+  const [clarityId, setClarityId] = useState("");
+  const [metaPixelId, setMetaPixelId] = useState("");
+  const [savingAnalytics, setSavingAnalytics] = useState(false);
+  const [testingAnalytics, setTestingAnalytics] = useState(false);
 
   const loadData = async (initial: boolean = false) => {
     try {
@@ -164,6 +173,12 @@ export function WhiteLabelIntegrations() {
             setStripeSecret(String(data.stripe.credentials.secretKey || ""));
             setStripePublishable(String(data.stripe.credentials.publishableKey || ""));
             setStripeWebhook(String(data.stripe.credentials.webhookSecret || ""));
+          }
+          if (data.analytics?.credentials) {
+            setGaId(String(data.analytics.credentials.gaId || ""));
+            setGtmId(String(data.analytics.credentials.gtmId || ""));
+            setClarityId(String(data.analytics.credentials.clarityId || ""));
+            setMetaPixelId(String(data.analytics.credentials.metaPixelId || ""));
           }
         }
       }
@@ -424,6 +439,76 @@ export function WhiteLabelIntegrations() {
     }
   };
 
+  // Handlers for Analytics
+  const handleSaveAnalytics = async () => {
+    setSavingAnalytics(true);
+    try {
+      await api.patch("/admin/integrations/analytics", {
+        credentials: {
+          gaId,
+          gtmId,
+          clarityId,
+          metaPixelId,
+        },
+      });
+      const now = new Date().toLocaleTimeString("it-IT");
+      setAnalyticsStatus({
+        type: "success",
+        message: "Configurazione Analytics salvata con successo nel Database!",
+        timestamp: now,
+      });
+      toast.success("Configurazione Analytics salvata nel Database!");
+      await loadData(false);
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      setAnalyticsStatus({
+        type: "error",
+        message: "Impossibile salvare i tag di Analytics",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
+    } finally {
+      setSavingAnalytics(false);
+    }
+  };
+
+  const handleTestAnalytics = async () => {
+    setTestingAnalytics(true);
+    try {
+      const res = await api.post<TestIntegrationResult>("/admin/integrations/test/analytics", {});
+      const now = new Date().toLocaleTimeString("it-IT");
+      if (res.success) {
+        setAnalyticsStatus({
+          type: "success",
+          message: res.message,
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
+        toast.success(res.message);
+      } else {
+        setAnalyticsStatus({
+          type: "error",
+          message: res.message || "Verifica Analytics fallita",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
+        toast.error(res.message);
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      setAnalyticsStatus({
+        type: "error",
+        message: "Errore durante la verifica dei tag Analytics",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
+    } finally {
+      setTestingAnalytics(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12 text-muted-foreground">
@@ -436,6 +521,7 @@ export function WhiteLabelIntegrations() {
   const resendInfo = integrations.resend;
   const tgInfo = integrations.telegram;
   const stripeInfo = integrations.stripe;
+  const analyticsInfo = integrations.analytics;
 
   return (
     <div className="space-y-6">
@@ -718,6 +804,123 @@ export function WhiteLabelIntegrations() {
             <Button type="button" size="sm" onClick={handleSaveStripe} disabled={savingStripe} className="cursor-pointer">
               {savingStripe && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Stripe
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Web Analytics Card */}
+      <Card className="border-border shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-violet-500/10 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Web Analytics & Tracking (GA4, GTM, Clarity, Pixel)</CardTitle>
+                <CardDescription>
+                  ID di monitoraggio e pixel di conversione per Google, Microsoft e Meta (Facebook)
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant={analyticsInfo?.source === "database" ? "default" : "secondary"}>
+                {analyticsInfo?.source === "database" ? "Database (White-label)" : "ENV Fallback"}
+              </Badge>
+              <Badge variant={analyticsInfo?.is_configured ? "outline" : "destructive"}>
+                {analyticsInfo?.is_configured ? "Configurato" : "Mancante"}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="gaId">Google Analytics 4 Measurement ID</Label>
+              <Input
+                id="gaId"
+                type="text"
+                value={gaId}
+                onChange={(e) => setGaId(e.target.value)}
+                placeholder="G-XXXXXXXXXX"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Es. <code>G-JN8BKKJ1D6</code> per tracciare visualizzazioni e conversioni
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gtmId">Google Tag Manager Container ID</Label>
+              <Input
+                id="gtmId"
+                type="text"
+                value={gtmId}
+                onChange={(e) => setGtmId(e.target.value)}
+                placeholder="GTM-XXXXXXX"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Es. <code>GTM-W2LB54V8</code> per la gestione centralizzata dei tag
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="clarityId">Microsoft Clarity Project ID</Label>
+              <Input
+                id="clarityId"
+                type="text"
+                value={clarityId}
+                onChange={(e) => setClarityId(e.target.value)}
+                placeholder="xxxxxxxxxx"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Es. <code>xo2pxnhx79</code> per heatmap e registrazioni sessioni
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="metaPixelId">Meta / Facebook Pixel ID</Label>
+              <Input
+                id="metaPixelId"
+                type="text"
+                value={metaPixelId}
+                onChange={(e) => setMetaPixelId(e.target.value)}
+                placeholder="123456789012345"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                ID numerico del pixel per tracciare campagne adv Meta
+              </p>
+            </div>
+          </div>
+
+          <FeedbackBanner
+            status={analyticsStatus}
+            onClear={() => setAnalyticsStatus(null)}
+          />
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTestAnalytics}
+              disabled={testingAnalytics}
+              className="text-xs cursor-pointer"
+            >
+              {testingAnalytics ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Verifica Tag Analytics
+            </Button>
+            <Button type="button" size="sm" onClick={handleSaveAnalytics} disabled={savingAnalytics} className="cursor-pointer">
+              {savingAnalytics && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              Salva Configurazione Analytics
             </Button>
           </div>
         </CardContent>

@@ -11,6 +11,7 @@ import {
   getResendCredentials,
   getTelegramCredentials,
   getStripeCredentials,
+  getAnalyticsCredentials,
   clearSecretsCache,
   sendEmailViaResend,
   sendTelegramMessage,
@@ -60,6 +61,7 @@ export class IntegrationsService {
       IntegrationProvider.RESEND,
       IntegrationProvider.TELEGRAM,
       IntegrationProvider.STRIPE,
+      IntegrationProvider.ANALYTICS,
     ];
 
     if (!validProviders.includes(provider as any)) {
@@ -264,6 +266,25 @@ export class IntegrationsService {
           message: err.message || 'Verifica credenziali Stripe fallita',
         };
       }
+    }
+
+    if (provider === IntegrationProvider.ANALYTICS) {
+      const creds = await getAnalyticsCredentials(this.supabase);
+      const configured: string[] = [];
+      if (creds.gaId) configured.push(`GA4 (${creds.gaId})`);
+      if (creds.gtmId) configured.push(`GTM (${creds.gtmId})`);
+      if (creds.clarityId) configured.push(`Clarity (${creds.clarityId})`);
+      if (creds.metaPixelId) configured.push(`Meta Pixel (${creds.metaPixelId})`);
+
+      if (configured.length === 0) {
+        throw new BadRequestException('Nessun tag di analisi configurato.');
+      }
+
+      return {
+        success: true,
+        message: `Configurazione Analytics valida: ${configured.join(', ')}`,
+        details: creds,
+      };
     }
 
     throw new BadRequestException(`Test non supportato per provider: ${provider}`);

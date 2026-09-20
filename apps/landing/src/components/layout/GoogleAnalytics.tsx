@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { env } from "@/config/env";
 import { captureUtmParams } from "@/lib/utm";
 
@@ -24,13 +24,31 @@ import { captureUtmParams } from "@/lib/utm";
  * 3. Dynamic updates: Updates consent dynamically when user accepts/declines cookies in the banner.
  */
 export default function GoogleAnalytics() {
-  const GA_ID = env.NEXT_PUBLIC_GA_ID;
-  const GTM_ID = env.NEXT_PUBLIC_GTM_ID;
-  const CLARITY_ID = env.NEXT_PUBLIC_CLARITY_ID;
+  const [config, setConfig] = useState({
+    gaId: env.NEXT_PUBLIC_GA_ID,
+    gtmId: env.NEXT_PUBLIC_GTM_ID,
+    clarityId: env.NEXT_PUBLIC_CLARITY_ID,
+  });
 
   useEffect(() => {
     captureUtmParams();
+    fetch('/landing/settings/analytics')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && data?.analytics) {
+          setConfig((prev) => ({
+            gaId: data.analytics.gaId || prev.gaId,
+            gtmId: data.analytics.gtmId || prev.gtmId,
+            clarityId: data.analytics.clarityId || prev.clarityId,
+          }));
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const GA_ID = config.gaId;
+  const GTM_ID = config.gtmId;
+  const CLARITY_ID = config.clarityId;
 
   useEffect(() => {
     if (!GA_ID && !GTM_ID && !CLARITY_ID) {
