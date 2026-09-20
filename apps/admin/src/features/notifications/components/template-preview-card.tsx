@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { NotificationChannel, NotificationTemplateRecord } from "../types";
+import { NotificationChannel } from "../types";
+import type { NotificationTemplateRecord } from "../types";
 import { Mail, MessageSquare, CheckCheck, Sparkles, ExternalLink } from "lucide-react";
 
 export const SAMPLE_PREVIEW_DATA: Record<string, string> = {
