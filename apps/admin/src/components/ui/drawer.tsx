@@ -48,6 +48,12 @@ function DrawerContent({
   children,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+  React.useEffect(() => {
+    return () => {
+      document.body.style.pointerEvents = "";
+    };
+  }, []);
+
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
