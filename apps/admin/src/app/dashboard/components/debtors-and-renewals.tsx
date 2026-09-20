@@ -11,6 +11,7 @@ import { api } from "@/lib/api"
 import { formatCurrency } from "@atena/utils"
 
 import { useTranslation } from "@/i18n/context"
+import { StatusBadge } from "@/components/shared/status-badge"
 
 export function DebtorsAndRenewals() {
   const { t } = useTranslation()
