@@ -138,6 +138,76 @@ export const NotificationChannel = {
 } as const;
 export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel];
 
+export const NOTIFICATION_CHANNEL_DICTIONARY: Record<NotificationChannel, DictionaryEntry> = {
+  [NotificationChannel.EMAIL]: {
+    id: 1,
+    code: 'EMAIL',
+    label_it: 'Email',
+    label_en: 'Email',
+    label_ru: 'Электронная почта',
+    description: 'Транзакционные письма через Resend',
+  },
+  [NotificationChannel.TELEGRAM]: {
+    id: 2,
+    code: 'TELEGRAM',
+    label_it: 'Telegram',
+    label_en: 'Telegram',
+    label_ru: 'Telegram',
+    description: 'Уведомления в Telegram-канал секретариата',
+  },
+};
+
+export function parseNotificationChannel(val: any): NotificationChannel {
+  if (typeof val === 'number') {
+    if (val === 1 || val === 2) return val as NotificationChannel;
+    return NotificationChannel.EMAIL;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'email' || s === 'mail') return NotificationChannel.EMAIL;
+  if (s === '2' || s === 'telegram' || s === 'tg') return NotificationChannel.TELEGRAM;
+  return NotificationChannel.EMAIL;
+}
+
+// ----------------------------------------------------------------------------
+// 3b. Recipient Types (Target audience for notification templates)
+// ----------------------------------------------------------------------------
+
+export const RecipientType = {
+  CUSTOMER: 1,
+  ADMIN: 2,
+} as const;
+export type RecipientType = (typeof RecipientType)[keyof typeof RecipientType];
+
+export const RECIPIENT_TYPE_DICTIONARY: Record<RecipientType, DictionaryEntry> = {
+  [RecipientType.CUSTOMER]: {
+    id: 1,
+    code: 'CUSTOMER',
+    label_it: 'Cliente',
+    label_en: 'Customer',
+    label_ru: 'Клиент',
+    description: 'Уведомления, отправляемые студенту или родителю',
+  },
+  [RecipientType.ADMIN]: {
+    id: 2,
+    code: 'ADMIN',
+    label_it: 'Amministrazione',
+    label_en: 'Administration',
+    label_ru: 'Администрация школы',
+    description: 'Уведомления и алерты секретариату и руководству',
+  },
+};
+
+export function parseRecipientType(val: any): RecipientType {
+  if (typeof val === 'number') {
+    if (val === 1 || val === 2) return val as RecipientType;
+    return RecipientType.CUSTOMER;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'customer' || s === 'cliente') return RecipientType.CUSTOMER;
+  if (s === '2' || s === 'admin' || s === 'amministrazione') return RecipientType.ADMIN;
+  return RecipientType.CUSTOMER;
+}
+
 export const NotificationStatus = {
   SENT: 1,
   FAILED: 2,
@@ -162,6 +232,43 @@ export const NOTIFICATION_STATUS_DICTIONARY: Record<NotificationStatus, Dictiona
     description: 'Ошибка при отправке уведомления через провайдера',
   },
 };
+
+// ----------------------------------------------------------------------------
+// 3c. Notification Templates Models & DTOs
+// ----------------------------------------------------------------------------
+
+export interface NotificationTemplateRecord {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  channel: NotificationChannel;
+  notification_type: NotificationType;
+  recipient_type: RecipientType;
+  subject_template?: string | null;
+  body_template: string;
+  available_variables: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateNotificationTemplateDto {
+  name?: string;
+  description?: string;
+  subject_template?: string;
+  body_template?: string;
+  is_active?: boolean;
+}
+
+export interface TestSendNotificationDto {
+  template_id?: string;
+  code?: string;
+  recipient: string;
+  subject_template?: string;
+  body_template?: string;
+  sample_data?: Record<string, any>;
+}
 
 // ----------------------------------------------------------------------------
 // 4. Log Types / Interfaces

@@ -4,6 +4,7 @@ import {
   NotificationChannel,
   NotificationStatus,
   NotificationType,
+  NotificationTemplateRecord,
 } from '@atena/api-types';
 import { formatCourseScheduleText } from '@atena/utils';
 import {
@@ -14,6 +15,39 @@ import {
   renderContactFormAdminEmail,
 } from './email-templates';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from '../types';
+
+export function compileTemplate(
+  template: string,
+  variables: Record<string, any>
+): string {
+  if (!template) return '';
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
+    const val = variables[key];
+    if (val === undefined || val === null) {
+      return '';
+    }
+    return String(val);
+  });
+}
+
+export async function getNotificationTemplateByCode(
+  supabase: SupabaseClient,
+  code: string
+): Promise<NotificationTemplateRecord | null> {
+  try {
+    const { data, error } = await supabase
+      .from('notification_templates')
+      .select('*')
+      .eq('code', code)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !data) return null;
+    return data as NotificationTemplateRecord;
+  } catch {
+    return null;
+  }
+}
 
 export interface NotificationLogData {
   channel: NotificationChannel;

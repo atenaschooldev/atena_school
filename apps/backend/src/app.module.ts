@@ -22,12 +22,14 @@ import { StudentsModule } from './features/students/students.module';
 import { GroupsModule } from './features/groups/groups.module';
 
 import { DictionaryModule } from './features/dictionary/dictionary.module';
+import { NotificationsModule } from './features/notifications/notifications.module';
 
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
 
 const businessModules = [
   DictionaryModule,
+  NotificationsModule,
   AuthModule,
   CoursesModule,
   GroupsModule,

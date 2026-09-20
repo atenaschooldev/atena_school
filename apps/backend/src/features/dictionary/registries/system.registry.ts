@@ -19,6 +19,9 @@ import {
   USER_ROLE_DICTIONARY,
   APP_SETTINGS_DICTIONARY,
   NOTIFICATION_TYPE_DICTIONARY,
+  NOTIFICATION_CHANNEL_DICTIONARY,
+  RECIPIENT_TYPE_DICTIONARY,
+  NOTIFICATION_STATUS_DICTIONARY,
   ITEM_TYPE_DICTIONARY,
   CONTACT_MESSAGE_STATUS_DICTIONARY,
   CONTACT_TOPIC_DICTIONARY,
@@ -27,6 +30,9 @@ import {
   UserRole,
   AppSettingKey,
   NotificationType,
+  NotificationChannel,
+  RecipientType,
+  NotificationStatus,
   ItemType,
   ContactMessageStatus,
   ContactTopic,
@@ -93,6 +99,22 @@ export function getAppSettingsDictionary(): DictionaryTableDefinition {
 
 export function getNotificationsDictionary(): DictionaryTableDefinition {
   const columns = {
+    channel: {
+      column: 'channel',
+      dbType: 'SMALLINT / INTEGER',
+      name: 'NotificationChannel',
+      description: 'Канал отправки уведомления (1=EMAIL, 2=TELEGRAM)',
+      values: NOTIFICATION_CHANNEL_DICTIONARY,
+      codes: NotificationChannel,
+    },
+    recipient_type: {
+      column: 'recipient_type',
+      dbType: 'SMALLINT / INTEGER',
+      name: 'RecipientType',
+      description: 'Целевая аудитория шаблона (1=CUSTOMER, 2=ADMIN)',
+      values: RECIPIENT_TYPE_DICTIONARY,
+      codes: RecipientType,
+    },
     type: {
       column: 'type',
       dbType: 'SMALLINT / TEXT',
@@ -100,6 +122,14 @@ export function getNotificationsDictionary(): DictionaryTableDefinition {
       description: 'Тип системного уведомления (1=BOOKING_CONFIRMATION..5=CONTACT_FORM)',
       values: NOTIFICATION_TYPE_DICTIONARY,
       codes: NotificationType,
+    },
+    status: {
+      column: 'status',
+      dbType: 'SMALLINT / INTEGER',
+      name: 'NotificationStatus',
+      description: 'Статус доставки уведомления (1=SENT, 2=FAILED)',
+      values: NOTIFICATION_STATUS_DICTIONARY,
+      codes: NotificationStatus,
     },
     item_type: {
       column: 'item_type',
@@ -112,10 +142,10 @@ export function getNotificationsDictionary(): DictionaryTableDefinition {
   };
 
   return {
-    table: 'notifications',
-    title: 'Системные уведомления и типы услуг',
+    table: 'notification_templates',
+    title: 'Шаблоны уведомлений и типы услуг',
     description:
-      'Реестр типов системных почтовых транзакций (Resend) и категорий реализуемых образовательных услуг.',
+      'Реестр шаблонов системных почтовых транзакций (Resend), Telegram-оповещений и категорий услуг.',
     columns,
     enums: columns,
   };
