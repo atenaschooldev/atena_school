@@ -116,6 +116,10 @@ export async function getResendCredentials(
       process.env.SCHOOL_ADMIN_EMAIL ||
       process.env.ADMIN_EMAIL ||
       'atenaschool20@gmail.com',
+    webhookSecret:
+      dbCreds?.webhookSecret ||
+      process.env.RESEND_WEBHOOK_SECRET ||
+      '',
   };
 }
 
@@ -291,6 +295,7 @@ export async function getMaskedIntegrationsSummary(
         apiKey: maskSecret(resendCreds.apiKey),
         fromEmail: resendCreds.fromEmail,
         adminEmail: resendCreds.adminEmail,
+        webhookSecret: maskSecret(resendCreds.webhookSecret),
       },
       is_active: resendActive,
       is_configured: Boolean(resendCreds.apiKey),

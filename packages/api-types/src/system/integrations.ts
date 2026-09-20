@@ -77,6 +77,31 @@ export interface ResendCredentials {
   apiKey: string;
   fromEmail: string;
   adminEmail: string;
+  webhookSecret?: string;
+}
+
+export type ResendWebhookEventType =
+  | 'email.sent'
+  | 'email.delivered'
+  | 'email.delivery_delayed'
+  | 'email.complained'
+  | 'email.bounced'
+  | 'email.opened'
+  | 'email.clicked';
+
+export interface ResendWebhookEvent {
+  type: ResendWebhookEventType;
+  created_at: string;
+  data: {
+    email_id: string;
+    from: string;
+    to: string[];
+    subject: string;
+    created_at?: string;
+    tags?: Record<string, string>;
+    click?: { link: string; timestamp: string };
+    bounce?: { message: string; type: string };
+  };
 }
 
 export interface TelegramCredentials {

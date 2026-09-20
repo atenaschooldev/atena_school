@@ -133,9 +133,11 @@ export function WhiteLabelIntegrations() {
   const [resendKey, setResendKey] = useState("");
   const [resendFrom, setResendFrom] = useState("");
   const [resendAdminEmail, setResendAdminEmail] = useState("");
+  const [resendWebhookSecret, setResendWebhookSecret] = useState("");
   const [savingResend, setSavingResend] = useState(false);
   const [testingResend, setTestingResend] = useState(false);
   const [showResendKey, setShowResendKey] = useState(false);
+  const [showResendWebhookSecret, setShowResendWebhookSecret] = useState(false);
 
   const [tgToken, setTgToken] = useState("");
   const [tgChatId, setTgChatId] = useState("");
@@ -184,6 +186,7 @@ export function WhiteLabelIntegrations() {
             setResendKey(String(data.resend.credentials.apiKey || ""));
             setResendFrom(String(data.resend.credentials.fromEmail || ""));
             setResendAdminEmail(String(data.resend.credentials.adminEmail || ""));
+            setResendWebhookSecret(String(data.resend.credentials.webhookSecret || ""));
           }
           if (data.telegram?.credentials) {
             setTgToken(String(data.telegram.credentials.botToken || ""));
@@ -235,6 +238,7 @@ export function WhiteLabelIntegrations() {
           apiKey: resendKey,
           fromEmail: resendFrom,
           adminEmail: resendAdminEmail,
+          webhookSecret: resendWebhookSecret,
         },
       });
       const now = new Date().toLocaleTimeString("it-IT");
@@ -708,6 +712,33 @@ export function WhiteLabelIntegrations() {
                 onChange={(e) => setResendAdminEmail(e.target.value)}
                 placeholder="atenaschool20@gmail.com"
               />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="resendWebhookSecret">Resend Webhook Signing Secret (Opzionale)</Label>
+              <div className="relative">
+                <Input
+                  id="resendWebhookSecret"
+                  type={showResendWebhookSecret ? "text" : "password"}
+                  value={resendWebhookSecret}
+                  onChange={(e) => setResendWebhookSecret(e.target.value)}
+                  placeholder="whsec_••••••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowResendWebhookSecret(!showResendWebhookSecret)}
+                  title={showResendWebhookSecret ? "Nascondi secret" : "Mostra secret"}
+                >
+                  {showResendWebhookSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Endpoint Webhook per Resend: <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono select-all">/landing/mail/webhook</code> (o <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono select-all">/v1/webhooks/resend</code>) per tracciare aperture, consegne e bounce.
+              </p>
             </div>
           </div>
 
