@@ -214,6 +214,8 @@ export async function getBookingLessonsAction(bookingId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
+  const cleanEmail = (user.email || "").trim().toLowerCase();
+
   // 1. Try Backend if configured
   const backendUrl = getBackendUrl();
   if (backendUrl && backendUrl !== "http://localhost:4000") {
@@ -241,6 +243,16 @@ export async function getBookingLessonsAction(bookingId: string) {
       .single();
 
     if (bErr || !booking) throw new Error("Prenotazione non trovata");
+
+    // Strict Security Check: Verify that the booking belongs to this authenticated user
+    const isOwner =
+      booking.user_id === user.id ||
+      (booking.purchaser_email && booking.purchaser_email.toLowerCase() === cleanEmail) ||
+      (booking.student_email && booking.student_email.toLowerCase() === cleanEmail);
+
+    if (!isOwner) {
+      throw new Error("Accesso negato a questa prenotazione");
+    }
 
     let course: any = null;
     const cid = booking.course_id || booking.item_id;
@@ -282,17 +294,38 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non autorizzato" };
 
+  const cleanEmail = (user.email || "").trim().toLowerCase();
+
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: booking } = await supabaseAdmin
+      .from("bookings")
+      .select("id, user_id, purchaser_email, student_email")
+      .eq("id", bookingId)
+      .single();
+
+    if (!booking) throw new Error("Prenotazione non trovata");
+
+    // Strict Security Check
+    const isOwner =
+      booking.user_id === user.id ||
+      (booking.purchaser_email && booking.purchaser_email.toLowerCase() === cleanEmail) ||
+      (booking.student_email && booking.student_email.toLowerCase() === cleanEmail);
+
+    if (!isOwner) {
+      throw new Error("Accesso negato");
+    }
+
     const startsAt = new Date(`${dateStr}T${timeStr}:00`);
     const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("lessons")
       .insert({
         booking_id: bookingId,
         starts_at: startsAt.toISOString(),
         ends_at: endsAt.toISOString(),
-        status: "scheduled",
+        status: 1, // ACTIVE / SCHEDULED
       })
       .select()
       .single();
