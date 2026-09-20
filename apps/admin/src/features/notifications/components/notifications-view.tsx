@@ -25,6 +25,7 @@ import { useNotificationTemplates } from "../hooks/use-notification-templates";
 import { TemplateEditorDrawer } from "./template-editor-drawer";
 import { TestSendModal } from "./test-send-modal";
 import { NotificationLogsView } from "./notification-logs-view";
+import { NotificationTriggersView } from "./notification-triggers-view";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +58,7 @@ import {
   ShieldCheck,
   Sparkles,
   Bell,
+  Zap,
 } from "lucide-react";
 
 export function NotificationsView() {
@@ -103,7 +105,7 @@ export function NotificationsView() {
     return recipientType === RecipientType.CUSTOMER ? "Cliente" : "Segreteria";
   }
 
-  const [activeTab, setActiveTab] = useState<"templates" | "logs">("templates");
+  const [activeTab, setActiveTab] = useState<"templates" | "triggers" | "logs">("templates");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -412,7 +414,7 @@ export function NotificationsView() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Top Navigation Tabs (Templates vs Live Logs) ── */}
+      {/* ── Top Navigation Tabs (Templates vs Triggers vs Live Logs) ── */}
       <div className="px-4 lg:px-6 flex items-center justify-between border-b pb-3">
         <div className="flex items-center gap-2">
           <div className="flex rounded-xl bg-muted/50 p-1 border">
@@ -430,6 +432,18 @@ export function NotificationsView() {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab("triggers")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "triggers"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Zap className="h-4 w-4 text-amber-500" />
+              {t("notifications.tabTriggers") || "Regole & Trigger"}
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab("logs")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "logs"
@@ -437,7 +451,7 @@ export function NotificationsView() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Bell className="h-4 w-4 text-amber-500" />
+              <Bell className="h-4 w-4 text-sky-500" />
               {t("notifications.tabLogs") || "Registro Invii & Log"}
             </button>
           </div>
@@ -447,6 +461,10 @@ export function NotificationsView() {
       {activeTab === "logs" ? (
         <div className="px-4 lg:px-6">
           <NotificationLogsView />
+        </div>
+      ) : activeTab === "triggers" ? (
+        <div className="px-4 lg:px-6">
+          <NotificationTriggersView />
         </div>
       ) : (
         <>

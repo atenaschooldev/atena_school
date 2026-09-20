@@ -28,6 +28,8 @@ import { IntegrationsModule } from './features/integrations/integrations.module'
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
 
+import { EventEmitterModule } from '@nestjs/event-emitter';
+
 const businessModules = [
   DictionaryModule,
   NotificationsModule,
@@ -55,6 +57,8 @@ const businessModules = [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    EventEmitterModule.forRoot(),
 
     // Глобальные сервисы инфраструктуры
     SupabaseModule,

@@ -3,6 +3,7 @@ import {
   Get,
   Patch,
   Post,
+  Delete,
   Body,
   Param,
   Query,
@@ -11,7 +12,9 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
+import { NotificationTriggersService } from './notification-triggers.service';
 import { UpdateNotificationTemplateDto, TestSendNotificationDto } from './dto/notification-template.dto';
+import type { CreateNotificationTriggerDto, UpdateNotificationTriggerDto } from '@atena/api-types';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
@@ -24,7 +27,10 @@ import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 @UseInterceptors(AuditInterceptor)
 @Controller('admin/notifications')
 export class NotificationsController {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    private readonly triggersService: NotificationTriggersService,
+  ) {}
 
   @Get('templates')
   @Roles('admin', 'secretary')
@@ -78,4 +84,66 @@ export class NotificationsController {
   ) {
     return this.notificationsService.testSend(id, dto);
   }
+
+  // ── Trigger Endpoints ──────────────────────────────────────────────────────
+
+  @Get('system-events')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить реестр системных событий и доступных переменных' })
+  getSystemEvents() {
+    return this.triggersService.getSystemEventsSchema();
+  }
+
+  @Get('triggers')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить список правил и триггеров автоматизации' })
+  async getTriggers() {
+    return this.triggersService.findAll();
+  }
+
+  @Get('triggers/:id')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить триггер по ID' })
+  async getTriggerById(@Param('id') id: string) {
+    return this.triggersService.findOne(id);
+  }
+
+  @Post('triggers')
+  @Roles('admin')
+  @Audit('notifications', 'create_trigger')
+  @ApiOperation({ summary: 'Создать новое правило/триггер автоматизации' })
+  async createTrigger(@Body() dto: CreateNotificationTriggerDto) {
+    return this.triggersService.create(dto);
+  }
+
+  @Patch('triggers/:id')
+  @Roles('admin')
+  @Audit('notifications', 'update_trigger')
+  @ApiOperation({ summary: 'Обновить параметры триггера' })
+  async updateTrigger(
+    @Param('id') id: string,
+    @Body() dto: UpdateNotificationTriggerDto,
+  ) {
+    return this.triggersService.update(id, dto);
+  }
+
+  @Patch('triggers/:id/toggle')
+  @Roles('admin')
+  @Audit('notifications', 'toggle_trigger')
+  @ApiOperation({ summary: 'Включить/выключить триггер' })
+  async toggleTrigger(
+    @Param('id') id: string,
+    @Body('is_active') isActive: boolean,
+  ) {
+    return this.triggersService.toggleActive(id, isActive);
+  }
+
+  @Delete('triggers/:id')
+  @Roles('admin')
+  @Audit('notifications', 'delete_trigger')
+  @ApiOperation({ summary: 'Удалить триггер' })
+  async deleteTrigger(@Param('id') id: string) {
+    return this.triggersService.delete(id);
+  }
 }
+

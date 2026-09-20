@@ -832,7 +832,29 @@ export const en = {
     // Test modal
     testModalEmailDesc: "A real email will be sent via Resend server with subject prefix [TEST].",
     testModalTgDesc: "A formatted HTML message will be sent via Atena Telegram Bot.",
+    // Automation & Triggers
+    tabTriggers: "Rules & Triggers",
+    searchTriggersPlaceholder: "Search by rule name, event or template...",
+    createTriggerBtn: "New Rule",
+    createTriggerTitle: "Create Automation Rule",
+    editTriggerTitle: "Edit Automation Rule",
+    triggerEditorSubtitle: "Connect a system event to a template with custom filters and timing.",
+    triggerNameLabel: "Rule Name",
+    triggerStatusHint: "Enable rule",
+    stepEvent: "1. When this event occurs:",
+    stepTemplate: "2. Send this Template:",
+    stepRecipientTiming: "3. Recipient & Timing:",
+    timingLabel: "Delivery Timing",
+    conditionsLabel: "4. Conditions & Filters (Optional):",
+    conditionsHint: "Leave {} to always trigger. Or provide key-value filters (e.g. min_amount, course_id, payment_method).",
+    createTriggerSubmit: "Create Rule",
+    noTriggersFound: "No automation rules found",
+    noTriggersHint: "Create a new rule to automatically dispatch notifications on specific system events.",
+    triggerCreated: "Rule created successfully!",
+    triggerUpdated: "Rule updated successfully!",
+    triggerDeleted: "Rule deleted",
   },
 } as const;
 
 export type TranslationKey = typeof en;
+

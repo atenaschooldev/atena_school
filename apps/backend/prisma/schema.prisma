@@ -560,12 +560,39 @@ model notification_templates {
   blocksConfig       Json?    @map("blocks_config")
   isActive           Boolean  @default(true) @map("is_active")
 
+  triggers           notification_triggers[]
+
   @@index([code], map: "idx_notification_templates_code")
   @@index([channel], map: "idx_notification_templates_channel")
   @@index([recipientType], map: "idx_notification_templates_recipient_type")
   @@index([isActive], map: "idx_notification_templates_is_active")
   @@map("notification_templates")
 }
+
+model notification_triggers {
+  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name            String                 @db.VarChar(255)
+  description     String?                @db.Text
+  eventKey        String                 @map("event_key") @db.VarChar(100)
+  templateId      String                 @map("template_id") @db.Uuid
+  channel         Int                    @default(1) @db.SmallInt
+  recipientType   Int                    @default(1) @map("recipient_type") @db.SmallInt
+  customRecipient String?                @map("custom_recipient") @db.VarChar(255)
+  conditions      Json?                  @default("{}")
+  timingType      String                 @default("immediate") @map("timing_type") @db.VarChar(50)
+  delaySeconds    Int                    @default(0) @map("delay_seconds")
+  isActive        Boolean                @default(true) @map("is_active")
+
+  template        notification_templates @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([eventKey], map: "idx_notification_triggers_event_key")
+  @@index([isActive], map: "idx_notification_triggers_is_active")
+  @@index([templateId], map: "idx_notification_triggers_template_id")
+  @@map("notification_triggers")
+}
+
 
 
 

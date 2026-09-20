@@ -322,6 +322,134 @@ export interface TestSendNotificationDto {
 }
 
 // ----------------------------------------------------------------------------
+// 3d. System Event Registry & Notification Triggers
+// ----------------------------------------------------------------------------
+
+export interface SystemEventVariable {
+  key: string;
+  label_it: string;
+  label_en: string;
+  example: string;
+}
+
+export interface SystemEventDefinition {
+  event_key: string;
+  category: 'booking' | 'payment' | 'lead' | 'lesson';
+  label_it: string;
+  label_en: string;
+  description_it: string;
+  description_en: string;
+  available_variables: SystemEventVariable[];
+}
+
+export const SYSTEM_EVENTS_REGISTRY: Record<string, SystemEventDefinition> = {
+  'booking.created_stripe': {
+    event_key: 'booking.created_stripe',
+    category: 'payment',
+    label_it: 'Pagamento Stripe Confermato',
+    label_en: 'Stripe Payment Succeeded',
+    description_it: 'Scatta quando una transazione su Stripe va a buon fine',
+    description_en: 'Fires when a Stripe checkout transaction succeeds',
+    available_variables: [
+      { key: 'purchaser_name', label_it: 'Nome Acquirente', label_en: 'Purchaser Name', example: 'Mario Rossi' },
+      { key: 'purchaser_email', label_it: 'Email Acquirente', label_en: 'Purchaser Email', example: 'mario.rossi@gmail.com' },
+      { key: 'purchaser_phone', label_it: 'Telefono Acquirente', label_en: 'Purchaser Phone', example: '+39 333 1234567' },
+      { key: 'student_name', label_it: 'Nome Studente', label_en: 'Student Name', example: 'Luca Rossi' },
+      { key: 'course_name', label_it: 'Nome Corso', label_en: 'Course Name', example: 'Kids English (6-7 anni)' },
+      { key: 'course_price', label_it: 'Prezzo Corso', label_en: 'Course Price', example: '73.20' },
+      { key: 'registration_fee', label_it: 'Quota Iscrizione (€)', label_en: 'Reg Fee (€)', example: '30.00' },
+      { key: 'total_amount', label_it: 'Totale (€)', label_en: 'Total Amount (€)', example: '103.20' },
+      { key: 'amount_paid', label_it: 'Importo Incassato', label_en: 'Amount Paid', example: '103.20' },
+      { key: 'start_date', label_it: 'Data di Inizio', label_en: 'Start Date', example: '2026-10-06' },
+      { key: 'lesson_schedule', label_it: 'Orario Lezioni', label_en: 'Lesson Schedule', example: 'Martedì e Giovedì 17:00-18:00' },
+      { key: 'booking_id', label_it: 'ID Prenotazione', label_en: 'Booking ID', example: '10bde731-f620-4e16-a240-63bb08b86d70' },
+      { key: 'dashboard_url', label_it: 'Link Portale Studente', label_en: 'Student Portal URL', example: 'https://app.atenaschool.com' },
+    ],
+  },
+  'booking.pending_cash': {
+    event_key: 'booking.pending_cash',
+    category: 'payment',
+    label_it: 'Prenotazione con Saldo in Sede',
+    label_en: 'New Booking with In-Person Payment',
+    description_it: 'Scatta quando il cliente prenota scegliendo di saldare in contanti o bonifico',
+    description_en: 'Fires when client books with cash or bank transfer option',
+    available_variables: [
+      { key: 'purchaser_name', label_it: 'Nome Acquirente', label_en: 'Purchaser Name', example: 'Mario Rossi' },
+      { key: 'purchaser_email', label_it: 'Email Acquirente', label_en: 'Purchaser Email', example: 'mario.rossi@gmail.com' },
+      { key: 'purchaser_phone', label_it: 'Telefono Acquirente', label_en: 'Purchaser Phone', example: '+39 333 1234567' },
+      { key: 'student_name', label_it: 'Nome Studente', label_en: 'Student Name', example: 'Luca Rossi' },
+      { key: 'course_name', label_it: 'Nome Corso', label_en: 'Course Name', example: 'Kids English (6-7 anni)' },
+      { key: 'total_amount', label_it: 'Totale da Saldare (€)', label_en: 'Total to Pay (€)', example: '103.20' },
+      { key: 'start_date', label_it: 'Data di Inizio', label_en: 'Start Date', example: '2026-10-06' },
+      { key: 'lesson_schedule', label_it: 'Orario Lezioni', label_en: 'Lesson Schedule', example: 'Martedì e Giovedì 17:00-18:00' },
+      { key: 'booking_id', label_it: 'ID Prenotazione', label_en: 'Booking ID', example: '10bde731-f620-4e16-a240-63bb08b86d70' },
+    ],
+  },
+  'contact_form.submitted': {
+    event_key: 'contact_form.submitted',
+    category: 'lead',
+    label_it: 'Richiesta di Contatto dal Sito',
+    label_en: 'Contact / Lead Form Submission',
+    description_it: 'Scatta quando un utente invia una richiesta tramite il form contatti',
+    description_en: 'Fires when user submits a contact inquiry form on the landing page',
+    available_variables: [
+      { key: 'sender_name', label_it: 'Nome Mittente', label_en: 'Sender Name', example: 'Giuseppe Verdi' },
+      { key: 'sender_email', label_it: 'Email Mittente', label_en: 'Sender Email', example: 'giuseppe.verdi@gmail.com' },
+      { key: 'sender_phone', label_it: 'Telefono Mittente', label_en: 'Sender Phone', example: '+39 333 9876543' },
+      { key: 'interest', label_it: 'Interesse / Corso', label_en: 'Interest / Course', example: 'Corso Cambridge B2' },
+      { key: 'topic', label_it: 'Argomento', label_en: 'Topic', example: 'Informazioni Iscrizioni' },
+      { key: 'message', label_it: 'Testo Messaggio', label_en: 'Message Body', example: 'Vorrei sapere quando iniziano i nuovi corsi serali.' },
+    ],
+  },
+};
+
+export interface NotificationTriggerRecord {
+  id: string;
+  name: string;
+  description?: string | null;
+  event_key: string;
+  template_id: string;
+  template?: NotificationTemplateRecord;
+  channel: NotificationChannel;
+  recipient_type: RecipientType | 3 | 4; // 1: CUSTOMER, 2: ADMIN, 3: STUDENT, 4: CUSTOM
+  custom_recipient?: string | null;
+  conditions?: Record<string, any> | null;
+  timing_type: 'immediate' | 'delayed' | 'before_event';
+  delay_seconds: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateNotificationTriggerDto {
+  name: string;
+  description?: string;
+  event_key: string;
+  template_id: string;
+  channel: NotificationChannel;
+  recipient_type: number;
+  custom_recipient?: string;
+  conditions?: Record<string, any>;
+  timing_type?: string;
+  delay_seconds?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateNotificationTriggerDto {
+  name?: string;
+  description?: string;
+  event_key?: string;
+  template_id?: string;
+  channel?: NotificationChannel;
+  recipient_type?: number;
+  custom_recipient?: string;
+  conditions?: Record<string, any>;
+  timing_type?: string;
+  delay_seconds?: number;
+  is_active?: boolean;
+}
+
+// ----------------------------------------------------------------------------
 // 4. Log Types / Interfaces
 // ----------------------------------------------------------------------------
 
