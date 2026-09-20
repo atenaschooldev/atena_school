@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {
   IntegrationProvider,
   ResendCredentials,
@@ -17,6 +17,24 @@ interface CacheEntry<T> {
 
 const CACHE_TTL_MS = 60 * 1000; // 60 seconds
 const cache = new Map<string, CacheEntry<any>>();
+
+let defaultAdminClient: SupabaseClient | null = null;
+
+export function getDefaultSupabaseClient(): SupabaseClient | null {
+  if (defaultAdminClient) return defaultAdminClient;
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    defaultAdminClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    return defaultAdminClient;
+  }
+  return null;
+}
 
 export function clearSecretsCache(provider?: string): void {
   if (provider) {
@@ -48,7 +66,8 @@ async function getSecretFromDb<T>(
   supabase: SupabaseClient | null | undefined,
   provider: string
 ): Promise<T | null> {
-  if (!supabase) return null;
+  const client = supabase || getDefaultSupabaseClient();
+  if (!client) return null;
 
   const cached = cache.get(provider);
   const now = Date.now();
@@ -57,7 +76,7 @@ async function getSecretFromDb<T>(
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('integration_secrets')
       .select('*')
       .eq('provider', provider)
@@ -214,11 +233,12 @@ export async function getDomainsCredentials(
 export async function getMaskedIntegrationsSummary(
   supabase?: SupabaseClient | null
 ): Promise<Record<string, MaskedIntegrationSecretRecord>> {
+  const client = supabase || getDefaultSupabaseClient();
   // Load raw from DB if available
   let dbRows: IntegrationSecretRecord[] = [];
-  if (supabase) {
+  if (client) {
     try {
-      const { data } = await supabase.from('integration_secrets').select('*');
+      const { data } = await client.from('integration_secrets').select('*');
       if (data) dbRows = data as IntegrationSecretRecord[];
     } catch (e) {
       console.warn('[IntegrationSecrets] Failed to fetch summary from DB:', e);
