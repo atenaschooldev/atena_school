@@ -85,7 +85,7 @@ export function TestSendModal({
             <div className="space-y-2">
               <Label htmlFor="test-recipient">
                 {t("notifications.recipientLabel") || "Destinatario di Test"} (
-                {isEmail ? "Indirizzo Email" : "Telegram Chat ID / Canale"})
+                {isEmail ? (t("notifications.channelEmail") || "Email") : (t("notifications.channelTelegram") || "Telegram")})
               </Label>
               <Input
                 id="test-recipient"
@@ -93,16 +93,16 @@ export function TestSendModal({
                 onChange={(e) => setRecipient(e.target.value)}
                 placeholder={
                   isEmail
-                    ? t("notifications.recipientEmailPlaceholder") || "es. admin@atenaschool.com"
-                    : t("notifications.recipientTelegramPlaceholder") || "es. @atena_school_bot"
+                    ? t("notifications.recipientEmailPlaceholder") || "e.g. admin@atenaschool.com"
+                    : t("notifications.recipientTelegramPlaceholder") || "e.g. Telegram chat ID"
                 }
                 required
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
                 {isEmail
-                  ? "Verrà inviata un'email reale tramite il server Resend con prefisso [TEST]."
-                  : "Verrà inviato un messaggio formattato in HTML tramite il Bot Telegram Atena."}
+                  ? (t("notifications.testModalEmailDesc") || "Verrà inviata un'email reale tramite il server Resend con prefisso [TEST].")
+                  : (t("notifications.testModalTgDesc") || "Verrà inviato un messaggio formattato in HTML tramite il Bot Telegram Atena.")}
               </p>
             </div>
           </div>

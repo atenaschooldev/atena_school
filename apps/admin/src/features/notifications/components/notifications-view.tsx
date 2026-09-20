@@ -122,25 +122,25 @@ export function NotificationsView() {
       {
         title: t("notifications.totalTemplates") || "Template Totali",
         value: total,
-        description: `${activeCount} attivi nel sistema`,
+        description: `${activeCount} ${t("notifications.metricsActiveInSystem") || "attivi nel sistema"}`,
         icon: Layers,
       },
       {
         title: t("notifications.tabCustomerEmail") || "Email Clienti",
         value: customerEmails,
-        description: "Conferme iscrizioni & ricevute",
+        description: t("notifications.metricsCustomerEmailDesc") || "Conferme iscrizioni & ricevute",
         icon: UserCheck,
       },
       {
         title: t("notifications.tabAdminEmail") || "Email Segreteria",
         value: adminEmails,
-        description: "Alerte nuove iscrizioni & lead",
+        description: t("notifications.metricsAdminEmailDesc") || "Alerte nuove iscrizioni & lead",
         icon: ShieldCheck,
       },
       {
         title: t("notifications.tabTelegram") || "Telegram Bot",
         value: telegrams,
-        description: "Messaggi istantanei su canale",
+        description: t("notifications.metricsTelegramDesc") || "Messaggi istantanei su canale",
         icon: MessageSquare,
       },
     ];
@@ -221,7 +221,7 @@ export function NotificationsView() {
                 (table.getIsSomePageRowsSelected() && "indeterminate")
               }
               onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-              aria-label="Seleziona tutti"
+              aria-label={t("common.selectAll") || "Seleziona tutti"}
             />
           </div>
         ),
@@ -230,7 +230,7 @@ export function NotificationsView() {
             <Checkbox
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Seleziona riga"
+              aria-label={t("common.selectRow") || "Seleziona riga"}
             />
           </div>
         ),
@@ -246,7 +246,7 @@ export function NotificationsView() {
             className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            <span>Nome Template</span>
+            <span>{t("notifications.columnName") || "Nome Template"}</span>
             {column.getIsSorted() === "desc" ? (
               <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
             ) : column.getIsSorted() === "asc" ? (
@@ -273,19 +273,19 @@ export function NotificationsView() {
       },
       {
         accessorKey: "channel",
-        header: "Canale",
+        header: t("notifications.columnChannel") || "Canale",
         cell: ({ row }) => {
           const isEmail = row.original.channel === NotificationChannel.EMAIL;
           return (
             <Badge variant="outline" className="text-xs font-medium">
-              {isEmail ? "Email" : "Telegram"}
+              {isEmail ? (t("notifications.channelEmail") || "Email") : (t("notifications.channelTelegram") || "Telegram")}
             </Badge>
           );
         },
       },
       {
         accessorKey: "recipient_type",
-        header: "Destinatario",
+        header: t("notifications.columnRecipient") || "Destinatario",
         cell: ({ row }) => {
           const isCustomer = row.original.recipient_type === RecipientType.CUSTOMER;
           return (
@@ -297,14 +297,14 @@ export function NotificationsView() {
                   : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
               }`}
             >
-              {isCustomer ? "Cliente" : "Segreteria"}
+              {isCustomer ? (t("notifications.recipientCustomer") || "Cliente") : (t("notifications.recipientAdmin") || "Segreteria")}
             </Badge>
           );
         },
       },
       {
         accessorKey: "notification_type",
-        header: "Tipo Evento",
+        header: t("notifications.columnEventType") || "Tipo Evento",
         cell: ({ row }) => {
           return (
             <span className="text-xs font-medium text-foreground truncate">
@@ -315,7 +315,7 @@ export function NotificationsView() {
       },
       {
         id: "subject",
-        header: "Oggetto / Dettagli",
+        header: t("notifications.columnSubject") || "Oggetto / Dettagli",
         cell: ({ row }) => {
           const text = row.original.subject_template || row.original.description || "—";
           return (
@@ -327,7 +327,7 @@ export function NotificationsView() {
       },
       {
         accessorKey: "is_active",
-        header: "Stato",
+        header: t("notifications.columnStatus") || t("common.status") || "Stato",
         cell: ({ row }) => {
           return (
             <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ export function NotificationsView() {
                 onCheckedChange={(checked) => handleToggleStatus(row.original, checked)}
                 disabled={isUpdating}
                 className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
-                aria-label="Attiva/Disattiva template"
+                aria-label={t("common.status") || "Stato"}
               />
             </div>
           );
@@ -345,7 +345,7 @@ export function NotificationsView() {
       },
       {
         id: "actions",
-        header: "Azioni",
+        header: t("notifications.columnActions") || t("common.actions") || "Azioni",
         enableHiding: false,
         cell: ({ row }) => {
           const tmpl = row.original;
@@ -356,7 +356,7 @@ export function NotificationsView() {
                 size="icon"
                 className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={() => handleOpenTest(tmpl)}
-                title="Invia test"
+                title={t("notifications.sendTest") || "Invia test"}
               >
                 <Send className="h-4 w-4" />
               </Button>
@@ -365,7 +365,7 @@ export function NotificationsView() {
                 size="icon"
                 className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={() => handleOpenEdit(tmpl)}
-                title="Modifica template"
+                title={t("notifications.editTemplate") || "Modifica template"}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -375,7 +375,7 @@ export function NotificationsView() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isUpdating]
+    [isUpdating, t, locale]
   );
 
   const table = useReactTable({
@@ -405,7 +405,7 @@ export function NotificationsView() {
               }`}
             >
               <Layers className="h-4 w-4" />
-              Modelli Notifiche ({templates.length})
+              {t("notifications.tabTemplates") || "Modelli Notifiche"} ({templates.length})
             </button>
             <button
               type="button"
@@ -417,7 +417,7 @@ export function NotificationsView() {
               }`}
             >
               <Bell className="h-4 w-4 text-amber-500" />
-              Registro Invii & Log
+              {t("notifications.tabLogs") || "Registro Invii & Log"}
             </button>
           </div>
         </div>
@@ -454,17 +454,17 @@ export function NotificationsView() {
         <DataViewToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca per nome, codice o oggetto..."
+          searchPlaceholder={t("notifications.searchPlaceholder") || "Cerca per nome, codice o oggetto..."}
           filters={[
             {
               value: categoryFilter,
               onChange: setCategoryFilter,
-              placeholder: "Canale",
+              placeholder: t("notifications.columnChannel") || "Canale",
               options: [
-                { value: "all", label: "Tutti i Canali" },
-                { value: "customer_email", label: "Email (Clienti)" },
-                { value: "admin_email", label: "Email (Segreteria)" },
-                { value: "telegram", label: "Telegram Bot" },
+                { value: "all", label: t("notifications.tabAll") || "Tutti i Canali" },
+                { value: "customer_email", label: `${t("notifications.channelEmail") || "Email"} (${t("notifications.recipientCustomer") || "Cliente"})` },
+                { value: "admin_email", label: `${t("notifications.channelEmail") || "Email"} (${t("notifications.recipientAdmin") || "Segreteria"})` },
+                { value: "telegram", label: t("notifications.channelTelegram") || "Telegram Bot" },
               ],
             },
             {
@@ -472,9 +472,9 @@ export function NotificationsView() {
               onChange: setStatusFilter,
               placeholder: t("common.status") || "Stato",
               options: [
-                { value: "all", label: "Tutti gli stati" },
-                { value: "active", label: t("common.active") || "Attivo" },
-                { value: "inactive", label: "Disattivo" },
+                { value: "all", label: t("notifications.statusFilterAll") || "Tutti gli stati" },
+                { value: "active", label: t("notifications.statusFilterActive") || "Attivo" },
+                { value: "inactive", label: t("notifications.statusFilterInactive") || "Disattivo" },
               ],
             },
           ]}
@@ -527,7 +527,7 @@ export function NotificationsView() {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        Nessun template trovato.
+                        {t("notifications.noTemplatesFound") || "Nessun template trovato."}
                       </TableCell>
                     </TableRow>
                   )}
@@ -579,7 +579,7 @@ export function NotificationsView() {
                     <div className="space-y-2.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge variant="outline" className="text-xs font-medium">
-                          {isEmail ? "Email" : "Telegram"}
+                          {isEmail ? (t("notifications.channelEmail") || "Email") : (t("notifications.channelTelegram") || "Telegram")}
                         </Badge>
                         <Badge
                           variant="outline"
@@ -589,7 +589,7 @@ export function NotificationsView() {
                               : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
                           }`}
                         >
-                          {isCustomer ? "Cliente" : "Segreteria"}
+                          {isCustomer ? (t("notifications.recipientCustomer") || "Cliente") : (t("notifications.recipientAdmin") || "Segreteria")}
                         </Badge>
                         <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                           {getNotificationTypeLabel(template.notification_type)}
@@ -598,7 +598,7 @@ export function NotificationsView() {
 
                       {template.subject_template && (
                         <div className="p-2 rounded-lg bg-muted/40 border border-border/50 text-xs">
-                          <span className="text-muted-foreground font-medium">Oggetto: </span>
+                          <span className="text-muted-foreground font-medium">{t("notifications.subjectPrefix") || "Oggetto: "}</span>
                           <span className="font-mono text-foreground">{template.subject_template}</span>
                         </div>
                       )}
@@ -619,7 +619,7 @@ export function NotificationsView() {
                       onClick={() => handleOpenTest(template)}
                     >
                       <Send className="h-3.5 w-3.5" />
-                      Invia Test
+                      {t("notifications.sendTest") || "Invia Test"}
                     </Button>
 
                     <Button
@@ -629,7 +629,7 @@ export function NotificationsView() {
                       onClick={() => handleOpenEdit(template)}
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      Modifica
+                      {t("notifications.editTemplate") || "Modifica"}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -637,7 +637,7 @@ export function NotificationsView() {
             })}
             {filteredTemplates.length === 0 && (
               <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                Nessun template trovato.
+                {t("notifications.noTemplatesFound") || "Nessun template trovato."}
               </div>
             )}
           </div>

@@ -3,10 +3,11 @@
 import React, { useState } from "react";
 import { useNotificationLogs } from "../hooks/use-notification-templates";
 import { NotificationChannel, NotificationStatus } from "../types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/i18n/context";
 import {
   Table,
   TableBody,
@@ -29,16 +30,13 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Eye,
-  ArrowUpDown,
-  Filter,
-  Layers,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 
 export function NotificationLogsView() {
+  const { t, locale } = useTranslation();
   const [page, setPage] = useState(1);
   const [channelFilter, setChannelFilter] = useState<number | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined);
@@ -57,7 +55,8 @@ export function NotificationLogsView() {
 
   const formatDate = (iso: string) => {
     try {
-      return new Date(iso).toLocaleString("it-IT", {
+      const loc = locale === "en" ? "en-US" : "it-IT";
+      return new Date(iso).toLocaleString(loc, {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
@@ -73,13 +72,13 @@ export function NotificationLogsView() {
   return (
     <div className="space-y-4">
       {/* Top Controls Bar */}
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-xs">
         <CardContent className="p-4 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2 w-full md:w-auto flex-1 max-w-md">
             <div className="relative w-full">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cerca per destinatario o oggetto..."
+                placeholder={t("notifications.searchLogsPlaceholder") || "Cerca per destinatario o oggetto..."}
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -103,7 +102,7 @@ export function NotificationLogsView() {
                   channelFilter === undefined ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Tutti
+                {t("notifications.logChannelAll") || "Tutti"}
               </button>
               <button
                 type="button"
@@ -115,7 +114,7 @@ export function NotificationLogsView() {
                   channelFilter === NotificationChannel.EMAIL ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Mail className="h-3 w-3" /> Email
+                <Mail className="h-3 w-3" /> {t("notifications.channelEmail") || "Email"}
               </button>
               <button
                 type="button"
@@ -127,7 +126,7 @@ export function NotificationLogsView() {
                   channelFilter === NotificationChannel.TELEGRAM ? "bg-background shadow-xs text-sky-600 dark:text-sky-400 font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <MessageSquare className="h-3 w-3" /> Telegram
+                <MessageSquare className="h-3 w-3" /> {t("notifications.channelTelegram") || "Telegram"}
               </button>
             </div>
 
@@ -143,7 +142,7 @@ export function NotificationLogsView() {
                   statusFilter === undefined ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Stato: Tutti
+                {t("notifications.logStatusAll") || "Stato: Tutti"}
               </button>
               <button
                 type="button"
@@ -155,7 +154,7 @@ export function NotificationLogsView() {
                   statusFilter === NotificationStatus.SENT ? "bg-background shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Inviati
+                {t("notifications.logStatusSent") || "Inviati"}
               </button>
               <button
                 type="button"
@@ -167,7 +166,7 @@ export function NotificationLogsView() {
                   statusFilter === NotificationStatus.FAILED ? "bg-background shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Falliti
+                {t("notifications.logStatusFailed") || "Falliti"}
               </button>
             </div>
 
@@ -177,7 +176,7 @@ export function NotificationLogsView() {
               onClick={() => refresh()}
               disabled={loading}
               className="h-9 px-2.5 cursor-pointer"
-              title="Ricarica log"
+              title={t("common.refresh") || "Ricarica"}
             >
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
@@ -186,17 +185,17 @@ export function NotificationLogsView() {
       </Card>
 
       {/* Logs Table */}
-      <Card className="border-border shadow-sm overflow-hidden">
+      <Card className="border-border shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead className="w-[170px] text-xs font-semibold">Data / Ora</TableHead>
-                <TableHead className="w-[120px] text-xs font-semibold">Canale</TableHead>
-                <TableHead className="text-xs font-semibold">Destinatario</TableHead>
-                <TableHead className="text-xs font-semibold">Oggetto / Titolo</TableHead>
-                <TableHead className="w-[120px] text-xs font-semibold text-center">Stato</TableHead>
-                <TableHead className="w-[80px] text-xs font-semibold text-right">Dettagli</TableHead>
+                <TableHead className="w-[170px] text-xs font-semibold">{t("notifications.logColDate") || "Data / Ora"}</TableHead>
+                <TableHead className="w-[120px] text-xs font-semibold">{t("notifications.logColChannel") || "Canale"}</TableHead>
+                <TableHead className="text-xs font-semibold">{t("notifications.logColRecipient") || "Destinatario"}</TableHead>
+                <TableHead className="text-xs font-semibold">{t("notifications.logColSubject") || "Oggetto / Titolo"}</TableHead>
+                <TableHead className="w-[130px] text-xs font-semibold text-center">{t("notifications.logColStatus") || "Stato"}</TableHead>
+                <TableHead className="w-[80px] text-xs font-semibold text-right">{t("notifications.logColActions") || "Azioni"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -204,20 +203,19 @@ export function NotificationLogsView() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-                    Caricamento registro notifiche...
+                    {t("common.loading") || "Caricamento..."}
                   </TableCell>
                 </TableRow>
               ) : logs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                    Nessuna notifica registrata nel periodo selezionato.
+                    {t("notifications.noLogsFound") || "Nessun log registrato."}
                   </TableCell>
                 </TableRow>
               ) : (
                 logs.map((log) => {
                   const isEmail = Number(log.channel) === NotificationChannel.EMAIL;
                   const isSuccess = Number(log.status) === NotificationStatus.SENT;
-                  const webhookEvents = log.response?.webhook_events || [];
                   const lastEvent = log.response?.last_event;
 
                   return (
@@ -229,11 +227,11 @@ export function NotificationLogsView() {
                         <div className="flex items-center gap-1.5 text-xs font-semibold">
                           {isEmail ? (
                             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                              <Mail className="h-3.5 w-3.5" /> Email
+                              <Mail className="h-3.5 w-3.5" /> {t("notifications.channelEmail") || "Email"}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                              <MessageSquare className="h-3.5 w-3.5" /> Telegram
+                              <MessageSquare className="h-3.5 w-3.5" /> {t("notifications.channelTelegram") || "Telegram"}
                             </span>
                           )}
                         </div>
@@ -248,11 +246,11 @@ export function NotificationLogsView() {
                         <div className="inline-flex items-center gap-1">
                           {isSuccess ? (
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-semibold gap-1">
-                              <CheckCircle2 className="h-3 w-3" /> Inviato
+                              <CheckCircle2 className="h-3 w-3" /> {t("notifications.logStatusSent") || "Inviato"}
                             </Badge>
                           ) : (
                             <Badge variant="destructive" className="text-[11px] font-semibold gap-1">
-                              <AlertCircle className="h-3 w-3" /> Fallito
+                              <AlertCircle className="h-3 w-3" /> {t("notifications.logStatusFailed") || "Fallito"}
                             </Badge>
                           )}
                           {lastEvent && (
@@ -268,7 +266,7 @@ export function NotificationLogsView() {
                           size="sm"
                           onClick={() => setSelectedLog(log)}
                           className="h-7 w-7 p-0 cursor-pointer"
-                          title="Visualizza dettagli"
+                          title={t("notifications.logColActions") || "Dettagli"}
                         >
                           <Eye className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                         </Button>
@@ -284,11 +282,13 @@ export function NotificationLogsView() {
         {/* Pagination Bar */}
         <div className="p-3 border-t bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
           <div>
-            Totale: <strong className="text-foreground">{total}</strong> notifiche
+            {t("notifications.totalTemplates") || "Totale"}: <strong className="text-foreground">{total}</strong> {t("notifications.tabLogs") || "notifiche"}
           </div>
           <div className="flex items-center gap-2">
             <span>
-              Pagina {page} di {totalPages}
+              {(t("notifications.logPageOf") || "Pagina {page} di {total}")
+                .replace("{page}", String(page))
+                .replace("{total}", String(totalPages))}
             </span>
             <Button
               variant="outline"
@@ -324,10 +324,10 @@ export function NotificationLogsView() {
                   <MessageSquare className="h-5 w-5" />
                 )}
               </div>
-              <DialogTitle>Dettagli Notifica</DialogTitle>
+              <DialogTitle>{t("notifications.logDetailTitle") || "Dettagli Notifica"}</DialogTitle>
             </div>
             <DialogDescription>
-              ID Transazione: <code className="font-mono text-xs">{selectedLog?.id}</code>
+              ID: <code className="font-mono text-xs">{selectedLog?.id}</code>
             </DialogDescription>
           </DialogHeader>
 
@@ -336,15 +336,15 @@ export function NotificationLogsView() {
               {/* Overview grid */}
               <div className="grid grid-cols-2 gap-3 text-xs p-3.5 bg-muted/40 rounded-xl border">
                 <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">Data & Ora</span>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">{t("notifications.logColDate") || "Data & Ora"}</span>
                   <span className="font-mono font-medium">{formatDate(selectedLog.created_at)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">Destinatario</span>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">{t("notifications.logColRecipient") || "Destinatario"}</span>
                   <span className="font-mono font-medium truncate block">{selectedLog.recipient}</span>
                 </div>
                 <div className="col-span-2">
-                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">Oggetto</span>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-bold">{t("notifications.columnSubject") || "Oggetto"}</span>
                   <span className="font-medium text-foreground">{selectedLog.subject || "—"}</span>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export function NotificationLogsView() {
               {Array.isArray(selectedLog.response?.webhook_events) && selectedLog.response.webhook_events.length > 0 && (
                 <div className="space-y-2">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                    Cronologia Eventi Resend Webhook
+                    {t("notifications.logSectionWebhookTimeline") || "Timeline Eventi Webhook Resend"}
                   </span>
                   <div className="space-y-1.5 p-3 rounded-xl bg-slate-900 text-slate-100 text-xs font-mono">
                     {selectedLog.response.webhook_events.map((evt: any, i: number) => (
@@ -369,7 +369,7 @@ export function NotificationLogsView() {
               {/* Raw JSON Payload */}
               <div className="space-y-1.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                  Dati Richiesta (Payload)
+                  {t("notifications.logSectionPayload") || "Dati Payload (JSON)"}
                 </span>
                 <pre className="p-3 bg-muted rounded-xl text-[11px] font-mono whitespace-pre-wrap max-h-40 overflow-auto border">
                   {JSON.stringify(selectedLog.request, null, 2)}
@@ -379,7 +379,7 @@ export function NotificationLogsView() {
               {/* Raw JSON Response */}
               <div className="space-y-1.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                  Risposta del Server / Provider
+                  {t("notifications.logSectionResponse") || "Risposta Server / Provider"}
                 </span>
                 <pre className="p-3 bg-muted rounded-xl text-[11px] font-mono whitespace-pre-wrap max-h-40 overflow-auto border">
                   {JSON.stringify(selectedLog.response, null, 2)}

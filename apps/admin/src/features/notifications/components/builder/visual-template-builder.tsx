@@ -113,6 +113,7 @@ import {
   Smartphone,
   Monitor,
 } from "lucide-react";
+import { useTranslation } from "@/i18n/context";
 import { toast } from "sonner";
 
 interface VisualTemplateBuilderProps {
@@ -127,22 +128,22 @@ interface VisualTemplateBuilderProps {
 // Block type metadata helper
 const BLOCK_META: Record<
   string,
-  { label: string; icon: React.ComponentType<{ className?: string }>; color: string }
+  { icon: React.ComponentType<{ className?: string }>; color: string; defaultLabel: string }
 > = {
-  header: { label: "Шапка бренда (Header)", icon: Building2, color: "text-blue-500 bg-blue-500/10" },
-  greeting: { label: "Приветствие и Вводный текст", icon: FileText, color: "text-indigo-500 bg-indigo-500/10" },
-  summary_table: { label: "Таблица деталей курса (Riepilogo)", icon: TableProperties, color: "text-amber-500 bg-amber-500/10" },
-  contact_summary_table: { label: "Таблица данных заявки (Contatto)", icon: TableProperties, color: "text-amber-500 bg-amber-500/10" },
-  cta_button: { label: "Кнопка действия (CTA)", icon: ExternalLink, color: "text-emerald-500 bg-emerald-500/10" },
-  bank_details: { label: "Реквизиты IBAN / Оплата", icon: CreditCard, color: "text-green-600 bg-green-600/10" },
-  school_location: { label: "Адрес филиала и WhatsApp", icon: MapPin, color: "text-orange-500 bg-orange-500/10" },
-  custom_text: { label: "Пользовательский блок / Заметка", icon: HelpCircle, color: "text-purple-500 bg-purple-500/10" },
-  footer: { label: "Подвал школы (Footer)", icon: Building2, color: "text-slate-500 bg-slate-500/10" },
-  tg_header: { label: "Заголовок Telegram", icon: MessageSquare, color: "text-sky-500 bg-sky-500/10" },
-  tg_student_info: { label: "Данные ученика / клиента", icon: FileText, color: "text-indigo-500 bg-indigo-500/10" },
-  tg_course_info: { label: "Детали курса и расписание", icon: TableProperties, color: "text-amber-500 bg-amber-500/10" },
-  tg_payment_info: { label: "Сумма и статус оплаты", icon: CreditCard, color: "text-emerald-500 bg-emerald-500/10" },
-  tg_custom_text: { label: "Текст заметки Telegram", icon: HelpCircle, color: "text-purple-500 bg-purple-500/10" },
+  header: { icon: Building2, color: "text-blue-500 bg-blue-500/10", defaultLabel: "Brand Header (Header)" },
+  greeting: { icon: FileText, color: "text-indigo-500 bg-indigo-500/10", defaultLabel: "Greeting & Intro Text" },
+  summary_table: { icon: TableProperties, color: "text-amber-500 bg-amber-500/10", defaultLabel: "Course Summary Table" },
+  contact_summary_table: { icon: TableProperties, color: "text-amber-500 bg-amber-500/10", defaultLabel: "Contact Request Data Table" },
+  cta_button: { icon: ExternalLink, color: "text-emerald-500 bg-emerald-500/10", defaultLabel: "Action Button (CTA)" },
+  bank_details: { icon: CreditCard, color: "text-green-600 bg-green-600/10", defaultLabel: "Bank Details IBAN / Payment" },
+  school_location: { icon: MapPin, color: "text-orange-500 bg-orange-500/10", defaultLabel: "School Location & WhatsApp" },
+  custom_text: { icon: HelpCircle, color: "text-purple-500 bg-purple-500/10", defaultLabel: "Custom Block / Note" },
+  footer: { icon: Building2, color: "text-slate-500 bg-slate-500/10", defaultLabel: "School Footer" },
+  tg_header: { icon: MessageSquare, color: "text-sky-500 bg-sky-500/10", defaultLabel: "Telegram Header" },
+  tg_student_info: { icon: FileText, color: "text-indigo-500 bg-indigo-500/10", defaultLabel: "Student & Customer Data" },
+  tg_course_info: { icon: TableProperties, color: "text-amber-500 bg-amber-500/10", defaultLabel: "Course Details & Schedule" },
+  tg_payment_info: { icon: CreditCard, color: "text-emerald-500 bg-emerald-500/10", defaultLabel: "Amount & Payment Status" },
+  tg_custom_text: { icon: HelpCircle, color: "text-purple-500 bg-purple-500/10", defaultLabel: "Telegram Note Text" },
 };
 
 // Sortable Block Item Component
@@ -171,21 +172,24 @@ function SortableBlockItem({
   onDelete?: () => void;
   availableVariables: string[];
 }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: block.id });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 50 : undefined,
   };
 
   const meta = BLOCK_META[block.type] || {
-    label: block.title || block.type,
     icon: Layers,
     color: "text-primary bg-primary/10",
+    defaultLabel: block.title || block.type,
   };
   const IconComp = meta.icon;
+  const blockTitle = t(`notifications.block_${block.type}` as any) || block.title || meta.defaultLabel;
 
   const insertVariable = (propKey: string, varName: string) => {
     const current = block.props[propKey] || "";
@@ -212,8 +216,9 @@ function SortableBlockItem({
             type="button"
             {...attributes}
             {...listeners}
-            className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted cursor-grab active:cursor-grabbing transition-colors"
-            title="Перетащите для изменения порядка"
+            className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted cursor-grab active:cursor-grabbing transition-colors touch-none select-none"
+            style={{ touchAction: "none" }}
+            title={t("notifications.tipDrag") || "Drag to reorder"}
           >
             <GripVertical className="h-4 w-4" />
           </button>
@@ -227,11 +232,11 @@ function SortableBlockItem({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="font-bold text-xs text-foreground truncate">
-                {block.title || meta.label}
+                {blockTitle}
               </span>
               {!block.is_enabled && (
                 <Badge variant="secondary" className="text-[10px] py-0 px-1.5 font-normal">
-                  Скрыт
+                  {t("notifications.blockHidden") || "Nascosto"}
                 </Badge>
               )}
             </div>
@@ -248,10 +253,10 @@ function SortableBlockItem({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
             onClick={onMoveUp}
             disabled={index === 0}
-            title="Переместить выше"
+            title={t("common.previous") || "Move up"}
           >
             <ArrowUp className="h-3.5 w-3.5" />
           </Button>
@@ -260,10 +265,10 @@ function SortableBlockItem({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground disabled:opacity-20 cursor-pointer"
             onClick={onMoveDown}
             disabled={index === total - 1}
-            title="Переместить ниже"
+            title={t("common.next") || "Move down"}
           >
             <ArrowDown className="h-3.5 w-3.5" />
           </Button>
@@ -272,8 +277,8 @@ function SortableBlockItem({
           <Switch
             checked={block.is_enabled}
             onCheckedChange={onToggleEnabled}
-            className="scale-80 data-[state=checked]:bg-emerald-600"
-            title={block.is_enabled ? "Скрыть блок" : "Включить блок"}
+            className="scale-80 cursor-pointer data-[state=checked]:bg-emerald-600"
+            title={block.is_enabled ? (t("notifications.blockHidden") || "Nascondi") : (t("common.active") || "Attiva")}
           />
 
           {/* Expand Settings Button */}
@@ -281,11 +286,11 @@ function SortableBlockItem({
             type="button"
             variant="ghost"
             size="icon"
-            className={`h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg transition-transform duration-200 ${
+            className={`h-7 w-7 text-muted-foreground hover:text-foreground rounded-lg transition-transform duration-200 cursor-pointer ${
               isExpanded ? "bg-muted text-foreground" : ""
             }`}
             onClick={onToggleExpand}
-            title={isExpanded ? "Свернуть" : "Настроить блок"}
+            title={isExpanded ? (t("common.close") || "Chiudi") : (t("common.edit") || "Modifica")}
           >
             {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </Button>
@@ -296,9 +301,9 @@ function SortableBlockItem({
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive cursor-pointer"
               onClick={onDelete}
-              title="Удалить блок"
+              title={t("notifications.blockDeleted") || "Elimina"}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -726,6 +731,7 @@ export function VisualTemplateBuilder({
   onOpenTest,
   isLoading = false,
 }: VisualTemplateBuilderProps) {
+  const { t, locale } = useTranslation();
   if (!template) return null;
 
   const isEmail = template.channel === NotificationChannel.EMAIL;
@@ -759,7 +765,7 @@ export function VisualTemplateBuilder({
 
   // DnD Sensors
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -769,13 +775,14 @@ export function VisualTemplateBuilder({
       setBlocksConfig((prev) => {
         const oldIndex = prev.blocks.findIndex((b) => b.id === active.id);
         const newIndex = prev.blocks.findIndex((b) => b.id === over.id);
+        if (oldIndex === -1 || newIndex === -1) return prev;
         const reordered = arrayMove(prev.blocks, oldIndex, newIndex).map((b, idx) => ({
           ...b,
           order: idx,
         }));
         return { ...prev, blocks: reordered };
       });
-      toast.info("Порядок секций обновлен");
+      toast.info(t("notifications.reorderSuccess") || "Ordine dei blocchi aggiornato");
     }
   };
 
@@ -821,12 +828,12 @@ export function VisualTemplateBuilder({
     const newBlock: TemplateBlock = {
       id: `custom-${Date.now()}`,
       type: isEmail ? "custom_text" : "tg_custom_text",
-      title: isEmail ? "Пользовательский блок" : "Заметка Telegram",
+      title: isEmail ? (t("notifications.customBlockTitle") || "Blocco Personalizzato") : (t("notifications.customBlockTgTitle") || "Nota Telegram"),
       is_enabled: true,
       order: blocksConfig.blocks.length,
       props: isEmail
-        ? { box_title: "📝 Nota Aggiuntiva:", content: "Inserisci qui il testo..." }
-        : { content: "📝 *Nota:*\nTesto..." },
+        ? { box_title: "📝 " + (t("notifications.customBlockDefaultBox") || "Nota:"), content: t("notifications.customBlockDefaultContent") || "Inserisci qui il testo..." }
+        : { content: "📝 *" + (t("notifications.customBlockDefaultBox") || "Nota:") + "*\n..." },
     };
 
     setBlocksConfig((prev) => ({
@@ -834,7 +841,7 @@ export function VisualTemplateBuilder({
       blocks: [...prev.blocks, newBlock],
     }));
     setExpandedBlockId(newBlock.id);
-    toast.success("Новый блок добавлен");
+    toast.success(t("notifications.newBlockAdded") || "Nuovo blocco aggiunto");
   };
 
   const handleDeleteBlock = (id: string) => {
@@ -842,14 +849,14 @@ export function VisualTemplateBuilder({
       ...prev,
       blocks: prev.blocks.filter((b) => b.id !== id),
     }));
-    toast.info("Блок удален");
+    toast.info(t("notifications.blockDeleted") || "Blocco eliminato");
   };
 
   const handleResetToDefault = () => {
     const defaults = getDefaultBlocksForTemplate(template.code, template.channel);
     setBlocksConfig(defaults);
     setExpandedBlockId(defaults.blocks[0]?.id || null);
-    toast.success("Шаблон сброшен к эталонному стандарту Atena School");
+    toast.success(t("notifications.resetDefaultSuccess") || "Modello ripristinato allo standard originale Atena School");
   };
 
   // Compile real live preview
@@ -872,10 +879,10 @@ export function VisualTemplateBuilder({
         subject: isEmail ? liveRendered.subject : undefined,
         is_active: template.is_active,
       });
-      toast.success("Шаблон успешно сохранен в базе данных!");
+      toast.success(t("notifications.saveSuccessDb") || "Modello salvato con successo nel database!");
       onClose();
     } catch (err: any) {
-      toast.error(err?.message || "Ошибка сохранения шаблона");
+      toast.error(err?.message || (t("notifications.saveError") || "Errore durante il salvataggio"));
     } finally {
       setIsSaving(false);
     }
@@ -897,16 +904,18 @@ export function VisualTemplateBuilder({
               </div>
               <div>
                 <DialogTitle className="text-base font-bold flex items-center gap-2">
-                  <span>Конструктор: {template.name}</span>
+                  <span>
+                    {(t("notifications.builderTitle") || "Costruttore: {name}").replace("{name}", template.name)}
+                  </span>
                   <Badge variant={template.is_active ? "default" : "secondary"} className="text-xs">
-                    {template.is_active ? "Attivo" : "Disattivato"}
+                    {template.is_active ? (t("common.active") || "Attivo") : (t("common.archived") || "Disattivato")}
                   </Badge>
                   <Badge variant="outline" className="font-mono text-xs">
                     {template.code}
                   </Badge>
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                  Перетаскивайте блоки, меняйте тексты и настраивайте видимость секций в реальном времени.
+                  {t("notifications.builderSubtitle") || "Trascina i blocchi per riordinarli, modifica i contenuti e configura la visibilità in tempo reale."}
                 </DialogDescription>
               </div>
             </div>
@@ -916,33 +925,33 @@ export function VisualTemplateBuilder({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 h-8 text-xs rounded-xl"
+                className="gap-1.5 h-8 text-xs rounded-xl cursor-pointer"
                 onClick={handleResetToDefault}
-                title="Сбросить к оригиналу"
+                title={t("notifications.resetDefault") || "Ripristina originale"}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
-                <span>Сброс к оригиналу</span>
+                <span>{t("notifications.resetDefault") || "Ripristina Originale"}</span>
               </Button>
 
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 h-8 text-xs rounded-xl text-primary font-semibold"
+                className="gap-1.5 h-8 text-xs rounded-xl text-primary font-semibold cursor-pointer"
                 onClick={() => onOpenTest(template)}
               >
                 <Send className="h-3.5 w-3.5" />
-                <span>Invia Test</span>
+                <span>{t("notifications.sendTest") || "Invia Test"}</span>
               </Button>
 
               <Button
                 variant="default"
                 size="sm"
-                className="gap-1.5 h-8 text-xs font-bold rounded-xl shadow-sm"
+                className="gap-1.5 h-8 text-xs font-bold rounded-xl shadow-xs cursor-pointer"
                 onClick={handleSave}
                 disabled={isSaving || isLoading}
               >
                 <Save className="h-3.5 w-3.5" />
-                <span>{isSaving ? "Salvataggio..." : "Salva Modifiche"}</span>
+                <span>{isSaving ? (t("notifications.savingChanges") || "Salvataggio...") : (t("notifications.saveChanges") || "Salva Modifiche")}</span>
               </Button>
 
               <div className="h-4 w-px bg-border mx-1" />
@@ -950,9 +959,9 @@ export function VisualTemplateBuilder({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                 onClick={onClose}
-                title="Chiudi"
+                title={t("common.close") || "Chiudi"}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -968,13 +977,13 @@ export function VisualTemplateBuilder({
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 overflow-hidden">
               <div className="p-3 border-b bg-muted/10 shrink-0 flex items-center justify-between">
                 <TabsList className="grid grid-cols-2 h-8 w-64">
-                  <TabsTrigger value="builder" className="text-xs gap-1.5 font-semibold">
+                  <TabsTrigger value="builder" className="text-xs gap-1.5 font-semibold cursor-pointer">
                     <Layers className="h-3.5 w-3.5" />
-                    <span>Блоки ({blocksConfig.blocks.length})</span>
+                    <span>{(t("notifications.tabBlocks") || "Blocchi ({count})").replace("{count}", String(blocksConfig.blocks.length))}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="simulator" className="text-xs gap-1.5 font-semibold">
+                  <TabsTrigger value="simulator" className="text-xs gap-1.5 font-semibold cursor-pointer">
                     <Sliders className="h-3.5 w-3.5" />
-                    <span>Симулятор</span>
+                    <span>{t("notifications.tabSimulator") || "Simulatore"}</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -983,11 +992,11 @@ export function VisualTemplateBuilder({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-8 text-xs gap-1 rounded-lg"
+                    className="h-8 text-xs gap-1 rounded-lg cursor-pointer"
                     onClick={handleAddCustomBlock}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    <span>+ Блок</span>
+                    <span>{t("notifications.addBlock") || "+ Blocco"}</span>
                   </Button>
                 )}
               </div>
@@ -997,7 +1006,7 @@ export function VisualTemplateBuilder({
                 <ScrollArea className="h-full p-4">
                   <div className="space-y-3 pb-6">
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      💡 <strong>Совет:</strong> Перетаскивайте плашки за левую ручку или используйте стрелочки для изменения порядка. Клик по блоку раскрывает настройки.
+                      {t("notifications.tipDrag") || "💡 Suggerimento: Trascina i blocchi dalla maniglia sinistra o usa le frecce per riordinarli. Fai clic su un blocco per aprirne i dettagli."}
                     </p>
 
                     <DndContext
@@ -1046,35 +1055,35 @@ export function VisualTemplateBuilder({
                 <ScrollArea className="h-full p-4">
                   <div className="space-y-3 pb-6">
                     <div className="flex items-center justify-between pb-1 border-b">
-                      <span className="text-xs font-bold text-foreground">Тестовые данные для симуляции</span>
+                      <span className="text-xs font-bold text-foreground">{t("notifications.simulatorHeading") || "Dati di simulazione di test"}</span>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-[11px] text-muted-foreground hover:text-primary"
+                        className="h-6 text-[11px] text-muted-foreground hover:text-primary cursor-pointer"
                         onClick={() => {
                           setCustomVars(SAMPLE_PREVIEW_DATA);
-                          toast.success("Данные сброшены");
+                          toast.success(t("notifications.simDataReset") || "Dati di test reimpostati");
                         }}
                       >
                         <RotateCcw className="h-3 w-3 mr-1" />
-                        Сбросить
+                        {t("notifications.resetSimData") || "Reimposta"}
                       </Button>
                     </div>
 
                     <p className="text-xs text-muted-foreground">
-                      Изменяйте тестовые значения для проверки отображения в разных ситуациях:
+                      {t("notifications.simulatorHint") || "Modifica i valori di prova per verificare la resa in diverse situazioni:"}
                     </p>
 
                     <div className="space-y-3">
                       {[
-                        { key: "purchaser_name", label: "Имя покупателя / родителя" },
-                        { key: "student_name", label: "Имя ученика" },
-                        { key: "course_name", label: "Название курса" },
-                        { key: "total_amount", label: "Итоговая сумма (€)" },
-                        { key: "registration_fee", label: "Взнос ассоциации (€)" },
-                        { key: "lesson_schedule", label: "Расписание уроков" },
-                        { key: "date", label: "Дата старта курса" },
-                        { key: "booking_id", label: "ID бронирования" },
+                        { key: "purchaser_name", label: "purchaser_name (Genitore/Acquirente)" },
+                        { key: "student_name", label: "student_name (Studente)" },
+                        { key: "course_name", label: "course_name (Corso)" },
+                        { key: "total_amount", label: "total_amount (€)" },
+                        { key: "registration_fee", label: "registration_fee (€)" },
+                        { key: "lesson_schedule", label: "lesson_schedule (Orari)" },
+                        { key: "date", label: "date (Data Inizio)" },
+                        { key: "booking_id", label: "booking_id (ID)" },
                       ].map(({ key, label }) => (
                         <div key={key} className="space-y-1">
                           <div className="flex items-center justify-between">
@@ -1103,7 +1112,10 @@ export function VisualTemplateBuilder({
             <div className="flex items-center justify-between shrink-0 select-none">
               <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>Живой рендер 1:1 ({previewDevice === "mobile" ? "Мобильный экран 375px" : "Десктоп"})</span>
+                <span>
+                  {(t("notifications.livePreviewTitle") || "Anteprima dal Vivo 1:1 ({device})")
+                    .replace("{device}", previewDevice === "mobile" ? (t("notifications.previewDeviceMobile") || "Mobile 375px") : (t("notifications.previewDeviceDesktop") || "Desktop"))}
+                </span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -1118,7 +1130,7 @@ export function VisualTemplateBuilder({
                     }`}
                   >
                     <Monitor className="h-3 w-3" />
-                    <span>Desktop</span>
+                    <span>{t("notifications.previewDeviceDesktop") || "Desktop"}</span>
                   </button>
                   <button
                     type="button"
@@ -1130,7 +1142,7 @@ export function VisualTemplateBuilder({
                     }`}
                   >
                     <Smartphone className="h-3 w-3" />
-                    <span>Mobile (375px)</span>
+                    <span>{t("notifications.previewDeviceMobile") || "Mobile (375px)"}</span>
                   </button>
                 </div>
 
@@ -1171,9 +1183,9 @@ export function VisualTemplateBuilder({
                   {/* Sender Bar */}
                   <div className="bg-slate-50 border-b border-slate-200 px-3.5 py-1.5 text-[11px] flex items-center justify-between text-slate-600 shrink-0">
                     <div className="truncate">
-                      <span className="font-bold text-slate-800">Da:</span> Atena School &lt;info@atenaschool.com&gt;
+                      <span className="font-bold text-slate-800">{t("notifications.emailFrom") || "Da:"}</span> Atena School &lt;info@atenaschool.com&gt;
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono">HTML 5 • Formattato</div>
+                    <div className="text-[10px] text-slate-500 font-mono">{t("notifications.emailHtmlFormatted") || "HTML 5 • Formattato"}</div>
                   </div>
 
                   {/* Iframe View */}
