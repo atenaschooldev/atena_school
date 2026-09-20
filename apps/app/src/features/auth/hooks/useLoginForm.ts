@@ -3,7 +3,8 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { toast } from "sonner";
 
-import { loginWithEmailAction, getOAuthUrlAction } from "@/app/actions/auth";
+import { loginWithEmailAction } from "@/app/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 
 export function useLoginForm() {
   const router = useRouter();
@@ -13,7 +14,10 @@ export function useLoginForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const redirectUrl = searchParams.get("redirect") || "/";
+  const rawRedirect = searchParams.get("redirect");
+  const redirectUrl = (rawRedirect && rawRedirect.startsWith("/") && !rawRedirect.startsWith("/autenticazione"))
+    ? rawRedirect
+    : "/dashboard";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +36,17 @@ export function useLoginForm() {
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+    const supabase = createClient();
     const redirectTo = `${window.location.origin}/autenticazione/callback?next=${encodeURIComponent(redirectUrl)}`;
-    const res = await getOAuthUrlAction({ provider, redirectTo });
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo,
+      },
+    });
 
-    if (res.success && res.url) {
-      window.location.href = res.url;
-    } else {
-      toast.error(res.error || "Impossibile avviare l'accesso social");
+    if (error) {
+      toast.error(error.message || "Impossibile avviare l'accesso social");
     }
   };
 

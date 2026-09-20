@@ -8,7 +8,7 @@ import { linkUserAccountWorkflow, DEFAULT_SCHOOL_PROFILE } from "@atena/core";
 
 async function getAuthToken(): Promise<string | null> {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) return session.access_token;
   } catch {}
@@ -36,7 +36,7 @@ function getBackendUrl(): string {
 // ─── getDashboardDataAction ───────────────────────────────────────────────────
 
 export async function getDashboardDataAction() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
@@ -180,7 +180,7 @@ export async function getDashboardDataAction() {
 // ─── updateUserProfileAction ──────────────────────────────────────────────────
 
 export async function updateUserProfileAction(params: { profileName: string; profilePhone: string }) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
@@ -209,7 +209,7 @@ export async function updateUserProfileAction(params: { profileName: string; pro
 // ─── getBookingLessonsAction ──────────────────────────────────────────────────
 
 export async function getBookingLessonsAction(bookingId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
@@ -276,7 +276,7 @@ export async function getBookingLessonsAction(bookingId: string) {
 // ─── scheduleNextLessonAction ─────────────────────────────────────────────────
 
 export async function scheduleNextLessonAction(bookingId: string, dateStr: string, timeStr: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Non autorizzato" };
 

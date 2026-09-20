@@ -195,7 +195,7 @@ function LoginForm() {
             <span className="text-[11px] xl:text-xs text-gray-500 font-bold max-h-[780px]:text-[10px]">
               Non hai un account?{" "}
               <Link
-                href={`/autenticazione/registrati${redirectUrl !== "/" ? `?redirect=${encodeURIComponent(redirectUrl)}` : ""}`}
+                href="/autenticazione/registrati"
                 className="text-[#F8861D] hover:underline transition-colors duration-200"
               >
                 Registrati

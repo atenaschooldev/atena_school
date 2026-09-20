@@ -33,7 +33,13 @@ build/
 .env.staging
 .env.production
 *.env
+.env.*
+apps/backend/.env.*
 .dev.vars
+vercel-landing-env.txt
+*vercel-env*
+vercel-*.txt
+*.txt.env
 !.env.example
 !*.env.example
 

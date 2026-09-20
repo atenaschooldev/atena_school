@@ -87,7 +87,7 @@ interface BlogPostRow {
 
 export const getHeroData = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('hero').select('*').single<HeroRow>();
     return {
       title_it: data?.title_it || '',
@@ -103,7 +103,7 @@ export const getHeroData = unstable_cache(
 
 export const getAboutData = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('about').select('*').single<AboutRow>();
     return {
       title_it: data?.title_it || '',
@@ -120,7 +120,7 @@ export const getAboutData = unstable_cache(
 
 export const getTestimonials = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('testimonials').select('*').eq('is_active', true).returns<TestimonialRow[]>();
     return (data || []).map((t) => ({
       ...t,
@@ -135,7 +135,7 @@ export const getTestimonials = unstable_cache(
 
 export const getContactData = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('site_contact').select('*').single<ContactRow>();
     return {
       address: data?.address || '',
@@ -153,7 +153,7 @@ export const getContactData = unstable_cache(
 
 export const getTeachers = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('profiles').select('*').eq('role', 'teacher').order('full_name').returns<TeacherProfileRow[]>();
     return (data || []).map((t) => ({
       ...t,
@@ -214,7 +214,7 @@ export async function getCourses() {
 
 export const getBlogPosts = unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase
       .from('blog_posts')
       .select('*')
@@ -281,7 +281,7 @@ export async function getSingleCourse(id: string) {
 
 export const getSingleBlogPost = (slug: string) => unstable_cache(
   async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.from('blog_posts').select('*').eq('slug', slug).single<BlogPostRow>();
     return data ? {
       ...data,

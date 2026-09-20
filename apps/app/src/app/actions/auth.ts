@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function loginWithEmailAction(params: { email: string; password: string }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email: params.email,
       password: params.password,
@@ -23,7 +23,7 @@ export async function signUpWithEmailAction(params: {
   metadata?: any;
 }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signUp({
       email: params.email,
       password: params.password,
@@ -44,7 +44,7 @@ export async function getOAuthUrlAction(params: {
   redirectTo: string;
 }) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: params.provider,
       options: {
@@ -62,7 +62,7 @@ export async function getOAuthUrlAction(params: {
 
 export async function signOutAction() {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
     return { success: true };
@@ -74,7 +74,7 @@ export async function signOutAction() {
 
 export async function forgotPasswordAction(email: string) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}/autenticazione/callback?next=/autenticazione/reimposta-password`,
     });
@@ -88,7 +88,7 @@ export async function forgotPasswordAction(email: string) {
 
 export async function resetPasswordAction(password: string) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.auth.updateUser({ password });
     if (error) throw error;
     return { success: true };

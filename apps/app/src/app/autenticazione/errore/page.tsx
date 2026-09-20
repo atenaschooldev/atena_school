@@ -21,7 +21,7 @@ export default function AuthCodeErrorPage() {
         </div>
 
         <Link
-          href="/autenticazione/accedi"
+          href="/autenticazione"
           className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-[#043569] text-white text-xs font-bold rounded-xl hover:bg-[#032852] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
