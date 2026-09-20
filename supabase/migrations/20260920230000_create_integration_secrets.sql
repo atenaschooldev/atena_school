@@ -35,3 +35,6 @@ DO $$ BEGIN
         WITH CHECK (EXISTS (SELECT 1 FROM public.users WHERE users.id = auth.uid() AND users.role = 3));
     END IF;
 END $$;
+
+-- 3. Grant Table-Level Permissions
+GRANT ALL ON TABLE public.integration_secrets TO postgres, service_role, authenticated;
