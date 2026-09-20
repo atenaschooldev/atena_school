@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { NotificationTemplateRecord, UpdateNotificationTemplateDto } from "../types";
+import type { NotificationTemplateRecord, UpdateNotificationTemplateDto } from "../types";
 import { VisualTemplateBuilder } from "./builder/visual-template-builder";
 
 interface TemplateEditorDrawerProps {
