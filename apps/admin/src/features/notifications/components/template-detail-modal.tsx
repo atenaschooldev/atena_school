@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationChannel } from "../types";
 import type { NotificationTemplateRecord } from "../types";
 import { TemplatePreviewFrame, SAMPLE_PREVIEW_DATA } from "./template-preview-card";
