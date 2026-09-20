@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import {
   Mail,
   Send,
@@ -15,19 +13,113 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  RefreshCw,
-  KeyRound,
   ShieldCheck,
   Radio,
-  ExternalLink,
+  Copy,
+  Check,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { MaskedIntegrationSecretRecord, TestIntegrationResult } from "@atena/api-types";
 
+interface StatusFeedback {
+  type: "success" | "error";
+  message: string;
+  details?: string;
+  timestamp: string;
+}
+
+function FeedbackBanner({
+  status,
+  onClear,
+}: {
+  status: StatusFeedback | null;
+  onClear: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  if (!status) return null;
+
+  const isSuccess = status.type === "success";
+  const fullText = status.details
+    ? `${status.message}\n\nDettagli:\n${status.details}`
+    : status.message;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    toast.success("Copiato negli appunti");
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  return (
+    <div
+      className={`rounded-xl p-4 text-sm border transition-all mt-3 ${
+        isSuccess
+          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-900 dark:text-emerald-200"
+          : "bg-destructive/10 border-destructive/30 text-destructive dark:text-red-300"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start space-x-2.5 min-w-0 flex-1">
+          {isSuccess ? (
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+          ) : (
+            <AlertCircle className="h-5 w-5 shrink-0 text-destructive dark:text-red-400 mt-0.5" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm">
+              {isSuccess ? "✅ Operazione Riuscita" : "❌ Operazione Fallita"}
+            </p>
+            <p className="mt-1 text-xs opacity-90 leading-relaxed break-words">{status.message}</p>
+            {status.details && (
+              <pre className="mt-2.5 p-2.5 rounded-lg bg-black/10 dark:bg-black/40 text-[11px] font-mono whitespace-pre-wrap max-h-40 overflow-auto border border-border/50">
+                {status.details}
+              </pre>
+            )}
+            <span className="text-[10px] opacity-60 block mt-1.5">
+              Ora: {status.timestamp}
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center space-x-1 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="h-7 px-2.5 text-xs bg-background/50 hover:bg-background cursor-pointer"
+          >
+            {copied ? (
+              <Check className="h-3.5 w-3.5 mr-1 text-emerald-600" />
+            ) : (
+              <Copy className="h-3.5 w-3.5 mr-1" />
+            )}
+            {copied ? "Copiato!" : "Copia"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClear}
+            className="h-7 w-7 p-0 opacity-60 hover:opacity-100 cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function WhiteLabelIntegrations() {
   const [loading, setLoading] = useState<boolean>(true);
   const [integrations, setIntegrations] = useState<Record<string, MaskedIntegrationSecretRecord>>({});
+
+  // Status feedback states per card
+  const [resendStatus, setResendStatus] = useState<StatusFeedback | null>(null);
+  const [tgStatus, setTgStatus] = useState<StatusFeedback | null>(null);
+  const [stripeStatus, setStripeStatus] = useState<StatusFeedback | null>(null);
 
   // Form states
   const [resendKey, setResendKey] = useState("");
@@ -94,10 +186,23 @@ export function WhiteLabelIntegrations() {
           adminEmail: resendAdminEmail,
         },
       });
-      toast.success("Credenziali Resend aggiornate con successo!");
+      const now = new Date().toLocaleTimeString("it-IT");
+      setResendStatus({
+        type: "success",
+        message: "Credenziali Resend salvate con successo nel Database!",
+        timestamp: now,
+      });
+      toast.success("Credenziali Resend salvate nel Database!");
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || "Errore nel salvataggio di Resend");
+      const errMsg = err?.message || String(err);
+      setResendStatus({
+        type: "error",
+        message: "Impossibile salvare le credenziali Resend",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setSavingResend(false);
     }
@@ -109,13 +214,32 @@ export function WhiteLabelIntegrations() {
       const res = await api.post<TestIntegrationResult>("/admin/integrations/test/resend", {
         toEmail: resendAdminEmail || undefined,
       });
+      const now = new Date().toLocaleTimeString("it-IT");
       if (res.success) {
+        setResendStatus({
+          type: "success",
+          message: res.message,
+          timestamp: now,
+        });
         toast.success(res.message);
       } else {
+        setResendStatus({
+          type: "error",
+          message: res.message || "Invio email di test fallito",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.error(res.message);
       }
     } catch (err: any) {
-      toast.error(err.message || "Test email fallito");
+      const errMsg = err?.message || String(err);
+      setResendStatus({
+        type: "error",
+        message: "Errore durante il test di invio Resend",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setTestingResend(false);
     }
@@ -132,10 +256,23 @@ export function WhiteLabelIntegrations() {
           locale: tgLocale,
         },
       });
-      toast.success("Credenziali Telegram salvate con successo!");
+      const now = new Date().toLocaleTimeString("it-IT");
+      setTgStatus({
+        type: "success",
+        message: "Credenziali Telegram salvate con successo nel Database!",
+        timestamp: now,
+      });
+      toast.success("Credenziali Telegram salvate nel Database!");
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || "Errore nel salvataggio di Telegram");
+      const errMsg = err?.message || String(err);
+      setTgStatus({
+        type: "error",
+        message: "Impossibile salvare le credenziali Telegram",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setSavingTg(false);
     }
@@ -145,13 +282,32 @@ export function WhiteLabelIntegrations() {
     setTestingTg(true);
     try {
       const res = await api.post<TestIntegrationResult>("/admin/integrations/test/telegram", {});
+      const now = new Date().toLocaleTimeString("it-IT");
       if (res.success) {
+        setTgStatus({
+          type: "success",
+          message: res.message,
+          timestamp: now,
+        });
         toast.success(res.message);
       } else {
+        setTgStatus({
+          type: "error",
+          message: res.message || "Invio messaggio Telegram fallito",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.error(res.message);
       }
     } catch (err: any) {
-      toast.error(err.message || "Test messaggio Telegram fallito");
+      const errMsg = err?.message || String(err);
+      setTgStatus({
+        type: "error",
+        message: "Errore durante il test Telegram",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setTestingTg(false);
     }
@@ -161,13 +317,33 @@ export function WhiteLabelIntegrations() {
     setSettingWebhook(true);
     try {
       const res = await api.post<TestIntegrationResult>("/admin/integrations/telegram/set-webhook", {});
+      const now = new Date().toLocaleTimeString("it-IT");
       if (res.success) {
+        setTgStatus({
+          type: "success",
+          message: res.message,
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.success(res.message);
       } else {
+        setTgStatus({
+          type: "error",
+          message: res.message || "Registrazione webhook fallita",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.error(res.message);
       }
     } catch (err: any) {
-      toast.error(err.message || "Registrazione webhook fallita");
+      const errMsg = err?.message || String(err);
+      setTgStatus({
+        type: "error",
+        message: "Errore durante la registrazione del webhook Telegram",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setSettingWebhook(false);
     }
@@ -184,10 +360,23 @@ export function WhiteLabelIntegrations() {
           webhookSecret: stripeWebhook,
         },
       });
-      toast.success("Credenziali Stripe salvate con successo!");
+      const now = new Date().toLocaleTimeString("it-IT");
+      setStripeStatus({
+        type: "success",
+        message: "Credenziali Stripe salvate con successo nel Database!",
+        timestamp: now,
+      });
+      toast.success("Credenziali Stripe salvate nel Database!");
       await loadData();
     } catch (err: any) {
-      toast.error(err.message || "Errore nel salvataggio di Stripe");
+      const errMsg = err?.message || String(err);
+      setStripeStatus({
+        type: "error",
+        message: "Impossibile salvare le credenziali Stripe",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setSavingStripe(false);
     }
@@ -197,13 +386,33 @@ export function WhiteLabelIntegrations() {
     setTestingStripe(true);
     try {
       const res = await api.post<TestIntegrationResult>("/admin/integrations/test/stripe", {});
+      const now = new Date().toLocaleTimeString("it-IT");
       if (res.success) {
+        setStripeStatus({
+          type: "success",
+          message: res.message,
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.success(res.message);
       } else {
+        setStripeStatus({
+          type: "error",
+          message: res.message || "Verifica Stripe fallita",
+          details: JSON.stringify(res.details || {}, null, 2),
+          timestamp: now,
+        });
         toast.error(res.message);
       }
     } catch (err: any) {
-      toast.error(err.message || "Verifica Stripe fallita");
+      const errMsg = err?.message || String(err);
+      setStripeStatus({
+        type: "error",
+        message: "Errore durante la verifica delle credenziali Stripe",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
     } finally {
       setTestingStripe(false);
     }
@@ -253,16 +462,14 @@ export function WhiteLabelIntegrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="resendApiKey">Resend API Key</Label>
-              <div className="relative">
-                <Input
-                  id="resendApiKey"
-                  type="text"
-                  value={resendKey}
-                  onChange={(e) => setResendKey(e.target.value)}
-                  placeholder="re_••••••••••••"
-                  className="font-mono text-sm"
-                />
-              </div>
+              <Input
+                id="resendApiKey"
+                type="text"
+                value={resendKey}
+                onChange={(e) => setResendKey(e.target.value)}
+                placeholder="re_••••••••••••"
+                className="font-mono text-sm"
+              />
               <p className="text-xs text-muted-foreground">
                 Lascia il valore mascherato per mantenere la chiave attuale, oppure inseriscine una nuova per sovrascriverla.
               </p>
@@ -290,13 +497,18 @@ export function WhiteLabelIntegrations() {
             </div>
           </div>
 
+          <FeedbackBanner
+            status={resendStatus}
+            onClear={() => setResendStatus(null)}
+          />
+
           <div className="flex items-center justify-between pt-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleTestResend}
               disabled={testingResend}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               {testingResend ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -305,7 +517,7 @@ export function WhiteLabelIntegrations() {
               )}
               Invia Email di Test
             </Button>
-            <Button size="sm" onClick={handleSaveResend} disabled={savingResend}>
+            <Button size="sm" onClick={handleSaveResend} disabled={savingResend} className="cursor-pointer">
               {savingResend && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Resend
             </Button>
@@ -359,11 +571,16 @@ export function WhiteLabelIntegrations() {
                 type="text"
                 value={tgChatId}
                 onChange={(e) => setTgChatId(e.target.value)}
-                placeholder="-100••••••••"
+                placeholder="-100123456789"
                 className="font-mono text-sm"
               />
             </div>
           </div>
+
+          <FeedbackBanner
+            status={tgStatus}
+            onClear={() => setTgStatus(null)}
+          />
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div className="flex items-center space-x-2">
@@ -372,7 +589,7 @@ export function WhiteLabelIntegrations() {
                 size="sm"
                 onClick={handleTestTelegram}
                 disabled={testingTg}
-                className="text-xs"
+                className="text-xs cursor-pointer"
               >
                 {testingTg ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -386,7 +603,7 @@ export function WhiteLabelIntegrations() {
                 size="sm"
                 onClick={handleSetTelegramWebhook}
                 disabled={settingWebhook}
-                className="text-xs"
+                className="text-xs cursor-pointer"
               >
                 {settingWebhook ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -396,7 +613,7 @@ export function WhiteLabelIntegrations() {
                 Registra Webhook Bot
               </Button>
             </div>
-            <Button size="sm" onClick={handleSaveTelegram} disabled={savingTg}>
+            <Button size="sm" onClick={handleSaveTelegram} disabled={savingTg} className="cursor-pointer">
               {savingTg && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Telegram
             </Button>
@@ -468,13 +685,18 @@ export function WhiteLabelIntegrations() {
             </div>
           </div>
 
+          <FeedbackBanner
+            status={stripeStatus}
+            onClear={() => setStripeStatus(null)}
+          />
+
           <div className="flex items-center justify-between pt-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleTestStripe}
               disabled={testingStripe}
-              className="text-xs"
+              className="text-xs cursor-pointer"
             >
               {testingStripe ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -483,7 +705,7 @@ export function WhiteLabelIntegrations() {
               )}
               Verifica Connessione Stripe
             </Button>
-            <Button size="sm" onClick={handleSaveStripe} disabled={savingStripe}>
+            <Button size="sm" onClick={handleSaveStripe} disabled={savingStripe} className="cursor-pointer">
               {savingStripe && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Credenziali Stripe
             </Button>
