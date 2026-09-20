@@ -62,7 +62,6 @@ export function NotificationLogsView() {
     const entry = NOTIFICATION_CHANNEL_DICTIONARY[channel as keyof typeof NOTIFICATION_CHANNEL_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
-      if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
     return channel === NotificationChannel.EMAIL ? "Email" : "Telegram";
@@ -72,7 +71,6 @@ export function NotificationLogsView() {
     const entry = NOTIFICATION_STATUS_DICTIONARY[status as keyof typeof NOTIFICATION_STATUS_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
-      if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
     return status === NotificationStatus.SENT ? "Inviato" : "Fallito";

@@ -73,7 +73,6 @@ export function NotificationsView() {
     const entry = NOTIFICATION_TYPE_DICTIONARY[num as keyof typeof NOTIFICATION_TYPE_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
-      if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
     if (typeof val === "string") {
@@ -82,7 +81,6 @@ export function NotificationsView() {
       );
       if (byCode) {
         if (locale === "en") return byCode.label_en || byCode.label_it;
-        if (locale === "ru") return byCode.label_ru || byCode.label_it;
         return byCode.label_it;
       }
     }
@@ -93,7 +91,6 @@ export function NotificationsView() {
     const entry = NOTIFICATION_CHANNEL_DICTIONARY[channel as keyof typeof NOTIFICATION_CHANNEL_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
-      if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
     return channel === NotificationChannel.EMAIL ? "Email" : "Telegram";
@@ -103,7 +100,6 @@ export function NotificationsView() {
     const entry = RECIPIENT_TYPE_DICTIONARY[recipientType as keyof typeof RECIPIENT_TYPE_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
-      if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
     if (recipientType === RecipientType.CUSTOMER) return "Cliente";
