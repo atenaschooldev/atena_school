@@ -1193,7 +1193,7 @@ export function WhiteLabelIntegrations() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="siteUrl">URL Sito Web / Vetrina</Label>
               <Input
@@ -1221,21 +1221,6 @@ export function WhiteLabelIntegrations() {
               />
               <p className="text-xs text-muted-foreground">
                 Usato nei pulsanti &quot;Accedi al tuo account&quot; nelle email di conferma
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="adminUrl">URL Portale CRM Admin</Label>
-              <Input
-                id="adminUrl"
-                type="url"
-                value={adminUrl}
-                onChange={(e) => setAdminUrl(e.target.value)}
-                placeholder="https://atena-school-admin.vercel.app"
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Usato nei pulsanti &quot;Admin CRM&quot; delle notifiche del bot Telegram
               </p>
             </div>
           </div>
