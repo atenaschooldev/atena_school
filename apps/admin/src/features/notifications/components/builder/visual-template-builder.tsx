@@ -1170,9 +1170,10 @@ export function VisualTemplateBuilder({
 
                   <div className="p-4 overflow-y-auto flex-1 flex flex-col justify-end space-y-2">
                     <div className="self-start max-w-[95%] bg-[#182533] border border-[#2b394a]/80 rounded-2xl rounded-tl-xs p-4 shadow-lg">
-                      <div className="text-xs leading-relaxed text-slate-100 whitespace-pre-wrap font-sans space-y-1">
-                        {liveRendered.html}
-                      </div>
+                      <div
+                        className="text-xs leading-relaxed text-slate-100 whitespace-pre-wrap font-sans space-y-1 [&_b]:font-bold [&_b]:text-white [&_code]:bg-[#0f1721] [&_code]:text-sky-300 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_a]:text-sky-400 [&_a]:underline [&_i]:italic [&_i]:text-slate-300"
+                        dangerouslySetInnerHTML={{ __html: liveRendered.html }}
+                      />
                       <div className="flex items-center justify-end gap-1 mt-2 text-[10px] text-slate-400">
                         <span>Oggi 18:30</span>
                         <Check className="h-3.5 w-3.5 text-sky-400" />

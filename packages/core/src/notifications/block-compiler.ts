@@ -710,6 +710,28 @@ export function renderEmailFromBlocks(
   return { subject: renderedSubject, html };
 }
 
+export function escapeTgHtml(text?: string | null): string {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+export function compileTgTemplateVariables(
+  text: string,
+  variables: Record<string, any>
+): string {
+  if (!text) return '';
+  return text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
+    const val = variables[key];
+    if (val === undefined || val === null) {
+      return '';
+    }
+    return escapeTgHtml(String(val));
+  });
+}
+
 /**
  * Compiles visual blocks configuration into Telegram HTML format
  */
@@ -737,7 +759,7 @@ export function renderTelegramFromBlocks(
 
     switch (block.type) {
       case 'tg_header': {
-        const rawTitle = compileTemplateVariables(p.title_text || '🎓 <b>NUOVA NOTIFICA ATENA SCHOOL</b>', v);
+        const rawTitle = compileTgTemplateVariables(p.title_text || '🎓 <b>NUOVA NOTIFICA ATENA SCHOOL</b>', v);
         lines.push(formatTgHtml(rawTitle));
         if (p.divider !== false) lines.push('━━━━━━━━━━━━━━━━━━━━');
         break;
@@ -746,34 +768,34 @@ export function renderTelegramFromBlocks(
       case 'tg_student_info': {
         const isLead = Boolean(v.sender_name && !v.student_name);
         if (isLead) {
-          const senderName = compileTemplateVariables(v.sender_name || 'Andrii Petukhov', v);
-          const phone = compileTemplateVariables(v.sender_phone || v.phone || '', v);
-          const email = compileTemplateVariables(v.sender_email || v.email || '', v);
-          const interest = compileTemplateVariables(v.interest || v.topic || '', v);
+          const senderName = escapeTgHtml(v.sender_name || 'Andrii Petukhov');
+          const phone = escapeTgHtml(v.sender_phone || v.phone || '');
+          const email = escapeTgHtml(v.sender_email || v.email || '');
+          const interest = escapeTgHtml(v.interest || v.topic || '');
 
           if (p.show_name !== false) lines.push(`👤 <b>Mittente:</b> ${senderName}`);
           if (p.show_phone !== false && phone) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
           if (p.show_email !== false && email) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
           if (p.show_interest !== false && interest) lines.push(`🎯 <b>Interesse:</b> ${interest}`);
         } else {
-          const student = compileTemplateVariables(v.student_name || 'Viktoria Petukhova', v);
-          const phone = compileTemplateVariables(v.phone || v.purchaser_phone || '+39 333 1234567', v);
-          const email = compileTemplateVariables(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com', v);
-          const purchaser = compileTemplateVariables(v.purchaser_name || 'Petukhov Andrii', v);
+          const student = escapeTgHtml(v.student_name || 'Viktoria Petukhova');
+          const phone = escapeTgHtml(v.phone || v.purchaser_phone || '+39 333 1234567');
+          const email = escapeTgHtml(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com');
+          const purchaser = escapeTgHtml(v.purchaser_name || 'Petukhov Andrii');
 
           if (p.show_name !== false) lines.push(`👤 <b>Studente:</b> ${student}`);
           if (p.show_phone !== false) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
-          if (p.show_email !== false) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
+          if (p.show_email !== false && email) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
           if (p.show_purchaser !== false && purchaser !== student) lines.push(`👥 <b>Referente:</b> ${purchaser}`);
-          if (p.show_interest !== false && v.interest) lines.push(`🎯 <b>Interesse:</b> ${v.interest}`);
+          if (p.show_interest !== false && v.interest) lines.push(`🎯 <b>Interesse:</b> ${escapeTgHtml(v.interest)}`);
         }
         break;
       }
 
       case 'tg_course_info': {
-        const course = compileTemplateVariables(v.course_name || 'Kids (6-7 anni)', v);
-        const startDate = compileTemplateVariables(v.start_date || v.date || '2026-10-06', v);
-        const schedule = compileTemplateVariables(v.schedule_text || v.lesson_schedule || 'Martedì e Giovedì 17:00-18:00', v);
+        const course = escapeTgHtml(v.course_name || 'Kids (6-7 anni)');
+        const startDate = escapeTgHtml(v.start_date || v.date || '2026-10-06');
+        const schedule = escapeTgHtml(v.schedule_text || v.lesson_schedule || 'Martedì e Giovedì 17:00-18:00');
 
         lines.push('');
         if (p.show_course !== false) lines.push(`📚 <b>Corso:</b> ${course}`);
@@ -783,8 +805,8 @@ export function renderTelegramFromBlocks(
       }
 
       case 'tg_payment_info': {
-        const status = compileTemplateVariables(v.payment_status_label || '⏳ Saldo in Sede', v);
-        const amount = compileTemplateVariables(v.amount_paid || v.total_amount || '103.20', v);
+        const status = escapeTgHtml(v.payment_status_label || '⏳ Saldo in Sede');
+        const amount = escapeTgHtml(v.amount_paid || v.total_amount || '103.20');
 
         lines.push('');
         if (p.show_status !== false) lines.push(`💳 <b>Stato:</b> <b>${status}</b>`);
@@ -793,7 +815,7 @@ export function renderTelegramFromBlocks(
       }
 
       case 'tg_custom_text': {
-        const content = compileTemplateVariables(p.content || '', v);
+        const content = compileTgTemplateVariables(p.content || '', v);
         if (content) lines.push(`\n${formatTgHtml(content)}`);
         break;
       }

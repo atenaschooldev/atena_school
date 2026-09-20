@@ -543,6 +543,31 @@ model notification_logs {
   @@map("notification_logs")
 }
 
+model notification_templates {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  code               String   @unique @db.VarChar(100)
+  name               String   @db.VarChar(255)
+  description        String?  @db.Text
+  channel            Int      @default(1) @db.SmallInt
+  notificationType   Int      @default(1) @map("notification_type") @db.SmallInt
+  recipientType      Int      @default(1) @map("recipient_type") @db.SmallInt
+  subject            String?  @db.VarChar(255)
+  bodyHtml           String?  @map("body_html") @db.Text
+  bodyText           String   @default("") @map("body_text") @db.Text
+  availableVariables Json     @default("[]") @map("available_variables")
+  blocksConfig       Json?    @map("blocks_config")
+  isActive           Boolean  @default(true) @map("is_active")
+
+  @@index([code], map: "idx_notification_templates_code")
+  @@index([channel], map: "idx_notification_templates_channel")
+  @@index([recipientType], map: "idx_notification_templates_recipient_type")
+  @@index([isActive], map: "idx_notification_templates_is_active")
+  @@map("notification_templates")
+}
+
+
 
 
 

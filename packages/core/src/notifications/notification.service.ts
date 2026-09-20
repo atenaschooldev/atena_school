@@ -163,6 +163,7 @@ export async function sendBookingNotificationEmails(params: {
   const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
   const fromEmail = config?.fromEmail || resendCreds.fromEmail;
   const appUrl = config?.appUrl || domainsCreds.appUrl || schoolProfile.app_url || process.env.NEXT_PUBLIC_APP_URL || 'https://app.atenaschool.com';
+  const adminUrl = domainsCreds.adminUrl || schoolProfile.admin_url || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
   const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
@@ -288,7 +289,8 @@ export async function sendBookingNotificationEmails(params: {
     app_url: appUrl,
     appUrl,
     dashboard_url: appUrl,
-    admin_url: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
+    admin_url: adminUrl,
+    adminUrl,
     pec_email: dto.pecEmail || '',
     sdi_code: dto.sdiCode || '',
   };

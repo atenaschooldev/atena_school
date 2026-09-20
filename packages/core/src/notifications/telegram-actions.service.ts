@@ -12,7 +12,7 @@ import {
   ACADEMIC_YEAR,
 } from '@atena/api-types';
 import { renderTelegramFromBlocks, getDefaultBlocksForTemplate } from './block-compiler';
-import { getTelegramCredentials } from '../system/integration-secrets.service';
+import { getTelegramCredentials, getDomainsCredentials } from '../system/integration-secrets.service';
 
 export type TelegramLocale = 'it' | 'en';
 
@@ -416,6 +416,8 @@ export async function sendBookingNotificationTelegram(params: {
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
   const { supabase, booking, course, dto, botToken, chatId, adminUrl } = params;
   const tgCreds = await getTelegramCredentials(supabase);
+  const domainsCreds = await getDomainsCredentials(supabase);
+  const resolvedAdminUrl = adminUrl || domainsCreds.adminUrl || process.env.ADMIN_URL || 'https://atena-school-admin.vercel.app';
   const token = botToken || tgCreds.botToken || process.env.TELEGRAM_BOT_TOKEN;
   const chat = chatId || tgCreds.chatId || process.env.TELEGRAM_CHAT_ID;
   const locale: TelegramLocale = params.locale || (tgCreds.locale as TelegramLocale) || (process.env.TELEGRAM_LOCALE as TelegramLocale) || 'it';
@@ -528,7 +530,7 @@ export async function sendBookingNotificationTelegram(params: {
     isCourseUnpaid,
     isCancelled: false,
     phone: dto.phone || booking.purchaser_phone,
-    adminUrl,
+    adminUrl: resolvedAdminUrl,
     stripePaymentIntentId,
     locale,
     regFeeEur,
