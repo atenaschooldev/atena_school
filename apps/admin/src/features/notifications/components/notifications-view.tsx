@@ -22,6 +22,7 @@ import type {
 import { useNotificationTemplates } from "../hooks/use-notification-templates";
 import { TemplateEditorDrawer } from "./template-editor-drawer";
 import { TestSendModal } from "./test-send-modal";
+import { NotificationLogsView } from "./notification-logs-view";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,6 +81,7 @@ export function NotificationsView() {
     return String(val || "—");
   }
 
+  const [activeTab, setActiveTab] = useState<"templates" | "logs">("templates");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -389,25 +391,63 @@ export function NotificationsView() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Top Metrics (Strictly matching CoursesMetrics design) ── */}
-      <div className="@container/main px-4 lg:px-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {metricsData.map((metric, index) => (
-            <Card key={index} className="border">
-              <CardContent className="space-y-4 pt-6">
-                <div className="flex items-center justify-between">
-                  <metric.icon className="text-muted-foreground size-6" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm font-medium">{metric.title}</p>
-                  <div className="text-2xl font-bold">{metric.value}</div>
-                  <div className="text-muted-foreground text-xs">{metric.description}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* ── Top Navigation Tabs (Templates vs Live Logs) ── */}
+      <div className="px-4 lg:px-6 flex items-center justify-between border-b pb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-muted/50 p-1 border">
+            <button
+              type="button"
+              onClick={() => setActiveTab("templates")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "templates"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers className="h-4 w-4" />
+              Modelli Notifiche ({templates.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("logs")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "logs"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Bell className="h-4 w-4 text-amber-500" />
+              Registro Invii & Log
+            </button>
+          </div>
         </div>
       </div>
+
+      {activeTab === "logs" ? (
+        <div className="px-4 lg:px-6">
+          <NotificationLogsView />
+        </div>
+      ) : (
+        <>
+          {/* ── Top Metrics (Strictly matching CoursesMetrics design) ── */}
+          <div className="@container/main px-4 lg:px-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {metricsData.map((metric, index) => (
+                <Card key={index} className="border">
+                  <CardContent className="space-y-4 pt-6">
+                    <div className="flex items-center justify-between">
+                      <metric.icon className="text-muted-foreground size-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-sm font-medium">{metric.title}</p>
+                      <div className="text-2xl font-bold">{metric.value}</div>
+                      <div className="text-muted-foreground text-xs">{metric.description}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
 
       {/* ── Main Toolbar & Content Container ── */}
       <div className="@container/main px-4 lg:px-6 space-y-4">
@@ -603,6 +643,8 @@ export function NotificationsView() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Editor & Visual Builder Modal */}
       <TemplateEditorDrawer

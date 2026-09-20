@@ -317,5 +317,48 @@ export class NotificationsService {
 
     throw new BadRequestException(`Canale di notifica sconosciuto: ${template.channel}`);
   }
+
+  async getLogs(filters?: {
+    page?: number;
+    limit?: number;
+    channel?: number;
+    status?: number;
+    search?: string;
+  }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    const page = Math.max(1, Number(filters?.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
+    const offset = (page - 1) * limit;
+
+    let query = this.supabase
+      .from('notification_logs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (filters?.channel) {
+      query = query.eq('channel', Number(filters.channel));
+    }
+    if (filters?.status) {
+      query = query.eq('status', Number(filters.status));
+    }
+    if (filters?.search && filters.search.trim()) {
+      const s = filters.search.trim();
+      query = query.or(`recipient.ilike.%${s}%,subject.ilike.%${s}%`);
+    }
+
+    const { data, error, count } = await query;
+    if (error) {
+      this.logger.error(`Failed to fetch notification logs: ${error.message}`);
+      throw new BadRequestException(`Errore caricamento log: ${error.message}`);
+    }
+
+    return {
+      data: data || [],
+      total: count || 0,
+      page,
+      limit,
+    };
+  }
 }
+
 

@@ -110,6 +110,8 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Smartphone,
+  Monitor,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -741,6 +743,7 @@ export function VisualTemplateBuilder({
   );
   const [customVars, setCustomVars] = useState<Record<string, string>>(SAMPLE_PREVIEW_DATA);
   const [activeTab, setActiveTab] = useState<string>("builder");
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [isSaving, setIsSaving] = useState(false);
 
   // Sync state when template changes
@@ -1100,16 +1103,52 @@ export function VisualTemplateBuilder({
             <div className="flex items-center justify-between shrink-0 select-none">
               <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>Живой рендер 1:1 (Реальный почтовый клиент / Telegram)</span>
+                <span>Живой рендер 1:1 ({previewDevice === "mobile" ? "Мобильный экран 375px" : "Десктоп"})</span>
               </div>
 
-              <Badge variant="outline" className="text-[10px] font-mono bg-background">
-                {isEmail ? "Resend HTML5 Sandbox" : "Telegram Bot Engine"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5 bg-background p-0.5 rounded-lg border shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice("desktop")}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-colors ${
+                      previewDevice === "desktop"
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Monitor className="h-3 w-3" />
+                    <span>Desktop</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice("mobile")}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-colors ${
+                      previewDevice === "mobile"
+                        ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Smartphone className="h-3 w-3" />
+                    <span>Mobile (375px)</span>
+                  </button>
+                </div>
+
+                <Badge variant="outline" className="text-[10px] font-mono bg-background hidden sm:inline-flex">
+                  {isEmail ? "Resend HTML5 Sandbox" : "Telegram Bot Engine"}
+                </Badge>
+              </div>
             </div>
 
-            {/* Canvas Frame */}
-            <div className="flex-1 w-full h-full min-h-0 rounded-2xl overflow-hidden border border-border/80 shadow-md bg-white text-slate-900 flex flex-col">
+            {/* Canvas Frame Container */}
+            <div className={`flex-1 w-full h-full min-h-0 overflow-hidden flex items-center justify-center ${previewDevice === "mobile" ? "bg-muted/40 p-2" : ""}`}>
+              <div
+                className={`h-full min-h-0 transition-all duration-300 overflow-hidden border shadow-md bg-white text-slate-900 flex flex-col ${
+                  previewDevice === "mobile"
+                    ? "w-[385px] max-w-[385px] rounded-[32px] border-4 border-slate-800 shadow-2xl ring-1 ring-slate-900/10"
+                    : "w-full rounded-2xl border-border/80"
+                }`}
+              >
               {isEmail ? (
                 <>
                   {/* Email Browser Bar */}
@@ -1182,6 +1221,7 @@ export function VisualTemplateBuilder({
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>

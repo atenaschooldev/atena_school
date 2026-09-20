@@ -83,3 +83,60 @@ export function useNotificationTemplates(filters?: {
     isTesting: testSendMutation.isPending,
   };
 }
+
+export interface NotificationLogsResponse {
+  data: Array<{
+    id: string;
+    created_at: string;
+    channel: number;
+    notification_type: number;
+    recipient: string;
+    subject?: string;
+    request: any;
+    response?: any;
+    status: number;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export function useNotificationLogs(filters?: {
+  page?: number;
+  limit?: number;
+  channel?: number;
+  status?: number;
+  search?: string;
+}) {
+  const queryParams = new URLSearchParams();
+  if (filters?.page) queryParams.set("page", String(filters.page));
+  if (filters?.limit) queryParams.set("limit", String(filters.limit));
+  if (filters?.channel) queryParams.set("channel", String(filters.channel));
+  if (filters?.status) queryParams.set("status", String(filters.status));
+  if (filters?.search) queryParams.set("search", filters.search);
+
+  const queryString = queryParams.toString();
+  const endpoint = `/admin/notifications/logs${queryString ? `?${queryString}` : ""}`;
+
+  const {
+    data,
+    isLoading,
+    refetch,
+  } = useQuery<NotificationLogsResponse>({
+    queryKey: ["notification-logs", filters?.page, filters?.limit, filters?.channel, filters?.status, filters?.search],
+    queryFn: async () => {
+      const res = await apiFetch<NotificationLogsResponse>(endpoint);
+      return res || { data: [], total: 0, page: 1, limit: 20 };
+    },
+    staleTime: 1000 * 15,
+  });
+
+  return {
+    logs: data?.data || [],
+    total: data?.total || 0,
+    page: data?.page || 1,
+    limit: data?.limit || 20,
+    loading: isLoading,
+    refresh: refetch,
+  };
+}

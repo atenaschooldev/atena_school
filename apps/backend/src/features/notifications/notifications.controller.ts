@@ -55,6 +55,19 @@ export class NotificationsController {
     return this.notificationsService.updateTemplate(id, dto);
   }
 
+  @Get('logs')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить журнал отправленных уведомлений (Email & Telegram)' })
+  async getLogs(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('channel') channel?: number,
+    @Query('status') status?: number,
+    @Query('search') search?: string,
+  ) {
+    return this.notificationsService.getLogs({ page, limit, channel, status, search });
+  }
+
   @Post('templates/:id/test-send')
   @Roles('admin')
   @Audit('notifications', 'test_send')
