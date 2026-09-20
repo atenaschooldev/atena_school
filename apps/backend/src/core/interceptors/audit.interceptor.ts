@@ -22,25 +22,8 @@ export class AuditInterceptor implements NestInterceptor {
     const operatorName = user?.email || user?.fullName || 'Администратор';
     const operatorId = user?.id || null;
 
-    return next.handle().pipe(
-      tap(async (responseData) => {
-        try {
-          const moduleName = auditOptions.table;
-          const actionName = auditOptions.action;
-          const targetId = request.params?.id || responseData?.id || null;
-          const detailsJson = JSON.stringify({
-            body: request.body || null,
-            query: request.query || null,
-          });
+    (request as any).audit = auditOptions;
 
-          await this.prisma.$executeRawUnsafe(`
-            INSERT INTO activity_logs (id, created_at, operator_id, operator_name, action, module, target_id, details, status)
-            VALUES (gen_random_uuid(), NOW(), ${operatorId ? `'${operatorId}'::uuid` : 'NULL'}, '${operatorName}', '${actionName}', '${moduleName}', ${targetId ? `'${targetId}'::uuid` : 'NULL'}, '${detailsJson}'::jsonb, 'success')
-          `).catch(() => null);
-        } catch {
-          // Non-blocking audit log failure
-        }
-      }),
-    );
+    return next.handle();
   }
 }

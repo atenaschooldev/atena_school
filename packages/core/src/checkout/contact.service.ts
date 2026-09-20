@@ -39,6 +39,7 @@ export async function submitContactWorkflow(
       email,
       phone: phone || undefined,
       interest: interest || undefined,
+      topic: interest || 'Richiesta Contatto',
       message,
     },
     config: { adminEmail: options?.adminEmail },

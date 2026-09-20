@@ -14,42 +14,62 @@ export class AuditLogsService {
   }) {
     const page = Math.max(1, Number(params?.page || 1));
     const limit = Math.min(100, Math.max(1, Number(params?.limit || 20)));
-    const offset = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-    const moduleFilter = params?.module ? `AND module ILIKE '%${params.module}%'` : '';
-    const actionFilter = params?.action ? `AND action ILIKE '%${params.action}%'` : '';
-    const searchFilter = params?.search
-      ? `AND (operator_name ILIKE '%${params.search}%' OR module ILIKE '%${params.search}%' OR action ILIKE '%${params.search}%')`
-      : '';
+    const where: any = {};
+
+    if (params?.module) {
+      where.controller = { contains: params.module, mode: 'insensitive' };
+    }
+    if (params?.action) {
+      where.action = { contains: params.action, mode: 'insensitive' };
+    }
+    if (params?.search) {
+      where.OR = [
+        { endpoint: { contains: params.search, mode: 'insensitive' } },
+        { action: { contains: params.search, mode: 'insensitive' } },
+        { controller: { contains: params.search, mode: 'insensitive' } },
+      ];
+    }
 
     try {
-      const logs = await this.prisma.$queryRawUnsafe<any[]>(`
-        SELECT id, created_at, operator_id, operator_name, action, module, target_id, details, status
-        FROM activity_logs
-        WHERE 1=1 ${moduleFilter} ${actionFilter} ${searchFilter}
-        ORDER BY created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `).catch(() => []);
-
-      const countResult = await this.prisma.$queryRawUnsafe<any[]>(`
-        SELECT COUNT(*)::int as total
-        FROM activity_logs
-        WHERE 1=1 ${moduleFilter} ${actionFilter} ${searchFilter}
-      `).catch(() => [{ total: 0 }]);
-
-      const total = countResult[0]?.total || 0;
+      const [logs, total] = await Promise.all([
+        this.prisma.admin_api_logs.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit,
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                fullName: true,
+              },
+            },
+          },
+        }),
+        this.prisma.admin_api_logs.count({ where }),
+      ]);
 
       return {
         items: logs.map((l) => ({
           id: l.id,
-          createdAt: l.created_at,
-          operatorId: l.operator_id,
-          operatorName: l.operator_name,
+          createdAt: l.createdAt,
+          operatorId: l.userId,
+          operatorName: l.user?.fullName || l.user?.email || 'Администратор',
           action: l.action,
-          module: l.module,
-          targetId: l.target_id,
-          details: l.details,
-          status: l.status,
+          module: l.controller.replace(/Controller$/i, ''),
+          targetId: (l.request as any)?.params?.id || null,
+          details: {
+            endpoint: l.endpoint,
+            httpMethod: l.httpMethod,
+            statusCode: l.statusCode,
+            request: l.request,
+            response: l.response,
+            ipAddress: l.ipAddress,
+          },
+          status: l.statusCode < 400 ? 'success' : 'failed',
         })),
         total,
         page,

@@ -130,6 +130,7 @@ const BLOCK_META: Record<
   header: { label: "Шапка бренда (Header)", icon: Building2, color: "text-blue-500 bg-blue-500/10" },
   greeting: { label: "Приветствие и Вводный текст", icon: FileText, color: "text-indigo-500 bg-indigo-500/10" },
   summary_table: { label: "Таблица деталей курса (Riepilogo)", icon: TableProperties, color: "text-amber-500 bg-amber-500/10" },
+  contact_summary_table: { label: "Таблица данных заявки (Contatto)", icon: TableProperties, color: "text-amber-500 bg-amber-500/10" },
   cta_button: { label: "Кнопка действия (CTA)", icon: ExternalLink, color: "text-emerald-500 bg-emerald-500/10" },
   bank_details: { label: "Реквизиты IBAN / Оплата", icon: CreditCard, color: "text-green-600 bg-green-600/10" },
   school_location: { label: "Адрес филиала и WhatsApp", icon: MapPin, color: "text-orange-500 bg-orange-500/10" },
@@ -449,6 +450,46 @@ function SortableBlockItem({
             </div>
           )}
 
+          {/* 3b. Contact Summary Table Props */}
+          {block.type === "contact_summary_table" && (
+            <div className="space-y-2.5 text-xs">
+              <div className="space-y-1">
+                <Label className="text-[11px] font-semibold">Заголовок таблицы</Label>
+                <Input
+                  value={block.props.table_title || ""}
+                  onChange={(e) => onUpdateProps("table_title", e.target.value)}
+                  placeholder="Dettagli Mittente"
+                  className="h-8 text-xs font-semibold"
+                />
+              </div>
+
+              <Label className="text-[11px] font-semibold text-muted-foreground pt-1 block">
+                Видимость строк таблицы:
+              </Label>
+
+              <div className="grid grid-cols-2 gap-2 bg-muted/30 p-2.5 rounded-xl border border-border/40">
+                {[
+                  { key: "show_name", label: "👤 Имя отправителя" },
+                  { key: "show_email", label: "✉️ Email отправителя" },
+                  { key: "show_phone", label: "📞 Телефон" },
+                  { key: "show_interest", label: "🎯 Интерес / Тема" },
+                ].map(({ key, label }) => (
+                  <label
+                    key={key}
+                    className="flex items-center justify-between text-[11px] py-0.5 cursor-pointer"
+                  >
+                    <span className="text-foreground">{label}</span>
+                    <Switch
+                      checked={block.props[key] !== false}
+                      onCheckedChange={(val) => onUpdateProps(key, val)}
+                      className="scale-75"
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 4. CTA Button Props */}
           {block.type === "cta_button" && (
             <div className="space-y-3 text-xs">
@@ -563,7 +604,23 @@ function SortableBlockItem({
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Текст содержимого</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-[11px] font-semibold">Текст содержимого</Label>
+                  {availableVariables && availableVariables.length > 0 && (
+                    <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+                      {availableVariables.slice(0, 5).map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => insertVariable("content", v)}
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          +{v}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <Textarea
                   value={block.props.content || ""}
                   onChange={(e) => onUpdateProps("content", e.target.value)}
@@ -627,7 +684,23 @@ function SortableBlockItem({
           {/* 10. Telegram Custom Text */}
           {block.type === "tg_custom_text" && (
             <div className="space-y-2 text-xs">
-              <Label className="text-[11px] font-semibold">Текст заметки (Markdown)</Label>
+              <div className="flex items-center justify-between">
+                <Label className="text-[11px] font-semibold">Текст заметки (Markdown)</Label>
+                {availableVariables && availableVariables.length > 0 && (
+                  <div className="flex flex-wrap gap-1 max-w-[280px] justify-end">
+                    {availableVariables.slice(0, 5).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => insertVariable("content", v)}
+                        className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      >
+                        +{v}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Textarea
                 value={block.props.content || ""}
                 onChange={(e) => onUpdateProps("content", e.target.value)}

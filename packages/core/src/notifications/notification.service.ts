@@ -407,7 +407,7 @@ export async function sendContactFormNotificationEmail(params: {
     senderPhone: data.phone || '',
     phone: data.phone || '',
     interest: data.interest || 'Informazioni Generali',
-    topic: data.topic || 'Richiesta Contatto',
+    topic: data.topic || data.interest || 'Richiesta Contatto',
     message: data.message,
     message_body: data.message,
     messageBody: data.message,
@@ -481,9 +481,25 @@ async function sendTelegramLeadAlert(
 
     const { text } = renderTelegramFromBlocks(blocksConfig, leadVariables);
 
+    const inlineKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
+    const rawPhone = leadVariables.sender_phone || leadVariables.phone || '';
+    const cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+    const crmUrl = process.env.ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
+    const actionRow: Array<{ text: string; url?: string }> = [];
+
+    if (cleanPhone) {
+      actionRow.push({ text: '💬 WhatsApp', url: `https://wa.me/${cleanPhone}` });
+    }
+    actionRow.push({ text: '🌐 Admin CRM', url: `${crmUrl}/prenotazioni` });
+
+    if (actionRow.length > 0) {
+      inlineKeyboard.push(actionRow);
+    }
+
     await sendTelegramMessage({
       supabase,
       text,
+      inlineKeyboard,
       notificationType: NotificationType.CONTACT_FORM,
     });
   } catch (err) {

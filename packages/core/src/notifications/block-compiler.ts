@@ -674,8 +674,18 @@ export function renderEmailFromBlocks(
     }
   }
 
-  const course = compileTemplateVariables(v.course_name || 'Kids (6-7 anni)', v);
-  renderedSubject = `Conferma Iscrizione: ${course} • ${school.name}`;
+  const isLead = Boolean(v.sender_name || config.blocks?.some((b) => b.type === 'contact_summary_table'));
+  const isPayment = Boolean(v.is_paid_online || (typeof v.payment_status === 'string' && (v.payment_status.includes('Stripe') || v.payment_status.includes('Pagato'))));
+
+  let defaultSubject = `Conferma Iscrizione: ${v.course_name || 'Corso'} • ${school.name}`;
+  if (isLead) {
+    const sender = v.sender_name || 'Cliente';
+    defaultSubject = `📩 Nuovo Messaggio dal Sito: ${sender} • ${school.name}`;
+  } else if (isPayment) {
+    defaultSubject = `Ricevuta di Pagamento: ${v.course_name || 'Corso'} • ${school.name}`;
+  }
+
+  renderedSubject = compileTemplateVariables(v.subject || defaultSubject, v);
 
   const html = `<!DOCTYPE html>
 <html lang="it">
@@ -734,16 +744,29 @@ export function renderTelegramFromBlocks(
       }
 
       case 'tg_student_info': {
-        const student = compileTemplateVariables(v.student_name || 'Viktoria Petukhova', v);
-        const phone = compileTemplateVariables(v.phone || v.purchaser_phone || '+39 333 1234567', v);
-        const email = compileTemplateVariables(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com', v);
-        const purchaser = compileTemplateVariables(v.purchaser_name || 'Petukhov Andrii', v);
+        const isLead = Boolean(v.sender_name && !v.student_name);
+        if (isLead) {
+          const senderName = compileTemplateVariables(v.sender_name || 'Andrii Petukhov', v);
+          const phone = compileTemplateVariables(v.sender_phone || v.phone || '', v);
+          const email = compileTemplateVariables(v.sender_email || v.email || '', v);
+          const interest = compileTemplateVariables(v.interest || v.topic || '', v);
 
-        if (p.show_name !== false) lines.push(`👤 <b>Studente:</b> ${student}`);
-        if (p.show_phone !== false) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
-        if (p.show_email !== false) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
-        if (p.show_purchaser !== false && purchaser !== student) lines.push(`👥 <b>Referente:</b> ${purchaser}`);
-        if (p.show_interest !== false && v.interest) lines.push(`🎯 <b>Interesse:</b> ${v.interest}`);
+          if (p.show_name !== false) lines.push(`👤 <b>Mittente:</b> ${senderName}`);
+          if (p.show_phone !== false && phone) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
+          if (p.show_email !== false && email) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
+          if (p.show_interest !== false && interest) lines.push(`🎯 <b>Interesse:</b> ${interest}`);
+        } else {
+          const student = compileTemplateVariables(v.student_name || 'Viktoria Petukhova', v);
+          const phone = compileTemplateVariables(v.phone || v.purchaser_phone || '+39 333 1234567', v);
+          const email = compileTemplateVariables(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com', v);
+          const purchaser = compileTemplateVariables(v.purchaser_name || 'Petukhov Andrii', v);
+
+          if (p.show_name !== false) lines.push(`👤 <b>Studente:</b> ${student}`);
+          if (p.show_phone !== false) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
+          if (p.show_email !== false) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
+          if (p.show_purchaser !== false && purchaser !== student) lines.push(`👥 <b>Referente:</b> ${purchaser}`);
+          if (p.show_interest !== false && v.interest) lines.push(`🎯 <b>Interesse:</b> ${v.interest}`);
+        }
         break;
       }
 

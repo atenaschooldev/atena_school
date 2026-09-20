@@ -63,8 +63,8 @@ export class ApiLoggingInterceptor implements NestInterceptor {
           const finalTable = this.resolveTargetTable(url, controllerName, userRole, responseData);
           const statusCode = response?.statusCode || 200;
           this.saveLog(finalTable, {
-            controller: controllerName,
-            action: actionName,
+            controller: (request as any)?.audit?.table ? `Audit:${(request as any).audit.table}` : controllerName,
+            action: (request as any)?.audit?.action || actionName,
             httpMethod,
             endpoint: url,
             userId,
@@ -86,8 +86,8 @@ export class ApiLoggingInterceptor implements NestInterceptor {
             statusCode,
           };
           this.saveLog(targetTable, {
-            controller: controllerName,
-            action: actionName,
+            controller: (request as any)?.audit?.table ? `Audit:${(request as any).audit.table}` : controllerName,
+            action: (request as any)?.audit?.action || actionName,
             httpMethod,
             endpoint: url,
             userId,

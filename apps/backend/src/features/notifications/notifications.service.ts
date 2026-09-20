@@ -241,17 +241,21 @@ export class NotificationsService {
 
     if (template.channel === NotificationChannel.EMAIL) {
       let subject = dto.subject || dto.subject_template || template.subject || 'Test Notifica Atena School';
-      let htmlBody = dto.body_html || dto.body_template || template.body_html;
+      let htmlBody = dto.body_html || dto.body_template;
 
-      if (dto.blocks_config) {
-        const compiled = renderEmailFromBlocks(dto.blocks_config, sampleData);
+      // Determine which blocks to use: explicit dto blocks -> saved template blocks -> default template blocks
+      const blocksConfig = dto.blocks_config?.blocks?.length
+        ? dto.blocks_config
+        : (template.blocks_config?.blocks?.length
+            ? template.blocks_config
+            : (!htmlBody ? getDefaultBlocksForTemplate(template.code, NotificationChannel.EMAIL) : null));
+
+      if (blocksConfig) {
+        const compiled = renderEmailFromBlocks(blocksConfig, sampleData);
         htmlBody = compiled.html;
         if (!dto.subject && !dto.subject_template) {
-          subject = compiled.subject;
+          subject = template.subject ? compileTemplate(template.subject, sampleData) : compiled.subject;
         }
-      } else if (!htmlBody && template.blocks_config) {
-        const compiled = renderEmailFromBlocks(template.blocks_config, sampleData);
-        htmlBody = compiled.html;
       }
 
       const compiledSubject = compileTemplate(subject, sampleData);
@@ -275,13 +279,16 @@ export class NotificationsService {
         details: emailRes,
       };
     } else if (template.channel === NotificationChannel.TELEGRAM) {
-      let tgText = dto.body_text || dto.body_template || template.body_text;
+      let tgText = dto.body_text || dto.body_template;
 
-      if (dto.blocks_config) {
-        const compiled = renderTelegramFromBlocks(dto.blocks_config, sampleData);
-        tgText = compiled.text;
-      } else if (!tgText && template.blocks_config) {
-        const compiled = renderTelegramFromBlocks(template.blocks_config, sampleData);
+      const blocksConfig = dto.blocks_config?.blocks?.length
+        ? dto.blocks_config
+        : (template.blocks_config?.blocks?.length
+            ? template.blocks_config
+            : (!tgText ? getDefaultBlocksForTemplate(template.code, NotificationChannel.TELEGRAM) : null));
+
+      if (blocksConfig) {
+        const compiled = renderTelegramFromBlocks(blocksConfig, sampleData);
         tgText = compiled.text;
       }
 
