@@ -19,6 +19,8 @@
     "dev:prod": "pnpm use:prod && pnpm --filter backend --filter admin dev"
   },
   "devDependencies": {
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.0",
     "prettier": "^3.7.3",
     "turbo": "^2.4.0",
     "typescript": "^5.8.3"
