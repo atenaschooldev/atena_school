@@ -14,7 +14,9 @@ import {
   NotificationChannel,
   RecipientType,
   NOTIFICATION_TYPE_DICTIONARY,
-} from "../types";
+  NOTIFICATION_CHANNEL_DICTIONARY,
+  RECIPIENT_TYPE_DICTIONARY,
+} from "@atena/api-types";
 import type {
   NotificationTemplateRecord,
   UpdateNotificationTemplateDto,
@@ -62,7 +64,7 @@ export function NotificationsView() {
 
   function getNotificationTypeLabel(val: unknown): string {
     const num = Number(val);
-    const entry = NOTIFICATION_TYPE_DICTIONARY[num as NotificationType];
+    const entry = NOTIFICATION_TYPE_DICTIONARY[num as keyof typeof NOTIFICATION_TYPE_DICTIONARY];
     if (entry) {
       if (locale === "en") return entry.label_en || entry.label_it;
       if (locale === "ru") return entry.label_ru || entry.label_it;
@@ -79,6 +81,26 @@ export function NotificationsView() {
       }
     }
     return String(val || "—");
+  }
+
+  function getChannelLabel(channel: number): string {
+    const entry = NOTIFICATION_CHANNEL_DICTIONARY[channel as keyof typeof NOTIFICATION_CHANNEL_DICTIONARY];
+    if (entry) {
+      if (locale === "en") return entry.label_en || entry.label_it;
+      if (locale === "ru") return entry.label_ru || entry.label_it;
+      return entry.label_it;
+    }
+    return channel === NotificationChannel.EMAIL ? "Email" : "Telegram";
+  }
+
+  function getRecipientLabel(recipientType: number): string {
+    const entry = RECIPIENT_TYPE_DICTIONARY[recipientType as keyof typeof RECIPIENT_TYPE_DICTIONARY];
+    if (entry) {
+      if (locale === "en") return entry.label_en || entry.label_it;
+      if (locale === "ru") return entry.label_ru || entry.label_it;
+      return entry.label_it;
+    }
+    return recipientType === RecipientType.CUSTOMER ? "Cliente" : "Segreteria";
   }
 
   const [activeTab, setActiveTab] = useState<"templates" | "logs">("templates");
@@ -275,10 +297,9 @@ export function NotificationsView() {
         accessorKey: "channel",
         header: t("notifications.columnChannel") || "Canale",
         cell: ({ row }) => {
-          const isEmail = row.original.channel === NotificationChannel.EMAIL;
           return (
             <Badge variant="outline" className="text-xs font-medium">
-              {isEmail ? (t("notifications.channelEmail") || "Email") : (t("notifications.channelTelegram") || "Telegram")}
+              {getChannelLabel(row.original.channel)}
             </Badge>
           );
         },
@@ -297,7 +318,7 @@ export function NotificationsView() {
                   : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
               }`}
             >
-              {isCustomer ? (t("notifications.recipientCustomer") || "Cliente") : (t("notifications.recipientAdmin") || "Segreteria")}
+              {getRecipientLabel(row.original.recipient_type)}
             </Badge>
           );
         },
@@ -462,9 +483,9 @@ export function NotificationsView() {
               placeholder: t("notifications.columnChannel") || "Canale",
               options: [
                 { value: "all", label: t("notifications.tabAll") || "Tutti i Canali" },
-                { value: "customer_email", label: `${t("notifications.channelEmail") || "Email"} (${t("notifications.recipientCustomer") || "Cliente"})` },
-                { value: "admin_email", label: `${t("notifications.channelEmail") || "Email"} (${t("notifications.recipientAdmin") || "Segreteria"})` },
-                { value: "telegram", label: t("notifications.channelTelegram") || "Telegram Bot" },
+                { value: "customer_email", label: `${getChannelLabel(NotificationChannel.EMAIL)} (${getRecipientLabel(RecipientType.CUSTOMER)})` },
+                { value: "admin_email", label: `${getChannelLabel(NotificationChannel.EMAIL)} (${getRecipientLabel(RecipientType.ADMIN)})` },
+                { value: "telegram", label: getChannelLabel(NotificationChannel.TELEGRAM) },
               ],
             },
             {
@@ -542,7 +563,6 @@ export function NotificationsView() {
             {filteredTemplates.map((template) => {
               const isEmail = template.channel === NotificationChannel.EMAIL;
               const isCustomer = template.recipient_type === RecipientType.CUSTOMER;
-              const typeInfo = NOTIFICATION_TYPE_DICTIONARY[template.notification_type];
 
               return (
                 <Card
@@ -579,7 +599,7 @@ export function NotificationsView() {
                     <div className="space-y-2.5">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge variant="outline" className="text-xs font-medium">
-                          {isEmail ? (t("notifications.channelEmail") || "Email") : (t("notifications.channelTelegram") || "Telegram")}
+                          {getChannelLabel(template.channel)}
                         </Badge>
                         <Badge
                           variant="outline"
@@ -589,7 +609,7 @@ export function NotificationsView() {
                               : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
                           }`}
                         >
-                          {isCustomer ? (t("notifications.recipientCustomer") || "Cliente") : (t("notifications.recipientAdmin") || "Segreteria")}
+                          {getRecipientLabel(template.recipient_type)}
                         </Badge>
                         <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
                           {getNotificationTypeLabel(template.notification_type)}

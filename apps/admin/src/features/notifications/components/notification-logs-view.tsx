@@ -2,7 +2,12 @@
 
 import React, { useState } from "react";
 import { useNotificationLogs } from "../hooks/use-notification-templates";
-import { NotificationChannel, NotificationStatus } from "../types";
+import {
+  NotificationChannel,
+  NotificationStatus,
+  NOTIFICATION_CHANNEL_DICTIONARY,
+  NOTIFICATION_STATUS_DICTIONARY,
+} from "@atena/api-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +57,26 @@ export function NotificationLogsView() {
   });
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  function getChannelLabel(channel: number): string {
+    const entry = NOTIFICATION_CHANNEL_DICTIONARY[channel as keyof typeof NOTIFICATION_CHANNEL_DICTIONARY];
+    if (entry) {
+      if (locale === "en") return entry.label_en || entry.label_it;
+      if (locale === "ru") return entry.label_ru || entry.label_it;
+      return entry.label_it;
+    }
+    return channel === NotificationChannel.EMAIL ? "Email" : "Telegram";
+  }
+
+  function getStatusLabel(status: number): string {
+    const entry = NOTIFICATION_STATUS_DICTIONARY[status as keyof typeof NOTIFICATION_STATUS_DICTIONARY];
+    if (entry) {
+      if (locale === "en") return entry.label_en || entry.label_it;
+      if (locale === "ru") return entry.label_ru || entry.label_it;
+      return entry.label_it;
+    }
+    return status === NotificationStatus.SENT ? "Inviato" : "Fallito";
+  }
 
   const formatDate = (iso: string) => {
     try {
@@ -114,7 +139,7 @@ export function NotificationLogsView() {
                   channelFilter === NotificationChannel.EMAIL ? "bg-background shadow-xs text-emerald-600 dark:text-emerald-400 font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Mail className="h-3 w-3" /> {t("notifications.channelEmail") || "Email"}
+                <Mail className="h-3 w-3" /> {getChannelLabel(NotificationChannel.EMAIL)}
               </button>
               <button
                 type="button"
@@ -126,7 +151,7 @@ export function NotificationLogsView() {
                   channelFilter === NotificationChannel.TELEGRAM ? "bg-background shadow-xs text-sky-600 dark:text-sky-400 font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <MessageSquare className="h-3 w-3" /> {t("notifications.channelTelegram") || "Telegram"}
+                <MessageSquare className="h-3 w-3" /> {getChannelLabel(NotificationChannel.TELEGRAM)}
               </button>
             </div>
 
@@ -154,7 +179,7 @@ export function NotificationLogsView() {
                   statusFilter === NotificationStatus.SENT ? "bg-background shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t("notifications.logStatusSent") || "Inviati"}
+                {getStatusLabel(NotificationStatus.SENT)}
               </button>
               <button
                 type="button"
@@ -166,7 +191,7 @@ export function NotificationLogsView() {
                   statusFilter === NotificationStatus.FAILED ? "bg-background shadow-xs font-bold" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t("notifications.logStatusFailed") || "Falliti"}
+                {getStatusLabel(NotificationStatus.FAILED)}
               </button>
             </div>
 
@@ -227,11 +252,11 @@ export function NotificationLogsView() {
                         <div className="flex items-center gap-1.5 text-xs font-semibold">
                           {isEmail ? (
                             <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
-                              <Mail className="h-3.5 w-3.5" /> {t("notifications.channelEmail") || "Email"}
+                              <Mail className="h-3.5 w-3.5" /> {getChannelLabel(NotificationChannel.EMAIL)}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                              <MessageSquare className="h-3.5 w-3.5" /> {t("notifications.channelTelegram") || "Telegram"}
+                              <MessageSquare className="h-3.5 w-3.5" /> {getChannelLabel(NotificationChannel.TELEGRAM)}
                             </span>
                           )}
                         </div>
@@ -246,11 +271,11 @@ export function NotificationLogsView() {
                         <div className="inline-flex items-center gap-1">
                           {isSuccess ? (
                             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-semibold gap-1">
-                              <CheckCircle2 className="h-3 w-3" /> {t("notifications.logStatusSent") || "Inviato"}
+                              <CheckCircle2 className="h-3 w-3" /> {getStatusLabel(NotificationStatus.SENT)}
                             </Badge>
                           ) : (
                             <Badge variant="destructive" className="text-[11px] font-semibold gap-1">
-                              <AlertCircle className="h-3 w-3" /> {t("notifications.logStatusFailed") || "Fallito"}
+                              <AlertCircle className="h-3 w-3" /> {getStatusLabel(NotificationStatus.FAILED)}
                             </Badge>
                           )}
                           {lastEvent && (

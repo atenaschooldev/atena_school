@@ -50,6 +50,15 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
 }) {
+  React.useEffect(() => {
+    return () => {
+      // Safety fix: ensure Radix UI does not leave pointer-events: none stuck on document.body
+      if (typeof document !== "undefined") {
+        document.body.style.pointerEvents = "";
+      }
+    };
+  }, []);
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -67,6 +76,12 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
           className
         )}
+        onCloseAutoFocus={(e) => {
+          if (typeof document !== "undefined") {
+            document.body.style.pointerEvents = "";
+          }
+          props.onCloseAutoFocus?.(e);
+        }}
         {...props}
       >
         {children}
