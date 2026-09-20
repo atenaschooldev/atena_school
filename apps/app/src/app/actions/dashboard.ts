@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { cookies } from "next/headers";
 import { BookingPaymentStatus } from "@atena/api-types";
-import { linkUserAccountWorkflow, DEFAULT_SCHOOL_PROFILE } from "@atena/core";
+import { linkUserAccountWorkflow, DEFAULT_SCHOOL_PROFILE, getSchoolProfile, getDomainsCredentials } from "@atena/core";
 
 async function getAuthToken(): Promise<string | null> {
   try {
@@ -120,6 +120,12 @@ export async function getDashboardDataAction() {
       }
     }
 
+    const [schoolProfile, domainsCreds] = await Promise.all([
+      getSchoolProfile(supabaseAdmin).catch(() => DEFAULT_SCHOOL_PROFILE),
+      getDomainsCredentials(supabaseAdmin).catch(() => ({ siteUrl: 'https://atenaschool.com', appUrl: 'https://app.atenaschool.com' })),
+    ]);
+    const siteUrl = domainsCreds?.siteUrl || schoolProfile.site_url || 'https://atenaschool.com';
+
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
@@ -127,10 +133,10 @@ export async function getDashboardDataAction() {
     const enrichedBookings = bookingsList.map((b: any) => {
       const cid = b.course_id || b.item_id;
       const c = coursesMap.get(cid);
-      const title = c?.name || b.course_name || `Corso ${DEFAULT_SCHOOL_PROFILE.name}`;
+      const title = c?.name || b.course_name || `Corso ${schoolProfile.name}`;
       const coursePrice = c?.price ? Number(c.price) : Number(b.amount_paid || 0);
       const totalAmount = Number(b.amount_paid || coursePrice || 0);
-      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || DEFAULT_SCHOOL_PROFILE.name : (c?.teacher_name || `Docente ${DEFAULT_SCHOOL_PROFILE.name}`);
+      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || schoolProfile.name : (c?.teacher_name || `Docente ${schoolProfile.name}`);
 
       const bdateStr = b.start_date || b.created_at;
       let isFuture = true;
@@ -193,6 +199,8 @@ export async function getDashboardDataAction() {
         dbProfile: dbProfile || null,
       },
       bookings: enrichedBookings,
+      schoolProfile,
+      siteUrl,
     };
   } catch (err: any) {
     console.error("Autonomous getDashboardDataAction error:", err);
@@ -313,6 +321,12 @@ export async function getBookingLessonsAction(bookingId: string) {
 
     const maxLessons = booking.total_lessons_count || course?.total_lessons || 10;
 
+    const [schoolProfile, domainsCreds] = await Promise.all([
+      getSchoolProfile(supabaseAdmin).catch(() => DEFAULT_SCHOOL_PROFILE),
+      getDomainsCredentials(supabaseAdmin).catch(() => ({ siteUrl: 'https://atenaschool.com', appUrl: 'https://app.atenaschool.com' })),
+    ]);
+    const siteUrl = domainsCreds?.siteUrl || schoolProfile.site_url || 'https://atenaschool.com';
+
     return {
       success: true,
       isPurchaser,
@@ -322,6 +336,8 @@ export async function getBookingLessonsAction(bookingId: string) {
       course,
       lessons: lessons || [],
       max_lessons: maxLessons,
+      schoolProfile,
+      siteUrl,
     };
   } catch (err: any) {
     return { success: false, error: err.message || "Prenotazione non trovata" };
@@ -375,5 +391,17 @@ export async function scheduleNextLessonAction(bookingId: string, dateStr: strin
     return { success: true, lesson: data };
   } catch (err: any) {
     return { success: false, error: err.message || "Impossibile programmare la lezione" };
+  }
+}
+
+// ─── getSchoolProfileAction ──────────────────────────────────────────────────
+
+export async function getSchoolProfileAction() {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const profile = await getSchoolProfile(supabaseAdmin);
+    return { success: true, profile };
+  } catch (err: any) {
+    return { success: false, profile: DEFAULT_SCHOOL_PROFILE, error: err.message };
   }
 }

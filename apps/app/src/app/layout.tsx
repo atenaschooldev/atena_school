@@ -13,25 +13,35 @@ const nunito = Nunito({
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-import { DEFAULT_SCHOOL_PROFILE } from '@atena/core';
+import { DEFAULT_SCHOOL_PROFILE, getSchoolProfile } from '@atena/core';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
-const school = DEFAULT_SCHOOL_PROFILE;
+export async function generateMetadata() {
+  let schoolName = DEFAULT_SCHOOL_PROFILE.name;
+  try {
+    const supabase = getSupabaseAdmin();
+    const school = await getSchoolProfile(supabase);
+    if (school?.name) schoolName = school.name;
+  } catch {
+    // fallback to default
+  }
 
-export const metadata = {
-  title: `Pannello Studente — ${school.name}`,
-  description: `Area riservata e portale studenti di ${school.name}`,
-  robots: {
-    index: false,
-    follow: false,
-    googleBot: {
+  return {
+    title: `Pannello Studente — ${schoolName}`,
+    description: `Area riservata e portale studenti di ${schoolName}`,
+    robots: {
       index: false,
       follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
     },
-  },
-  other: {
-    google: 'notranslate',
-  },
-};
+    other: {
+      google: 'notranslate',
+    },
+  };
+}
 
 export default function RootLayout({
   children,

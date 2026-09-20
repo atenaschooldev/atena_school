@@ -12,6 +12,8 @@ export function useDashboard() {
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [siteUrl, setSiteUrl] = useState("https://atenaschool.com");
+  const [schoolProfile, setSchoolProfile] = useState<any>(null);
 
   useEffect(() => {
     async function initDashboard() {
@@ -19,6 +21,8 @@ export function useDashboard() {
         const res = await getDashboardDataAction();
         if (res.success && res.user) {
           setUser(res.user);
+          if (res.siteUrl) setSiteUrl(res.siteUrl);
+          if (res.schoolProfile) setSchoolProfile(res.schoolProfile);
           const dbName = res.user.dbProfile?.full_name || (res.user.dbProfile?.first_name ? `${res.user.dbProfile.first_name} ${res.user.dbProfile.last_name || ""}`.trim() : "");
           const dbPhone = res.user.dbProfile?.phone || (res.user as any).phone || "";
           setProfileName(dbName || res.user.user_metadata?.full_name || "");
@@ -77,5 +81,7 @@ export function useDashboard() {
     setProfilePhone,
     savingProfile,
     handleSaveProfile,
+    siteUrl,
+    schoolProfile,
   };
 }

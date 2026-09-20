@@ -72,11 +72,21 @@ export async function signOutAction() {
   }
 }
 
+import { getDomainsCredentials } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+
 export async function forgotPasswordAction(email: string) {
   try {
     const supabase = await createClient();
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002";
+    try {
+      const supabaseAdmin = getSupabaseAdmin();
+      const domains = await getDomainsCredentials(supabaseAdmin);
+      if (domains?.appUrl) appUrl = domains.appUrl;
+    } catch {}
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}/autenticazione/callback?next=/autenticazione/reimposta-password`,
+      redirectTo: `${appUrl}/autenticazione/callback?next=/autenticazione/reimposta-password`,
     });
     if (error) throw error;
     return { success: true };

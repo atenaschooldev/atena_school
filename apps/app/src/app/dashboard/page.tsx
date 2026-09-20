@@ -26,6 +26,7 @@ export default function DashboardPage() {
     setProfilePhone,
     savingProfile,
     handleSaveProfile,
+    siteUrl,
   } = useDashboard();
 
   if (loading) {
@@ -80,7 +81,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <a
-              href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
+              href={`${siteUrl || 'https://atenaschool.com'}/corsi`}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
             >
               Esplora altri corsi
@@ -132,7 +133,7 @@ export default function DashboardPage() {
                   Nessuna lezione o corso trovato in questa sezione.
                 </p>
                 <a
-                  href={`${process.env.NEXT_PUBLIC_SITE_URL || 'https://atena-school-landing-three.vercel.app'}/corsi`}
+                  href={`${siteUrl || 'https://atenaschool.com'}/corsi`}
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline"
                 >
                   Prenota una lezione ora →

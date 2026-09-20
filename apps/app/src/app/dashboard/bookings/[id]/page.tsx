@@ -36,6 +36,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
     lessons,
     courseTitle,
     teacherName,
+    schoolProfile,
     coursePrice,
     regFee,
     totalAmount,
@@ -195,7 +196,10 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Sede Lezioni</p>
-                    <p className="text-sm font-bold text-foreground">{SCHOOL_INFO.NAME}, {SCHOOL_INFO.ADDRESS}</p>
+                    <p className="text-sm font-bold text-foreground">
+                      {schoolProfile?.name || SCHOOL_INFO.NAME},{' '}
+                      {schoolProfile?.address || SCHOOL_INFO.ADDRESS}
+                    </p>
                   </div>
                 </div>
 

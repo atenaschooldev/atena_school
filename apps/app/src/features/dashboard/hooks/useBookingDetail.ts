@@ -39,6 +39,8 @@ export function useBookingDetail(bookingId: string) {
 
   const [isPurchaser, setIsPurchaser] = useState(true);
   const [isChildStudent, setIsChildStudent] = useState(false);
+  const [schoolProfile, setSchoolProfile] = useState<any>(null);
+  const [siteUrl, setSiteUrl] = useState("https://atenaschool.com");
 
   useEffect(() => {
     async function loadData() {
@@ -51,6 +53,8 @@ export function useBookingDetail(bookingId: string) {
           setMaxLessons(res.max_lessons ?? null);
           setIsPurchaser(Boolean(res.isPurchaser ?? true));
           setIsChildStudent(Boolean(res.isChildStudent ?? false));
+          if (res.schoolProfile) setSchoolProfile(res.schoolProfile);
+          if (res.siteUrl) setSiteUrl(res.siteUrl);
         } else {
           setError(res.error || "Impossibile caricare i dati della prenotazione");
         }
@@ -64,7 +68,8 @@ export function useBookingDetail(bookingId: string) {
   }, [bookingId, refreshTrigger]);
 
   const courseTitle = course?.name || course?.title_it || "Corso di Lingua";
-  const teacherName = course?.teacher_name || `Docente ${DEFAULT_SCHOOL_PROFILE.name}`;
+  const schoolName = schoolProfile?.name || DEFAULT_SCHOOL_PROFILE.name;
+  const teacherName = course?.teacher_name || `Docente ${schoolName}`;
   const rawCoursePrice = course?.price
     ? parseFloat(String(course.price).replace(/[^0-9.,]/g, "").replace(",", "."))
     : 0;
@@ -179,6 +184,8 @@ export function useBookingDetail(bookingId: string) {
     lessons,
     courseTitle,
     teacherName,
+    schoolProfile,
+    siteUrl,
     coursePrice,
     regFee,
     totalAmount,
