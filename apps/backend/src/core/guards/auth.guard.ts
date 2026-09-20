@@ -52,22 +52,48 @@ export class AuthGuard implements CanActivate {
       const fullName = meta.full_name || `${firstName} ${lastName}`.trim();
 
       try {
-        await this.prisma.user.upsert({
-          where: { id: user.id },
-          create: {
-            id: user.id,
-            email: user.email || '',
-            fullName,
-            role: numericRole,
-          },
-          update: {
-            email: user.email || '',
-            fullName,
-            role: numericRole,
-          },
-        });
+        if (user.email) {
+          const existingById = await this.prisma.user.findUnique({
+            where: { id: user.id },
+          });
+
+          if (existingById) {
+            await this.prisma.user.update({
+              where: { id: user.id },
+              data: {
+                email: user.email,
+                fullName,
+                role: numericRole,
+              },
+            });
+          } else {
+            const existingByEmail = await this.prisma.user.findUnique({
+              where: { email: user.email },
+            });
+
+            if (existingByEmail) {
+              await this.prisma.user.update({
+                where: { id: existingByEmail.id },
+                data: {
+                  fullName,
+                  role: numericRole,
+                },
+              });
+              request.user.id = existingByEmail.id;
+            } else {
+              await this.prisma.user.create({
+                data: {
+                  id: user.id,
+                  email: user.email,
+                  fullName,
+                  role: numericRole,
+                },
+              });
+            }
+          }
+        }
       } catch (err: any) {
-        this.logger.error(`Failed to sync user profile for ${user.id}: ${err?.message || err}`);
+        this.logger.warn(`User profile sync note for ${user.id}: ${err?.message || err}`);
       }
 
       return true;
