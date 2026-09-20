@@ -18,13 +18,14 @@ import { MailService } from '../mail/mail.service';
 import { TelegramService } from '../mail/telegram.service';
 import { UpdateNotificationTemplateDto, TestSendNotificationDto } from './dto/notification-template.dto';
 
-const DEFAULT_SAMPLE_DATA: Record<string, any> = {
+const BOOKING_SAMPLE_DATA: Record<string, any> = {
   student_name: 'Viktoria Petukhova',
   purchaser_name: 'Petukhov Andrii',
   course_name: 'Kids (6-7 anni)',
   amount_paid: '103.20',
   registration_fee: '30.00',
   total_amount: '103.20',
+  course_price: '73.20',
   lesson_schedule: 'Martedì e Giovedì 17:00-18:00',
   schedule_text: 'Martedì e Giovedì 17:00-18:00',
   start_date: '2026-10-06',
@@ -36,18 +37,29 @@ const DEFAULT_SAMPLE_DATA: Record<string, any> = {
   dashboard_url: 'https://app.atenaschool.com',
   admin_url: 'https://admin.atenaschool.com',
   booking_id: '10bde731-f620-4e16-a240-63bb08b86d70',
-  sender_name: 'Andrii Petukhov',
-  sender_email: 'andrii.petukhov@gmail.com',
-  sender_phone: '+39 333 1234567',
-  interest: 'Kids (6-7 anni)',
-  topic: 'Iscrizione Corso',
-  message: 'Vorrei confermare l\'orario delle lezioni per il corso Kids.',
-  message_body: 'Vorrei confermare l\'orario delle lezioni per il corso Kids.',
   payment_method: 'Contanti / Saldo in Sede',
   payment_method_label: 'Saldo in Sede',
   payment_status: 'In attesa di saldo',
   payment_status_label: '⏳ Saldo in Sede',
 };
+
+const CONTACT_SAMPLE_DATA: Record<string, any> = {
+  sender_name: 'Mario Rossi',
+  sender_email: 'mario.rossi@gmail.com',
+  sender_phone: '+39 347 1234567',
+  interest: 'Corso di Inglese Adulti',
+  topic: 'Richiesta Informazioni',
+  message: 'Buongiorno, vorrei avere informazioni sui corsi di inglese per adulti disponibili.',
+  message_body: 'Buongiorno, vorrei avere informazioni sui corsi di inglese per adulti disponibili.',
+  admin_url: 'https://admin.atenaschool.com',
+};
+
+function getSampleDataForTemplate(code: string): Record<string, any> {
+  if (code.includes('contact') || code.includes('lead')) {
+    return CONTACT_SAMPLE_DATA;
+  }
+  return BOOKING_SAMPLE_DATA;
+}
 
 @Injectable()
 export class NotificationsService {
@@ -171,7 +183,7 @@ export class NotificationsService {
       updatePayload.blocks_config = dto.blocks_config;
 
       if (existing.channel === NotificationChannel.EMAIL) {
-        const compiled = renderEmailFromBlocks(dto.blocks_config, DEFAULT_SAMPLE_DATA);
+        const compiled = renderEmailFromBlocks(dto.blocks_config, getSampleDataForTemplate(existing.code));
         updatePayload.body_html = compiled.html;
         if (dto.subject || dto.subject_template) {
           updatePayload.subject = dto.subject || dto.subject_template;
@@ -179,7 +191,7 @@ export class NotificationsService {
           updatePayload.subject = compiled.subject;
         }
       } else {
-        const compiled = renderTelegramFromBlocks(dto.blocks_config, DEFAULT_SAMPLE_DATA);
+        const compiled = renderTelegramFromBlocks(dto.blocks_config, getSampleDataForTemplate(existing.code));
         updatePayload.body_text = compiled.text;
       }
     } else {
@@ -218,7 +230,7 @@ export class NotificationsService {
     const template = await this.getTemplateById(id);
 
     const sampleData = {
-      ...DEFAULT_SAMPLE_DATA,
+      ...getSampleDataForTemplate(template.code),
       ...(dto.sample_data || {}),
     };
 

@@ -14,6 +14,7 @@ import {
   renderAdminBookingNotificationEmail,
   renderContactFormAdminEmail,
 } from './email-templates';
+import { renderEmailFromBlocks } from './block-compiler';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from '../types';
 
 export function compileTemplate(
@@ -220,23 +221,112 @@ export async function sendBookingNotificationEmails(params: {
     createdAtFormatted: new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' }),
   };
 
-  // 1. Client Confirmation Email
+  // Common dynamic variables dictionary for template engine
+  const templateVariables: Record<string, any> = {
+    course_name: courseName,
+    courseName,
+    purchaser_name: purchaserName,
+    purchaserName,
+    student_name: studentName,
+    studentName,
+    purchaser_email: dto.email,
+    purchaserEmail: dto.email,
+    email: dto.email,
+    purchaser_phone: dto.phone || '',
+    purchaserPhone: dto.phone || '',
+    phone: dto.phone || '',
+    purchaser_tax_code: dto.purchaserTaxCode || '',
+    purchaserTaxCode: dto.purchaserTaxCode || '',
+    birth_place: dto.birthPlace || '',
+    birthPlace: dto.birthPlace || '',
+    student_tax_code: dto.studentTaxCode || dto.purchaserTaxCode || '',
+    studentTaxCode: dto.studentTaxCode || dto.purchaserTaxCode || '',
+    student_birth_date: dto.studentBirthDate || '',
+    studentBirthDate: dto.studentBirthDate || '',
+    student_birth_place: dto.studentBirthPlace || dto.birthPlace || '',
+    studentBirthPlace: dto.studentBirthPlace || dto.birthPlace || '',
+    student_email: dto.studentEmail || '',
+    studentEmail: dto.studentEmail || '',
+    student_phone: dto.studentPhone || '',
+    studentPhone: dto.studentPhone || '',
+    is_for_child: dto.isForChild,
+    isForChild: dto.isForChild,
+    promo_code: dto.promoCode || booking.promo_code || '',
+    promoCode: dto.promoCode || booking.promo_code || '',
+    discount_amount: booking.discount_amount ? String(booking.discount_amount) : '0.00',
+    discountAmount: booking.discount_amount ? String(booking.discount_amount) : '0.00',
+    date: dto.date || '',
+    start_date: dto.date || '',
+    time: dto.time || '',
+    lesson_schedule: lessonSchedule,
+    lessonSchedule,
+    schedule_text: lessonSchedule,
+    total_amount: totalEur,
+    totalEur,
+    amount_paid: totalEur,
+    course_price: courseFeeEur,
+    courseFeeEur,
+    registration_fee: regFeeEur,
+    regFeeEur,
+    is_paid_online: isPaidOnline,
+    isPaidOnline,
+    payment_status: paymentStatusText,
+    paymentStatusText,
+    payment_status_label: isPaidOnline ? '✓ Pagato Online (Stripe)' : '⏳ Saldo in Sede',
+    payment_method: String(booking.payment_method || '1'),
+    payment_method_label: isPaidOnline ? 'Carta di Credito (Stripe)' : 'Saldo in Sede / Contanti',
+    booking_id: booking.id,
+    bookingId: booking.id,
+    notes: dto.notes || '',
+    app_url: appUrl,
+    appUrl,
+    dashboard_url: appUrl,
+    admin_url: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
+    pec_email: dto.pecEmail || '',
+    sdi_code: dto.sdiCode || '',
+  };
+
+  // 1. Client Confirmation / Payment Receipt Email
   if (dto.email) {
-    const clientRendered = renderClientBookingConfirmationEmail(templateData);
+    const templateCode = isPaidOnline ? 'payment_receipt_customer' : 'booking_confirmation_customer';
+    let subject = `Conferma Iscrizione: ${courseName} • ${schoolProfile.name}`;
+    let html = '';
+
+    const clientTmpl = await getNotificationTemplateByCode(supabase, templateCode);
+    if (clientTmpl) {
+      if (!clientTmpl.is_active) {
+        // Disabled by admin
+        return;
+      }
+      if (clientTmpl.blocks_config && clientTmpl.blocks_config.blocks && clientTmpl.blocks_config.blocks.length > 0) {
+        const rendered = renderEmailFromBlocks(clientTmpl.blocks_config, templateVariables, schoolProfile);
+        html = rendered.html;
+        subject = clientTmpl.subject ? compileTemplate(clientTmpl.subject, templateVariables) : rendered.subject;
+      } else if (clientTmpl.body_html) {
+        html = compileTemplate(clientTmpl.body_html, templateVariables);
+        subject = compileTemplate(clientTmpl.subject || subject, templateVariables);
+      }
+    }
+
+    if (!html) {
+      const fallbackRendered = renderClientBookingConfirmationEmail(templateData);
+      subject = fallbackRendered.subject;
+      html = fallbackRendered.html;
+    }
 
     const clientRes = await sendEmailViaResend({
       apiKey,
       from: fromEmail,
       to: dto.email,
-      subject: clientRendered.subject,
-      html: clientRendered.html,
+      subject,
+      html,
     });
 
     await logNotification(supabase, {
       channel: NotificationChannel.EMAIL,
-      type: NotificationType.BOOKING_CONFIRMATION,
+      type: isPaidOnline ? NotificationType.PAYMENT_RECEIPT : NotificationType.BOOKING_CONFIRMATION,
       recipient: dto.email,
-      subject: clientRendered.subject,
+      subject,
       status: clientRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
       bookingId: booking.id,
       provider: 'resend',
@@ -248,28 +338,51 @@ export async function sendBookingNotificationEmails(params: {
 
   // 2. Admin Notification Email
   if (adminEmail) {
-    const adminRendered = renderAdminBookingNotificationEmail(templateData);
+    const adminTmpl = await getNotificationTemplateByCode(supabase, 'booking_alert_admin');
+    let subject = `🔔 Nuova Iscrizione: ${studentName} — ${courseName}`;
+    let html = '';
 
-    const adminRes = await sendEmailViaResend({
-      apiKey,
-      from: fromEmail,
-      to: adminEmail,
-      subject: adminRendered.subject,
-      html: adminRendered.html,
-    });
+    if (adminTmpl) {
+      if (!adminTmpl.is_active) {
+        // Disabled by admin
+      } else if (adminTmpl.blocks_config && adminTmpl.blocks_config.blocks && adminTmpl.blocks_config.blocks.length > 0) {
+        const rendered = renderEmailFromBlocks(adminTmpl.blocks_config, templateVariables, schoolProfile);
+        html = rendered.html;
+        subject = adminTmpl.subject ? compileTemplate(adminTmpl.subject, templateVariables) : rendered.subject;
+      } else if (adminTmpl.body_html) {
+        html = compileTemplate(adminTmpl.body_html, templateVariables);
+        subject = compileTemplate(adminTmpl.subject || subject, templateVariables);
+      }
+    }
 
-    await logNotification(supabase, {
-      channel: NotificationChannel.EMAIL,
-      type: NotificationType.BOOKING_CONFIRMATION,
-      recipient: adminEmail,
-      subject: adminRendered.subject,
-      status: adminRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-      bookingId: booking.id,
-      provider: 'resend',
-      messageId: adminRes.messageId || null,
-      error: adminRes.error || null,
-      payload: { courseName, studentName, totalEur },
-    });
+    if (!html && (!adminTmpl || adminTmpl.is_active)) {
+      const fallbackRendered = renderAdminBookingNotificationEmail(templateData);
+      subject = fallbackRendered.subject;
+      html = fallbackRendered.html;
+    }
+
+    if (html) {
+      const adminRes = await sendEmailViaResend({
+        apiKey,
+        from: fromEmail,
+        to: adminEmail,
+        subject,
+        html,
+      });
+
+      await logNotification(supabase, {
+        channel: NotificationChannel.EMAIL,
+        type: NotificationType.BOOKING_CONFIRMATION,
+        recipient: adminEmail,
+        subject,
+        status: adminRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+        bookingId: booking.id,
+        provider: 'resend',
+        messageId: adminRes.messageId || null,
+        error: adminRes.error || null,
+        payload: { courseName, studentName, totalEur },
+      });
+    }
   }
 }
 
@@ -286,21 +399,61 @@ export async function sendContactFormNotificationEmail(params: {
 
   data.schoolProfile = schoolProfile;
   const senderName = `${data.firstName} ${data.lastName}`.trim();
-  const contactRendered = renderContactFormAdminEmail(data);
+
+  const leadVariables: Record<string, any> = {
+    sender_name: senderName,
+    senderName,
+    sender_email: data.email,
+    senderEmail: data.email,
+    email: data.email,
+    sender_phone: data.phone || '',
+    senderPhone: data.phone || '',
+    phone: data.phone || '',
+    interest: data.interest || 'Informazioni Generali',
+    topic: data.topic || 'Richiesta Contatto',
+    message: data.message,
+    message_body: data.message,
+    messageBody: data.message,
+    admin_url: process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
+  };
+
+  const leadTmpl = await getNotificationTemplateByCode(supabase, 'contact_lead_admin');
+  let subject = `📩 Nuovo Messaggio dal Sito: ${senderName}`;
+  let html = '';
+
+  if (leadTmpl) {
+    if (!leadTmpl.is_active) {
+      return;
+    }
+    if (leadTmpl.blocks_config && leadTmpl.blocks_config.blocks && leadTmpl.blocks_config.blocks.length > 0) {
+      const rendered = renderEmailFromBlocks(leadTmpl.blocks_config, leadVariables, schoolProfile);
+      html = rendered.html;
+      subject = leadTmpl.subject ? compileTemplate(leadTmpl.subject, leadVariables) : rendered.subject;
+    } else if (leadTmpl.body_html) {
+      html = compileTemplate(leadTmpl.body_html, leadVariables);
+      subject = compileTemplate(leadTmpl.subject || subject, leadVariables);
+    }
+  }
+
+  if (!html) {
+    const fallbackRendered = renderContactFormAdminEmail(data);
+    subject = fallbackRendered.subject;
+    html = fallbackRendered.html;
+  }
 
   const res = await sendEmailViaResend({
     apiKey,
     from: fromEmail,
     to: adminEmail,
-    subject: contactRendered.subject,
-    html: contactRendered.html,
+    subject,
+    html,
   });
 
   await logNotification(supabase, {
     channel: NotificationChannel.EMAIL,
     type: NotificationType.CONTACT_FORM,
     recipient: adminEmail,
-    subject: contactRendered.subject,
+    subject,
     status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
     provider: 'resend',
     messageId: res.messageId || null,

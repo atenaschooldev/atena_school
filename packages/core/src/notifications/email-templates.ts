@@ -47,6 +47,7 @@ export interface ContactEmailTemplateData {
   email: string;
   phone?: string;
   interest?: string;
+  topic?: string;
   message: string;
   createdAt?: string;
   schoolProfile?: SchoolProfile;

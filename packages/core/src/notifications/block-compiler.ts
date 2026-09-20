@@ -237,16 +237,16 @@ export function getDefaultBlocksForTemplate(
         },
         {
           id: 'block-table-3',
-          type: 'summary_table',
-          title: 'Таблица данных клиента',
+          type: 'contact_summary_table',
+          title: 'Dati del Mittente',
           is_enabled: true,
           order: 2,
           props: {
             table_title: 'Dettagli Mittente',
-            show_purchaser: true,
+            show_name: true,
             show_email: true,
             show_phone: true,
-            show_course: true,
+            show_interest: true,
           },
         },
         {
@@ -530,6 +530,41 @@ export function renderEmailFromBlocks(
         break;
       }
 
+      // 3b. CONTACT SUMMARY TABLE (for lead/contact form templates)
+      case 'contact_summary_table': {
+        const senderName = compileTemplateVariables(v.sender_name || v.purchaser_name || 'Andrii Petukhov', v);
+        const senderEmail = compileTemplateVariables(v.sender_email || v.email || 'andrii.petukhov@gmail.com', v);
+        const senderPhone = compileTemplateVariables(v.sender_phone || v.phone || '+39 333 1234567', v);
+        const interest = compileTemplateVariables(v.interest || v.topic || 'Informazioni Generali', v);
+
+        renderedBlocksHtml += `
+          <tr>
+            <td style="padding: 0 32px 24px 32px;">
+              <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; background-image: linear-gradient(to right, rgba(4, 53, 105, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(4, 53, 105, 0.04) 1px, transparent 1px); background-size: 20px 20px; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden;">
+                <tr>
+                  <td style="padding: 16px 20px; background-color: #ffffff; border-bottom: 1px solid #e2e8f0;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #0284c7; margin-right: 8px; vertical-align: middle;"></span>
+                    <span style="font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; color: #043569; vertical-align: middle;">
+                      ${compileTemplateVariables(p.table_title || 'Dettagli Mittente', v)}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 18px 20px;">
+                    <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0">
+                      ${p.show_name !== false ? `<tr><td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Nome Mittente:</td><td align="right" style="padding: 6px 0; font-size: 13px; font-weight: 800; color: #043569;">${senderName}</td></tr>` : ''}
+                      ${p.show_email !== false ? `<tr><td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Email:</td><td align="right" style="padding: 6px 0; font-size: 13px; font-weight: 700; color: #1e293b;"><a href="mailto:${senderEmail}" style="color: #043569; text-decoration: underline;">${senderEmail}</a></td></tr>` : ''}
+                      ${p.show_phone !== false && senderPhone ? `<tr><td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Telefono:</td><td align="right" style="padding: 6px 0; font-size: 13px; font-weight: 700; color: #1e293b;">${senderPhone}</td></tr>` : ''}
+                      ${p.show_interest !== false && interest ? `<tr><td style="padding: 6px 0; font-size: 13px; color: #64748b; font-weight: 600;">Interesse / Argomento:</td><td align="right" style="padding: 6px 0; font-size: 13px; font-weight: 700; color: #1e293b;">${interest}</td></tr>` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`;
+        break;
+      }
+
       // 4. CTA BUTTON
       case 'cta_button': {
         const btnText = compileTemplateVariables(p.button_text || 'Accedi al Portale Studente →', v);
@@ -666,7 +701,7 @@ export function renderEmailFromBlocks(
 }
 
 /**
- * Compiles visual blocks configuration into Telegram Markdown format
+ * Compiles visual blocks configuration into Telegram HTML format
  */
 export function renderTelegramFromBlocks(
   config: TemplateBlocksConfig,
@@ -679,13 +714,21 @@ export function renderTelegramFromBlocks(
 
   const lines: string[] = [];
 
+  const formatTgHtml = (str: string) => {
+    if (!str) return '';
+    return str
+      .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+      .replace(/\*(.*?)\*/g, '<b>$1</b>')
+      .replace(/_(.*?)_/g, '<i>$1</i>');
+  };
+
   for (const block of sortedBlocks) {
     const p = block.props || {};
 
     switch (block.type) {
       case 'tg_header': {
-        const title = compileTemplateVariables(p.title_text || '🎓 *NUOVA NOTIFICA ATENA SCHOOL*', v);
-        lines.push(title);
+        const rawTitle = compileTemplateVariables(p.title_text || '🎓 <b>NUOVA NOTIFICA ATENA SCHOOL</b>', v);
+        lines.push(formatTgHtml(rawTitle));
         if (p.divider !== false) lines.push('━━━━━━━━━━━━━━━━━━━━');
         break;
       }
@@ -696,11 +739,11 @@ export function renderTelegramFromBlocks(
         const email = compileTemplateVariables(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com', v);
         const purchaser = compileTemplateVariables(v.purchaser_name || 'Petukhov Andrii', v);
 
-        if (p.show_name !== false) lines.push(`👤 *Studente:* ${student}`);
-        if (p.show_phone !== false) lines.push(`📞 *Telefono:* ${phone}`);
-        if (p.show_email !== false) lines.push(`✉️ *Email:* ${email}`);
-        if (p.show_purchaser !== false && purchaser !== student) lines.push(`👥 *Referente:* ${purchaser}`);
-        if (p.show_interest !== false && v.interest) lines.push(`🎯 *Interesse:* ${v.interest}`);
+        if (p.show_name !== false) lines.push(`👤 <b>Studente:</b> ${student}`);
+        if (p.show_phone !== false) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);
+        if (p.show_email !== false) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
+        if (p.show_purchaser !== false && purchaser !== student) lines.push(`👥 <b>Referente:</b> ${purchaser}`);
+        if (p.show_interest !== false && v.interest) lines.push(`🎯 <b>Interesse:</b> ${v.interest}`);
         break;
       }
 
@@ -710,9 +753,9 @@ export function renderTelegramFromBlocks(
         const schedule = compileTemplateVariables(v.schedule_text || v.lesson_schedule || 'Martedì e Giovedì 17:00-18:00', v);
 
         lines.push('');
-        if (p.show_course !== false) lines.push(`📚 *Corso:* ${course}`);
-        if (p.show_start_date !== false) lines.push(`📅 *Inizio:* ${startDate}`);
-        if (p.show_schedule !== false) lines.push(`⏰ *Orario:* ${schedule}`);
+        if (p.show_course !== false) lines.push(`📚 <b>Corso:</b> ${course}`);
+        if (p.show_start_date !== false) lines.push(`📅 <b>Inizio:</b> <code>${startDate}</code>`);
+        if (p.show_schedule !== false) lines.push(`⏰ <b>Orario:</b> ${schedule}`);
         break;
       }
 
@@ -721,14 +764,14 @@ export function renderTelegramFromBlocks(
         const amount = compileTemplateVariables(v.amount_paid || v.total_amount || '103.20', v);
 
         lines.push('');
-        if (p.show_status !== false) lines.push(`💳 *Stato:* ${status}`);
-        if (p.show_amount !== false) lines.push(`💰 *Totale:* €${amount}`);
+        if (p.show_status !== false) lines.push(`💳 <b>Stato:</b> <b>${status}</b>`);
+        if (p.show_amount !== false) lines.push(`💰 <b>Totale:</b> <b>€${amount}</b>`);
         break;
       }
 
       case 'tg_custom_text': {
         const content = compileTemplateVariables(p.content || '', v);
-        if (content) lines.push(`\n${content}`);
+        if (content) lines.push(`\n${formatTgHtml(content)}`);
         break;
       }
 

@@ -241,6 +241,7 @@ export type TemplateBlockType =
   | 'header'
   | 'greeting'
   | 'summary_table'
+  | 'contact_summary_table'
   | 'cta_button'
   | 'bank_details'
   | 'school_location'
