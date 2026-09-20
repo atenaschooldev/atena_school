@@ -12,6 +12,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@atena/core": path.resolve(__dirname, "../../packages/core/src"),
+      "@atena/utils": path.resolve(__dirname, "../../packages/utils/src"),
+      "@atena/api-types": path.resolve(__dirname, "../../packages/api-types/src"),
     },
   },
   define: {

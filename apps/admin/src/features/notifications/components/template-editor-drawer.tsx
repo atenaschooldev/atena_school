@@ -22,6 +22,7 @@ import type {
   NotificationTemplateRecord,
   UpdateNotificationTemplateDto,
 } from "../types";
+import { TemplatePreviewFrame } from "./template-preview-card";
 import { useTranslation } from "@/i18n/context";
 import {
   Mail,
@@ -339,46 +340,27 @@ export function TemplateEditorDrawer({
 
             {/* Tab: Live Preview */}
             <TabsContent value="preview" className="space-y-4 mt-0">
-              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4" />
                   <span>
                     {t("notifications.sampleDataBadge") ||
-                      "Anteprima renderizzata con dati studente e corso fittizi"}
+                      "Anteprima reale renderizzata con dati studente e corso attuali"}
                   </span>
                 </div>
               </div>
 
-              {isEmail && (
-                <div className="p-3 rounded-lg border bg-card space-y-1 text-sm">
-                  <div className="text-xs text-muted-foreground uppercase font-semibold">
-                    Oggetto Renderizzato:
-                  </div>
-                  <div className="font-semibold text-foreground">{renderCompiledSubject()}</div>
-                </div>
-              )}
-
-              <div className="rounded-xl border bg-background overflow-hidden shadow-sm">
-                <div className="p-3 border-b bg-muted/40 text-xs font-semibold text-muted-foreground flex items-center justify-between">
-                  <span>{isEmail ? "Anteprima Email" : "Anteprima Messaggio Telegram"}</span>
-                  <Badge variant="outline" className="text-[10px]">
-                    {isEmail ? "HTML Render" : "Telegram Parse Mode"}
-                  </Badge>
-                </div>
-
-                <div className="p-4 overflow-auto max-h-[500px]">
-                  {isEmail ? (
-                    <div
-                      className="email-preview-content prose dark:prose-invert max-w-none text-sm"
-                      dangerouslySetInnerHTML={{ __html: renderCompiledBody() }}
-                    />
-                  ) : (
-                    <div
-                      className="p-4 bg-slate-900 text-slate-100 rounded-lg font-sans text-sm leading-relaxed whitespace-pre-wrap"
-                      dangerouslySetInnerHTML={{ __html: renderCompiledBody() }}
-                    />
-                  )}
-                </div>
+              <div className="rounded-2xl border bg-background overflow-hidden shadow-xs h-[520px]">
+                <TemplatePreviewFrame
+                  template={{
+                    ...template,
+                    name,
+                    description,
+                    subject_template: subjectTemplate,
+                    body_template: bodyTemplate,
+                    is_active: isActive,
+                  }}
+                />
               </div>
             </TabsContent>
           </Tabs>

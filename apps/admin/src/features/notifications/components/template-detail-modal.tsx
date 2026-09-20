@@ -12,11 +12,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationChannel } from "../types";
 import type { NotificationTemplateRecord } from "../types";
-import { TemplatePreviewFrame, SAMPLE_PREVIEW_DATA } from "./template-preview-card";
+import {
+  TemplatePreviewFrame,
+  SAMPLE_PREVIEW_DATA,
+  buildCompleteEmailHtml,
+} from "./template-preview-card";
 import { useTranslation } from "@/i18n/context";
 import {
   Mail,
@@ -28,6 +31,7 @@ import {
   RefreshCw,
   Copy,
   Check,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,41 +59,57 @@ export function TemplateDetailModal({
   const isEmail = template.channel === NotificationChannel.EMAIL;
 
   const handleVarChange = (key: string, value: string) => {
-    setCustomVars((prev) => ({ ...prev, [key]: value }));
+    setCustomVars((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "total_amount") next.amount_paid = value;
+      if (key === "amount_paid") next.total_amount = value;
+      if (key === "date") next.start_date = value;
+      if (key === "start_date") next.date = value;
+      if (key === "lesson_schedule") next.schedule_text = value;
+      if (key === "schedule_text") next.lesson_schedule = value;
+      return next;
+    });
   };
 
   const handleResetVars = () => {
     setCustomVars(SAMPLE_PREVIEW_DATA);
-    toast.success("Dati campione ripristinati");
+    toast.success("Dati simulazione ripristinati");
   };
 
   const handleCopyBody = () => {
-    navigator.clipboard.writeText(template.body_template || "").then(() => {
+    let contentToCopy = template.body_template || "";
+    if (isEmail) {
+      contentToCopy = buildCompleteEmailHtml(template, customVars).html;
+    }
+    navigator.clipboard.writeText(contentToCopy).then(() => {
       setCopied(true);
-      toast.success("Codice template copiato negli appunti!");
+      toast.success("Codice HTML del template copiato negli appunti!");
       setTimeout(() => setCopied(false), 2000);
     });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-5xl h-[88vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-6xl w-[95vw] h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
-        <DialogHeader className="p-6 pb-4 border-b bg-muted/20 shrink-0">
+        <DialogHeader className="p-5 px-6 border-b bg-muted/20 shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-primary/10 text-primary shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10 text-primary shadow-xs">
                 {isEmail ? <Mail className="h-5 w-5" /> : <MessageSquare className="h-5 w-5" />}
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <DialogTitle className="text-lg font-bold flex items-center gap-2">
                   {template.name}
                   <Badge variant={template.is_active ? "default" : "secondary"} className="text-xs">
                     {template.is_active ? "Attivo" : "Disattivato"}
                   </Badge>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {template.code}
+                  </Badge>
                 </DialogTitle>
-                <DialogDescription className="font-mono text-xs text-muted-foreground mt-0.5">
-                  {template.code} • {template.description || "Nessuna descrizione"}
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                  {template.description || "Nessuna descrizione impostata"}
                 </DialogDescription>
               </div>
             </div>
@@ -98,7 +118,7 @@ export function TemplateDetailModal({
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 h-8 text-xs"
+                className="gap-1.5 h-8 text-xs rounded-xl"
                 onClick={() => {
                   onClose();
                   onOpenTest(template);
@@ -111,7 +131,7 @@ export function TemplateDetailModal({
               <Button
                 variant="default"
                 size="sm"
-                className="gap-1.5 h-8 text-xs font-semibold"
+                className="gap-1.5 h-8 text-xs font-semibold rounded-xl shadow-xs"
                 onClick={() => {
                   onClose();
                   onOpenEdit(template);
@@ -126,12 +146,12 @@ export function TemplateDetailModal({
 
         {/* Content Body */}
         <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 overflow-hidden">
-          {/* Left Column: Live Render Preview */}
-          <div className="lg:col-span-8 p-6 overflow-y-auto bg-muted/10 flex flex-col space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Left Column: Real Live Render Preview */}
+          <div className="lg:col-span-8 p-5 overflow-hidden bg-muted/10 flex flex-col space-y-3">
+            <div className="flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                 <Sparkles className="h-4 w-4 text-amber-500" />
-                <span>Anteprima dal Vivo (Rendering Reale)</span>
+                <span>Anteprima Reale Mail / Messaggio (100% Fedele al Client di Posta)</span>
               </div>
 
               <Button
@@ -141,21 +161,21 @@ export function TemplateDetailModal({
                 onClick={handleCopyBody}
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-                <span>Copia Codice</span>
+                <span>Copia HTML</span>
               </Button>
             </div>
 
-            <div className="flex-1 min-h-[420px]">
+            <div className="flex-1 w-full h-full min-h-0 rounded-2xl overflow-hidden">
               <TemplatePreviewFrame template={template} customVariables={customVars} />
             </div>
           </div>
 
-          {/* Right Column: Interactive Sample Variables Tester */}
-          <div className="lg:col-span-4 p-6 border-l bg-card flex flex-col overflow-hidden space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b">
-              <div className="flex items-center gap-1.5 font-bold text-sm">
+          {/* Right Column: Interactive Sample Variables Simulator */}
+          <div className="lg:col-span-4 p-5 border-l bg-card flex flex-col overflow-hidden space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b shrink-0">
+              <div className="flex items-center gap-1.5 font-bold text-sm text-foreground">
                 <Sliders className="h-4 w-4 text-primary" />
-                <span>Dati di Simulazione</span>
+                <span>Variabili & Dati Campione</span>
               </div>
 
               <Button
@@ -170,25 +190,39 @@ export function TemplateDetailModal({
               </Button>
             </div>
 
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Modifica i valori qui sotto per testare la formattazione e la reattività del template in tempo reale:
+            <p className="text-xs text-muted-foreground leading-relaxed shrink-0">
+              Modifica i valori sottostanti per verificare istantaneamente la reattività e la formattazione del template:
             </p>
 
             <ScrollArea className="flex-1 pr-3">
-              <div className="space-y-3.5">
-                {(template.available_variables || Object.keys(SAMPLE_PREVIEW_DATA)).map((varKey) => (
-                  <div key={varKey} className="space-y-1">
+              <div className="space-y-3 pb-4">
+                {[
+                  { key: "purchaser_name", label: "Nome Acquirente / Referente" },
+                  { key: "student_name", label: "Nome Studente (Allievo)" },
+                  { key: "course_name", label: "Nome Corso" },
+                  { key: "total_amount", label: "Totale (€)" },
+                  { key: "registration_fee", label: "Quota Iscrizione (€)" },
+                  { key: "lesson_schedule", label: "Orario e Frequenza" },
+                  { key: "date", label: "Data Inizio Corso" },
+                  { key: "student_birth_date", label: "Data Nascita Studente" },
+                  { key: "birth_place", label: "Luogo di Nascita" },
+                  { key: "booking_id", label: "ID Prenotazione Univoco" },
+                ].map(({ key, label }) => (
+                  <div key={key} className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor={`var-${varKey}`} className="text-xs font-mono text-muted-foreground">
-                        {`{{${varKey}}}`}
+                      <Label htmlFor={`var-${key}`} className="text-[11px] font-semibold text-foreground">
+                        {label}
                       </Label>
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {`{{${key}}}`}
+                      </span>
                     </div>
                     <Input
-                      id={`var-${varKey}`}
-                      value={customVars[varKey] || ""}
-                      onChange={(e) => handleVarChange(varKey, e.target.value)}
-                      placeholder={`Valore per {{${varKey}}}...`}
-                      className="h-8 text-xs font-sans"
+                      id={`var-${key}`}
+                      value={customVars[key] || ""}
+                      onChange={(e) => handleVarChange(key, e.target.value)}
+                      placeholder={`Valore per ${key}...`}
+                      className="h-8 text-xs font-sans rounded-lg"
                     />
                   </div>
                 ))}
