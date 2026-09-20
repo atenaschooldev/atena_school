@@ -42,10 +42,6 @@ export function useLoginForm() {
       provider,
       options: {
         redirectTo,
-        queryParams: {
-          prompt: 'select_account',
-          access_type: 'offline',
-        },
       },
     });
 
