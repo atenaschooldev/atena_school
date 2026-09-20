@@ -172,7 +172,7 @@ export function BookingDetailDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-3xl max-w-3xl p-0 gap-0 overflow-hidden">
         {/* Header Bar */}
         <div className="p-6 pb-4 border-b bg-muted/20 space-y-3">
           <div className="flex items-center gap-2">

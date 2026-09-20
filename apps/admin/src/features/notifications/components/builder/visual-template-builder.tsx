@@ -769,7 +769,7 @@ export function VisualTemplateBuilder({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[96vw] w-[96vw] h-[94vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-background border-border/80 shadow-2xl">
+      <DialogContent className="sm:max-w-[96vw] max-w-[96vw] w-[96vw] h-[94vh] max-h-[94vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-background border-border/80 shadow-2xl">
         {/* Top Navigation Header */}
         <DialogHeader className="p-4 px-6 border-b bg-muted/20 shrink-0 select-none">
           <div className="flex items-center justify-between gap-4">

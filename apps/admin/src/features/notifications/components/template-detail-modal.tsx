@@ -90,7 +90,7 @@ export function TemplateDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-6xl w-[95vw] h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="sm:max-w-[95vw] max-w-[95vw] w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <DialogHeader className="p-5 px-6 border-b bg-muted/20 shrink-0">
           <div className="flex items-center justify-between gap-4">
