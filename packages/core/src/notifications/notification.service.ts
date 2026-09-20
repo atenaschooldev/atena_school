@@ -514,82 +514,130 @@ export async function sendTelegramMessage(params: {
   supabase?: SupabaseClient;
   botToken?: string;
   chatId?: string;
+  chatIds?: string[];
   text: string;
   inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>;
   bookingId?: string | null;
   notificationType?: NotificationType;
+  isCash?: boolean;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
   let token = params.botToken;
   let chat = params.chatId;
+  let chatIds = params.chatIds;
 
-  if ((!token || !chat) && params.supabase) {
+  if (params.supabase) {
     const tgCreds = await getTelegramCredentials(params.supabase);
     token = token || tgCreds.botToken;
     chat = chat || tgCreds.chatId;
+    if (!chatIds || chatIds.length === 0) {
+      chatIds = tgCreds.chatIds;
+    }
+
+    // Check notification type filter flags
+    if (params.isCash && tgCreds.notifyCash === false) {
+      return { success: true };
+    }
+    if (params.notificationType) {
+      if (params.notificationType === NotificationType.CONTACT_FORM && tgCreds.notifyLeads === false) {
+        return { success: true };
+      }
+      if (params.notificationType === NotificationType.BOOKING_CONFIRMATION && tgCreds.notifyBookings === false) {
+        return { success: true };
+      }
+      if (params.notificationType === NotificationType.PAYMENT_RECEIPT && tgCreds.notifyPayments === false) {
+        return { success: true };
+      }
+    }
   }
 
   token = token || process.env.TELEGRAM_BOT_TOKEN;
   chat = chat || process.env.TELEGRAM_CHAT_ID;
 
-  if (!token || !chat) {
+  // Extract all target chat IDs (supports comma, space, semicolon or array)
+  const targetChats: string[] = [];
+  if (chatIds && chatIds.length > 0) {
+    for (const c of chatIds) {
+      const parts = String(c).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+      targetChats.push(...parts);
+    }
+  } else if (chat) {
+    const parts = String(chat).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+    targetChats.push(...parts);
+  }
+
+  // Deduplicate
+  const uniqueChats = Array.from(new Set(targetChats));
+
+  if (!token || uniqueChats.length === 0) {
     return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
   }
 
-  try {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const body: Record<string, any> = {
-      chat_id: chat,
-      text: params.text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
-    };
+  let lastMsgId: number | undefined;
+  let lastError: string | undefined;
+  let successCount = 0;
 
-    if (params.inlineKeyboard && params.inlineKeyboard.length > 0) {
-      body.reply_markup = { inline_keyboard: params.inlineKeyboard };
-    }
+  for (const recipient of uniqueChats) {
+    try {
+      const url = `https://api.telegram.org/bot${token}/sendMessage`;
+      const body: Record<string, any> = {
+        chat_id: recipient,
+        text: params.text,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      };
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    const json = (await res.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
-
-    if (!res.ok || !json.ok) {
-      const errStr = json.description || `HTTP error ${res.status}`;
-      if (params.supabase) {
-        await logNotification(params.supabase, {
-          channel: NotificationChannel.TELEGRAM,
-          type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
-          recipient: chat,
-          status: NotificationStatus.FAILED,
-          bookingId: params.bookingId || null,
-          provider: 'telegram',
-          error: errStr,
-          payload: { text: params.text },
-        });
+      if (params.inlineKeyboard && params.inlineKeyboard.length > 0) {
+        body.reply_markup = { inline_keyboard: params.inlineKeyboard };
       }
-      return { success: false, error: errStr };
-    }
 
-    const msgId = json.result?.message_id;
-    if (params.supabase) {
-      await logNotification(params.supabase, {
-        channel: NotificationChannel.TELEGRAM,
-        type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
-        recipient: chat,
-        status: NotificationStatus.SENT,
-        bookingId: params.bookingId || null,
-        provider: 'telegram',
-        messageId: msgId ? String(msgId) : null,
-        payload: { text: params.text },
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
-    }
 
-    return { success: true, messageId: msgId };
-  } catch (err: any) {
-    return { success: false, error: err?.message || 'Network error' };
+      const json = (await res.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
+
+      if (!res.ok || !json.ok) {
+        const errStr = json.description || `HTTP error ${res.status}`;
+        lastError = errStr;
+        if (params.supabase) {
+          await logNotification(params.supabase, {
+            channel: NotificationChannel.TELEGRAM,
+            type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
+            recipient,
+            status: NotificationStatus.FAILED,
+            bookingId: params.bookingId || null,
+            provider: 'telegram',
+            error: errStr,
+            payload: { text: params.text },
+          });
+        }
+      } else {
+        successCount++;
+        lastMsgId = json.result?.message_id;
+        if (params.supabase) {
+          await logNotification(params.supabase, {
+            channel: NotificationChannel.TELEGRAM,
+            type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
+            recipient,
+            status: NotificationStatus.SENT,
+            bookingId: params.bookingId || null,
+            provider: 'telegram',
+            messageId: lastMsgId ? String(lastMsgId) : null,
+            payload: { text: params.text },
+          });
+        }
+      }
+    } catch (err: any) {
+      lastError = err?.message || 'Network error';
+    }
   }
+
+  if (successCount > 0) {
+    return { success: true, messageId: lastMsgId };
+  }
+
+  return { success: false, error: lastError || 'Failed to send to Telegram recipient(s)' };
 }
 

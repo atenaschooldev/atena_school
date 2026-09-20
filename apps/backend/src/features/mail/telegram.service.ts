@@ -35,63 +35,91 @@ export class TelegramService {
     const botToken = creds.botToken || this.configService.get<string>('TELEGRAM_BOT_TOKEN');
     const chatId = creds.chatId || this.configService.get<string>('TELEGRAM_CHAT_ID');
 
-    if (!botToken || !chatId) {
-      this.logger.warn('[TELEGRAM SKIPPED]: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured');
+    // Extract all target chat IDs (multi-admin support)
+    const targetChats: string[] = [];
+    if (creds.chatIds && creds.chatIds.length > 0) {
+      for (const c of creds.chatIds) {
+        const parts = String(c).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+        targetChats.push(...parts);
+      }
+    }
+    if (chatId) {
+      const parts = String(chatId).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
+      targetChats.push(...parts);
+    }
+    const uniqueChats = Array.from(new Set(targetChats));
+
+    if (!botToken || uniqueChats.length === 0) {
+      this.logger.warn('[TELEGRAM SKIPPED]: TELEGRAM_BOT_TOKEN or CHAT_ID is not configured');
       return { success: false, error: 'Telegram credentials not configured' };
     }
 
-    const payload: Record<string, unknown> = {
-      chat_id: chatId,
-      text: htmlText,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true,
+    let lastResult: { success: boolean; messageId?: number; error?: string } = {
+      success: false,
+      error: 'Failed to send to Telegram recipient(s)',
     };
+    let successCount = 0;
 
-    if (inlineKeyboard && inlineKeyboard.length > 0) {
-      payload.reply_markup = {
-        inline_keyboard: inlineKeyboard,
+    for (const recipient of uniqueChats) {
+      const payload: Record<string, unknown> = {
+        chat_id: recipient,
+        text: htmlText,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
       };
-    }
 
-    let result: { success: boolean; messageId?: number; error?: string };
-
-    try {
-      const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = (await response.json()) as { ok: boolean; result?: { message_id?: number }; description?: string };
-
-      if (!response.ok || !data.ok) {
-        this.logger.error(`[TELEGRAM ERROR]: ${data.description || response.statusText}`);
-        result = { success: false, error: data.description || 'Failed to send message' };
-      } else {
-        this.logger.log(`[TELEGRAM SUCCESS]: Notification sent, Msg ID: ${data.result?.message_id}`);
-        result = { success: true, messageId: data.result?.message_id };
+      if (inlineKeyboard && inlineKeyboard.length > 0) {
+        payload.reply_markup = {
+          inline_keyboard: inlineKeyboard,
+        };
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      this.logger.error(`[TELEGRAM NETWORK ERROR]: ${msg}`);
-      result = { success: false, error: msg };
+
+      let result: { success: boolean; messageId?: number; error?: string };
+
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = (await response.json()) as { ok: boolean; result?: { message_id?: number }; description?: string };
+
+        if (!response.ok || !data.ok) {
+          this.logger.error(`[TELEGRAM ERROR]: ${data.description || response.statusText}`);
+          result = { success: false, error: data.description || 'Failed to send message' };
+        } else {
+          successCount++;
+          this.logger.log(`[TELEGRAM SUCCESS]: Notification sent to ${recipient}, Msg ID: ${data.result?.message_id}`);
+          result = { success: true, messageId: data.result?.message_id };
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.error(`[TELEGRAM NETWORK ERROR]: ${msg}`);
+        result = { success: false, error: msg };
+      }
+
+      lastResult = result;
+
+      // Async log to notification_logs
+      this.prisma.notification_logs.create({
+        data: {
+          channel: NotificationChannel.TELEGRAM,
+          notificationType,
+          recipient,
+          subject: 'Telegram Bot Alert',
+          request: payload as any,
+          response: result as any,
+          status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+        },
+      }).catch(() => null);
     }
 
-    // Async log to notification_logs
-    this.prisma.notification_logs.create({
-      data: {
-        channel: NotificationChannel.TELEGRAM,
-        notificationType,
-        recipient: chatId,
-        subject: 'Telegram Bot Alert',
-        request: payload as any,
-        response: result as any,
-        status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-      },
-    }).catch(() => null);
+    if (successCount > 0) {
+      return { success: true, messageId: lastResult.messageId };
+    }
 
-
-    return result;
+    return lastResult;
   }
 
 
@@ -161,6 +189,20 @@ export class TelegramService {
     stripePaymentIntentId?: string;
     stripeDashboardUrl?: string;
   }): Promise<{ success: boolean; messageId?: number; error?: string }> {
+    const creds = await getTelegramCredentials();
+    if (creds.notifyBookings === false) {
+      this.logger.log('[TELEGRAM FILTERED]: notifyBookings is disabled in integration settings');
+      return { success: true };
+    }
+    if (data.isPaidOnline && creds.notifyPayments === false) {
+      this.logger.log('[TELEGRAM FILTERED]: notifyPayments is disabled in integration settings');
+      return { success: true };
+    }
+    if (!data.isPaidOnline && creds.notifyCash === false) {
+      this.logger.log('[TELEGRAM FILTERED]: notifyCash is disabled in integration settings');
+      return { success: true };
+    }
+
     const isPaid = Boolean(data.isPaidOnline);
     const statusEmoji = isPaid ? '✅' : '⏳';
     const cleanPhone = (data.purchaserPhone || '').replace(/[^0-9+]/g, '');
@@ -260,6 +302,12 @@ export class TelegramService {
     interest?: string;
     message: string;
   }): Promise<{ success: boolean; messageId?: number; error?: string }> {
+    const creds = await getTelegramCredentials();
+    if (creds.notifyLeads === false) {
+      this.logger.log('[TELEGRAM FILTERED]: notifyLeads is disabled in integration settings');
+      return { success: true };
+    }
+
     const cleanPhone = (data.phone || '').replace(/[^0-9+]/g, '');
     const waNumber = cleanPhone.startsWith('+') ? cleanPhone.slice(1) : (cleanPhone.startsWith('39') ? cleanPhone : `39${cleanPhone}`);
     const whatsappUrl = cleanPhone ? `https://wa.me/${waNumber}` : null;

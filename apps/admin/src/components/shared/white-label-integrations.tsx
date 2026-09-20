@@ -19,7 +19,11 @@ import {
   Check,
   X,
   BarChart3,
+  Eye,
+  EyeOff,
+  Bell,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import type { MaskedIntegrationSecretRecord, TestIntegrationResult } from "@atena/api-types";
@@ -129,6 +133,7 @@ export function WhiteLabelIntegrations() {
   const [resendAdminEmail, setResendAdminEmail] = useState("");
   const [savingResend, setSavingResend] = useState(false);
   const [testingResend, setTestingResend] = useState(false);
+  const [showResendKey, setShowResendKey] = useState(false);
 
   const [tgToken, setTgToken] = useState("");
   const [tgChatId, setTgChatId] = useState("");
@@ -136,12 +141,20 @@ export function WhiteLabelIntegrations() {
   const [savingTg, setSavingTg] = useState(false);
   const [testingTg, setTestingTg] = useState(false);
   const [settingWebhook, setSettingWebhook] = useState(false);
+  const [showTgToken, setShowTgToken] = useState(false);
+  const [tgNotifyBookings, setTgNotifyBookings] = useState(true);
+  const [tgNotifyPayments, setTgNotifyPayments] = useState(true);
+  const [tgNotifyCash, setTgNotifyCash] = useState(true);
+  const [tgNotifyLeads, setTgNotifyLeads] = useState(true);
 
   const [stripeSecret, setStripeSecret] = useState("");
   const [stripePublishable, setStripePublishable] = useState("");
   const [stripeWebhook, setStripeWebhook] = useState("");
   const [savingStripe, setSavingStripe] = useState(false);
   const [testingStripe, setTestingStripe] = useState(false);
+  const [showStripeSecret, setShowStripeSecret] = useState(false);
+  const [showStripePublishable, setShowStripePublishable] = useState(false);
+  const [showStripeWebhook, setShowStripeWebhook] = useState(false);
 
   const [gaId, setGaId] = useState("");
   const [gtmId, setGtmId] = useState("");
@@ -168,6 +181,10 @@ export function WhiteLabelIntegrations() {
             setTgToken(String(data.telegram.credentials.botToken || ""));
             setTgChatId(String(data.telegram.credentials.chatId || ""));
             setTgLocale((data.telegram.credentials.locale as any) || "it");
+            setTgNotifyBookings(data.telegram.credentials.notifyBookings !== false);
+            setTgNotifyPayments(data.telegram.credentials.notifyPayments !== false);
+            setTgNotifyCash(data.telegram.credentials.notifyCash !== false);
+            setTgNotifyLeads(data.telegram.credentials.notifyLeads !== false);
           }
           if (data.stripe?.credentials) {
             setStripeSecret(String(data.stripe.credentials.secretKey || ""));
@@ -270,11 +287,21 @@ export function WhiteLabelIntegrations() {
   const handleSaveTelegram = async () => {
     setSavingTg(true);
     try {
+      const chatIdsList = tgChatId
+        .split(/[\s,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
       await api.patch("/admin/integrations/telegram", {
         credentials: {
           botToken: tgToken,
           chatId: tgChatId,
+          chatIds: chatIdsList,
           locale: tgLocale,
+          notifyBookings: tgNotifyBookings,
+          notifyPayments: tgNotifyPayments,
+          notifyCash: tgNotifyCash,
+          notifyLeads: tgNotifyLeads,
         },
       });
       const now = new Date().toLocaleTimeString("it-IT");
@@ -554,14 +581,26 @@ export function WhiteLabelIntegrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="resendApiKey">Resend API Key</Label>
-              <Input
-                id="resendApiKey"
-                type="text"
-                value={resendKey}
-                onChange={(e) => setResendKey(e.target.value)}
-                placeholder="re_••••••••••••"
-                className="font-mono text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="resendApiKey"
+                  type={showResendKey ? "text" : "password"}
+                  value={resendKey}
+                  onChange={(e) => setResendKey(e.target.value)}
+                  placeholder="re_••••••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowResendKey(!showResendKey)}
+                  title={showResendKey ? "Nascondi chiave" : "Mostra chiave"}
+                >
+                  {showResendKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
               <p className="text-xs text-muted-foreground">
                 Lascia il valore mascherato per mantenere la chiave attuale, oppure inseriscine una nuova per sovrascriverla.
               </p>
@@ -647,26 +686,109 @@ export function WhiteLabelIntegrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="tgToken">Bot Token</Label>
-              <Input
-                id="tgToken"
-                type="text"
-                value={tgToken}
-                onChange={(e) => setTgToken(e.target.value)}
-                placeholder="123456789:AA••••••••"
-                className="font-mono text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="tgToken"
+                  type={showTgToken ? "text" : "password"}
+                  value={tgToken}
+                  onChange={(e) => setTgToken(e.target.value)}
+                  placeholder="123456789:AA••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowTgToken(!showTgToken)}
+                  title={showTgToken ? "Nascondi token" : "Mostra token"}
+                >
+                  {showTgToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tgChatId">Chat ID / Canale Notifiche</Label>
+              <Label htmlFor="tgChatId">Chat ID Amministratori (Multipli)</Label>
               <Input
                 id="tgChatId"
                 type="text"
                 value={tgChatId}
                 onChange={(e) => setTgChatId(e.target.value)}
-                placeholder="-100123456789"
+                placeholder="es. 7159974353, -100123456789"
                 className="font-mono text-sm"
               />
+              <p className="text-xs text-muted-foreground">
+                Puoi inserire più Chat ID separati da virgola. Il bot invierà tutte le notifiche contemporaneamente a ciascun amministratore.
+              </p>
+            </div>
+
+            {/* Notification Event Filters */}
+            <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-3 md:col-span-2">
+              <div className="flex items-center space-x-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <h4 className="text-sm font-medium text-foreground">Filtro Notifiche Telegram</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Scegli quali eventi devono attivare un messaggio automatico nel canale o chat degli amministratori:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <label className="flex items-start space-x-3 p-3 rounded-lg border border-border/60 bg-background/60 hover:bg-background cursor-pointer transition-colors">
+                  <Checkbox
+                    checked={tgNotifyBookings}
+                    onCheckedChange={(checked) => setTgNotifyBookings(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold block text-foreground">Nuove Prenotazioni</span>
+                    <span className="text-[11px] text-muted-foreground block leading-tight">
+                      Avviso immediato per ogni nuova iscrizione registrata dal sito
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start space-x-3 p-3 rounded-lg border border-border/60 bg-background/60 hover:bg-background cursor-pointer transition-colors">
+                  <Checkbox
+                    checked={tgNotifyPayments}
+                    onCheckedChange={(checked) => setTgNotifyPayments(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold block text-foreground">Pagamenti Online Stripe</span>
+                    <span className="text-[11px] text-muted-foreground block leading-tight">
+                      Conferma quando un cliente paga online con carta di credito
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start space-x-3 p-3 rounded-lg border border-border/60 bg-background/60 hover:bg-background cursor-pointer transition-colors">
+                  <Checkbox
+                    checked={tgNotifyCash}
+                    onCheckedChange={(checked) => setTgNotifyCash(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold block text-foreground">Saldo in Sede (Contanti)</span>
+                    <span className="text-[11px] text-muted-foreground block leading-tight">
+                      Avviso quando la prenotazione richiede saldo di persona
+                    </span>
+                  </div>
+                </label>
+
+                <label className="flex items-start space-x-3 p-3 rounded-lg border border-border/60 bg-background/60 hover:bg-background cursor-pointer transition-colors">
+                  <Checkbox
+                    checked={tgNotifyLeads}
+                    onCheckedChange={(checked) => setTgNotifyLeads(Boolean(checked))}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-semibold block text-foreground">Lead & Modulo Contatti</span>
+                    <span className="text-[11px] text-muted-foreground block leading-tight">
+                      Messaggi e richieste di informazioni inviati dal modulo contatti
+                    </span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -745,38 +867,74 @@ export function WhiteLabelIntegrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="stripeSecret">Secret Key (sk_...)</Label>
-              <Input
-                id="stripeSecret"
-                type="text"
-                value={stripeSecret}
-                onChange={(e) => setStripeSecret(e.target.value)}
-                placeholder="sk_••••••••••••"
-                className="font-mono text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="stripeSecret"
+                  type={showStripeSecret ? "text" : "password"}
+                  value={stripeSecret}
+                  onChange={(e) => setStripeSecret(e.target.value)}
+                  placeholder="sk_••••••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowStripeSecret(!showStripeSecret)}
+                  title={showStripeSecret ? "Nascondi chiave" : "Mostra chiave"}
+                >
+                  {showStripeSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="stripePublishable">Publishable Key (pk_...)</Label>
-              <Input
-                id="stripePublishable"
-                type="text"
-                value={stripePublishable}
-                onChange={(e) => setStripePublishable(e.target.value)}
-                placeholder="pk_test_••••••••"
-                className="font-mono text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="stripePublishable"
+                  type={showStripePublishable ? "text" : "password"}
+                  value={stripePublishable}
+                  onChange={(e) => setStripePublishable(e.target.value)}
+                  placeholder="pk_test_••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowStripePublishable(!showStripePublishable)}
+                  title={showStripePublishable ? "Nascondi chiave" : "Mostra chiave"}
+                >
+                  {showStripePublishable ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="stripeWebhook">Webhook Secret (whsec_...)</Label>
-              <Input
-                id="stripeWebhook"
-                type="text"
-                value={stripeWebhook}
-                onChange={(e) => setStripeWebhook(e.target.value)}
-                placeholder="whsec_••••••••"
-                className="font-mono text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="stripeWebhook"
+                  type={showStripeWebhook ? "text" : "password"}
+                  value={stripeWebhook}
+                  onChange={(e) => setStripeWebhook(e.target.value)}
+                  placeholder="whsec_••••••••"
+                  className="font-mono text-sm pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                  onClick={() => setShowStripeWebhook(!showStripeWebhook)}
+                  title={showStripeWebhook ? "Nascondi secret" : "Mostra secret"}
+                >
+                  {showStripeWebhook ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </div>
 

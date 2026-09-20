@@ -107,7 +107,12 @@ export async function getTelegramCredentials(
   return {
     botToken: dbCreds?.botToken || process.env.TELEGRAM_BOT_TOKEN || '',
     chatId: dbCreds?.chatId || process.env.TELEGRAM_CHAT_ID || '',
+    chatIds: dbCreds?.chatIds || [],
     locale: (dbCreds?.locale || process.env.TELEGRAM_LOCALE || 'it') as 'it' | 'en' | 'ru',
+    notifyBookings: dbCreds?.notifyBookings ?? true,
+    notifyPayments: dbCreds?.notifyPayments ?? true,
+    notifyCash: dbCreds?.notifyCash ?? true,
+    notifyLeads: dbCreds?.notifyLeads ?? true,
   };
 }
 
@@ -218,6 +223,10 @@ export async function getMaskedIntegrationsSummary(
         botToken: maskSecret(tgCreds.botToken),
         chatId: tgCreds.chatId || '',
         locale: tgCreds.locale,
+        notifyBookings: tgCreds.notifyBookings,
+        notifyPayments: tgCreds.notifyPayments,
+        notifyCash: tgCreds.notifyCash,
+        notifyLeads: tgCreds.notifyLeads,
       },
       is_active: tgActive,
       is_configured: Boolean(tgCreds.botToken && tgCreds.chatId),

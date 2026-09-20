@@ -73,7 +73,12 @@ export interface ResendCredentials {
 export interface TelegramCredentials {
   botToken: string;
   chatId: string;
+  chatIds?: string[];
   locale?: 'it' | 'en' | 'ru';
+  notifyBookings?: boolean;
+  notifyPayments?: boolean;
+  notifyCash?: boolean;
+  notifyLeads?: boolean;
 }
 
 export interface StripeCredentials {
