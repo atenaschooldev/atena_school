@@ -718,8 +718,6 @@ export const it = {
     inactiveBadge: "Disattivato",
     channelEmail: "Email",
     channelTelegram: "Telegram",
-    recipientCustomer: "Cliente",
-    recipientAdmin: "Segreteria",
     variablesTitle: "Variabili Dinamiche Disponibili",
     variablesHint: "Fai clic su un tag per inserirlo automaticamente nel cursore o copialo negli appunti.",
     editTemplate: "Modifica Template",

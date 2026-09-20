@@ -14,7 +14,6 @@ import {
   NotificationChannel,
   RecipientType,
   NOTIFICATION_CHANNEL_DICTIONARY,
-  RECIPIENT_TYPE_DICTIONARY,
 } from "@atena/api-types";
 import type { NotificationTriggerRecord } from "@atena/api-types";
 import {
@@ -29,9 +28,6 @@ import {
   ArrowRight,
   Clock,
   Filter,
-  Layers,
-  Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 
 export function NotificationTriggersView() {

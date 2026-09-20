@@ -718,8 +718,6 @@ export const en = {
     inactiveBadge: "Inactive",
     channelEmail: "Email",
     channelTelegram: "Telegram",
-    recipientCustomer: "Customer",
-    recipientAdmin: "Admin",
     variablesTitle: "Available Dynamic Variables",
     variablesHint: "Click any tag to insert it into your editor or copy it.",
     editTemplate: "Edit Template",

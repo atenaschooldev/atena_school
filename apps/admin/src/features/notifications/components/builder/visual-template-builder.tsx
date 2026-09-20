@@ -31,7 +31,7 @@ import {
   renderTelegramFromBlocks,
   DEFAULT_SCHOOL_PROFILE,
 } from "@atena/core";
-export const SAMPLE_PREVIEW_DATA: Record<string, string> = {
+const SAMPLE_PREVIEW_DATA: Record<string, string> = {
   student_name: "Viktoria Petukhova",
   purchaser_name: "Petukhov Andrii",
   course_name: "Kids (6-7 anni)",
@@ -726,17 +726,24 @@ function SortableBlockItem({
   );
 }
 
-export function VisualTemplateBuilder({
+interface VisualTemplateBuilderContentProps {
+  template: NotificationTemplateRecord;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (templateId: string, updates: Partial<NotificationTemplateRecord>) => Promise<any>;
+  onOpenTest: (template: NotificationTemplateRecord) => void;
+  isLoading?: boolean;
+}
+
+function VisualTemplateBuilderContent({
   template,
   isOpen,
   onClose,
   onSave,
   onOpenTest,
   isLoading = false,
-}: VisualTemplateBuilderProps) {
+}: VisualTemplateBuilderContentProps) {
   const { t, locale } = useTranslation();
-  if (!template) return null;
-
   const isEmail = template.channel === NotificationChannel.EMAIL;
 
   const initialConfig = useMemo(() => {
@@ -812,18 +819,6 @@ export function VisualTemplateBuilder({
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [isSaving, setIsSaving] = useState(false);
   const [copiedHtml, setCopiedHtml] = useState(false);
-
-  // Sync state when template changes
-  React.useEffect(() => {
-    if (template) {
-      const cfg = template.blocks_config && template.blocks_config.blocks?.length
-        ? template.blocks_config
-        : getDefaultBlocksForTemplate(template.code, template.channel);
-      setBlocksConfig(cfg);
-      setHistory([cfg]);
-      setHistoryIndex(0);
-    }
-  }, [template]);
 
   // DnD Sensors
   const sensors = useSensors(
@@ -1364,3 +1359,20 @@ export function VisualTemplateBuilder({
     </Dialog>
   );
 }
+
+export function VisualTemplateBuilder(props: VisualTemplateBuilderProps) {
+  if (!props.isOpen || !props.template) return null;
+
+  return (
+    <VisualTemplateBuilderContent
+      key={props.template.id}
+      template={props.template}
+      isOpen={props.isOpen}
+      onClose={props.onClose}
+      onSave={props.onSave}
+      onOpenTest={props.onOpenTest}
+      isLoading={props.isLoading}
+    />
+  );
+}
+
