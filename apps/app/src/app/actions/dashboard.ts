@@ -90,7 +90,6 @@ export async function getDashboardDataAction() {
       .from("bookings")
       .select("*")
       .or(filterConditions.join(","))
-      .in("payment_status", [BookingPaymentStatus.PENDING, BookingPaymentStatus.RESERVED, BookingPaymentStatus.PAID])
       .order("created_at", { ascending: false });
 
     const bookingsList = rawBookings || [];
