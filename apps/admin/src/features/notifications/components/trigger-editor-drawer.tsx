@@ -335,8 +335,8 @@ export function TriggerEditorDrawer({
                       <SelectItem value={String(RecipientType.CUSTOMER)} className="text-xs">
                         👤 {locale === "en" ? "Customer (Purchaser / Parent)" : "Cliente (Genitore / Referente)"}
                       </SelectItem>
-                      <SelectItem value="3" className="text-xs">
-                        🎓 {locale === "en" ? "Student (Allievo)" : "Studente (Allievo)"}
+                      <SelectItem value={String(RecipientType.TEACHER)} className="text-xs">
+                        🧑‍🏫 {locale === "en" ? "Teacher (Course Instructor)" : "Insegnante / Docente del Corso"}
                       </SelectItem>
                       <SelectItem value={String(RecipientType.ADMIN)} className="text-xs">
                         🏢 {locale === "en" ? "School Administration" : "Segreteria Atena School"}
@@ -419,6 +419,36 @@ export function TriggerEditorDrawer({
                 {t("notifications.conditionsHint") ||
                   "Lascia {} per attivare sempre. Oppure inserisci filtri chiave-valore (ad es. min_amount, course_id, payment_method)."}
               </p>
+
+              {currentEvent.available_variables?.length > 0 && (
+                <div className="space-y-1.5 pt-2 border-t border-border/50">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                    {locale === "en" ? "Available Event Variables (click to insert into filter):" : "Variabili Evento Disponibili (clicca per inserire nel filtro):"}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                    {currentEvent.available_variables.map((v) => (
+                      <button
+                        key={v.key}
+                        type="button"
+                        onClick={() => {
+                          try {
+                            const cur = JSON.parse(conditionsJson || "{}");
+                            cur[v.key] = v.example || "valore";
+                            setConditionsJson(JSON.stringify(cur, null, 2));
+                          } catch {
+                            setConditionsJson(`{\n  "${v.key}": "${v.example || "valore"}"\n}`);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-background border text-[11px] font-mono text-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                        title={locale === "en" ? v.label_en : v.label_it}
+                      >
+                        <span className="font-semibold text-primary">{v.key}</span>
+                        <span className="text-[9px] text-muted-foreground font-sans">({v.example})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
