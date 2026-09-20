@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { NotificationChannel } from "../types";
 import type { NotificationTemplateRecord } from "../types";
 import { useTranslation } from "@/i18n/context";
