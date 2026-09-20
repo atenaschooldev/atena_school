@@ -234,8 +234,46 @@ export const NOTIFICATION_STATUS_DICTIONARY: Record<NotificationStatus, Dictiona
 };
 
 // ----------------------------------------------------------------------------
-// 3c. Notification Templates Models & DTOs
+// 3c. Notification Templates Visual Block Types & Interfaces
 // ----------------------------------------------------------------------------
+
+export type TemplateBlockType =
+  | 'header'
+  | 'greeting'
+  | 'summary_table'
+  | 'cta_button'
+  | 'bank_details'
+  | 'school_location'
+  | 'notes'
+  | 'custom_text'
+  | 'footer'
+  | 'tg_header'
+  | 'tg_student_info'
+  | 'tg_course_info'
+  | 'tg_payment_info'
+  | 'tg_custom_text'
+  | 'tg_inline_buttons';
+
+export interface TemplateBlock {
+  id: string;
+  type: TemplateBlockType;
+  title: string;
+  is_enabled: boolean;
+  order: number;
+  props: Record<string, any>;
+}
+
+export interface TemplateBlocksConfig {
+  version: number;
+  channel: NotificationChannel;
+  theme?: {
+    primary_color?: string;
+    accent_color?: string;
+    background_pattern?: boolean;
+    header_style?: 'navy_grid' | 'clean_white' | 'dark_gradient';
+  };
+  blocks: TemplateBlock[];
+}
 
 export interface NotificationTemplateRecord {
   id: string;
@@ -245,8 +283,12 @@ export interface NotificationTemplateRecord {
   channel: NotificationChannel;
   notification_type: NotificationType;
   recipient_type: RecipientType;
+  subject?: string | null;
   subject_template?: string | null;
-  body_template: string;
+  body_html?: string | null;
+  body_text?: string | null;
+  body_template?: string | null;
+  blocks_config?: TemplateBlocksConfig | null;
   available_variables: string[];
   is_active: boolean;
   created_at: string;
@@ -256,8 +298,12 @@ export interface NotificationTemplateRecord {
 export interface UpdateNotificationTemplateDto {
   name?: string;
   description?: string;
+  subject?: string;
   subject_template?: string;
+  body_html?: string;
+  body_text?: string;
   body_template?: string;
+  blocks_config?: TemplateBlocksConfig;
   is_active?: boolean;
 }
 
@@ -265,8 +311,12 @@ export interface TestSendNotificationDto {
   template_id?: string;
   code?: string;
   recipient: string;
+  subject?: string;
   subject_template?: string;
+  body_html?: string;
+  body_text?: string;
   body_template?: string;
+  blocks_config?: TemplateBlocksConfig;
   sample_data?: Record<string, any>;
 }
 

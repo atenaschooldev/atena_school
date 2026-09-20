@@ -392,52 +392,39 @@ export function NotificationsView() {
                   </div>
                 </CardHeader>
 
-                {/* Card Content with Embedded Live Preview Frame */}
-                <CardContent className="p-5 space-y-4 flex-1">
-                  {/* Live Rendered Template Frame */}
-                  <div className="relative group/frame">
-                    <TemplatePreviewFrame template={template} isMini={true} />
-
-                    {/* Quick Full Preview Overlay Button */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/frame:opacity-100 transition-opacity backdrop-blur-[2px] rounded-xl flex items-center justify-center gap-2 pointer-events-none group-hover/frame:pointer-events-auto">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="shadow-lg font-semibold gap-1.5 text-xs rounded-xl"
-                        onClick={() => handleOpenFullPreview(template)}
-                      >
-                        <Maximize2 className="h-3.5 w-3.5" />
-                        <span>Anteprima a Schermo Intero</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Dynamic Variables Chips Preview */}
-                  <div className="space-y-1.5 pt-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1 font-semibold">
-                        <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                        <span>Tag Dinamici Supportati ({template.available_variables?.length || 0}):</span>
+                {/* Card Content with Description & Supported Variables */}
+                <CardContent className="p-5 pt-0 space-y-4 flex-1 flex flex-col justify-between">
+                  <div className="space-y-3">
+                    {/* Subject Line Display */}
+                    {template.subject && (
+                      <div className="p-2.5 rounded-xl bg-muted/40 border border-border/50 text-xs">
+                        <span className="text-muted-foreground font-semibold">Oggetto: </span>
+                        <span className="font-medium text-foreground">{template.subject}</span>
                       </div>
-                      <span className="text-[11px] font-mono opacity-80">
-                        {new Date(template.updated_at).toLocaleDateString("it-IT")}
-                      </span>
-                    </div>
+                    )}
 
-                    <div className="flex flex-wrap gap-1 max-h-12 overflow-hidden">
-                      {(template.available_variables || []).slice(0, 5).map((v) => (
-                        <span
-                          key={v}
-                          className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-muted/60 text-muted-foreground border border-border/40"
-                        >
-                          {`{{${v}}}`}
+                    {/* Dynamic Variables Chips Preview */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 font-semibold">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          <span>Variabili dinamiche ({template.available_variables?.length || 0}):</span>
+                        </div>
+                        <span className="text-[11px] font-mono opacity-80">
+                          {new Date(template.updated_at).toLocaleDateString("it-IT")}
                         </span>
-                      ))}
-                      {(template.available_variables || []).length > 5 && (
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-primary/10 text-primary font-bold">
-                          +{(template.available_variables || []).length - 5} altri
-                        </span>
-                      )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-1">
+                        {(template.available_variables || []).map((v) => (
+                          <span
+                            key={v}
+                            className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-muted/60 text-muted-foreground border border-border/40"
+                          >
+                            {`{{${v}}}`}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

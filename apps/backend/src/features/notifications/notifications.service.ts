@@ -8,31 +8,45 @@ import {
   RecipientType,
   NotificationTemplateRecord,
 } from '@atena/api-types';
-import { compileTemplate } from '@atena/core';
+import {
+  compileTemplate,
+  getDefaultBlocksForTemplate,
+  renderEmailFromBlocks,
+  renderTelegramFromBlocks,
+} from '@atena/core';
 import { MailService } from '../mail/mail.service';
 import { TelegramService } from '../mail/telegram.service';
 import { UpdateNotificationTemplateDto, TestSendNotificationDto } from './dto/notification-template.dto';
 
 const DEFAULT_SAMPLE_DATA: Record<string, any> = {
-  student_name: 'Mario Rossi',
-  course_name: 'Inglese Individuale B2',
-  amount_paid: '€180.00',
-  registration_fee: '€30.00',
-  total_amount: '€210.00',
-  lesson_schedule: 'Lunedì e Mercoledì 18:00 - 19:30',
-  start_date: '01/10/2026',
+  student_name: 'Viktoria Petukhova',
+  purchaser_name: 'Petukhov Andrii',
+  course_name: 'Kids (6-7 anni)',
+  amount_paid: '103.20',
+  registration_fee: '30.00',
+  total_amount: '103.20',
+  lesson_schedule: 'Martedì e Giovedì 17:00-18:00',
+  schedule_text: 'Martedì e Giovedì 17:00-18:00',
+  start_date: '2026-10-06',
+  date: '2026-10-06',
+  student_birth_date: '2005-12-02',
+  birth_place: 'Cittanova RC',
+  student_birth_place: 'Cittanova RC',
   app_url: 'https://app.atenaschool.com',
-  booking_id: 'BK-TEST-2026-999',
-  sender_name: 'Giulia Bianchi',
-  sender_email: 'giulia.bianchi@example.com',
+  dashboard_url: 'https://app.atenaschool.com',
+  admin_url: 'https://admin.atenaschool.com',
+  booking_id: '10bde731-f620-4e16-a240-63bb08b86d70',
+  sender_name: 'Andrii Petukhov',
+  sender_email: 'andrii.petukhov@gmail.com',
   sender_phone: '+39 333 1234567',
-  topic: 'Informazioni Corsi',
-  message: 'Vorrei richiedere maggiori dettagli sulle certificazioni Cambridge.',
-  payment_method: 'Carta di Credito (Stripe)',
-  payment_status: 'Pagato Online',
-  purchaser_name: 'Mario Rossi',
-  purchaser_email: 'mario.rossi@example.com',
-  purchaser_phone: '+39 333 9876543',
+  interest: 'Kids (6-7 anni)',
+  topic: 'Iscrizione Corso',
+  message: 'Vorrei confermare l\'orario delle lezioni per il corso Kids.',
+  message_body: 'Vorrei confermare l\'orario delle lezioni per il corso Kids.',
+  payment_method: 'Contanti / Saldo in Sede',
+  payment_method_label: 'Saldo in Sede',
+  payment_status: 'In attesa di saldo',
+  payment_status_label: '⏳ Saldo in Sede',
 };
 
 @Injectable()
@@ -63,6 +77,27 @@ export class NotificationsService {
     });
   }
 
+  private normalizeTemplate(t: any): NotificationTemplateRecord {
+    const channel: NotificationChannel =
+      Number(t.channel) === NotificationChannel.TELEGRAM
+        ? NotificationChannel.TELEGRAM
+        : NotificationChannel.EMAIL;
+    const blocksConfig = t.blocks_config || getDefaultBlocksForTemplate(t.code, channel);
+
+    return {
+      ...t,
+      channel,
+      notification_type: Number(t.notification_type) || NotificationType.BOOKING_CONFIRMATION,
+      recipient_type: Number(t.recipient_type) || RecipientType.CUSTOMER,
+      subject: t.subject || t.subject_template || null,
+      subject_template: t.subject || t.subject_template || null,
+      body_html: t.body_html || t.body_template || null,
+      body_text: t.body_text || t.body_template || null,
+      body_template: t.body_html || t.body_text || t.body_template || '',
+      blocks_config: blocksConfig,
+    };
+  }
+
   async getTemplates(filters?: {
     channel?: number;
     recipient_type?: number;
@@ -88,7 +123,7 @@ export class NotificationsService {
       throw new BadRequestException(`Errore caricamento template: ${error.message}`);
     }
 
-    let templates = (data || []) as NotificationTemplateRecord[];
+    let templates = (data || []).map((t) => this.normalizeTemplate(t));
 
     if (filters?.search && filters.search.trim() !== '') {
       const s = filters.search.trim().toLowerCase();
@@ -114,7 +149,7 @@ export class NotificationsService {
       throw new NotFoundException(`Template non trovato con ID: ${id}`);
     }
 
-    return data as NotificationTemplateRecord;
+    return this.normalizeTemplate(data);
   }
 
   async updateTemplate(
@@ -129,9 +164,37 @@ export class NotificationsService {
 
     if (dto.name !== undefined) updatePayload.name = dto.name;
     if (dto.description !== undefined) updatePayload.description = dto.description;
-    if (dto.subject_template !== undefined) updatePayload.subject_template = dto.subject_template;
-    if (dto.body_template !== undefined) updatePayload.body_template = dto.body_template;
     if (dto.is_active !== undefined) updatePayload.is_active = dto.is_active;
+
+    // Handle blocks config compilation
+    if (dto.blocks_config) {
+      updatePayload.blocks_config = dto.blocks_config;
+
+      if (existing.channel === NotificationChannel.EMAIL) {
+        const compiled = renderEmailFromBlocks(dto.blocks_config, DEFAULT_SAMPLE_DATA);
+        updatePayload.body_html = compiled.html;
+        if (dto.subject || dto.subject_template) {
+          updatePayload.subject = dto.subject || dto.subject_template;
+        } else {
+          updatePayload.subject = compiled.subject;
+        }
+      } else {
+        const compiled = renderTelegramFromBlocks(dto.blocks_config, DEFAULT_SAMPLE_DATA);
+        updatePayload.body_text = compiled.text;
+      }
+    } else {
+      if (dto.subject !== undefined) updatePayload.subject = dto.subject;
+      if (dto.subject_template !== undefined) updatePayload.subject = dto.subject_template;
+      if (dto.body_html !== undefined) updatePayload.body_html = dto.body_html;
+      if (dto.body_text !== undefined) updatePayload.body_text = dto.body_text;
+      if (dto.body_template !== undefined) {
+        if (existing.channel === NotificationChannel.EMAIL) {
+          updatePayload.body_html = dto.body_template;
+        } else {
+          updatePayload.body_text = dto.body_template;
+        }
+      }
+    }
 
     const { data, error } = await this.supabase
       .from('notification_templates')
@@ -145,7 +208,7 @@ export class NotificationsService {
       throw new BadRequestException(`Impossibile aggiornare il template: ${error?.message}`);
     }
 
-    return data as NotificationTemplateRecord;
+    return this.normalizeTemplate(data);
   }
 
   async testSend(
@@ -159,23 +222,34 @@ export class NotificationsService {
       ...(dto.sample_data || {}),
     };
 
-    const subjectTemplate = dto.subject_template ?? template.subject_template ?? 'Test Notifica Atena School';
-    const bodyTemplate = dto.body_template ?? template.body_template;
-
-    const compiledSubject = compileTemplate(subjectTemplate, sampleData);
-    const compiledBody = compileTemplate(bodyTemplate, sampleData);
-
     const recipient = (dto.recipient || '').trim();
     if (!recipient) {
       throw new BadRequestException('Destinatario mancante (email o chat_id)');
     }
 
     if (template.channel === NotificationChannel.EMAIL) {
+      let subject = dto.subject || dto.subject_template || template.subject || 'Test Notifica Atena School';
+      let htmlBody = dto.body_html || dto.body_template || template.body_html;
+
+      if (dto.blocks_config) {
+        const compiled = renderEmailFromBlocks(dto.blocks_config, sampleData);
+        htmlBody = compiled.html;
+        if (!dto.subject && !dto.subject_template) {
+          subject = compiled.subject;
+        }
+      } else if (!htmlBody && template.blocks_config) {
+        const compiled = renderEmailFromBlocks(template.blocks_config, sampleData);
+        htmlBody = compiled.html;
+      }
+
+      const compiledSubject = compileTemplate(subject, sampleData);
+      const compiledHtml = compileTemplate(htmlBody || '', sampleData);
+
       const emailRes = await this.mailService.sendEmail(
         recipient,
         `[TEST] ${compiledSubject}`,
-        compiledBody,
-        compiledBody,
+        compiledHtml,
+        compiledHtml,
         template.notification_type || NotificationType.BOOKING_CONFIRMATION,
       );
 
@@ -189,6 +263,18 @@ export class NotificationsService {
         details: emailRes,
       };
     } else if (template.channel === NotificationChannel.TELEGRAM) {
+      let tgText = dto.body_text || dto.body_template || template.body_text;
+
+      if (dto.blocks_config) {
+        const compiled = renderTelegramFromBlocks(dto.blocks_config, sampleData);
+        tgText = compiled.text;
+      } else if (!tgText && template.blocks_config) {
+        const compiled = renderTelegramFromBlocks(template.blocks_config, sampleData);
+        tgText = compiled.text;
+      }
+
+      const compiledBody = compileTemplate(tgText || '', sampleData);
+
       const tgRes = await this.telegramService.sendMessage(
         `<b>[TEST NOTIFICA ATENA SCHOOL]</b>\n\n${compiledBody}`,
         undefined,
@@ -209,3 +295,4 @@ export class NotificationsService {
     throw new BadRequestException(`Canale di notifica sconosciuto: ${template.channel}`);
   }
 }
+

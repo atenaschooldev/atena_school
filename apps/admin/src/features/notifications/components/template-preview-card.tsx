@@ -8,6 +8,8 @@ import {
   renderAdminBookingNotificationEmail,
   renderContactFormAdminEmail,
   DEFAULT_SCHOOL_PROFILE,
+} from "@atena/core";
+import type {
   BookingEmailTemplateData,
   ContactEmailTemplateData,
 } from "@atena/core";
