@@ -14,7 +14,7 @@ import {
   renderAdminBookingNotificationEmail,
   renderContactFormAdminEmail,
 } from './email-templates';
-import { renderEmailFromBlocks } from './block-compiler';
+import { renderEmailFromBlocks, getDefaultBlocksForTemplate, renderTelegramFromBlocks } from './block-compiler';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from '../types';
 
 export function compileTemplate(
@@ -294,46 +294,45 @@ export async function sendBookingNotificationEmails(params: {
 
     const clientTmpl = await getNotificationTemplateByCode(supabase, templateCode);
     if (clientTmpl) {
-      if (!clientTmpl.is_active) {
-        // Disabled by admin
-        return;
-      }
-      if (clientTmpl.blocks_config && clientTmpl.blocks_config.blocks && clientTmpl.blocks_config.blocks.length > 0) {
-        const rendered = renderEmailFromBlocks(clientTmpl.blocks_config, templateVariables, schoolProfile);
+      if (clientTmpl.is_active) {
+        // Use saved blocks_config or fall back to default blocks (never stale body_html)
+        const blocksConfig = clientTmpl.blocks_config?.blocks?.length
+          ? clientTmpl.blocks_config
+          : getDefaultBlocksForTemplate(templateCode, NotificationChannel.EMAIL);
+        const rendered = renderEmailFromBlocks(blocksConfig, templateVariables, schoolProfile);
         html = rendered.html;
         subject = clientTmpl.subject ? compileTemplate(clientTmpl.subject, templateVariables) : rendered.subject;
-      } else if (clientTmpl.body_html) {
-        html = compileTemplate(clientTmpl.body_html, templateVariables);
-        subject = compileTemplate(clientTmpl.subject || subject, templateVariables);
       }
-    }
-
-    if (!html) {
+      // if !is_active → html stays '' → client email silently skipped
+    } else {
+      // Template not found in DB → hardcoded fallback
       const fallbackRendered = renderClientBookingConfirmationEmail(templateData);
       subject = fallbackRendered.subject;
       html = fallbackRendered.html;
     }
 
-    const clientRes = await sendEmailViaResend({
-      apiKey,
-      from: fromEmail,
-      to: dto.email,
-      subject,
-      html,
-    });
+    if (html) {
+      const clientRes = await sendEmailViaResend({
+        apiKey,
+        from: fromEmail,
+        to: dto.email,
+        subject,
+        html,
+      });
 
-    await logNotification(supabase, {
-      channel: NotificationChannel.EMAIL,
-      type: isPaidOnline ? NotificationType.PAYMENT_RECEIPT : NotificationType.BOOKING_CONFIRMATION,
-      recipient: dto.email,
-      subject,
-      status: clientRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-      bookingId: booking.id,
-      provider: 'resend',
-      messageId: clientRes.messageId || null,
-      error: clientRes.error || null,
-      payload: { courseName, totalEur, isPaidOnline },
-    });
+      await logNotification(supabase, {
+        channel: NotificationChannel.EMAIL,
+        type: isPaidOnline ? NotificationType.PAYMENT_RECEIPT : NotificationType.BOOKING_CONFIRMATION,
+        recipient: dto.email,
+        subject,
+        status: clientRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+        bookingId: booking.id,
+        provider: 'resend',
+        messageId: clientRes.messageId || null,
+        error: clientRes.error || null,
+        payload: { courseName, totalEur, isPaidOnline },
+      });
+    }
   }
 
   // 2. Admin Notification Email
@@ -343,19 +342,17 @@ export async function sendBookingNotificationEmails(params: {
     let html = '';
 
     if (adminTmpl) {
-      if (!adminTmpl.is_active) {
-        // Disabled by admin
-      } else if (adminTmpl.blocks_config && adminTmpl.blocks_config.blocks && adminTmpl.blocks_config.blocks.length > 0) {
-        const rendered = renderEmailFromBlocks(adminTmpl.blocks_config, templateVariables, schoolProfile);
+      if (adminTmpl.is_active) {
+        const blocksConfig = adminTmpl.blocks_config?.blocks?.length
+          ? adminTmpl.blocks_config
+          : getDefaultBlocksForTemplate('booking_alert_admin', NotificationChannel.EMAIL);
+        const rendered = renderEmailFromBlocks(blocksConfig, templateVariables, schoolProfile);
         html = rendered.html;
         subject = adminTmpl.subject ? compileTemplate(adminTmpl.subject, templateVariables) : rendered.subject;
-      } else if (adminTmpl.body_html) {
-        html = compileTemplate(adminTmpl.body_html, templateVariables);
-        subject = compileTemplate(adminTmpl.subject || subject, templateVariables);
       }
-    }
-
-    if (!html && (!adminTmpl || adminTmpl.is_active)) {
+      // if !is_active → html stays '' → admin email silently skipped
+    } else {
+      // Template not found in DB → hardcoded fallback
       const fallbackRendered = renderAdminBookingNotificationEmail(templateData);
       subject = fallbackRendered.subject;
       html = fallbackRendered.html;
@@ -422,44 +419,76 @@ export async function sendContactFormNotificationEmail(params: {
   let html = '';
 
   if (leadTmpl) {
-    if (!leadTmpl.is_active) {
-      return;
-    }
-    if (leadTmpl.blocks_config && leadTmpl.blocks_config.blocks && leadTmpl.blocks_config.blocks.length > 0) {
-      const rendered = renderEmailFromBlocks(leadTmpl.blocks_config, leadVariables, schoolProfile);
+    if (leadTmpl.is_active) {
+      const blocksConfig = leadTmpl.blocks_config?.blocks?.length
+        ? leadTmpl.blocks_config
+        : getDefaultBlocksForTemplate('contact_lead_admin', NotificationChannel.EMAIL);
+      const rendered = renderEmailFromBlocks(blocksConfig, leadVariables, schoolProfile);
       html = rendered.html;
       subject = leadTmpl.subject ? compileTemplate(leadTmpl.subject, leadVariables) : rendered.subject;
-    } else if (leadTmpl.body_html) {
-      html = compileTemplate(leadTmpl.body_html, leadVariables);
-      subject = compileTemplate(leadTmpl.subject || subject, leadVariables);
     }
-  }
-
-  if (!html) {
+    // if !is_active → email silently skipped
+  } else {
+    // Template not found in DB → hardcoded fallback
     const fallbackRendered = renderContactFormAdminEmail(data);
     subject = fallbackRendered.subject;
     html = fallbackRendered.html;
   }
 
-  const res = await sendEmailViaResend({
-    apiKey,
-    from: fromEmail,
-    to: adminEmail,
-    subject,
-    html,
-  });
+  if (html) {
+    const res = await sendEmailViaResend({
+      apiKey,
+      from: fromEmail,
+      to: adminEmail,
+      subject,
+      html,
+    });
 
-  await logNotification(supabase, {
-    channel: NotificationChannel.EMAIL,
-    type: NotificationType.CONTACT_FORM,
-    recipient: adminEmail,
-    subject,
-    status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-    provider: 'resend',
-    messageId: res.messageId || null,
-    error: res.error || null,
-    payload: { senderName, email: data.email, message: data.message },
-  });
+    await logNotification(supabase, {
+      channel: NotificationChannel.EMAIL,
+      type: NotificationType.CONTACT_FORM,
+      recipient: adminEmail,
+      subject,
+      status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+      provider: 'resend',
+      messageId: res.messageId || null,
+      error: res.error || null,
+      payload: { senderName, email: data.email, message: data.message },
+    });
+  }
+
+  // Telegram lead alert (fire-and-forget)
+  sendTelegramLeadAlert(supabase, leadVariables).catch((err) =>
+    console.warn('Async Telegram lead alert error:', err)
+  );
+}
+
+/**
+ * Sends a Telegram notification to the school channel when a contact form is submitted.
+ * Uses DB template blocks_config if available, otherwise falls back to getDefaultBlocksForTemplate.
+ */
+async function sendTelegramLeadAlert(
+  supabase: SupabaseClient,
+  leadVariables: Record<string, any>
+): Promise<void> {
+  try {
+    const tgTmpl = await getNotificationTemplateByCode(supabase, 'telegram_lead_alert');
+    if (tgTmpl && !tgTmpl.is_active) return;
+
+    const blocksConfig = tgTmpl?.blocks_config?.blocks?.length
+      ? tgTmpl.blocks_config
+      : getDefaultBlocksForTemplate('telegram_lead_alert', NotificationChannel.TELEGRAM);
+
+    const { text } = renderTelegramFromBlocks(blocksConfig, leadVariables);
+
+    await sendTelegramMessage({
+      supabase,
+      text,
+      notificationType: NotificationType.CONTACT_FORM,
+    });
+  } catch (err) {
+    console.warn('Telegram lead alert error:', err);
+  }
 }
 
 export async function sendTelegramMessage(params: {

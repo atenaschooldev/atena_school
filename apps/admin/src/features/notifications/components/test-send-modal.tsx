@@ -39,7 +39,7 @@ export function TestSendModal({
       if (template.channel === NotificationChannel.EMAIL) {
         setRecipient("atenaschool20@gmail.com");
       } else {
-        setRecipient("-10023456789");
+        setRecipient("");
       }
     }
   }, [template]);

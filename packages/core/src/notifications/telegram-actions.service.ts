@@ -11,6 +11,7 @@ import {
   NotificationType,
   ACADEMIC_YEAR,
 } from '@atena/api-types';
+import { renderTelegramFromBlocks, getDefaultBlocksForTemplate } from './block-compiler';
 
 export type TelegramLocale = 'it' | 'en';
 
@@ -436,37 +437,85 @@ export async function sendBookingNotificationTelegram(params: {
   const courseFeeEur = Math.max(0, Number(totalEur) - Number(regFeeEur)).toFixed(2);
   const stripePaymentIntentId = booking.stripe_payment_intent_id || booking.payment_intent_id || null;
 
-  const htmlText = formatBookingTelegramHtml({
-    courseName,
-    purchaserName,
-    purchaserEmail: dto.email || booking.purchaser_email,
-    purchaserPhone: dto.phone || booking.purchaser_phone,
-    purchaserTaxCode: dto.purchaserTaxCode || booking.purchaser_tax_code,
-    birthPlace: dto.birthPlace || booking.birth_place,
-    studentName,
-    studentTaxCode: dto.studentTaxCode || booking.student_tax_code,
-    studentBirthDate: dto.studentBirthDate || booking.student_birth_date,
-    studentBirthPlace: dto.studentBirthPlace || booking.student_birth_place || booking.birth_place,
-    studentEmail: dto.studentEmail || booking.student_email,
-    studentPhone: dto.studentPhone || booking.student_phone,
-    isForChild: dto.isForChild,
-    needsCompanyInvoice: dto.needsCompanyInvoice,
-    pecEmail: dto.pecEmail || booking.pec_email,
-    sdiCode: dto.sdiCode || booking.sdi_code,
-    date: dto.date || booking.start_date,
-    time: dto.time || booking.start_time,
-    totalEur,
-    courseFeeEur,
-    regFeeEur,
-    discountAmount: booking.discount_amount,
-    promoCode: dto.promoCode || booking.promo_code,
-    isPaidOnline,
-    paymentStatusText,
-    bookingId: booking.id,
-    notes: dto.notes || booking.notes,
-    stripePaymentIntentId,
-    locale,
-  });
+  // Build flat variables map for block-based rendering (used if admin saved a custom blocks_config)
+  const tgVariables: Record<string, any> = {
+    student_name: studentName,
+    purchaser_name: purchaserName,
+    phone: dto.phone || booking.purchaser_phone || '',
+    email: dto.email || booking.purchaser_email || '',
+    course_name: courseName,
+    start_date: dto.date || booking.start_date || '',
+    date: dto.date || booking.start_date || '',
+    schedule_text: dto.time || booking.start_time || '',
+    lesson_schedule: dto.time || booking.start_time || '',
+    payment_status_label: paymentStatusText,
+    payment_status: paymentStatusText,
+    amount_paid: totalEur,
+    total_amount: totalEur,
+    course_price: courseFeeEur,
+    registration_fee: regFeeEur,
+    booking_id: booking.id,
+    notes: dto.notes || booking.notes || '',
+  };
+
+  // Try DB template first — allows admin to customize via visual builder
+  let htmlText = '';
+  try {
+    const tgTemplateCode = isPaidOnline ? 'telegram_payment_alert' : 'telegram_booking_alert';
+    const { data: tgTmpl } = await supabase
+      .from('notification_templates')
+      .select('blocks_config, is_active')
+      .eq('code', tgTemplateCode)
+      .maybeSingle();
+
+    if (tgTmpl && !tgTmpl.is_active) {
+      // Template explicitly disabled by admin — skip silently
+      return { success: true };
+    }
+
+    if (tgTmpl?.blocks_config?.blocks?.length) {
+      // Admin saved custom blocks → use them
+      const { text } = renderTelegramFromBlocks(tgTmpl.blocks_config, tgVariables);
+      htmlText = text;
+    }
+  } catch {
+    // Non-blocking: DB error falls through to hardcoded formatter
+  }
+
+  // Fallback: rich hardcoded formatter (preserves inline action buttons)
+  if (!htmlText) {
+    htmlText = formatBookingTelegramHtml({
+      courseName,
+      purchaserName,
+      purchaserEmail: dto.email || booking.purchaser_email,
+      purchaserPhone: dto.phone || booking.purchaser_phone,
+      purchaserTaxCode: dto.purchaserTaxCode || booking.purchaser_tax_code,
+      birthPlace: dto.birthPlace || booking.birth_place,
+      studentName,
+      studentTaxCode: dto.studentTaxCode || booking.student_tax_code,
+      studentBirthDate: dto.studentBirthDate || booking.student_birth_date,
+      studentBirthPlace: dto.studentBirthPlace || booking.student_birth_place || booking.birth_place,
+      studentEmail: dto.studentEmail || booking.student_email,
+      studentPhone: dto.studentPhone || booking.student_phone,
+      isForChild: dto.isForChild,
+      needsCompanyInvoice: dto.needsCompanyInvoice,
+      pecEmail: dto.pecEmail || booking.pec_email,
+      sdiCode: dto.sdiCode || booking.sdi_code,
+      date: dto.date || booking.start_date,
+      time: dto.time || booking.start_time,
+      totalEur,
+      courseFeeEur,
+      regFeeEur,
+      discountAmount: booking.discount_amount,
+      promoCode: dto.promoCode || booking.promo_code,
+      isPaidOnline,
+      paymentStatusText,
+      bookingId: booking.id,
+      notes: dto.notes || booking.notes,
+      stripePaymentIntentId,
+      locale,
+    });
+  }
 
   const hasUnpaidFee = !isPaidOnline && Number(regFeeEur) > 0;
   const isCourseUnpaid = !isPaidOnline;
