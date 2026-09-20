@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import {
   NotificationChannel,
   RecipientType,
+} from "../types";
+import type {
   NotificationTemplateRecord,
   UpdateNotificationTemplateDto,
 } from "../types";

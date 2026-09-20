@@ -2,6 +2,9 @@ import {
   NotificationChannel,
   NotificationType,
   RecipientType,
+} from '@atena/api-types';
+
+import type {
   NotificationTemplateRecord,
   UpdateNotificationTemplateDto,
   TestSendNotificationDto,
