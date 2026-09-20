@@ -57,7 +57,28 @@ import {
 } from "lucide-react";
 
 export function NotificationsView() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+
+  function getNotificationTypeLabel(val: unknown): string {
+    const num = Number(val);
+    const entry = NOTIFICATION_TYPE_DICTIONARY[num as NotificationType];
+    if (entry) {
+      if (locale === "en") return entry.label_en || entry.label_it;
+      if (locale === "ru") return entry.label_ru || entry.label_it;
+      return entry.label_it;
+    }
+    if (typeof val === "string") {
+      const byCode = Object.values(NOTIFICATION_TYPE_DICTIONARY).find(
+        (e) => e.code.toLowerCase() === val.toLowerCase()
+      );
+      if (byCode) {
+        if (locale === "en") return byCode.label_en || byCode.label_it;
+        if (locale === "ru") return byCode.label_ru || byCode.label_it;
+        return byCode.label_it;
+      }
+    }
+    return String(val || "—");
+  }
 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -283,10 +304,9 @@ export function NotificationsView() {
         accessorKey: "notification_type",
         header: "Tipo Evento",
         cell: ({ row }) => {
-          const dict = NOTIFICATION_TYPE_DICTIONARY[row.original.notification_type];
           return (
             <span className="text-xs font-medium text-foreground truncate">
-              {dict?.label || row.original.notification_type}
+              {getNotificationTypeLabel(row.original.notification_type)}
             </span>
           );
         },
@@ -532,7 +552,7 @@ export function NotificationsView() {
                           {isCustomer ? "Cliente" : "Segreteria"}
                         </Badge>
                         <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                          {typeInfo?.label || template.notification_type}
+                          {getNotificationTypeLabel(template.notification_type)}
                         </Badge>
                       </div>
 
