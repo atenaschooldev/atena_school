@@ -750,8 +750,12 @@ export const it = {
     createTemplateDesc: "Crea un nuovo modello grafico per Email (Resend) o messaggi Telegram, modificabile poi con il visual builder.",
     createTemplateSubmit: "Crea Modello",
     deleteConfirm: "Sei sicuro di voler eliminare il modello '{name}'? Verranno eliminati anche i trigger associati.",
+    cannotDeleteSystemTemplate: "Questo è un modello di sistema fondamentale e non può essere eliminato.",
     deleteSuccess: "Template eliminato con successo!",
     deleteError: "Impossibile eliminare il template",
+    recipientCustomer: "Cliente / Allievo",
+    recipientTeacher: "Insegnante / Docente",
+    recipientAdmin: "Segreteria / Admin",
     // Table columns
     columnName: "Nome Template",
     columnChannel: "Canale",

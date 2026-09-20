@@ -181,6 +181,9 @@ export function CreateTemplateDialog({
                     <SelectItem value={String(RecipientType.CUSTOMER)}>
                       {t("notifications.recipientCustomer") || "Cliente / Allievo"}
                     </SelectItem>
+                    <SelectItem value={String(RecipientType.TEACHER)}>
+                      {t("notifications.recipientTeacher") || "Insegnante / Docente"}
+                    </SelectItem>
                     <SelectItem value={String(RecipientType.ADMIN)}>
                       {t("notifications.recipientAdmin") || "Segreteria / Admin"}
                     </SelectItem>

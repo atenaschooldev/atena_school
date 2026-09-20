@@ -58,7 +58,10 @@ const businessModules = [
       isGlobal: true,
     }),
 
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({
+      wildcard: true,
+      delimiter: '.',
+    }),
 
     // Глобальные сервисы инфраструктуры
     SupabaseModule,

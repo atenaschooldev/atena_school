@@ -297,6 +297,26 @@ export class NotificationsService {
   }
 
   async deleteTemplate(id: string): Promise<{ success: boolean }> {
+    const { data: existing } = await this.supabase
+      .from('notification_templates')
+      .select('code, name')
+      .eq('id', id)
+      .maybeSingle();
+
+    const SYSTEM_CODES = [
+      'booking_confirmation_client',
+      'booking_alert_admin',
+      'contact_lead_admin',
+      'membership_card_client',
+      'payment_reminder_client',
+    ];
+
+    if (existing && SYSTEM_CODES.includes(existing.code)) {
+      throw new BadRequestException(
+        `Il modello '${existing.name}' (${existing.code}) è un template di sistema fondamentale e non può essere eliminato.`
+      );
+    }
+
     const { error } = await this.supabase
       .from('notification_templates')
       .delete()

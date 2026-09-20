@@ -2,7 +2,7 @@
  * Safely resolves nested property paths (e.g. 'course.schedule.is_evening')
  * with instant O(1) fallback for direct top-level keys.
  */
-function getFieldValue(obj: Record<string, any>, path: string): any {
+export function getFieldValue(obj: Record<string, any>, path: string): any {
   if (!obj || typeof obj !== 'object') return undefined;
   if (Object.prototype.hasOwnProperty.call(obj, path)) {
     return obj[path];
@@ -21,7 +21,7 @@ function getFieldValue(obj: Record<string, any>, path: string): any {
 /**
  * Normalizes boolean-like values (1/"true"/true vs 0/"false"/false/null/undefined)
  */
-function normalizeBoolean(val: any): boolean {
+export function normalizeBoolean(val: any): boolean {
   if (val === true || val === 1 || val === '1' || val === 'true' || val === 'TRUE') {
     return true;
   }

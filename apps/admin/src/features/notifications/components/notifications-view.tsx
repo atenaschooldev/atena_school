@@ -106,7 +106,9 @@ export function NotificationsView() {
       if (locale === "ru") return entry.label_ru || entry.label_it;
       return entry.label_it;
     }
-    return recipientType === RecipientType.CUSTOMER ? "Cliente" : "Segreteria";
+    if (recipientType === RecipientType.CUSTOMER) return "Cliente";
+    if (recipientType === RecipientType.TEACHER) return "Insegnante";
+    return "Segreteria";
   }
 
   const [activeTab, setActiveTab] = useState<"templates" | "triggers" | "logs">("templates");
@@ -240,6 +242,22 @@ export function NotificationsView() {
   };
 
   const handleDeleteTemplate = async (template: NotificationTemplateRecord) => {
+    const SYSTEM_CODES = [
+      "booking_confirmation_client",
+      "booking_alert_admin",
+      "contact_lead_admin",
+      "membership_card_client",
+      "payment_reminder_client",
+    ];
+
+    if (SYSTEM_CODES.includes(template.code)) {
+      alert(
+        t("notifications.cannotDeleteSystemTemplate") ||
+          `Il modello "${template.name}" è un template di sistema fondamentale e non può essere eliminato.`
+      );
+      return;
+    }
+
     const confirmed = window.confirm(
       (t("notifications.deleteConfirm") || "Sei sicuro di voler eliminare il modello '{name}'? Verranno eliminati anche i trigger associati.")
         .replace("{name}", template.name)
@@ -337,12 +355,15 @@ export function NotificationsView() {
         header: t("notifications.columnRecipient") || "Destinatario",
         cell: ({ row }) => {
           const isCustomer = row.original.recipient_type === RecipientType.CUSTOMER;
+          const isTeacher = row.original.recipient_type === RecipientType.TEACHER;
           return (
             <Badge
               variant="outline"
               className={`text-xs font-medium ${
                 isCustomer
                   ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
+                  : isTeacher
+                  ? "border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5"
                   : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
               }`}
             >

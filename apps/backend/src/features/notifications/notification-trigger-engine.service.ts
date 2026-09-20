@@ -12,6 +12,8 @@ import {
   matchesTriggerConditions,
   renderEmailFromBlocks,
   renderTelegramFromBlocks,
+  compileTemplate,
+  getFieldValue,
   DEFAULT_SCHOOL_PROFILE,
 } from '@atena/core';
 
@@ -26,21 +28,46 @@ export class NotificationTriggerEngineService {
   ) {}
 
   /**
-   * Listen to all system events matching wildcard patterns
+   * Universal event listener for all supported business domain events
    */
-  @OnEvent('booking.*')
-  async handleBookingEvent(payload: Record<string, any>) {
+  @OnEvent('booking.created_stripe')
+  async handleBookingCreatedStripe(payload: Record<string, any>) {
     await this.processEvent('booking.created_stripe', payload);
   }
 
   @OnEvent('booking.pending_cash')
-  async handleCashBookingEvent(payload: Record<string, any>) {
+  async handleBookingPendingCash(payload: Record<string, any>) {
     await this.processEvent('booking.pending_cash', payload);
   }
 
-  @OnEvent('contact_form.*')
-  async handleContactFormEvent(payload: Record<string, any>) {
+  @OnEvent('booking.cancelled')
+  async handleBookingCancelled(payload: Record<string, any>) {
+    await this.processEvent('booking.cancelled', payload);
+  }
+
+  @OnEvent('booking.rescheduled')
+  async handleBookingRescheduled(payload: Record<string, any>) {
+    await this.processEvent('booking.rescheduled', payload);
+  }
+
+  @OnEvent('booking.refunded')
+  async handleBookingRefunded(payload: Record<string, any>) {
+    await this.processEvent('booking.refunded', payload);
+  }
+
+  @OnEvent('contact_form.submitted')
+  async handleContactFormSubmitted(payload: Record<string, any>) {
     await this.processEvent('contact_form.submitted', payload);
+  }
+
+  @OnEvent('payment.succeeded')
+  async handlePaymentSucceeded(payload: Record<string, any>) {
+    await this.processEvent('payment.succeeded', payload);
+  }
+
+  @OnEvent('payment.failed')
+  async handlePaymentFailed(payload: Record<string, any>) {
+    await this.processEvent('payment.failed', payload);
   }
 
   /**
@@ -80,7 +107,7 @@ export class NotificationTriggerEngineService {
         // Resolve destination recipient
         const recipient = this.resolveRecipient(trigger, payload);
         if (!recipient) {
-          this.logger.warn(`Trigger "${trigger.name}" skipped: unable to resolve recipient.`);
+          this.logger.warn(`Trigger "${trigger.name}" skipped: unable to resolve recipient for recipientType ${trigger.recipientType}`);
           continue;
         }
 
@@ -97,16 +124,25 @@ export class NotificationTriggerEngineService {
       return trigger.customRecipient.trim();
     }
 
-    if (trigger.channel === NotificationChannel.EMAIL) {
-      if (trigger.recipientType === RecipientType.CUSTOMER || trigger.recipientType === 3) {
-        return payload.purchaser_email || payload.email || payload.student_email || null;
+    const channel = Number(trigger.channel);
+    const recipientType = Number(trigger.recipientType);
+
+    if (channel === NotificationChannel.EMAIL) {
+      if (recipientType === RecipientType.CUSTOMER || recipientType === 3) {
+        return payload.purchaser_email || payload.email || payload.student_email || payload.purchaserEmail || null;
       }
-      if (trigger.recipientType === RecipientType.ADMIN) {
+      if (recipientType === RecipientType.TEACHER || recipientType === 2) {
+        return payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
+      }
+      if (recipientType === RecipientType.ADMIN || recipientType === 1) {
         return process.env.NOTIFICATION_ADMIN_EMAIL || 'atenaschool20@gmail.com';
       }
     }
 
-    if (trigger.channel === NotificationChannel.TELEGRAM) {
+    if (channel === NotificationChannel.TELEGRAM) {
+      if (trigger.customRecipient && trigger.customRecipient.trim()) {
+        return trigger.customRecipient.trim();
+      }
       return process.env.TELEGRAM_ADMIN_CHAT_ID || 'DEFAULT_ADMIN_CHAT';
     }
 
@@ -118,7 +154,7 @@ export class NotificationTriggerEngineService {
     recipient: string,
     payload: Record<string, any>
   ) {
-    const isEmail = trigger.channel === NotificationChannel.EMAIL;
+    const isEmail = Number(trigger.channel) === NotificationChannel.EMAIL;
     const template = trigger.template;
 
     if (isEmail) {
@@ -127,22 +163,18 @@ export class NotificationTriggerEngineService {
 
       if (template.blocksConfig && template.blocksConfig.blocks?.length) {
         const rendered = renderEmailFromBlocks(template.blocksConfig, payload, DEFAULT_SCHOOL_PROFILE);
-        subject = rendered.subject || subject;
+        subject = template.subject ? compileTemplate(template.subject, payload) : (rendered.subject || subject);
         html = rendered.html;
       } else {
-        // Simple mustache replacement fallback
-        for (const [k, v] of Object.entries(payload)) {
-          const regex = new RegExp(`{{${k}}}`, 'g');
-          subject = subject.replace(regex, String(v ?? ''));
-          html = html.replace(regex, String(v ?? ''));
-        }
+        subject = compileTemplate(subject, payload);
+        html = compileTemplate(template.bodyHtml || template.bodyText || '', payload);
       }
 
       try {
         const sendResult = await this.mailService.sendEmail(
           recipient,
           subject,
-          template.bodyText || subject,
+          template.bodyText ? compileTemplate(template.bodyText, payload) : subject,
           html,
           template.notificationType
         );
@@ -175,29 +207,32 @@ export class NotificationTriggerEngineService {
         const rendered = renderTelegramFromBlocks(template.blocksConfig, payload);
         text = rendered.text;
       } else {
-        for (const [k, v] of Object.entries(payload)) {
-          const regex = new RegExp(`{{${k}}}`, 'g');
-          text = text.replace(regex, String(v ?? ''));
-        }
+        text = compileTemplate(text, payload);
       }
 
       try {
-        const sendResult = await this.telegramService.sendMessage(text);
+        const customChatId = recipient !== 'DEFAULT_ADMIN_CHAT' ? recipient : undefined;
+        const sendResult = await this.telegramService.sendMessage(
+          text,
+          undefined,
+          template.notificationType,
+          customChatId
+        );
 
         await this.logExecution({
           channel: NotificationChannel.TELEGRAM,
           notificationType: template.notificationType,
-          recipient: 'Telegram Bot Channel',
+          recipient: recipient || 'Telegram Admin',
           subject: 'Telegram Bot Alert',
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: sendResult,
-          status: NotificationStatus.SENT,
+          status: sendResult.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
         });
       } catch (sendErr: any) {
         await this.logExecution({
           channel: NotificationChannel.TELEGRAM,
           notificationType: template.notificationType,
-          recipient: 'Telegram Bot Channel',
+          recipient: recipient || 'Telegram Admin',
           subject: 'Telegram Bot Alert',
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: { error: sendErr.message },

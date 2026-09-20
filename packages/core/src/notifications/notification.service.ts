@@ -18,13 +18,15 @@ import {
 import { renderEmailFromBlocks, getDefaultBlocksForTemplate, renderTelegramFromBlocks } from './block-compiler';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from '../types';
 
+import { getFieldValue } from './trigger-matcher';
+
 export function compileTemplate(
   template: string,
   variables: Record<string, any>
 ): string {
   if (!template) return '';
-  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
-    const val = variables[key];
+  return template.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_match, key) => {
+    const val = getFieldValue(variables, key);
     if (val === undefined || val === null) {
       return '';
     }
@@ -427,6 +429,17 @@ export async function sendBookingNotificationEmails(params: {
       });
     }
   }
+
+  // 3. Process Dynamic Event Automation Triggers
+  try {
+    await processNotificationTriggers(
+      supabase,
+      isPaidOnline ? 'booking.created_stripe' : 'booking.pending_cash',
+      templateVariables
+    );
+  } catch (triggerErr) {
+    console.warn('[NotificationTriggers]: Error executing custom booking triggers:', triggerErr);
+  }
 }
 
 export async function sendContactFormNotificationEmail(params: {
@@ -501,8 +514,15 @@ export async function sendContactFormNotificationEmail(params: {
       provider: 'resend',
       messageId: res.messageId || null,
       error: res.error || null,
-      payload: { senderName, email: data.email, message: data.message },
+      payload: { name: senderName, email: data.email, phone: data.phone },
     });
+  }
+
+  // Process Dynamic Event Automation Triggers for Contact Form
+  try {
+    await processNotificationTriggers(supabase, 'contact_form.submitted', leadVariables);
+  } catch (triggerErr) {
+    console.warn('[NotificationTriggers]: Error executing custom contact triggers:', triggerErr);
   }
 
   // Telegram lead alert (fire-and-forget)
@@ -726,10 +746,14 @@ export async function processNotificationTriggers(
         recipient = trigger.custom_recipient.trim();
       } else if (Number(trigger.channel) === NotificationChannel.EMAIL) {
         if (Number(trigger.recipient_type) === RecipientType.CUSTOMER || Number(trigger.recipient_type) === 3) {
-          recipient = payload.purchaser_email || payload.email || payload.student_email || null;
-        } else if (Number(trigger.recipient_type) === RecipientType.ADMIN) {
+          recipient = payload.purchaser_email || payload.email || payload.student_email || payload.purchaserEmail || null;
+        } else if (Number(trigger.recipient_type) === RecipientType.TEACHER || Number(trigger.recipient_type) === 2) {
+          recipient = payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
+        } else if (Number(trigger.recipient_type) === RecipientType.ADMIN || Number(trigger.recipient_type) === 1) {
           recipient = resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
         }
+      } else if (Number(trigger.channel) === NotificationChannel.TELEGRAM) {
+        recipient = trigger.custom_recipient?.trim() || null;
       }
 
       const isEmail = Number(trigger.channel) === NotificationChannel.EMAIL;

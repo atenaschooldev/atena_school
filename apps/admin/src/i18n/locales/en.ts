@@ -750,8 +750,12 @@ export const en = {
     createTemplateDesc: "Create a new visual email or Telegram notification template with live drag-and-drop customization.",
     createTemplateSubmit: "Create Template",
     deleteConfirm: "Are you sure you want to delete template '{name}'? Associated automation triggers will also be removed.",
+    cannotDeleteSystemTemplate: "This is a core system template and cannot be deleted.",
     deleteSuccess: "Template deleted successfully!",
     deleteError: "Failed to delete template",
+    recipientCustomer: "Customer / Student",
+    recipientTeacher: "Teacher / Instructor",
+    recipientAdmin: "Administration / Secretariat",
     // Table columns
     columnName: "Template Name",
     columnChannel: "Channel",

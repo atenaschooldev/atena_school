@@ -175,6 +175,7 @@ export function parseNotificationChannel(val: any): NotificationChannel {
 export const RecipientType = {
   CUSTOMER: 1,
   ADMIN: 2,
+  TEACHER: 3,
 } as const;
 export type RecipientType = (typeof RecipientType)[keyof typeof RecipientType];
 
@@ -195,16 +196,25 @@ export const RECIPIENT_TYPE_DICTIONARY: Record<RecipientType, DictionaryEntry> =
     label_ru: 'Администрация школы',
     description: 'Уведомления и алерты секретариату и руководству',
   },
+  [RecipientType.TEACHER]: {
+    id: 3,
+    code: 'TEACHER',
+    label_it: 'Insegnante',
+    label_en: 'Teacher',
+    label_ru: 'Преподаватель',
+    description: 'Уведомления и расписание для преподавателей',
+  },
 };
 
 export function parseRecipientType(val: any): RecipientType {
   if (typeof val === 'number') {
-    if (val === 1 || val === 2) return val as RecipientType;
+    if (val === 1 || val === 2 || val === 3) return val as RecipientType;
     return RecipientType.CUSTOMER;
   }
   const s = String(val || '').toLowerCase().trim();
   if (s === '1' || s === 'customer' || s === 'cliente') return RecipientType.CUSTOMER;
   if (s === '2' || s === 'admin' || s === 'amministrazione') return RecipientType.ADMIN;
+  if (s === '3' || s === 'teacher' || s === 'insegnante' || s === 'docente') return RecipientType.TEACHER;
   return RecipientType.CUSTOMER;
 }
 
