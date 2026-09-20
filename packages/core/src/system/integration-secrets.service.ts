@@ -156,12 +156,34 @@ export async function getAnalyticsCredentials(
   };
 }
 
+function isLocalhost(url?: string | null): boolean {
+  if (!url) return false;
+  return url.includes('localhost') || url.includes('127.0.0.1');
+}
+
 /**
- * Fetch official domains and app URLs from DB with ENV fallback
+ * Fetch official domains and app URLs from DB with ENV fallback.
+ * Strictly guarantees that local development runs on localhost ports.
  */
 export async function getDomainsCredentials(
   supabase?: SupabaseClient | null
 ): Promise<DomainsCredentials> {
+  const isDev = process.env.NODE_ENV === 'development';
+
+  if (isDev) {
+    return {
+      siteUrl: isLocalhost(process.env.NEXT_PUBLIC_SITE_URL)
+        ? process.env.NEXT_PUBLIC_SITE_URL!
+        : 'http://localhost:3000',
+      appUrl: isLocalhost(process.env.NEXT_PUBLIC_APP_URL)
+        ? process.env.NEXT_PUBLIC_APP_URL!
+        : 'http://localhost:3002',
+      adminUrl: isLocalhost(process.env.NEXT_PUBLIC_ADMIN_URL)
+        ? process.env.NEXT_PUBLIC_ADMIN_URL!
+        : 'http://localhost:3001',
+    };
+  }
+
   const dbCreds = await getSecretFromDb<DomainsCredentials>(
     supabase,
     IntegrationProvider.DOMAINS

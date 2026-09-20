@@ -35,7 +35,17 @@ export function formatFullSchoolAddress(school: Partial<SchoolProfile>): string 
 }
 
 export async function getSchoolProfile(supabase?: SupabaseClient | null): Promise<SchoolProfile> {
+  const isDev = process.env.NODE_ENV === 'development';
+
   if (!supabase) {
+    if (isDev) {
+      return {
+        ...DEFAULT_SCHOOL_PROFILE,
+        site_url: 'http://localhost:3000',
+        app_url: 'http://localhost:3002',
+        admin_url: 'http://localhost:3001',
+      };
+    }
     return DEFAULT_SCHOOL_PROFILE;
   }
   try {
@@ -46,6 +56,14 @@ export async function getSchoolProfile(supabase?: SupabaseClient | null): Promis
       .maybeSingle();
 
     if (error || !data || !data.value) {
+      if (isDev) {
+        return {
+          ...DEFAULT_SCHOOL_PROFILE,
+          site_url: 'http://localhost:3000',
+          app_url: 'http://localhost:3002',
+          admin_url: 'http://localhost:3001',
+        };
+      }
       return DEFAULT_SCHOOL_PROFILE;
     }
 
@@ -53,6 +71,9 @@ export async function getSchoolProfile(supabase?: SupabaseClient | null): Promis
     return {
       ...DEFAULT_SCHOOL_PROFILE,
       ...val,
+      site_url: isDev ? 'http://localhost:3000' : (val.site_url || DEFAULT_SCHOOL_PROFILE.site_url),
+      app_url: isDev ? 'http://localhost:3002' : (val.app_url || DEFAULT_SCHOOL_PROFILE.app_url),
+      admin_url: isDev ? 'http://localhost:3001' : (val.admin_url || DEFAULT_SCHOOL_PROFILE.admin_url),
       address: cleanStreetAddress(val.address || DEFAULT_SCHOOL_PROFILE.address),
       socials: {
         ...DEFAULT_SCHOOL_PROFILE.socials,
@@ -61,6 +82,14 @@ export async function getSchoolProfile(supabase?: SupabaseClient | null): Promis
     };
   } catch (err) {
     console.warn('[SchoolProfile] Failed to load school profile from DB, falling back to defaults:', err);
+    if (isDev) {
+      return {
+        ...DEFAULT_SCHOOL_PROFILE,
+        site_url: 'http://localhost:3000',
+        app_url: 'http://localhost:3002',
+        admin_url: 'http://localhost:3001',
+      };
+    }
     return DEFAULT_SCHOOL_PROFILE;
   }
 }

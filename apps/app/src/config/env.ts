@@ -7,10 +7,20 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(), // Optional on client, required on server
   
   // App
-  NEXT_PUBLIC_SITE_URL: z.string().url().default(
+  NEXT_PUBLIC_SITE_URL: z.string().url().transform((val) => {
+    if (process.env.NODE_ENV === 'development' && !val.includes('localhost') && !val.includes('127.0.0.1')) {
+      return 'http://localhost:3000';
+    }
+    return val;
+  }).default(
     process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://atenaschool.com'
   ),
-  NEXT_PUBLIC_APP_URL: z.string().url().default(
+  NEXT_PUBLIC_APP_URL: z.string().url().transform((val) => {
+    if (process.env.NODE_ENV === 'development' && !val.includes('localhost') && !val.includes('127.0.0.1')) {
+      return 'http://localhost:3002';
+    }
+    return val;
+  }).default(
     process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://app.atenaschool.com'
   ),
   ADMIN_EMAILS: z.string().default('').transform((val) => {

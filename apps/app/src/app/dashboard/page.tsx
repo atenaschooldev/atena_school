@@ -9,6 +9,7 @@ import { signOutAction } from "@/app/actions/auth";
 
 import { formatCourseScheduleText } from "@atena/utils";
 import { BookingPaymentStatus } from "@atena/api-types";
+import { getLandingSiteUrl } from "@/lib/urls";
 
 export default function DashboardPage() {
   const dateLocale = it;
@@ -81,7 +82,7 @@ export default function DashboardPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <a
-              href={`${siteUrl || 'https://atenaschool.com'}/corsi`}
+              href={getLandingSiteUrl('/corsi')}
               className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-secondary/10 hover:bg-secondary/20 text-foreground rounded-2xl font-bold text-xs uppercase tracking-wider transition-all"
             >
               Esplora altri corsi
@@ -133,7 +134,7 @@ export default function DashboardPage() {
                   Nessuna lezione o corso trovato in questa sezione.
                 </p>
                 <a
-                  href={`${siteUrl || 'https://atenaschool.com'}/corsi`}
+                  href={getLandingSiteUrl('/corsi')}
                   className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline"
                 >
                   Prenota una lezione ora →

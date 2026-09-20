@@ -8,6 +8,7 @@ import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, Phone, Envelop
 import { usePathname } from "next/navigation";
 import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
 import type { SchoolProfile } from "@atena/api-types";
+import { getStudentPortalUrl } from "@/lib/urls";
 
 interface FooterProps {
   school?: SchoolProfile;
@@ -62,7 +63,7 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
 
           {/* Top CTA Button */}
           <a
-            href={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002'}/autenticazione/accedi`}
+            href={getStudentPortalUrl('/autenticazione/accedi')}
             className="w-full sm:w-auto text-center bg-white hover:bg-slate-100 text-slate-900 font-extrabold px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all duration-300 shadow-md hover:shadow-lg inline-flex items-center justify-center gap-2 select-none cursor-pointer"
           >
             Accedi alla piattaforma →

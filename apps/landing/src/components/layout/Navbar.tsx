@@ -12,6 +12,7 @@ import { useMounted } from "@/hooks/useMounted";
 import { env } from "@/config/env";
 import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
 import type { SchoolProfile } from "@atena/api-types";
+import { getStudentPortalUrl } from "@/lib/urls";
 
 interface NavbarProps {
   school?: SchoolProfile;
@@ -204,7 +205,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   </>
                 )}
                 <a
-                  href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                  href={getStudentPortalUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full bg-[#043569] text-white hover:bg-[#F8861D] transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
@@ -216,7 +217,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
               /* Full actions */
               <>
                 <a
-                  href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                  href={getStudentPortalUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
@@ -381,7 +382,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                 {/* User Section / Login */}
                 <div className="border-t border-gray-100 pt-6 space-y-3">
                   <a
-                    href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}
+                    href={getStudentPortalUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"

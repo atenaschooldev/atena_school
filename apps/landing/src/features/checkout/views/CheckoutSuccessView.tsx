@@ -19,6 +19,7 @@ import { Link } from "@/i18n/routing";
 import { CheckoutStepper } from "@/features/checkout/components";
 import { useCheckoutSuccess } from "@/features/checkout/hooks/useCheckoutSuccess";
 import { useMounted } from "@/hooks/useMounted";
+import { getStudentPortalUrl } from "@/lib/urls";
 
 export function CheckoutSuccessView() {
   const mounted = useMounted();
@@ -173,8 +174,7 @@ export function CheckoutSuccessView() {
           {user ? (
             <button
               onClick={() => {
-                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
-                window.location.href = `${appUrl}/dashboard`;
+                window.location.href = getStudentPortalUrl('/dashboard');
               }}
               className="w-full py-3.5 px-6 bg-[#043569] hover:bg-[#032850] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
@@ -184,8 +184,7 @@ export function CheckoutSuccessView() {
           ) : isGmail ? (
             <button
               onClick={() => {
-                const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
-                window.location.href = `${appUrl}/autenticazione/accedi?redirect=/dashboard`;
+                window.location.href = getStudentPortalUrl('/autenticazione/accedi?redirect=/dashboard');
               }}
               className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >

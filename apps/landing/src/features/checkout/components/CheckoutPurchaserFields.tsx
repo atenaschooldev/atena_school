@@ -21,6 +21,7 @@ import type { UserProfile } from "@atena/api-types";
 import { sanitizeTaxCode } from "@atena/utils";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
 import { FeeCheckStatus } from "@/constants";
+import { getStudentPortalUrl, getLandingSiteUrl } from "@/lib/urls";
 
 interface CheckoutPurchaserFieldsProps {
   register: UseFormRegister<CheckoutFormValues>;
@@ -52,11 +53,10 @@ export function CheckoutPurchaserFields({
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");
 
-  const loginRedirectUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3002"}/autenticazione/accedi?redirectTo=${encodeURIComponent(
-    `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/checkout/${courseId}${
-      dateParam ? `?date=${dateParam}&time=${timeParam}` : ""
-    }`
-  )}`;
+  const targetCheckoutUrl = `${getLandingSiteUrl()}/checkout/${courseId}${
+    dateParam ? `?date=${dateParam}&time=${timeParam}` : ""
+  }`;
+  const loginRedirectUrl = `${getStudentPortalUrl('/autenticazione/accedi')}?redirectTo=${encodeURIComponent(targetCheckoutUrl)}`;
 
   return (
     <>
