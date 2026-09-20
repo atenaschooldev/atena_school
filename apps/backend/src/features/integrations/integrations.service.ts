@@ -125,11 +125,11 @@ export class IntegrationsService {
 
     let webhookUrl = dto.webhookUrl;
     if (!webhookUrl) {
-      const backendUrl =
-        process.env.BACKEND_URL ||
-        process.env.NEXT_PUBLIC_BACKEND_URL ||
-        'https://backend.atenaschool.com';
-      webhookUrl = `${backendUrl}/checkout/webhook/telegram`;
+      const siteUrl =
+        process.env.SITE_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        'https://atenaschool.com';
+      webhookUrl = `${siteUrl.replace(/\/$/, '')}/landing/telegram/webhook`;
     }
 
     try {

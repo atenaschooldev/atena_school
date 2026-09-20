@@ -20,6 +20,7 @@ import {
   handleStripeWebhook as handleStripeWebhookCore,
   getSchoolProfile as getSchoolProfileCore,
   updateSchoolProfile as updateSchoolProfileCore,
+  getStripeCredentials,
 } from '@atena/core';
 import type { SchoolProfile } from '@atena/api-types';
 
@@ -37,6 +38,19 @@ export class CheckoutService {
     this.supabaseAdmin = createClient(supabaseUrl, serviceKey);
     const StripeConstructor = typeof StripeClient === 'function' ? StripeClient : StripeClient.default;
     this.stripe = new StripeConstructor(stripeSecret, { apiVersion: '2023-10-16' });
+  }
+
+  private async getStripeInstance(): Promise<Stripe> {
+    try {
+      const creds = await getStripeCredentials(this.supabaseAdmin);
+      if (creds.secretKey) {
+        const StripeConstructor = typeof StripeClient === 'function' ? StripeClient : StripeClient.default;
+        return new StripeConstructor(creds.secretKey, { apiVersion: '2023-10-16' });
+      }
+    } catch (e) {
+      this.logger.warn('Failed to load dynamic stripe credentials:', e);
+    }
+    return this.stripe;
   }
 
   async checkFeeStatus(dto: CheckFeeDto) {
@@ -57,18 +71,21 @@ export class CheckoutService {
 
   async createStripeSession(dto: CreateReservationDto) {
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    return createStripeSessionCore(this.supabaseAdmin, dto as any, { stripe: this.stripe, siteUrl });
+    const stripe = await this.getStripeInstance();
+    return createStripeSessionCore(this.supabaseAdmin, dto as any, { stripe, siteUrl });
   }
 
   async verifyPayment(dto: VerifyPaymentDto) {
-    return verifyPaymentCore(this.supabaseAdmin, dto, { stripe: this.stripe });
+    const stripe = await this.getStripeInstance();
+    return verifyPaymentCore(this.supabaseAdmin, dto, { stripe });
   }
 
   async createCustomerPortalSession(dto: CustomerPortalDto) {
     const siteUrl = this.configService.get<string>('NEXT_PUBLIC_SITE_URL') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const stripe = await this.getStripeInstance();
     return createCustomerPortalSessionCore(this.supabaseAdmin, {
       ...dto,
-      stripe: this.stripe,
+      stripe,
       returnUrl: `${siteUrl}/checkout`,
     });
   }

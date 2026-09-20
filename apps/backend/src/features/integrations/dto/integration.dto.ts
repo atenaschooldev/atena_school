@@ -30,8 +30,8 @@ export class TestIntegrationDto {
 
 export class SetTelegramWebhookDto {
   @ApiPropertyOptional({
-    description: 'Полный HTTPS URL эндпоинта вебхука бэкенда. Если не передан, вычисляется автоматически.',
-    example: 'https://backend.atenaschool.com/checkout/webhook/telegram',
+    description: 'Полный HTTPS URL эндпоинта вебхука бэкенда/лендинга. Если не передан, вычисляется автоматически.',
+    example: 'https://atenaschool.com/landing/telegram/webhook',
   })
   webhookUrl?: string;
 }

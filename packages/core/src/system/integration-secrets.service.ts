@@ -189,7 +189,7 @@ export async function getMaskedIntegrationsSummary(
       provider: IntegrationProvider.TELEGRAM,
       credentials: {
         botToken: maskSecret(tgCreds.botToken),
-        chatId: tgCreds.chatId ? maskSecret(tgCreds.chatId) : '',
+        chatId: tgCreds.chatId || '',
         locale: tgCreds.locale,
       },
       is_active: tgActive,

@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
+import { getResendCredentials } from '@atena/core';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -50,16 +51,18 @@ export class MailService implements OnModuleInit {
     html?: string,
     notificationType: number = NotificationType.BOOKING_CONFIRMATION,
   ): Promise<{ success: boolean; id?: string; error?: string }> {
-    const from = this.defaultFromEmail;
+    const creds = await getResendCredentials();
+    const apiKey = creds.apiKey || this.resendApiKey;
+    const from = creds.fromEmail || this.defaultFromEmail;
     let result: { success: boolean; id?: string; error?: string } = { success: false };
 
     // 1. Resend API Dispatch (Primary if key configured)
-    if (this.resendApiKey) {
+    if (apiKey) {
       try {
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${this.resendApiKey}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

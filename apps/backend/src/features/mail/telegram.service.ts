@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { NotificationChannel, NotificationStatus, NotificationType } from '@atena/api-types';
-import { DEFAULT_SCHOOL_PROFILE } from '@atena/core';
+import { DEFAULT_SCHOOL_PROFILE, getTelegramCredentials } from '@atena/core';
 
 export interface TelegramButton {
   text: string;
@@ -31,8 +31,9 @@ export class TelegramService {
     inlineKeyboard?: TelegramButton[][],
     notificationType: number = NotificationType.BOOKING_CONFIRMATION,
   ): Promise<{ success: boolean; messageId?: number; error?: string }> {
-    const botToken = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
-    const chatId = this.configService.get<string>('TELEGRAM_CHAT_ID');
+    const creds = await getTelegramCredentials();
+    const botToken = creds.botToken || this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+    const chatId = creds.chatId || this.configService.get<string>('TELEGRAM_CHAT_ID');
 
     if (!botToken || !chatId) {
       this.logger.warn('[TELEGRAM SKIPPED]: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured');
