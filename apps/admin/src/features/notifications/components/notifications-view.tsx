@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import {
   NotificationChannel,
   RecipientType,
+  NOTIFICATION_TYPE_DICTIONARY,
 } from "../types";
 import type {
   NotificationTemplateRecord,
@@ -35,9 +36,18 @@ import {
   RefreshCw,
   Layers,
   LayoutGrid,
+  List,
   ListFilter,
   Sliders,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function NotificationsView() {
   const { t } = useTranslation();
@@ -45,6 +55,7 @@ export function NotificationsView() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
 
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplateRecord | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -287,11 +298,33 @@ export function NotificationsView() {
             >
               <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
+
+            {/* View Mode Toggle (Table / Grid) */}
+            <div className="flex items-center rounded-xl border border-border/80 bg-background/80 p-0.5 shadow-2xs">
+              <Button
+                variant={viewMode === "table" ? "secondary" : "ghost"}
+                size="icon"
+                className={`h-8 w-8 rounded-lg transition-all ${viewMode === "table" ? "bg-muted shadow-2xs font-bold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setViewMode("table")}
+                title="Vista Tabella"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className={`h-8 w-8 rounded-lg transition-all ${viewMode === "grid" ? "bg-muted shadow-2xs font-bold text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => setViewMode("grid")}
+                title="Vista Griglia"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ── Templates Grid with Realtime Live Preview Frames ── */}
+      {/* ── Content View: Table or Grid ── */}
       {filteredTemplates.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 rounded-2xl">
           <div className="flex flex-col items-center justify-center space-y-3">
@@ -306,6 +339,155 @@ export function NotificationsView() {
                 Nessun modello corrisponde ai criteri di ricerca o alla categoria selezionata.
               </p>
             </div>
+          </div>
+        </Card>
+      ) : viewMode === "table" ? (
+        <Card className="rounded-2xl border border-border/60 bg-card shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/40">
+                <TableRow className="border-b border-border/60">
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5 pl-6">Modello / Nome</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5">Canale</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5">Destinatario</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5">Tipo Evento</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5">Oggetto / Dettagli</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5 text-center">Stato</TableHead>
+                  <TableHead className="font-bold text-xs uppercase tracking-wider py-3.5 pr-6 text-right">Azioni</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTemplates.map((template) => {
+                  const isEmail = template.channel === NotificationChannel.EMAIL;
+                  const isCustomer = template.recipient_type === RecipientType.CUSTOMER;
+                  const typeInfo = NOTIFICATION_TYPE_DICTIONARY[template.notification_type];
+
+                  return (
+                    <TableRow
+                      key={template.id}
+                      className="group border-b border-border/40 hover:bg-muted/30 transition-colors"
+                    >
+                      {/* Template Name & Technical Code */}
+                      <TableCell className="py-4 pl-6">
+                        <div className="flex flex-col gap-1 max-w-xs">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                              {template.name}
+                            </span>
+                            <Badge variant="outline" className="font-mono text-[10px] py-0 px-1.5 bg-muted/50 text-muted-foreground border-border/60">
+                              {template.code}
+                            </Badge>
+                          </div>
+                          {template.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {template.description}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Channel Badge */}
+                      <TableCell className="py-4 whitespace-nowrap">
+                        <Badge
+                          variant={isEmail ? "default" : "secondary"}
+                          className={`gap-1.5 text-xs py-1 px-2.5 rounded-lg font-semibold shadow-2xs ${
+                            isEmail
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/20"
+                          }`}
+                        >
+                          {isEmail ? <Mail className="h-3.5 w-3.5" /> : <MessageSquare className="h-3.5 w-3.5" />}
+                          {isEmail ? "Email (Resend)" : "Telegram Bot"}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Recipient Type */}
+                      <TableCell className="py-4 whitespace-nowrap">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs py-1 px-2.5 rounded-lg font-medium border gap-1.5 ${
+                            isCustomer
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                              : "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20"
+                          }`}
+                        >
+                          {isCustomer ? <UserCheck className="h-3.5 w-3.5" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                          {isCustomer
+                            ? t("notifications.recipientCustomer") || "Cliente"
+                            : t("notifications.recipientAdmin") || "Amministrazione"}
+                        </Badge>
+                      </TableCell>
+
+                      {/* Notification Event Type */}
+                      <TableCell className="py-4 whitespace-nowrap">
+                        <span className="text-xs font-semibold text-foreground/85 bg-muted/60 px-2.5 py-1 rounded-md border border-border/40">
+                          {typeInfo?.label_it || "Notifica"}
+                        </span>
+                      </TableCell>
+
+                      {/* Subject / Trigger Details */}
+                      <TableCell className="py-4 max-w-[220px]">
+                        {isEmail ? (
+                          <p className="text-xs text-foreground/80 font-mono truncate" title={template.subject || ""}>
+                            {template.subject || "Nessun oggetto"}
+                          </p>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">
+                            Telegram alert
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* Status Toggle Switch */}
+                      <TableCell className="py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={template.is_active}
+                            onCheckedChange={(val) => handleToggleStatus(template, val)}
+                            disabled={isUpdating}
+                            className="scale-90 cursor-pointer"
+                          />
+                          <span
+                            className={`text-xs font-semibold ${
+                              template.is_active ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                            }`}
+                          >
+                            {template.is_active ? "Attivo" : "Disattivo"}
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="py-4 pr-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs rounded-xl hover:bg-muted font-semibold cursor-pointer"
+                            onClick={() => handleOpenTest(template)}
+                            disabled={!template.is_active || isTesting}
+                            title="Invia email/messaggio di prova"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            <span>Test</span>
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 gap-1.5 text-xs rounded-xl shadow-2xs font-semibold cursor-pointer"
+                            onClick={() => handleOpenEdit(template)}
+                            title="Modifica contenuto e blocchi grafici"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                            <span>Modifica</span>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         </Card>
       ) : (
