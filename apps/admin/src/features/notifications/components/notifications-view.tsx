@@ -19,10 +19,12 @@ import {
 } from "@atena/api-types";
 import type {
   NotificationTemplateRecord,
+  CreateNotificationTemplateDto,
   UpdateNotificationTemplateDto,
 } from "../types";
 import { useNotificationTemplates } from "../hooks/use-notification-templates";
 import { TemplateEditorDrawer } from "./template-editor-drawer";
+import { CreateTemplateDialog } from "./create-template-dialog";
 import { TestSendModal } from "./test-send-modal";
 import { NotificationLogsView } from "./notification-logs-view";
 import { NotificationTriggersView } from "./notification-triggers-view";
@@ -49,6 +51,8 @@ import {
   MessageSquare,
   Send,
   Pencil,
+  Plus,
+  Trash2,
   RefreshCw,
   ArrowDown,
   ArrowUp,
@@ -116,6 +120,7 @@ export function NotificationsView() {
 
   const [editingTemplate, setEditingTemplate] = useState<NotificationTemplateRecord | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [testingTemplate, setTestingTemplate] = useState<NotificationTemplateRecord | null>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -124,9 +129,13 @@ export function NotificationsView() {
     templates,
     loading,
     refresh,
+    createTemplate,
     updateTemplate,
+    deleteTemplate,
     testSend,
+    isCreating,
     isUpdating,
+    isDeleting,
     isTesting,
   } = useNotificationTemplates();
 
@@ -220,6 +229,23 @@ export function NotificationsView() {
 
   const handleToggleStatus = async (template: NotificationTemplateRecord, newStatus: boolean) => {
     await updateTemplate(template.id, { is_active: newStatus });
+  };
+
+  const handleCreateTemplate = async (dto: CreateNotificationTemplateDto) => {
+    const created = await createTemplate(dto);
+    if (created) {
+      setEditingTemplate(created);
+      setIsEditorOpen(true);
+    }
+  };
+
+  const handleDeleteTemplate = async (template: NotificationTemplateRecord) => {
+    const confirmed = window.confirm(
+      (t("notifications.deleteConfirm") || "Sei sicuro di voler eliminare il modello '{name}'? Verranno eliminati anche i trigger associati.")
+        .replace("{name}", template.name)
+    );
+    if (!confirmed) return;
+    await deleteTemplate(template.id);
   };
 
   const handleSaveTemplate = async (id: string, payload: UpdateNotificationTemplateDto) => {
@@ -392,6 +418,16 @@ export function NotificationsView() {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors"
+                onClick={() => handleDeleteTemplate(tmpl)}
+                disabled={isDeleting}
+                title={t("common.delete") || "Elimina"}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           );
         },
@@ -518,16 +554,27 @@ export function NotificationsView() {
             },
           ]}
           actionElement={
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2.5 cursor-pointer text-xs font-medium"
-              onClick={() => refresh()}
-              disabled={loading}
-            >
-              <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              {t("common.refresh") || "Aggiorna"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="h-8 px-3 cursor-pointer text-xs font-bold gap-1.5 shadow-xs"
+                onClick={() => setIsCreateOpen(true)}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t("notifications.createTemplateBtn") || "Nuovo Modello"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 cursor-pointer text-xs font-medium"
+                onClick={() => refresh()}
+                disabled={loading}
+              >
+                <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+                {t("common.refresh") || "Aggiorna"}
+              </Button>
+            </div>
           }
           viewMode={viewMode}
           onViewModeChange={setViewMode}
@@ -580,49 +627,53 @@ export function NotificationsView() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
             {filteredTemplates.map((template) => {
               const isEmail = template.channel === NotificationChannel.EMAIL;
-              const isCustomer = template.recipient_type === RecipientType.CUSTOMER;
 
               return (
                 <Card
                   key={template.id}
-                  className="flex flex-col h-full rounded-2xl overflow-hidden border border-border/40 hover:border-primary/30 shadow-xs hover:shadow-lg transition-all duration-300 group"
+                  className="flex flex-col justify-between border-border/80 hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-md"
                 >
-                  <CardHeader className="p-5 pb-3 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20">
-                        {isEmail ? <Mail className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                  <CardHeader className="p-4 pb-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div
+                          className={`p-2 rounded-xl shrink-0 ${
+                            isEmail
+                              ? "bg-primary/10 text-primary"
+                              : "bg-sky-500/10 text-sky-500"
+                          }`}
+                        >
+                          {isEmail ? <Mail className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                        </div>
+                        <div className="min-w-0">
+                          <CardTitle className="text-sm font-bold truncate">
+                            {template.name}
+                          </CardTitle>
+                          <CardDescription className="text-xs font-mono truncate text-muted-foreground mt-0.5">
+                            {template.code}
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <StatusBadge status={template.is_active ? "attivo" : "archived"} />
-                        <Switch
-                          checked={template.is_active}
-                          onCheckedChange={(val) => handleToggleStatus(template, val)}
-                          disabled={isUpdating}
-                          className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
-                        />
-                      </div>
-                    </div>
 
-                    <div>
-                      <CardTitle className="text-base font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                        {template.name}
-                      </CardTitle>
-                      <CardDescription className="text-xs text-muted-foreground font-mono mt-1">
-                        {template.code}
-                      </CardDescription>
+                      <Switch
+                        checked={template.is_active}
+                        onCheckedChange={(checked) => handleToggleStatus(template, checked)}
+                        disabled={isUpdating}
+                        className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600 shrink-0"
+                      />
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-5 pt-0 space-y-3 flex-1 flex flex-col justify-between">
-                    <div className="space-y-2.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge variant="outline" className="text-xs font-medium">
+                  <CardContent className="p-4 pt-0 space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="secondary" className="text-xs font-medium">
                           {getChannelLabel(template.channel)}
                         </Badge>
                         <Badge
                           variant="outline"
                           className={`text-xs font-medium ${
-                            isCustomer
+                            template.recipient_type === RecipientType.CUSTOMER
                               ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
                               : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
                           }`}
@@ -649,7 +700,7 @@ export function NotificationsView() {
                     </div>
                   </CardContent>
 
-                  <CardFooter className="p-4 pt-3 border-t border-border/40 bg-muted/10 gap-2">
+                  <CardFooter className="p-4 pt-3 border-t border-border/40 bg-muted/10 gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
@@ -657,7 +708,7 @@ export function NotificationsView() {
                       onClick={() => handleOpenTest(template)}
                     >
                       <Send className="h-3.5 w-3.5" />
-                      {t("notifications.sendTest") || "Invia Test"}
+                      {t("notifications.sendTest") || "Test"}
                     </Button>
 
                     <Button
@@ -668,6 +719,17 @@ export function NotificationsView() {
                     >
                       <Pencil className="h-3.5 w-3.5" />
                       {t("notifications.editTemplate") || "Modifica"}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      onClick={() => handleDeleteTemplate(template)}
+                      disabled={isDeleting}
+                      title={t("common.delete") || "Elimina"}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -683,6 +745,14 @@ export function NotificationsView() {
       </div>
       </>
       )}
+
+      {/* Create New Template Dialog */}
+      <CreateTemplateDialog
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreate={handleCreateTemplate}
+        isLoading={isCreating}
+      />
 
       {/* Editor & Visual Builder Modal */}
       <TemplateEditorDrawer

@@ -296,6 +296,23 @@ export interface NotificationTemplateRecord {
   updated_at: string;
 }
 
+export interface CreateNotificationTemplateDto {
+  code: string;
+  name: string;
+  description?: string;
+  channel: NotificationChannel;
+  notification_type?: NotificationType;
+  recipient_type?: RecipientType;
+  subject?: string;
+  subject_template?: string;
+  body_html?: string;
+  body_text?: string;
+  body_template?: string;
+  blocks_config?: TemplateBlocksConfig;
+  available_variables?: string[];
+  is_active?: boolean;
+}
+
 export interface UpdateNotificationTemplateDto {
   name?: string;
   description?: string;

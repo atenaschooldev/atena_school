@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/api";
 import { useTranslation } from "@/i18n/context";
 import type {
   NotificationTemplateRecord,
+  CreateNotificationTemplateDto,
   UpdateNotificationTemplateDto,
   TestSendNotificationDto,
 } from "../types";
@@ -37,6 +38,22 @@ export function useNotificationTemplates(filters?: {
     staleTime: 1000 * 30,
   });
 
+  const createMutation = useMutation({
+    mutationFn: async (payload: CreateNotificationTemplateDto) => {
+      return apiFetch<NotificationTemplateRecord>("/admin/notifications/templates", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: () => {
+      toast.success(t("notifications.createSuccess") || "Nuovo template creato con successo");
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || t("notifications.createError") || "Errore durante la creazione del template");
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: UpdateNotificationTemplateDto }) => {
       return apiFetch<NotificationTemplateRecord>(`/admin/notifications/templates/${id}`, {
@@ -44,12 +61,27 @@ export function useNotificationTemplates(filters?: {
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: (updated) => {
+    onSuccess: () => {
       toast.success(t("notifications.saveSuccess") || "Template salvato con successo");
       queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
     },
     onError: (e: any) => {
       toast.error(e?.message || t("notifications.saveError") || "Errore durante il salvataggio");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch<{ success: boolean }>(`/admin/notifications/templates/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast.success(t("notifications.deleteSuccess") || "Template eliminato con successo");
+      queryClient.invalidateQueries({ queryKey: ["notification-templates"] });
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || t("notifications.deleteError") || "Errore durante l'eliminazione del template");
     },
   });
 
@@ -75,11 +107,17 @@ export function useNotificationTemplates(filters?: {
     templates,
     loading: isLoading,
     refresh: refetch,
+    createTemplate: (payload: CreateNotificationTemplateDto) =>
+      createMutation.mutateAsync(payload),
     updateTemplate: (id: string, payload: UpdateNotificationTemplateDto) =>
       updateMutation.mutateAsync({ id, payload }),
+    deleteTemplate: (id: string) =>
+      deleteMutation.mutateAsync(id),
     testSend: (id: string, payload: TestSendNotificationDto) =>
       testSendMutation.mutateAsync({ id, payload }),
+    isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
     isTesting: testSendMutation.isPending,
   };
 }

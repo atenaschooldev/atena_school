@@ -13,7 +13,11 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
 import { NotificationTriggersService } from './notification-triggers.service';
-import { UpdateNotificationTemplateDto, TestSendNotificationDto } from './dto/notification-template.dto';
+import {
+  CreateNotificationTemplateDto,
+  UpdateNotificationTemplateDto,
+  TestSendNotificationDto,
+} from './dto/notification-template.dto';
 import type { CreateNotificationTriggerDto, UpdateNotificationTriggerDto } from '@atena/api-types';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
@@ -43,6 +47,14 @@ export class NotificationsController {
     return this.notificationsService.getTemplates({ channel, recipient_type, search });
   }
 
+  @Post('templates')
+  @Roles('admin')
+  @Audit('notifications', 'create_template')
+  @ApiOperation({ summary: 'Создать новый шаблон уведомлений' })
+  async createTemplate(@Body() dto: CreateNotificationTemplateDto) {
+    return this.notificationsService.createTemplate(dto);
+  }
+
   @Get('templates/:id')
   @Roles('admin', 'secretary')
   @ApiOperation({ summary: 'Получить шаблон по ID' })
@@ -59,6 +71,14 @@ export class NotificationsController {
     @Body() dto: UpdateNotificationTemplateDto,
   ) {
     return this.notificationsService.updateTemplate(id, dto);
+  }
+
+  @Delete('templates/:id')
+  @Roles('admin')
+  @Audit('notifications', 'delete_template')
+  @ApiOperation({ summary: 'Удалить шаблон уведомлений' })
+  async deleteTemplate(@Param('id') id: string) {
+    return this.notificationsService.deleteTemplate(id);
   }
 
   @Get('logs')

@@ -16,7 +16,11 @@ import {
 } from '@atena/core';
 import { MailService } from '../mail/mail.service';
 import { TelegramService } from '../mail/telegram.service';
-import { UpdateNotificationTemplateDto, TestSendNotificationDto } from './dto/notification-template.dto';
+import {
+  CreateNotificationTemplateDto,
+  UpdateNotificationTemplateDto,
+  TestSendNotificationDto,
+} from './dto/notification-template.dto';
 
 const BOOKING_SAMPLE_DATA: Record<string, any> = {
   student_name: 'Viktoria Petukhova',
@@ -221,6 +225,89 @@ export class NotificationsService {
     }
 
     return this.normalizeTemplate(data);
+  }
+
+  async createTemplate(
+    dto: CreateNotificationTemplateDto,
+  ): Promise<NotificationTemplateRecord> {
+    const rawCode = (dto.code || dto.name)
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9_]/g, '_');
+
+    // Check unique code
+    const { data: existing } = await this.supabase
+      .from('notification_templates')
+      .select('id')
+      .eq('code', rawCode)
+      .maybeSingle();
+
+    if (existing) {
+      throw new BadRequestException(`Un template con il codice '${rawCode}' esiste già.`);
+    }
+
+    const channel = (Number(dto.channel) || NotificationChannel.EMAIL) as NotificationChannel;
+    const notificationType = (Number(dto.notification_type) || NotificationType.BOOKING_CONFIRMATION) as NotificationType;
+    const recipientType = (Number(dto.recipient_type) || RecipientType.CUSTOMER) as RecipientType;
+
+    const blocksConfig = dto.blocks_config?.blocks?.length
+      ? dto.blocks_config
+      : getDefaultBlocksForTemplate(rawCode, channel);
+
+    let subject = dto.subject || dto.subject_template || (channel === NotificationChannel.EMAIL ? `Notifica: ${dto.name}` : '');
+    let bodyHtml = dto.body_html || '';
+    let bodyText = dto.body_text || '';
+
+    if (channel === NotificationChannel.EMAIL) {
+      const compiled = renderEmailFromBlocks(blocksConfig, getSampleDataForTemplate(rawCode));
+      bodyHtml = bodyHtml || compiled.html;
+      subject = subject || compiled.subject;
+    } else {
+      const compiled = renderTelegramFromBlocks(blocksConfig, getSampleDataForTemplate(rawCode));
+      bodyText = bodyText || compiled.text;
+    }
+
+    const insertPayload: Record<string, any> = {
+      code: rawCode,
+      name: dto.name,
+      description: dto.description || null,
+      channel,
+      notification_type: notificationType,
+      recipient_type: recipientType,
+      subject,
+      body_html: bodyHtml,
+      body_text: bodyText,
+      blocks_config: blocksConfig,
+      available_variables: ['student_name', 'course_name', 'total_amount', 'purchaser_name', 'date', 'lesson_schedule'],
+      is_active: dto.is_active !== undefined ? dto.is_active : true,
+    };
+
+    const { data, error } = await this.supabase
+      .from('notification_templates')
+      .insert(insertPayload)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      this.logger.error(`Error creating template: ${error?.message}`);
+      throw new BadRequestException(`Impossibile creare il template: ${error?.message}`);
+    }
+
+    return this.normalizeTemplate(data);
+  }
+
+  async deleteTemplate(id: string): Promise<{ success: boolean }> {
+    const { error } = await this.supabase
+      .from('notification_templates')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      this.logger.error(`Error deleting template ${id}: ${error.message}`);
+      throw new BadRequestException(`Impossibile eliminare il template: ${error.message}`);
+    }
+
+    return { success: true };
   }
 
   async testSend(
