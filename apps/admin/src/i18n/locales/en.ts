@@ -736,6 +736,8 @@ export const en = {
     recipientTelegramPlaceholder: "e.g. Telegram chat ID or channel",
     sendTestSubmit: "Send Now",
     sendingTest: "Sending...",
+    invalidEmail: "Please enter a valid email address (e.g. admin@atenaschool.com)",
+    invalidTelegram: "Please enter a valid Telegram Chat ID (e.g. 123456789 or -100123456789)",
     testSuccess: "Test notification sent successfully!",
     testError: "Failed to send test notification",
     saveSuccess: "Template updated successfully!",

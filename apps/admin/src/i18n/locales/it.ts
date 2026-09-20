@@ -736,6 +736,8 @@ export const it = {
     recipientTelegramPlaceholder: "es. Chat ID Telegram o canale",
     sendTestSubmit: "Invia Ora",
     sendingTest: "Invio in corso...",
+    invalidEmail: "Inserisci un indirizzo email valido (es. admin@atenaschool.com)",
+    invalidTelegram: "Inserisci un Chat ID Telegram valido (es. 123456789 o -100123456789)",
     testSuccess: "Notifica di test inviata con successo!",
     testError: "Errore durante l'invio del test",
     saveSuccess: "Template aggiornato con successo!",

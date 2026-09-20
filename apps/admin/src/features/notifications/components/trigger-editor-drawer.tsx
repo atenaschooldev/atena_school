@@ -75,7 +75,7 @@ function TriggerEditorForm({
   const [channel, setChannel] = useState<number>(trigger?.channel || NotificationChannel.EMAIL);
 
   const initialTemplates = templates.filter(
-    (tmpl) => tmpl.channel === (trigger?.channel || NotificationChannel.EMAIL)
+    (tmpl) => Number(tmpl.channel) === Number(trigger?.channel || NotificationChannel.EMAIL)
   );
   const [templateId, setTemplateId] = useState<string>(
     trigger?.template_id || initialTemplates[0]?.id || ""
@@ -96,11 +96,11 @@ function TriggerEditorForm({
     trigger?.is_active !== undefined ? trigger.is_active : true
   );
 
-  const availableTemplates = templates.filter((tmpl) => tmpl.channel === channel);
+  const availableTemplates = templates.filter((tmpl) => Number(tmpl.channel) === Number(channel));
 
   const handleChannelChange = (newChannel: number) => {
     setChannel(newChannel);
-    const newTemplates = templates.filter((tmpl) => tmpl.channel === newChannel);
+    const newTemplates = templates.filter((tmpl) => Number(tmpl.channel) === Number(newChannel));
     if (!newTemplates.some((tmpl) => tmpl.id === templateId)) {
       setTemplateId(newTemplates[0]?.id || "");
     }
@@ -285,7 +285,7 @@ function TriggerEditorForm({
               {/* Template picker */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">{t("notifications.tabTemplates") || "Modello Notifica"} *</Label>
-                <Select value={templateId} onValueChange={setTemplateId}>
+                <Select value={templateId} onValueChange={(val) => { if (val) setTemplateId(val); }}>
                   <SelectTrigger className="h-9 text-xs bg-background">
                     <SelectValue placeholder="Seleziona modello..." />
                   </SelectTrigger>
