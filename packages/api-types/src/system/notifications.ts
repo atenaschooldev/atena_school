@@ -428,6 +428,36 @@ export const SYSTEM_EVENTS_REGISTRY: Record<string, SystemEventDefinition> = {
       { key: 'message', label_it: 'Testo Messaggio', label_en: 'Message Body', example: 'Vorrei sapere quando iniziano i nuovi corsi serali.' },
     ],
   },
+  'booking.cancelled': {
+    event_key: 'booking.cancelled',
+    category: 'booking',
+    label_it: 'Prenotazione Annullata / Rifiutata',
+    label_en: 'Booking Cancelled / Rejected',
+    description_it: 'Scatta quando una prenotazione viene cancellata o rifiutata',
+    description_en: 'Fires when a booking is cancelled or rejected',
+    available_variables: [
+      { key: 'student_name', label_it: 'Nome Studente', label_en: 'Student Name', example: 'Luca Rossi' },
+      { key: 'purchaser_name', label_it: 'Nome Acquirente', label_en: 'Purchaser Name', example: 'Mario Rossi' },
+      { key: 'purchaser_email', label_it: 'Email Acquirente', label_en: 'Purchaser Email', example: 'mario.rossi@gmail.com' },
+      { key: 'course_name', label_it: 'Nome Corso', label_en: 'Course Name', example: 'Kids English (6-7 anni)' },
+      { key: 'booking_id', label_it: 'ID Prenotazione', label_en: 'Booking ID', example: '10bde731-f620-4e16-a240-63bb08b86d70' },
+      { key: 'cancellation_reason', label_it: 'Motivo Annullamento', label_en: 'Cancellation Reason', example: 'Richiesta cliente' },
+    ],
+  },
+  'membership.card_issued': {
+    event_key: 'membership.card_issued',
+    category: 'booking',
+    label_it: 'Tessera Associativa Emessa',
+    label_en: 'Membership Card Issued',
+    description_it: 'Scatta quando viene generata la tessera associativa annuale',
+    description_en: 'Fires when annual membership card is generated',
+    available_variables: [
+      { key: 'student_name', label_it: 'Nome Studente', label_en: 'Student Name', example: 'Luca Rossi' },
+      { key: 'membership_number', label_it: 'Numero Tessera', label_en: 'Card Number', example: '2026-0042' },
+      { key: 'valid_until', label_it: 'Valida Fino Al', label_en: 'Valid Until', example: '31/08/2027' },
+      { key: 'purchaser_email', label_it: 'Email Destinatario', label_en: 'Recipient Email', example: 'mario.rossi@gmail.com' },
+    ],
+  },
 };
 
 export interface NotificationTriggerRecord {
