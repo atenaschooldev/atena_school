@@ -52,6 +52,10 @@ export function useRegisterForm() {
       provider,
       options: {
         redirectTo,
+        queryParams: {
+          prompt: 'select_account',
+          access_type: 'offline',
+        },
       },
     });
 
