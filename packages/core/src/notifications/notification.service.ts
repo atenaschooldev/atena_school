@@ -5,6 +5,7 @@ import {
   NotificationStatus,
   NotificationType,
   NotificationTemplateRecord,
+  RecipientType,
 } from '@atena/api-types';
 import { formatCourseScheduleText } from '@atena/utils';
 import {
@@ -643,10 +644,119 @@ export async function sendTelegramMessage(params: {
     }
   }
 
-  if (successCount > 0) {
-    return { success: true, messageId: lastMsgId };
-  }
-
-  return { success: false, error: lastError || 'Failed to send to Telegram recipient(s)' };
+  return {
+    success: successCount > 0,
+    messageId: lastMsgId,
+    error: successCount === 0 ? lastError : undefined,
+  };
 }
+
+/**
+ * Universal Event-Driven Trigger Processor for Vercel Server Actions & Next.js
+ * Queries active triggers from Supabase, matches conditions, and dispatches Email/Telegram.
+ */
+export async function processNotificationTriggers(
+  supabase: SupabaseClient,
+  eventKey: string,
+  payload: Record<string, any>
+): Promise<void> {
+  try {
+    const { data: triggers, error } = await supabase
+      .from('notification_triggers')
+      .select('*, template:notification_templates(*)')
+      .eq('event_key', eventKey)
+      .eq('is_active', true);
+
+    if (error || !triggers || triggers.length === 0) {
+      return;
+    }
+
+    const schoolProfile = await getSchoolProfile(supabase);
+    const resendCreds = await getResendCredentials(supabase);
+
+    for (const trigger of triggers) {
+      const template = trigger.template;
+      if (!template || !template.is_active) continue;
+
+      // Match JSON conditions
+      const { matchesTriggerConditions } = await import('./trigger-matcher');
+      if (!matchesTriggerConditions(payload, trigger.conditions)) {
+        continue;
+      }
+
+      // Resolve recipient
+      let recipient: string | null = null;
+      if (trigger.custom_recipient && trigger.custom_recipient.trim()) {
+        recipient = trigger.custom_recipient.trim();
+      } else if (Number(trigger.channel) === NotificationChannel.EMAIL) {
+        if (Number(trigger.recipient_type) === RecipientType.CUSTOMER || Number(trigger.recipient_type) === 3) {
+          recipient = payload.purchaser_email || payload.email || payload.student_email || null;
+        } else if (Number(trigger.recipient_type) === RecipientType.ADMIN) {
+          recipient = resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
+        }
+      }
+
+      const isEmail = Number(trigger.channel) === NotificationChannel.EMAIL;
+
+      if (isEmail && recipient) {
+        let subject = template.subject || 'Atena School';
+        let html = '';
+
+        if (template.blocks_config && template.blocks_config.blocks?.length) {
+          const rendered = renderEmailFromBlocks(template.blocks_config, payload, schoolProfile);
+          subject = template.subject ? compileTemplate(template.subject, payload) : rendered.subject;
+          html = rendered.html;
+        } else {
+          html = template.body_html || template.body_text || '';
+          subject = compileTemplate(subject, payload);
+          html = compileTemplate(html, payload);
+        }
+
+        if (html) {
+          const res = await sendEmailViaResend({
+            apiKey: resendCreds.apiKey,
+            from: resendCreds.fromEmail,
+            to: recipient,
+            subject,
+            html,
+          });
+
+          await logNotification(supabase, {
+            channel: NotificationChannel.EMAIL,
+            type: template.notification_type,
+            recipient,
+            subject,
+            status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+            bookingId: payload.booking_id || null,
+            provider: 'resend',
+            messageId: res.messageId || null,
+            error: res.error || null,
+            payload,
+          });
+        }
+      } else if (!isEmail) {
+        // Telegram
+        let text = '';
+        if (template.blocks_config && template.blocks_config.blocks?.length) {
+          const rendered = renderTelegramFromBlocks(template.blocks_config, payload);
+          text = rendered.text;
+        } else {
+          text = compileTemplate(template.body_text || '', payload);
+        }
+
+        if (text) {
+          await sendTelegramMessage({
+            supabase,
+            text,
+            bookingId: payload.booking_id || null,
+            notificationType: template.notification_type,
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Error in processNotificationTriggers:', err);
+  }
+}
+
 
