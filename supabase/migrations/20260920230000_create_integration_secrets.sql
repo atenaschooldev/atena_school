@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.integration_secrets (
     credentials JSONB NOT NULL DEFAULT '{}'::jsonb,
     is_active BOOLEAN NOT NULL DEFAULT true,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_by UUID REFERENCES public.users(id) ON DELETE SET NULL
+    updated_by UUID DEFAULT NULL
 );
 
 -- Index on provider
