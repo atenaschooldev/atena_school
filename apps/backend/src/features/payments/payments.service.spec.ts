@@ -7,6 +7,9 @@ import {
   PaymentRecordStatus,
   PaymentType,
 } from '@atena/api-types';
+import { vi } from 'vitest';
+
+const jest = vi;
 
 describe('PaymentsService — Business Logic Tests', () => {
   let service: PaymentsService;
@@ -39,18 +42,18 @@ describe('PaymentsService — Business Logic Tests', () => {
       payment: {
         create: jest.fn(),
       },
+      students: {
+        findUnique: jest.fn().mockResolvedValue({ tax_code: 'RSSMRA80A01H501T' }),
+      },
+      annualMembership: {
+        count: jest.fn().mockResolvedValue(5),
+        update: jest.fn().mockResolvedValue({}),
+      },
       $executeRawUnsafe: jest.fn().mockResolvedValue(1),
+      $queryRawUnsafe: jest.fn().mockResolvedValue([]),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PaymentsService,
-        { provide: PaymentsRepository, useValue: repository },
-        { provide: PrismaService, useValue: prisma },
-      ],
-    }).compile();
-
-    service = module.get<PaymentsService>(PaymentsService);
+    service = new PaymentsService(repository, prisma as any);
   });
 
   describe('Booking Payment Status Calculation', () => {

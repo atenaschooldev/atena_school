@@ -221,4 +221,41 @@ export function matchesTriggerConditions(
   return true;
 }
 
+export function resolveRecipient(
+  recipientType: number,
+  channel: number,
+  customRecipient?: string | null,
+  payload: Record<string, any> = {},
+  fallbackAdminEmail = 'info@atenaschool.com'
+): string | null {
+  if (customRecipient && customRecipient.trim()) {
+    return customRecipient.trim();
+  }
+
+  if (Number(channel) === 1 /* EMAIL */) {
+    if (Number(recipientType) === 1 /* CUSTOMER */) {
+      return payload.purchaser_email || payload.customer_email || payload.email || payload.student_email || payload.purchaserEmail || null;
+    }
+    if (Number(recipientType) === 3 /* TEACHER */) {
+      return payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
+    }
+    if (Number(recipientType) === 2 /* ADMIN */) {
+      return payload.admin_email || fallbackAdminEmail;
+    }
+  } else if (Number(channel) === 2 /* TELEGRAM */) {
+    if (Number(recipientType) === 2 /* ADMIN */) {
+      return payload.admin_telegram_chat_id || null;
+    }
+    if (Number(recipientType) === 3 /* TEACHER */) {
+      return payload.teacher_telegram_chat_id || null;
+    }
+    if (Number(recipientType) === 1 /* CUSTOMER */) {
+      return payload.customer_phone || payload.phone || null;
+    }
+  }
+
+  return null;
+}
+
+
 

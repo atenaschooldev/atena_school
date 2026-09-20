@@ -3,6 +3,9 @@ import { MembershipsService } from './memberships.admin.service';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { MembershipStatus, PaymentRecordStatus } from '@atena/api-types';
+import { vi } from 'vitest';
+
+const jest = vi;
 
 describe('MembershipsService — Business Logic Tests', () => {
   let service: MembershipsService;
@@ -19,28 +22,35 @@ describe('MembershipsService — Business Logic Tests', () => {
     } as any;
 
     prisma = {
+      annualMembership: {
+        count: jest.fn().mockResolvedValue(5),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      payment: {
+        findFirst: jest.fn().mockResolvedValue({ id: 'pay-1' }),
+        update: jest.fn().mockResolvedValue({}),
+      },
       $executeRawUnsafe: jest.fn().mockResolvedValue(1),
-    };
+    } as any;
 
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        MembershipsService,
-        { provide: MembershipsRepository, useValue: repository },
-        { provide: PrismaService, useValue: prisma },
-      ],
-    }).compile();
-
-    service = module.get<MembershipsService>(MembershipsService);
+    service = new MembershipsService(repository, prisma as any);
   });
 
   it('should set student annual_fee_paid=true and sync linked payment to succeeded when membership is set to active', async () => {
     const memId = 'mem-123';
-    repository.findById.mockResolvedValue({
-      id: memId,
-      studentId: 'student-99',
-      status: MembershipStatus.PENDING,
-      taxCode: 'RSSMRA80A01H501Z',
-    } as any);
+    repository.findById
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.PENDING,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any)
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.ACTIVE,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,
@@ -55,19 +65,28 @@ describe('MembershipsService — Business Logic Tests', () => {
     expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
       expect.stringContaining("UPDATE students SET annual_fee_paid = true"),
     );
-    expect(prisma.$executeRawUnsafe).toHaveBeenCalledWith(
-      expect.stringContaining(`UPDATE payments SET status = ${PaymentRecordStatus.SUCCEEDED}`),
+    expect(prisma.payment.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: PaymentRecordStatus.SUCCEEDED }),
+      })
     );
   });
 
   it('should set student annual_fee_paid=false and sync linked payment to pending when membership is set to pending', async () => {
     const memId = 'mem-123';
-    repository.findById.mockResolvedValue({
-      id: memId,
-      studentId: 'student-99',
-      status: MembershipStatus.ACTIVE,
-      taxCode: 'RSSMRA80A01H501Z',
-    } as any);
+    repository.findById
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.ACTIVE,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any)
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.PENDING,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,
@@ -89,12 +108,19 @@ describe('MembershipsService — Business Logic Tests', () => {
 
   it('should set student annual_fee_paid=false when membership is revoked', async () => {
     const memId = 'mem-123';
-    repository.findById.mockResolvedValue({
-      id: memId,
-      studentId: 'student-99',
-      status: MembershipStatus.ACTIVE,
-      taxCode: 'RSSMRA80A01H501Z',
-    } as any);
+    repository.findById
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.ACTIVE,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any)
+      .mockResolvedValueOnce({
+        id: memId,
+        studentId: 'student-99',
+        status: MembershipStatus.REVOKED,
+        taxCode: 'RSSMRA80A01H501Z',
+      } as any);
 
     repository.updateStatus.mockResolvedValue({
       id: memId,

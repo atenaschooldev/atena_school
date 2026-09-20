@@ -8,6 +8,7 @@
     "dev:desktop": "pnpm --filter desktop dev",
     "dev:all": "node scripts/dev-info.js",
     "lint": "turbo lint",
+    "test": "turbo test",
     "format": "prettier --write .",
     "push:dev": "git push origin main",
     "push:prod": "git push prod main",
@@ -23,7 +24,8 @@
     "pg": "^8.23.0",
     "prettier": "^3.7.3",
     "turbo": "^2.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^5.0.0"
   },
   "overrides": {
     "react": "19.2.7",

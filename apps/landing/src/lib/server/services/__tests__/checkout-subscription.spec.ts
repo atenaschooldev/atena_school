@@ -93,12 +93,16 @@ describe('Checkout & Subscription Booking Logic', () => {
           {
             firstName: 'Luca',
             lastName: 'Rossi',
+            email: 'luca.rossi@example.com',
+            phone: '+39 340 1234567',
             taxCode: 'RSSLCU10A01H501Z',
             birthDate: '2015-05-12',
           },
           {
             firstName: 'Giulia',
             lastName: 'Rossi',
+            email: 'giulia.rossi@example.com',
+            phone: '+39 340 1234567',
             taxCode: 'RSSGLI12B41H501X',
             birthDate: '2017-08-20',
           },
