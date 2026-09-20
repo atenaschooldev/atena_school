@@ -29,6 +29,7 @@
 - Два платежа на бронь: `type='payment'` (курс) + `type='registration_fee'` (взнос €30)
 - Ищи клиента в `bookings` по `purchaser_email` / `purchaser_phone` / `purchaser_tax_code` — не `email`/`phone`
 - Взнос проверяй по данным **студента** (при isForChild — ребёнка, не родителя)
+- **GIT & PROD VERCEL:** Автор коммитов ВСЕГДА строго `atenaschooldev <atenaschool.dev@gmail.com>`. Продакшн Vercel привязан к аккаунту `atenaschooldev`. Пушить через `git push all main` (или `git push prod main`).
 
 ### 🔍 ПЕРЕД КОДИНГОМ:
 - Посмотри как это сделано на лендинге (`apps/landing/src/features/checkout/`)
