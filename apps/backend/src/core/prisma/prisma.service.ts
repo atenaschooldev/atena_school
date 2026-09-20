@@ -7,7 +7,10 @@ import { softDeleteExtension } from '../../shared/prisma/soft-delete.extension';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
     super({
-      log: ['query', 'info', 'warn', 'error'],
+      log:
+        process.env.PRISMA_LOG_QUERIES === 'true'
+          ? ['query', 'info', 'warn', 'error']
+          : ['warn', 'error'],
     });
 
     const extendedClient = this.$extends(softDeleteExtension);
