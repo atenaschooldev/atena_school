@@ -12,8 +12,6 @@ import type {
 import { useNotificationTemplates } from "../hooks/use-notification-templates";
 import { TemplateEditorDrawer } from "./template-editor-drawer";
 import { TestSendModal } from "./test-send-modal";
-import { TemplateDetailModal } from "./template-detail-modal";
-import { TemplatePreviewFrame } from "./template-preview-card";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,10 +34,9 @@ import {
   UserCheck,
   RefreshCw,
   Layers,
-  Eye,
   LayoutGrid,
   ListFilter,
-  Maximize2,
+  Sliders,
 } from "lucide-react";
 
 export function NotificationsView() {
@@ -54,9 +51,6 @@ export function NotificationsView() {
 
   const [testingTemplate, setTestingTemplate] = useState<NotificationTemplateRecord | null>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-
-  const [previewingTemplate, setPreviewingTemplate] = useState<NotificationTemplateRecord | null>(null);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const {
     templates,
@@ -129,11 +123,6 @@ export function NotificationsView() {
   const handleOpenTest = (template: NotificationTemplateRecord) => {
     setTestingTemplate(template);
     setIsTestModalOpen(true);
-  };
-
-  const handleOpenFullPreview = (template: NotificationTemplateRecord) => {
-    setPreviewingTemplate(template);
-    setIsPreviewModalOpen(true);
   };
 
   const handleToggleStatus = async (template: NotificationTemplateRecord, newStatus: boolean) => {
@@ -435,16 +424,6 @@ export function NotificationsView() {
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs gap-1.5 h-9 rounded-xl border-border/60 hover:bg-background"
-                    onClick={() => handleOpenFullPreview(template)}
-                  >
-                    <Eye className="h-3.5 w-3.5" />
-                    <span>Anteprima</span>
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-xs gap-1.5 h-9 rounded-xl border-border/60 hover:bg-background"
                     onClick={() => handleOpenTest(template)}
                   >
                     <Send className="h-3.5 w-3.5" />
@@ -458,7 +437,7 @@ export function NotificationsView() {
                     onClick={() => handleOpenEdit(template)}
                   >
                     <Edit3 className="h-3.5 w-3.5" />
-                    {t("notifications.editTemplate") || "Modifica"}
+                    {t("notifications.editTemplate") || "Modifica & Costruttore"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -467,16 +446,7 @@ export function NotificationsView() {
         </div>
       )}
 
-      {/* Fullscreen Interactive Detail & Preview Modal */}
-      <TemplateDetailModal
-        template={previewingTemplate}
-        isOpen={isPreviewModalOpen}
-        onClose={() => setIsPreviewModalOpen(false)}
-        onOpenEdit={handleOpenEdit}
-        onOpenTest={handleOpenTest}
-      />
-
-      {/* Editor Side Drawer */}
+      {/* Editor & Visual Builder Modal */}
       <TemplateEditorDrawer
         template={editingTemplate}
         isOpen={isEditorOpen}
