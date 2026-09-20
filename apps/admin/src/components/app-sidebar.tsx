@@ -15,6 +15,9 @@ import {
   Globe,
   Tag,
   Bell,
+  Plug,
+  Building2,
+  Palette,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -121,14 +124,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       label: t("nav.settings"),
       items: [
         {
+          title: t("nav.integrations") || "Integrazioni & White-Label",
+          url: "/settings/connections",
+          icon: Plug,
+        },
+        {
           title: t("nav.accountSettings"),
           url: "/settings/account",
-          icon: Settings,
+          icon: Building2,
         },
         {
           title: t("nav.appearance"),
           url: "/settings/appearance",
-          icon: Settings,
+          icon: Palette,
         },
       ],
     },

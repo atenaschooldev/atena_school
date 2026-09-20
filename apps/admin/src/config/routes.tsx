@@ -181,6 +181,10 @@ export const routes: RouteConfig[] = [
 
   // Settings Routes
   {
+    path: "/settings",
+    element: <Navigate to="/settings/connections" replace />
+  },
+  {
     path: "/settings/user",
     element: <UserSettings />
   },
