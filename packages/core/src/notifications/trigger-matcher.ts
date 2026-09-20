@@ -1,6 +1,22 @@
 /**
- * Declarative condition matching helper for dynamic notification triggers
+ * Safely resolves nested property paths (e.g. 'course.schedule.is_evening')
+ * with instant O(1) fallback for direct top-level keys.
  */
+function getFieldValue(obj: Record<string, any>, path: string): any {
+  if (!obj || typeof obj !== 'object') return undefined;
+  if (Object.prototype.hasOwnProperty.call(obj, path)) {
+    return obj[path];
+  }
+  if (!path.includes('.')) {
+    return obj[path];
+  }
+  return path.split('.').reduce((acc, part) => {
+    if (acc === null || acc === undefined || typeof acc !== 'object') {
+      return undefined;
+    }
+    return acc[part];
+  }, obj);
+}
 
 export function matchesTriggerConditions(
   payload: Record<string, any>,
@@ -15,7 +31,7 @@ export function matchesTriggerConditions(
       continue;
     }
 
-    const actualValue = payload[key];
+    const actualValue = getFieldValue(payload, key);
 
     // Array inclusion
     if (Array.isArray(expectedValue)) {
@@ -28,7 +44,7 @@ export function matchesTriggerConditions(
     // Min amount comparison
     if (key.startsWith('min_') && typeof expectedValue === 'number') {
       const field = key.replace('min_', '');
-      const num = Number(payload[field] ?? payload.total_amount ?? payload.amount_paid ?? 0);
+      const num = Number(getFieldValue(payload, field) ?? payload.total_amount ?? payload.amount_paid ?? 0);
       if (num < expectedValue) return false;
       continue;
     }
@@ -36,7 +52,7 @@ export function matchesTriggerConditions(
     // Max amount comparison
     if (key.startsWith('max_') && typeof expectedValue === 'number') {
       const field = key.replace('max_', '');
-      const num = Number(payload[field] ?? payload.total_amount ?? payload.amount_paid ?? 0);
+      const num = Number(getFieldValue(payload, field) ?? payload.total_amount ?? payload.amount_paid ?? 0);
       if (num > expectedValue) return false;
       continue;
     }
@@ -56,3 +72,4 @@ export function matchesTriggerConditions(
 
   return true;
 }
+
