@@ -69,10 +69,10 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 sm:p-8 rounded-3xl border border-border shadow-sm">
           <div>
             <span className="text-xs uppercase tracking-widest font-bold text-primary">
-              Area Riservata
+              {user.userRole === "parent" ? "Area Genitore / Acquirente" : "Area Riservata"}
             </span>
             <h1 className="text-2xl sm:text-3xl font-black text-foreground mt-1">
-              Pannello Studente
+              {user.userRole === "parent" ? "Pannello Genitore" : "Pannello Studente"}
             </h1>
             <p className="text-xs sm:text-sm text-foreground/60 mt-1">
               Benvenuto, {user.dbProfile?.full_name || user.user_metadata?.custom_full_name || user.user_metadata?.full_name || user.email}

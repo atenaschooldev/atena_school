@@ -123,6 +123,7 @@ export async function getDashboardDataAction() {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
+    let isAnyParentBooking = false;
     const enrichedBookings = bookingsList.map((b: any) => {
       const cid = b.course_id || b.item_id;
       const c = coursesMap.get(cid);
@@ -140,8 +141,28 @@ export async function getDashboardDataAction() {
         }
       }
 
+      const isPurchaser = Boolean(
+        (cleanEmail && b.purchaser_email && b.purchaser_email.toLowerCase() === cleanEmail) ||
+        (user.id && b.user_id === user.id)
+      );
+      const isStudent = Boolean(cleanEmail && b.student_email && b.student_email.toLowerCase() === cleanEmail);
+      const isChildStudent = isStudent && !isPurchaser;
+
+      if (isPurchaser && b.student_email && b.student_email.toLowerCase() !== cleanEmail) {
+        isAnyParentBooking = true;
+      }
+
+      // If student is logged in (not purchaser), omit purchaser private info
+      const sanitizedPurchaserTaxCode = isChildStudent ? undefined : b.purchaser_tax_code;
+      const sanitizedPurchaserPhone = isChildStudent ? undefined : b.purchaser_phone;
+
       return {
         ...b,
+        purchaser_tax_code: sanitizedPurchaserTaxCode,
+        purchaser_phone: sanitizedPurchaserPhone,
+        is_purchaser: isPurchaser,
+        is_student: isStudent,
+        is_child_student: isChildStudent,
         item_id: cid,
         item_type: "course",
         item_title: title,
@@ -165,8 +186,10 @@ export async function getDashboardDataAction() {
 
     return {
       success: true,
+      userRole: isAnyParentBooking ? "parent" : "student",
       user: {
         ...user,
+        userRole: isAnyParentBooking ? "parent" : "student",
         dbProfile: dbProfile || null,
       },
       bookings: enrichedBookings,
@@ -253,6 +276,22 @@ export async function getBookingLessonsAction(bookingId: string) {
       throw new Error("Accesso negato a questa prenotazione");
     }
 
+    const isPurchaser = Boolean(
+      (cleanEmail && booking.purchaser_email && booking.purchaser_email.toLowerCase() === cleanEmail) ||
+      (user.id && booking.user_id === user.id)
+    );
+    const isStudent = Boolean(cleanEmail && booking.student_email && booking.student_email.toLowerCase() === cleanEmail);
+    const isChildStudent = isStudent && !isPurchaser;
+
+    const sanitizedBooking = {
+      ...booking,
+      purchaser_tax_code: isChildStudent ? undefined : booking.purchaser_tax_code,
+      purchaser_phone: isChildStudent ? undefined : booking.purchaser_phone,
+      is_purchaser: isPurchaser,
+      is_student: isStudent,
+      is_child_student: isChildStudent,
+    };
+
     let course: any = null;
     const cid = booking.course_id || booking.item_id;
     if (cid) {
@@ -276,7 +315,10 @@ export async function getBookingLessonsAction(bookingId: string) {
 
     return {
       success: true,
-      booking,
+      isPurchaser,
+      isStudent,
+      isChildStudent,
+      booking: sanitizedBooking,
       course,
       lessons: lessons || [],
       max_lessons: maxLessons,

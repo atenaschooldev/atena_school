@@ -27,6 +27,8 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
   const bookingId = resolvedParams.id;
 
   const {
+    isPurchaser,
+    isChildStudent,
     loading,
     error,
     booking,
@@ -151,7 +153,7 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {booking.purchaser_name && booking.purchaser_name !== booking.student_name && (
+                {isPurchaser && booking.purchaser_name && booking.purchaser_name !== booking.student_name && (
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shrink-0">
                       <User className="w-5 h-5" />
@@ -197,10 +199,12 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {(booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code) && (
+                {(isChildStudent ? booking.student_tax_code : (booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code)) && (
                   <div className="pt-2 border-t border-border/60 text-xs flex justify-between">
                     <span className="text-foreground/50">Codice Fiscale:</span>
-                    <span className="font-mono font-bold text-foreground">{booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code}</span>
+                    <span className="font-mono font-bold text-foreground">
+                      {isChildStudent ? booking.student_tax_code : (booking.student_tax_code || booking.purchaser_tax_code || booking.tax_code)}
+                    </span>
                   </div>
                 )}
               </div>

@@ -37,6 +37,9 @@ export function useBookingDetail(bookingId: string) {
   const [modalTime, setModalTime] = useState("10:00");
   const [scheduling, setScheduling] = useState(false);
 
+  const [isPurchaser, setIsPurchaser] = useState(true);
+  const [isChildStudent, setIsChildStudent] = useState(false);
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -46,6 +49,8 @@ export function useBookingDetail(bookingId: string) {
           setCourse(res.course);
           setLessons(res.lessons || []);
           setMaxLessons(res.max_lessons ?? null);
+          setIsPurchaser(Boolean(res.isPurchaser ?? true));
+          setIsChildStudent(Boolean(res.isChildStudent ?? false));
         } else {
           setError(res.error || "Impossibile caricare i dati della prenotazione");
         }
@@ -165,6 +170,8 @@ export function useBookingDetail(bookingId: string) {
   };
 
   return {
+    isPurchaser,
+    isChildStudent,
     loading,
     error,
     booking,
