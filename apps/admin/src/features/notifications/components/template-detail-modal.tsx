@@ -32,6 +32,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -90,7 +91,7 @@ export function TemplateDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[95vw] max-w-[95vw] w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent showCloseButton={false} className="sm:max-w-[95vw] max-w-[95vw] w-[95vw] h-[92vh] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <DialogHeader className="p-5 px-6 border-b bg-muted/20 shrink-0">
           <div className="flex items-center justify-between gap-4">
@@ -139,6 +140,18 @@ export function TemplateDetailModal({
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 {t("notifications.editTemplate") || "Modifica"}
+              </Button>
+
+              <div className="h-4 w-px bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
+                onClick={onClose}
+                title="Chiudi"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>

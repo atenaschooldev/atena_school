@@ -72,6 +72,7 @@ import {
   TableProperties,
   ArrowUp,
   ArrowDown,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -769,7 +770,7 @@ export function VisualTemplateBuilder({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[96vw] max-w-[96vw] w-[96vw] h-[94vh] max-h-[94vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-background border-border/80 shadow-2xl">
+      <DialogContent showCloseButton={false} className="sm:max-w-[96vw] max-w-[96vw] w-[96vw] h-[94vh] max-h-[94vh] flex flex-col p-0 gap-0 overflow-hidden rounded-2xl bg-background border-border/80 shadow-2xl">
         {/* Top Navigation Header */}
         <DialogHeader className="p-4 px-6 border-b bg-muted/20 shrink-0 select-none">
           <div className="flex items-center justify-between gap-4">
@@ -829,6 +830,18 @@ export function VisualTemplateBuilder({
               >
                 <Save className="h-3.5 w-3.5" />
                 <span>{isSaving ? "Salvataggio..." : "Salva Modifiche"}</span>
+              </Button>
+
+              <div className="h-4 w-px bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
+                onClick={onClose}
+                title="Chiudi"
+              >
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
