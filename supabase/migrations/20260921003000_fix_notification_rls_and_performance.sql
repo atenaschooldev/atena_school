@@ -66,3 +66,27 @@ CREATE INDEX IF NOT EXISTS idx_notification_logs_response_gin ON public.notifica
 CREATE INDEX IF NOT EXISTS idx_notification_logs_request_gin ON public.notification_logs USING gin (request);
 CREATE INDEX IF NOT EXISTS idx_notification_triggers_conditions_gin ON public.notification_triggers USING gin (conditions);
 
+-- 5. Data Retention & Log Lifecycle Automation (Prunes payload blobs older than retention window)
+CREATE OR REPLACE FUNCTION public.cleanup_old_notification_logs(days_to_keep INT DEFAULT 90)
+RETURNS INT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    deleted_count INT;
+BEGIN
+    -- Delete granular raw JSON blobs for logs older than retention period to conserve disk space,
+    -- while retaining delivery metrics (id, channel, status, recipient, created_at)
+    UPDATE public.notification_logs
+    SET 
+        request = jsonb_build_object('archived', true, 'purged_at', NOW()),
+        response = jsonb_build_object('archived', true, 'purged_at', NOW())
+    WHERE created_at < NOW() - (days_to_keep || ' days')::INTERVAL
+      AND (request != '{"archived": true}'::jsonb OR response != '{"archived": true}'::jsonb);
+
+    GET DIAGNOSTICS deleted_count = ROW_COUNT;
+    RETURN deleted_count;
+END;
+$$;
+
+

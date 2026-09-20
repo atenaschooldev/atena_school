@@ -112,6 +112,9 @@ import {
   X,
   Smartphone,
   Monitor,
+  Undo2,
+  Redo2,
+  Copy,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
 import { toast } from "sonner";
@@ -736,13 +739,70 @@ export function VisualTemplateBuilder({
 
   const isEmail = template.channel === NotificationChannel.EMAIL;
 
-  // Initialize blocks configuration
-  const [blocksConfig, setBlocksConfig] = useState<TemplateBlocksConfig>(() => {
+  const initialConfig = useMemo(() => {
     if (template.blocks_config && template.blocks_config.blocks?.length) {
       return template.blocks_config;
     }
     return getDefaultBlocksForTemplate(template.code, template.channel);
-  });
+  }, [template]);
+
+  // Blocks configuration with Undo/Redo history stack
+  const [blocksConfig, setBlocksConfig] = useState<TemplateBlocksConfig>(initialConfig);
+  const [history, setHistory] = useState<TemplateBlocksConfig[]>([initialConfig]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+
+  const commitConfigChange = useCallback((nextConfig: TemplateBlocksConfig | ((prev: TemplateBlocksConfig) => TemplateBlocksConfig)) => {
+    setBlocksConfig((prev) => {
+      const resolved = typeof nextConfig === 'function' ? nextConfig(prev) : nextConfig;
+      setHistory((prevHist) => {
+        const sliced = prevHist.slice(0, historyIndex + 1);
+        const updated = [...sliced, resolved].slice(-30); // Keep max 30 states
+        setHistoryIndex(updated.length - 1);
+        return updated;
+      });
+      return resolved;
+    });
+  }, [historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const handleUndo = useCallback(() => {
+    if (!canUndo) return;
+    const newIndex = historyIndex - 1;
+    setHistoryIndex(newIndex);
+    setBlocksConfig(history[newIndex]);
+    toast.info(t("notifications.undoSuccess") || "Modifica annullata");
+  }, [canUndo, historyIndex, history, t]);
+
+  const handleRedo = useCallback(() => {
+    if (!canRedo) return;
+    const newIndex = historyIndex + 1;
+    setHistoryIndex(newIndex);
+    setBlocksConfig(history[newIndex]);
+    toast.info(t("notifications.redoSuccess") || "Modifica ripristinata");
+  }, [canRedo, historyIndex, history, t]);
+
+  // Global Keyboard Shortcuts (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Shift+Z)
+  React.useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        handleUndo();
+      } else if (
+        ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+        ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y')
+      ) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleUndo, handleRedo]);
 
   const [expandedBlockId, setExpandedBlockId] = useState<string | null>(
     blocksConfig.blocks[0]?.id || null
@@ -751,15 +811,17 @@ export function VisualTemplateBuilder({
   const [activeTab, setActiveTab] = useState<string>("builder");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [isSaving, setIsSaving] = useState(false);
+  const [copiedHtml, setCopiedHtml] = useState(false);
 
   // Sync state when template changes
   React.useEffect(() => {
     if (template) {
-      if (template.blocks_config && template.blocks_config.blocks?.length) {
-        setBlocksConfig(template.blocks_config);
-      } else {
-        setBlocksConfig(getDefaultBlocksForTemplate(template.code, template.channel));
-      }
+      const cfg = template.blocks_config && template.blocks_config.blocks?.length
+        ? template.blocks_config
+        : getDefaultBlocksForTemplate(template.code, template.channel);
+      setBlocksConfig(cfg);
+      setHistory([cfg]);
+      setHistoryIndex(0);
     }
   }, [template]);
 
@@ -772,7 +834,7 @@ export function VisualTemplateBuilder({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      setBlocksConfig((prev) => {
+      commitConfigChange((prev) => {
         const oldIndex = prev.blocks.findIndex((b) => b.id === active.id);
         const newIndex = prev.blocks.findIndex((b) => b.id === over.id);
         if (oldIndex === -1 || newIndex === -1) return prev;
@@ -788,7 +850,7 @@ export function VisualTemplateBuilder({
 
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
-    setBlocksConfig((prev) => {
+    commitConfigChange((prev) => {
       const reordered = arrayMove(prev.blocks, index, index - 1).map((b, idx) => ({
         ...b,
         order: idx,
@@ -798,7 +860,7 @@ export function VisualTemplateBuilder({
   };
 
   const handleMoveDown = (index: number) => {
-    setBlocksConfig((prev) => {
+    commitConfigChange((prev) => {
       if (index >= prev.blocks.length - 1) return prev;
       const reordered = arrayMove(prev.blocks, index, index + 1).map((b, idx) => ({
         ...b,
@@ -809,14 +871,14 @@ export function VisualTemplateBuilder({
   };
 
   const handleToggleBlockEnabled = (id: string, enabled: boolean) => {
-    setBlocksConfig((prev) => ({
+    commitConfigChange((prev) => ({
       ...prev,
       blocks: prev.blocks.map((b) => (b.id === id ? { ...b, is_enabled: enabled } : b)),
     }));
   };
 
   const handleUpdateBlockProps = (id: string, propKey: string, val: any) => {
-    setBlocksConfig((prev) => ({
+    commitConfigChange((prev) => ({
       ...prev,
       blocks: prev.blocks.map((b) =>
         b.id === id ? { ...b, props: { ...b.props, [propKey]: val } } : b
@@ -836,7 +898,7 @@ export function VisualTemplateBuilder({
         : { content: "📝 *" + (t("notifications.customBlockDefaultBox") || "Nota:") + "*\n..." },
     };
 
-    setBlocksConfig((prev) => ({
+    commitConfigChange((prev) => ({
       ...prev,
       blocks: [...prev.blocks, newBlock],
     }));
@@ -845,7 +907,7 @@ export function VisualTemplateBuilder({
   };
 
   const handleDeleteBlock = (id: string) => {
-    setBlocksConfig((prev) => ({
+    commitConfigChange((prev) => ({
       ...prev,
       blocks: prev.blocks.filter((b) => b.id !== id),
     }));
@@ -854,7 +916,7 @@ export function VisualTemplateBuilder({
 
   const handleResetToDefault = () => {
     const defaults = getDefaultBlocksForTemplate(template.code, template.channel);
-    setBlocksConfig(defaults);
+    commitConfigChange(defaults);
     setExpandedBlockId(defaults.blocks[0]?.id || null);
     toast.success(t("notifications.resetDefaultSuccess") || "Modello ripristinato allo standard originale Atena School");
   };
@@ -867,6 +929,18 @@ export function VisualTemplateBuilder({
     const compiledTg = renderTelegramFromBlocks(blocksConfig, customVars);
     return { subject: "", html: compiledTg.text };
   }, [blocksConfig, customVars, isEmail]);
+
+  const handleCopyCleanHtml = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(liveRendered.html);
+      setCopiedHtml(true);
+      toast.success(t("notifications.htmlCopied") || "Codice HTML copiato negli appunti!");
+      setTimeout(() => setCopiedHtml(false), 2000);
+    } catch {
+      toast.error("Impossibile copiare il codice HTML");
+    }
+  }, [liveRendered.html, t]);
+
 
   // Save handler
   const handleSave = async () => {
@@ -922,6 +996,32 @@ export function VisualTemplateBuilder({
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
+              {/* Undo / Redo Toolbar */}
+              <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-xl border">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  onClick={handleUndo}
+                  disabled={!canUndo}
+                  title="Undo (Ctrl+Z / ⌘Z)"
+                >
+                  <Undo2 className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg cursor-pointer text-muted-foreground hover:text-foreground disabled:opacity-30"
+                  onClick={handleRedo}
+                  disabled={!canRedo}
+                  title="Redo (Ctrl+Y / ⌘⇧Z)"
+                >
+                  <Redo2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -1145,6 +1245,29 @@ export function VisualTemplateBuilder({
                     <span>{t("notifications.previewDeviceMobile") || "Mobile (375px)"}</span>
                   </button>
                 </div>
+
+                {isEmail && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[11px] gap-1 px-2.5 rounded-lg border bg-background hover:bg-muted text-foreground cursor-pointer"
+                    onClick={handleCopyCleanHtml}
+                    title={t("notifications.copyHtmlTitle") || "Copia il codice HTML pronto per l'invio"}
+                  >
+                    {copiedHtml ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <span className="text-emerald-600 font-semibold">{t("notifications.copied") || "Copiato!"}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{t("notifications.copyHtml") || "Copia HTML"}</span>
+                      </>
+                    )}
+                  </Button>
+                )}
 
                 <Badge variant="outline" className="text-[10px] font-mono bg-background hidden sm:inline-flex">
                   {isEmail ? "Resend HTML5 Sandbox" : "Telegram Bot Engine"}

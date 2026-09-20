@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { NotificationChannel } from "../types";
 import type { NotificationTemplateRecord } from "../types";
 import { useTranslation } from "@/i18n/context";
-import { Send, Mail, MessageSquare, Loader2 } from "lucide-react";
+import { Send, Mail, MessageSquare, Loader2, AlertCircle } from "lucide-react";
 
 interface TestSendModalProps {
   template: NotificationTemplateRecord | null;
@@ -45,13 +45,29 @@ export function TestSendModal({
     }
   }, [template]);
 
-  if (!template) return null;
+  const isEmail = template?.channel === NotificationChannel.EMAIL;
 
-  const isEmail = template.channel === NotificationChannel.EMAIL;
+  const validationError = useMemo(() => {
+    if (!recipient.trim()) return null;
+    if (isEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(recipient.trim())) {
+        return t("notifications.invalidEmail") || "Inserisci un indirizzo email valido (es. admin@atenaschool.com)";
+      }
+    } else {
+      // Telegram chat ID (number or @channel or string without spaces)
+      if (recipient.trim().includes(" ")) {
+        return t("notifications.invalidTelegram") || "Inserisci un Chat ID Telegram valido (es. 123456789 o -100123456789)";
+      }
+    }
+    return null;
+  }, [recipient, isEmail, t]);
+
+  if (!template) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!recipient.trim()) return;
+    if (!recipient.trim() || validationError) return;
     await onSendTest({ recipient: recipient.trim() });
     onClose();
   };
@@ -97,13 +113,20 @@ export function TestSendModal({
                     : t("notifications.recipientTelegramPlaceholder") || "e.g. Telegram chat ID"
                 }
                 required
-                className="font-mono text-sm"
+                className={`font-mono text-sm ${validationError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               />
-              <p className="text-xs text-muted-foreground">
-                {isEmail
-                  ? (t("notifications.testModalEmailDesc") || "Verrà inviata un'email reale tramite il server Resend con prefisso [TEST].")
-                  : (t("notifications.testModalTgDesc") || "Verrà inviato un messaggio formattato in HTML tramite il Bot Telegram Atena.")}
-              </p>
+              {validationError ? (
+                <div className="flex items-center gap-1.5 text-xs text-destructive font-medium mt-1">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span>{validationError}</span>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {isEmail
+                    ? (t("notifications.testModalEmailDesc") || "Verrà inviata un'email reale tramite il server Resend con prefisso [TEST].")
+                    : (t("notifications.testModalTgDesc") || "Verrà inviato un messaggio formattato in HTML tramite il Bot Telegram Atena.")}
+                </p>
+              )}
             </div>
           </div>
 
@@ -111,7 +134,11 @@ export function TestSendModal({
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               {t("common.cancel") || "Annulla"}
             </Button>
-            <Button type="submit" disabled={isLoading || !recipient.trim()} className="gap-2">
+            <Button
+              type="submit"
+              disabled={isLoading || !recipient.trim() || Boolean(validationError)}
+              className="gap-2"
+            >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -127,3 +154,4 @@ export function TestSendModal({
     </Dialog>
   );
 }
+

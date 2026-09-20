@@ -106,6 +106,41 @@ export interface EmailServiceConfig {
   appUrl?: string;
 }
 
+/**
+ * Utility for exponential backoff retries on transient network and HTTP 429/5xx errors
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 3,
+  baseDelayMs = 350
+): Promise<Response> {
+  let attempt = 0;
+  while (true) {
+    try {
+      const res = await fetch(url, options);
+      // Retry only on rate limits (429) or transient server errors (500, 502, 503, 504)
+      if ((res.status === 429 || res.status >= 500) && attempt < maxRetries) {
+        attempt++;
+        const jitter = Math.floor(Math.random() * 100);
+        const delay = baseDelayMs * Math.pow(2, attempt - 1) + jitter;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (attempt < maxRetries) {
+        attempt++;
+        const jitter = Math.floor(Math.random() * 100);
+        const delay = baseDelayMs * Math.pow(2, attempt - 1) + jitter;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 export async function sendEmailViaResend(options: {
   apiKey?: string;
   from: string;
@@ -119,7 +154,7 @@ export async function sendEmailViaResend(options: {
   }
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetchWithRetry('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -144,6 +179,7 @@ export async function sendEmailViaResend(options: {
     return { success: false, error: err?.message || 'Network error' };
   }
 }
+
 
 export async function sendBookingNotificationEmails(params: {
   supabase: SupabaseClient;
@@ -600,7 +636,7 @@ export async function sendTelegramMessage(params: {
         body.reply_markup = { inline_keyboard: params.inlineKeyboard };
       }
 
-      const res = await fetch(url, {
+      const res = await fetchWithRetry(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
