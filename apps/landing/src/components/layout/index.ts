@@ -4,3 +4,5 @@ export { default as CookieBanner } from "./CookieBanner";
 export { default as ScrollToTop } from "./ScrollToTop";
 export { default as GoogleAnalytics } from "./GoogleAnalytics";
 export { default as ScrollAnimateProvider } from "./ScrollAnimateProvider";
+export { default as NavigationProgressBar } from "./NavigationProgressBar";
+

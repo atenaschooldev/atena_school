@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import messages from '../../messages/it.json';
 import '@/index.css';
 import { Nunito } from 'next/font/google';
 import { Toaster } from 'sonner';
+import NavigationProgressBar from '@/components/NavigationProgressBar';
 
 const nunito = Nunito({
   subsets: ['latin', 'latin-ext', 'cyrillic'],
@@ -52,6 +54,9 @@ export default function RootLayout({
     <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`}>
       <body className="antialiased bg-[#f8f9fa] min-h-screen flex flex-col" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages as any}>
+          <Suspense fallback={null}>
+            <NavigationProgressBar />
+          </Suspense>
           <div className="flex flex-col min-h-screen">
             <main className="flex-grow">{children}</main>
           </div>
@@ -61,3 +66,4 @@ export default function RootLayout({
     </html>
   );
 }
+

@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import {
@@ -8,6 +9,7 @@ import {
   ScrollToTop,
   GoogleAnalytics,
   ScrollAnimateProvider,
+  NavigationProgressBar,
 } from '@/components/layout';
 import '@/index.css';
 import { Nunito } from 'next/font/google';
@@ -141,6 +143,9 @@ export default async function RootLayout({
       <body className="antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale="it" messages={messages}>
           <ScrollAnimateProvider>
+            <Suspense fallback={null}>
+              <NavigationProgressBar />
+            </Suspense>
             <div className="flex flex-col min-h-screen">
               <Navbar school={school} />
               <main className="flex-grow flex flex-col">{children}</main>
