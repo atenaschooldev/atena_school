@@ -128,14 +128,14 @@ export class NotificationTriggerEngineService {
     const recipientType = Number(trigger.recipientType);
 
     if (channel === NotificationChannel.EMAIL) {
-      if (recipientType === RecipientType.CUSTOMER || recipientType === 3) {
+      if (recipientType === RecipientType.CUSTOMER) {
         return payload.purchaser_email || payload.email || payload.student_email || payload.purchaserEmail || null;
       }
-      if (recipientType === RecipientType.TEACHER || recipientType === 2) {
-        return payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
+      if (recipientType === RecipientType.ADMIN) {
+        return process.env.ADMIN_EMAIL || process.env.NOTIFICATION_ADMIN_EMAIL || 'info@atenaschool.com';
       }
-      if (recipientType === RecipientType.ADMIN || recipientType === 1) {
-        return process.env.NOTIFICATION_ADMIN_EMAIL || 'atenaschool20@gmail.com';
+      if (recipientType === RecipientType.TEACHER) {
+        return payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
       }
     }
 
@@ -143,7 +143,7 @@ export class NotificationTriggerEngineService {
       if (trigger.customRecipient && trigger.customRecipient.trim()) {
         return trigger.customRecipient.trim();
       }
-      return process.env.TELEGRAM_ADMIN_CHAT_ID || 'DEFAULT_ADMIN_CHAT';
+      return process.env.TELEGRAM_CHAT_ID || process.env.TELEGRAM_ADMIN_CHAT_ID || 'DEFAULT_ADMIN_CHAT';
     }
 
     return null;

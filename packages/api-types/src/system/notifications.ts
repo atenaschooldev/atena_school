@@ -468,7 +468,7 @@ export interface NotificationTriggerRecord {
   template_id: string;
   template?: NotificationTemplateRecord;
   channel: NotificationChannel;
-  recipient_type: RecipientType | 3 | 4; // 1: CUSTOMER, 2: ADMIN, 3: STUDENT, 4: CUSTOM
+  recipient_type: RecipientType | 4; // 1: CUSTOMER, 2: ADMIN, 3: TEACHER, 4: CUSTOM
   custom_recipient?: string | null;
   conditions?: Record<string, any> | null;
   timing_type: 'immediate' | 'delayed' | 'before_event';

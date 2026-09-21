@@ -182,6 +182,103 @@ export async function sendEmailViaResend(options: {
   }
 }
 
+export async function sendTelegramMessage(params: {
+  supabase?: SupabaseClient;
+  text: string;
+  botToken?: string;
+  chatId?: string;
+  inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>;
+  bookingId?: string | null;
+  notificationType?: NotificationType;
+}): Promise<{ success: boolean; messageId?: number; error?: string }> {
+  const { supabase, text, botToken, chatId, inlineKeyboard, bookingId, notificationType } = params;
+  let token = botToken || process.env.TELEGRAM_BOT_TOKEN;
+  let chat = chatId || process.env.TELEGRAM_CHAT_ID;
+
+  if (supabase && (!token || !chat)) {
+    try {
+      const tgCreds = await getTelegramCredentials(supabase);
+      token = token || tgCreds.botToken;
+      chat = chat || tgCreds.chatId;
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!token || !chat) {
+    return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
+  }
+
+  try {
+    const body: Record<string, any> = {
+      chat_id: chat,
+      text,
+      parse_mode: 'HTML',
+      disable_web_page_preview: true,
+    };
+
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      body.reply_markup = { inline_keyboard: inlineKeyboard };
+    }
+
+    const res = await fetchWithRetry(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      if (supabase) {
+        await logNotification(supabase, {
+          channel: NotificationChannel.TELEGRAM,
+          type: (notificationType || NotificationType.BOOKING_CONFIRMATION) as NotificationType,
+          recipient: chat,
+          subject: 'Telegram Notification',
+          status: NotificationStatus.FAILED,
+          bookingId: bookingId || null,
+          error: errText,
+          provider: 'telegram',
+        });
+      }
+      return { success: false, error: `Telegram status ${res.status}: ${errText}` };
+    }
+
+    const json = (await res.json()) as { ok?: boolean; result?: { message_id?: number } };
+    const messageId = json.result?.message_id;
+
+    if (supabase) {
+      await logNotification(supabase, {
+        channel: NotificationChannel.TELEGRAM,
+        type: (notificationType || NotificationType.BOOKING_CONFIRMATION) as NotificationType,
+        recipient: chat,
+        subject: 'Telegram Notification',
+        status: NotificationStatus.SENT,
+        bookingId: bookingId || null,
+        messageId: messageId ? String(messageId) : undefined,
+        provider: 'telegram',
+      });
+    }
+
+    return { success: true, messageId };
+  } catch (err: any) {
+    if (supabase) {
+      await logNotification(supabase, {
+        channel: NotificationChannel.TELEGRAM,
+        type: (notificationType || NotificationType.BOOKING_CONFIRMATION) as NotificationType,
+        recipient: chat,
+        subject: 'Telegram Notification',
+        status: NotificationStatus.FAILED,
+        bookingId: bookingId || null,
+        error: err?.message || 'Network error',
+        provider: 'telegram',
+      });
+    }
+    return { success: false, error: err?.message || 'Network error' };
+  }
+}
+
+import { buildBookingTelegramKeyboard } from './telegram-actions.service';
 
 export async function sendBookingNotificationEmails(params: {
   supabase: SupabaseClient;
@@ -192,18 +289,14 @@ export async function sendBookingNotificationEmails(params: {
 }): Promise<void> {
   const { supabase, booking, course, dto, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
-  const resendCreds = await getResendCredentials(supabase);
   const domainsCreds = await getDomainsCredentials(supabase);
   const courseName = course?.name || course?.title_it || `Corso ${schoolProfile.name}`;
   const purchaserName = `${dto.firstName} ${dto.lastName}`.trim();
   const studentName = dto.isForChild
     ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || purchaserName
     : purchaserName;
-  const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
-  const fromEmail = config?.fromEmail || resendCreds.fromEmail;
   const appUrl = config?.appUrl || domainsCreds.appUrl || schoolProfile.app_url || process.env.NEXT_PUBLIC_APP_URL || 'https://app.atenaschool.com';
   const adminUrl = domainsCreds.adminUrl || schoolProfile.admin_url || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
-  const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   const isPaidOnline = Number(booking.payment_status) === BookingPaymentStatus.PAID;
   const paymentStatusText = isPaidOnline ? 'Pagato Online con Carta (Stripe)' : 'Prenotato con Saldo in Sede';
@@ -227,46 +320,6 @@ export async function sendBookingNotificationEmails(params: {
       lessonSchedule = startTime;
     }
   }
-
-  const templateData: BookingEmailTemplateData = {
-    courseName,
-    purchaserName,
-    studentName,
-    purchaserEmail: dto.email,
-    purchaserPhone: dto.phone,
-    purchaserTaxCode: dto.purchaserTaxCode,
-    birthPlace: dto.birthPlace,
-    isForChild: dto.isForChild,
-    studentEmail: dto.studentEmail,
-    studentPhone: dto.studentPhone,
-    studentTaxCode: dto.studentTaxCode,
-    studentBirthDate: dto.studentBirthDate,
-    studentBirthPlace: dto.studentBirthPlace || dto.birthPlace || undefined,
-    promoCode: dto.promoCode || booking.promo_code || undefined,
-    discountAmount: booking.discount_amount ? String(booking.discount_amount) : undefined,
-    date: dto.date,
-    time: dto.time,
-    lessonSchedule,
-    totalEur,
-    courseFeeEur,
-    regFeeEur,
-    isPaidOnline,
-    paymentStatusText,
-    paymentMethodText: String(booking.payment_method || '1'),
-    bookingId: booking.id,
-    notes: dto.notes,
-    appUrl,
-    schoolProfile,
-    pecEmail: dto.pecEmail,
-    sdiCode: dto.sdiCode,
-    needsCompanyInvoice: dto.needsCompanyInvoice,
-    stripeSessionId,
-    stripePaymentIntentId,
-    stripeDashboardUrl: stripePaymentIntentId
-      ? `https://dashboard.stripe.com/payments/${stripePaymentIntentId}`
-      : undefined,
-    createdAtFormatted: new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' }),
-  };
 
   // Common dynamic variables dictionary for template engine
   const templateVariables: Record<string, any> = {
@@ -332,114 +385,17 @@ export async function sendBookingNotificationEmails(params: {
     adminUrl,
     pec_email: dto.pecEmail || '',
     sdi_code: dto.sdiCode || '',
+    stripe_payment_intent_id: stripePaymentIntentId,
+    stripe_session_id: stripeSessionId,
   };
 
-  // 1. Client Confirmation / Payment Receipt Email
-  if (dto.email) {
-    const templateCode = isPaidOnline ? 'payment_receipt_customer' : 'booking_confirmation_customer';
-    let subject = `Conferma Iscrizione: ${courseName} • ${schoolProfile.name}`;
-    let html = '';
-
-    const clientTmpl = await getNotificationTemplateByCode(supabase, templateCode);
-    if (clientTmpl) {
-      if (clientTmpl.is_active) {
-        // Use saved blocks_config or fall back to default blocks (never stale body_html)
-        const blocksConfig = clientTmpl.blocks_config?.blocks?.length
-          ? clientTmpl.blocks_config
-          : getDefaultBlocksForTemplate(templateCode, NotificationChannel.EMAIL);
-        const rendered = renderEmailFromBlocks(blocksConfig, templateVariables, schoolProfile);
-        html = rendered.html;
-        subject = clientTmpl.subject ? compileTemplate(clientTmpl.subject, templateVariables) : rendered.subject;
-      }
-      // if !is_active → html stays '' → client email silently skipped
-    } else {
-      // Template not found in DB → hardcoded fallback
-      const fallbackRendered = renderClientBookingConfirmationEmail(templateData);
-      subject = fallbackRendered.subject;
-      html = fallbackRendered.html;
-    }
-
-    if (html) {
-      const clientRes = await sendEmailViaResend({
-        apiKey,
-        from: fromEmail,
-        to: dto.email,
-        subject,
-        html,
-      });
-
-      await logNotification(supabase, {
-        channel: NotificationChannel.EMAIL,
-        type: isPaidOnline ? NotificationType.PAYMENT_RECEIPT : NotificationType.BOOKING_CONFIRMATION,
-        recipient: dto.email,
-        subject,
-        status: clientRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-        bookingId: booking.id,
-        provider: 'resend',
-        messageId: clientRes.messageId || null,
-        error: clientRes.error || null,
-        payload: { courseName, totalEur, isPaidOnline },
-      });
-    }
-  }
-
-  // 2. Admin Notification Email
-  if (adminEmail) {
-    const adminTmpl = await getNotificationTemplateByCode(supabase, 'booking_alert_admin');
-    let subject = `🔔 Nuova Iscrizione: ${studentName} — ${courseName}`;
-    let html = '';
-
-    if (adminTmpl) {
-      if (adminTmpl.is_active) {
-        const blocksConfig = adminTmpl.blocks_config?.blocks?.length
-          ? adminTmpl.blocks_config
-          : getDefaultBlocksForTemplate('booking_alert_admin', NotificationChannel.EMAIL);
-        const rendered = renderEmailFromBlocks(blocksConfig, templateVariables, schoolProfile);
-        html = rendered.html;
-        subject = adminTmpl.subject ? compileTemplate(adminTmpl.subject, templateVariables) : rendered.subject;
-      }
-      // if !is_active → html stays '' → admin email silently skipped
-    } else {
-      // Template not found in DB → hardcoded fallback
-      const fallbackRendered = renderAdminBookingNotificationEmail(templateData);
-      subject = fallbackRendered.subject;
-      html = fallbackRendered.html;
-    }
-
-    if (html) {
-      const adminRes = await sendEmailViaResend({
-        apiKey,
-        from: fromEmail,
-        to: adminEmail,
-        subject,
-        html,
-      });
-
-      await logNotification(supabase, {
-        channel: NotificationChannel.EMAIL,
-        type: NotificationType.BOOKING_CONFIRMATION,
-        recipient: adminEmail,
-        subject,
-        status: adminRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-        bookingId: booking.id,
-        provider: 'resend',
-        messageId: adminRes.messageId || null,
-        error: adminRes.error || null,
-        payload: { courseName, studentName, totalEur },
-      });
-    }
-  }
-
-  // 3. Process Dynamic Event Automation Triggers
-  try {
-    await processNotificationTriggers(
-      supabase,
-      isPaidOnline ? 'booking.created_stripe' : 'booking.pending_cash',
-      templateVariables
-    );
-  } catch (triggerErr) {
-    console.warn('[NotificationTriggers]: Error executing custom booking triggers:', triggerErr);
-  }
+  // Dispatch via Unified Trigger Engine (DB Triggers + SYSTEM_TRIGGERS Fallback)
+  await processNotificationTriggers(
+    supabase,
+    isPaidOnline ? 'booking.created_stripe' : 'booking.pending_cash',
+    templateVariables,
+    config
+  );
 }
 
 export async function sendContactFormNotificationEmail(params: {
@@ -449,11 +405,7 @@ export async function sendContactFormNotificationEmail(params: {
 }): Promise<void> {
   const { supabase, data, config } = params;
   const schoolProfile = await getSchoolProfile(supabase);
-  const resendCreds = await getResendCredentials(supabase);
   const domainsCreds = await getDomainsCredentials(supabase);
-  const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
-  const fromEmail = config?.fromEmail || resendCreds.fromEmail;
-  const apiKey = config?.resendApiKey || resendCreds.apiKey;
 
   data.schoolProfile = schoolProfile;
   const senderName = `${data.firstName} ${data.lastName}`.trim();
@@ -475,253 +427,79 @@ export async function sendContactFormNotificationEmail(params: {
     admin_url: domainsCreds.adminUrl || schoolProfile.admin_url || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app',
   };
 
-  const leadTmpl = await getNotificationTemplateByCode(supabase, 'contact_lead_admin');
-  let subject = `📩 Nuovo Messaggio dal Sito: ${senderName}`;
-  let html = '';
-
-  if (leadTmpl) {
-    if (leadTmpl.is_active) {
-      const blocksConfig = leadTmpl.blocks_config?.blocks?.length
-        ? leadTmpl.blocks_config
-        : getDefaultBlocksForTemplate('contact_lead_admin', NotificationChannel.EMAIL);
-      const rendered = renderEmailFromBlocks(blocksConfig, leadVariables, schoolProfile);
-      html = rendered.html;
-      subject = leadTmpl.subject ? compileTemplate(leadTmpl.subject, leadVariables) : rendered.subject;
-    }
-    // if !is_active → email silently skipped
-  } else {
-    // Template not found in DB → hardcoded fallback
-    const fallbackRendered = renderContactFormAdminEmail(data);
-    subject = fallbackRendered.subject;
-    html = fallbackRendered.html;
-  }
-
-  if (html) {
-    const res = await sendEmailViaResend({
-      apiKey,
-      from: fromEmail,
-      to: adminEmail,
-      subject,
-      html,
-    });
-
-    await logNotification(supabase, {
-      channel: NotificationChannel.EMAIL,
-      type: NotificationType.CONTACT_FORM,
-      recipient: adminEmail,
-      subject,
-      status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
-      provider: 'resend',
-      messageId: res.messageId || null,
-      error: res.error || null,
-      payload: { name: senderName, email: data.email, phone: data.phone },
-    });
-  }
-
-  // Process Dynamic Event Automation Triggers for Contact Form
-  try {
-    await processNotificationTriggers(supabase, 'contact_form.submitted', leadVariables);
-  } catch (triggerErr) {
-    console.warn('[NotificationTriggers]: Error executing custom contact triggers:', triggerErr);
-  }
-
-  // Telegram lead alert (fire-and-forget)
-  sendTelegramLeadAlert(supabase, leadVariables).catch((err) =>
-    console.warn('Async Telegram lead alert error:', err)
+  // Dispatch via Unified Trigger Engine (DB Triggers + SYSTEM_TRIGGERS Fallback)
+  await processNotificationTriggers(
+    supabase,
+    'contact_form.submitted',
+    leadVariables,
+    config
   );
-}
-
-/**
- * Sends a Telegram notification to the school channel when a contact form is submitted.
- * Uses DB template blocks_config if available, otherwise falls back to getDefaultBlocksForTemplate.
- */
-async function sendTelegramLeadAlert(
-  supabase: SupabaseClient,
-  leadVariables: Record<string, any>
-): Promise<void> {
-  try {
-    const tgTmpl = await getNotificationTemplateByCode(supabase, 'telegram_lead_alert');
-    if (tgTmpl && !tgTmpl.is_active) return;
-
-    const blocksConfig = tgTmpl?.blocks_config?.blocks?.length
-      ? tgTmpl.blocks_config
-      : getDefaultBlocksForTemplate('telegram_lead_alert', NotificationChannel.TELEGRAM);
-
-    const { text } = renderTelegramFromBlocks(blocksConfig, leadVariables);
-
-    const inlineKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> = [];
-    const rawPhone = leadVariables.sender_phone || leadVariables.phone || '';
-    const cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
-    const domainsCreds = await getDomainsCredentials(supabase);
-    const crmUrl = domainsCreds.adminUrl || process.env.ADMIN_URL || process.env.NEXT_PUBLIC_ADMIN_URL || 'https://atena-school-admin.vercel.app';
-    const actionRow: Array<{ text: string; url?: string }> = [];
-
-    if (cleanPhone) {
-      actionRow.push({ text: '💬 WhatsApp', url: `https://wa.me/${cleanPhone}` });
-    }
-    actionRow.push({ text: '🌐 Admin CRM', url: `${crmUrl}/prenotazioni` });
-
-    if (actionRow.length > 0) {
-      inlineKeyboard.push(actionRow);
-    }
-
-    await sendTelegramMessage({
-      supabase,
-      text,
-      inlineKeyboard,
-      notificationType: NotificationType.CONTACT_FORM,
-    });
-  } catch (err) {
-    console.warn('Telegram lead alert error:', err);
-  }
-}
-
-export async function sendTelegramMessage(params: {
-  supabase?: SupabaseClient;
-  botToken?: string;
-  chatId?: string;
-  chatIds?: string[];
-  text: string;
-  inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>;
-  bookingId?: string | null;
-  notificationType?: NotificationType;
-  isCash?: boolean;
-}): Promise<{ success: boolean; messageId?: number; error?: string }> {
-  let token = params.botToken;
-  let chat = params.chatId;
-  let chatIds = params.chatIds;
-
-  if (params.supabase) {
-    const tgCreds = await getTelegramCredentials(params.supabase);
-    token = token || tgCreds.botToken;
-    chat = chat || tgCreds.chatId;
-    if (!chatIds || chatIds.length === 0) {
-      chatIds = tgCreds.chatIds;
-    }
-
-    // Check notification type filter flags
-    if (params.isCash && tgCreds.notifyCash === false) {
-      return { success: true };
-    }
-    if (params.notificationType) {
-      if (params.notificationType === NotificationType.CONTACT_FORM && tgCreds.notifyLeads === false) {
-        return { success: true };
-      }
-      if (params.notificationType === NotificationType.BOOKING_CONFIRMATION && tgCreds.notifyBookings === false) {
-        return { success: true };
-      }
-      if (params.notificationType === NotificationType.PAYMENT_RECEIPT && tgCreds.notifyPayments === false) {
-        return { success: true };
-      }
-    }
-  }
-
-  token = token || process.env.TELEGRAM_BOT_TOKEN;
-  chat = chat || process.env.TELEGRAM_CHAT_ID;
-
-  // Extract all target chat IDs (supports comma, space, semicolon or array)
-  const targetChats: string[] = [];
-  if (chatIds && chatIds.length > 0) {
-    for (const c of chatIds) {
-      const parts = String(c).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
-      targetChats.push(...parts);
-    }
-  } else if (chat) {
-    const parts = String(chat).split(/[\s,;]+/).map((s) => s.trim()).filter(Boolean);
-    targetChats.push(...parts);
-  }
-
-  // Deduplicate
-  const uniqueChats = Array.from(new Set(targetChats));
-
-  if (!token || uniqueChats.length === 0) {
-    return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
-  }
-
-  let lastMsgId: number | undefined;
-  let lastError: string | undefined;
-  let successCount = 0;
-
-  for (const recipient of uniqueChats) {
-    try {
-      const url = `https://api.telegram.org/bot${token}/sendMessage`;
-      const body: Record<string, any> = {
-        chat_id: recipient,
-        text: params.text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-      };
-
-      if (params.inlineKeyboard && params.inlineKeyboard.length > 0) {
-        body.reply_markup = { inline_keyboard: params.inlineKeyboard };
-      }
-
-      const res = await fetchWithRetry(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const json = (await res.json()) as { ok: boolean; result?: { message_id: number }; description?: string };
-
-      if (!res.ok || !json.ok) {
-        const errStr = json.description || `HTTP error ${res.status}`;
-        lastError = errStr;
-        if (params.supabase) {
-          await logNotification(params.supabase, {
-            channel: NotificationChannel.TELEGRAM,
-            type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
-            recipient,
-            status: NotificationStatus.FAILED,
-            bookingId: params.bookingId || null,
-            provider: 'telegram',
-            error: errStr,
-            payload: { text: params.text },
-          });
-        }
-      } else {
-        successCount++;
-        lastMsgId = json.result?.message_id;
-        if (params.supabase) {
-          await logNotification(params.supabase, {
-            channel: NotificationChannel.TELEGRAM,
-            type: params.notificationType || NotificationType.BOOKING_CONFIRMATION,
-            recipient,
-            status: NotificationStatus.SENT,
-            bookingId: params.bookingId || null,
-            provider: 'telegram',
-            messageId: lastMsgId ? String(lastMsgId) : null,
-            payload: { text: params.text },
-          });
-        }
-      }
-    } catch (err: any) {
-      lastError = err?.message || 'Network error';
-    }
-  }
-
-  return {
-    success: successCount > 0,
-    messageId: lastMsgId,
-    error: successCount === 0 ? lastError : undefined,
-  };
 }
 
 import { SYSTEM_TRIGGERS, SystemTriggerDefinition } from './system-triggers.config';
 
 /**
  * Universal Event-Driven Trigger Processor for Vercel Server Actions & Next.js
- * Uses type-safe declarative TypeScript triggers from SYSTEM_TRIGGERS registry.
+ * Supports dynamic rules from database with zero-breaking fallback to declarative SYSTEM_TRIGGERS.
  */
 export async function processNotificationTriggers(
   supabase: SupabaseClient,
   eventKey: string,
-  payload: Record<string, any>
+  payload: Record<string, any>,
+  config?: EmailServiceConfig
 ): Promise<void> {
   try {
-    const activeTriggers = SYSTEM_TRIGGERS.filter(
-      (t) => t.event_key === eventKey && t.is_active
-    );
+    let activeTriggers: Array<{
+      id: string;
+      name: string;
+      description?: string | null;
+      event_key: string;
+      template_code?: string;
+      template?: NotificationTemplateRecord | null;
+      channel: NotificationChannel;
+      recipient_type: number;
+      custom_recipient?: string | null;
+      conditions?: Record<string, any> | null;
+      timing_type?: string;
+      delay_seconds?: number;
+      is_active: boolean;
+    }> = [];
+
+    // 1. Try to load dynamic triggers from database
+    try {
+      const { data: dbTriggers, error: dbErr } = await supabase
+        .from('notification_triggers')
+        .select('*, template:notification_templates(*)')
+        .eq('event_key', eventKey)
+        .eq('is_active', true);
+
+      if (!dbErr && dbTriggers && dbTriggers.length > 0) {
+        activeTriggers = dbTriggers.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          event_key: r.event_key,
+          template_code: r.template?.code,
+          template: r.template || null,
+          channel: (Number(r.channel) || NotificationChannel.EMAIL) as NotificationChannel,
+          recipient_type: (Number(r.recipient_type) || RecipientType.CUSTOMER) as RecipientType,
+          custom_recipient: r.custom_recipient || null,
+          conditions: r.conditions || null,
+          timing_type: r.timing_type || 'immediate',
+          delay_seconds: r.delay_seconds || 0,
+          is_active: r.is_active,
+        }));
+      }
+    } catch {
+      // DB table might not exist in dev or network error -> fallback to SYSTEM_TRIGGERS
+    }
+
+    // 2. Safe Fallback to declarative SYSTEM_TRIGGERS
+    if (activeTriggers.length === 0) {
+      activeTriggers = SYSTEM_TRIGGERS.filter(
+        (t) => t.event_key === eventKey && t.is_active
+      ).map((t) => ({ ...t, template: null }));
+    }
 
     if (activeTriggers.length === 0) {
       return;
@@ -729,9 +507,18 @@ export async function processNotificationTriggers(
 
     const schoolProfile = await getSchoolProfile(supabase);
     const resendCreds = await getResendCredentials(supabase);
+    const apiKey = config?.resendApiKey || resendCreds.apiKey;
+    const fromEmail = config?.fromEmail || resendCreds.fromEmail;
+    const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
 
     for (const trigger of activeTriggers) {
-      const template = await getNotificationTemplateByCode(supabase, trigger.template_code);
+      let template: NotificationTemplateRecord | null = trigger.template || null;
+      const templateCode = trigger.template_code || trigger.template?.code;
+
+      if (!template && templateCode) {
+        template = await getNotificationTemplateByCode(supabase, templateCode);
+      }
+
       if (template && !template.is_active) {
         continue;
       }
@@ -747,12 +534,12 @@ export async function processNotificationTriggers(
       if (trigger.custom_recipient && trigger.custom_recipient.trim()) {
         recipient = trigger.custom_recipient.trim();
       } else if (Number(trigger.channel) === NotificationChannel.EMAIL) {
-        if (Number(trigger.recipient_type) === RecipientType.CUSTOMER || Number(trigger.recipient_type) === 3) {
+        if (Number(trigger.recipient_type) === RecipientType.CUSTOMER) {
           recipient = payload.purchaser_email || payload.email || payload.student_email || payload.purchaserEmail || null;
-        } else if (Number(trigger.recipient_type) === RecipientType.TEACHER || Number(trigger.recipient_type) === 2) {
+        } else if (Number(trigger.recipient_type) === RecipientType.ADMIN) {
+          recipient = adminEmail;
+        } else if (Number(trigger.recipient_type) === RecipientType.TEACHER) {
           recipient = payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
-        } else if (Number(trigger.recipient_type) === RecipientType.ADMIN || Number(trigger.recipient_type) === 1) {
-          recipient = resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
         }
       } else if (Number(trigger.channel) === NotificationChannel.TELEGRAM) {
         recipient = trigger.custom_recipient?.trim() || null;
@@ -770,16 +557,24 @@ export async function processNotificationTriggers(
       if (isEmail && recipient) {
         const blocksConfig = template?.blocks_config?.blocks?.length
           ? template.blocks_config
-          : getDefaultBlocksForTemplate(trigger.template_code, NotificationChannel.EMAIL);
+          : (templateCode ? getDefaultBlocksForTemplate(templateCode, NotificationChannel.EMAIL) : null);
 
-        const rendered = renderEmailFromBlocks(blocksConfig, payload, schoolProfile);
-        const subject = template?.subject ? compileTemplate(template.subject, payload) : rendered.subject;
-        const html = rendered.html;
+        let subject = `Notifica: ${schoolProfile.name}`;
+        let html = '';
+
+        if (blocksConfig) {
+          const rendered = renderEmailFromBlocks(blocksConfig, payload, schoolProfile);
+          subject = template?.subject ? compileTemplate(template.subject, payload) : rendered.subject;
+          html = rendered.html;
+        } else if (template?.body_html) {
+          subject = template.subject ? compileTemplate(template.subject, payload) : subject;
+          html = compileTemplate(template.body_html, payload);
+        }
 
         if (html) {
           const res = await sendEmailViaResend({
-            apiKey: resendCreds.apiKey,
-            from: resendCreds.fromEmail,
+            apiKey,
+            from: fromEmail,
             to: recipient,
             subject,
             html,
@@ -802,15 +597,50 @@ export async function processNotificationTriggers(
         // Telegram
         const blocksConfig = template?.blocks_config?.blocks?.length
           ? template.blocks_config
-          : getDefaultBlocksForTemplate(trigger.template_code, NotificationChannel.TELEGRAM);
+          : (templateCode ? getDefaultBlocksForTemplate(templateCode, NotificationChannel.TELEGRAM) : null);
 
-        const rendered = renderTelegramFromBlocks(blocksConfig, payload);
-        const text = rendered.text;
+        let text = '';
+        if (blocksConfig) {
+          const rendered = renderTelegramFromBlocks(blocksConfig, payload);
+          text = rendered.text;
+        } else if (template?.body_text) {
+          text = compileTemplate(template.body_text, payload);
+        }
+
+        // Build inline keyboard
+        let inlineKeyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> | undefined = undefined;
+
+        if (payload.booking_id && (eventKey.startsWith('booking.') || eventKey.startsWith('payment.'))) {
+          const hasUnpaid = !payload.is_paid_online;
+          inlineKeyboard = buildBookingTelegramKeyboard({
+            bookingId: payload.booking_id,
+            hasUnpaidFee: hasUnpaid,
+            isCourseUnpaid: hasUnpaid,
+            phone: payload.purchaser_phone || payload.phone || null,
+            adminUrl: payload.admin_url,
+            stripePaymentIntentId: payload.stripe_payment_intent_id || null,
+            regFeeEur: payload.registration_fee,
+          });
+        } else if (eventKey === 'contact_form.submitted') {
+          const rawPhone = payload.sender_phone || payload.phone || '';
+          const cleanPhone = String(rawPhone).replace(/[^0-9]/g, '');
+          const actionRow: Array<{ text: string; url?: string }> = [];
+          if (cleanPhone) {
+            actionRow.push({ text: '💬 WhatsApp', url: `https://wa.me/${cleanPhone}` });
+          }
+          if (payload.admin_url) {
+            actionRow.push({ text: '🌐 Admin CRM', url: `${payload.admin_url}/prenotazioni` });
+          }
+          if (actionRow.length > 0) {
+            inlineKeyboard = [actionRow];
+          }
+        }
 
         if (text) {
           await sendTelegramMessage({
             supabase,
             text,
+            inlineKeyboard,
             bookingId: payload.booking_id || null,
             notificationType: notifType,
           });

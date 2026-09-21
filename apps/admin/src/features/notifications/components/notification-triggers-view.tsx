@@ -88,9 +88,9 @@ export function NotificationTriggersView() {
   };
 
   const getRecipientLabel = (type: number): string => {
-    if (type === 1) return locale === "en" ? "Customer" : "Cliente (Genitore)";
-    if (type === 2) return locale === "en" ? "School Administration" : "Segreteria";
-    if (type === 3) return locale === "en" ? "Student" : "Studente";
+    if (type === RecipientType.CUSTOMER) return locale === "en" ? "Customer (Purchaser / Parent)" : "Cliente (Genitore / Referente)";
+    if (type === RecipientType.ADMIN) return locale === "en" ? "School Administration" : "Segreteria Atena School";
+    if (type === RecipientType.TEACHER) return locale === "en" ? "Teacher" : "Docente / Insegnante";
     return locale === "en" ? "Custom Recipient" : "Personalizzato";
   };
 

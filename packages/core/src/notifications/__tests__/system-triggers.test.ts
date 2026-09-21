@@ -28,14 +28,17 @@ describe('System Notification Triggers (Code-as-Configuration)', () => {
     let mockSupabase: any;
 
     beforeEach(() => {
+      const queryBuilder: any = {
+        data: null,
+        error: null,
+      };
+      queryBuilder.eq = vi.fn().mockReturnValue(queryBuilder);
+      queryBuilder.single = vi.fn().mockResolvedValue({ data: null, error: null });
+      queryBuilder.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+
       mockSupabase = {
         from: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: null, error: null }),
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-            }),
-          }),
+          select: vi.fn().mockReturnValue(queryBuilder),
           insert: vi.fn().mockResolvedValue({ data: null, error: null }),
         }),
       };

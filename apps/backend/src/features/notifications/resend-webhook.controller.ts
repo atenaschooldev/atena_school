@@ -14,7 +14,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { handleResendWebhook } from '@atena/core';
 
 @ApiTags('Public & Webhooks — Resend Email Events')
-@Controller(['webhooks/resend', 'landing/mail/webhook', 'mail/webhook'])
+@Controller(['webhooks/resend', 'notifications/resend-webhook', 'landing/mail/webhook', 'mail/webhook'])
 export class ResendWebhookController {
   private readonly logger = new Logger(ResendWebhookController.name);
   private supabase: SupabaseClient;

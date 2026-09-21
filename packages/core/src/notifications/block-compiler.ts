@@ -7,16 +7,18 @@ import {
 } from '@atena/api-types';
 import { DEFAULT_SCHOOL_PROFILE } from '../system/school-profile.service';
 
+import { getFieldValue } from './trigger-matcher';
+
 /**
- * Replaces {{variable_name}} with corresponding values
+ * Replaces {{variable_name}} with corresponding values (including dot-notation paths)
  */
 export function compileTemplateVariables(
   text: string,
   variables: Record<string, any>
 ): string {
   if (!text) return '';
-  return text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
-    const val = variables[key];
+  return text.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_match, key) => {
+    const val = getFieldValue(variables, key);
     if (val === undefined || val === null) {
       return '';
     }

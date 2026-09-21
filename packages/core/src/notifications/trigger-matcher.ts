@@ -51,6 +51,8 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
   if (condition && typeof condition === 'object' && !(condition instanceof Date) && !Array.isArray(condition)) {
     for (const [op, opVal] of Object.entries(condition)) {
       switch (op) {
+        case '=':
+        case '==':
         case 'eq': {
           if (typeof opVal === 'boolean') {
             if (normalizeBoolean(actualValue) !== opVal) return false;
@@ -62,6 +64,8 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
           break;
         }
 
+        case '!=':
+        case '<>':
         case 'neq': {
           if (typeof opVal === 'boolean') {
             if (normalizeBoolean(actualValue) === opVal) return false;
@@ -73,6 +77,7 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
           break;
         }
 
+        case '>':
         case 'gt': {
           const numActual = Number(actualValue ?? 0);
           const numExpected = Number(opVal);
@@ -80,6 +85,7 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
           break;
         }
 
+        case '>=':
         case 'gte': {
           const numActual = Number(actualValue ?? 0);
           const numExpected = Number(opVal);
@@ -87,6 +93,7 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
           break;
         }
 
+        case '<':
         case 'lt': {
           const numActual = Number(actualValue ?? 0);
           const numExpected = Number(opVal);
@@ -94,6 +101,7 @@ function evaluateCondition(actualValue: any, condition: any, payload: Record<str
           break;
         }
 
+        case '<=':
         case 'lte': {
           const numActual = Number(actualValue ?? 0);
           const numExpected = Number(opVal);
