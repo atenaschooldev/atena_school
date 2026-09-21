@@ -60,11 +60,15 @@ export function DynamicCustomFields({
                   <option value="">
                     {field.placeholder || "Seleziona un'opzione..."}
                   </option>
-                  {field.options?.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
+                  {field.options?.map((opt: any) => {
+                    const val = typeof opt === "string" ? opt : (opt?.value || String(opt));
+                    const label = typeof opt === "string" ? opt : (opt?.label || val);
+                    return (
+                      <option key={val} value={val}>
+                        {label}
+                      </option>
+                    );
+                  })}
                 </select>
               ) : field.field_type === FormFieldType.TEXTAREA ? (
                 <textarea
