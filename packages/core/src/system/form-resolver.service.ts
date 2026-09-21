@@ -18,43 +18,7 @@ export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
   is_active: true,
   category_slug: null,
   course_id: null,
-  fields_config: [
-    {
-      id: 'field-study-level',
-      key: 'study_level',
-      label: 'Livello di partenza stimato',
-      placeholder: 'Seleziona il tuo livello o conoscenza',
-      field_type: FormFieldType.SELECT,
-      target: FormFieldTarget.STUDENT,
-      is_required: false,
-      is_enabled: true,
-      sort_order: 1,
-      options: [
-        { label: 'Principiante assoluto (A0/A1)', value: 'A1' },
-        { label: 'Elementare / Intermedio (A2/B1)', value: 'B1' },
-        { label: 'Intermedio superiore / Avanzato (B2/C1)', value: 'B2' },
-        { label: 'Non saprei (Vorrei fare il test)', value: 'TEST_NEEDED' },
-      ],
-    },
-    {
-      id: 'field-heard-from',
-      key: 'heard_from',
-      label: 'Come hai conosciuto Atena School?',
-      placeholder: 'Seleziona come ci hai trovati',
-      field_type: FormFieldType.SELECT,
-      target: FormFieldTarget.PURCHASER,
-      is_required: false,
-      is_enabled: true,
-      sort_order: 2,
-      options: [
-        { label: 'Passaparola / Amici', value: 'word_of_mouth' },
-        { label: 'Social Network (Instagram / Facebook)', value: 'social' },
-        { label: 'Ricerca Google / Mappe', value: 'google' },
-        { label: 'Volantini / Cartellonistica a scuola', value: 'flyers' },
-        { label: 'Altro', value: 'other' },
-      ],
-    },
-  ],
+  fields_config: [],
 };
 
 export const DEFAULT_CONTACT_FORM_TEMPLATE: FormTemplate = {
@@ -66,40 +30,7 @@ export const DEFAULT_CONTACT_FORM_TEMPLATE: FormTemplate = {
   is_active: true,
   category_slug: null,
   course_id: null,
-  fields_config: [
-    {
-      id: 'field-preferred-time',
-      key: 'preferred_time',
-      label: 'Fascia oraria preferita per essere ricontattato',
-      placeholder: 'Seleziona una fascia oraria...',
-      field_type: FormFieldType.SELECT,
-      target: FormFieldTarget.PURCHASER,
-      is_required: false,
-      is_enabled: true,
-      sort_order: 1,
-      options: [
-        { label: 'Mattina (09:00 - 13:00)', value: 'morning' },
-        { label: 'Pomeriggio (14:00 - 18:00)', value: 'afternoon' },
-        { label: 'Sera (18:00 - 20:00)', value: 'evening' },
-      ],
-    },
-    {
-      id: 'field-preferred-method',
-      key: 'preferred_method',
-      label: 'Canale di contatto preferito',
-      placeholder: 'Seleziona come preferisci essere contattato...',
-      field_type: FormFieldType.SELECT,
-      target: FormFieldTarget.PURCHASER,
-      is_required: false,
-      is_enabled: true,
-      sort_order: 2,
-      options: [
-        { label: 'WhatsApp', value: 'whatsapp' },
-        { label: 'Chiamata telefonica', value: 'phone' },
-        { label: 'Email', value: 'email' },
-      ],
-    },
-  ],
+  fields_config: [],
 };
 
 /**

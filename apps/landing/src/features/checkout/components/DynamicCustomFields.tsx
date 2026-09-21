@@ -10,6 +10,7 @@ interface DynamicCustomFieldsProps {
   target: FormFieldTarget;
   register: UseFormRegister<any>;
   errors: FieldErrors<any>;
+  title?: string;
 }
 
 export function DynamicCustomFields({
@@ -17,6 +18,7 @@ export function DynamicCustomFields({
   target,
   register,
   errors,
+  title,
 }: DynamicCustomFieldsProps) {
   const targetFields = (fields || []).filter(
     (f) => f.is_enabled && f.target === target
@@ -24,12 +26,19 @@ export function DynamicCustomFields({
 
   if (targetFields.length === 0) return null;
 
+  const defaultTitle =
+    target === FormFieldTarget.STUDENT
+      ? "Domande per lo Studente"
+      : target === FormFieldTarget.PURCHASER
+      ? "Domande per l'Acquirente"
+      : "Informazioni Aggiuntive";
+
   return (
     <div className="space-y-4 pt-4 border-t border-slate-100">
       <div className="flex items-center gap-2">
         <Sparkle className="w-4 h-4 text-[#FAA904]" weight="bold" />
         <h3 className="text-xs font-black uppercase tracking-wider text-[#043569]">
-          Informazioni Aggiuntive
+          {title || defaultTitle}
         </h3>
       </div>
 
