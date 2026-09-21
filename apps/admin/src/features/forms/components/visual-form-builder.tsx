@@ -49,7 +49,6 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
-import { FormPreviewModal } from "./form-preview-modal";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 
 interface VisualFormBuilderProps {
@@ -123,7 +122,6 @@ export function VisualFormBuilder({
   const [activeTab, setActiveTab] = useState<"builder" | "preview">("builder");
   const [previewMode, setPreviewMode] = useState<"direct" | "child">("direct");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   // Field modal state
   const [editingField, setEditingField] = useState<FormFieldConfig | null>(null);
@@ -351,17 +349,6 @@ export function VisualFormBuilder({
               👁️ Anteprima Live
             </button>
           </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs cursor-pointer"
-            onClick={() => setPreviewModalOpen(true)}
-          >
-            <Eye className="w-3.5 h-3.5" />
-            Simulatore
-          </Button>
 
           <Button
             type="button"
@@ -1445,13 +1432,6 @@ export function VisualFormBuilder({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Standalone Simulator Modal */}
-      <FormPreviewModal
-        isOpen={previewModalOpen}
-        onClose={() => setPreviewModalOpen(false)}
-        form={formData}
-      />
     </div>
   );
 }
