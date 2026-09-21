@@ -96,17 +96,39 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open]);
 
-  const handleLinkClick = (href: string) => {
+  const handleLinkClick = (e: React.MouseEvent, href: string) => {
     setOpen(false);
-    if (href.startsWith("/#")) {
-      const id = href.replace("/#", "");
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
+
+    if (href.startsWith("/#") || href.startsWith("#")) {
+      const id = href.replace(/^\/?#/, "");
       if (pathname === "/") {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth" });
-        }
+        e.preventDefault();
+        try {
+          window.history.replaceState(null, "", `#${id}`);
+        } catch {}
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            const el = document.getElementById(id);
+            if (el) {
+              const yOffset = -80;
+              const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+              window.scrollTo({ top: y, behavior: "smooth" });
+            }
+          }, 60);
+        });
       } else {
         router.push(href);
+      }
+    } else if (href === "/") {
+      if (pathname === "/") {
+        e.preventDefault();
+        try {
+          window.history.replaceState(null, "", "/");
+        } catch {}
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   };
@@ -138,7 +160,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
             <Link
               href="/"
               className="flex items-center gap-2.5 md:gap-3"
-              onClick={() => handleLinkClick("/")}
+              onClick={(e) => handleLinkClick(e, "/")}
               translate="no"
             >
               <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-9 h-9 md:w-12 md:h-12">
@@ -177,7 +199,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                       ? "text-white hover:text-[#FAA904] hover:bg-white/10"
                       : "text-gray-700 hover:text-primary hover:bg-primary/10"
                     }`}
-                  onClick={() => handleLinkClick(l.href)}
+                  onClick={(e) => handleLinkClick(e, l.href)}
                 >
                   {l.label}
                 </Link>
@@ -324,7 +346,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
             {/* Drawer Header */}
             <div className="flex items-center justify-between h-20 px-6 border-b border-gray-100 shrink-0 bg-white">
               {/* Logo / Brand */}
-              <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+              <Link href="/" className="flex items-center gap-2" onClick={(e) => handleLinkClick(e, "/")}>
                 <Image
                   src={logo}
                   alt="Atena School"
@@ -366,7 +388,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                       key={l.href}
                       href={l.href}
                       className="flex items-center justify-between py-3.5 px-4 text-lg font-bold text-gray-700 hover:text-primary hover:bg-gray-50 rounded-xl transition-all duration-200 active:scale-[0.98]"
-                      onClick={() => setOpen(false)}
+                      onClick={(e) => handleLinkClick(e, l.href)}
                     >
                       <div className="flex items-center gap-4">
                         {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
