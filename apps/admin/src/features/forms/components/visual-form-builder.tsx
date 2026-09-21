@@ -302,7 +302,7 @@ export function VisualFormBuilder({
   return (
     <div className="space-y-6">
       {/* Top Header Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">
@@ -314,27 +314,27 @@ export function VisualFormBuilder({
               </Badge>
             )}
             <span
-              className={`w-2 h-2 rounded-full ${formData.is_active ? "bg-emerald-500" : "bg-slate-300"}`}
+              className={`w-2 h-2 rounded-full ${formData.is_active ? "bg-emerald-500" : "bg-muted-foreground"}`}
             />
           </div>
-          <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[#FAA904]" />
+          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Layers className="w-5 h-5 text-primary" />
             {formData.title || "Configurazione Modulo"}
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Personalizza i campi e visualizza esattamente come appare il checkout per corsisti e genitori.
           </p>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 mr-2">
+          <div className="bg-muted/60 p-1 rounded-xl flex items-center gap-1 mr-2 border border-border">
             <button
               type="button"
               onClick={() => setActiveTab("builder")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "builder"
-                  ? "bg-white text-[#043569] shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               🛠️ Editor Modulo
@@ -342,13 +342,13 @@ export function VisualFormBuilder({
             <button
               type="button"
               onClick={() => setActiveTab("preview")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "preview"
-                  ? "bg-white text-[#043569] shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              👁️ Anteprima Live Checkout
+              👁️ Anteprima Live
             </button>
           </div>
 
@@ -356,11 +356,11 @@ export function VisualFormBuilder({
             type="button"
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs font-bold"
+            className="gap-1.5 text-xs cursor-pointer"
             onClick={() => setPreviewModalOpen(true)}
           >
             <Eye className="w-3.5 h-3.5" />
-            Modal Simulatore
+            Simulatore
           </Button>
 
           <Button
@@ -368,7 +368,7 @@ export function VisualFormBuilder({
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="text-xs font-bold"
+            className="text-xs cursor-pointer"
           >
             Annulla
           </Button>
@@ -376,7 +376,7 @@ export function VisualFormBuilder({
           <Button
             type="button"
             size="sm"
-            className="gap-1.5 bg-[#043569] text-white hover:bg-[#032850] font-bold text-xs cursor-pointer"
+            className="gap-1.5 font-bold text-xs cursor-pointer"
             onClick={() => onSave(formData)}
             disabled={isSaving || !formData.title.trim()}
           >
@@ -391,14 +391,14 @@ export function VisualFormBuilder({
           {/* Left Column (1/3): Form Scope & Targeting (100% Database First) */}
           <div className="lg:col-span-1 space-y-6">
             {/* General Settings */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#043569] border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-amber-500" />
+            <div className="bg-card p-5 rounded-2xl border border-border shadow-xs space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground border-b border-border pb-2 flex items-center gap-1.5">
+                <FileText className="w-4 h-4 text-primary" />
                 1. Informazioni Modulo
               </h3>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Titolo Modulo *</Label>
+                <Label className="text-xs font-medium text-foreground">Titolo Modulo *</Label>
                 <Input
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -408,7 +408,7 @@ export function VisualFormBuilder({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Descrizione interna</Label>
+                <Label className="text-xs font-medium text-foreground">Descrizione interna</Label>
                 <Textarea
                   value={formData.description || ""}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -419,11 +419,11 @@ export function VisualFormBuilder({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Tipo di Modulo</Label>
+                <Label className="text-xs font-medium text-foreground">Tipo di Modulo</Label>
                 <select
                   value={formData.form_type}
                   onChange={(e) => setFormData({ ...formData, form_type: e.target.value as FormType })}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium"
+                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground"
                 >
                   <option value={FormType.BOOKING}>Iscrizione Corso (Booking / Checkout)</option>
                   <option value={FormType.CONTACT}>Contatti & Info (Lead Form)</option>
@@ -432,11 +432,11 @@ export function VisualFormBuilder({
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 space-y-3">
+              <div className="pt-3 border-t border-border space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Modulo Attivo</p>
-                    <p className="text-[10px] text-slate-400">Abilita o disabilita il modulo</p>
+                    <p className="text-xs font-medium text-foreground">Modulo Attivo</p>
+                    <p className="text-[10px] text-muted-foreground">Abilita o disabilita il modulo</p>
                   </div>
                   <Switch
                     checked={formData.is_active}
@@ -446,8 +446,8 @@ export function VisualFormBuilder({
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-800">Modulo Predefinito</p>
-                    <p className="text-[10px] text-slate-400">Usato se nessun altro modulo corrisponde</p>
+                    <p className="text-xs font-medium text-foreground">Modulo Predefinito</p>
+                    <p className="text-[10px] text-muted-foreground">Usato se nessun altro modulo corrisponde</p>
                   </div>
                   <Switch
                     checked={formData.is_default}
@@ -458,20 +458,20 @@ export function VisualFormBuilder({
             </div>
 
             {/* Scope / Targeting (DATABASE FIRST) */}
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#043569] border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-500" />
+            <div className="bg-card p-5 rounded-2xl border border-border shadow-xs space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground border-b border-border pb-2 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-primary" />
                 2. A Quali Corsi si Applica? (Database First)
               </h3>
 
-              <div className="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <div className="grid grid-cols-3 gap-1.5 bg-muted/50 p-1 rounded-xl border border-border">
                 <button
                   type="button"
                   onClick={() => handleScopeChange("global")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
                     scopeMode === "global"
-                      ? "bg-white text-[#043569] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Globe className="w-4 h-4" />
@@ -480,10 +480,10 @@ export function VisualFormBuilder({
                 <button
                   type="button"
                   onClick={() => handleScopeChange("category")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
                     scopeMode === "category"
-                      ? "bg-white text-[#043569] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Folder className="w-4 h-4" />
@@ -492,10 +492,10 @@ export function VisualFormBuilder({
                 <button
                   type="button"
                   onClick={() => handleScopeChange("course")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
                     scopeMode === "course"
-                      ? "bg-white text-[#043569] shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
+                      ? "bg-background text-foreground shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <GraduationCap className="w-4 h-4" />
@@ -504,12 +504,12 @@ export function VisualFormBuilder({
               </div>
 
               {scopeMode === "global" && (
-                <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-blue-900 text-xs leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1 text-blue-950">
-                    <Globe className="w-3.5 h-3.5 text-blue-600" />
+                <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-foreground text-xs leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                    <Globe className="w-3.5 h-3.5" />
                     Applicazione su Tutti i Corsi
                   </p>
-                  <p className="text-[11px] text-blue-800">
+                  <p className="text-[11px] text-muted-foreground">
                     Questo modulo sarà utilizzato come standard per tutti i corsi della scuola, a meno che non esista un modulo specifico per categoria o singolo corso.
                   </p>
                 </div>
@@ -517,7 +517,7 @@ export function VisualFormBuilder({
 
               {scopeMode === "category" && (
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-800">
+                  <Label className="text-xs font-medium text-foreground">
                     Seleziona Categoria dal Database
                   </Label>
                   <select
@@ -529,7 +529,7 @@ export function VisualFormBuilder({
                         course_id: null,
                       })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800"
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground"
                   >
                     <option value="">-- Seleziona una categoria --</option>
                     {availableCategories.map((cat) => {
@@ -541,7 +541,7 @@ export function VisualFormBuilder({
                       );
                     })}
                   </select>
-                  <p className="text-[10px] text-slate-500 leading-tight">
+                  <p className="text-[10px] text-muted-foreground leading-tight">
                     Tutti i corsi appartenenti a questa categoria useranno questo modulo automaticamente.
                   </p>
                 </div>
@@ -550,22 +550,22 @@ export function VisualFormBuilder({
               {scopeMode === "course" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold text-slate-800">
+                    <Label className="text-xs font-medium text-foreground">
                       Seleziona Corso dal Database
                     </Label>
-                    <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded-md">
                       {coursesList.length} corsi disponibili
                     </span>
                   </div>
 
                   {/* Course Search Filter */}
                   <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       value={courseSearch}
                       onChange={(e) => setCourseSearch(e.target.value)}
                       placeholder="Cerca corso per nome o categoria..."
-                      className="pl-8 h-8 text-xs rounded-xl bg-slate-50 border-slate-200"
+                      className="pl-8 h-8 text-xs rounded-xl bg-background border-border"
                     />
                   </div>
 
@@ -579,7 +579,7 @@ export function VisualFormBuilder({
                         category_slug: null,
                       })
                     }
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 cursor-pointer"
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground cursor-pointer"
                   >
                     <option value="">-- Seleziona il corso --</option>
                     {filteredCourses.map((course) => (
@@ -591,18 +591,18 @@ export function VisualFormBuilder({
 
                   {/* Selected Course Card Preview */}
                   {selectedCourse ? (
-                    <div className="p-3.5 rounded-xl bg-purple-50/80 border border-purple-200/80 space-y-2">
+                    <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-900 flex items-center gap-1">
-                          <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                          <GraduationCap className="w-3.5 h-3.5" />
                           Corso Collegato
                         </span>
-                        <Badge className="bg-purple-200 text-purple-900 border-purple-300 text-[10px]">
+                        <Badge className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[10px]">
                           €{selectedCourse.prezzo}
                         </Badge>
                       </div>
-                      <p className="text-xs font-black text-purple-950">{selectedCourse.nome}</p>
-                      <div className="flex items-center gap-2 text-[10px] text-purple-800">
+                      <p className="text-xs font-bold text-foreground">{selectedCourse.nome}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                         <span>Categoria: <strong>{selectedCourse.categoria || "Nessuna"}</strong></span>
                         {selectedCourse.teacherName && (
                           <span>• Docente: <strong>{selectedCourse.teacherName}</strong></span>
@@ -622,22 +622,22 @@ export function VisualFormBuilder({
           {/* Right Column (2/3): Complete Form Structure & Custom Fields Management */}
           <div className="lg:col-span-2 space-y-6">
             {/* 1. Core System Fields Overview (Transparent Breakdown) */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div className="bg-card p-6 rounded-2xl border border-border shadow-xs space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-wider text-[#043569] flex items-center gap-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-600" />
                     {formData.form_type === FormType.CONTACT
                       ? "Campi di Sistema Obbligatori (Form Contatti / Lead)"
                       : "Campi di Sistema Obbligatori (Core Anagrafica & Fiscale)"}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {formData.form_type === FormType.CONTACT
                       ? "Campi essenziali per la ricezione, tracciamento e gestione della richiesta nella CRM."
                       : "Questi campi sono sempre presenti e protetti per legge per garantire la fatturazione e il contratto."}
                   </p>
                 </div>
-                <Badge className="bg-emerald-500/10 text-emerald-800 border-emerald-300 text-[10px] font-bold">
+                <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px] font-bold">
                   🔒 Protetto di sistema
                 </Badge>
               </div>
@@ -662,26 +662,26 @@ export function VisualFormBuilder({
                       { name: "Modalità Genitore", desc: "Sto iscrivendo un figlio", lock: true },
                     ]
                 ).map((item, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-800">
+                  <div key={i} className="p-3 rounded-xl bg-muted/40 border border-border">
+                    <div className="flex items-center justify-between text-xs font-medium text-foreground">
                       <span>{item.name}</span>
-                      <Lock className="w-3 h-3 text-slate-400" />
+                      <Lock className="w-3 h-3 text-muted-foreground" />
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{item.desc}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{item.desc}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* 2. Custom Dynamic Fields Management */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div className="bg-card p-6 rounded-2xl border border-border shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border pb-4">
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-wider text-[#043569] flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-amber-500" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
                     Domande & Campi Personalizzati ({formData.fields_config.length})
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     Campi dinamici aggiuntivi che verranno mostrati nella sezione &quot;Informazioni Aggiuntive&quot;.
                   </p>
                 </div>
@@ -689,7 +689,7 @@ export function VisualFormBuilder({
                 <Button
                   type="button"
                   onClick={handleOpenAddField}
-                  className="gap-1.5 bg-[#FAA904] text-slate-950 hover:bg-[#e09804] font-bold text-xs cursor-pointer"
+                  className="gap-1.5 font-bold text-xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Aggiungi Campo
@@ -697,10 +697,10 @@ export function VisualFormBuilder({
               </div>
 
               {formData.fields_config.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                  <HelpCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-slate-700">Nessun campo personalizzato attivo</p>
-                  <p className="text-[11px] text-slate-400 max-w-sm mx-auto mt-1">
+                <div className="text-center py-10 border-2 border-dashed border-border rounded-2xl bg-muted/20">
+                  <HelpCircle className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-foreground">Nessun campo personalizzato attivo</p>
+                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto mt-1">
                     Questo modulo conterrà solo i campi base. Clicca su &quot;Aggiungi Campo&quot; per richiedere informazioni aggiuntive.
                   </p>
                 </div>
@@ -714,8 +714,8 @@ export function VisualFormBuilder({
                         key={field.id}
                         className={`p-4 rounded-xl border transition-all ${
                           field.is_enabled
-                            ? "bg-white border-slate-200 shadow-xs"
-                            : "bg-slate-50/60 border-slate-200/60 opacity-60"
+                            ? "bg-card border-border shadow-xs"
+                            : "bg-muted/40 border-border/60 opacity-60"
                         }`}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -726,7 +726,7 @@ export function VisualFormBuilder({
                                 type="button"
                                 disabled={index === 0}
                                 onClick={() => handleMoveField(index, "up")}
-                                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
                               >
                                 <ArrowUp className="w-3.5 h-3.5" />
                               </button>
@@ -734,7 +734,7 @@ export function VisualFormBuilder({
                                 type="button"
                                 disabled={index === formData.fields_config.length - 1}
                                 onClick={() => handleMoveField(index, "down")}
-                                className="p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-700 disabled:opacity-30 cursor-pointer"
+                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
                               >
                                 <ArrowDown className="w-3.5 h-3.5" />
                               </button>
@@ -742,10 +742,10 @@ export function VisualFormBuilder({
 
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="text-xs font-bold text-slate-900">
+                                <h4 className="text-xs font-bold text-foreground">
                                   {field.label}
                                 </h4>
-                                <code className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono">
+                                <code className="bg-muted text-muted-foreground px-1.5 py-0.5 rounded text-[10px] font-mono">
                                   {`{{${field.key}}}`}
                                 </code>
                                 {field.is_required && (
@@ -755,8 +755,8 @@ export function VisualFormBuilder({
                                 )}
                               </div>
 
-                              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
-                                <span className="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded text-[10px] uppercase">
+                              <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                                <span className="bg-primary/10 text-primary font-bold px-2 py-0.5 rounded text-[10px] uppercase">
                                   {field.field_type}
                                 </span>
                                 <span className="flex items-center gap-1 font-medium">
@@ -773,7 +773,7 @@ export function VisualFormBuilder({
                                   )}
                                 </span>
                                 {field.options && (
-                                  <span className="text-slate-400">
+                                  <span className="text-muted-foreground">
                                     • {field.options.length} opzioni
                                   </span>
                                 )}
@@ -793,14 +793,14 @@ export function VisualFormBuilder({
                                   ),
                                 }));
                               }}
-                              className="mr-2"
+                              className="mr-2 cursor-pointer data-[state=checked]:bg-emerald-600"
                               title="Abilita / Disabilita campo"
                             />
                             <Button
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900 cursor-pointer"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
                               onClick={() => handleOpenEditField(field)}
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -809,7 +809,7 @@ export function VisualFormBuilder({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 cursor-pointer"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
                               onClick={() => handleDeleteField(field.id)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />

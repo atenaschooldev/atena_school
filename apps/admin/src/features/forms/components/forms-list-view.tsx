@@ -434,316 +434,55 @@ export function FormsListView() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-xs">
-        <div>
-          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <div className="p-2 bg-primary/10 text-primary rounded-xl">
-              <Layers className="w-5 h-5" />
-            </div>
-            Moduli d'Iscrizione & Campi Dinamici
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Gestisci i modelli di form per il checkout, le domande addizionali per studente/genitore e le impostazioni della quota associativa.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="cursor-pointer text-xs gap-1.5 h-9"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
-            Aggiorna
-          </Button>
-
-          <Button
-            onClick={() => setEditingForm("new")}
-            size="sm"
-            className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs h-9 px-4 cursor-pointer shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            Nuovo Modulo
-          </Button>
+    <div className="flex flex-col gap-4">
+      {/* ── Top Navigation Tabs (Templates vs Fields Guide vs Quota Associativa) ── */}
+      <div className="px-4 lg:px-6 flex items-center justify-between border-b pb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-xl bg-muted/50 p-1 border">
+            <button
+              type="button"
+              onClick={() => setActiveTab("templates")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "templates"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers className="h-4 w-4" />
+              Modelli di Form ({forms.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("fields_guide")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "fields_guide"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <BookOpen className="h-4 w-4 text-sky-500" />
+              Guida Campi & Target
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("quota")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "quota"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Award className="h-4 w-4 text-amber-500" />
+              Quota Associativa (€30)
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Top Metrics Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {metricsData.map((metric, idx) => {
-          const Icon = metric.icon;
-          return (
-            <Card key={idx} className="border-border shadow-2xs">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {metric.title}
-                </CardTitle>
-                <div className="p-1.5 rounded-lg bg-primary/5 text-primary">
-                  <Icon className="h-4 w-4" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">{metric.value}</div>
-                <p className="text-[11px] text-muted-foreground mt-1">{metric.description}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Main Tabs Navigation */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
-        <TabsList className="bg-muted/60 p-1 border border-border">
-          <TabsTrigger value="templates" className="gap-2 text-xs font-medium cursor-pointer">
-            <Layers className="h-3.5 w-3.5" />
-            Modelli di Form & Checkout
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-              {forms.length}
-            </Badge>
-          </TabsTrigger>
-
-          <TabsTrigger value="fields_guide" className="gap-2 text-xs font-medium cursor-pointer">
-            <BookOpen className="h-3.5 w-3.5" />
-            Guida Campi & Target
-          </TabsTrigger>
-
-          <TabsTrigger value="quota" className="gap-2 text-xs font-medium cursor-pointer">
-            <Award className="h-3.5 w-3.5 text-amber-500" />
-            Quota Associativa Annuale (€)
-          </TabsTrigger>
-        </TabsList>
-
-        {/* TAB 1: FORM TEMPLATES TABLE & GRID */}
-        <TabsContent value="templates" className="space-y-4">
-          <Card className="border-border">
-            <CardHeader className="pb-3 border-b border-border">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                <div>
-                  <CardTitle className="text-base font-bold text-foreground">
-                    Elenco Modelli di Form
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                    Seleziona un modello per modificarne i campi o collegarlo a specifici corsi e categorie.
-                  </CardDescription>
-                </div>
-
-                {/* Toolbar */}
-                <DataViewToolbar
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  searchPlaceholder="Cerca modulo per nome, corso o categoria..."
-                  categoryFilter={typeFilter}
-                  onCategoryChange={setTypeFilter}
-                  categoryOptions={[
-                    { label: "Tutti i tipi", value: "all" },
-                    { label: "Iscrizione (Booking)", value: FormType.BOOKING },
-                    { label: "Contatto (Lead)", value: FormType.CONTACT },
-                    { label: "Test Livello", value: FormType.TEST },
-                    { label: "Personalizzato", value: FormType.CUSTOM },
-                  ]}
-                  statusFilter={statusFilter}
-                  onStatusChange={setStatusFilter}
-                  statusOptions={[
-                    { label: "Tutti gli stati", value: "all" },
-                    { label: "Attivi", value: "active" },
-                    { label: "Disattivati", value: "inactive" },
-                  ]}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  categoryLabel="Tipo Modulo"
-                />
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-0">
-              {viewMode === "table" ? (
-                <div className="relative overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead key={header.id} className="text-xs font-bold text-muted-foreground">
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </TableHead>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableSkeletonRows columnsCount={5} rowsCount={3} />
-                      ) : table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                          <TableRow key={row.id} className="hover:bg-muted/40 transition-colors">
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell key={cell.id} className="py-3">
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-32 text-center text-xs text-muted-foreground">
-                            Nessun modello di modulo trovato con i filtri selezionati.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-
-                  <div className="p-4 border-t border-border">
-                    <DataTablePagination table={table} />
-                  </div>
-                </div>
-              ) : (
-                /* Grid View */
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredForms.map((form) => {
-                    const fieldsCount = form.fields_config?.length || 0;
-                    const enabledCount = form.fields_config?.filter((f) => f.is_enabled).length || 0;
-                    return (
-                      <Card
-                        key={form.id}
-                        className={`flex flex-col justify-between transition-all duration-200 hover:shadow-md ${
-                          form.is_default ? "border-amber-400/80 ring-1 ring-amber-400/30 bg-amber-500/[0.02]" : "border-border"
-                        }`}
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <Badge variant="secondary" className="text-[10px] uppercase font-bold px-2 py-0.5">
-                                {form.form_type}
-                              </Badge>
-                              {form.is_default && (
-                                <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-2 py-0.5">
-                                  <Star className="w-3 h-3 fill-current" />
-                                  Predefinito
-                                </Badge>
-                              )}
-                            </div>
-                            <Switch
-                              checked={form.is_active}
-                              onCheckedChange={(checked) => handleToggleStatus(form, checked)}
-                              disabled={isUpdating}
-                              className="scale-75 data-[state=checked]:bg-emerald-600"
-                            />
-                          </div>
-
-                          <CardTitle className="text-base font-bold text-foreground leading-tight">
-                            {form.title}
-                          </CardTitle>
-                          {form.description && (
-                            <CardDescription className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                              {form.description}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-
-                        <CardContent className="space-y-3 pb-3">
-                          {/* Target Pill */}
-                          <div className="flex items-center gap-1.5 text-xs">
-                            <span className="font-semibold text-muted-foreground">Target:</span>
-                            {form.course_id ? (
-                              <Badge variant="outline" className="text-purple-600 dark:text-purple-400 border-purple-500/30 bg-purple-500/5 font-semibold text-[11px] gap-1">
-                                <GraduationCap className="w-3 h-3" />
-                                {coursesList.find((c) => c.id === form.course_id)?.nome || "Corso dedicato"}
-                              </Badge>
-                            ) : form.category_slug ? (
-                              <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 font-semibold text-[11px] gap-1">
-                                <Folder className="w-3 h-3" />
-                                {form.category_slug.toUpperCase()}
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-slate-600 dark:text-slate-400 text-[11px] gap-1">
-                                <Globe className="w-3 h-3 text-slate-400" />
-                                Globale (Tutti)
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Fields stats */}
-                          <div className="text-xs text-muted-foreground flex items-center justify-between">
-                            <span>Campi dinamici:</span>
-                            <span className="font-bold text-foreground">
-                              {enabledCount} attivi {fieldsCount !== enabledCount && `(${fieldsCount} tot)`}
-                            </span>
-                          </div>
-                        </CardContent>
-
-                        <div className="p-4 pt-3 border-t border-border flex items-center justify-between gap-1">
-                          <div className="flex items-center gap-1">
-                            {!form.is_default && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600"
-                                title="Imposta predefinito"
-                                onClick={() => setDefaultForm(form.id)}
-                              >
-                                <Star className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                              title="Anteprima"
-                              onClick={() => setPreviewForm(form)}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                              title="Duplica"
-                              onClick={() => duplicateForm(form.id)}
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </Button>
-                            {!form.is_default && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
-                                title="Elimina"
-                                onClick={() => handleDeleteForm(form)}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                          </div>
-
-                          <Button
-                            size="sm"
-                            className="h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90 gap-1 px-3"
-                            onClick={() => setEditingForm(form)}
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                            Modifica
-                          </Button>
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* TAB 2: FIELDS & TARGETS GUIDELINE */}
-        <TabsContent value="fields_guide" className="space-y-4">
+      {activeTab === "fields_guide" ? (
+        <div className="@container/main px-4 lg:px-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-border">
+            <Card className="border">
               <CardHeader className="pb-3">
                 <div className="p-2 w-fit rounded-lg bg-blue-500/10 text-blue-600 mb-2">
                   <User className="w-5 h-5" />
@@ -754,12 +493,12 @@ export function FormsListView() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Esempi tipici: <em>"Come ci hai conosciuto?", "Necessità fattura aziendale", "Codice SDI"</em>.</p>
+                <p>• Esempi: <em>"Come ci hai conosciuto?", "Necessità fattura aziendale", "Codice SDI"</em>.</p>
                 <p>• Viene renderizzato nel primo blocco di anagrafica del checkout online.</p>
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card className="border">
               <CardHeader className="pb-3">
                 <div className="p-2 w-fit rounded-lg bg-purple-500/10 text-purple-600 mb-2">
                   <Users className="w-5 h-5" />
@@ -770,12 +509,12 @@ export function FormsListView() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Esempi tipici: <em>"Livello di partenza stimato", "Obiettivo esame", "Classe frequentata"</em>.</p>
-                <p>• Viene associato al partecipante del corso in tabella `students` e salvato in JSONB.</p>
+                <p>• Esempi: <em>"Livello di partenza stimato", "Obiettivo esame", "Classe frequentata"</em>.</p>
+                <p>• Viene associato al partecipante del corso in tabella <code>students</code> e salvato in JSONB.</p>
               </CardContent>
             </Card>
 
-            <Card className="border-border">
+            <Card className="border">
               <CardHeader className="pb-3">
                 <div className="p-2 w-fit rounded-lg bg-emerald-500/10 text-emerald-600 mb-2">
                   <Calendar className="w-5 h-5" />
@@ -786,18 +525,269 @@ export function FormsListView() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Esempi tipici: <em>"Disponibilità fasce orarie", "Richieste particolari al docente"</em>.</p>
-                <p>• Viene archiviato direttamente in `bookings.custom_fields`.</p>
+                <p>• Esempi: <em>"Disponibilità fasce orarie", "Richieste particolari al docente"</em>.</p>
+                <p>• Viene archiviato direttamente in <code>bookings.custom_fields</code>.</p>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* TAB 3: REGISTRATION FEE / QUOTA ANNUALE */}
-        <TabsContent value="quota" className="space-y-4">
+        </div>
+      ) : activeTab === "quota" ? (
+        <div className="@container/main px-4 lg:px-6">
           <RegistrationFeeSettingsCard />
-        </TabsContent>
-      </Tabs>
+        </div>
+      ) : (
+        <>
+          {/* ── Top Metrics (Strictly matching CoursesMetrics & Notifications design) ── */}
+          <div className="@container/main px-4 lg:px-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {metricsData.map((metric, index) => (
+                <Card key={index} className="border">
+                  <CardContent className="space-y-4 pt-6">
+                    <div className="flex items-center justify-between">
+                      <metric.icon className="text-muted-foreground size-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground text-sm font-medium">{metric.title}</p>
+                      <div className="text-2xl font-bold">{metric.value}</div>
+                      <div className="text-muted-foreground text-xs">{metric.description}</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Main Toolbar & Content Container ── */}
+          <div className="@container/main px-4 lg:px-6 space-y-4">
+            <DataViewToolbar
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              searchPlaceholder="Cerca modulo per nome, corso o categoria..."
+              filters={[
+                {
+                  value: typeFilter,
+                  onChange: setTypeFilter,
+                  placeholder: "Tipo Modulo",
+                  options: [
+                    { value: "all", label: "Tutti i tipi" },
+                    { value: FormType.BOOKING, label: "Iscrizione (Booking)" },
+                    { value: FormType.CONTACT, label: "Contatto (Lead)" },
+                    { value: FormType.TEST, label: "Test Livello" },
+                    { value: FormType.CUSTOM, label: "Personalizzato" },
+                  ],
+                },
+                {
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  placeholder: "Stato",
+                  options: [
+                    { value: "all", label: "Tutti gli stati" },
+                    { value: "active", label: "Attivo" },
+                    { value: "inactive", label: "Disattivato" },
+                  ],
+                },
+              ]}
+              actionElement={
+                <Button
+                  onClick={() => setEditingForm("new")}
+                  className="font-medium cursor-pointer shadow-sm text-xs"
+                >
+                  <Plus className="mr-1.5 h-4 w-4" /> Nuovo Modulo
+                </Button>
+              }
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+
+            {viewMode === "table" ? (
+              <div className="space-y-4">
+                <div className="rounded-md border bg-card">
+                  <Table>
+                    <TableHeader>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                          {headerGroup.headers.map((header) => (
+                            <TableHead key={header.id}>
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(header.column.columnDef.header, header.getContext())}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                      ) : table.getRowModel().rows?.length ? (
+                        table.getRowModel().rows.map((row) => (
+                          <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                            {row.getVisibleCells().map((cell) => (
+                              <TableCell key={cell.id}>
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                            Nessun modello di modulo trovato.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <DataTablePagination table={table} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                {filteredForms.map((form) => {
+                  const fieldsCount = form.fields_config?.length || 0;
+                  const enabledCount = form.fields_config?.filter((f) => f.is_enabled).length || 0;
+                  return (
+                    <Card
+                      key={form.id}
+                      className={`border flex flex-col justify-between hover:shadow-sm transition-all ${
+                        form.is_default ? "border-amber-400/80 ring-1 ring-amber-400/30" : ""
+                      }`}
+                    >
+                      <CardHeader className="pb-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+                              {form.form_type}
+                            </Badge>
+                            {form.is_default && (
+                              <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-1.5 py-0.5">
+                                <Star className="w-3 h-3 fill-current" />
+                                Predefinito
+                              </Badge>
+                            )}
+                          </div>
+                          <Switch
+                            checked={form.is_active}
+                            onCheckedChange={(checked) => handleToggleStatus(form, checked)}
+                            disabled={isUpdating}
+                            className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
+                          />
+                        </div>
+
+                        <div>
+                          <CardTitle className="text-sm font-bold text-foreground">
+                            {form.title}
+                          </CardTitle>
+                          {form.description && (
+                            <CardDescription className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                              {form.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                      </CardHeader>
+
+                      <CardContent className="space-y-3 pb-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-semibold text-muted-foreground">Target:</span>
+                          {form.course_id ? (
+                            <Badge variant="outline" className="text-purple-600 dark:text-purple-400 border-purple-500/30 bg-purple-500/5 font-semibold text-[11px] gap-1">
+                              <GraduationCap className="w-3 h-3" />
+                              {coursesList.find((c) => c.id === form.course_id)?.nome || "Corso dedicato"}
+                            </Badge>
+                          ) : form.category_slug ? (
+                            <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 font-semibold text-[11px] gap-1">
+                              <Folder className="w-3 h-3" />
+                              {form.category_slug.toUpperCase()}
+                            </Badge>
+                          ) : form.form_type === FormType.CONTACT ? (
+                            <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 text-[11px] gap-1">
+                              <Globe className="w-3 h-3 text-blue-500" />
+                              Sito Web & Landing (Contatti)
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground text-[11px] gap-1">
+                              <Globe className="w-3 h-3" />
+                              Tutti i corsi (Globale)
+                            </Badge>
+                          )}
+                        </div>
+
+                        <div className="text-xs text-muted-foreground flex items-center justify-between">
+                          <span>Campi dinamici:</span>
+                          <span className="font-bold text-foreground">
+                            {enabledCount} attivi {fieldsCount !== enabledCount && `(${fieldsCount} tot)`}
+                          </span>
+                        </div>
+                      </CardContent>
+
+                      <div className="p-3 border-t flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1">
+                          {!form.is_default && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600 cursor-pointer"
+                              title="Imposta predefinito"
+                              onClick={() => setDefaultForm(form.id)}
+                            >
+                              <Star className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Anteprima"
+                            onClick={() => setPreviewForm(form)}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                            title="Duplica"
+                            onClick={() => duplicateForm(form.id)}
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                          {!form.is_default && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
+                              title="Elimina"
+                              onClick={() => handleDeleteForm(form)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 text-xs cursor-pointer gap-1 px-2.5"
+                          onClick={() => setEditingForm(form)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Modifica
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+                {filteredForms.length === 0 && (
+                  <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
+                    Nessun modello di modulo trovato.
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Interactive Preview Modal */}
       <FormPreviewModal
