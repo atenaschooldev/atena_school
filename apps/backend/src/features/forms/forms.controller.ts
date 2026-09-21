@@ -25,7 +25,7 @@ import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 
 @ApiTags('Forms — Public & Resolution')
-@Controller('forms')
+@Controller(['forms', 'landing/forms'])
 export class FormsPublicController {
   constructor(private readonly formsService: FormsService) {}
 

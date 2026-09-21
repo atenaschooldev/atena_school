@@ -8,7 +8,15 @@ import {
   type CreateFormTemplateDto,
   type UpdateFormTemplateDto,
 } from "../types";
-import { DEFAULT_BOOKING_FORM_TEMPLATE } from "@atena/core";
+import {
+  DEFAULT_BOOKING_FORM_TEMPLATE,
+  DEFAULT_CONTACT_FORM_TEMPLATE,
+} from "@atena/core";
+
+const BUILTIN_FALLBACKS: FormTemplate[] = [
+  DEFAULT_BOOKING_FORM_TEMPLATE,
+  DEFAULT_CONTACT_FORM_TEMPLATE,
+];
 
 export function useForms(filters?: {
   form_type?: FormType;
@@ -25,7 +33,7 @@ export function useForms(filters?: {
   const endpoint = `/admin/forms${queryString ? `?${queryString}` : ""}`;
 
   const {
-    data: forms = [DEFAULT_BOOKING_FORM_TEMPLATE],
+    data: forms = BUILTIN_FALLBACKS,
     isLoading,
     refetch,
   } = useQuery<FormTemplate[]>({
@@ -33,9 +41,9 @@ export function useForms(filters?: {
     queryFn: async () => {
       try {
         const data = await apiFetch<FormTemplate[]>(endpoint);
-        return Array.isArray(data) && data.length > 0 ? data : [DEFAULT_BOOKING_FORM_TEMPLATE];
+        return Array.isArray(data) && data.length > 0 ? data : BUILTIN_FALLBACKS;
       } catch (e) {
-        return [DEFAULT_BOOKING_FORM_TEMPLATE];
+        return BUILTIN_FALLBACKS;
       }
     },
     staleTime: 1000 * 30,

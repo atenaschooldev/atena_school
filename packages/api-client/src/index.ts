@@ -286,7 +286,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
       if (params.course_id) q.append("course_id", params.course_id);
       if (params.category_slug) q.append("category_slug", params.category_slug);
       const endpoint = isNest
-        ? `${baseUrl}/v1/forms/resolve?${q.toString()}`
+        ? `${baseUrl}/forms/resolve?${q.toString()}`
         : `${prefix}/forms/resolve?${q.toString()}`;
       const res = await fetch(endpoint, { headers: getHeaders() });
       return handleResponse(res);

@@ -265,6 +265,14 @@ export function FormsListView() {
         header: "Destinazione / Target",
         cell: ({ row }) => {
           const form = row.original;
+          if (form.form_type === FormType.CONTACT) {
+            return (
+              <Badge variant="outline" className="border-blue-500/30 text-blue-700 dark:text-blue-400 bg-blue-50/60 font-semibold text-xs gap-1.5 py-1">
+                <Globe className="w-3.5 h-3.5 text-blue-500" />
+                Sito Web & Landing (Contatti)
+              </Badge>
+            );
+          }
           if (form.course_id) {
             const course = coursesList.find((c) => c.id === form.course_id);
             return (
