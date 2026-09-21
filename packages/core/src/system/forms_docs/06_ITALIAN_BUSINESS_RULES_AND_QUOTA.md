@@ -68,3 +68,23 @@ export async function checkAnnualMembershipFee(
   return { feeDue: true };
 }
 ```
+
+---
+
+## 4. Управление квотой в CRM/Админке
+
+Для гибкости бизнес-процессов Atena School реализован выделенный блок управления Quota Associativa (`RegistrationFeeSettingsCard`):
+
+1. **Главный переключатель (Master Switch)**:
+   - `registration_fee_enabled`: `true / false`.
+   - Позволяет полностью отключить начисление и проверку членского взноса (например, в период промо-кампаний или при безналоговых спецкурсах).
+2. **Настройка суммы взноса**:
+   - `registration_fee_eur`: числовое поле (по умолчанию `30`, диапазон `0 - 500 €`).
+   - Быстрые пресеты в интерфейсе: `€0 (Бесплатно)`, `€20`, `€30 (Стандарт)`, `€50`.
+3. **Учебный год (Academic Year)**:
+   - `academic_year`: строка (например, `2026/2027`), выводится в квитанциях и договорах.
+4. **Размещение в Админке**:
+   - **Настройки аккаунта**: `apps/admin/src/app/settings/account/page.tsx`
+   - **Раздел Moduli & Form Engine**: `apps/admin/src/features/forms/components/forms-list-view.tsx`
+   - **White-Label карточка школы**: `apps/admin/src/components/shared/school-profile-card.tsx`
+

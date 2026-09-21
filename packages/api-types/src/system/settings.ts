@@ -83,6 +83,7 @@ export interface SchoolProfile {
   admin_url?: string;
   vat_code?: string;
   secretariat_hours?: string;
+  registration_fee_enabled?: boolean;
   registration_fee_eur?: number;
   academic_year?: string;
   iban?: string;
@@ -115,6 +116,7 @@ export const DEFAULT_SCHOOL_PROFILE: SchoolProfile = {
   admin_url: 'https://atena-school-admin.vercel.app',
   vat_code: 'P.IVA/C.F. 03321620803',
   secretariat_hours: 'Martedì e Giovedì dalle ore 15:00 alle ore 18:00',
+  registration_fee_enabled: true,
   registration_fee_eur: 30,
   academic_year: '2026/2027',
   iban: 'IT60X0542811101000000123456',

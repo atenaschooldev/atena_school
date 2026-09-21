@@ -3,6 +3,7 @@ import { useForms } from "../hooks/use-forms";
 import { FormTemplate, FormType } from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
+import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,6 +17,9 @@ import {
   CheckCircle2,
   Sparkles,
   ArrowRight,
+  Award,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 export function FormsListView() {
@@ -34,6 +38,7 @@ export function FormsListView() {
   const [selectedType, setSelectedType] = useState<string>("all");
   const [editingForm, setEditingForm] = useState<FormTemplate | null | "new">(null);
   const [previewForm, setPreviewForm] = useState<FormTemplate | null>(null);
+  const [showQuotaCard, setShowQuotaCard] = useState<boolean>(true);
 
   const filteredForms = forms.filter((f) => {
     if (selectedType === "all") return true;
@@ -95,14 +100,31 @@ export function FormsListView() {
           </p>
         </div>
 
-        <Button
-          onClick={() => setEditingForm("new")}
-          className="gap-1.5 bg-[#FAA904] text-slate-950 hover:bg-[#e09804] font-black text-xs px-4"
-        >
-          <Plus className="w-4 h-4" />
-          Crea Nuovo Modulo
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowQuotaCard((prev) => !prev)}
+            className="gap-1.5 border-amber-300 text-amber-900 bg-amber-50 hover:bg-amber-100 font-bold text-xs px-3.5"
+          >
+            <Award className="w-4 h-4 text-amber-600" />
+            Quota Associativa
+            {showQuotaCard ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </Button>
+
+          <Button
+            onClick={() => setEditingForm("new")}
+            className="gap-1.5 bg-[#FAA904] text-slate-950 hover:bg-[#e09804] font-black text-xs px-4"
+          >
+            <Plus className="w-4 h-4" />
+            Crea Nuovo Modulo
+          </Button>
+        </div>
       </div>
+
+      {/* Quota Associativa Management Block */}
+      {showQuotaCard && (
+        <RegistrationFeeSettingsCard />
+      )}
 
       {/* Type Filter Pills */}
       <div className="flex flex-wrap items-center gap-2">

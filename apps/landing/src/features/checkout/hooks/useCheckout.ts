@@ -320,7 +320,12 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
         }
 
         if (profileRes?.success && profileRes.profile) {
-          if (profileRes.profile.registration_fee_eur != null) {
+          const isFeeEnabled = profileRes.profile.registration_fee_enabled !== false;
+          if (!isFeeEnabled) {
+            setRegistrationFeeAmount(0);
+            setHasPaidAnnualFee(true);
+            formMethods.setValue("includeRegistrationFee", false);
+          } else if (profileRes.profile.registration_fee_eur != null) {
             setRegistrationFeeAmount(Number(profileRes.profile.registration_fee_eur));
           }
           if (profileRes.profile.academic_year) {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
-  FormTemplate,
-  FormFieldConfig,
+  type FormTemplate,
+  type FormFieldConfig,
   FormFieldType,
   FormFieldTarget,
   FormType,
