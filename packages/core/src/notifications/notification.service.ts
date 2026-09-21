@@ -192,10 +192,10 @@ export async function sendTelegramMessage(params: {
   notificationType?: NotificationType;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
   const { supabase, text, botToken, chatId, inlineKeyboard, bookingId, notificationType } = params;
-  let token = botToken || process.env.TELEGRAM_BOT_TOKEN;
-  let chat = chatId || process.env.TELEGRAM_CHAT_ID;
+  let token = botToken;
+  let chat = chatId;
 
-  if (supabase && (!token || !chat)) {
+  if (!token || !chat) {
     try {
       const tgCreds = await getTelegramCredentials(supabase);
       token = token || tgCreds.botToken;
@@ -204,6 +204,9 @@ export async function sendTelegramMessage(params: {
       // ignore
     }
   }
+
+  token = token || process.env.TELEGRAM_BOT_TOKEN;
+  chat = chat || process.env.TELEGRAM_CHAT_ID;
 
   if (!token || !chat) {
     return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
