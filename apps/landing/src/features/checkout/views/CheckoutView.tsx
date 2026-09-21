@@ -212,8 +212,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               target={FormFieldTarget.BOOKING}
               register={register}
               errors={errors}
-              inline={false}
-              title="Informazioni Aggiuntive"
+              inline={true}
             />
 
             <CheckoutBillingSchemeSelector
