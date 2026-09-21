@@ -1,12 +1,47 @@
 # 🛠️ 07. Руководство разработчика (Developer Integration Guide)
 
-Пошаговые инструкции по добавлению новых типов событий, триггеров и вызову нотификаций.
+Пошаговые инструкции по вызову нотификаций, добавлению новых типов событий и регистрации триггеров.
 
 ---
 
-## 1. Как вызвать отправку уведомления по событию
+## 1. Как вызвать отправку уведомления по бронированию
 
-В любом Server Action (Next.js) или NestJS Service достаточно импортировать `processNotificationTriggers` из `@atena/core`:
+В Server Actions (Next.js) или сервисах бронирования:
+
+```ts
+import { sendBookingNotificationEmails } from '@atena/core';
+
+await sendBookingNotificationEmails({
+  supabase: supabaseClient,
+  booking: bookingRecord,
+  course: courseRecord,
+  dto: createReservationDto,
+});
+```
+
+---
+
+## 2. Как вызвать отправку уведомления по форме контактов
+
+```ts
+import { sendContactFormNotificationEmail } from '@atena/core';
+
+await sendContactFormNotificationEmail({
+  supabase: supabaseClient,
+  data: {
+    firstName: dto.firstName,
+    lastName: dto.lastName,
+    email: dto.email,
+    phone: dto.phone,
+    interest: dto.interest,
+    message: dto.message,
+  },
+});
+```
+
+---
+
+## 3. Как запустить цепочку триггеров по ключу события
 
 ```ts
 import { processNotificationTriggers } from '@atena/core';
@@ -36,7 +71,7 @@ await processNotificationTriggers(
 
 ---
 
-## 2. Как добавить новое системное событие
+## 4. Как добавить новое системное событие
 
 1. **Зарегистрировать ключ в `@atena/api-types`:**
    В файле [packages/api-types/src/system/notifications.ts](file:///Users/krimson/PROJECTS/atena_school/packages/api-types/src/system/notifications.ts) добавить событие в `SYSTEM_EVENTS_REGISTRY`:
@@ -58,7 +93,7 @@ await processNotificationTriggers(
    ```
 
 2. **Зарегистрировать правило триггера в `SYSTEM_TRIGGERS`:**
-   В файле [packages/core/src/notifications/system-triggers.config.ts](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/system-triggers.config.ts) добавить правило:
+   В файле [packages/core/src/notifications/system-triggers.config.ts](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/system-triggers.config.ts):
    ```ts
    {
      id: 'trg_lesson_rescheduled_customer',
@@ -84,23 +119,21 @@ await processNotificationTriggers(
 
 ---
 
-## 3. Отправка прямого произвольного Telegram сообщения
-
-Если необходимо отправить системный алерт вне триггеров:
+## 5. Прямая отправка произвольного Telegram сообщения
 
 ```ts
 import { sendTelegramMessage, NotificationType } from '@atena/core';
 
 await sendTelegramMessage({
   supabase: supabaseClient,
-  text: `⚠️ <b>AVVISO DI SISTEMA:</b> Backup completato con successo.`,
+  text: `⚠️ <b>AVVISO DI SISTEMA:</b> Aggiornamento completato con successo.`,
   notificationType: NotificationType.BOOKING_CONFIRMATION,
 });
 ```
 
 ---
 
-## 4. Отправка прямого произвольного Email
+## 6. Прямая отправка произвольного Email через Resend
 
 ```ts
 import { sendEmailViaResend } from '@atena/core';

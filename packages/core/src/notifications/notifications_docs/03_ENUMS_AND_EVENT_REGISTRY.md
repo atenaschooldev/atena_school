@@ -1,6 +1,6 @@
 # 🗂️ 03. Энамы, Реестр событий и Переменные
 
-Все перечисления и типы определены в пакете `@atena/api-types/system/notifications`.
+Все перечисления и типы строго определены в пакете `@atena/api-types/system/notifications`.
 
 ---
 
@@ -27,7 +27,7 @@
 | `1` | `CUSTOMER` | Клиент (студент или родитель) |
 | `2` | `ADMIN` | Администрация / секретариат школы |
 | `3` | `TEACHER` | Преподаватель курса |
-| `4` | `CUSTOM` | Произвольный email или Telegram Chat ID |
+| `—` | `CUSTOM` | Произвольный email или Telegram Chat ID (задается в поле `custom_recipient`) |
 
 ### 1.4. Статусы отправки (`NotificationStatus`)
 | ID | Код | Описание |
@@ -51,7 +51,7 @@
 
 ## 3. Полный справочник переменных Payload
 
-Любая переменная доступна в шаблонах через синтаксис `{{key}}` или `{{nested.path}}`:
+Любая переменная доступна в шаблонах через синтаксис `{{key}}`:
 
 | Переменная | Описание | Пример значения |
 |---|---|---|
@@ -62,21 +62,31 @@
 | `student_name` | Имя студента (при `isForChild` — ребенка) | `Luca Rossi` |
 | `student_email` | Email студента | `luca.rossi@gmail.com` |
 | `student_tax_code` | Codice Fiscale студента | `RSSLKU15M01H501Y` |
+| `student_birth_date` | Дата рождения студента | `2005-12-02` |
+| `student_birth_place` | Место рождения студента | `Cittanova RC` |
+| `birth_place` | Место рождения плательщика | `Cittanova RC` |
 | `is_for_child` | Флаг оформления на ребенка (`true`/`false`) | `true` |
 | `course_name` | Название образовательного курса | `Kids English (6-7 anni)` |
 | `start_date` / `date` | Дата начала занятий | `2026-10-06` |
-| `lesson_schedule` | Расписание и дни занятий | `Martedì e Giovedì 17:00-18:00` |
+| `lesson_schedule` / `schedule_text` | Расписание и дни занятий | `Martedì e Giovedì 17:00-18:00` |
 | `course_price` | Стоимость курса (€) | `73.20` |
 | `registration_fee` | Взнос за членскую карту (€) | `30.00` |
-| `total_amount` | Итоговая сумма заказа (€) | `103.20` |
-| `amount_paid` | Фактически оплаченная сумма | `103.20` |
+| `total_amount` / `amount_paid` | Итоговая сумма заказа (€) | `103.20` |
 | `is_paid_online` | Оплачено онлайн (`true`/`false`) | `true` |
 | `payment_status` | Текстовый статус оплаты | `Pagato Online con Carta (Stripe)` |
+| `payment_status_label` | Бейдж статуса оплаты | `✓ Pagato Online (Stripe)` |
+| `payment_method` | ID метода оплаты | `1` |
+| `payment_method_label` | Название метода оплаты | `Carta di Credito (Stripe)` |
 | `booking_id` | Уникальный UUID бронирования | `10bde731-f620-4e16-a240-63bb08b86d70` |
-| `dashboard_url` | Ссылка в Личный кабинет студента | `https://app.atenaschool.com` |
+| `dashboard_url` / `app_url` | Ссылка в Личный кабинет студента | `https://app.atenaschool.com` |
+| `admin_url` | Ссылка в Панель управления CRM | `https://admin.atenaschool.com` |
+| `pec_email` | Адрес сертифицированной почты PEC | `mario.rossi@pec.it` |
+| `sdi_code` | Код системы обмена счетами SDI | `M5UXCR1` |
 | `sender_name` | Имя отправителя формы обратной связи | `Giuseppe Verdi` |
 | `sender_email` | Email отправителя формы | `giuseppe.verdi@gmail.com` |
 | `sender_phone` | Телефон отправителя формы | `+39 333 9876543` |
-| `message` | Текст сообщения из формы контактов | `Vorrei informazioni sui corsi serali.` |
-| `membership_number` | Номер выданной членской карты | `ATN-2026-0042` |
+| `interest` | Интересующий курс / услуга | `Corso Cambridge B2` |
+| `topic` | Тема обращения | `Informazioni Iscrizioni` |
+| `message` / `message_body` | Текст сообщения из формы контактов | `Vorrei informazioni sui corsi serali.` |
+| `membership_number` | Номер выданной членской карты | `2026-0042` |
 | `valid_until` | Срок действия членства | `31/08/2027` |
