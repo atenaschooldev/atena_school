@@ -3,6 +3,8 @@ import { checkRateLimit, getClientIp, rateLimitExceededResponse } from "@/lib/se
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 import { withLandingApiLog } from "@/lib/server/api-logger";
 
+import { getStudentPortalUrl } from "@/lib/urls";
+
 async function handler(req: NextRequest) {
   try {
     const ip = getClientIp(req);
@@ -26,11 +28,11 @@ async function handler(req: NextRequest) {
     }
 
     const supabase = getSupabaseAdmin();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://atena-school.vercel.app";
+    const callbackUrl = getStudentPortalUrl("/autenticazione/callback");
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/autenticazione/callback`,
+        emailRedirectTo: callbackUrl,
       },
     });
 

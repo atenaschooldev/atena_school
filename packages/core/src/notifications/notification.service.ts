@@ -707,9 +707,11 @@ export async function sendTelegramMessage(params: {
   };
 }
 
+import { SYSTEM_TRIGGERS, SystemTriggerDefinition } from './system-triggers.config';
+
 /**
  * Universal Event-Driven Trigger Processor for Vercel Server Actions & Next.js
- * Queries active triggers from Supabase, matches conditions, and dispatches Email/Telegram.
+ * Uses type-safe declarative TypeScript triggers from SYSTEM_TRIGGERS registry.
  */
 export async function processNotificationTriggers(
   supabase: SupabaseClient,
@@ -717,22 +719,22 @@ export async function processNotificationTriggers(
   payload: Record<string, any>
 ): Promise<void> {
   try {
-    const { data: triggers, error } = await supabase
-      .from('notification_triggers')
-      .select('*, template:notification_templates(*)')
-      .eq('event_key', eventKey)
-      .eq('is_active', true);
+    const activeTriggers = SYSTEM_TRIGGERS.filter(
+      (t) => t.event_key === eventKey && t.is_active
+    );
 
-    if (error || !triggers || triggers.length === 0) {
+    if (activeTriggers.length === 0) {
       return;
     }
 
     const schoolProfile = await getSchoolProfile(supabase);
     const resendCreds = await getResendCredentials(supabase);
 
-    for (const trigger of triggers) {
-      const template = trigger.template;
-      if (!template || !template.is_active) continue;
+    for (const trigger of activeTriggers) {
+      const template = await getNotificationTemplateByCode(supabase, trigger.template_code);
+      if (template && !template.is_active) {
+        continue;
+      }
 
       // Match JSON conditions
       const { matchesTriggerConditions } = await import('./trigger-matcher');
@@ -757,20 +759,22 @@ export async function processNotificationTriggers(
       }
 
       const isEmail = Number(trigger.channel) === NotificationChannel.EMAIL;
+      const notifType = template?.notification_type || (
+        trigger.event_key === 'contact_form.submitted'
+          ? NotificationType.CONTACT_FORM
+          : trigger.event_key === 'membership.card_issued'
+            ? NotificationType.MEMBERSHIP_CARD
+            : NotificationType.BOOKING_CONFIRMATION
+      );
 
       if (isEmail && recipient) {
-        let subject = template.subject || 'Atena School';
-        let html = '';
+        const blocksConfig = template?.blocks_config?.blocks?.length
+          ? template.blocks_config
+          : getDefaultBlocksForTemplate(trigger.template_code, NotificationChannel.EMAIL);
 
-        if (template.blocks_config && template.blocks_config.blocks?.length) {
-          const rendered = renderEmailFromBlocks(template.blocks_config, payload, schoolProfile);
-          subject = template.subject ? compileTemplate(template.subject, payload) : rendered.subject;
-          html = rendered.html;
-        } else {
-          html = template.body_html || template.body_text || '';
-          subject = compileTemplate(subject, payload);
-          html = compileTemplate(html, payload);
-        }
+        const rendered = renderEmailFromBlocks(blocksConfig, payload, schoolProfile);
+        const subject = template?.subject ? compileTemplate(template.subject, payload) : rendered.subject;
+        const html = rendered.html;
 
         if (html) {
           const res = await sendEmailViaResend({
@@ -783,7 +787,7 @@ export async function processNotificationTriggers(
 
           await logNotification(supabase, {
             channel: NotificationChannel.EMAIL,
-            type: template.notification_type,
+            type: notifType,
             recipient,
             subject,
             status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
@@ -796,20 +800,19 @@ export async function processNotificationTriggers(
         }
       } else if (!isEmail) {
         // Telegram
-        let text = '';
-        if (template.blocks_config && template.blocks_config.blocks?.length) {
-          const rendered = renderTelegramFromBlocks(template.blocks_config, payload);
-          text = rendered.text;
-        } else {
-          text = compileTemplate(template.body_text || '', payload);
-        }
+        const blocksConfig = template?.blocks_config?.blocks?.length
+          ? template.blocks_config
+          : getDefaultBlocksForTemplate(trigger.template_code, NotificationChannel.TELEGRAM);
+
+        const rendered = renderTelegramFromBlocks(blocksConfig, payload);
+        const text = rendered.text;
 
         if (text) {
           await sendTelegramMessage({
             supabase,
             text,
             bookingId: payload.booking_id || null,
-            notificationType: template.notification_type,
+            notificationType: notifType,
           });
         }
       }

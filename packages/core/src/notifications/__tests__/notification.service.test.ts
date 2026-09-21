@@ -131,7 +131,7 @@ describe("@atena/core - NotificationService Integration Tests", () => {
 
       await processNotificationTriggers(mockSupabase, "booking.created_stripe", payload);
 
-      expect(mockSupabase.from).toHaveBeenCalledWith("notification_triggers");
+      expect(mockSupabase.from).toHaveBeenCalledWith("notification_logs");
     });
   });
 });

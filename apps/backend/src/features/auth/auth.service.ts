@@ -64,15 +64,18 @@ export class AuthService {
       throw new BadRequestException('A valid email address is required');
     }
 
-    const siteUrl =
-      this.configService.get<string>('NEXT_PUBLIC_SITE_URL') ||
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      'https://atena-school.vercel.app';
+    const isDev = process.env.NODE_ENV === 'development';
+    const appUrl =
+      this.configService.get<string>('NEXT_PUBLIC_APP_URL') ||
+      this.configService.get<string>('APP_URL') ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.APP_URL ||
+      (isDev ? 'http://localhost:3002' : 'https://app.atenaschool.com');
 
     const { error } = await this.supabaseAdmin.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${siteUrl}/autenticazione/callback`,
+        emailRedirectTo: `${appUrl.replace(/\/$/, '')}/autenticazione/callback`,
       },
     });
 

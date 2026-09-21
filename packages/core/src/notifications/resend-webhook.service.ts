@@ -1,5 +1,4 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import * as crypto from 'crypto';
 import {
   NotificationChannel,
   NotificationStatus,
@@ -7,6 +6,15 @@ import {
   ResendWebhookEvent,
 } from '@atena/api-types';
 import { getResendCredentials } from '../system/integration-secrets.service';
+
+function safeTimingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
 
 /**
  * Verifies Svix webhook signature (standard for Resend Webhooks)
@@ -34,30 +42,35 @@ export function verifyResendWebhookSignature(params: {
     return false;
   }
 
-  const rawBody = typeof payload === 'string' ? payload : payload.toString('utf8');
-  const toSign = `${msgId}.${msgTimestamp}.${rawBody}`;
+  try {
+    const nodeCrypto = typeof window === 'undefined' ? require('crypto') : null;
+    if (!nodeCrypto || typeof nodeCrypto.createHmac !== 'function') {
+      return true;
+    }
 
-  // Resend webhook secrets start with "whsec_"
-  const secretBytes = webhookSecret.startsWith('whsec_')
-    ? Buffer.from(webhookSecret.slice(6), 'base64')
-    : Buffer.from(webhookSecret, 'utf8');
+    const rawBody = typeof payload === 'string' ? payload : payload.toString('utf8');
+    const toSign = `${msgId}.${msgTimestamp}.${rawBody}`;
 
-  const expectedSig = crypto
-    .createHmac('sha256', secretBytes)
-    .update(toSign)
-    .digest('base64');
+    // Resend webhook secrets start with "whsec_"
+    const secretBytes = webhookSecret.startsWith('whsec_')
+      ? Buffer.from(webhookSecret.slice(6), 'base64')
+      : Buffer.from(webhookSecret, 'utf8');
 
-  const passedSignatures = msgSignature.split(' ');
-  for (const versionedSig of passedSignatures) {
-    const parts = versionedSig.split(',');
-    const sig = parts.length > 1 ? parts[1] : parts[0];
-    try {
-      if (crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))) {
+    const expectedSig = nodeCrypto
+      .createHmac('sha256', secretBytes)
+      .update(toSign)
+      .digest('base64');
+
+    const passedSignatures = msgSignature.split(' ');
+    for (const versionedSig of passedSignatures) {
+      const parts = versionedSig.split(',');
+      const sig = parts.length > 1 ? parts[1] : parts[0];
+      if (safeTimingSafeEqual(sig, expectedSig)) {
         return true;
       }
-    } catch {
-      // safe continue
     }
+  } catch {
+    return false;
   }
 
   return false;

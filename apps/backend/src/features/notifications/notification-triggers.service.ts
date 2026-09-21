@@ -8,6 +8,8 @@ import {
   SystemEventDefinition,
 } from '@atena/api-types';
 
+import { SYSTEM_TRIGGERS } from '@atena/core';
+
 @Injectable()
 export class NotificationTriggersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -17,14 +19,61 @@ export class NotificationTriggersService {
   }
 
   async findAll(): Promise<NotificationTriggerRecord[]> {
-    const records = await this.prisma.notification_triggers.findMany({
+    const dbRecords = await this.prisma.notification_triggers.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
         template: true,
       },
     });
 
-    return records.map((r) => this.mapToRecord(r));
+    if (dbRecords.length > 0) {
+      return dbRecords.map((r) => this.mapToRecord(r));
+    }
+
+    // Fallback to declarative TypeScript SYSTEM_TRIGGERS
+    const templates = await this.prisma.notification_templates.findMany();
+    const templateMap = new Map(templates.map((t) => [t.code, t]));
+
+    return SYSTEM_TRIGGERS.map((st) => {
+      const tmpl = templateMap.get(st.template_code);
+      return {
+        id: st.id,
+        name: st.name,
+        description: st.description,
+        event_key: st.event_key,
+        template_id: tmpl?.id || st.template_code,
+        template: tmpl
+          ? {
+              id: tmpl.id,
+              code: tmpl.code,
+              name: tmpl.name,
+              description: tmpl.description,
+              channel: tmpl.channel as any,
+              notification_type: tmpl.notificationType as any,
+              recipient_type: tmpl.recipientType as any,
+              subject: tmpl.subject,
+              subject_template: tmpl.subject,
+              body_html: tmpl.bodyHtml,
+              body_text: tmpl.bodyText,
+              body_template: tmpl.bodyText,
+              blocks_config: tmpl.blocksConfig as any,
+              available_variables: (tmpl.availableVariables as any) || [],
+              is_active: tmpl.isActive,
+              created_at: tmpl.createdAt.toISOString(),
+              updated_at: tmpl.updatedAt.toISOString(),
+            }
+          : undefined,
+        channel: st.channel,
+        recipient_type: st.recipient_type,
+        custom_recipient: st.custom_recipient || null,
+        conditions: st.conditions || null,
+        timing_type: st.timing_type,
+        delay_seconds: st.delay_seconds,
+        is_active: st.is_active,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    });
   }
 
   async findOne(id: string): Promise<NotificationTriggerRecord> {

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, Envelope, Lock, SignIn, Sparkle, ArrowRight, Spinner, CheckCircle } from "@phosphor-icons/react";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { getStudentPortalUrl } from "@/lib/urls";
 import type { User } from "@supabase/supabase-js";
 
 interface CheckoutAuthModalProps {
@@ -69,11 +70,11 @@ export function CheckoutAuthModal({
 
     setLoading(true);
     try {
-      const currentOrigin = typeof window !== "undefined" ? window.location.origin : "";
+      const callbackUrl = getStudentPortalUrl("/autenticazione/callback");
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
         options: {
-          emailRedirectTo: `${currentOrigin}/autenticazione/callback`,
+          emailRedirectTo: callbackUrl,
         },
       });
 
