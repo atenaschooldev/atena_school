@@ -70,52 +70,14 @@ export function VisualFormBuilder({
   const [formData, setFormData] = useState<FormTemplate>(
     initialForm || {
       id: "",
-      title: "Modulo Iscrizione Standard",
-      description: "Modulo predefinito per la prenotazione e acquisto dei corsi",
+      title: "Nuovo Modulo",
+      description: "Descrizione del modulo",
       form_type: FormType.BOOKING,
-      is_default: true,
+      is_default: false,
       is_active: true,
       category_slug: null,
       course_id: null,
-      fields_config: [
-        {
-          id: "f-level",
-          key: "study_level",
-          label: "Livello di partenza stimato",
-          placeholder: "Seleziona il tuo livello...",
-          field_type: FormFieldType.SELECT,
-          target: FormFieldTarget.STUDENT,
-          is_required: true,
-          is_enabled: true,
-          sort_order: 1,
-          options: [
-            { label: "A1 - Principiante assoluto", value: "A1" },
-            { label: "A2 - Elementare", value: "A2" },
-            { label: "B1 - Intermedio", value: "B1" },
-            { label: "B2 - Intermedio superiore", value: "B2" },
-            { label: "C1 - Avanzato", value: "C1" },
-            { label: "C2 - Padronanza completa", value: "C2" },
-          ],
-        },
-        {
-          id: "f-source",
-          key: "heard_from",
-          label: "Come hai conosciuto Atena School?",
-          placeholder: "Seleziona come ci hai trovati...",
-          field_type: FormFieldType.SELECT,
-          target: FormFieldTarget.PURCHASER,
-          is_required: false,
-          is_enabled: true,
-          sort_order: 2,
-          options: [
-            { label: "Passaparola / Amici", value: "word_of_mouth" },
-            { label: "Social Network (Instagram / Facebook)", value: "social" },
-            { label: "Ricerca Google / Mappe", value: "google" },
-            { label: "Volantini / Cartellonistica a scuola", value: "flyers" },
-            { label: "Altro", value: "other" },
-          ],
-        },
-      ],
+      fields_config: [],
     }
   );
 
@@ -654,111 +616,6 @@ export function VisualFormBuilder({
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Quick Field Presets */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-2xl border border-amber-200/80 shadow-sm space-y-3">
-              <h3 className="text-xs font-black uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-amber-600" />
-                Domande Pronte (Preimpostate)
-              </h3>
-              <p className="text-[11px] text-amber-800/80 leading-tight">
-                Clicca per aggiungere istantaneamente un campo frequente:
-              </p>
-              <div className="flex flex-col gap-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleApplyPreset({
-                      key: "study_level",
-                      label: "Livello di partenza stimato",
-                      type: FormFieldType.SELECT,
-                      target: FormFieldTarget.STUDENT,
-                      options: [
-                        { label: "A1 - Principiante assoluto", value: "A1" },
-                        { label: "A2 - Elementare", value: "A2" },
-                        { label: "B1 - Intermedio", value: "B1" },
-                        { label: "B2 - Intermedio superiore", value: "B2" },
-                        { label: "C1 - Avanzato", value: "C1" },
-                        { label: "C2 - Padronanza completa", value: "C2" },
-                      ],
-                    })
-                  }
-                  className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
-                >
-                  🎓 + Livello Linguistico (A1-C2)
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleApplyPreset({
-                      key: "heard_from",
-                      label: "Come hai conosciuto Atena School?",
-                      type: FormFieldType.SELECT,
-                      target: FormFieldTarget.PURCHASER,
-                      options: [
-                        { label: "Passaparola / Amici", value: "word_of_mouth" },
-                        { label: "Social Network (Instagram / FB)", value: "social" },
-                        { label: "Ricerca Google / Mappe", value: "google" },
-                        { label: "Volantini / Scuola", value: "flyers" },
-                        { label: "Altro", value: "other" },
-                      ],
-                    })
-                  }
-                  className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
-                >
-                  📢 + Come ci hai conosciuto?
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleApplyPreset({
-                      key: "preferred_time",
-                      label: "Fascia oraria preferita per essere ricontattato",
-                      type: FormFieldType.SELECT,
-                      target: FormFieldTarget.PURCHASER,
-                      options: [
-                        { label: "Mattina (09:00 - 13:00)", value: "morning" },
-                        { label: "Pomeriggio (14:00 - 18:00)", value: "afternoon" },
-                        { label: "Sera (18:00 - 20:00)", value: "evening" },
-                      ],
-                    })
-                  }
-                  className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
-                >
-                  🕒 + Fascia Oraria Preferita
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    handleApplyPreset({
-                      key: "preferred_method",
-                      label: "Canale di contatto preferito",
-                      type: FormFieldType.SELECT,
-                      target: FormFieldTarget.PURCHASER,
-                      options: [
-                        { label: "WhatsApp", value: "whatsapp" },
-                        { label: "Chiamata telefonica", value: "phone" },
-                        { label: "Email", value: "email" },
-                      ],
-                    })
-                  }
-                  className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
-                >
-                  📱 + Canale di Contatto Preferito
-                </Button>
-              </div>
             </div>
           </div>
 
