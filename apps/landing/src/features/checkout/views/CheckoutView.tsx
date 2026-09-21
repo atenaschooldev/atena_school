@@ -210,14 +210,12 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               />
             )}
 
-            {!isForChild && (
-              <DynamicCustomFields
-                fields={customFields}
-                target={FormFieldTarget.STUDENT}
-                register={register}
-                errors={errors}
-              />
-            )}
+            <DynamicCustomFields
+              fields={customFields}
+              target={FormFieldTarget.STUDENT}
+              register={register}
+              errors={errors}
+            />
 
             <DynamicCustomFields
               fields={customFields}

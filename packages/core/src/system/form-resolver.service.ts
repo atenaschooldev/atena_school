@@ -54,17 +54,6 @@ export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
         { label: 'Altro', value: 'other' },
       ],
     },
-    {
-      id: 'field-additional-notes',
-      key: 'additional_requests',
-      label: 'Note o richieste speciali',
-      placeholder: 'Es. orari preferiti, allergie, compagni di classe...',
-      field_type: FormFieldType.TEXTAREA,
-      target: FormFieldTarget.BOOKING,
-      is_required: false,
-      is_enabled: true,
-      sort_order: 3,
-    },
   ],
 };
 

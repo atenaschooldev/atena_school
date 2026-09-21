@@ -99,19 +99,19 @@ export function VisualFormBuilder({
         },
         {
           id: "f-source",
-          key: "found_from",
+          key: "heard_from",
           label: "Come hai conosciuto Atena School?",
-          placeholder: "Seleziona un canale...",
+          placeholder: "Seleziona come ci hai trovati...",
           field_type: FormFieldType.SELECT,
           target: FormFieldTarget.PURCHASER,
           is_required: false,
           is_enabled: true,
           sort_order: 2,
           options: [
-            { label: "Instagram", value: "instagram" },
-            { label: "Facebook", value: "facebook" },
-            { label: "Google / Ricerca Web", value: "google" },
             { label: "Passaparola / Amici", value: "word_of_mouth" },
+            { label: "Social Network (Instagram / Facebook)", value: "social" },
+            { label: "Ricerca Google / Mappe", value: "google" },
+            { label: "Volantini / Cartellonistica a scuola", value: "flyers" },
             { label: "Altro", value: "other" },
           ],
         },
@@ -697,15 +697,16 @@ export function VisualFormBuilder({
                   size="sm"
                   onClick={() =>
                     handleApplyPreset({
-                      key: "found_from",
+                      key: "heard_from",
                       label: "Come hai conosciuto Atena School?",
                       type: FormFieldType.SELECT,
                       target: FormFieldTarget.PURCHASER,
                       options: [
-                        { label: "Instagram", value: "instagram" },
-                        { label: "Facebook", value: "facebook" },
-                        { label: "Google / Web", value: "google" },
-                        { label: "Passaparola", value: "word_of_mouth" },
+                        { label: "Passaparola / Amici", value: "word_of_mouth" },
+                        { label: "Social Network (Instagram / FB)", value: "social" },
+                        { label: "Ricerca Google / Mappe", value: "google" },
+                        { label: "Volantini / Scuola", value: "flyers" },
+                        { label: "Altro", value: "other" },
                       ],
                     })
                   }
