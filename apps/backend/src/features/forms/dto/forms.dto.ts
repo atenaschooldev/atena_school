@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsArray,
   IsIn,
+  ValidateIf,
 } from 'class-validator';
 import { FormType, FormFieldConfig } from '@atena/api-types';
 
@@ -15,8 +16,9 @@ export class CreateFormTemplateDto {
 
   @ApiPropertyOptional({ description: 'Описание формы' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @ApiProperty({ enum: FormType, description: 'Тип формы' })
   @IsIn([FormType.BOOKING, FormType.CONTACT, FormType.TEST, FormType.CUSTOM])
@@ -34,11 +36,13 @@ export class CreateFormTemplateDto {
 
   @ApiPropertyOptional({ description: 'Привязка к категории курсов' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
   category_slug?: string | null;
 
   @ApiPropertyOptional({ description: 'Привязка к конкретному курсу' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
   course_id?: string | null;
 
@@ -55,8 +59,9 @@ export class UpdateFormTemplateDto {
 
   @ApiPropertyOptional({ description: 'Описание формы' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
-  description?: string;
+  description?: string | null;
 
   @ApiPropertyOptional({ enum: FormType, description: 'Тип формы' })
   @IsOptional()
@@ -75,11 +80,13 @@ export class UpdateFormTemplateDto {
 
   @ApiPropertyOptional({ description: 'Привязка к категории курсов' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
   category_slug?: string | null;
 
   @ApiPropertyOptional({ description: 'Привязка к конкретному курсу' })
   @IsOptional()
+  @ValidateIf((_, v) => v !== null && v !== undefined)
   @IsString()
   course_id?: string | null;
 
