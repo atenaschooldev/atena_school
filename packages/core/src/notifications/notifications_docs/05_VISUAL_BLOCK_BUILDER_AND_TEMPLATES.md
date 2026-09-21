@@ -51,33 +51,111 @@ export interface TemplateBlocksConfig {
 
 ---
 
-## 2. Доступные типы блоков
+## 2. Детальная спецификация всех 16 типов блоков
 
-### 2.1. Для Email (`channel = 1`):
-* `header` — брендовая шапка с логотипом школы, градиентом или navy-grid паттерном.
-* `greeting` — персонализированное приветствие с подстановкой имени (`Ciao {{student_name}}!`).
-* `summary_table` — сводная таблица бронирования (курс, даты, расписание, финансовая разбивка: курс + взнос €30 + скидка).
-* `contact_summary_table` — карточка сообщения из контактной формы лендинга.
-* `bank_details` — блок с реквизитами IBAN, назначением платежа и инструкциями для банковского перевода.
-* `school_location` — блок с адресом филиала, картой и часами работы.
-* `cta_button` — кнопка перехода (например, в Личный кабинет студента).
-* `custom_text` — произвольный HTML / текст с поддержкой переменных `{{key}}`.
-* `notes` — акцентная плашка с важными примечаниями (документы, тест уровня).
-* `footer` — подвал письма с контактами школы, реквизитами ассоциации, ссылками на соцсети и копирайтом.
+### 2.1. Блоки Email (`channel = 1`):
 
-### 2.2. Для Telegram (`channel = 2`):
-* `tg_header` — заголовок алерта с эмодзи (`🏛️ NUOVA ISCRIZIONE`).
-* `tg_student_info` — блок анкетных данных покупателя и студента (имя, телефон, Codice Fiscale).
-* `tg_course_info` — блок информации о курсе (название, расписание, дата старта).
-* `tg_payment_info` — блок финансового статуса (оплачено онлайн / ожидается в секретариате).
-* `tg_custom_text` — произвольный текст с поддержкой HTML-тегов Telegram (`<b>`, `<i>`, `<code>`).
-* `tg_inline_buttons` — конфигурация интерактивных кнопок быстрых действий.
+1. **`header` (Шапка письма):**
+   * `show_logo`: отображать логотип школы (`boolean`).
+   * `custom_title`: переопределить название школы (`string`).
+   * `custom_subtitle`: подзаголовок шапки (`string`).
+   * `logo_size`: размер логотипа (`sm`, `md`, `lg`).
+
+2. **`greeting` (Приветствие):**
+   * `greeting_text`: текст приветствия (`"Ciao {{student_name}}!"`).
+   * `subtext`: вступительный абзац (`"Ti confermiamo l'iscrizione al corso."`).
+
+3. **`summary_table` (Сводная таблица бронирования):**
+   * `show_course_price`: показывать строку стоимости курса (`boolean`).
+   * `show_reg_fee`: показывать строку ежегодного взноса €30 (`boolean`).
+   * `show_discount`: показывать скидку по промокоду (`boolean`).
+   * `show_total`: показывать итоговую сумму к оплате (`boolean`).
+   * `show_schedule`: показывать дни и время уроков (`boolean`).
+   * `show_dates`: показывать дату старта (`boolean`).
+   * `highlight_color`: цвет акцентной рамки или плашки.
+
+4. **`contact_summary_table` (Карточка лида / сообщения):**
+   * `show_sender_info`: контакты клиента (имя, телефон, email).
+   * `show_interest`: интересующий курс.
+   * `show_message`: полный текст сообщения.
+
+5. **`bank_details` (Банковские реквизиты IBAN):**
+   * `iban`: номер IBAN (по умолчанию подтягивается из профиля школы).
+   * `account_holder`: владелец счета / ассоциация.
+   * `bank_name`: наименование банка.
+   * `bic_swift`: BIC/SWIFT код.
+   * `payment_reason_template`: назначение платежа (`"Saldo corso {{course_name}} - {{student_name}}"`).
+
+6. **`school_location` (Адрес и часы работы):**
+   * `show_address`: юридический / фактический адрес филиала.
+   * `show_phone`: телефон секретариата.
+   * `show_hours`: часы работы секретариата.
+   * `show_map_link`: кнопка открытия в Google Maps.
+
+7. **`cta_button` (Кнопка действия):**
+   * `button_text`: текст на кнопке (`"Accedi al Portale Studente"`).
+   * `button_url`: ссылка (`"{{dashboard_url}}"`).
+   * `button_color`: цвет кнопки (HEX).
+   * `alignment`: выравнивание (`left`, `center`, `right`).
+
+8. **`custom_text` (Произвольный HTML / текст):**
+   * `content`: текст с разметкой и переменными `{{key}}`.
+
+9. **`notes` (Важные примечания):**
+   * `title`: заголовок плашки (`"Importante"`).
+   * `content`: текст требований (документы, подтверждение уровня).
+   * `style_variant`: `'info'` (синий), `'warning'` (желтый), `'success'` (зеленый).
+
+10. **`footer` (Подвал письма):**
+    * `show_social_links`: ссылки на Instagram, Facebook.
+    * `show_legal_notes`: реквизиты некоммерческой ассоциации.
+    * `custom_copyright`: строка копирайта.
 
 ---
 
-## 3. Компиляция и автозамена переменных
+### 2.2. Блоки Telegram (`channel = 2`):
 
-Функции компиляции в `@atena/core`:
-* `renderEmailFromBlocks(blocksConfig, variables, schoolProfile)` — формирует полный HTML-документ с табличной версткой и inline-стилями для почтовых клиентов.
-* `renderTelegramFromBlocks(blocksConfig, variables)` — генерирует структурированное сообщение для Telegram Bot API с экранированием тегов.
-* `compileTemplateVariables(text, variables)` — производит замену тегов `{{variable_name}}` на переданные значения (при отсутствии переменной подставляется пустая строка).
+11. **`tg_header`:**
+    * `title_text`: заголовок сообщения с эмодзи (`"🏛️ *NUOVA ISCRIZIONE*"`).
+    * `divider`: разделительная линия (`boolean`).
+
+12. **`tg_student_info`:**
+    * `show_purchaser`: выводить блок заказчика/родителя.
+    * `show_student`: выводить блок студента/ребенка.
+    * `show_tax_code`: выводить Codice Fiscale.
+    * `show_fiscal_data`: выводить поля PEC и SDI.
+
+13. **`tg_course_info`:**
+    * `show_dates`: дата начала.
+    * `show_schedule`: расписание занятий.
+    * `show_location`: формат (In Presenza / Online).
+
+14. **`tg_payment_info`:**
+    * `show_breakdown`: разбивка (курс + взнос €30 + промокод).
+    * `show_status_badge`: статус оплаты (Pagato / Saldo in Sede).
+
+15. **`tg_custom_text`:**
+    * `content`: произвольный текст с поддержкой тегов Telegram HTML (`<b>`, `<i>`, `<code>`, `<a href="...">`).
+
+16. **`tg_inline_buttons`:**
+    * `enable_settle_fee`: кнопка `fee` (Salda Quota €30).
+    * `enable_settle_course`: кнопка `course` (Salda Corso).
+    * `enable_settle_all`: кнопка `all` (Salda Tutto).
+    * `enable_cancel`: кнопка `cancel` (Annulla).
+    * `enable_whatsapp`: прямая ссылка в WhatsApp.
+    * `enable_stripe`: ссылка на платеж в Stripe.
+    * `enable_crm`: ссылка в карточку CRM.
+    * `enable_lang_switch`: кнопка смены языка (`it` / `en`).
+
+---
+
+## 3. Настройки темы (`theme`)
+
+Конструктор позволяет настраивать глобальный стиль письма:
+* `header_style`:
+  * `'navy_grid'` — фирменный темно-синий градиент с декоративной сеткой.
+  * `'clean_white'` — минималистичный белый стиль с темным логотипом.
+  * `'dark_gradient'` — элегантный темный фон для премиальных курсов.
+* `primary_color`: основной цвет кнопок, плашек и заголовков (HEX).
+* `accent_color`: дополнительный цвет для бейджей и выделений.
+* `background_pattern`: декоративный геометрический фон.
