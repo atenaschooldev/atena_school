@@ -123,8 +123,11 @@ export function VisualFormBuilder({
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     coursesList.forEach((c) => {
-      if (c.categoria && c.categoria.trim()) {
-        set.add(c.categoria.trim().toLowerCase());
+      if (c.categoria) {
+        const catStr = String(c.categoria).trim();
+        if (catStr) {
+          set.add(catStr.toLowerCase());
+        }
       }
     });
     return Array.from(set);
@@ -147,12 +150,12 @@ export function VisualFormBuilder({
   const filteredCourses = useMemo(() => {
     if (!courseSearch.trim()) return coursesList;
     const q = courseSearch.toLowerCase();
-    return coursesList.filter(
-      (c) =>
-        c.nome.toLowerCase().includes(q) ||
-        (c.categoria && c.categoria.toLowerCase().includes(q)) ||
-        (c.teacherName && c.teacherName.toLowerCase().includes(q))
-    );
+    return coursesList.filter((c) => {
+      const nomeStr = String(c.nome || "").toLowerCase();
+      const catStr = String(c.categoria || "").toLowerCase();
+      const teacherStr = String(c.teacherName || "").toLowerCase();
+      return nomeStr.includes(q) || catStr.includes(q) || teacherStr.includes(q);
+    });
   }, [coursesList, courseSearch]);
 
   const [activeTab, setActiveTab] = useState<"builder" | "preview">("builder");
@@ -568,7 +571,7 @@ export function VisualFormBuilder({
                   >
                     <option value="">-- Seleziona una categoria --</option>
                     {availableCategories.map((cat) => {
-                      const count = coursesList.filter((c) => c.categoria?.toLowerCase() === cat).length;
+                      const count = coursesList.filter((c) => String(c.categoria || "").toLowerCase() === cat).length;
                       return (
                         <option key={cat} value={cat}>
                           📂 {cat.toUpperCase()} ({count} corsi nel database)
