@@ -15,9 +15,10 @@
     "push:all": "git push all main",
     "use:dev": "cp apps/backend/.env.dev apps/backend/.env && cp apps/landing/.env.dev apps/landing/.env && cp apps/app/.env.dev apps/app/.env && cp apps/admin/.env.dev apps/admin/.env && echo '✓ All apps switched to DEV environment'",
     "use:prod": "cp apps/backend/.env.prod apps/backend/.env && cp apps/landing/.env.prod apps/landing/.env && cp apps/app/.env.prod apps/app/.env && cp apps/admin/.env.prod apps/admin/.env && echo '✓ All apps switched to PROD environment'",
-    "dev:dev": "pnpm use:dev && pnpm --filter backend --filter admin dev",
-    "dev:dev:all": "pnpm use:dev && pnpm --filter backend --filter admin --filter landing dev",
-    "dev:prod": "pnpm use:prod && pnpm --filter backend --filter admin dev"
+    "dev:dev": "pnpm use:dev && pnpm --filter backend --filter admin --filter landing --filter app dev",
+    "dev:dev:all": "pnpm use:dev && pnpm --filter backend --filter admin --filter landing --filter app dev",
+    "dev:prod": "pnpm use:prod && pnpm --filter backend --filter admin --filter landing --filter app dev",
+    "dev:prod:all": "pnpm use:prod && pnpm --filter backend --filter admin --filter landing --filter app dev"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
