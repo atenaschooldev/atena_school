@@ -321,7 +321,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setItem(fetchedItem);
         }
 
-        const resolvedForm = formRes?.template || (formRes?.id ? formRes : null);
+        const resolvedForm = formRes?.template || ((formRes as any)?.id ? formRes : null);
         if (resolvedForm) {
           setFormTemplate(resolvedForm);
         }

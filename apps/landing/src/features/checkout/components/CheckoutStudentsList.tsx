@@ -15,10 +15,13 @@ import {
   Phone,
   Plus,
 } from "@phosphor-icons/react";
-import type { FieldErrors } from "react-hook-form";
+import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
 import { sanitizeTaxCode } from "@atena/utils";
 import { FeeCheckStatus } from "@/constants";
+import type { FormFieldConfig } from "@atena/api-types";
+import { FormFieldTarget } from "@atena/api-types";
+import { DynamicCustomFields } from "./DynamicCustomFields";
 
 interface StudentItem {
   firstName: string;
@@ -50,6 +53,8 @@ interface CheckoutStudentsListProps {
   updateStudent: (index: number, field: keyof StudentItem, value: string) => void;
   availableSavedStudents?: SavedStudentItem[];
   onSelectSavedStudent?: (student: SavedStudentItem, targetIndex?: number) => void;
+  customFields?: FormFieldConfig[];
+  register?: UseFormRegister<any>;
 }
 
 export function CheckoutStudentsList({
@@ -62,6 +67,8 @@ export function CheckoutStudentsList({
   updateStudent,
   availableSavedStudents,
   onSelectSavedStudent,
+  customFields = [],
+  register,
 }: CheckoutStudentsListProps) {
   return (
     <div className="space-y-4 pt-3 border-t border-slate-100">
@@ -302,6 +309,17 @@ export function CheckoutStudentsList({
                   )}
                 </div>
               </div>
+
+              {/* Student Custom Fields for this student */}
+              {register && (
+                <DynamicCustomFields
+                  fields={customFields}
+                  target={FormFieldTarget.STUDENT}
+                  register={register}
+                  namePrefix={studentsList.length > 1 ? `custom_fields.students.${idx}` : "custom_fields"}
+                  inline={true}
+                />
+              )}
             </div>
           );
         })}

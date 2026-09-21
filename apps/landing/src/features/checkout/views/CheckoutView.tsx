@@ -187,13 +187,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               savedProfileSource={savedProfileSource}
               onClearSavedProfile={clearSavedProfile}
               onOpenAuthModal={() => setAuthModalOpen(true)}
-            />
-
-            <DynamicCustomFields
-              fields={customFields}
-              target={FormFieldTarget.PURCHASER}
-              register={register}
-              errors={errors}
+              customFields={customFields}
             />
 
             {isForChild && (
@@ -207,21 +201,19 @@ export function CheckoutView({ id }: CheckoutViewProps) {
                 updateStudent={updateStudent}
                 availableSavedStudents={availableSavedStudents}
                 onSelectSavedStudent={selectSavedStudent}
+                customFields={customFields}
+                register={register}
               />
             )}
 
-            <DynamicCustomFields
-              fields={customFields}
-              target={FormFieldTarget.STUDENT}
-              register={register}
-              errors={errors}
-            />
-
+            {/* General booking-level custom fields if configured */}
             <DynamicCustomFields
               fields={customFields}
               target={FormFieldTarget.BOOKING}
               register={register}
               errors={errors}
+              inline={false}
+              title="Informazioni Aggiuntive"
             />
 
             <CheckoutBillingSchemeSelector

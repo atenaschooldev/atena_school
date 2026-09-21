@@ -17,11 +17,13 @@ import {
 } from "@phosphor-icons/react";
 import type { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
-import type { UserProfile } from "@atena/api-types";
+import type { UserProfile, FormFieldConfig } from "@atena/api-types";
+import { FormFieldTarget } from "@atena/api-types";
 import { sanitizeTaxCode } from "@atena/utils";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
 import { FeeCheckStatus } from "@/constants";
 import { getStudentPortalUrl, getLandingSiteUrl } from "@/lib/urls";
+import { DynamicCustomFields } from "./DynamicCustomFields";
 
 interface CheckoutPurchaserFieldsProps {
   register: UseFormRegister<CheckoutFormValues>;
@@ -35,6 +37,7 @@ interface CheckoutPurchaserFieldsProps {
   savedProfileSource?: "local" | "account" | "draft" | null;
   onClearSavedProfile?: () => void;
   onOpenAuthModal?: () => void;
+  customFields?: FormFieldConfig[];
 }
 
 export function CheckoutPurchaserFields({
@@ -49,6 +52,7 @@ export function CheckoutPurchaserFields({
   savedProfileSource,
   onClearSavedProfile,
   onOpenAuthModal,
+  customFields = [],
 }: CheckoutPurchaserFieldsProps) {
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");
@@ -264,6 +268,15 @@ export function CheckoutPurchaserFields({
           </div>
         </div>
 
+        {/* Purchaser Custom Fields */}
+        <DynamicCustomFields
+          fields={customFields}
+          target={FormFieldTarget.PURCHASER}
+          register={register}
+          errors={errors}
+          inline={true}
+        />
+
         {/* Purchaser Tax Code (when parent) OR Personal Tax Code (when purchasing for self) */}
         {isForChild ? (
           <div className="min-w-0">
@@ -393,6 +406,15 @@ export function CheckoutPurchaserFields({
                 <p id="checkout-taxCode-error" role="alert" className="text-[10px] text-red-500 mt-1 font-semibold">{errors.taxCode.message}</p>
               )}
             </div>
+
+            {/* Student Custom Fields for self-registration */}
+            <DynamicCustomFields
+              fields={customFields}
+              target={FormFieldTarget.STUDENT}
+              register={register}
+              errors={errors}
+              inline={true}
+            />
           </div>
         )}
 

@@ -45,7 +45,7 @@ export function useContactForm() {
     async function loadTemplate() {
       try {
         const res = await api.forms.resolve({ form_type: "contact" });
-        const tpl = res?.template || (res?.id ? res : null);
+        const tpl = res?.template || ((res as any)?.id ? res : null);
         if (isMounted && tpl) {
           setFormTemplate(tpl);
         }
