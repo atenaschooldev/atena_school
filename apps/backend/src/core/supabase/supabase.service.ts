@@ -10,7 +10,7 @@ export class SupabaseService implements OnModuleInit {
 
   onModuleInit() {
     const url = this.configService.get<string>('SUPABASE_URL');
-    const key = this.configService.get<string>('SUPABASE_KEY') || this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY');
+    const key = this.configService.get<string>('SUPABASE_SERVICE_ROLE_KEY') || this.configService.get<string>('SUPABASE_KEY');
 
     if (url && key) {
       this.client = createClient(url, key, {
