@@ -13,6 +13,7 @@ import {
 import {
   resolveActiveFormTemplate,
   DEFAULT_BOOKING_FORM_TEMPLATE,
+  DEFAULT_CONTACT_FORM_TEMPLATE,
 } from '@atena/core';
 import {
   CreateFormTemplateDto,
@@ -43,20 +44,28 @@ export class FormsService {
         query = query.eq('is_active', filter.is_active);
       }
 
+      const defaultList = [DEFAULT_BOOKING_FORM_TEMPLATE, DEFAULT_CONTACT_FORM_TEMPLATE];
+      const getFallback = () => {
+        if (filter?.form_type) {
+          return defaultList.filter((f) => f.form_type === filter.form_type);
+        }
+        return defaultList;
+      };
+
       const { data, error } = await query;
       if (error) {
         this.logger.warn(`Failed to fetch form templates from DB: ${error.message}. Returning default.`);
-        return [DEFAULT_BOOKING_FORM_TEMPLATE];
+        return getFallback();
       }
 
       if (!data || data.length === 0) {
-        return [DEFAULT_BOOKING_FORM_TEMPLATE];
+        return getFallback();
       }
 
       return data as FormTemplate[];
     } catch (err: any) {
       this.logger.error(`Error in getForms: ${err.message}`);
-      return [DEFAULT_BOOKING_FORM_TEMPLATE];
+      return [DEFAULT_BOOKING_FORM_TEMPLATE, DEFAULT_CONTACT_FORM_TEMPLATE];
     }
   }
 
