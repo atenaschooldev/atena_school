@@ -18,6 +18,7 @@ import {
   Plug,
   Building2,
   Palette,
+  ClipboardList,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -117,6 +118,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: t("nav.notifications") || "Notifiche & Template",
           url: "/notifiche",
           icon: Bell,
+        },
+        {
+          title: "Moduli & Form Engine",
+          url: "/moduli",
+          icon: ClipboardList,
         },
       ],
     },

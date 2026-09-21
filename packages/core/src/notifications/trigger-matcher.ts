@@ -7,6 +7,18 @@ export function getFieldValue(obj: Record<string, any>, path: string): any {
   if (Object.prototype.hasOwnProperty.call(obj, path)) {
     return obj[path];
   }
+
+  // Check inside custom_fields if not found directly
+  if (obj.custom_fields && typeof obj.custom_fields === 'object') {
+    if (Object.prototype.hasOwnProperty.call(obj.custom_fields, path)) {
+      return obj.custom_fields[path];
+    }
+    const cleanPath = path.replace(/^custom\./, '').replace(/^custom_fields\./, '');
+    if (Object.prototype.hasOwnProperty.call(obj.custom_fields, cleanPath)) {
+      return obj.custom_fields[cleanPath];
+    }
+  }
+
   if (!path.includes('.')) {
     return obj[path];
   }

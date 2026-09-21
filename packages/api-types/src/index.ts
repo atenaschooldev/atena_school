@@ -43,9 +43,11 @@ export * from './commerce/payments';
 export * from './commerce/discounts';
 
 // ----------------------------------------------------------------------------
-// 5. System & Platform Domain (Settings, Notifications, Contact Leads, Integrations)
+// 5. System & Platform Domain (Settings, Notifications, Contact Leads, Integrations, Forms)
 // ----------------------------------------------------------------------------
 export * from './system/settings';
 export * from './system/notifications';
 export * from './system/contact';
 export * from './system/integrations';
+export * from './system/form-templates';
+

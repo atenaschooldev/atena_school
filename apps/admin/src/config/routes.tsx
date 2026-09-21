@@ -15,6 +15,7 @@ const Iscrizioni = lazy(() => import('@/app/iscrizioni/page'))
 const Insegnanti = lazy(() => import('@/app/insegnanti/page'))
 const Promozioni = lazy(() => import('@/app/promozioni/page'))
 const Notifiche = lazy(() => import('@/app/notifiche/page'))
+const Moduli = lazy(() => import('@/app/moduli/page'))
 const FAQs = lazy(() => import('@/app/faqs/page'))
 
 // Auth pages
@@ -113,6 +114,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/notifiche",
     element: <Notifiche />
+  },
+  {
+    path: "/moduli",
+    element: <Moduli />
   },
 
   // Authentication Routes
