@@ -3,10 +3,10 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 import { useTranslation } from "@/i18n/context";
 import {
-  FormTemplate,
+  type FormTemplate,
   FormType,
-  CreateFormTemplateDto,
-  UpdateFormTemplateDto,
+  type CreateFormTemplateDto,
+  type UpdateFormTemplateDto,
 } from "../types";
 import { DEFAULT_BOOKING_FORM_TEMPLATE } from "@atena/core";
 

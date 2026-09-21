@@ -77,11 +77,12 @@ export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
  * Приоритет 5: Дефолтный встроенный шаблон системы (для booking)
  */
 export function resolveActiveFormTemplate(
-  templates: FormTemplate[] = [],
-  query: ResolveFormQuery
+  templates?: FormTemplate[] | null,
+  query: ResolveFormQuery = { form_type: FormType.BOOKING }
 ): FormTemplate {
-  const activeTemplates = templates.filter(
-    (t) => t.is_active && t.form_type === query.form_type
+  const safeTemplates = Array.isArray(templates) ? templates : [];
+  const activeTemplates = safeTemplates.filter(
+    (t) => t && t.is_active && t.form_type === query.form_type
   );
 
   // 1. Проверка по конкретному курсу

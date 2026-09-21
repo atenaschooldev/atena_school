@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FormTemplate, FormFieldType, FormFieldTarget } from "../types";
+import { type FormTemplate, FormFieldType, FormFieldTarget } from "../types";
 import { Smartphone, Monitor, CheckCircle, Info, ShieldCheck } from "lucide-react";
 
 interface FormPreviewModalProps {

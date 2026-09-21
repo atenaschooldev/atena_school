@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useForms } from "../hooks/use-forms";
-import { FormTemplate, FormType } from "../types";
+import { type FormTemplate, FormType } from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
 import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";

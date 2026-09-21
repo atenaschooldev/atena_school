@@ -51,11 +51,12 @@ export interface SystemTriggerDefinition {
 
 Матчер условий позволяет настраивать гибкие правила фильтрации триггеров на основе JSON-объекта `conditions`.
 
-### 3.1. Доступ к вложенным полям (Dot-Notation)
+### 3.1. Доступ к вложенным полям (Dot-Notation) и кастомным полям форм
 Функция `getFieldValue(payload, path)` безопасно извлекает значения первого уровня или вложенные свойства:
 * `course.price`
 * `student.is_minor`
 * `purchaser.tax_code`
+* **Кастомные поля форм из `bookings.custom_fields`**: автоматически доступны через прямые ключи `study_level`, с префиксом `custom.study_level` или полным путем `custom_fields.study_level`.
 
 ### 3.2. Нормализация булевых значений
 Функция `normalizeBoolean(val)` корректно приводит к `true`: `true`, `1`, `'1'`, `'true'`, `'TRUE'`.
