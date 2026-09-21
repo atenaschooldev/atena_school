@@ -12,7 +12,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useForms } from "../hooks/use-forms";
-import { type FormTemplate, FormType, FormFieldType, FormFieldTarget } from "../types";
+import {
+  type FormTemplate,
+  FormType,
+  FormFieldType,
+  FormFieldTarget,
+  FORM_TYPE_DICTIONARY,
+  FORM_FIELD_TARGET_DICTIONARY,
+} from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
 import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
@@ -60,10 +67,22 @@ import {
 } from "lucide-react";
 
 export function FormsListView() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const targetCourseParam = searchParams[0]?.get("courseId") || searchParams[0]?.get("course_id");
   const { coursesList } = useCourses();
+
+  const getFormTypeLabel = (val: FormType): string => {
+    const entry = FORM_TYPE_DICTIONARY[val];
+    if (entry) return locale === "en" ? entry.label_en : entry.label_it;
+    return val;
+  };
+
+  const getFieldTargetLabel = (val: FormFieldTarget): string => {
+    const entry = FORM_FIELD_TARGET_DICTIONARY[val];
+    if (entry) return locale === "en" ? entry.label_en : entry.label_it;
+    return val;
+  };
 
   const {
     forms,
@@ -125,31 +144,31 @@ export function FormsListView() {
 
     return [
       {
-        title: "Modelli Totali",
+        title: t("forms.metricTotalLabel"),
         value: total,
-        description: `${activeCount} attivi nel sistema`,
+        description: `${activeCount} ${t("forms.metricTotalDesc")}`,
         icon: Layers,
       },
       {
-        title: "Moduli per Corsi",
+        title: t("forms.metricCoursesLabel"),
         value: courseSpecific,
-        description: "Personalizzati per corsi singoli",
+        description: t("forms.metricCoursesDesc"),
         icon: GraduationCap,
       },
       {
-        title: "Moduli per Categorie",
+        title: t("forms.metricCategoryLabel"),
         value: categorySpecific,
-        description: "Applicati per categoria (es. Kids)",
+        description: t("forms.metricCategoryDesc"),
         icon: Folder,
       },
       {
-        title: "Modulo Globale",
-        value: forms.filter((f) => f.is_default).length > 0 ? "Attivo" : "Standard",
-        description: "Fallback predefinito checkout",
+        title: t("forms.metricGlobalLabel"),
+        value: forms.filter((f) => f.is_default).length > 0 ? (locale === "en" ? "Active" : "Attivo") : "Standard",
+        description: t("forms.metricGlobalDesc"),
         icon: Globe,
       },
     ];
-  }, [forms]);
+  }, [forms, t, locale]);
 
   // Filtering
   const filteredForms = useMemo(() => {
@@ -190,11 +209,13 @@ export function FormsListView() {
 
   const handleDeleteForm = async (form: FormTemplate) => {
     if (form.is_default) {
-      alert("Il modulo predefinito globale non può essere eliminato. Imposta un altro modulo come predefinito prima.");
+      alert(locale === "en" ? "The default global form cannot be deleted. Set another form as default first." : "Il modulo predefinito globale non può essere eliminato. Imposta un altro modulo come predefinito prima.");
       return;
     }
     const confirmed = window.confirm(
-      `Sei sicuro di voler eliminare il modello "${form.title}"? Le registrazioni già completate manterranno i dati storici.`
+      locale === "en"
+        ? `Are you sure you want to delete "${form.title}"? Completed registrations will keep historical data.`
+        : `Sei sicuro di voler eliminare il modello "${form.title}"? Le registrazioni già completate manterranno i dati storici.`
     );
     if (confirmed) {
       await deleteForm(form.id);
@@ -236,7 +257,7 @@ export function FormsListView() {
     return [
       {
         accessorKey: "title",
-        header: "Nome Modulo & Dettagli",
+        header: t("forms.columnNameDetails"),
         cell: ({ row }) => {
           const form = row.original;
           return (
@@ -246,11 +267,11 @@ export function FormsListView() {
                 {form.is_default && (
                   <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-2 py-0.5 shadow-2xs">
                     <Star className="w-3 h-3 fill-current" />
-                    Predefinito
+                    {t("forms.badgeDefault")}
                   </Badge>
                 )}
                 <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                  {form.form_type}
+                  {getFormTypeLabel(form.form_type)}
                 </Badge>
               </div>
               {form.description && (
@@ -262,14 +283,14 @@ export function FormsListView() {
       },
       {
         id: "target",
-        header: "Destinazione / Target",
+        header: t("forms.columnDestination"),
         cell: ({ row }) => {
           const form = row.original;
           if (form.form_type === FormType.CONTACT) {
             return (
               <Badge variant="outline" className="border-blue-500/30 text-blue-700 dark:text-blue-400 bg-blue-50/60 font-semibold text-xs gap-1.5 py-1">
                 <Globe className="w-3.5 h-3.5 text-blue-500" />
-                Sito Web & Landing (Contatti)
+                {t("forms.targetContactSite")}
               </Badge>
             );
           }
@@ -278,7 +299,7 @@ export function FormsListView() {
             return (
               <Badge variant="outline" className="border-purple-500/30 text-purple-600 dark:text-purple-400 bg-purple-500/5 font-semibold text-xs gap-1.5 py-1">
                 <GraduationCap className="w-3.5 h-3.5" />
-                {course?.nome || "Corso specifico"}
+                {course?.nome || t("forms.targetCourse")}
               </Badge>
             );
           }
@@ -286,21 +307,21 @@ export function FormsListView() {
             return (
               <Badge variant="outline" className="border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5 font-semibold text-xs gap-1.5 py-1">
                 <Folder className="w-3.5 h-3.5" />
-                Cat: {form.category_slug.toUpperCase()}
+                {t("forms.targetCategory")}: {form.category_slug.toUpperCase()}
               </Badge>
             );
           }
           return (
             <Badge variant="outline" className="border-slate-300 text-slate-600 dark:text-slate-400 bg-slate-100/50 font-medium text-xs gap-1.5 py-1">
               <Globe className="w-3.5 h-3.5 text-slate-400" />
-              Tutti i corsi (Globale)
+              {t("forms.targetGlobal")}
             </Badge>
           );
         },
       },
       {
         id: "fields",
-        header: "Campi Configurati",
+        header: t("forms.columnFields"),
         cell: ({ row }) => {
           const fields = row.original.fields_config || [];
           const enabledCount = fields.filter((f) => f.is_enabled).length;
@@ -310,16 +331,16 @@ export function FormsListView() {
           return (
             <div className="flex items-center gap-1.5 flex-wrap">
               <Badge variant="secondary" className="text-xs font-bold px-2 py-0.5">
-                {enabledCount} attivi
+                {enabledCount} {t("forms.badgeActive").toLowerCase()}
               </Badge>
               {purchaserCount > 0 && (
                 <span className="text-[11px] text-muted-foreground font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                  {purchaserCount} genitore
+                  {purchaserCount} {getFieldTargetLabel(FormFieldTarget.PURCHASER).toLowerCase()}
                 </span>
               )}
               {studentCount > 0 && (
                 <span className="text-[11px] text-muted-foreground font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                  {studentCount} studente
+                  {studentCount} {getFieldTargetLabel(FormFieldTarget.STUDENT).toLowerCase()}
                 </span>
               )}
             </div>
@@ -328,7 +349,7 @@ export function FormsListView() {
       },
       {
         accessorKey: "is_active",
-        header: "Stato",
+        header: t("forms.columnStatus"),
         cell: ({ row }) => {
           const form = row.original;
           return (
@@ -347,7 +368,7 @@ export function FormsListView() {
       },
       {
         id: "actions",
-        header: "Azioni",
+        header: t("forms.columnActions"),
         enableHiding: false,
         cell: ({ row }) => {
           const form = row.original;
@@ -359,7 +380,7 @@ export function FormsListView() {
                   size="icon"
                   className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-amber-600"
                   onClick={() => setDefaultForm(form.id)}
-                  title="Imposta come predefinito"
+                  title={t("forms.badgeDefault")}
                 >
                   <Star className="h-4 w-4" />
                 </Button>
@@ -369,7 +390,7 @@ export function FormsListView() {
                 size="icon"
                 className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={() => setPreviewForm(form)}
-                title="Anteprima modulo"
+                title="Preview"
               >
                 <Eye className="h-4 w-4" />
               </Button>
@@ -378,7 +399,7 @@ export function FormsListView() {
                 size="icon"
                 className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={() => duplicateForm(form.id)}
-                title="Duplica modulo"
+                title={t("forms.actionDuplicate")}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -387,7 +408,7 @@ export function FormsListView() {
                 size="icon"
                 className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
                 onClick={() => setEditingForm(form)}
-                title="Modifica modulo e campi"
+                title={t("forms.actionEdit")}
               >
                 <Pencil className="h-4 w-4" />
               </Button>
@@ -398,7 +419,7 @@ export function FormsListView() {
                   className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors"
                   onClick={() => handleDeleteForm(form)}
                   disabled={isDeleting}
-                  title="Elimina modulo"
+                  title={t("forms.actionDelete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -408,7 +429,7 @@ export function FormsListView() {
         },
       },
     ];
-  }, [coursesList, isUpdating, isDeleting, setDefaultForm, duplicateForm]);
+  }, [coursesList, isUpdating, isDeleting, setDefaultForm, duplicateForm, t, locale]);
 
   const table = useReactTable({
     data: filteredForms,
@@ -423,13 +444,15 @@ export function FormsListView() {
 
   if (editingForm) {
     return (
-      <VisualFormBuilder
-        key={editingForm === "new" ? "new" : (editingForm.id || "draft")}
-        initialForm={editingForm === "new" ? null : editingForm}
-        onSave={handleSave}
-        onCancel={() => setEditingForm(null)}
-        isSaving={isCreating || isUpdating}
-      />
+      <div className="px-4 lg:px-6">
+        <VisualFormBuilder
+          key={editingForm === "new" ? "new" : (editingForm.id || "draft")}
+          initialForm={editingForm === "new" ? null : editingForm}
+          onSave={handleSave}
+          onCancel={() => setEditingForm(null)}
+          isSaving={isCreating || isUpdating}
+        />
+      </div>
     );
   }
 
@@ -449,7 +472,7 @@ export function FormsListView() {
               }`}
             >
               <Layers className="h-4 w-4" />
-              Modelli di Form ({forms.length})
+              {t("forms.tabTemplates")} ({forms.length})
             </button>
             <button
               type="button"
@@ -461,7 +484,7 @@ export function FormsListView() {
               }`}
             >
               <BookOpen className="h-4 w-4 text-sky-500" />
-              Guida Campi & Target
+              {t("forms.tabFieldsGuide")}
             </button>
             <button
               type="button"
@@ -473,7 +496,7 @@ export function FormsListView() {
               }`}
             >
               <Award className="h-4 w-4 text-amber-500" />
-              Quota Associativa (€30)
+              {t("forms.tabQuota")} (€30)
             </button>
           </div>
         </div>
@@ -487,9 +510,9 @@ export function FormsListView() {
                 <div className="p-2 w-fit rounded-lg bg-blue-500/10 text-blue-600 mb-2">
                   <User className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-base font-bold">Target: Acquirente / Genitore</CardTitle>
+                <CardTitle className="text-base font-bold">{t("forms.guidePurchaserTitle")}</CardTitle>
                 <CardDescription className="text-xs">
-                  Valori salvati nei dati del pagatore o del genitore che effettua l'ordine.
+                  {t("forms.guidePurchaserDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
@@ -503,9 +526,9 @@ export function FormsListView() {
                 <div className="p-2 w-fit rounded-lg bg-purple-500/10 text-purple-600 mb-2">
                   <Users className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-base font-bold">Target: Studente / Figlio</CardTitle>
+                <CardTitle className="text-base font-bold">{t("forms.guideStudentTitle")}</CardTitle>
                 <CardDescription className="text-xs">
-                  Valori legati alle competenze o caratteristiche del singolo studente iscritto.
+                  {t("forms.guideStudentDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
@@ -519,9 +542,9 @@ export function FormsListView() {
                 <div className="p-2 w-fit rounded-lg bg-emerald-500/10 text-emerald-600 mb-2">
                   <Calendar className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-base font-bold">Target: Prenotazione / Generale</CardTitle>
+                <CardTitle className="text-base font-bold">{t("forms.guideBookingTitle")}</CardTitle>
                 <CardDescription className="text-xs">
-                  Valori generali relativi alla sessione o preferenze di orario del servizio.
+                  {t("forms.guideBookingDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
@@ -562,28 +585,28 @@ export function FormsListView() {
             <DataViewToolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              searchPlaceholder="Cerca modulo per nome, corso o categoria..."
+              searchPlaceholder={t("forms.searchPlaceholder")}
               filters={[
                 {
                   value: typeFilter,
                   onChange: setTypeFilter,
-                  placeholder: "Tipo Modulo",
+                  placeholder: t("forms.filterType"),
                   options: [
-                    { value: "all", label: "Tutti i tipi" },
-                    { value: FormType.BOOKING, label: "Iscrizione (Booking)" },
-                    { value: FormType.CONTACT, label: "Contatto (Lead)" },
-                    { value: FormType.TEST, label: "Test Livello" },
-                    { value: FormType.CUSTOM, label: "Personalizzato" },
+                    { value: "all", label: t("forms.typeAll") },
+                    { value: FormType.BOOKING, label: getFormTypeLabel(FormType.BOOKING) },
+                    { value: FormType.CONTACT, label: getFormTypeLabel(FormType.CONTACT) },
+                    { value: FormType.TEST, label: getFormTypeLabel(FormType.TEST) },
+                    { value: FormType.CUSTOM, label: getFormTypeLabel(FormType.CUSTOM) },
                   ],
                 },
                 {
                   value: statusFilter,
                   onChange: setStatusFilter,
-                  placeholder: "Stato",
+                  placeholder: t("forms.filterStatus"),
                   options: [
-                    { value: "all", label: "Tutti gli stati" },
-                    { value: "active", label: "Attivo" },
-                    { value: "inactive", label: "Disattivato" },
+                    { value: "all", label: t("forms.statusAll") },
+                    { value: "active", label: t("forms.statusActive") },
+                    { value: "inactive", label: t("forms.statusInactive") },
                   ],
                 },
               ]}
@@ -592,7 +615,7 @@ export function FormsListView() {
                   onClick={() => setEditingForm("new")}
                   className="font-medium cursor-pointer shadow-sm text-xs"
                 >
-                  <Plus className="mr-1.5 h-4 w-4" /> Nuovo Modulo
+                  <Plus className="mr-1.5 h-4 w-4" /> {t("forms.newFormBtn")}
                 </Button>
               }
               viewMode={viewMode}
@@ -632,7 +655,7 @@ export function FormsListView() {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                            Nessun modello di modulo trovato.
+                            {t("forms.noFormsFound")}
                           </TableCell>
                         </TableRow>
                       )}
@@ -658,12 +681,12 @@ export function FormsListView() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                              {form.form_type}
+                              {getFormTypeLabel(form.form_type)}
                             </Badge>
                             {form.is_default && (
                               <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-1.5 py-0.5">
                                 <Star className="w-3 h-3 fill-current" />
-                                Predefinito
+                                {t("forms.badgeDefault")}
                               </Badge>
                             )}
                           </div>
@@ -693,30 +716,30 @@ export function FormsListView() {
                           {form.course_id ? (
                             <Badge variant="outline" className="text-purple-600 dark:text-purple-400 border-purple-500/30 bg-purple-500/5 font-semibold text-[11px] gap-1">
                               <GraduationCap className="w-3 h-3" />
-                              {coursesList.find((c) => c.id === form.course_id)?.nome || "Corso dedicato"}
+                              {coursesList.find((c) => c.id === form.course_id)?.nome || t("forms.targetCourse")}
                             </Badge>
                           ) : form.category_slug ? (
                             <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 font-semibold text-[11px] gap-1">
                               <Folder className="w-3 h-3" />
-                              {form.category_slug.toUpperCase()}
+                              {t("forms.targetCategory")}: {form.category_slug.toUpperCase()}
                             </Badge>
                           ) : form.form_type === FormType.CONTACT ? (
                             <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 text-[11px] gap-1">
                               <Globe className="w-3 h-3 text-blue-500" />
-                              Sito Web & Landing (Contatti)
+                              {t("forms.targetContactSite")}
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="text-muted-foreground text-[11px] gap-1">
                               <Globe className="w-3 h-3" />
-                              Tutti i corsi (Globale)
+                              {t("forms.targetGlobal")}
                             </Badge>
                           )}
                         </div>
 
                         <div className="text-xs text-muted-foreground flex items-center justify-between">
-                          <span>Campi dinamici:</span>
+                          <span>{t("forms.columnFields")}:</span>
                           <span className="font-bold text-foreground">
-                            {enabledCount} attivi {fieldsCount !== enabledCount && `(${fieldsCount} tot)`}
+                            {enabledCount} {t("forms.badgeActive").toLowerCase()} {fieldsCount !== enabledCount && `(${fieldsCount} tot)`}
                           </span>
                         </div>
                       </CardContent>
@@ -728,7 +751,7 @@ export function FormsListView() {
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600 cursor-pointer"
-                              title="Imposta predefinito"
+                              title={t("forms.badgeDefault")}
                               onClick={() => setDefaultForm(form.id)}
                             >
                               <Star className="w-3.5 h-3.5" />
@@ -738,7 +761,7 @@ export function FormsListView() {
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Anteprima"
+                            title="Preview"
                             onClick={() => setPreviewForm(form)}
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -747,7 +770,7 @@ export function FormsListView() {
                             size="sm"
                             variant="ghost"
                             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Duplica"
+                            title={t("forms.actionDuplicate")}
                             onClick={() => duplicateForm(form.id)}
                           >
                             <Copy className="w-3.5 h-3.5" />
@@ -757,7 +780,7 @@ export function FormsListView() {
                               size="sm"
                               variant="ghost"
                               className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                              title="Elimina"
+                              title={t("forms.actionDelete")}
                               onClick={() => handleDeleteForm(form)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -772,7 +795,7 @@ export function FormsListView() {
                           onClick={() => setEditingForm(form)}
                         >
                           <Pencil className="w-3.5 h-3.5" />
-                          Modifica
+                          {t("forms.actionEdit")}
                         </Button>
                       </div>
                     </Card>
@@ -780,7 +803,7 @@ export function FormsListView() {
                 })}
                 {filteredForms.length === 0 && (
                   <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                    Nessun modello di modulo trovato.
+                    {t("forms.noFormsFound")}
                   </div>
                 )}
               </div>

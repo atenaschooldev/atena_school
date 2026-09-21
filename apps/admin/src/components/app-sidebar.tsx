@@ -56,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: t("nav.website"),
-          url: "https://atena-school-landing-three.vercel.app/",
+          url: "https://atenaschool.com",
           icon: Globe,
         },
       ],

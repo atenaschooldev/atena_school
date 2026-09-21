@@ -136,95 +136,102 @@ export default function ScrollAnimateProvider({
 
   // GSAP Responsive MatchMedia & Context Setup
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const mm = gsap.matchMedia();
+    let ctx: gsap.Context | null = null;
+    let timer: NodeJS.Timeout | null = null;
 
-      mm.add(
-        {
-          isDesktop: "(min-width: 1024px) and (pointer: fine)",
-          isMobile: "(max-width: 1023px), (pointer: coarse)",
-          reduceMotion: "(prefers-reduced-motion: reduce)",
-        },
-        (context) => {
-          const conditions = context.conditions as {
-            isDesktop?: boolean;
-            isMobile?: boolean;
-            reduceMotion?: boolean;
-          } | undefined;
-          const isDesktop = conditions?.isDesktop;
-          const isMobile = conditions?.isMobile;
-          const reduceMotion = conditions?.reduceMotion;
+    // Defer to next animation frame so React finishes hydration pass before GSAP mutates element styles
+    const frameId = requestAnimationFrame(() => {
+      ctx = gsap.context(() => {
+        const mm = gsap.matchMedia();
 
-          // 1. Reduced motion preference -> clear all inline styles immediately
-          if (reduceMotion) {
-            gsap.set("[data-gsap]", { clearProps: "all", opacity: 1, y: 0 });
-            return;
+        mm.add(
+          {
+            isDesktop: "(min-width: 1024px) and (pointer: fine)",
+            isMobile: "(max-width: 1023px), (pointer: coarse)",
+            reduceMotion: "(prefers-reduced-motion: reduce)",
+          },
+          (context) => {
+            const conditions = context.conditions as {
+              isDesktop?: boolean;
+              isMobile?: boolean;
+              reduceMotion?: boolean;
+            } | undefined;
+            const isDesktop = conditions?.isDesktop;
+            const isMobile = conditions?.isMobile;
+            const reduceMotion = conditions?.reduceMotion;
+
+            // 1. Reduced motion preference -> clear all inline styles immediately
+            if (reduceMotion) {
+              gsap.set("[data-gsap]", { clearProps: "all", opacity: 1, y: 0 });
+              return;
+            }
+
+            // 2. Mobile devices: Snappy, lightweight fade-in without heavy shifts or jank
+            if (isMobile) {
+              const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
+              elements.forEach((el) => {
+                gsap.fromTo(
+                  el,
+                  { autoAlpha: 0, y: 10 },
+                  {
+                    autoAlpha: 1,
+                    y: 0,
+                    duration: 0.35,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                      trigger: el,
+                      start: "top 95%",
+                      once: true,
+                    },
+                  }
+                );
+              });
+            }
+
+            // 3. Desktop: Smooth premium animations with custom delays
+            if (isDesktop) {
+              const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
+              elements.forEach((el) => {
+                const animationType = el.getAttribute("data-gsap") || "fade-up";
+                const delayStr = el.getAttribute("data-gsap-delay") || "0";
+                const delay = parseFloat(delayStr) / 1000;
+                const durationStr = el.getAttribute("data-gsap-duration") || "500";
+                const duration = parseFloat(durationStr) / 1000;
+
+                const initialY = animationType === "fade-up" ? 20 : 0;
+
+                gsap.fromTo(
+                  el,
+                  { autoAlpha: 0, y: initialY },
+                  {
+                    autoAlpha: 1,
+                    y: 0,
+                    duration,
+                    delay,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                      trigger: el,
+                      start: "top 90%",
+                      once: true,
+                    },
+                  }
+                );
+              });
+            }
           }
+        );
+      });
 
-          // 2. Mobile devices: Snappy, lightweight fade-in without heavy shifts or jank
-          if (isMobile) {
-            const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
-            elements.forEach((el) => {
-              gsap.fromTo(
-                el,
-                { autoAlpha: 0, y: 10 },
-                {
-                  autoAlpha: 1,
-                  y: 0,
-                  duration: 0.35,
-                  ease: "power2.out",
-                  scrollTrigger: {
-                    trigger: el,
-                    start: "top 95%",
-                    once: true,
-                  },
-                }
-              );
-            });
-          }
-
-          // 3. Desktop: Smooth premium animations with custom delays
-          if (isDesktop) {
-            const elements = gsap.utils.toArray<HTMLElement>("[data-gsap]");
-            elements.forEach((el) => {
-              const animationType = el.getAttribute("data-gsap") || "fade-up";
-              const delayStr = el.getAttribute("data-gsap-delay") || "0";
-              const delay = parseFloat(delayStr) / 1000;
-              const durationStr = el.getAttribute("data-gsap-duration") || "500";
-              const duration = parseFloat(durationStr) / 1000;
-
-              const initialY = animationType === "fade-up" ? 20 : 0;
-
-              gsap.fromTo(
-                el,
-                { autoAlpha: 0, y: initialY },
-                {
-                  autoAlpha: 1,
-                  y: 0,
-                  duration,
-                  delay,
-                  ease: "power2.out",
-                  scrollTrigger: {
-                    trigger: el,
-                    start: "top 90%",
-                    once: true,
-                  },
-                }
-              );
-            });
-          }
-        }
-      );
+      // Refresh ScrollTrigger after DOM renders
+      timer = setTimeout(() => {
+        ScrollTrigger.refresh();
+      }, 100);
     });
 
-    // Refresh ScrollTrigger after DOM renders
-    const timer = setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 100);
-
     return () => {
-      clearTimeout(timer);
-      ctx.revert();
+      cancelAnimationFrame(frameId);
+      if (timer) clearTimeout(timer);
+      if (ctx) ctx.revert();
     };
   }, [pathname]);
 

@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   type FormTemplate,
   type FormFieldConfig,
   FormFieldType,
   FormFieldTarget,
   FormType,
+  FORM_TYPE_DICTIONARY,
+  FORM_FIELD_TYPE_DICTIONARY,
+  FORM_FIELD_TARGET_DICTIONARY,
 } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +17,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -31,25 +41,23 @@ import {
   Eye,
   Layers,
   Sparkles,
-  CheckCircle2,
   ShieldCheck,
+  Star,
   User,
-  Users,
   FileText,
   HelpCircle,
   Smartphone,
   Monitor,
-  Calendar,
   Building,
-  CreditCard,
-  Lock,
   Globe,
   Folder,
   GraduationCap,
   ChevronRight,
   Search,
 } from "lucide-react";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { useCourses } from "@/features/courses/hooks/use-courses";
+import { useTranslation } from "@/i18n/context";
 
 interface VisualFormBuilderProps {
   initialForm?: FormTemplate | null;
@@ -64,7 +72,26 @@ export function VisualFormBuilder({
   onCancel,
   isSaving = false,
 }: VisualFormBuilderProps) {
+  const { t, locale } = useTranslation();
   const { coursesList, loading: loadingCourses } = useCourses();
+
+  const getFormTypeLabel = (val: FormType): string => {
+    const entry = FORM_TYPE_DICTIONARY[val];
+    if (entry) return locale === "en" ? entry.label_en : entry.label_it;
+    return val;
+  };
+
+  const getFieldTypeLabel = (val: FormFieldType): string => {
+    const entry = FORM_FIELD_TYPE_DICTIONARY[val];
+    if (entry) return locale === "en" ? entry.label_en : entry.label_it;
+    return val;
+  };
+
+  const getFieldTargetLabel = (val: FormFieldTarget): string => {
+    const entry = FORM_FIELD_TARGET_DICTIONARY[val];
+    if (entry) return locale === "en" ? entry.label_en : entry.label_it;
+    return val;
+  };
 
   const [formData, setFormData] = useState<FormTemplate>(
     initialForm || {
@@ -189,30 +216,6 @@ export function VisualFormBuilder({
     setFieldDialogOpen(true);
   };
 
-  const handleApplyPreset = (preset: {
-    key: string;
-    label: string;
-    type: FormFieldType;
-    target: FormFieldTarget;
-    options?: { label: string; value: string }[];
-  }) => {
-    const newField: FormFieldConfig = {
-      id: `field-${Date.now()}`,
-      key: preset.key,
-      label: preset.label,
-      field_type: preset.type,
-      target: preset.target,
-      is_required: false,
-      is_enabled: true,
-      sort_order: formData.fields_config.length + 1,
-      options: preset.options,
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      fields_config: [...prev.fields_config, newField],
-    }));
-  };
 
   const handleSaveFieldDialog = () => {
     if (!fieldLabel.trim()) return;
@@ -298,516 +301,414 @@ export function VisualFormBuilder({
   );
 
   return (
-    <div className="space-y-6">
-      {/* Top Header Actions */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-6 rounded-2xl border border-border shadow-xs">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-wider">
-              {formData.form_type}
-            </Badge>
-            {formData.is_default && (
-              <Badge className="bg-amber-500 text-slate-950 font-black text-[10px]">
-                Predefinito Globale
-              </Badge>
-            )}
-            <span
-              className={`w-2 h-2 rounded-full ${formData.is_active ? "bg-emerald-500" : "bg-muted-foreground"}`}
-            />
-          </div>
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Layers className="w-5 h-5 text-primary" />
-            {formData.title || "Configurazione Modulo"}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Personalizza i campi e visualizza esattamente come appare il checkout per corsisti e genitori.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="bg-muted/60 p-1 rounded-xl flex items-center gap-1 mr-2 border border-border">
-            <button
-              type="button"
-              onClick={() => setActiveTab("builder")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "builder"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              🛠️ Editor Modulo
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("preview")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "preview"
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              👁️ Anteprima Live
-            </button>
-          </div>
-
+    <div className="flex flex-col gap-6">
+      {/* ── Top Header Bar ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
+        <div className="space-y-1">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="text-xs cursor-pointer"
+            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer -ml-2 h-7 px-2"
           >
-            Annulla
+            <ChevronRight className="w-3.5 h-3.5 rotate-180" />
+            {t("forms.builderBackBtn")}
+          </Button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h1 className="text-xl font-bold tracking-tight text-foreground">
+              {formData.title || t("forms.newFormBtn")}
+            </h1>
+            <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+              {getFormTypeLabel(formData.form_type)}
+            </Badge>
+            {formData.is_default && (
+              <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-1.5 py-0.5">
+                <Star className="w-3 h-3 fill-current" />
+                {t("forms.badgeDefault")}
+              </Badge>
+            )}
+            <StatusBadge status={formData.is_active ? "attivo" : "archived"} />
+          </div>
+          {formData.description && (
+            <p className="text-xs text-muted-foreground line-clamp-1">{formData.description}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex rounded-lg bg-muted/50 p-1 border">
+            <button
+              type="button"
+              onClick={() => setActiveTab("builder")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "builder"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              {t("forms.builderTabBuilder")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("preview")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "preview"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              {locale === "en" ? "Live Preview" : "Anteprima Live"}
+            </button>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onCancel}
+            className="text-xs cursor-pointer h-8"
+          >
+            {t("forms.builderCancel")}
           </Button>
 
           <Button
             type="button"
             size="sm"
-            className="gap-1.5 font-bold text-xs cursor-pointer"
             onClick={() => onSave(formData)}
             disabled={isSaving || !formData.title.trim()}
+            className="font-semibold text-xs shadow-xs gap-1.5 cursor-pointer h-8"
           >
-            <Save className="w-4 h-4" />
-            {isSaving ? "Salvataggio..." : "Salva Modulo"}
+            <Save className="w-3.5 h-3.5" />
+            {isSaving ? t("forms.builderSaving") : t("forms.builderSaveBtn")}
           </Button>
         </div>
       </div>
 
       {activeTab === "builder" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column (1/3): Form Scope & Targeting (100% Database First) */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* General Settings */}
-            <div className="bg-card p-5 rounded-2xl border border-border shadow-xs space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground border-b border-border pb-2 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-primary" />
-                1. Informazioni Modulo
-              </h3>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Titolo Modulo *</Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Es. Modulo Corsi Bambini (Kids)"
-                  className="text-xs font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Descrizione interna</Label>
-                <Textarea
-                  value={formData.description || ""}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Note per la segreteria sull'utilizzo..."
-                  rows={2}
-                  className="text-xs"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-foreground">Tipo di Modulo</Label>
-                <select
-                  value={formData.form_type}
-                  onChange={(e) => setFormData({ ...formData, form_type: e.target.value as FormType })}
-                  className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground"
-                >
-                  <option value={FormType.BOOKING}>Iscrizione Corso (Booking / Checkout)</option>
-                  <option value={FormType.CONTACT}>Contatti & Info (Lead Form)</option>
-                  <option value={FormType.TEST}>Test di Livello Inglese</option>
-                  <option value={FormType.CUSTOM}>Personalizzato (Custom)</option>
-                </select>
-              </div>
-
-              <div className="pt-3 border-t border-border space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-foreground">Modulo Attivo</p>
-                    <p className="text-[10px] text-muted-foreground">Abilita o disabilita il modulo</p>
-                  </div>
-                  <Switch
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+        <div className="space-y-3">
+          {/* ── Settings Row: Info + Scope side by side ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* General Information Card */}
+            <Card className="border">
+              <CardHeader className="px-4 py-2.5 border-b">
+                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-primary" />
+                  {t("forms.builderInfoTitle")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">{t("forms.builderTitleLabel")}</Label>
+                  <Input
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder={t("forms.builderTitlePlaceholder")}
+                    className="text-xs h-8"
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-foreground">Modulo Predefinito</p>
-                    <p className="text-[10px] text-muted-foreground">Usato se nessun altro modulo corrisponde</p>
-                  </div>
-                  <Switch
-                    checked={formData.is_default}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">{t("forms.builderDescLabel")}</Label>
+                  <Textarea
+                    value={formData.description || ""}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder={t("forms.builderDescPlaceholder")}
+                    rows={1}
+                    className="text-xs resize-none"
                   />
                 </div>
-              </div>
-            </div>
 
-            {/* Scope / Targeting (DATABASE FIRST) */}
-            <div className="bg-card p-5 rounded-2xl border border-border shadow-xs space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground border-b border-border pb-2 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-primary" />
-                2. A Quali Corsi si Applica? (Database First)
-              </h3>
-
-              <div className="grid grid-cols-3 gap-1.5 bg-muted/50 p-1 rounded-xl border border-border">
-                <button
-                  type="button"
-                  onClick={() => handleScopeChange("global")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
-                    scopeMode === "global"
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Globe className="w-4 h-4" />
-                  Globale
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleScopeChange("category")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
-                    scopeMode === "category"
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Folder className="w-4 h-4" />
-                  Categoria
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleScopeChange("course")}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
-                    scopeMode === "course"
-                      ? "bg-background text-foreground shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  Singolo Corso
-                </button>
-              </div>
-
-              {scopeMode === "global" && (
-                <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-foreground text-xs leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1 text-blue-600 dark:text-blue-400">
-                    <Globe className="w-3.5 h-3.5" />
-                    Applicazione su Tutti i Corsi
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Questo modulo sarà utilizzato come standard per tutti i corsi della scuola, a meno che non esista un modulo specifico per categoria o singolo corso.
-                  </p>
-                </div>
-              )}
-
-              {scopeMode === "category" && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-foreground">
-                    Seleziona Categoria dal Database
-                  </Label>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">{t("forms.builderTypeLabel")}</Label>
                   <select
-                    value={formData.category_slug || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        category_slug: e.target.value || null,
-                        course_id: null,
-                      })
-                    }
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground"
+                    value={formData.form_type}
+                    onChange={(e) => setFormData({ ...formData, form_type: e.target.value as FormType })}
+                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
                   >
-                    <option value="">-- Seleziona una categoria --</option>
-                    {availableCategories.map((cat) => {
-                      const count = coursesList.filter((c) => String(c.categoria || "").toLowerCase() === cat).length;
-                      return (
-                        <option key={cat} value={cat}>
-                          📂 {cat.toUpperCase()} ({count} corsi nel database)
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <p className="text-[10px] text-muted-foreground leading-tight">
-                    Tutti i corsi appartenenti a questa categoria useranno questo modulo automaticamente.
-                  </p>
-                </div>
-              )}
-
-              {scopeMode === "course" && (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs font-medium text-foreground">
-                      Seleziona Corso dal Database
-                    </Label>
-                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold bg-purple-500/10 px-2 py-0.5 rounded-md">
-                      {coursesList.length} corsi disponibili
-                    </span>
-                  </div>
-
-                  {/* Course Search Filter */}
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      value={courseSearch}
-                      onChange={(e) => setCourseSearch(e.target.value)}
-                      placeholder="Cerca corso per nome o categoria..."
-                      className="pl-8 h-8 text-xs rounded-xl bg-background border-border"
-                    />
-                  </div>
-
-                  {/* Course Select Dropdown */}
-                  <select
-                    value={formData.course_id || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        course_id: e.target.value || null,
-                        category_slug: null,
-                      })
-                    }
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-xs font-medium text-foreground cursor-pointer"
-                  >
-                    <option value="">-- Seleziona il corso --</option>
-                    {filteredCourses.map((course) => (
-                      <option key={course.id} value={course.id}>
-                        📘 {course.nome} — €{course.prezzo} ({course.categoria || "Generale"})
+                    {Object.entries(FORM_TYPE_DICTIONARY).map(([key, dict]) => (
+                      <option key={key} value={key}>
+                        {locale === "en" ? dict.label_en : dict.label_it}
                       </option>
                     ))}
                   </select>
-
-                  {/* Selected Course Card Preview */}
-                  {selectedCourse ? (
-                    <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 flex items-center gap-1">
-                          <GraduationCap className="w-3.5 h-3.5" />
-                          Corso Collegato
-                        </span>
-                        <Badge className="bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[10px]">
-                          €{selectedCourse.prezzo}
-                        </Badge>
-                      </div>
-                      <p className="text-xs font-bold text-foreground">{selectedCourse.nome}</p>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span>Categoria: <strong>{selectedCourse.categoria || "Nessuna"}</strong></span>
-                        {selectedCourse.teacherName && (
-                          <span>• Docente: <strong>{selectedCourse.teacherName}</strong></span>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[10px] text-amber-600 font-medium">
-                      ⚠️ Seleziona un corso per attivare la priorità massima su quel corso.
-                    </p>
-                  )}
                 </div>
-              )}
-            </div>
-          </div>
 
-          {/* Right Column (2/3): Complete Form Structure & Custom Fields Management */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 1. Core System Fields Overview (Transparent Breakdown) */}
-            <div className="bg-card p-6 rounded-2xl border border-border shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                    {formData.form_type === FormType.CONTACT
-                      ? "Campi di Sistema Obbligatori (Form Contatti / Lead)"
-                      : "Campi di Sistema Obbligatori (Core Anagrafica & Fiscale)"}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {formData.form_type === FormType.CONTACT
-                      ? "Campi essenziali per la ricezione, tracciamento e gestione della richiesta nella CRM."
-                      : "Questi campi sono sempre presenti e protetti per legge per garantire la fatturazione e il contratto."}
-                  </p>
-                </div>
-                <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 text-[10px] font-bold">
-                  🔒 Protetto di sistema
-                </Badge>
-              </div>
-
-              {/* Core fields grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
-                {(formData.form_type === FormType.CONTACT
-                  ? [
-                      { name: "Nome & Cognome", desc: "Mittente della richiesta", lock: true },
-                      { name: "Email", desc: "Indirizzo per la risposta", lock: true },
-                      { name: "Telefono (WhatsApp)", desc: "Contatto diretto e promemoria", lock: true },
-                      { name: "Corso d'Interesse", desc: "Selezione percorso didattico", lock: true },
-                      { name: "Messaggio / Richiesta", desc: "Testo libero del cliente", lock: true },
-                      { name: "Privacy Policy GDPR", desc: "Consenso legale obbligatorio", lock: true },
-                    ]
-                  : [
-                      { name: "Nome & Cognome", desc: "Acquirente / Studente", lock: true },
-                      { name: "Email", desc: "Ricevute e notifiche", lock: true },
-                      { name: "Telefono (WhatsApp)", desc: "Contatto segreteria", lock: true },
-                      { name: "Codice Fiscale", desc: "Verifica quota €30 & SDI", lock: true },
-                      { name: "Data & Luogo Nascita", desc: "Generazione automatica CF", lock: true },
-                      { name: "Modalità Genitore", desc: "Sto iscrivendo un figlio", lock: true },
-                    ]
-                ).map((item, i) => (
-                  <div key={i} className="p-3 rounded-xl bg-muted/40 border border-border">
-                    <div className="flex items-center justify-between text-xs font-medium text-foreground">
-                      <span>{item.name}</span>
-                      <Lock className="w-3 h-3 text-muted-foreground" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{item.desc}</p>
+                <div className="flex items-center gap-4 pt-1 border-t">
+                  <div className="flex items-center justify-between flex-1">
+                    <span className="text-xs font-medium">{t("forms.builderActiveLabel")}</span>
+                    <Switch
+                      checked={formData.is_active}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                      className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-90"
+                    />
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. Custom Dynamic Fields Management */}
-            <div className="bg-card p-6 rounded-2xl border border-border shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border pb-4">
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    Domande & Campi Personalizzati ({formData.fields_config.length})
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Campi dinamici aggiuntivi che verranno mostrati nella sezione &quot;Informazioni Aggiuntive&quot;.
-                  </p>
+                  <div className="flex items-center justify-between flex-1">
+                    <span className="text-xs font-medium">{t("forms.builderDefaultLabel")}</span>
+                    <Switch
+                      checked={formData.is_default}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
+                      className="cursor-pointer data-[state=checked]:bg-amber-500 scale-90"
+                    />
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <Button
-                  type="button"
-                  onClick={handleOpenAddField}
-                  className="gap-1.5 font-bold text-xs cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  Aggiungi Campo
-                </Button>
-              </div>
-
-              {formData.fields_config.length === 0 ? (
-                <div className="text-center py-10 border-2 border-dashed border-border rounded-2xl bg-muted/20">
-                  <HelpCircle className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-foreground">Nessun campo personalizzato attivo</p>
-                  <p className="text-[11px] text-muted-foreground max-w-sm mx-auto mt-1">
-                    Questo modulo conterrà solo i campi base. Clicca su &quot;Aggiungi Campo&quot; per richiedere informazioni aggiuntive.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {formData.fields_config.map((field, index) => {
-                    const isStudent = field.target === FormFieldTarget.STUDENT;
-
-                    return (
-                      <div
-                        key={field.id}
-                        className={`p-4 rounded-xl border transition-all ${
-                          field.is_enabled
-                            ? "bg-card border-border shadow-xs"
-                            : "bg-muted/40 border-border/60 opacity-60"
+            {/* Scope / Destination Card */}
+            <Card className="border">
+              <CardHeader className="px-4 py-2.5 border-b">
+                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  {t("forms.builderScopeTitle")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                {formData.form_type === FormType.CONTACT ? (
+                  <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs flex items-center gap-2">
+                    <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <p className="text-muted-foreground">{t("forms.builderScopeContactHint")}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-1 bg-muted/50 p-1 rounded-lg border">
+                      <button
+                        type="button"
+                        onClick={() => handleScopeChange("global")}
+                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                          scopeMode === "global"
+                            ? "bg-background text-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-3">
-                          {/* Left: Reorder buttons & Label */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-col gap-0.5">
-                              <button
-                                type="button"
-                                disabled={index === 0}
-                                onClick={() => handleMoveField(index, "up")}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
-                              >
-                                <ArrowUp className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={index === formData.fields_config.length - 1}
-                                onClick={() => handleMoveField(index, "down")}
-                                className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
-                              >
-                                <ArrowDown className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                        <Globe className="w-3.5 h-3.5" />
+                        {t("forms.builderScopeGlobal")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleScopeChange("category")}
+                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                          scopeMode === "category"
+                            ? "bg-background text-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Folder className="w-3.5 h-3.5" />
+                        {t("forms.builderScopeCategory")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleScopeChange("course")}
+                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                          scopeMode === "course"
+                            ? "bg-background text-foreground shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        {t("forms.builderScopeCourse")}
+                      </button>
+                    </div>
 
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className="text-xs font-bold text-foreground">
-                                  {field.label}
-                                </h4>
-                                <code className="bg-muted text-muted-foreground px-1.5 py-0.5 rounded text-[10px] font-mono">
-                                  {`{{${field.key}}}`}
-                                </code>
-                                {field.is_required && (
-                                  <Badge variant="destructive" className="text-[9px] py-0 px-1.5 font-bold">
-                                    Obbligatorio
-                                  </Badge>
-                                )}
-                              </div>
+                    {scopeMode === "global" && (
+                      <p className="text-[11px] text-muted-foreground bg-muted/40 px-2.5 py-2 rounded-md">
+                        🌐 {t("forms.builderScopeGlobalHint")}
+                      </p>
+                    )}
 
-                              <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-                                <span className="bg-primary/10 text-primary font-bold px-2 py-0.5 rounded text-[10px] uppercase">
-                                  {field.field_type}
-                                </span>
-                                <span className="flex items-center gap-1 font-medium">
-                                  {isStudent ? (
-                                    <>
-                                      <User className="w-3 h-3 text-purple-600" />
-                                      Studente
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Building className="w-3 h-3 text-amber-600" />
-                                      Acquirente
-                                    </>
-                                  )}
-                                </span>
-                                {field.options && (
-                                  <span className="text-muted-foreground">
-                                    • {field.options.length} opzioni
-                                  </span>
-                                )}
-                              </div>
-                            </div>
+                    {scopeMode === "category" && (
+                      <div className="space-y-1">
+                        <Label className="text-xs font-medium">{t("forms.builderScopeCategoryLabel")}</Label>
+                        <select
+                          value={formData.category_slug || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              category_slug: e.target.value || null,
+                              course_id: null,
+                            })
+                          }
+                          className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
+                        >
+                          <option value="">{t("forms.builderScopeCategoryPlaceholder")}</option>
+                          {availableCategories.map((cat) => {
+                            const count = coursesList.filter((c) => String(c.categoria || "").toLowerCase() === cat).length;
+                            return (
+                              <option key={cat} value={cat}>
+                                📂 {cat.toUpperCase()} ({count} {locale === "en" ? "courses" : "corsi"})
+                              </option>
+                            );
+                          })}
+                        </select>
+                      </div>
+                    )}
+
+                    {scopeMode === "course" && (
+                      <div className="space-y-2">
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            value={courseSearch}
+                            onChange={(e) => setCourseSearch(e.target.value)}
+                            placeholder={t("forms.builderScopeCourseFilterPlaceholder")}
+                            className="pl-8 h-7 text-xs rounded-md"
+                          />
+                        </div>
+                        <select
+                          value={formData.course_id || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              course_id: e.target.value || null,
+                              category_slug: null,
+                            })
+                          }
+                          className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
+                        >
+                          <option value="">{t("forms.builderScopeCoursePlaceholder")}</option>
+                          {filteredCourses.map((course) => (
+                            <option key={course.id} value={course.id}>
+                              📘 {course.nome} (€{course.prezzo})
+                            </option>
+                          ))}
+                        </select>
+                        {selectedCourse && (
+                          <div className="px-2.5 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-xs">
+                            <span className="font-semibold text-foreground">{selectedCourse.nome}</span>
+                            <span className="text-muted-foreground ml-1.5">• €{selectedCourse.prezzo}</span>
                           </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-                          {/* Right: Actions */}
-                          <div className="flex items-center gap-1">
-                            <Switch
-                              checked={field.is_enabled}
-                              onCheckedChange={(checked) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  fields_config: prev.fields_config.map((f) =>
-                                    f.id === field.id ? { ...f, is_enabled: checked } : f
-                                  ),
-                                }));
-                              }}
-                              className="mr-2 cursor-pointer data-[state=checked]:bg-emerald-600"
-                              title="Abilita / Disabilita campo"
-                            />
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                              onClick={() => handleOpenEditField(field)}
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                              onClick={() => handleDeleteField(field.id)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+          {/* ── Fields: full width ── */}
+          <div className="space-y-3">
+            {/* Custom Dynamic Fields Card */}
+            <Card className="border">
+              <CardHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between gap-4">
+                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  {t("forms.builderFieldsTitle")} ({formData.fields_config.length})
+                </CardTitle>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleOpenAddField}
+                  className="gap-1.5 font-semibold text-xs cursor-pointer shadow-xs shrink-0 h-7 px-2.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  {t("forms.builderAddFieldBtn")}
+                </Button>
+              </CardHeader>
+
+              <CardContent className="p-4">
+                {/* Fields List or Empty State */}
+                {formData.fields_config.length === 0 ? (
+                  <div className="flex items-center justify-between py-3 px-4 border border-dashed rounded-lg bg-muted/20">
+                    <div className="flex items-center gap-2.5">
+                      <HelpCircle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+                      <p className="text-xs text-muted-foreground">{t("forms.builderEmptyFields")}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleOpenAddField}
+                      className="text-xs cursor-pointer h-7 px-2.5 shrink-0"
+                    >
+                      <Plus className="w-3 h-3 mr-1" /> {t("forms.builderAddFirst")}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    {formData.fields_config.map((field, index) => {
+                      const isStudent = field.target === FormFieldTarget.STUDENT;
+                      return (
+                        <div
+                          key={field.id}
+                          className={`px-3 py-2 rounded-lg border transition-all ${
+                            field.is_enabled
+                              ? "bg-card border-border hover:border-primary/40"
+                              : "bg-muted/30 border-border/60 opacity-60"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex flex-col shrink-0">
+                                <button type="button" disabled={index === 0} onClick={() => handleMoveField(index, "up")} className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer">
+                                  <ArrowUp className="w-3 h-3" />
+                                </button>
+                                <button type="button" disabled={index === formData.fields_config.length - 1} onClick={() => handleMoveField(index, "down")} className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer">
+                                  <ArrowDown className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                                <span className="text-xs font-semibold text-foreground">{field.label}</span>
+                                <code className="bg-muted text-muted-foreground px-1 rounded text-[10px] font-mono">{`{{${field.key}}}`}</code>
+                                <span className="bg-primary/10 text-primary px-1.5 rounded text-[10px] font-semibold uppercase">{getFieldTypeLabel(field.field_type)}</span>
+                                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                  {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
+                                  {getFieldTargetLabel(field.target)}
+                                </span>
+                                {field.is_required && <Badge variant="destructive" className="text-[9px] py-0 px-1">{locale === "en" ? "Req." : "Obbl."}</Badge>}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-0.5 shrink-0">
+                              <Switch
+                                checked={field.is_enabled}
+                                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, fields_config: prev.fields_config.map((f) => f.id === field.id ? { ...f, is_enabled: checked } : f) }))}
+                                className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-75"
+                              />
+                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer" onClick={() => handleOpenEditField(field)}>
+                                <Edit2 className="w-3 h-3" />
+                              </Button>
+                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer" onClick={() => handleDeleteField(field.id)}>
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* System Fields — compact flat row */}
+            <div className="flex items-center gap-2 flex-wrap px-1">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-[11px] font-medium text-muted-foreground">{t("forms.builderSystemFieldsLabel")}</span>
+              </div>
+              {(formData.form_type === FormType.CONTACT
+                ? [
+                    locale === "en" ? "Full Name" : "Nome & Cognome",
+                    "Email",
+                    locale === "en" ? "Phone" : "Telefono",
+                    locale === "en" ? "Course of Interest" : "Corso d'Interesse",
+                    locale === "en" ? "Message" : "Messaggio",
+                    "Privacy GDPR"
+                  ]
+                : [
+                    locale === "en" ? "Full Name" : "Nome & Cognome",
+                    "Email",
+                    locale === "en" ? "Phone" : "Telefono",
+                    locale === "en" ? "Tax Code" : "Codice Fiscale",
+                    locale === "en" ? "Date & Place of Birth" : "Data & Luogo Nascita",
+                    locale === "en" ? "Parent Mode" : "Modalità Genitore"
+                  ]
+              ).map((name) => (
+                <span key={name} className="text-[10px] font-medium bg-muted border rounded px-1.5 py-0.5 text-muted-foreground">
+                  {name}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -1271,76 +1172,76 @@ export function VisualFormBuilder({
 
       {/* Add / Edit Field Dialog */}
       <Dialog open={fieldDialogOpen} onOpenChange={setFieldDialogOpen}>
-        <DialogContent className="max-w-lg bg-white rounded-2xl p-6">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-base font-black text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#FAA904]" />
-              {editingField ? "Modifica Campo" : "Aggiungi Campo Personalizzato"}
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              {editingField ? t("forms.builderDialogEditTitle") : t("forms.builderDialogAddTitle")}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-3">
+          <div className="space-y-4 py-1">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-700">Etichetta Visibile (Label) *</Label>
+              <Label className="text-xs font-medium">{t("forms.builderDialogLabelLabel")} *</Label>
               <Input
                 value={fieldLabel}
                 onChange={(e) => setFieldLabel(e.target.value)}
-                placeholder="Es. Livello di partenza stimato"
+                placeholder={t("forms.builderDialogLabelPlaceholder")}
                 className="text-xs"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-700">Chiave Tecnica (Key)</Label>
+                <Label className="text-xs font-medium">{t("forms.builderDialogKeyLabel")}</Label>
                 <Input
                   value={fieldKey}
                   onChange={(e) => setFieldKey(e.target.value)}
-                  placeholder="study_level"
+                  placeholder={t("forms.builderDialogKeyPlaceholder")}
                   className="text-xs font-mono"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-700">Tipo di Input</Label>
+                <Label className="text-xs font-medium">{t("forms.builderDialogTypeLabel")}</Label>
                 <select
                   value={fieldType}
                   onChange={(e) => setFieldType(e.target.value as FormFieldType)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs text-foreground"
                 >
-                  <option value={FormFieldType.TEXT}>Testo Singolo (Text)</option>
-                  <option value={FormFieldType.SELECT}>Menu a Tendina (Select)</option>
-                  <option value={FormFieldType.RADIO}>Scelta Singola (Radio)</option>
-                  <option value={FormFieldType.CHECKBOX}>Casella Singola (Checkbox)</option>
-                  <option value={FormFieldType.NUMBER}>Numero (Number)</option>
-                  <option value={FormFieldType.DATE}>Data (Date)</option>
-                  <option value={FormFieldType.TEXTAREA}>Testo Esteso (Textarea)</option>
+                  {Object.entries(FORM_FIELD_TYPE_DICTIONARY).map(([key, dict]) => (
+                    <option key={key} value={key}>
+                      {locale === "en" ? dict.label_en : dict.label_it}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-700">Destinatario del Dato (Target)</Label>
+              <Label className="text-xs font-medium">{t("forms.builderDialogTargetLabel")}</Label>
               <select
                 value={fieldTarget}
                 onChange={(e) => setFieldTarget(e.target.value as FormFieldTarget)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs text-foreground"
               >
-                <option value={FormFieldTarget.STUDENT}>👤 Studente (ripetuto per ogni figlio/corsista)</option>
-                <option value={FormFieldTarget.PURCHASER}>💳 Acquirente / Genitore (un solo dato globale)</option>
-                <option value={FormFieldTarget.BOOKING}>📦 Prenotazione Generale</option>
+                {Object.entries(FORM_FIELD_TARGET_DICTIONARY).map(([key, dict]) => (
+                  <option key={key} value={key}>
+                    {locale === "en" ? dict.label_en : dict.label_it}
+                  </option>
+                ))}
               </select>
             </div>
 
             {(fieldType === FormFieldType.SELECT || fieldType === FormFieldType.RADIO) && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-700">
-                  Opzioni di Scelta (una per riga: &quot;Etichetta:Valore&quot;)
+                <Label className="text-xs font-medium">
+                  {t("forms.builderDialogOptionsLabel")}
                 </Label>
                 <Textarea
                   value={fieldOptionsText}
                   onChange={(e) => setFieldOptionsText(e.target.value)}
-                  placeholder="A1 - Principiante:A1&#10;A2 - Elementare:A2&#10;B1 - Intermedio:B1"
+                  placeholder={t("forms.builderDialogOptionsPlaceholder")}
                   rows={4}
                   className="text-xs font-mono"
                 />
@@ -1348,32 +1249,32 @@ export function VisualFormBuilder({
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-slate-700">Placeholder o Testo di Esempio</Label>
+              <Label className="text-xs font-medium">{t("forms.builderDialogPlaceholderLabel")}</Label>
               <Input
                 value={fieldPlaceholder}
                 onChange={(e) => setFieldPlaceholder(e.target.value)}
-                placeholder="Es. Seleziona il livello desiderato..."
+                placeholder={t("forms.builderDialogPlaceholderPlaceholder")}
                 className="text-xs"
               />
             </div>
 
-            {/* Live Visual Preview of the Field inside the Dialog */}
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+            {/* Inline live preview */}
+            <div className="p-3 rounded-lg bg-muted/40 border space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Anteprima dal vivo
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {locale === "en" ? "Preview" : "Anteprima"}
                 </span>
-                <span className="text-[10px] font-bold text-[#043569] bg-blue-50 px-2 py-0.5 rounded">
-                  {fieldTarget === FormFieldTarget.STUDENT ? "👤 Per lo studente" : "💳 Per l'acquirente"}
-                </span>
+                <Badge variant="secondary" className="text-[10px] gap-1">
+                  {getFieldTargetLabel(fieldTarget)}
+                </Badge>
               </div>
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-800">
-                  {fieldLabel || "Nome del campo"} {fieldRequired && <span className="text-red-500">*</span>}
+                <label className="text-xs font-semibold text-foreground">
+                  {fieldLabel || (locale === "en" ? "Field name" : "Nome del campo")} {fieldRequired && <span className="text-destructive">*</span>}
                 </label>
                 {fieldType === FormFieldType.SELECT ? (
-                  <select className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700">
-                    <option>{fieldPlaceholder || "-- Seleziona opzione --"}</option>
+                  <select className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground">
+                    <option>{fieldPlaceholder || (locale === "en" ? "-- Select option --" : "-- Seleziona opzione --")}</option>
                     {fieldOptionsText
                       .split("\n")
                       .filter(Boolean)
@@ -1384,30 +1285,32 @@ export function VisualFormBuilder({
                 ) : fieldType === FormFieldType.TEXTAREA ? (
                   <textarea
                     rows={2}
-                    placeholder={fieldPlaceholder || "Scrivi qui..."}
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs"
+                    placeholder={fieldPlaceholder || (locale === "en" ? "Write here..." : "Scrivi qui...")}
+                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs"
                   />
                 ) : fieldType === FormFieldType.CHECKBOX ? (
                   <div className="flex items-center gap-2 pt-1">
-                    <input type="checkbox" className="w-4 h-4 rounded text-[#043569]" />
-                    <span className="text-xs text-slate-600">{fieldPlaceholder || "Confermo"}</span>
+                    <input type="checkbox" className="w-4 h-4 rounded" />
+                    <span className="text-xs text-muted-foreground">{fieldPlaceholder || (locale === "en" ? "I agree" : "Confermo")}</span>
                   </div>
                 ) : (
                   <input
                     type={fieldType === FormFieldType.NUMBER ? "number" : fieldType === FormFieldType.DATE ? "date" : "text"}
-                    placeholder={fieldPlaceholder || "Inserisci..."}
-                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs"
+                    placeholder={fieldPlaceholder || (locale === "en" ? "Enter value..." : "Inserisci...")}
+                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs"
                   />
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between pt-2 border-t">
               <div>
-                <p className="text-xs font-bold text-slate-800">Campo Obbligatorio</p>
-                <p className="text-[10px] text-slate-400">Blocca il checkout se non compilato</p>
+                <p className="text-xs font-medium text-foreground">{t("forms.builderDialogRequiredLabel")}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {locale === "en" ? "Blocks checkout if not filled" : "Blocca il checkout se non compilato"}
+                </p>
               </div>
-              <Switch checked={fieldRequired} onCheckedChange={setFieldRequired} />
+              <Switch checked={fieldRequired} onCheckedChange={setFieldRequired} className="cursor-pointer" />
             </div>
           </div>
 
@@ -1417,17 +1320,18 @@ export function VisualFormBuilder({
               variant="outline"
               size="sm"
               onClick={() => setFieldDialogOpen(false)}
+              className="cursor-pointer"
             >
-              Annulla
+              {t("forms.builderDialogCancelBtn")}
             </Button>
             <Button
               type="button"
               size="sm"
-              className="bg-[#043569] text-white hover:bg-[#032850]"
               onClick={handleSaveFieldDialog}
               disabled={!fieldLabel.trim()}
+              className="cursor-pointer"
             >
-              {editingField ? "Salva Modifiche" : "Aggiungi al Modulo"}
+              {t("forms.builderDialogSaveBtn")}
             </Button>
           </DialogFooter>
         </DialogContent>

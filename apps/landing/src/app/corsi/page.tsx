@@ -53,7 +53,7 @@ export default async function CoursesPage() {
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary/5 rounded-full blur-[120px] -z-10" />
 
       {/* Hero Header */}
-      <header className="max-w-7xl mx-auto px-4 pt-6 md:pt-10 pb-8 text-center relative z-10" data-gsap="fade-in">
+      <header className="max-w-7xl mx-auto px-4 pt-6 md:pt-10 pb-8 text-center relative z-10" data-gsap="fade-in" suppressHydrationWarning>
         <h1 
           className="text-5xl md:text-7xl font-black uppercase tracking-tight text-foreground mb-6"
         >

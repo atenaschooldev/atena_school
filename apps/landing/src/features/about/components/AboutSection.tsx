@@ -37,6 +37,7 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
           <div 
             className="lg:col-span-6 space-y-5 flex flex-col items-start text-left h-fit self-center pr-0 lg:pr-8 lg:-mt-6" 
             data-gsap="fade-up"
+            suppressHydrationWarning
           >
             <div className="space-y-3.5">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
@@ -62,6 +63,7 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
             className="lg:col-span-6 mt-8 lg:mt-0 w-full pl-0 lg:pl-8" 
             data-gsap="fade-up" 
             data-gsap-delay="100"
+            suppressHydrationWarning
           >
             {/* Image Grid with bottom alignment and offset */}
             <div className="grid grid-cols-2 gap-4 items-stretch max-w-xl lg:max-w-none ml-auto lg:ml-0">

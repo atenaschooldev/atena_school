@@ -85,6 +85,7 @@ export default function CoursesCatalog({ sections }: CoursesCatalogProps) {
                     key={course.id} 
                     data-gsap="fade-up"
                     data-gsap-delay={(idx % 3) * 100}
+                    suppressHydrationWarning
                   >
                     <CourseCard
                       id={course.id}
