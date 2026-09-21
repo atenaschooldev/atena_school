@@ -424,6 +424,7 @@ export function FormsListView() {
   if (editingForm) {
     return (
       <VisualFormBuilder
+        key={editingForm === "new" ? "new" : (editingForm.id || "draft")}
         initialForm={editingForm === "new" ? null : editingForm}
         onSave={handleSave}
         onCancel={() => setEditingForm(null)}
