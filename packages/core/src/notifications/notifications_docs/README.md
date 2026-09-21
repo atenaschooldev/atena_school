@@ -17,6 +17,7 @@
 | **05** | [Визуальный конструктор и шаблоны](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/notifications_docs/05_VISUAL_BLOCK_BUILDER_AND_TEMPLATES.md) | Компилятор визуальных блоков (`block-compiler.ts`), JSON-структура блоков, верстка для Email и форматирование Telegram HTML. |
 | **06** | [Админка, аудит и логирование](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/notifications_docs/06_ADMIN_UI_AND_AUDIT_LOGS.md) | Мониторинг в Admin CRM, Visual Builder, песочница тестовой отправки (Test Send) и структура таблицы `notification_logs`. |
 | **07** | [Руководство разработчика](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/notifications_docs/07_DEVELOPER_INTEGRATION_GUIDE.md) | Пошаговые инструкции: как добавить новое событие, зарегистрировать триггер, вызвать нотификацию в Server Action или сервисе. |
+| **08** | [Бизнес-анализ, SA и QA Test Plan](file:///Users/krimson/PROJECTS/atena_school/packages/core/src/notifications/notifications_docs/08_BUSINESS_SYSTEM_ANALYSIS_AND_QA.md) | Спецификация для BA (Use Cases, бизнес-правила), SA (Sequence диаграммы, Data Mapping) и QA (матрица тест-кейсов TC-01..TC-10). |
 
 ---
 
