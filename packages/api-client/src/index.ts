@@ -279,6 +279,20 @@ export function createApiClient(config?: string | ApiClientConfig) {
     },
   };
 
+  const formsService = {
+    async resolve(params: { form_type?: string; course_id?: string; category_slug?: string }): Promise<{ success: boolean; template?: any }> {
+      const q = new URLSearchParams();
+      if (params.form_type) q.append("form_type", params.form_type);
+      if (params.course_id) q.append("course_id", params.course_id);
+      if (params.category_slug) q.append("category_slug", params.category_slug);
+      const endpoint = isNest
+        ? `${baseUrl}/v1/forms/resolve?${q.toString()}`
+        : `${prefix}/forms/resolve?${q.toString()}`;
+      const res = await fetch(endpoint, { headers: getHeaders() });
+      return handleResponse(res);
+    },
+  };
+
   const appService = {
     async getDashboard(token: string) {
       const appPrefix = baseUrl ? `${baseUrl}/app` : "/app";
@@ -309,6 +323,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
     bookings: bookingsService,
     contact: contactService,
     settings: settingsService,
+    forms: formsService,
     app: appService,
     portal: appService,
     cms: {
@@ -322,6 +337,7 @@ export function createApiClient(config?: string | ApiClientConfig) {
       bookings: bookingsService,
       contact: contactService,
       settings: settingsService,
+      forms: formsService,
     },
   };
 }

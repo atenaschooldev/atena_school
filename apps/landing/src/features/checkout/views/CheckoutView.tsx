@@ -19,8 +19,9 @@ import {
   CheckoutOrderSummary,
   CheckoutMobileBottomBar,
   CheckoutAuthModal,
+  DynamicCustomFields,
 } from "@/features/checkout/components";
-import { BillingScheme } from "@atena/api-types";
+import { BillingScheme, FormFieldTarget } from "@atena/api-types";
 
 interface CheckoutViewProps {
   id: string;
@@ -58,6 +59,7 @@ export function CheckoutView({ id }: CheckoutViewProps) {
     selectSavedStudent,
     dateParam,
     timeParam,
+    customFields,
     actionRef,
     onSubmit,
   } = useCheckout(id);
@@ -187,6 +189,13 @@ export function CheckoutView({ id }: CheckoutViewProps) {
               onOpenAuthModal={() => setAuthModalOpen(true)}
             />
 
+            <DynamicCustomFields
+              fields={customFields}
+              target={FormFieldTarget.PURCHASER}
+              register={register}
+              errors={errors}
+            />
+
             {isForChild && (
               <CheckoutStudentsList
                 studentsList={studentsList}
@@ -200,6 +209,22 @@ export function CheckoutView({ id }: CheckoutViewProps) {
                 onSelectSavedStudent={selectSavedStudent}
               />
             )}
+
+            {!isForChild && (
+              <DynamicCustomFields
+                fields={customFields}
+                target={FormFieldTarget.STUDENT}
+                register={register}
+                errors={errors}
+              />
+            )}
+
+            <DynamicCustomFields
+              fields={customFields}
+              target={FormFieldTarget.BOOKING}
+              register={register}
+              errors={errors}
+            />
 
             <CheckoutBillingSchemeSelector
               subscriptionsEnabled={subscriptionsEnabled}

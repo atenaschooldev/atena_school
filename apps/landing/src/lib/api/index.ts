@@ -70,6 +70,10 @@ export const api = {
     getPaymentGateway: () => baseClient.landing.settings.getPaymentGateway(),
     getSchoolProfile: () => baseClient.landing.settings.getSchoolProfile(),
   },
+  forms: {
+    resolve: (params: { form_type?: string; course_id?: string; category_slug?: string }) =>
+      baseClient.landing.forms.resolve(params),
+  },
   auth: {
     async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
       const endpoint = backendUrl && baseClient.isNest

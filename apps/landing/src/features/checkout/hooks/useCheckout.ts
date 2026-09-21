@@ -90,6 +90,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   );
 
+  const [formTemplate, setFormTemplate] = useState<any>(null);
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{
     id: string;
@@ -307,16 +308,21 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
 
     async function initCheckout() {
       try {
-        const [itemRes, settingsRes, profileRes] = await Promise.all([
+        const [itemRes, settingsRes, profileRes, formRes] = await Promise.all([
           api.courses.getById(id).catch(() => ({ success: false, item: undefined })),
           api.settings.getPaymentGateway().catch(() => ({ success: false, settings: { stripeEnabled: false, subscriptionsEnabled: false } })),
           api.settings.getSchoolProfile().catch(() => ({ success: false, profile: undefined })),
+          api.forms.resolve({ course_id: id }).catch(() => ({ success: false, template: undefined })),
         ]);
 
         let fetchedItem: BookingItem | null = null;
         if (itemRes.success && itemRes.item) {
           fetchedItem = itemRes.item as unknown as BookingItem;
           setItem(fetchedItem);
+        }
+
+        if (formRes?.success && formRes.template) {
+          setFormTemplate(formRes.template);
         }
 
         if (profileRes?.success && profileRes.profile) {
@@ -827,6 +833,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       pecEmail: values.pecEmail || undefined,
       billingScheme: subscriptionsEnabled ? billingScheme : BillingScheme.FULL,
       idempotencyKey: idempotencyKeyRef.current,
+      custom_fields: (values as any).custom_fields || undefined,
+      form_id: formTemplate?.id || undefined,
     };
   };
 
@@ -930,6 +938,8 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     selectSavedStudent,
     dateParam,
     timeParam,
+    formTemplate,
+    customFields: (formTemplate?.fields_config || []) as any[],
     actionRef,
     onSubmit,
   };

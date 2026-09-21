@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useForms } from "../hooks/use-forms";
-import { type FormTemplate, FormType } from "../types";
+import { type FormTemplate, FormType, FormFieldType, FormFieldTarget } from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
 import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useCourses } from "@/features/courses/hooks/use-courses";
 import {
   Plus,
   Layers,
@@ -20,9 +23,16 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
+  GraduationCap,
+  Folder,
+  Globe,
+  Search,
 } from "lucide-react";
 
 export function FormsListView() {
+  const searchParams = useSearchParams();
+  const targetCourseParam = searchParams.get("courseId") || searchParams.get("course_id");
+  const { coursesList } = useCourses();
   const {
     forms,
     isLoading,
@@ -36,13 +46,48 @@ export function FormsListView() {
   } = useForms();
 
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [editingForm, setEditingForm] = useState<FormTemplate | null | "new">(null);
   const [previewForm, setPreviewForm] = useState<FormTemplate | null>(null);
   const [showQuotaCard, setShowQuotaCard] = useState<boolean>(true);
 
+  // Auto-open builder if courseId query param is provided
+  useEffect(() => {
+    if (targetCourseParam && forms.length > 0 && editingForm === null) {
+      // Find matching form for this course or open new
+      const existing = forms.find((f) => f.course_id === targetCourseParam);
+      if (existing) {
+        setEditingForm(existing);
+      } else {
+        const courseObj = coursesList.find((c) => c.id === targetCourseParam || c.slug === targetCourseParam);
+        const newCourseForm: FormTemplate = {
+          id: "",
+          title: courseObj ? `Modulo Iscrizione — ${courseObj.nome}` : "Modulo Corso Dedicato",
+          description: `Modulo personalizzato per il corso ${courseObj?.nome || ""}`,
+          form_type: FormType.BOOKING,
+          is_default: false,
+          is_active: true,
+          category_slug: null,
+          course_id: courseObj?.id || targetCourseParam,
+          fields_config: [],
+        };
+        setEditingForm(newCourseForm);
+      }
+    }
+  }, [targetCourseParam, forms, coursesList]);
+
   const filteredForms = forms.filter((f) => {
-    if (selectedType === "all") return true;
-    return f.form_type === selectedType;
+    if (selectedType !== "all" && f.form_type !== selectedType) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchTitle = f.title.toLowerCase().includes(q);
+      const matchDesc = (f.description || "").toLowerCase().includes(q);
+      const courseName = coursesList.find((c) => c.id === f.course_id)?.nome.toLowerCase() || "";
+      const matchCourse = courseName.includes(q);
+      const matchCat = (f.category_slug || "").toLowerCase().includes(q);
+      return matchTitle || matchDesc || matchCourse || matchCat;
+    }
+    return true;
   });
 
   const handleSave = async (form: FormTemplate) => {
@@ -126,27 +171,39 @@ export function FormsListView() {
         <RegistrationFeeSettingsCard />
       )}
 
-      {/* Type Filter Pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        {[
-          { label: "Tutti i Moduli", value: "all" },
-          { label: "Iscrizioni Corsi (Booking)", value: FormType.BOOKING },
-          { label: "Contattaci & Lead", value: FormType.CONTACT },
-          { label: "Test Inglese", value: FormType.TEST },
-          { label: "Personalizzati", value: FormType.CUSTOM },
-        ].map((pill) => (
-          <button
-            key={pill.value}
-            onClick={() => setSelectedType(pill.value)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
-              selectedType === pill.value
-                ? "bg-[#043569] text-white shadow-sm"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            {pill.label}
-          </button>
-        ))}
+      {/* Type Filter & Search Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { label: "Tutti i Moduli", value: "all" },
+            { label: "Iscrizioni Corsi (Booking)", value: FormType.BOOKING },
+            { label: "Contattaci & Lead", value: FormType.CONTACT },
+            { label: "Test Inglese", value: FormType.TEST },
+            { label: "Personalizzati", value: FormType.CUSTOM },
+          ].map((pill) => (
+            <button
+              key={pill.value}
+              onClick={() => setSelectedType(pill.value)}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                selectedType === pill.value
+                  ? "bg-[#043569] text-white shadow-sm"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cerca per corso o titolo..."
+            className="pl-9 h-8 text-xs rounded-xl bg-white border-slate-200 shadow-2xs"
+          />
+        </div>
       </div>
 
       {/* Forms Grid */}
@@ -201,16 +258,19 @@ export function FormsListView() {
                 <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
                   <span className="font-bold text-slate-700">Target:</span>
                   {form.course_id ? (
-                    <span className="bg-purple-50 text-purple-700 font-bold px-2 py-0.5 rounded-md">
-                      Corso specifico
+                    <span className="bg-purple-50 text-purple-800 font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                      {coursesList.find((c) => c.id === form.course_id)?.nome || "Corso specifico"}
                     </span>
                   ) : form.category_slug ? (
-                    <span className="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-md">
-                      Categoria: {form.category_slug}
+                    <span className="bg-blue-50 text-blue-800 font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Folder className="w-3.5 h-3.5 text-blue-600" />
+                      Categoria: {form.category_slug.toUpperCase()}
                     </span>
                   ) : (
-                    <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
-                      Tutti i corsi
+                    <span className="bg-slate-100 text-slate-700 font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
+                      <Globe className="w-3.5 h-3.5 text-slate-500" />
+                      Tutti i corsi (Globale)
                     </span>
                   )}
                 </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   type FormTemplate,
   type FormFieldConfig,
@@ -43,8 +43,14 @@ import {
   Building,
   CreditCard,
   Lock,
+  Globe,
+  Folder,
+  GraduationCap,
+  ChevronRight,
+  Search,
 } from "lucide-react";
 import { FormPreviewModal } from "./form-preview-modal";
+import { useCourses } from "@/features/courses/hooks/use-courses";
 
 interface VisualFormBuilderProps {
   initialForm?: FormTemplate | null;
@@ -59,6 +65,8 @@ export function VisualFormBuilder({
   onCancel,
   isSaving = false,
 }: VisualFormBuilderProps) {
+  const { coursesList, loading: loadingCourses } = useCourses();
+
   const [formData, setFormData] = useState<FormTemplate>(
     initialForm || {
       id: "",
@@ -111,6 +119,42 @@ export function VisualFormBuilder({
     }
   );
 
+  // Derive unique categories from real courses in the database
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    coursesList.forEach((c) => {
+      if (c.categoria && c.categoria.trim()) {
+        set.add(c.categoria.trim().toLowerCase());
+      }
+    });
+    return Array.from(set);
+  }, [coursesList]);
+
+  const [courseSearch, setCourseSearch] = useState<string>("");
+
+  // Scope mode state
+  const [scopeMode, setScopeMode] = useState<"global" | "category" | "course">(() => {
+    if (formData.course_id) return "course";
+    if (formData.category_slug) return "category";
+    return "global";
+  });
+
+  const selectedCourse = useMemo(() => {
+    if (!formData.course_id) return null;
+    return coursesList.find((c) => c.id === formData.course_id || c.slug === formData.course_id) || null;
+  }, [formData.course_id, coursesList]);
+
+  const filteredCourses = useMemo(() => {
+    if (!courseSearch.trim()) return coursesList;
+    const q = courseSearch.toLowerCase();
+    return coursesList.filter(
+      (c) =>
+        c.nome.toLowerCase().includes(q) ||
+        (c.categoria && c.categoria.toLowerCase().includes(q)) ||
+        (c.teacherName && c.teacherName.toLowerCase().includes(q))
+    );
+  }, [coursesList, courseSearch]);
+
   const [activeTab, setActiveTab] = useState<"builder" | "preview">("builder");
   const [previewMode, setPreviewMode] = useState<"direct" | "child">("direct");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
@@ -128,6 +172,25 @@ export function VisualFormBuilder({
   const [fieldEnabled, setFieldEnabled] = useState(true);
   const [fieldHelpText, setFieldHelpText] = useState("");
   const [fieldOptionsText, setFieldOptionsText] = useState("");
+
+  const handleScopeChange = (mode: "global" | "category" | "course") => {
+    setScopeMode(mode);
+    if (mode === "global") {
+      setFormData((prev) => ({ ...prev, course_id: null, category_slug: null }));
+    } else if (mode === "category") {
+      setFormData((prev) => ({
+        ...prev,
+        course_id: null,
+        category_slug: prev.category_slug || availableCategories[0] || "lingue",
+      }));
+    } else if (mode === "course") {
+      setFormData((prev) => ({
+        ...prev,
+        category_slug: null,
+        course_id: prev.course_id || coursesList[0]?.id || null,
+      }));
+    }
+  };
 
   const handleOpenAddField = () => {
     setEditingField(null);
@@ -348,7 +411,7 @@ export function VisualFormBuilder({
           <Button
             type="button"
             size="sm"
-            className="gap-1.5 bg-[#043569] text-white hover:bg-[#032850] font-bold text-xs"
+            className="gap-1.5 bg-[#043569] text-white hover:bg-[#032850] font-bold text-xs cursor-pointer"
             onClick={() => onSave(formData)}
             disabled={isSaving || !formData.title.trim()}
           >
@@ -360,13 +423,13 @@ export function VisualFormBuilder({
 
       {activeTab === "builder" ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column (1/3): Form Scope & Targeting */}
+          {/* Left Column (1/3): Form Scope & Targeting (100% Database First) */}
           <div className="lg:col-span-1 space-y-6">
             {/* General Settings */}
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#043569] border-b border-slate-100 pb-2 flex items-center gap-1.5">
                 <FileText className="w-4 h-4 text-amber-500" />
-                1. Impostazioni Generali
+                1. Informazioni Modulo
               </h3>
 
               <div className="space-y-1.5">
@@ -429,42 +492,165 @@ export function VisualFormBuilder({
               </div>
             </div>
 
-            {/* Scope / Targeting */}
+            {/* Scope / Targeting (DATABASE FIRST) */}
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <h3 className="text-xs font-black uppercase tracking-wider text-[#043569] border-b border-slate-100 pb-2 flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                2. Ambito di Applicazione (Targeting)
+                2. A Quali Corsi si Applica? (Database First)
               </h3>
 
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Determina quando questo modulo deve apparire al checkout rispetto agli altri:
-              </p>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">Categoria Corsi (Opzionale)</Label>
-                <Input
-                  value={formData.category_slug || ""}
-                  onChange={(e) => setFormData({ ...formData, category_slug: e.target.value || null })}
-                  placeholder="Es. kids, lingue, doposcuola"
-                  className="text-xs"
-                />
-                <p className="text-[10px] text-slate-400">
-                  Si applica a tutti i corsi della categoria indicata.
-                </p>
+              <div className="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => handleScopeChange("global")}
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                    scopeMode === "global"
+                      ? "bg-white text-[#043569] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Globe className="w-4 h-4" />
+                  Globale
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleScopeChange("category")}
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                    scopeMode === "category"
+                      ? "bg-white text-[#043569] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Folder className="w-4 h-4" />
+                  Categoria
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleScopeChange("course")}
+                  className={`py-2 px-1 text-[11px] font-bold rounded-lg transition-all flex flex-col items-center gap-1 text-center ${
+                    scopeMode === "course"
+                      ? "bg-white text-[#043569] shadow-xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  Singolo Corso
+                </button>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-slate-800">ID Corso Specifico (Opzionale)</Label>
-                <Input
-                  value={formData.course_id || ""}
-                  onChange={(e) => setFormData({ ...formData, course_id: e.target.value || null })}
-                  placeholder="UUID o slug del singolo corso"
-                  className="text-xs font-mono"
-                />
-                <p className="text-[10px] text-slate-400">
-                  Priorità massima: sostituisce il modulo di categoria e il default.
-                </p>
-              </div>
+              {scopeMode === "global" && (
+                <div className="p-3.5 rounded-xl bg-blue-50/80 border border-blue-200/80 text-blue-900 text-xs leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1 text-blue-950">
+                    <Globe className="w-3.5 h-3.5 text-blue-600" />
+                    Applicazione su Tutti i Corsi
+                  </p>
+                  <p className="text-[11px] text-blue-800">
+                    Questo modulo sarà utilizzato come standard per tutti i corsi della scuola, a meno che non esista un modulo specifico per categoria o singolo corso.
+                  </p>
+                </div>
+              )}
+
+              {scopeMode === "category" && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-slate-800">
+                    Seleziona Categoria dal Database
+                  </Label>
+                  <select
+                    value={formData.category_slug || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        category_slug: e.target.value || null,
+                        course_id: null,
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800"
+                  >
+                    <option value="">-- Seleziona una categoria --</option>
+                    {availableCategories.map((cat) => {
+                      const count = coursesList.filter((c) => c.categoria?.toLowerCase() === cat).length;
+                      return (
+                        <option key={cat} value={cat}>
+                          📂 {cat.toUpperCase()} ({count} corsi nel database)
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="text-[10px] text-slate-500 leading-tight">
+                    Tutti i corsi appartenenti a questa categoria useranno questo modulo automaticamente.
+                  </p>
+                </div>
+              )}
+
+              {scopeMode === "course" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-slate-800">
+                      Seleziona Corso dal Database
+                    </Label>
+                    <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded-md">
+                      {coursesList.length} corsi disponibili
+                    </span>
+                  </div>
+
+                  {/* Course Search Filter */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={courseSearch}
+                      onChange={(e) => setCourseSearch(e.target.value)}
+                      placeholder="Cerca corso per nome o categoria..."
+                      className="pl-8 h-8 text-xs rounded-xl bg-slate-50 border-slate-200"
+                    />
+                  </div>
+
+                  {/* Course Select Dropdown */}
+                  <select
+                    value={formData.course_id || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        course_id: e.target.value || null,
+                        category_slug: null,
+                      })
+                    }
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 cursor-pointer"
+                  >
+                    <option value="">-- Seleziona il corso --</option>
+                    {filteredCourses.map((course) => (
+                      <option key={course.id} value={course.id}>
+                        📘 {course.nome} — €{course.prezzo} ({course.categoria || "Generale"})
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Selected Course Card Preview */}
+                  {selectedCourse ? (
+                    <div className="p-3.5 rounded-xl bg-purple-50/80 border border-purple-200/80 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-purple-900 flex items-center gap-1">
+                          <GraduationCap className="w-3.5 h-3.5 text-purple-600" />
+                          Corso Collegato
+                        </span>
+                        <Badge className="bg-purple-200 text-purple-900 border-purple-300 text-[10px]">
+                          €{selectedCourse.prezzo}
+                        </Badge>
+                      </div>
+                      <p className="text-xs font-black text-purple-950">{selectedCourse.nome}</p>
+                      <div className="flex items-center gap-2 text-[10px] text-purple-800">
+                        <span>Categoria: <strong>{selectedCourse.categoria || "Nessuna"}</strong></span>
+                        {selectedCourse.teacherName && (
+                          <span>• Docente: <strong>{selectedCourse.teacherName}</strong></span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-amber-600 font-medium">
+                      ⚠️ Seleziona un corso per attivare la priorità massima su quel corso.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Quick Field Presets */}
@@ -607,7 +793,7 @@ export function VisualFormBuilder({
                 <Button
                   type="button"
                   onClick={handleOpenAddField}
-                  className="gap-1.5 bg-[#FAA904] text-slate-950 hover:bg-[#e09804] font-bold text-xs"
+                  className="gap-1.5 bg-[#FAA904] text-slate-950 hover:bg-[#e09804] font-bold text-xs cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Aggiungi Campo
@@ -718,7 +904,7 @@ export function VisualFormBuilder({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900"
+                              className="h-8 w-8 p-0 text-slate-500 hover:text-slate-900 cursor-pointer"
                               onClick={() => handleOpenEditField(field)}
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -727,7 +913,7 @@ export function VisualFormBuilder({
                               type="button"
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50"
+                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 cursor-pointer"
                               onClick={() => handleDeleteField(field.id)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1199,6 +1385,51 @@ export function VisualFormBuilder({
                 placeholder="Es. Seleziona il livello desiderato..."
                 className="text-xs"
               />
+            </div>
+
+            {/* Live Visual Preview of the Field inside the Dialog */}
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Anteprima dal vivo
+                </span>
+                <span className="text-[10px] font-bold text-[#043569] bg-blue-50 px-2 py-0.5 rounded">
+                  {fieldTarget === FormFieldTarget.STUDENT ? "👤 Per lo studente" : "💳 Per l'acquirente"}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-800">
+                  {fieldLabel || "Nome del campo"} {fieldRequired && <span className="text-red-500">*</span>}
+                </label>
+                {fieldType === FormFieldType.SELECT ? (
+                  <select className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700">
+                    <option>{fieldPlaceholder || "-- Seleziona opzione --"}</option>
+                    {fieldOptionsText
+                      .split("\n")
+                      .filter(Boolean)
+                      .map((opt, i) => (
+                        <option key={i}>{opt.split(":")[0]}</option>
+                      ))}
+                  </select>
+                ) : fieldType === FormFieldType.TEXTAREA ? (
+                  <textarea
+                    rows={2}
+                    placeholder={fieldPlaceholder || "Scrivi qui..."}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs"
+                  />
+                ) : fieldType === FormFieldType.CHECKBOX ? (
+                  <div className="flex items-center gap-2 pt-1">
+                    <input type="checkbox" className="w-4 h-4 rounded text-[#043569]" />
+                    <span className="text-xs text-slate-600">{fieldPlaceholder || "Confermo"}</span>
+                  </div>
+                ) : (
+                  <input
+                    type={fieldType === FormFieldType.NUMBER ? "number" : fieldType === FormFieldType.DATE ? "date" : "text"}
+                    placeholder={fieldPlaceholder || "Inserisci..."}
+                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs"
+                  />
+                )}
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-2 border-t border-slate-100">

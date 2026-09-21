@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import type { CourseFormValues } from "../types";
 import type { Teacher } from "@/features/teachers";
-import { X } from "lucide-react";
+import { X, FileText, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -365,6 +365,35 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
               className="h-9 text-xs rounded-xl" />
           </div>
         )}
+
+        {/* ── Modulo di Iscrizione & Form Engine ── */}
+        <div className="col-span-2 bg-gradient-to-r from-blue-50/70 to-indigo-50/50 rounded-2xl p-4 border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-[#043569] text-[#FAA904] rounded-xl shadow-xs shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                Modulo di Iscrizione & Form Engine
+                <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  Database-First
+                </span>
+              </p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Personalizza le domande e i campi richiesti al corsista durante il checkout di questo corso.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`/moduli?courseId=${form.slug || (initialValues as any).id || ""}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-2 bg-white hover:bg-slate-50 text-[#043569] border border-blue-200 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-[#FAA904]" />
+            Personalizza Modulo
+          </a>
+        </div>
 
         {/* ── Descrizione ── */}
         <div className="col-span-2">
