@@ -39,6 +39,9 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: ContactSectio
   const locale = useLocale();
   const {
     formData,
+    customFields,
+    customFieldsValues,
+    handleCustomFieldChange,
     submitted,
     loading,
     error,
@@ -345,10 +348,67 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: ContactSectio
                     {formData.messaggio.length} / 2000
                   </span>
                 </div>
-                {fieldErrors?.messaggio && (
-                  <p className="text-[11px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.messaggio}</p>
-                )}
               </div>
+
+              {/* Dynamic Custom Fields from Form Template */}
+              {customFields && customFields.filter((f) => f.is_enabled).length > 0 && (
+                <div className="space-y-3 pt-2">
+                  {customFields
+                    .filter((f) => f.is_enabled)
+                    .map((field) => {
+                      const val = customFieldsValues[field.key] ?? "";
+                      return (
+                        <div key={field.id} className="space-y-1 text-left">
+                          <label className="block text-xs font-bold text-gray-700">
+                            {field.label} {field.is_required && <span className="text-red-500">*</span>}
+                          </label>
+
+                          {field.field_type === "select" ? (
+                            <div className="relative flex items-center group/field">
+                              <select
+                                value={val}
+                                onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
+                                className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 px-4 text-xs appearance-none outline-none transition-all duration-300 text-gray-900 cursor-pointer"
+                              >
+                                <option value="">{field.placeholder || "Seleziona un'opzione..."}</option>
+                                {field.options?.map((opt: any) => {
+                                  const oVal = typeof opt === "string" ? opt : opt.value;
+                                  const oLbl = typeof opt === "string" ? opt : opt.label;
+                                  return (
+                                    <option key={oVal} value={oVal}>
+                                      {oLbl}
+                                    </option>
+                                  );
+                                })}
+                              </select>
+                              <CaretDown className="absolute right-3.5 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                            </div>
+                          ) : field.field_type === "textarea" ? (
+                            <textarea
+                              value={val}
+                              onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
+                              placeholder={field.placeholder}
+                              rows={2}
+                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
+                            />
+                          ) : (
+                            <input
+                              type={field.field_type === "number" ? "number" : "text"}
+                              value={val}
+                              onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
+                              placeholder={field.placeholder}
+                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900"
+                            />
+                          )}
+
+                          {field.help_text && (
+                            <p className="text-[10px] text-gray-400">{field.help_text}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
 
               {/* Checkbox */}
               <div>

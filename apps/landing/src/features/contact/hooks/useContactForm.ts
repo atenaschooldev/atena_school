@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { contactFormSchema } from "@atena/validators";
 import { getStoredUtmParams } from "@/lib/utm";
 import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
+import type { FormFieldConfig } from "@atena/api-types";
 
 export interface ContactFormData {
   nome: string;
@@ -31,10 +32,31 @@ export function useContactForm() {
     website_url: "",
   });
 
+  const [formTemplate, setFormTemplate] = useState<any>(null);
+  const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  // Dynamic template resolution for contact forms (White-Label Form Engine)
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTemplate() {
+      try {
+        const tpl = await api.forms.resolve({ form_type: "contact" });
+        if (isMounted && tpl) {
+          setFormTemplate(tpl);
+        }
+      } catch (err) {
+        console.warn("Failed to resolve contact form template:", err);
+      }
+    }
+    loadTemplate();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -44,6 +66,10 @@ export function useContactForm() {
     if (fieldErrors[name as keyof ContactFormData]) {
       setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  const handleCustomFieldChange = (key: string, value: any) => {
+    setCustomFieldsValues((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +91,7 @@ export function useContactForm() {
       privacy: false,
       website_url: "",
     });
+    setCustomFieldsValues({});
     setFieldErrors({});
     setError(null);
   };
@@ -123,7 +150,9 @@ export function useContactForm() {
       const data = await api.contact.submit({
         ...formData,
         ...utm,
-      });
+        custom_fields: Object.keys(customFieldsValues).length > 0 ? customFieldsValues : undefined,
+        form_id: formTemplate?.id || undefined,
+      } as any);
 
       if (data.success) {
         setSubmitted(true);
@@ -159,6 +188,10 @@ export function useContactForm() {
 
   return {
     formData,
+    formTemplate,
+    customFields: (formTemplate?.fields_config || []) as FormFieldConfig[],
+    customFieldsValues,
+    handleCustomFieldChange,
     submitted,
     loading,
     error,
@@ -169,3 +202,5 @@ export function useContactForm() {
     resetForm,
   };
 }
+
+export default useContactForm;

@@ -57,6 +57,8 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
     privacy: false,
   });
 
+  const [formTemplate, setFormTemplate] = useState<any>(null);
+  const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +67,25 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
   const phone = school.phone || contactData?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";
   const landline = school.landline || contactData?.landline || DEFAULT_SCHOOL_PROFILE.landline || "0966 447052";
   const email = school.secretariat_email || school.email || contactData?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
+
+  // Dynamic template resolution
+  useEffect(() => {
+    let isMounted = true;
+    async function loadTemplate() {
+      try {
+        const tpl = await api.forms.resolve({ form_type: "contact" });
+        if (isMounted && tpl) {
+          setFormTemplate(tpl);
+        }
+      } catch (err) {
+        console.warn("Failed to resolve contact form template:", err);
+      }
+    }
+    loadTemplate();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   // Disable body scroll when modal is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (isOpen) {
@@ -170,7 +191,11 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
 
     setLoading(true);
     try {
-      const res = await api.contact.submit(formData);
+      const res = await api.contact.submit({
+        ...formData,
+        custom_fields: Object.keys(customFieldsValues).length > 0 ? customFieldsValues : undefined,
+        form_id: formTemplate?.id || undefined,
+      } as any);
       if (res.success) {
         setSubmitted(true);
         setTimeout(() => {
@@ -184,6 +209,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
             messaggio: "",
             privacy: false,
           });
+          setCustomFieldsValues({});
           setFieldErrors({});
           onClose();
         }, 2000);
@@ -499,6 +525,66 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                     <p className="text-[10px] text-red-500 font-semibold text-left mt-1 pl-1">{fieldErrors.messaggio}</p>
                   )}
                 </div>
+
+                {/* Dynamic Custom Fields from Form Template */}
+                {formTemplate?.fields_config && formTemplate.fields_config.filter((f: any) => f.is_enabled).length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    {formTemplate.fields_config
+                      .filter((f: any) => f.is_enabled)
+                      .map((field: any) => {
+                        const val = customFieldsValues[field.key] ?? "";
+                        return (
+                          <div key={field.id} className="space-y-1 text-left">
+                            <label className="block text-xs font-bold text-gray-700">
+                              {field.label} {field.is_required && <span className="text-red-500">*</span>}
+                            </label>
+
+                            {field.field_type === "select" ? (
+                              <div className="relative flex items-center group/field">
+                                <select
+                                  value={val}
+                                  onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2.5 px-3 text-xs appearance-none outline-none transition-all text-gray-900 cursor-pointer"
+                                >
+                                  <option value="">{field.placeholder || "Seleziona un'opzione..."}</option>
+                                  {field.options?.map((opt: any) => {
+                                    const oVal = typeof opt === "string" ? opt : opt.value;
+                                    const oLbl = typeof opt === "string" ? opt : opt.label;
+                                    return (
+                                      <option key={oVal} value={oVal}>
+                                        {oLbl}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                                <CaretDown className="absolute right-3 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                              </div>
+                            ) : field.field_type === "textarea" ? (
+                              <textarea
+                                value={val}
+                                onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                placeholder={field.placeholder}
+                                rows={2}
+                                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
+                              />
+                            ) : (
+                              <input
+                                type={field.field_type === "number" ? "number" : "text"}
+                                value={val}
+                                onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                                placeholder={field.placeholder}
+                                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900"
+                              />
+                            )}
+
+                            {field.help_text && (
+                              <p className="text-[10px] text-gray-400">{field.help_text}</p>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
 
                 {/* Checkbox */}
                 <div>

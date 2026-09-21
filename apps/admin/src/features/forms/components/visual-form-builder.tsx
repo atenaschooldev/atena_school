@@ -721,21 +721,42 @@ export function VisualFormBuilder({
                   size="sm"
                   onClick={() =>
                     handleApplyPreset({
-                      key: "course_goal",
-                      label: "Obiettivo del corso",
+                      key: "preferred_time",
+                      label: "Fascia oraria preferita per essere ricontattato",
                       type: FormFieldType.SELECT,
-                      target: FormFieldTarget.STUDENT,
+                      target: FormFieldTarget.PURCHASER,
                       options: [
-                        { label: "Studio / Esame Scolastico", value: "school" },
-                        { label: "Lavoro / Carriera", value: "work" },
-                        { label: "Certificazione Ufficiale", value: "cert" },
-                        { label: "Piacere personale / Viaggi", value: "travel" },
+                        { label: "Mattina (09:00 - 13:00)", value: "morning" },
+                        { label: "Pomeriggio (14:00 - 18:00)", value: "afternoon" },
+                        { label: "Sera (18:00 - 20:00)", value: "evening" },
                       ],
                     })
                   }
                   className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
                 >
-                  🎯 + Obiettivo del corso
+                  🕒 + Fascia Oraria Preferita
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    handleApplyPreset({
+                      key: "preferred_method",
+                      label: "Canale di contatto preferito",
+                      type: FormFieldType.SELECT,
+                      target: FormFieldTarget.PURCHASER,
+                      options: [
+                        { label: "WhatsApp", value: "whatsapp" },
+                        { label: "Chiamata telefonica", value: "phone" },
+                        { label: "Email", value: "email" },
+                      ],
+                    })
+                  }
+                  className="justify-start text-xs bg-white text-slate-700 border-amber-200 hover:bg-amber-100/50"
+                >
+                  📱 + Canale di Contatto Preferito
                 </Button>
               </div>
             </div>
@@ -749,27 +770,41 @@ export function VisualFormBuilder({
                 <div>
                   <h3 className="text-sm font-black uppercase tracking-wider text-[#043569] flex items-center gap-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                    Campi di Sistema Obbligatori (Core Anagrafica & Fiscale)
+                    {formData.form_type === FormType.CONTACT
+                      ? "Campi di Sistema Obbligatori (Form Contatti / Lead)"
+                      : "Campi di Sistema Obbligatori (Core Anagrafica & Fiscale)"}
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Questi campi sono sempre presenti e protetti per legge per garantire la fatturazione e il contratto.
+                    {formData.form_type === FormType.CONTACT
+                      ? "Campi essenziali per la ricezione, tracciamento e gestione della richiesta nella CRM."
+                      : "Questi campi sono sempre presenti e protetti per legge per garantire la fatturazione e il contratto."}
                   </p>
                 </div>
                 <Badge className="bg-emerald-500/10 text-emerald-800 border-emerald-300 text-[10px] font-bold">
-                  🔒 Protetto per legge
+                  🔒 Protetto di sistema
                 </Badge>
               </div>
 
               {/* Core fields grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2">
-                {[
-                  { name: "Nome & Cognome", desc: "Acquirente / Studente", lock: true },
-                  { name: "Email", desc: "Ricevute e notifiche", lock: true },
-                  { name: "Telefono (WhatsApp)", desc: "Contatto segreteria", lock: true },
-                  { name: "Codice Fiscale", desc: "Verifica quota €30 & SDI", lock: true },
-                  { name: "Data & Luogo Nascita", desc: "Generazione automatica CF", lock: true },
-                  { name: "Modalità Genitore", desc: "Sto iscrivendo un figlio", lock: true },
-                ].map((item, i) => (
+                {(formData.form_type === FormType.CONTACT
+                  ? [
+                      { name: "Nome & Cognome", desc: "Mittente della richiesta", lock: true },
+                      { name: "Email", desc: "Indirizzo per la risposta", lock: true },
+                      { name: "Telefono (WhatsApp)", desc: "Contatto diretto e promemoria", lock: true },
+                      { name: "Corso d'Interesse", desc: "Selezione percorso didattico", lock: true },
+                      { name: "Messaggio / Richiesta", desc: "Testo libero del cliente", lock: true },
+                      { name: "Privacy Policy GDPR", desc: "Consenso legale obbligatorio", lock: true },
+                    ]
+                  : [
+                      { name: "Nome & Cognome", desc: "Acquirente / Studente", lock: true },
+                      { name: "Email", desc: "Ricevute e notifiche", lock: true },
+                      { name: "Telefono (WhatsApp)", desc: "Contatto segreteria", lock: true },
+                      { name: "Codice Fiscale", desc: "Verifica quota €30 & SDI", lock: true },
+                      { name: "Data & Luogo Nascita", desc: "Generazione automatica CF", lock: true },
+                      { name: "Modalità Genitore", desc: "Sto iscrivendo un figlio", lock: true },
+                    ]
+                ).map((item, i) => (
                   <div key={i} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                       <span>{item.name}</span>
@@ -933,7 +968,6 @@ export function VisualFormBuilder({
           </div>
         </div>
       ) : (
-        /* Full WYSIWYG Interactive Checkout Preview (Directly matching user screenshots) */
         <div className="bg-slate-100 p-6 rounded-3xl border border-slate-200 shadow-inner">
           {/* Simulator Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6">
@@ -990,32 +1024,119 @@ export function VisualFormBuilder({
             </div>
           </div>
 
-          {/* Checkout Card Container */}
+          {/* Card Container (Adapts based on form_type) */}
           <div className={`mx-auto transition-all ${previewDevice === "mobile" ? "max-w-md" : "max-w-3xl"}`}>
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
-              {/* Checkout Title */}
-              <div>
-                <p className="text-xs font-black uppercase tracking-wider text-[#FAA904]">
-                  ISCRIZIONE E CHECKOUT
-                </p>
-                <h2 className="text-2xl font-black text-[#043569]">
-                  Completa l&apos;iscrizione
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Inserisci i dati dello studente e seleziona la modalità di pagamento desiderata.
-                </p>
-              </div>
-
-              {/* Login Banner */}
-              <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <Sparkles className="w-4 h-4 text-[#FAA904]" />
-                  Sei già nostro corsista o genitore?
+            {formData.form_type === FormType.CONTACT ? (
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-[#00328F]">
+                    CONTATTI & INFORMAZIONI
+                  </p>
+                  <h2 className="text-2xl font-black text-slate-900">
+                    Contatta la Scuola
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Compila il modulo per richiedere informazioni o essere ricontattato dalla segreteria.
+                  </p>
                 </div>
-                <button className="bg-[#043569] text-white text-xs font-bold px-3 py-1.5 rounded-xl">
-                  Accedi per autocompilare
-                </button>
+
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Nome *</label>
+                      <input disabled placeholder="Mario" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Cognome *</label>
+                      <input disabled placeholder="Rossi" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Email *</label>
+                      <input disabled placeholder="mario.rossi@gmail.com" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Telefono (WhatsApp) *</label>
+                      <input disabled placeholder="+39 340 1234567" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs" />
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-xs font-bold text-slate-700">Corso di interesse</label>
+                      <select disabled className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs">
+                        <option>Corsi di Lingua (Inglese)</option>
+                        <option>Certificazioni Informatiche (EIPASS)</option>
+                        <option>Doposcuola & Recupero</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-xs font-bold text-slate-700">Messaggio *</label>
+                      <textarea disabled placeholder="Scrivi qui la tua richiesta..." rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs resize-none" />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Custom Fields in Contact Preview */}
+                  {formData.fields_config.filter((f) => f.is_enabled).length > 0 && (
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <p className="text-[11px] font-bold text-[#00328F] uppercase tracking-wider">
+                        ✨ Campi Aggiuntivi Configurati ({formData.fields_config.filter(f => f.is_enabled).length})
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {formData.fields_config.filter(f => f.is_enabled).map(f => (
+                          <div key={f.id} className="space-y-1">
+                            <label className="text-xs font-bold text-slate-700">
+                              {f.label} {f.is_required && <span className="text-red-500">*</span>}
+                            </label>
+                            {f.field_type === FormFieldType.SELECT ? (
+                              <select disabled className="w-full bg-blue-50/50 border border-blue-200 rounded-xl px-3 py-2 text-xs">
+                                <option>{f.placeholder || "Seleziona..."}</option>
+                                {f.options?.map((o: any, idx: number) => (
+                                  <option key={idx}>{typeof o === 'string' ? o : o.label}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input disabled placeholder={f.placeholder} className="w-full bg-blue-50/50 border border-blue-200 rounded-xl px-3 py-2 text-xs" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <label className="flex items-center gap-2 text-xs text-slate-500">
+                      <input type="checkbox" checked disabled className="rounded text-[#00328F]" />
+                      Accetto l&apos;Informativa sulla Privacy GDPR *
+                    </label>
+                  </div>
+
+                  <Button disabled className="w-full bg-[#00328F] text-white py-3 rounded-xl font-bold text-xs">
+                    Invia richiesta
+                  </Button>
+                </div>
               </div>
+            ) : (
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
+                {/* Checkout Title */}
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-[#FAA904]">
+                    ISCRIZIONE E CHECKOUT
+                  </p>
+                  <h2 className="text-2xl font-black text-[#043569]">
+                    Completa l&apos;iscrizione
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Inserisci i dati dello studente e seleziona la modalità di pagamento desiderata.
+                  </p>
+                </div>
+
+                {/* Login Banner */}
+                <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                    <Sparkles className="w-4 h-4 text-[#FAA904]" />
+                    Sei già nostro corsista o genitore?
+                  </div>
+                  <button className="bg-[#043569] text-white text-xs font-bold px-3 py-1.5 rounded-xl">
+                    Accedi per autocompilare
+                  </button>
+                </div>
 
               {/* isForChild Toggle Box */}
               <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-start gap-3">
@@ -1299,6 +1420,7 @@ export function VisualFormBuilder({
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       )}

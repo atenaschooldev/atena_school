@@ -57,13 +57,58 @@ export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
   ],
 };
 
+export const DEFAULT_CONTACT_FORM_TEMPLATE: FormTemplate = {
+  id: 'default-contact-form',
+  title: 'Modulo Contatto Standard',
+  description: 'Modulo predefinito per le richieste di informazioni e contatto',
+  form_type: FormType.CONTACT,
+  is_default: true,
+  is_active: true,
+  category_slug: null,
+  course_id: null,
+  fields_config: [
+    {
+      id: 'field-preferred-time',
+      key: 'preferred_time',
+      label: 'Fascia oraria preferita per essere ricontattato',
+      placeholder: 'Seleziona una fascia oraria...',
+      field_type: FormFieldType.SELECT,
+      target: FormFieldTarget.PURCHASER,
+      is_required: false,
+      is_enabled: true,
+      sort_order: 1,
+      options: [
+        { label: 'Mattina (09:00 - 13:00)', value: 'morning' },
+        { label: 'Pomeriggio (14:00 - 18:00)', value: 'afternoon' },
+        { label: 'Sera (18:00 - 20:00)', value: 'evening' },
+      ],
+    },
+    {
+      id: 'field-preferred-method',
+      key: 'preferred_method',
+      label: 'Canale di contatto preferito',
+      placeholder: 'Seleziona come preferisci essere contattato...',
+      field_type: FormFieldType.SELECT,
+      target: FormFieldTarget.PURCHASER,
+      is_required: false,
+      is_enabled: true,
+      sort_order: 2,
+      options: [
+        { label: 'WhatsApp', value: 'whatsapp' },
+        { label: 'Chiamata telefonica', value: 'phone' },
+        { label: 'Email', value: 'email' },
+      ],
+    },
+  ],
+};
+
 /**
  * Каскадный резолвер активного шаблона формы:
  * Приоритет 1: Точный курс (`course_id === query.course_id`)
  * Приоритет 2: Категория курса (`category_slug === query.category_slug`)
  * Приоритет 3: Форма по умолчанию (`is_default === true && form_type === query.form_type`)
  * Приоритет 4: Первая активная форма указанного типа (`form_type === query.form_type`)
- * Приоритет 5: Дефолтный встроенный шаблон системы (для booking)
+ * Приоритет 5: Дефолтный встроенный шаблон системы (для booking или contact)
  */
 export function resolveActiveFormTemplate(
   templates?: FormTemplate[] | null,
@@ -100,6 +145,9 @@ export function resolveActiveFormTemplate(
   // 5. Встроенный фоллбэк
   if (query.form_type === FormType.BOOKING) {
     return DEFAULT_BOOKING_FORM_TEMPLATE;
+  }
+  if (query.form_type === FormType.CONTACT) {
+    return DEFAULT_CONTACT_FORM_TEMPLATE;
   }
 
   return {
