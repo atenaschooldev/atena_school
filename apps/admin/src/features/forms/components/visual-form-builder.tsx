@@ -81,6 +81,12 @@ export function VisualFormBuilder({
     }
   );
 
+  useEffect(() => {
+    if (initialForm) {
+      setFormData(initialForm);
+    }
+  }, [initialForm]);
+
   // Derive unique categories from real courses in the database
   const availableCategories = useMemo(() => {
     const set = new Set<string>();

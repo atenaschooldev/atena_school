@@ -46,7 +46,7 @@ export function useForms(filters?: {
         return BUILTIN_FALLBACKS;
       }
     },
-    staleTime: 1000 * 30,
+    staleTime: 0,
   });
 
   const createMutation = useMutation({
