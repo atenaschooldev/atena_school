@@ -289,7 +289,16 @@ export function createApiClient(config?: string | ApiClientConfig) {
         ? `${baseUrl}/forms/resolve?${q.toString()}`
         : `${prefix}/forms/resolve?${q.toString()}`;
       const res = await fetch(endpoint, { headers: getHeaders() });
-      return handleResponse(res);
+      const data = await handleResponse<any>(res);
+      if (data && typeof data === "object") {
+        if ("template" in data) {
+          return data;
+        }
+        if ("id" in data) {
+          return { success: true, template: data };
+        }
+      }
+      return { success: false, template: data };
     },
   };
 

@@ -73,7 +73,8 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
     let isMounted = true;
     async function loadTemplate() {
       try {
-        const tpl = await api.forms.resolve({ form_type: "contact" });
+        const res = await api.forms.resolve({ form_type: "contact" });
+        const tpl = res?.template || (res?.id ? res : null);
         if (isMounted && tpl) {
           setFormTemplate(tpl);
         }

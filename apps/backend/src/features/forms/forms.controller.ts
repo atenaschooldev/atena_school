@@ -36,11 +36,15 @@ export class FormsPublicController {
     @Query('course_id') course_id?: string,
     @Query('category_slug') category_slug?: string,
   ) {
-    return this.formsService.resolveForm({
+    const template = await this.formsService.resolveForm({
       form_type,
       course_id,
       category_slug,
     });
+    return {
+      success: true,
+      template,
+    };
   }
 }
 

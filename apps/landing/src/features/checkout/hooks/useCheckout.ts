@@ -321,8 +321,9 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
           setItem(fetchedItem);
         }
 
-        if (formRes?.success && formRes.template) {
-          setFormTemplate(formRes.template);
+        const resolvedForm = formRes?.template || (formRes?.id ? formRes : null);
+        if (resolvedForm) {
+          setFormTemplate(resolvedForm);
         }
 
         if (profileRes?.success && profileRes.profile) {
