@@ -41,7 +41,10 @@ export function useContactForm(initialFormTemplate?: any) {
 
   // Dynamic template resolution for contact forms (White-Label Form Engine)
   useEffect(() => {
-    if (initialFormTemplate) return;
+    if (initialFormTemplate) {
+      setFormTemplate(initialFormTemplate);
+      return;
+    }
     let isMounted = true;
     async function loadTemplate() {
       try {

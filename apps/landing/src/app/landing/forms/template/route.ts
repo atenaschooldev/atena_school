@@ -5,6 +5,8 @@ import { FormType, parseFormType } from '@atena/api-types';
 import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 async function handler(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

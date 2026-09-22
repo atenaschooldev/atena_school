@@ -7,7 +7,8 @@ import { getSchoolProfile, resolveActiveFormTemplate } from "@atena/core";
 import { FormType } from "@atena/api-types";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata() {
   const supabase = getSupabaseAdmin();

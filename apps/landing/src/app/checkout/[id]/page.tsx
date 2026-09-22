@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getSchoolProfile, resolveActiveFormTemplate } from "@atena/core";
 import { FormType } from "@atena/api-types";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function CheckoutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
