@@ -9,6 +9,7 @@ import {
   FormTemplate,
   FormType,
   ResolveFormQuery,
+  parseFormType,
 } from '@atena/api-types';
 import {
   resolveActiveFormTemplate,
@@ -116,12 +117,13 @@ export class FormsService {
    * Создать новый шаблон формы
    */
   async createForm(dto: CreateFormTemplateDto): Promise<FormTemplate> {
+    const formType = parseFormType(dto.form_type);
     // Если форма создаётся как дефолтная, сбрасываем предыдущую дефолтную для этого типа
     if (dto.is_default) {
       await this.supabase
         .from('form_templates')
         .update({ is_default: false })
-        .eq('form_type', dto.form_type);
+        .eq('form_type', formType);
     }
 
     const { data, error } = await this.supabase
@@ -129,7 +131,7 @@ export class FormsService {
       .insert({
         title: dto.title,
         description: dto.description || null,
-        form_type: dto.form_type,
+        form_type: formType,
         is_default: dto.is_default ?? false,
         is_active: dto.is_active ?? true,
         category_slug: dto.category_slug || null,
@@ -154,7 +156,7 @@ export class FormsService {
     const targetId = this.resolveFormId(id);
     const current = await this.getFormById(targetId);
 
-    const formType = dto.form_type || current.form_type;
+    const formType = dto.form_type !== undefined ? parseFormType(dto.form_type) : current.form_type;
 
     if (dto.is_default) {
       await this.supabase
@@ -166,7 +168,7 @@ export class FormsService {
     const updatePayload: Record<string, any> = {};
     if (dto.title !== undefined) updatePayload.title = dto.title;
     if (dto.description !== undefined) updatePayload.description = dto.description;
-    if (dto.form_type !== undefined) updatePayload.form_type = dto.form_type;
+    if (dto.form_type !== undefined) updatePayload.form_type = parseFormType(dto.form_type);
     if (dto.is_default !== undefined) updatePayload.is_default = dto.is_default;
     if (dto.is_active !== undefined) updatePayload.is_active = dto.is_active;
     if (dto.category_slug !== undefined) updatePayload.category_slug = dto.category_slug;
