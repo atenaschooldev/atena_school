@@ -194,16 +194,28 @@ export function VisualFormBuilder({
     }
   };
 
-  // Available catalog fields — exclude system (core) fields; they are not selectable from catalog.
-  // System fields are added automatically by the checkout engine, not via the form builder UI.
+  // Available catalog fields — exclude system (core) fields and filter by form type.
+  // System fields are added automatically by the checkout/contact engine, not via the form builder UI.
   const availableCatalogFields = useMemo(() => {
-    return catalogFields.filter((cf) => !cf.is_system);
-  }, [catalogFields]);
+    return catalogFields.filter((cf) => {
+      if (cf.is_system) return false;
+      if (formData.form_type === FormType.CONTACT) {
+        return cf.target === "contact";
+      }
+      return cf.target !== "contact";
+    });
+  }, [catalogFields, formData.form_type]);
 
   // System fields from catalog for the current form type (shown as read-only indicator below the builder)
   const systemCatalogFields = useMemo(() => {
-    return catalogFields.filter((cf) => cf.is_system);
-  }, [catalogFields]);
+    return catalogFields.filter((cf) => {
+      if (!cf.is_system) return false;
+      if (formData.form_type === FormType.CONTACT) {
+        return cf.target === "contact";
+      }
+      return cf.target !== "contact";
+    });
+  }, [catalogFields, formData.form_type]);
 
   // Filtered catalog fields for the selection modal
   const filteredCatalogFields = useMemo(() => {
