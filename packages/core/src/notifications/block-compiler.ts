@@ -534,8 +534,8 @@ export function renderEmailFromBlocks(
 
       // 3b. CONTACT SUMMARY TABLE (for lead/contact form templates)
       case 'contact_summary_table': {
-        const senderName = compileTemplateVariables(v.sender_name || v.purchaser_name || 'Andrii Petukhov', v);
-        const senderEmail = compileTemplateVariables(v.sender_email || v.email || 'andrii.petukhov@gmail.com', v);
+        const senderName = compileTemplateVariables(v.sender_name || v.purchaser_name || 'Mario Rossi', v);
+        const senderEmail = compileTemplateVariables(v.sender_email || v.email || 'mario.rossi@example.com', v);
         const senderPhone = compileTemplateVariables(v.sender_phone || v.phone || '+39 333 1234567', v);
         const interest = compileTemplateVariables(v.interest || v.topic || 'Informazioni Generali', v);
 
@@ -780,10 +780,10 @@ export function renderTelegramFromBlocks(
           if (p.show_email !== false && email) lines.push(`✉️ <b>Email:</b> <a href="mailto:${email}">${email}</a>`);
           if (p.show_interest !== false && interest) lines.push(`🎯 <b>Interesse:</b> ${interest}`);
         } else {
-          const student = escapeTgHtml(v.student_name || 'Viktoria Petukhova');
+          const student = escapeTgHtml(v.student_name || 'Luca Rossi');
           const phone = escapeTgHtml(v.phone || v.purchaser_phone || '+39 333 1234567');
-          const email = escapeTgHtml(v.email || v.purchaser_email || 'andrii.petukhov@gmail.com');
-          const purchaser = escapeTgHtml(v.purchaser_name || 'Petukhov Andrii');
+          const email = escapeTgHtml(v.email || v.purchaser_email || 'mario.rossi@example.com');
+          const purchaser = escapeTgHtml(v.purchaser_name || 'Mario Rossi');
 
           if (p.show_name !== false) lines.push(`👤 <b>Studente:</b> ${student}`);
           if (p.show_phone !== false) lines.push(`📞 <b>Telefono:</b> <code>${phone}</code>`);

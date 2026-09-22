@@ -103,7 +103,10 @@ export class MailController {
   @ApiOperation({ summary: 'Отправить тестовое письмо для проверки конфигурации почты' })
   @ApiResponse({ status: 200, description: 'Тестовое письмо отправлено' })
   async sendTestMail(@Body() dto: TestMailDto) {
-    const targetEmail = dto.to || 'atenaschool20@gmail.com';
+    if (!dto.to) {
+      return { success: false, error: 'Recipient email (to) is required' };
+    }
+    const targetEmail = dto.to;
     const subject = 'Test Email — Atena School System';
     const html = '<h2>Atena School Notification System</h2><p>Verifica del funzionamento del servizio email di Atena School.</p>';
     const result = await this.mailService.sendEmail(targetEmail, subject, 'Verifica del funzionamento del servizio email.', html);

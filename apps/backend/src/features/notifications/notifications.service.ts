@@ -49,7 +49,7 @@ const BOOKING_SAMPLE_DATA: Record<string, any> = {
 
 const CONTACT_SAMPLE_DATA: Record<string, any> = {
   sender_name: 'Mario Rossi',
-  sender_email: 'mario.rossi@gmail.com',
+  sender_email: 'mario.rossi@example.com',
   sender_phone: '+39 347 1234567',
   interest: 'Corso di Inglese Adulti',
   topic: 'Richiesta Informazioni',
