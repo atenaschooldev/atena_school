@@ -63,10 +63,6 @@ import {
   Folder,
   Globe,
   Award,
-  BookOpen,
-  User,
-  Users,
-  Calendar,
   HelpCircle,
   Sliders,
   ArrowDown,
@@ -108,7 +104,7 @@ export function FormsListView() {
     isDeleting,
   } = useForms();
 
-  const [activeTab, setActiveTab] = useState<"templates" | "fields_catalog" | "fields_guide" | "quota">("templates");
+  const [activeTab, setActiveTab] = useState<"templates" | "fields_catalog" | "quota">("templates");
 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -568,18 +564,6 @@ export function FormsListView() {
             </button>
             <button
               type="button"
-              onClick={() => setActiveTab("fields_guide")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "fields_guide"
-                  ? "bg-background shadow-xs text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <BookOpen className="h-4 w-4 text-sky-500" />
-              {t("forms.tabFieldsGuide")}
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab("quota")}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === "quota"
@@ -597,59 +581,6 @@ export function FormsListView() {
       {activeTab === "fields_catalog" ? (
         <div className="@container/main px-4 lg:px-6 space-y-4">
           <FormFieldsView />
-        </div>
-      ) : activeTab === "fields_guide" ? (
-        <div className="@container/main px-4 lg:px-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border">
-              <CardHeader className="pb-3">
-                <div className="p-2 w-fit rounded-lg bg-blue-500/10 text-blue-600 mb-2">
-                  <User className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-base font-bold">{t("forms.guidePurchaserTitle")}</CardTitle>
-                <CardDescription className="text-xs">
-                  {t("forms.guidePurchaserDesc")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-2">
-
-                <p>• Esempi: <em>"Come ci hai conosciuto?", "Necessità fattura aziendale", "Codice SDI"</em>.</p>
-                <p>• Viene renderizzato nel primo blocco di anagrafica del checkout online.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border">
-              <CardHeader className="pb-3">
-                <div className="p-2 w-fit rounded-lg bg-purple-500/10 text-purple-600 mb-2">
-                  <Users className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-base font-bold">{t("forms.guideStudentTitle")}</CardTitle>
-                <CardDescription className="text-xs">
-                  {t("forms.guideStudentDesc")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Esempi: <em>"Livello di partenza stimato", "Obiettivo esame", "Classe frequentata"</em>.</p>
-                <p>• Viene associato al partecipante del corso in tabella <code>students</code> e salvato in JSONB.</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border">
-              <CardHeader className="pb-3">
-                <div className="p-2 w-fit rounded-lg bg-emerald-500/10 text-emerald-600 mb-2">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-base font-bold">{t("forms.guideBookingTitle")}</CardTitle>
-                <CardDescription className="text-xs">
-                  {t("forms.guideBookingDesc")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-xs text-muted-foreground space-y-2">
-                <p>• Esempi: <em>"Disponibilità fasce orarie", "Richieste particolari al docente"</em>.</p>
-                <p>• Viene archiviato direttamente in <code>bookings.custom_fields</code>.</p>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       ) : activeTab === "quota" ? (
         <div className="@container/main px-4 lg:px-6">
