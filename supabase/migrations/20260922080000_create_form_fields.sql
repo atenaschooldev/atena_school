@@ -55,16 +55,21 @@ INSERT INTO public.form_fields (
     ('purchaser_last_name', 'Cognome Acquirente', 'Purchaser Last Name', 'es. Rossi', 'e.g. Doe', 'text', 'purchaser', true, true, 20, '[]'::jsonb),
     ('purchaser_email', 'Email Acquirente', 'Purchaser Email', 'mario.rossi@email.com', 'john.doe@email.com', 'email', 'purchaser', true, true, 30, '[]'::jsonb),
     ('purchaser_phone', 'Telefono Acquirente', 'Purchaser Phone', '+39 333 1234567', '+1 555 123456', 'phone', 'purchaser', true, true, 40, '[]'::jsonb),
-    ('purchaser_tax_code', 'Codice Fiscale Acquirente', 'Purchaser Tax Code', 'RSSMRA80A01H501U', 'Tax / Fiscal Code', 'text', 'purchaser', true, true, 50, '[]'::jsonb),
-    ('purchaser_address', 'Indirizzo di Residenza', 'Residential Address', 'Via Roma 10, Milano', '123 Main St', 'text', 'purchaser', false, false, 60, '[]'::jsonb),
-    ('sdi_code', 'Codice SDI / PEC', 'SDI Code / PEC', 'M5UXCR1 o pec@email.it', 'Electronic invoice code', 'text', 'purchaser', false, false, 70, '[]'::jsonb),
+    ('purchaser_birth_date', 'Data di Nascita Acquirente', 'Purchaser Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'purchaser', true, true, 50, '[]'::jsonb),
+    ('purchaser_birth_place', 'Luogo di Nascita Acquirente', 'Purchaser Birth Place', 'es. Milano (MI)', 'e.g. Rome', 'text', 'purchaser', true, false, 55, '[]'::jsonb),
+    ('purchaser_tax_code', 'Codice Fiscale Acquirente', 'Purchaser Tax Code', 'RSSMRA80A01H501U', 'Tax / Fiscal Code', 'text', 'purchaser', true, true, 60, '[]'::jsonb),
+    ('purchaser_address', 'Indirizzo di Residenza', 'Residential Address', 'Via Roma 10, Milano', '123 Main St', 'text', 'purchaser', false, false, 70, '[]'::jsonb),
+    ('sdi_code', 'Codice SDI / PEC', 'SDI Code / PEC', 'M5UXCR1 o pec@email.it', 'Electronic invoice code', 'text', 'purchaser', false, false, 80, '[]'::jsonb),
 
     -- System Student Fields
     ('student_first_name', 'Nome Studente', 'Student First Name', 'es. Luca', 'e.g. Alex', 'text', 'student', true, true, 100, '[]'::jsonb),
     ('student_last_name', 'Cognome Studente', 'Student Last Name', 'es. Rossi', 'e.g. Doe', 'text', 'student', true, true, 110, '[]'::jsonb),
-    ('student_birth_date', 'Data di Nascita Studente', 'Student Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'student', true, true, 120, '[]'::jsonb),
-    ('student_tax_code', 'Codice Fiscale Studente', 'Student Tax Code', 'RSSLCA10A01H501U', 'Student Fiscal Code', 'text', 'student', true, true, 130, '[]'::jsonb),
-    ('study_level', 'Livello Linguistico di Partenza', 'Starting Language Level', 'Seleziona livello', 'Select level', 'select', 'student', false, false, 140, '[
+    ('student_tax_code', 'Codice Fiscale Studente', 'Student Tax Code', 'RSSLCA10A01H501U', 'Student Fiscal Code', 'text', 'student', true, true, 120, '[]'::jsonb),
+    ('student_birth_date', 'Data di Nascita Studente', 'Student Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'student', true, true, 130, '[]'::jsonb),
+    ('student_birth_place', 'Luogo di Nascita Studente', 'Student Birth Place', 'es. Roma (RM)', 'e.g. Rome', 'text', 'student', true, false, 135, '[]'::jsonb),
+    ('student_email', 'Email Studente', 'Student Email', 'studente@email.com', 'student@email.com', 'email', 'student', true, false, 140, '[]'::jsonb),
+    ('student_phone', 'Telefono Studente', 'Student Phone', '+39 340 000000', '+1 555 000000', 'phone', 'student', true, false, 145, '[]'::jsonb),
+    ('study_level', 'Livello Linguistico di Partenza', 'Starting Language Level', 'Seleziona livello', 'Select level', 'select', 'student', false, false, 150, '[
         {"label": "Principiante assoluto (A0/A1)", "value": "A1"},
         {"label": "Elementare / Pre-intermedio (A2)", "value": "A2"},
         {"label": "Intermedio (B1)", "value": "B1"},
