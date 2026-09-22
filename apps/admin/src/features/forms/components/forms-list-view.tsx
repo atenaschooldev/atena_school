@@ -68,6 +68,9 @@ import {
   Calendar,
   HelpCircle,
   Sliders,
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
 } from "lucide-react";
 
 export function FormsListView() {
@@ -151,86 +154,80 @@ export function FormsListView() {
 
     return [
       {
-        title: t("forms.metricTotalLabel"),
+        title: t("forms.metricTotalForms"),
         value: total,
-        description: `${activeCount} ${t("forms.metricTotalDesc")}`,
+        description: t("forms.metricTotalFormsDesc"),
         icon: Layers,
       },
       {
-        title: t("forms.metricCoursesLabel"),
+        title: t("forms.metricActiveForms"),
+        value: activeCount,
+        description: t("forms.metricActiveFormsDesc"),
+        icon: CheckCircle2,
+      },
+      {
+        title: t("forms.metricCourseSpecific"),
         value: courseSpecific,
-        description: t("forms.metricCoursesDesc"),
+        description: t("forms.metricCourseSpecificDesc"),
         icon: GraduationCap,
       },
       {
-        title: t("forms.metricCategoryLabel"),
+        title: t("forms.metricCategorySpecific"),
         value: categorySpecific,
-        description: t("forms.metricCategoryDesc"),
+        description: t("forms.metricCategorySpecificDesc"),
         icon: Folder,
       },
-      {
-        title: t("forms.metricGlobalLabel"),
-        value: forms.filter((f) => f.is_default).length > 0 ? (locale === "en" ? "Active" : "Attivo") : "Standard",
-        description: t("forms.metricGlobalDesc"),
-        icon: Globe,
-      },
     ];
-  }, [forms, t, locale]);
+  }, [forms, t]);
 
   // Filtering
   const filteredForms = useMemo(() => {
-    return forms.filter((item) => {
+    return forms.filter((form) => {
       // Type filter
-      if (typeFilter !== "all" && item.form_type !== typeFilter) return false;
-
-      // Target filter
-      if (targetFilter === "courses" && !item.course_id) return false;
-      if (targetFilter === "categories" && (!item.category_slug || item.course_id)) return false;
-      if (targetFilter === "global" && (item.course_id || item.category_slug)) return false;
+      if (typeFilter !== "all" && form.form_type !== typeFilter) {
+        return false;
+      }
 
       // Status filter
-      if (statusFilter === "active" && !item.is_active) return false;
-      if (statusFilter === "inactive" && item.is_active) return false;
+      if (statusFilter === "active" && !form.is_active) return false;
+      if (statusFilter === "inactive" && form.is_active) return false;
 
-      // Search query filter
-      if (searchQuery.trim() !== "") {
+      // Target filter
+      if (targetFilter === "courses" && !form.course_id) return false;
+      if (targetFilter === "categories" && !form.category_slug) return false;
+      if (targetFilter === "global" && (form.course_id || form.category_slug)) return false;
+
+      // Search query
+      if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = item.title.toLowerCase().includes(q);
-        const matchesDesc = item.description ? item.description.toLowerCase().includes(q) : false;
-        const courseName = coursesList.find((c) => c.id === item.course_id)?.nome.toLowerCase() || "";
-        const matchesCourse = courseName.includes(q);
-        const matchesCat = (item.category_slug || "").toLowerCase().includes(q);
-        if (!matchesTitle && !matchesDesc && !matchesCourse && !matchesCat) return false;
+        const matchTitle = form.title.toLowerCase().includes(q);
+        const matchDesc = (form.description || "").toLowerCase().includes(q);
+        const matchType = form.form_type.toLowerCase().includes(q);
+        return matchTitle || matchDesc || matchType;
       }
 
       return true;
     });
-  }, [forms, typeFilter, targetFilter, statusFilter, searchQuery, coursesList]);
+  }, [forms, typeFilter, statusFilter, targetFilter, searchQuery]);
 
-  const handleToggleStatus = async (form: FormTemplate, newStatus: boolean) => {
+  const handleToggleStatus = async (form: FormTemplate, checked: boolean) => {
     await updateForm({
       id: form.id,
-      payload: { is_active: newStatus },
+      payload: {
+        is_active: checked,
+      },
     });
   };
 
   const handleDeleteForm = async (form: FormTemplate) => {
     if (form.is_default) {
-      alert(locale === "en" ? "The default global form cannot be deleted. Set another form as default first." : "Il modulo predefinito globale non può essere eliminato. Imposta un altro modulo come predefinito prima.");
       return;
     }
-    const confirmed = window.confirm(
-      locale === "en"
-        ? `Are you sure you want to delete "${form.title}"? Completed registrations will keep historical data.`
-        : `Sei sicuro di voler eliminare il modello "${form.title}"? Le registrazioni già completate manterranno i dati storici.`
-    );
-    if (confirmed) {
-      await deleteForm(form.id);
-    }
+    await deleteForm(form.id);
   };
 
   const handleSave = async (form: FormTemplate) => {
-    if (editingForm === "new" || !form.id) {
+    if (!form.id || form.id === "new") {
       await createForm({
         title: form.title,
         description: form.description,
@@ -263,27 +260,91 @@ export function FormsListView() {
   const columns = useMemo<ColumnDef<FormTemplate>[]>(() => {
     return [
       {
+        id: "select",
+        header: ({ table }) => (
+          <div className="flex items-center justify-center px-2">
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label={t("common.selectAll") || "Seleziona tutti"}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center px-2">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label={t("common.selectRow") || "Seleziona riga"}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        size: 40,
+      },
+      {
         accessorKey: "title",
-        header: t("forms.columnNameDetails"),
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            <span>{t("forms.columnNameDetails")}</span>
+            {column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
+            ) : column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
+            ) : (
+              <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+            )}
+          </Button>
+        ),
         cell: ({ row }) => {
           const form = row.original;
+          const isContact = form.form_type === FormType.CONTACT;
+          const iconColorClass = isContact
+            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
+            : form.course_id
+            ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20"
+            : form.category_slug
+            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+            : "bg-primary/10 text-primary border-primary/20";
+
           return (
-            <div className="flex flex-col gap-1 min-w-[220px]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-sm text-foreground">{form.title}</span>
-                {form.is_default && (
-                  <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-2 py-0.5 shadow-2xs">
-                    <Star className="w-3 h-3 fill-current" />
-                    {t("forms.badgeDefault")}
-                  </Badge>
+            <div className="flex items-center gap-3 min-w-[240px]">
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 border ${iconColorClass}`}>
+                {isContact ? (
+                  <Globe className="h-4 w-4" />
+                ) : form.course_id ? (
+                  <GraduationCap className="h-4 w-4" />
+                ) : form.category_slug ? (
+                  <Folder className="h-4 w-4" />
+                ) : (
+                  <Layers className="h-4 w-4" />
                 )}
-                <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                  {getFormTypeLabel(form.form_type)}
-                </Badge>
               </div>
-              {form.description && (
-                <p className="text-xs text-muted-foreground line-clamp-1">{form.description}</p>
-              )}
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-sm text-foreground truncate">{form.title}</span>
+                  {form.is_default && (
+                    <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-1.5 py-0 shadow-2xs">
+                      <Star className="w-2.5 h-2.5 fill-current" />
+                      {t("forms.badgeDefault")}
+                    </Badge>
+                  )}
+                  <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+                    {getFormTypeLabel(form.form_type)}
+                  </Badge>
+                </div>
+                {form.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{form.description}</p>
+                )}
+              </div>
             </div>
           );
         },
