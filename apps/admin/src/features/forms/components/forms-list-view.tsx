@@ -420,6 +420,9 @@ export function FormsListView() {
         header: t("forms.columnStatus"),
         cell: ({ row }) => {
           const form = row.original;
+          if (form.is_default) {
+            return <StatusBadge status="attivo" />;
+          }
           return (
             <div className="flex items-center gap-2">
               <StatusBadge status={form.is_active ? "attivo" : "archived"} />
@@ -775,12 +778,14 @@ export function FormsListView() {
                               </Badge>
                             )}
                           </div>
-                          <Switch
-                            checked={form.is_active}
-                            onCheckedChange={(checked) => handleToggleStatus(form, checked)}
-                            disabled={isUpdating}
-                            className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
-                          />
+                          {!form.is_default && (
+                            <Switch
+                              checked={form.is_active}
+                              onCheckedChange={(checked) => handleToggleStatus(form, checked)}
+                              disabled={isUpdating}
+                              className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
+                            />
+                          )}
                         </div>
 
                         <div>
