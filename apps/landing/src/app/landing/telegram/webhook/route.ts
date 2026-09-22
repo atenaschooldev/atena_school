@@ -4,13 +4,16 @@ import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
 import { withLandingApiLog } from '@/lib/server/api-logger';
 
 async function handler(request: NextRequest) {
-  // 1. Verify Telegram Webhook Secret Token (if configured)
+  // 1. Verify Telegram Webhook Secret Token
   const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (webhookSecret) {
-    const receivedSecret = request.headers.get('x-telegram-bot-api-secret-token');
-    if (receivedSecret !== webhookSecret) {
-      return NextResponse.json({ ok: false, error: 'Unauthorized secret token' }, { status: 401 });
-    }
+  const receivedSecret = request.headers.get('x-telegram-bot-api-secret-token');
+
+  if (webhookSecret && receivedSecret !== webhookSecret) {
+    return NextResponse.json({ ok: false, error: 'Unauthorized: Invalid Telegram webhook secret token' }, { status: 401 });
+  }
+
+  if (!webhookSecret && process.env.NODE_ENV === 'production') {
+    console.warn('[Telegram Webhook] Security Notice: TELEGRAM_WEBHOOK_SECRET should be configured for production webhooks');
   }
 
   try {

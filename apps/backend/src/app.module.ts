@@ -26,8 +26,9 @@ import { NotificationsModule } from './features/notifications/notifications.modu
 import { IntegrationsModule } from './features/integrations/integrations.module';
 import { FormsModule } from './features/forms/forms.module';
 
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -60,6 +61,15 @@ const businessModules = [
       isGlobal: true,
     }),
 
+    // Защита от DDoS и флуда (Rate Limiting)
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 120,
+      },
+    ]),
+
     EventEmitterModule.forRoot({
       wildcard: true,
       delimiter: '.',
@@ -77,6 +87,10 @@ const businessModules = [
     {
       provide: APP_INTERCEPTOR,
       useClass: ApiLoggingInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

@@ -47,6 +47,16 @@ export const POST = withLandingApiLog(
         taxCode: body.taxCode,
       });
 
+      // Security / GDPR: Only return full personal details if the user is authenticated via Bearer JWT
+      if (!authUserId) {
+        return NextResponse.json({
+          success: true,
+          userFound: Boolean(result.purchaser || (result.students && result.students.length > 0)),
+          purchaser: null,
+          students: [],
+        });
+      }
+
       return NextResponse.json(result);
     } catch (err: any) {
       console.error('[API /checkout/lookup-profile] Error:', err);
