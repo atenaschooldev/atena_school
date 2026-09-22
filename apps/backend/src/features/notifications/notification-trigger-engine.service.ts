@@ -92,6 +92,8 @@ export class NotificationTriggerEngineService {
 
       this.logger.log(`Processing event "${eventKey}" with ${triggers.length} active triggers`);
 
+      const schoolProfile = payload.schoolProfile || (await this.getSchoolProfile());
+
       // 2. Evaluate and execute each trigger
       for (const trigger of triggers) {
         if (!trigger.template || !trigger.template.isActive) {
@@ -105,21 +107,21 @@ export class NotificationTriggerEngineService {
         }
 
         // Resolve destination recipient
-        const recipient = this.resolveRecipient(trigger, payload);
+        const recipient = this.resolveRecipient(trigger, payload, schoolProfile);
         if (!recipient) {
           this.logger.warn(`Trigger "${trigger.name}" skipped: unable to resolve recipient for recipientType ${trigger.recipientType}`);
           continue;
         }
 
         // Dispatch notification
-        await this.dispatchNotification(trigger, recipient, payload);
+        await this.dispatchNotification(trigger, recipient, { ...payload, schoolProfile });
       }
     } catch (err: any) {
       this.logger.error(`Error in NotificationTriggerEngine for event "${eventKey}": ${err.message}`, err.stack);
     }
   }
 
-  private resolveRecipient(trigger: any, payload: Record<string, any>): string | null {
+  private resolveRecipient(trigger: any, payload: Record<string, any>, schoolProfile?: any): string | null {
     if (trigger.customRecipient && trigger.customRecipient.trim()) {
       return trigger.customRecipient.trim();
     }
@@ -132,7 +134,14 @@ export class NotificationTriggerEngineService {
         return payload.purchaser_email || payload.email || payload.student_email || payload.purchaserEmail || null;
       }
       if (recipientType === RecipientType.ADMIN) {
-        return process.env.ADMIN_EMAIL || process.env.NOTIFICATION_ADMIN_EMAIL || 'info@atenaschool.com';
+        return (
+          trigger.customRecipient?.trim() ||
+          schoolProfile?.secretariat_email ||
+          schoolProfile?.email ||
+          process.env.ADMIN_EMAIL ||
+          process.env.NOTIFICATION_ADMIN_EMAIL ||
+          'info@atenaschool.com'
+        );
       }
       if (recipientType === RecipientType.TEACHER) {
         return payload.teacher_email || payload.teacherEmail || getFieldValue(payload, 'course.teacher.email') || null;
