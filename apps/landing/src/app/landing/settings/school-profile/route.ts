@@ -7,6 +7,8 @@ import { withLandingApiLog } from '@/lib/server/api-logger';
 import { handleCorsOptions, withCors } from '@/lib/server/cors';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function OPTIONS() {
   return handleCorsOptions();
