@@ -18,13 +18,11 @@ import { useFormFields } from "../hooks/use-form-fields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -34,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Plus,
@@ -49,7 +48,6 @@ import {
   Star,
   User,
   FileText,
-  HelpCircle,
   Smartphone,
   Monitor,
   Building,
@@ -58,10 +56,41 @@ import {
   GraduationCap,
   ChevronRight,
   Search,
+  Check,
+  Calendar,
+  Phone,
+  Mail,
+  HelpCircle,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useTranslation } from "@/i18n/context";
+
+const CORE_BASE_KEYS_BOOKING = new Set([
+  "purchaser_first_name",
+  "purchaser_last_name",
+  "purchaser_email",
+  "purchaser_phone",
+  "purchaser_tax_code",
+  "purchaser_birth_date",
+  "purchaser_birth_place",
+  "student_first_name",
+  "student_last_name",
+  "student_email",
+  "student_phone",
+  "student_tax_code",
+  "student_birth_date",
+  "student_birth_place",
+]);
+
+const CORE_BASE_KEYS_CONTACT = new Set([
+  "contact_full_name",
+  "contact_email",
+  "contact_phone",
+  "inquiry_subject",
+  "inquiry_message",
+  "privacy_consent",
+]);
 
 interface VisualFormBuilderProps {
   initialForm?: FormTemplate | null;
@@ -77,8 +106,8 @@ export function VisualFormBuilder({
   isSaving = false,
 }: VisualFormBuilderProps) {
   const { t, locale } = useTranslation();
-  const { coursesList, loading: loadingCourses } = useCourses();
-  const { fields: catalogFields } = useFormFields();
+  const { coursesList } = useCourses();
+  const { fields: catalogFields, loading: loadingCatalog } = useFormFields();
 
   const getFormTypeLabel = (val: any): string => {
     const parsed = parseFormType(val);
@@ -156,19 +185,18 @@ export function VisualFormBuilder({
   const [previewMode, setPreviewMode] = useState<"direct" | "child">("direct");
   const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
 
-  // Field modal state
+  // Modal Dialogs state
+  const [catalogModalOpen, setCatalogModalOpen] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [catalogTargetFilter, setCatalogTargetFilter] = useState<string>("all");
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingField, setEditingField] = useState<FormFieldConfig | null>(null);
-  const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
-  const [selectedCatalogFieldId, setSelectedCatalogFieldId] = useState<string>("custom");
-  const [fieldKey, setFieldKey] = useState("");
-  const [fieldLabel, setFieldLabel] = useState("");
-  const [fieldPlaceholder, setFieldPlaceholder] = useState("");
-  const [fieldType, setFieldType] = useState<FormFieldType>(FormFieldType.TEXT);
-  const [fieldTarget, setFieldTarget] = useState<FormFieldTarget>(FormFieldTarget.STUDENT);
-  const [fieldRequired, setFieldRequired] = useState(false);
-  const [fieldEnabled, setFieldEnabled] = useState(true);
-  const [fieldHelpText, setFieldHelpText] = useState("");
-  const [fieldOptionsText, setFieldOptionsText] = useState("");
+  const [editLabel, setEditLabel] = useState("");
+  const [editPlaceholder, setEditPlaceholder] = useState("");
+  const [editHelpText, setEditHelpText] = useState("");
+  const [editRequired, setEditRequired] = useState(false);
+  const [editEnabled, setEditEnabled] = useState(true);
 
   const handleScopeChange = (mode: "global" | "category" | "course") => {
     setScopeMode(mode);
@@ -189,63 +217,34 @@ export function VisualFormBuilder({
     }
   };
 
-  const handleOpenAddField = () => {
-    setEditingField(null);
-    setSelectedCatalogFieldId("custom");
-    setFieldKey("");
-    setFieldLabel("");
-    setFieldPlaceholder("");
-    setFieldType(FormFieldType.TEXT);
-    setFieldTarget(FormFieldTarget.STUDENT);
-    setFieldRequired(false);
-    setFieldEnabled(true);
-    setFieldHelpText("");
-    setFieldOptionsText("");
-    setFieldDialogOpen(true);
-  };
+  // Base core keys for this form type
+  const baseCoreKeys = useMemo(() => {
+    return formData.form_type === FormType.CONTACT ? CORE_BASE_KEYS_CONTACT : CORE_BASE_KEYS_BOOKING;
+  }, [formData.form_type]);
 
-  const handleOpenEditField = (f: FormFieldConfig) => {
-    setEditingField(f);
-    setSelectedCatalogFieldId("custom");
-    setFieldKey(f.key);
-    setFieldLabel(f.label);
-    setFieldPlaceholder(f.placeholder || "");
-    setFieldType(f.field_type);
-    setFieldTarget(f.target);
-    setFieldRequired(f.is_required);
-    setFieldEnabled(f.is_enabled);
-    setFieldHelpText(f.help_text || "");
-    setFieldOptionsText(
-      f.options
-        ? f.options
-            .map((o) => (typeof o === "string" ? `${o}:${o}` : `${o.label}:${o.value}`))
-            .join("\n")
-        : ""
-    );
-    setFieldDialogOpen(true);
-  };
+  // Available catalog fields (excluding base core fields)
+  const availableCatalogFields = useMemo(() => {
+    return catalogFields.filter((cf) => !baseCoreKeys.has(cf.key));
+  }, [catalogFields, baseCoreKeys]);
 
-  const handleSelectCatalogFieldInDialog = (fieldId: string) => {
-    setSelectedCatalogFieldId(fieldId);
-    if (fieldId === "custom") return;
-
-    const catalogField = catalogFields.find((f) => f.id === fieldId || f.key === fieldId);
-    if (!catalogField) return;
-
-    setFieldKey(catalogField.key);
-    setFieldLabel(locale === "en" ? catalogField.label_en : catalogField.label_it);
-    setFieldPlaceholder((locale === "en" ? catalogField.placeholder_en : catalogField.placeholder_it) || "");
-    setFieldType(catalogField.field_type);
-    setFieldTarget(catalogField.target);
-    setFieldRequired(catalogField.is_required_default);
-    setFieldOptionsText(
-      Array.isArray(catalogField.options)
-        ? catalogField.options
-            .map((o) => (typeof o === "string" ? `${o}:${o}` : `${o.label}:${o.value}`))
-            .join("\n")
-        : ""
-    );
-  };
+  // Filtered catalog fields for the selection modal
+  const filteredCatalogFields = useMemo(() => {
+    return availableCatalogFields.filter((cf) => {
+      // Filter by target
+      if (catalogTargetFilter !== "all" && cf.target !== catalogTargetFilter) {
+        return false;
+      }
+      // Filter by search query
+      if (catalogSearch.trim()) {
+        const q = catalogSearch.toLowerCase();
+        const labelIt = (cf.label_it || "").toLowerCase();
+        const labelEn = (cf.label_en || "").toLowerCase();
+        const key = (cf.key || "").toLowerCase();
+        return labelIt.includes(q) || labelEn.includes(q) || key.includes(q);
+      }
+      return true;
+    });
+  }, [availableCatalogFields, catalogTargetFilter, catalogSearch]);
 
   const handleAttachCatalogField = (catalogField: FormFieldItem) => {
     const existing = formData.fields_config.find((f) => f.key === catalogField.key);
@@ -270,62 +269,7 @@ export function VisualFormBuilder({
     }));
   };
 
-
-
-  const handleSaveFieldDialog = () => {
-    if (!fieldLabel.trim()) return;
-
-    const normalizedKey =
-      fieldKey.trim() ||
-      fieldLabel
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, "_")
-        .replace(/_+/g, "_");
-
-    const parsedOptions = fieldOptionsText
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const [label, val] = line.split(":");
-        return {
-          label: label.trim(),
-          value: (val || label).trim(),
-        };
-      });
-
-    const newField: FormFieldConfig = {
-      id: editingField?.id || `field-${Date.now()}`,
-      key: normalizedKey,
-      label: fieldLabel,
-      placeholder: fieldPlaceholder || undefined,
-      field_type: fieldType,
-      target: fieldTarget,
-      is_required: fieldRequired,
-      is_enabled: fieldEnabled,
-      sort_order: editingField ? editingField.sort_order : formData.fields_config.length + 1,
-      help_text: fieldHelpText || undefined,
-      options: parsedOptions.length > 0 ? parsedOptions : undefined,
-    };
-
-    if (editingField) {
-      setFormData((prev) => ({
-        ...prev,
-        fields_config: prev.fields_config.map((f) =>
-          f.id === editingField.id ? newField : f
-        ),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        fields_config: [...prev.fields_config, newField],
-      }));
-    }
-
-    setFieldDialogOpen(false);
-  };
-
-  const handleDeleteField = (id: string) => {
+  const handleRemoveField = (id: string) => {
     setFormData((prev) => ({
       ...prev,
       fields_config: prev.fields_config.filter((f) => f.id !== id),
@@ -348,6 +292,39 @@ export function VisualFormBuilder({
     setFormData((prev) => ({ ...prev, fields_config: list }));
   };
 
+  const handleOpenEditField = (f: FormFieldConfig) => {
+    setEditingField(f);
+    setEditLabel(f.label);
+    setEditPlaceholder(f.placeholder || "");
+    setEditHelpText(f.help_text || "");
+    setEditRequired(f.is_required);
+    setEditEnabled(f.is_enabled);
+    setEditModalOpen(true);
+  };
+
+  const handleSaveEditField = () => {
+    if (!editingField || !editLabel.trim()) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      fields_config: prev.fields_config.map((f) =>
+        f.id === editingField.id
+          ? {
+              ...f,
+              label: editLabel.trim(),
+              placeholder: editPlaceholder.trim() || undefined,
+              help_text: editHelpText.trim() || undefined,
+              is_required: editRequired,
+              is_enabled: editEnabled,
+            }
+          : f
+      ),
+    }));
+
+    setEditModalOpen(false);
+    setEditingField(null);
+  };
+
   const studentFields = formData.fields_config.filter(
     (f) => f.target === FormFieldTarget.STUDENT
   );
@@ -356,22 +333,22 @@ export function VisualFormBuilder({
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* ── Top Header Bar ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-3">
+        <div className="space-y-0.5">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={onCancel}
-            className="gap-1.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer -ml-2 h-7 px-2"
+            className="gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer -ml-2 h-6 px-2"
           >
             <ChevronRight className="w-3.5 h-3.5 rotate-180" />
             {t("forms.builderBackBtn")}
           </Button>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-lg font-bold tracking-tight text-foreground">
               {formData.title || t("forms.newFormBtn")}
             </h1>
             <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
@@ -386,16 +363,16 @@ export function VisualFormBuilder({
             <StatusBadge status={formData.is_active ? "attivo" : "archived"} />
           </div>
           {formData.description && (
-            <p className="text-xs text-muted-foreground line-clamp-1">{formData.description}</p>
+            <p className="text-[11px] text-muted-foreground line-clamp-1">{formData.description}</p>
           )}
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex rounded-lg bg-muted/50 p-1 border">
+          <div className="flex rounded-md bg-muted/60 p-0.5 border">
             <button
               type="button"
               onClick={() => setActiveTab("builder")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "builder"
                   ? "bg-background shadow-xs text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -407,7 +384,7 @@ export function VisualFormBuilder({
             <button
               type="button"
               onClick={() => setActiveTab("preview")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === "preview"
                   ? "bg-background shadow-xs text-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -423,7 +400,7 @@ export function VisualFormBuilder({
             variant="outline"
             size="sm"
             onClick={onCancel}
-            className="text-xs cursor-pointer h-8"
+            className="text-xs cursor-pointer h-7"
           >
             {t("forms.builderCancel")}
           </Button>
@@ -433,7 +410,7 @@ export function VisualFormBuilder({
             size="sm"
             onClick={() => onSave(formData)}
             disabled={isSaving || !formData.title.trim()}
-            className="font-semibold text-xs shadow-xs gap-1.5 cursor-pointer h-8"
+            className="font-semibold text-xs shadow-xs gap-1.5 cursor-pointer h-7"
           >
             <Save className="w-3.5 h-3.5" />
             {isSaving ? t("forms.builderSaving") : t("forms.builderSaveBtn")}
@@ -446,65 +423,65 @@ export function VisualFormBuilder({
           {/* ── Settings Row: Info + Scope side by side ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* General Information Card */}
-            <Card className="border">
-              <CardHeader className="px-4 py-2.5 border-b">
+            <Card className="border shadow-xs">
+              <CardHeader className="px-3.5 py-2 border-b bg-muted/20">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-primary" />
                   {t("forms.builderInfoTitle")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">{t("forms.builderTitleLabel")}</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder={t("forms.builderTitlePlaceholder")}
-                    className="text-xs h-8"
-                  />
+              <CardContent className="p-3 space-y-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="sm:col-span-2 space-y-1">
+                    <Label className="text-[11px] font-medium text-muted-foreground">{t("forms.builderTitleLabel")}</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder={t("forms.builderTitlePlaceholder")}
+                      className="text-xs h-7"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-medium text-muted-foreground">{t("forms.builderTypeLabel")}</Label>
+                    <select
+                      value={formData.form_type}
+                      onChange={(e) => setFormData({ ...formData, form_type: e.target.value as FormType })}
+                      className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground cursor-pointer h-7"
+                    >
+                      {Object.entries(FORM_TYPE_DICTIONARY).map(([key, dict]) => (
+                        <option key={key} value={key}>
+                          {locale === "en" ? dict.label_en : dict.label_it}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-medium">{t("forms.builderDescLabel")}</Label>
-                  <Textarea
+                  <Label className="text-[11px] font-medium text-muted-foreground">{t("forms.builderDescLabel")}</Label>
+                  <Input
                     value={formData.description || ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder={t("forms.builderDescPlaceholder")}
-                    rows={1}
-                    className="text-xs resize-none"
+                    className="text-xs h-7"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <Label className="text-xs font-medium">{t("forms.builderTypeLabel")}</Label>
-                  <select
-                    value={formData.form_type}
-                    onChange={(e) => setFormData({ ...formData, form_type: e.target.value as FormType })}
-                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
-                  >
-                    {Object.entries(FORM_TYPE_DICTIONARY).map(([key, dict]) => (
-                      <option key={key} value={key}>
-                        {locale === "en" ? dict.label_en : dict.label_it}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-4 pt-1 border-t">
+                <div className="flex items-center gap-4 pt-2 border-t text-xs">
                   <div className="flex items-center justify-between flex-1">
-                    <span className="text-xs font-medium">{t("forms.builderActiveLabel")}</span>
+                    <span className="text-[11px] font-medium">{t("forms.builderActiveLabel")}</span>
                     <Switch
                       checked={formData.is_active}
                       onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                      className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-90"
+                      className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-75"
                     />
                   </div>
                   <div className="flex items-center justify-between flex-1">
-                    <span className="text-xs font-medium">{t("forms.builderDefaultLabel")}</span>
+                    <span className="text-[11px] font-medium">{t("forms.builderDefaultLabel")}</span>
                     <Switch
                       checked={formData.is_default}
                       onCheckedChange={(checked) => setFormData({ ...formData, is_default: checked })}
-                      className="cursor-pointer data-[state=checked]:bg-amber-500 scale-90"
+                      className="cursor-pointer data-[state=checked]:bg-amber-500 scale-75"
                     />
                   </div>
                 </div>
@@ -512,69 +489,68 @@ export function VisualFormBuilder({
             </Card>
 
             {/* Scope / Destination Card */}
-            <Card className="border">
-              <CardHeader className="px-4 py-2.5 border-b">
+            <Card className="border shadow-xs">
+              <CardHeader className="px-3.5 py-2 border-b bg-muted/20">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
                   {t("forms.builderScopeTitle")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 space-y-3">
+              <CardContent className="p-3 space-y-2.5">
                 {formData.form_type === FormType.CONTACT ? (
-                  <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-xs flex items-center gap-2">
+                  <div className="p-2.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs flex items-center gap-2">
                     <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <p className="text-muted-foreground">{t("forms.builderScopeContactHint")}</p>
+                    <p className="text-muted-foreground text-[11px]">{t("forms.builderScopeContactHint")}</p>
                   </div>
                 ) : (
                   <>
-                    <div className="grid grid-cols-3 gap-1 bg-muted/50 p-1 rounded-lg border">
+                    <div className="grid grid-cols-3 gap-1 bg-muted/50 p-0.5 rounded-md border">
                       <button
                         type="button"
                         onClick={() => handleScopeChange("global")}
-                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                        className={`py-1 px-1 text-[11px] font-medium rounded transition-all cursor-pointer flex items-center justify-center gap-1 text-center ${
                           scopeMode === "global"
-                            ? "bg-background text-foreground shadow-xs"
+                            ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <Globe className="w-3.5 h-3.5" />
+                        <Globe className="w-3 h-3" />
                         {t("forms.builderScopeGlobal")}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleScopeChange("category")}
-                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                        className={`py-1 px-1 text-[11px] font-medium rounded transition-all cursor-pointer flex items-center justify-center gap-1 text-center ${
                           scopeMode === "category"
-                            ? "bg-background text-foreground shadow-xs"
+                            ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <Folder className="w-3.5 h-3.5" />
+                        <Folder className="w-3 h-3" />
                         {t("forms.builderScopeCategory")}
                       </button>
                       <button
                         type="button"
                         onClick={() => handleScopeChange("course")}
-                        className={`py-1.5 px-1 text-[11px] font-semibold rounded transition-all cursor-pointer flex flex-col items-center gap-1 text-center ${
+                        className={`py-1 px-1 text-[11px] font-medium rounded transition-all cursor-pointer flex items-center justify-center gap-1 text-center ${
                           scopeMode === "course"
-                            ? "bg-background text-foreground shadow-xs"
+                            ? "bg-background text-foreground shadow-xs font-semibold"
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        <GraduationCap className="w-3.5 h-3.5" />
+                        <GraduationCap className="w-3 h-3" />
                         {t("forms.builderScopeCourse")}
                       </button>
                     </div>
 
                     {scopeMode === "global" && (
-                      <p className="text-[11px] text-muted-foreground bg-muted/40 px-2.5 py-2 rounded-md">
+                      <p className="text-[11px] text-muted-foreground bg-muted/30 px-2 py-1.5 rounded-md">
                         🌐 {t("forms.builderScopeGlobalHint")}
                       </p>
                     )}
 
                     {scopeMode === "category" && (
                       <div className="space-y-1">
-                        <Label className="text-xs font-medium">{t("forms.builderScopeCategoryLabel")}</Label>
                         <select
                           value={formData.category_slug || ""}
                           onChange={(e) =>
@@ -584,7 +560,7 @@ export function VisualFormBuilder({
                               course_id: null,
                             })
                           }
-                          className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
+                          className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground cursor-pointer h-7"
                         >
                           <option value="">{t("forms.builderScopeCategoryPlaceholder")}</option>
                           {availableCategories.map((cat) => {
@@ -600,14 +576,14 @@ export function VisualFormBuilder({
                     )}
 
                     {scopeMode === "course" && (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <div className="relative">
-                          <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                          <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                           <Input
                             value={courseSearch}
                             onChange={(e) => setCourseSearch(e.target.value)}
                             placeholder={t("forms.builderScopeCourseFilterPlaceholder")}
-                            className="pl-8 h-7 text-xs rounded-md"
+                            className="pl-7 h-6 text-xs rounded-md"
                           />
                         </div>
                         <select
@@ -619,7 +595,7 @@ export function VisualFormBuilder({
                               category_slug: null,
                             })
                           }
-                          className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer"
+                          className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground cursor-pointer h-7"
                         >
                           <option value="">{t("forms.builderScopeCoursePlaceholder")}</option>
                           {filteredCourses.map((course) => (
@@ -628,12 +604,6 @@ export function VisualFormBuilder({
                             </option>
                           ))}
                         </select>
-                        {selectedCourse && (
-                          <div className="px-2.5 py-1.5 rounded-md bg-purple-500/10 border border-purple-500/20 text-xs">
-                            <span className="font-semibold text-foreground">{selectedCourse.nome}</span>
-                            <span className="text-muted-foreground ml-1.5">• €{selectedCourse.prezzo}</span>
-                          </div>
-                        )}
                       </div>
                     )}
                   </>
@@ -642,162 +612,197 @@ export function VisualFormBuilder({
             </Card>
           </div>
 
-          {/* ── Fields: full width ── */}
-          <div className="space-y-3">
-            {/* Custom Dynamic Fields Card */}
-            <Card className="border">
-              <CardHeader className="px-4 py-2.5 border-b flex flex-row items-center justify-between gap-4">
+          {/* ── Custom Dynamic Fields Section ── */}
+          <Card className="border shadow-xs">
+            <CardHeader className="px-3.5 py-2 border-b bg-muted/20 flex flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  {t("forms.builderFieldsTitle")} ({formData.fields_config.length})
+                  {t("forms.builderFieldsTitle")}
                 </CardTitle>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleOpenAddField}
-                  className="gap-1.5 font-semibold text-xs cursor-pointer shadow-xs shrink-0 h-7 px-2.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  {t("forms.builderAddFieldBtn")}
-                </Button>
-              </CardHeader>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-semibold">
+                  {formData.fields_config.length}
+                </Badge>
+              </div>
 
-              <CardContent className="p-4">
-                {/* 1-Click Quick Catalog Attachment Bar */}
-                {catalogFields.filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key)).length > 0 && (
-                  <div className="mb-4 p-3 rounded-lg bg-muted/40 border border-border/60">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
-                        <Layers className="w-3.5 h-3.5 text-primary" />
-                        {locale === "en" ? "Quick Attach from Database Catalog:" : "Campi disponibili dal catalogo (attiva in 1 click):"}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {catalogFields.filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key)).length} {locale === "en" ? "ready to attach" : "disponibili"}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                      {catalogFields
-                        .filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key))
-                        .map((cf) => (
-                          <button
-                            key={cf.id}
-                            type="button"
-                            onClick={() => handleAttachCatalogField(cf)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-background border border-border hover:border-primary/50 hover:bg-primary/5 text-foreground transition-all cursor-pointer shadow-2xs"
-                            title={locale === "en" ? `Add "${cf.label_en}"` : `Aggiungi "${cf.label_it}"`}
-                          >
-                            <Plus className="w-3 h-3 text-primary shrink-0" />
-                            <span className="font-medium">{locale === "en" ? cf.label_en : cf.label_it}</span>
-                            <span className="text-[10px] text-muted-foreground font-mono">({cf.key})</span>
-                          </button>
-                        ))}
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setCatalogSearch("");
+                  setCatalogTargetFilter("all");
+                  setCatalogModalOpen(true);
+                }}
+                className="gap-1.5 font-semibold text-xs cursor-pointer shadow-xs shrink-0 h-7 px-2.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {t("forms.builderAddFieldBtn")}
+              </Button>
+            </CardHeader>
+
+            <CardContent className="p-3">
+              {formData.fields_config.length === 0 ? (
+                <div className="flex items-center justify-between py-4 px-3.5 border border-dashed rounded-lg bg-muted/20">
+                  <div className="flex items-center gap-2.5">
+                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                    <div>
+                      <p className="text-xs font-medium text-foreground">{t("forms.builderEmptyFields")}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {locale === "en"
+                          ? "Add additional questions from the database catalog (e.g. SDI code, notes, level)."
+                          : "Aggiungi domande e campi extra dal catalogo database (es. Codice SDI, note, livello)."}
+                      </p>
                     </div>
                   </div>
-                )}
-
-                {/* Fields List or Empty State */}
-                {formData.fields_config.length === 0 ? (
-                  <div className="flex items-center justify-between py-3 px-4 border border-dashed rounded-lg bg-muted/20">
-                    <div className="flex items-center gap-2.5">
-                      <HelpCircle className="w-4 h-4 text-muted-foreground/40 shrink-0" />
-                      <p className="text-xs text-muted-foreground">{t("forms.builderEmptyFields")}</p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleOpenAddField}
-                      className="text-xs cursor-pointer h-7 px-2.5 shrink-0"
-                    >
-                      <Plus className="w-3 h-3 mr-1" /> {t("forms.builderAddFirst")}
-                    </Button>
-                  </div>
-                ) : (
-
-                  <div className="space-y-1.5">
-                    {formData.fields_config.map((field, index) => {
-                      const isStudent = field.target === FormFieldTarget.STUDENT;
-                      return (
-                        <div
-                          key={field.id}
-                          className={`px-3 py-2 rounded-lg border transition-all ${
-                            field.is_enabled
-                              ? "bg-card border-border hover:border-primary/40"
-                              : "bg-muted/30 border-border/60 opacity-60"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="flex flex-col shrink-0">
-                                <button type="button" disabled={index === 0} onClick={() => handleMoveField(index, "up")} className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer">
-                                  <ArrowUp className="w-3 h-3" />
-                                </button>
-                                <button type="button" disabled={index === formData.fields_config.length - 1} onClick={() => handleMoveField(index, "down")} className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer">
-                                  <ArrowDown className="w-3 h-3" />
-                                </button>
-                              </div>
-                              <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                                <span className="text-xs font-semibold text-foreground">{field.label}</span>
-                                <code className="bg-muted text-muted-foreground px-1 rounded text-[10px] font-mono">{`{{${field.key}}}`}</code>
-                                <span className="bg-primary/10 text-primary px-1.5 rounded text-[10px] font-semibold uppercase">{getFieldTypeLabel(field.field_type)}</span>
-                                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                                  {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
-                                  {getFieldTargetLabel(field.target)}
-                                </span>
-                                {field.is_required && <Badge variant="destructive" className="text-[9px] py-0 px-1">{locale === "en" ? "Req." : "Obbl."}</Badge>}
-                              </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setCatalogSearch("");
+                      setCatalogTargetFilter("all");
+                      setCatalogModalOpen(true);
+                    }}
+                    className="text-xs cursor-pointer h-7 px-2.5 shrink-0 font-medium"
+                  >
+                    <Plus className="w-3 h-3 mr-1 text-primary" /> {t("forms.builderAddFirst")}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {formData.fields_config.map((field, index) => {
+                    const isStudent = field.target === FormFieldTarget.STUDENT;
+                    const isPurchaser = field.target === FormFieldTarget.PURCHASER;
+                    return (
+                      <div
+                        key={field.id}
+                        className={`px-3 py-1.5 rounded-md border transition-all ${
+                          field.is_enabled
+                            ? "bg-card border-border hover:border-primary/40"
+                            : "bg-muted/30 border-border/60 opacity-60"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex flex-col shrink-0">
+                              <button
+                                type="button"
+                                disabled={index === 0}
+                                onClick={() => handleMoveField(index, "up")}
+                                className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer"
+                                title={locale === "en" ? "Move up" : "Sposta su"}
+                              >
+                                <ArrowUp className="w-2.5 h-2.5" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={index === formData.fields_config.length - 1}
+                                onClick={() => handleMoveField(index, "down")}
+                                className="p-0.5 rounded hover:bg-muted text-muted-foreground disabled:opacity-20 cursor-pointer"
+                                title={locale === "en" ? "Move down" : "Sposta giù"}
+                              >
+                                <ArrowDown className="w-2.5 h-2.5" />
+                              </button>
                             </div>
-                            <div className="flex items-center gap-0.5 shrink-0">
-                              <Switch
-                                checked={field.is_enabled}
-                                onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, fields_config: prev.fields_config.map((f) => f.id === field.id ? { ...f, is_enabled: checked } : f) }))}
-                                className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-75"
-                              />
-                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground cursor-pointer" onClick={() => handleOpenEditField(field)}>
-                                <Edit2 className="w-3 h-3" />
-                              </Button>
-                              <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive cursor-pointer" onClick={() => handleDeleteField(field.id)}>
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                              <span className="text-xs font-semibold text-foreground">{field.label}</span>
+                              <code className="bg-muted text-muted-foreground px-1 rounded text-[10px] font-mono">{`{{${field.key}}}`}</code>
+                              <span className="bg-primary/10 text-primary px-1.5 py-0.2 rounded text-[10px] font-semibold uppercase">
+                                {getFieldTypeLabel(field.field_type)}
+                              </span>
+                              <span
+                                className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                                  isStudent
+                                    ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                                    : isPurchaser
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                                    : "bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                                }`}
+                              >
+                                {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
+                                {getFieldTargetLabel(field.target)}
+                              </span>
+                              {field.is_required && (
+                                <Badge variant="destructive" className="text-[9px] py-0 px-1 font-semibold">
+                                  {locale === "en" ? "Req." : "Obbl."}
+                                </Badge>
+                              )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* System Fields — compact flat row */}
-            <div className="flex items-center gap-2 flex-wrap px-1">
-              <div className="flex items-center gap-1.5 shrink-0">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-[11px] font-medium text-muted-foreground">{t("forms.builderSystemFieldsLabel")}</span>
-              </div>
-              {(formData.form_type === FormType.CONTACT
-                ? [
-                    locale === "en" ? "Full Name" : "Nome & Cognome",
-                    "Email",
-                    locale === "en" ? "Phone" : "Telefono",
-                    locale === "en" ? "Course of Interest" : "Corso d'Interesse",
-                    locale === "en" ? "Message" : "Messaggio",
-                    "Privacy GDPR"
-                  ]
-                : [
-                    locale === "en" ? "Full Name" : "Nome & Cognome",
-                    "Email",
-                    locale === "en" ? "Phone" : "Telefono",
-                    locale === "en" ? "Tax Code" : "Codice Fiscale",
-                    locale === "en" ? "Date & Place of Birth" : "Data & Luogo Nascita",
-                    locale === "en" ? "Parent Mode" : "Modalità Genitore"
-                  ]
-              ).map((name) => (
-                <span key={name} className="text-[10px] font-medium bg-muted border rounded px-1.5 py-0.5 text-muted-foreground">
-                  {name}
-                </span>
-              ))}
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Switch
+                              checked={field.is_enabled}
+                              onCheckedChange={(checked) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  fields_config: prev.fields_config.map((f) =>
+                                    f.id === field.id ? { ...f, is_enabled: checked } : f
+                                  ),
+                                }))
+                              }
+                              className="cursor-pointer data-[state=checked]:bg-emerald-600 scale-75"
+                              title={field.is_enabled ? "Attivo nel modulo" : "Disattivato nel modulo"}
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                              onClick={() => handleOpenEditField(field)}
+                              title={locale === "en" ? "Edit field" : "Modifica campo"}
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
+                              onClick={() => handleRemoveField(field.id)}
+                              title={locale === "en" ? "Remove field" : "Rimuovi campo"}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* System Core Fields — Compact flat indicator */}
+          <div className="flex items-center gap-1.5 flex-wrap px-1 text-muted-foreground">
+            <div className="flex items-center gap-1 shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="text-[10px] font-medium">{t("forms.builderSystemFieldsLabel")}</span>
             </div>
+            {(formData.form_type === FormType.CONTACT
+              ? [
+                  locale === "en" ? "Full Name" : "Nome & Cognome",
+                  "Email",
+                  locale === "en" ? "Phone" : "Telefono",
+                  locale === "en" ? "Course of Interest" : "Corso d'Interesse",
+                  locale === "en" ? "Message" : "Messaggio",
+                  "Privacy GDPR",
+                ]
+              : [
+                  locale === "en" ? "Full Name" : "Nome & Cognome",
+                  "Email",
+                  locale === "en" ? "Phone" : "Telefono",
+                  locale === "en" ? "Tax Code" : "Codice Fiscale",
+                  locale === "en" ? "Date & Place of Birth" : "Data & Luogo Nascita",
+                  locale === "en" ? "Parent Mode" : "Modalità Genitore",
+                ]
+            ).map((name) => (
+              <span key={name} className="text-[9px] font-medium bg-muted/60 border rounded px-1.5 py-0.5 text-muted-foreground">
+                {name}
+              </span>
+            ))}
           </div>
         </div>
       ) : (
@@ -909,10 +914,10 @@ export function VisualFormBuilder({
                   {formData.fields_config.filter((f) => f.is_enabled).length > 0 && (
                     <div className="pt-3 border-t border-slate-100 space-y-3">
                       <p className="text-[11px] font-bold text-[#00328F] uppercase tracking-wider">
-                        ✨ Campi Aggiuntivi Configurati ({formData.fields_config.filter(f => f.is_enabled).length})
+                        ✨ Campi Aggiuntivi Configurati ({formData.fields_config.filter((f) => f.is_enabled).length})
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {formData.fields_config.filter(f => f.is_enabled).map(f => (
+                        {formData.fields_config.filter((f) => f.is_enabled).map((f) => (
                           <div key={f.id} className="space-y-1">
                             <label className="text-xs font-bold text-slate-700">
                               {f.label} {f.is_required && <span className="text-red-500">*</span>}
@@ -921,7 +926,7 @@ export function VisualFormBuilder({
                               <select disabled className="w-full bg-blue-50/50 border border-blue-200 rounded-xl px-3 py-2 text-xs">
                                 <option>{f.placeholder || "Seleziona..."}</option>
                                 {f.options?.map((o: any, idx: number) => (
-                                  <option key={idx}>{typeof o === 'string' ? o : o.label}</option>
+                                  <option key={idx}>{typeof o === "string" ? o : o.label}</option>
                                 ))}
                               </select>
                             ) : (
@@ -947,7 +952,6 @@ export function VisualFormBuilder({
               </div>
             ) : (
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xl space-y-6">
-                {/* Checkout Title */}
                 <div>
                   <p className="text-xs font-black uppercase tracking-wider text-[#FAA904]">
                     ISCRIZIONE E CHECKOUT
@@ -960,7 +964,6 @@ export function VisualFormBuilder({
                   </p>
                 </div>
 
-                {/* Login Banner */}
                 <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                     <Sparkles className="w-4 h-4 text-[#FAA904]" />
@@ -971,105 +974,238 @@ export function VisualFormBuilder({
                   </button>
                 </div>
 
-              {/* isForChild Toggle Box */}
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={previewMode === "child"}
-                  onChange={(e) => setPreviewMode(e.target.checked ? "child" : "direct")}
-                  className="w-4 h-4 rounded mt-0.5 text-[#043569]"
-                />
-                <div>
-                  <p className="text-xs font-bold text-slate-900">
-                    Sto iscrivendo un figlio o minorenne (sono un genitore)
-                  </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Seleziona se l&apos;intestatario del corso è diverso da chi effettua il pagamento.
-                  </p>
-                </div>
-              </div>
-
-              {/* Purchaser / Parent Data */}
-              <div className="space-y-4 pt-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-[#043569]">
-                  {previewMode === "child" ? "DATI DEL GENITORE / ACQUIRENTE" : "DATI PERSONALI"}
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Nome *</label>
-                    <input
-                      disabled
-                      placeholder="Mario"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Cognome *</label>
-                    <input
-                      disabled
-                      placeholder="Rossi"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Email *</label>
-                    <input
-                      disabled
-                      placeholder="mario.rossi@gmail.com"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700">Telefono (WhatsApp) *</label>
-                    <input
-                      disabled
-                      placeholder="+39 340 1234567"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                    />
-                  </div>
-
-                  {previewMode === "direct" && (
-                    <>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Data di Nascita *</label>
-                        <input
-                          disabled
-                          placeholder="mm/dd/yyyy"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Luogo di Nascita *</label>
-                        <input
-                          disabled
-                          placeholder="es. Milano (MI)"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <div className={`space-y-1 ${previewMode === "direct" ? "sm:col-span-2" : "sm:col-span-2"}`}>
-                    <label className="text-xs font-bold text-slate-700">
-                      Codice Fiscale {previewMode === "child" ? "Genitore *" : "*"}
-                    </label>
-                    <input
-                      disabled
-                      placeholder="RSSMRA80A01H501Z"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Purchaser Custom Fields */}
-                {purchaserFields.filter((f) => f.is_enabled).length > 0 && (
-                  <div className="pt-3 border-t border-slate-100 space-y-3">
-                    <p className="text-[11px] font-bold text-[#FAA904] uppercase tracking-wider">
-                      ✨ Domande Aggiuntive Acquirente
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={previewMode === "child"}
+                    onChange={(e) => setPreviewMode(e.target.checked ? "child" : "direct")}
+                    className="w-4 h-4 rounded mt-0.5 text-[#043569]"
+                  />
+                  <div>
+                    <p className="text-xs font-bold text-slate-900">
+                      Sto iscrivendo un figlio o minorenne (sono un genitore)
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {purchaserFields
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Seleziona se l&apos;intestatario del corso è diverso da chi effettua il pagamento.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#043569]">
+                    {previewMode === "child" ? "DATI DEL GENITORE / ACQUIRENTE" : "DATI PERSONALI"}
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Nome *</label>
+                      <input
+                        disabled
+                        placeholder="Mario"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Cognome *</label>
+                      <input
+                        disabled
+                        placeholder="Rossi"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Email *</label>
+                      <input
+                        disabled
+                        placeholder="mario.rossi@gmail.com"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">Telefono (WhatsApp) *</label>
+                      <input
+                        disabled
+                        placeholder="+39 340 1234567"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                      />
+                    </div>
+
+                    {previewMode === "direct" && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Data di Nascita *</label>
+                          <input
+                            disabled
+                            placeholder="mm/dd/yyyy"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Luogo di Nascita *</label>
+                          <input
+                            disabled
+                            placeholder="es. Milano (MI)"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="space-y-1 sm:col-span-2">
+                      <label className="text-xs font-bold text-slate-700">
+                        Codice Fiscale {previewMode === "child" ? "Genitore *" : "*"}
+                      </label>
+                      <input
+                        disabled
+                        placeholder="RSSMRA80A01H501Z"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Purchaser Custom Fields */}
+                  {purchaserFields.filter((f) => f.is_enabled).length > 0 && (
+                    <div className="pt-3 border-t border-slate-100 space-y-3">
+                      <p className="text-[11px] font-bold text-[#FAA904] uppercase tracking-wider">
+                        ✨ Domande Aggiuntive Acquirente
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {purchaserFields
+                          .filter((f) => f.is_enabled)
+                          .map((f) => (
+                            <div key={f.id} className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700">
+                                {f.label} {f.is_required && <span className="text-red-500">*</span>}
+                              </label>
+                              {f.field_type === FormFieldType.SELECT ? (
+                                <select className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs">
+                                  <option>{f.placeholder || "Seleziona..."}</option>
+                                  {f.options?.map((o, idx) => (
+                                    <option key={idx}>
+                                      {typeof o === "string" ? o : o.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <input
+                                  placeholder={f.placeholder}
+                                  className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs"
+                                />
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* If Child Mode: Render Student Card */}
+                {previewMode === "child" && (
+                  <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-200/80 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-2">
+                        🎓 DATI DEGLI STUDENTI (1)
+                      </h3>
+                      <Badge className="bg-indigo-100 text-indigo-900 border-indigo-300 text-[10px]">
+                        1 Studente
+                      </Badge>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-xl border border-indigo-100 space-y-3">
+                      <p className="text-xs font-black text-slate-900">1. STUDENTE #1</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Nome Studente *</label>
+                          <input
+                            disabled
+                            placeholder="Luca"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Cognome Studente *</label>
+                          <input
+                            disabled
+                            placeholder="Rossi"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <label className="text-xs font-bold text-slate-700">Codice Fiscale Studente *</label>
+                          <input
+                            disabled
+                            placeholder="RSSLCU10A01H501Z"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Data di Nascita *</label>
+                          <input
+                            disabled
+                            placeholder="mm/dd/yyyy"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-700">Luogo di Nascita *</label>
+                          <input
+                            disabled
+                            placeholder="es. Roma (RM)"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Student Custom Fields */}
+                      {studentFields.filter((f) => f.is_enabled).length > 0 && (
+                        <div className="pt-3 border-t border-slate-100 space-y-2">
+                          <p className="text-[11px] font-bold text-[#FAA904] uppercase tracking-wider">
+                            ✨ Domande per lo Studente
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {studentFields
+                              .filter((f) => f.is_enabled)
+                              .map((f) => (
+                                <div key={f.id} className="space-y-1">
+                                  <label className="text-xs font-bold text-slate-700">
+                                    {f.label} {f.is_required && <span className="text-red-500">*</span>}
+                                  </label>
+                                  {f.field_type === FormFieldType.SELECT ? (
+                                    <select className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs">
+                                      <option>{f.placeholder || "Seleziona..."}</option>
+                                      {f.options?.map((o, idx) => (
+                                        <option key={idx}>
+                                          {typeof o === "string" ? o : o.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : (
+                                    <input
+                                      placeholder={f.placeholder}
+                                      className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs"
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-indigo-200 text-indigo-700 text-xs font-bold bg-white hover:bg-indigo-50/50">
+                      + AGGIUNGI UN ALTRO STUDENTE
+                    </button>
+                  </div>
+                )}
+
+                {/* Student Custom Fields in Direct Mode */}
+                {previewMode === "direct" && studentFields.filter((f) => f.is_enabled).length > 0 && (
+                  <div className="pt-3 border-t border-slate-100 space-y-3">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-[#043569]">
+                      INFORMAZIONI AGGIUNTIVE
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {studentFields
                         .filter((f) => f.is_enabled)
                         .map((f) => (
                           <div key={f.id} className="space-y-1">
@@ -1096,379 +1232,319 @@ export function VisualFormBuilder({
                     </div>
                   </div>
                 )}
-              </div>
 
-              {/* If Child Mode: Render Student Card */}
-              {previewMode === "child" && (
-                <div className="p-5 rounded-2xl bg-indigo-50/40 border border-indigo-200/80 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-indigo-950 flex items-center gap-2">
-                      🎓 DATI DEGLI STUDENTI (1)
-                    </h3>
-                    <Badge className="bg-indigo-100 text-indigo-900 border-indigo-300 text-[10px]">
-                      1 Studente
-                    </Badge>
+                {/* Electronic Invoicing & Notes */}
+                <div className="space-y-4 pt-2 border-t border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" className="w-4 h-4 rounded text-[#043569]" />
+                    <span className="text-xs font-bold text-slate-800">
+                      Richiedo fatturazione elettronica aziendale (Azienda / P.IVA / Freelance)
+                    </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-xl border border-indigo-100 space-y-3">
-                    <p className="text-xs font-black text-slate-900">1. STUDENTE #1</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Nome Studente *</label>
-                        <input
-                          disabled
-                          placeholder="Luca"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Cognome Studente *</label>
-                        <input
-                          disabled
-                          placeholder="Rossi"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1 sm:col-span-2">
-                        <label className="text-xs font-bold text-slate-700">Codice Fiscale Studente *</label>
-                        <input
-                          disabled
-                          placeholder="RSSLCU10A01H501Z"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-mono"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Data di Nascita *</label>
-                        <input
-                          disabled
-                          placeholder="mm/dd/yyyy"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">Luogo di Nascita *</label>
-                        <input
-                          disabled
-                          placeholder="es. Roma (RM)"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Student Custom Fields */}
-                    {studentFields.filter((f) => f.is_enabled).length > 0 && (
-                      <div className="pt-3 border-t border-slate-100 space-y-2">
-                        <p className="text-[11px] font-bold text-[#FAA904] uppercase tracking-wider">
-                          ✨ Domande per lo Studente
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {studentFields
-                            .filter((f) => f.is_enabled)
-                            .map((f) => (
-                              <div key={f.id} className="space-y-1">
-                                <label className="text-xs font-bold text-slate-700">
-                                  {f.label} {f.is_required && <span className="text-red-500">*</span>}
-                                </label>
-                                {f.field_type === FormFieldType.SELECT ? (
-                                  <select className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs">
-                                    <option>{f.placeholder || "Seleziona..."}</option>
-                                    {f.options?.map((o, idx) => (
-                                      <option key={idx}>
-                                        {typeof o === "string" ? o : o.label}
-                                      </option>
-                                    ))}
-                                  </select>
-                                ) : (
-                                  <input
-                                    placeholder={f.placeholder}
-                                    className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs"
-                                  />
-                                )}
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700">
+                      Note o richieste per la segreteria (opzionale)
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Es. preferenze orarie, segnalazioni didattiche..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
+                    />
                   </div>
-
-                  <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-indigo-200 text-indigo-700 text-xs font-bold bg-white hover:bg-indigo-50/50">
-                    + AGGIUNGI UN ALTRO STUDENTE
-                  </button>
-                </div>
-              )}
-
-              {/* Student Custom Fields in Direct Mode */}
-              {previewMode === "direct" && studentFields.filter((f) => f.is_enabled).length > 0 && (
-                <div className="pt-3 border-t border-slate-100 space-y-3">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-[#043569]">
-                    INFORMAZIONI AGGIUNTIVE
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                    {studentFields
-                      .filter((f) => f.is_enabled)
-                      .map((f) => (
-                        <div key={f.id} className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700">
-                            {f.label} {f.is_required && <span className="text-red-500">*</span>}
-                          </label>
-                          {f.field_type === FormFieldType.SELECT ? (
-                            <select className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs">
-                              <option>{f.placeholder || "Seleziona..."}</option>
-                              {f.options?.map((o, idx) => (
-                                <option key={idx}>
-                                  {typeof o === "string" ? o : o.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <input
-                              placeholder={f.placeholder}
-                              className="w-full bg-amber-50/50 border border-amber-200 rounded-xl px-3 py-2 text-xs"
-                            />
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Electronic Invoicing & Notes */}
-              <div className="space-y-4 pt-2 border-t border-slate-100">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" className="w-4 h-4 rounded text-[#043569]" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Richiedo fatturazione elettronica aziendale (Azienda / P.IVA / Freelance)
-                  </span>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">
-                    Note o richieste per la segreteria (opzionale)
-                  </label>
-                  <textarea
-                    rows={2}
-                    placeholder="Es. preferenze orarie, segnalazioni didattiche..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"
-                  />
                 </div>
               </div>
-            </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Add / Edit Field Dialog */}
-      <Dialog open={fieldDialogOpen} onOpenChange={setFieldDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              {editingField ? t("forms.builderDialogEditTitle") : t("forms.builderDialogAddTitle")}
-            </DialogTitle>
+      {/* ── Dialog 1: Add Field from Database Catalog Modal ── */}
+      <Dialog open={catalogModalOpen} onOpenChange={setCatalogModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 pb-3 border-b bg-muted/20 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-md bg-primary/10 text-primary">
+                <Layers className="w-4 h-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-bold">
+                  {locale === "en" ? "Add Field from Catalog" : "Aggiungi Campo dal Catalogo"}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  {locale === "en"
+                    ? "Select fields defined in the database catalog to attach to this form template."
+                    : "Seleziona i campi dal database da includere in questo modello di form."}
+                </DialogDescription>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-3">
+              <div className="relative flex-1">
+                <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  placeholder={locale === "en" ? "Search catalog by name or key..." : "Cerca campo per nome o chiave..."}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-1 bg-muted/60 p-0.5 rounded-md border shrink-0 overflow-x-auto">
+                {[
+                  { id: "all", label: locale === "en" ? "All" : "Tutti" },
+                  { id: FormFieldTarget.PURCHASER, label: locale === "en" ? "Purchaser" : "Acquirente" },
+                  { id: FormFieldTarget.STUDENT, label: locale === "en" ? "Student" : "Studente" },
+                  { id: FormFieldTarget.BOOKING, label: locale === "en" ? "Booking" : "Iscrizione" },
+                  { id: FormFieldTarget.CONTACT, label: locale === "en" ? "Contact" : "Contatto" },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setCatalogTargetFilter(tab.id)}
+                    className={`px-2 py-1 rounded text-[11px] font-medium transition-all cursor-pointer whitespace-nowrap ${
+                      catalogTargetFilter === tab.id
+                        ? "bg-background text-foreground shadow-xs font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4 py-1">
-            {/* Catalog Selector Dropdown */}
-            {!editingField && (
-              <div className="space-y-1.5 bg-muted/40 p-3 rounded-lg border border-border/70">
-                <Label className="text-xs font-semibold flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-primary" />
-                    {locale === "en" ? "Select from Database Catalog" : "Seleziona dal Catalogo Campi"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-normal">
-                    {catalogFields.length} {locale === "en" ? "fields" : "campi"}
-                  </span>
-                </Label>
-                <select
-                  value={selectedCatalogFieldId}
-                  onChange={(e) => handleSelectCatalogFieldInDialog(e.target.value)}
-                  className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground font-medium"
-                >
-                  <option value="custom">✨ {locale === "en" ? "-- Custom ad-hoc field --" : "-- Campo personalizzato libero --"}</option>
-                  <optgroup label={locale === "en" ? "Purchaser Fields" : "Campi Acquirente"}>
-                    {catalogFields.filter(f => f.target === FormFieldTarget.PURCHASER).map(f => (
-                      <option key={f.id} value={f.id}>
-                        👤 {locale === "en" ? f.label_en : f.label_it} ({f.key})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={locale === "en" ? "Student Fields" : "Campi Studente"}>
-                    {catalogFields.filter(f => f.target === FormFieldTarget.STUDENT).map(f => (
-                      <option key={f.id} value={f.id}>
-                        🎓 {locale === "en" ? f.label_en : f.label_it} ({f.key})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={locale === "en" ? "Booking Fields" : "Campi Iscrizione"}>
-                    {catalogFields.filter(f => f.target === FormFieldTarget.BOOKING).map(f => (
-                      <option key={f.id} value={f.id}>
-                        📅 {locale === "en" ? f.label_en : f.label_it} ({f.key})
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={locale === "en" ? "Contact Fields" : "Campi Contatto"}>
-                    {catalogFields.filter(f => f.target === FormFieldTarget.CONTACT).map(f => (
-                      <option key={f.id} value={f.id}>
-                        ✉️ {locale === "en" ? f.label_en : f.label_it} ({f.key})
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2 max-h-[50vh]">
+            {loadingCatalog ? (
+              <div className="py-8 text-center text-xs text-muted-foreground">
+                {locale === "en" ? "Loading database catalog..." : "Caricamento catalogo campi..."}
               </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t("forms.builderDialogLabelLabel")} *</Label>
-              <Input
-                value={fieldLabel}
-                onChange={(e) => setFieldLabel(e.target.value)}
-                placeholder={t("forms.builderDialogLabelPlaceholder")}
-                className="text-xs"
-              />
-            </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">{t("forms.builderDialogKeyLabel")}</Label>
-                <Input
-                  value={fieldKey}
-                  onChange={(e) => setFieldKey(e.target.value)}
-                  placeholder={t("forms.builderDialogKeyPlaceholder")}
-                  className="text-xs font-mono"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">{t("forms.builderDialogTypeLabel")}</Label>
-                <select
-                  value={fieldType}
-                  onChange={(e) => setFieldType(e.target.value as FormFieldType)}
-                  className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs text-foreground"
-                >
-                  {Object.entries(FORM_FIELD_TYPE_DICTIONARY).map(([key, dict]) => (
-                    <option key={key} value={key}>
-                      {locale === "en" ? dict.label_en : dict.label_it}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t("forms.builderDialogTargetLabel")}</Label>
-              <select
-                value={fieldTarget}
-                onChange={(e) => setFieldTarget(e.target.value as FormFieldTarget)}
-                className="w-full bg-background border border-border rounded-md px-3 py-2 text-xs text-foreground"
-              >
-                {Object.entries(FORM_FIELD_TARGET_DICTIONARY).map(([key, dict]) => (
-                  <option key={key} value={key}>
-                    {locale === "en" ? dict.label_en : dict.label_it}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {(fieldType === FormFieldType.SELECT || fieldType === FormFieldType.RADIO) && (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium">
-                  {t("forms.builderDialogOptionsLabel")}
-                </Label>
-                <Textarea
-                  value={fieldOptionsText}
-                  onChange={(e) => setFieldOptionsText(e.target.value)}
-                  placeholder={t("forms.builderDialogOptionsPlaceholder")}
-                  rows={4}
-                  className="text-xs font-mono"
-                />
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">{t("forms.builderDialogPlaceholderLabel")}</Label>
-              <Input
-                value={fieldPlaceholder}
-                onChange={(e) => setFieldPlaceholder(e.target.value)}
-                placeholder={t("forms.builderDialogPlaceholderPlaceholder")}
-                className="text-xs"
-              />
-            </div>
-
-            {/* Inline live preview */}
-            <div className="p-3 rounded-lg bg-muted/40 border space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  {locale === "en" ? "Preview" : "Anteprima"}
-                </span>
-                <Badge variant="secondary" className="text-[10px] gap-1">
-                  {getFieldTargetLabel(fieldTarget)}
-                </Badge>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-foreground">
-                  {fieldLabel || (locale === "en" ? "Field name" : "Nome del campo")} {fieldRequired && <span className="text-destructive">*</span>}
-                </label>
-                {fieldType === FormFieldType.SELECT ? (
-                  <select className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs text-foreground">
-                    <option>{fieldPlaceholder || (locale === "en" ? "-- Select option --" : "-- Seleziona opzione --")}</option>
-                    {fieldOptionsText
-                      .split("\n")
-                      .filter(Boolean)
-                      .map((opt, i) => (
-                        <option key={i}>{opt.split(":")[0]}</option>
-                      ))}
-                  </select>
-                ) : fieldType === FormFieldType.TEXTAREA ? (
-                  <textarea
-                    rows={2}
-                    placeholder={fieldPlaceholder || (locale === "en" ? "Write here..." : "Scrivi qui...")}
-                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs"
-                  />
-                ) : fieldType === FormFieldType.CHECKBOX ? (
-                  <div className="flex items-center gap-2 pt-1">
-                    <input type="checkbox" className="w-4 h-4 rounded" />
-                    <span className="text-xs text-muted-foreground">{fieldPlaceholder || (locale === "en" ? "I agree" : "Confermo")}</span>
-                  </div>
-                ) : (
-                  <input
-                    type={fieldType === FormFieldType.NUMBER ? "number" : fieldType === FormFieldType.DATE ? "date" : "text"}
-                    placeholder={fieldPlaceholder || (locale === "en" ? "Enter value..." : "Inserisci...")}
-                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs"
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div>
-                <p className="text-xs font-medium text-foreground">{t("forms.builderDialogRequiredLabel")}</p>
-                <p className="text-[10px] text-muted-foreground">
-                  {locale === "en" ? "Blocks checkout if not filled" : "Blocca il checkout se non compilato"}
+            ) : filteredCatalogFields.length === 0 ? (
+              <div className="py-8 text-center space-y-1">
+                <HelpCircle className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+                <p className="text-xs font-medium text-foreground">
+                  {locale === "en" ? "No available fields found" : "Nessun campo disponibile"}
+                </p>
+                <p className="text-[11px] text-muted-foreground max-w-sm mx-auto">
+                  {catalogSearch
+                    ? locale === "en"
+                      ? "Try changing your search keywords or filter category."
+                      : "Prova a modificare i termini di ricerca o la categoria."
+                    : locale === "en"
+                    ? "All available fields from the catalog are already added to this form."
+                    : "Tutti i campi disponibili dal catalogo sono già stati aggiunti a questo modulo."}
                 </p>
               </div>
-              <Switch checked={fieldRequired} onCheckedChange={setFieldRequired} className="cursor-pointer" />
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {filteredCatalogFields.map((cf) => {
+                  const isAttached = formData.fields_config.some((fc) => fc.key === cf.key);
+                  const isStudent = cf.target === FormFieldTarget.STUDENT;
+                  const isPurchaser = cf.target === FormFieldTarget.PURCHASER;
+
+                  return (
+                    <div
+                      key={cf.id}
+                      className={`p-2.5 rounded-lg border transition-all flex flex-col justify-between gap-2 ${
+                        isAttached
+                          ? "bg-muted/40 border-border/60 opacity-60"
+                          : "bg-card border-border hover:border-primary/50 hover:shadow-2xs"
+                      }`}
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span
+                            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                              isStudent
+                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                                : isPurchaser
+                                ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                                : "bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                            }`}
+                          >
+                            {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
+                            {getFieldTargetLabel(cf.target)}
+                          </span>
+                          <span className="text-[10px] font-semibold text-muted-foreground uppercase bg-muted px-1.5 py-0.2 rounded">
+                            {getFieldTypeLabel(cf.field_type)}
+                          </span>
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-foreground truncate">
+                            {locale === "en" ? cf.label_en : cf.label_it}
+                          </p>
+                          <code className="text-[10px] font-mono text-muted-foreground">{`{{${cf.key}}}`}</code>
+                        </div>
+
+                        {(cf.help_text_it || cf.placeholder_it) && (
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">
+                            {locale === "en" ? cf.help_text_en || cf.placeholder_en : cf.help_text_it || cf.placeholder_it}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-1.5 border-t flex items-center justify-between gap-2">
+                        {cf.is_required_default ? (
+                          <span className="text-[9px] font-medium text-amber-600 dark:text-amber-400">
+                            * {locale === "en" ? "Required default" : "Obbligatorio"}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-muted-foreground">
+                            {locale === "en" ? "Optional" : "Facoltativo"}
+                          </span>
+                        )}
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={isAttached ? "secondary" : "default"}
+                          disabled={isAttached}
+                          onClick={() => handleAttachCatalogField(cf)}
+                          className="h-6 px-2 text-[11px] font-medium gap-1 cursor-pointer"
+                        >
+                          {isAttached ? (
+                            <>
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              {locale === "en" ? "Added" : "Aggiunto"}
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="w-3 h-3" />
+                              {locale === "en" ? "Add to Form" : "Aggiungi"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="p-3 border-t bg-muted/10 shrink-0 flex items-center justify-between sm:justify-between">
+            <span className="text-[11px] text-muted-foreground">
+              {formData.fields_config.length} {locale === "en" ? "fields configured in this form" : "campi configurati in questo modulo"}
+            </span>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={() => setFieldDialogOpen(false)}
-              className="cursor-pointer"
+              onClick={() => setCatalogModalOpen(false)}
+              className="h-7 text-xs cursor-pointer"
+            >
+              {locale === "en" ? "Done" : "Fatto / Chiudi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Dialog 2: Edit Attached Field Modal ── */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Edit2 className="w-4 h-4 text-primary" />
+              {t("forms.builderDialogEditTitle")}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {locale === "en"
+                ? "Configure how this field behaves in this specific form template."
+                : "Personalizza etichetta, placeholder e obbligatorietà per questo modulo."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingField && (
+            <div className="space-y-3 py-1 text-xs">
+              <div className="p-2.5 rounded-md bg-muted/40 border space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase">{getFieldTypeLabel(editingField.field_type)}</span>
+                  <Badge variant="secondary" className="text-[9px]">{getFieldTargetLabel(editingField.target)}</Badge>
+                </div>
+                <code className="text-xs font-mono font-semibold text-foreground">{`{{${editingField.key}}}`}</code>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium">{t("forms.builderDialogLabelLabel")} *</Label>
+                <Input
+                  value={editLabel}
+                  onChange={(e) => setEditLabel(e.target.value)}
+                  placeholder={t("forms.builderDialogLabelPlaceholder")}
+                  className="text-xs h-8"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium">{t("forms.builderDialogPlaceholderLabel")}</Label>
+                <Input
+                  value={editPlaceholder}
+                  onChange={(e) => setEditPlaceholder(e.target.value)}
+                  placeholder={t("forms.builderDialogPlaceholderPlaceholder")}
+                  className="text-xs h-8"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-medium">
+                  {locale === "en" ? "Help / Tooltip text" : "Testo di aiuto o suggerimento"}
+                </Label>
+                <Input
+                  value={editHelpText}
+                  onChange={(e) => setEditHelpText(e.target.value)}
+                  placeholder={locale === "en" ? "e.g. Inserisci 7 caratteri..." : "es. Inserisci 7 caratteri del codice SDI"}
+                  className="text-xs h-8"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div>
+                  <p className="text-xs font-medium text-foreground">{t("forms.builderDialogRequiredLabel")}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {locale === "en" ? "Blocks checkout if not filled" : "Blocca il checkout se non compilato"}
+                  </p>
+                </div>
+                <Switch
+                  checked={editRequired}
+                  onCheckedChange={setEditRequired}
+                  className="cursor-pointer data-[state=checked]:bg-destructive"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div>
+                  <p className="text-xs font-medium text-foreground">{locale === "en" ? "Field Active in Form" : "Campo Attivo nel Modulo"}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {locale === "en" ? "Show field to customers" : "Mostra questo campo nel modulo"}
+                  </p>
+                </div>
+                <Switch
+                  checked={editEnabled}
+                  onCheckedChange={setEditEnabled}
+                  className="cursor-pointer data-[state=checked]:bg-emerald-600"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 pt-2 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setEditModalOpen(false)}
+              className="text-xs cursor-pointer h-7"
             >
               {t("forms.builderDialogCancelBtn")}
             </Button>
             <Button
               type="button"
               size="sm"
-              onClick={handleSaveFieldDialog}
-              disabled={!fieldLabel.trim()}
-              className="cursor-pointer"
+              onClick={handleSaveEditField}
+              disabled={!editLabel.trim()}
+              className="text-xs font-semibold cursor-pointer h-7"
             >
               {t("forms.builderDialogSaveBtn")}
             </Button>
