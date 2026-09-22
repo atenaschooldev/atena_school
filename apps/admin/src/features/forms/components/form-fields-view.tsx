@@ -12,14 +12,15 @@ import {
 } from "@tanstack/react-table";
 import { useFormFields } from "../hooks/use-form-fields";
 import {
-  FormFieldItem,
+  type FormFieldItem,
+  type CreateFormFieldDto,
+  type UpdateFormFieldDto,
   FormFieldType,
   FormFieldTarget,
-  CreateFormFieldDto,
-  UpdateFormFieldDto,
   FORM_FIELD_TYPE_DICTIONARY,
   FORM_FIELD_TARGET_DICTIONARY,
 } from "../types";
+
 import { useTranslation } from "@/i18n/context";
 
 // UI Components
