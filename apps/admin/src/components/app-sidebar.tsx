@@ -26,6 +26,7 @@ import { Logo } from "@/components/logo"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { useTranslation } from "@/i18n/context"
+import { useSchoolProfile } from "@/hooks/use-school-profile"
 import {
   Sidebar,
   SidebarContent,
@@ -38,11 +39,12 @@ import {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation()
+  const { profile } = useSchoolProfile()
 
   const user = {
-    name: "Atena School",
-    email: "admin@atenaschool.com",
-    avatar: "",
+    name: profile.name || "Atena School",
+    email: profile.email || "admin@atenaschool.com",
+    avatar: profile.logo_url || "",
   }
 
   const navGroups = [
@@ -56,7 +58,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         {
           title: t("nav.website"),
-          url: "https://atenaschool.com",
+          url: profile.site_url || profile.website || "https://atenaschool.com",
           icon: Globe,
         },
       ],
@@ -155,11 +157,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Logo size={24} className="text-current" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
+                  {profile.logo_url ? (
+                    <img
+                      src={profile.logo_url}
+                      alt={profile.name}
+                      className="size-6 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <Logo size={24} className="text-current" />
+                  )}
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">Atena School</span>
+                  <span className="truncate font-medium">{profile.name || "Atena School"}</span>
                   <span className="truncate text-xs">{t("nav.adminDashboard")}</span>
                 </div>
               </Link>
