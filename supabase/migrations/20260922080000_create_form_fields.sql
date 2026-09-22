@@ -58,8 +58,8 @@ INSERT INTO public.form_fields (
     ('purchaser_birth_date', 'Data di Nascita Acquirente', 'Purchaser Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'purchaser', true, true, 50, '[]'::jsonb),
     ('purchaser_birth_place', 'Luogo di Nascita Acquirente', 'Purchaser Birth Place', 'es. Milano (MI)', 'e.g. Rome', 'text', 'purchaser', true, false, 55, '[]'::jsonb),
     ('purchaser_tax_code', 'Codice Fiscale Acquirente', 'Purchaser Tax Code', 'RSSMRA80A01H501U', 'Tax / Fiscal Code', 'text', 'purchaser', true, true, 60, '[]'::jsonb),
-    ('purchaser_address', 'Indirizzo di Residenza', 'Residential Address', 'Via Roma 10, Milano', '123 Main St', 'text', 'purchaser', false, false, 70, '[]'::jsonb),
-    ('sdi_code', 'Codice SDI / PEC', 'SDI Code / PEC', 'M5UXCR1 o pec@email.it', 'Electronic invoice code', 'text', 'purchaser', false, false, 80, '[]'::jsonb),
+    ('purchaser_address', 'Indirizzo di Residenza', 'Residential Address', 'Via Roma 10, Milano', '123 Main St', 'text', 'purchaser', true, false, 70, '[]'::jsonb),
+    ('sdi_code', 'Codice SDI / PEC', 'SDI Code / PEC', 'M5UXCR1 o pec@email.it', 'Electronic invoice code', 'text', 'purchaser', true, false, 80, '[]'::jsonb),
 
     -- System Student Fields
     ('student_first_name', 'Nome Studente', 'Student First Name', 'es. Luca', 'e.g. Alex', 'text', 'student', true, true, 100, '[]'::jsonb),
@@ -69,7 +69,7 @@ INSERT INTO public.form_fields (
     ('student_birth_place', 'Luogo di Nascita Studente', 'Student Birth Place', 'es. Roma (RM)', 'e.g. Rome', 'text', 'student', true, false, 135, '[]'::jsonb),
     ('student_email', 'Email Studente', 'Student Email', 'studente@email.com', 'student@email.com', 'email', 'student', true, false, 140, '[]'::jsonb),
     ('student_phone', 'Telefono Studente', 'Student Phone', '+39 340 000000', '+1 555 000000', 'phone', 'student', true, false, 145, '[]'::jsonb),
-    ('study_level', 'Livello Linguistico di Partenza', 'Starting Language Level', 'Seleziona livello', 'Select level', 'select', 'student', false, false, 150, '[
+    ('study_level', 'Livello Linguistico di Partenza', 'Starting Language Level', 'Seleziona livello', 'Select level', 'select', 'student', true, false, 150, '[
         {"label": "Principiante assoluto (A0/A1)", "value": "A1"},
         {"label": "Elementare / Pre-intermedio (A2)", "value": "A2"},
         {"label": "Intermedio (B1)", "value": "B1"},
@@ -79,14 +79,14 @@ INSERT INTO public.form_fields (
     ]'::jsonb),
 
     -- System Booking & General Fields
-    ('heard_from', 'Come ci hai conosciuto?', 'How did you hear about us?', 'Seleziona canale', 'Select channel', 'select', 'booking', false, false, 200, '[
+    ('heard_from', 'Come ci hai conosciuto?', 'How did you hear about us?', 'Seleziona canale', 'Select channel', 'select', 'booking', true, false, 200, '[
         {"label": "Passaparola / Amici", "value": "word_of_mouth"},
         {"label": "Social Network (Instagram / Facebook)", "value": "social"},
         {"label": "Ricerca Google / Mappe", "value": "google"},
         {"label": "Volantini / Scuola", "value": "flyers"},
         {"label": "Altro", "value": "other"}
     ]'::jsonb),
-    ('special_requests', 'Note o Richieste Particolari', 'Special Requests / Notes', 'Eventuali preferenze o informazioni utili...', 'Any preferences or details...', 'textarea', 'booking', false, false, 210, '[]'::jsonb),
+    ('special_requests', 'Note o Richieste Particolari', 'Special Requests / Notes', 'Eventuali preferenze o informazioni utili...', 'Any preferences or details...', 'textarea', 'booking', true, false, 210, '[]'::jsonb),
 
     -- System Contact Form Fields
     ('contact_name', 'Nome e Cognome Contatto', 'Contact Full Name', 'es. Mario Rossi', 'e.g. John Doe', 'text', 'contact', true, true, 300, '[]'::jsonb),
