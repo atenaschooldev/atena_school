@@ -55,23 +55,47 @@ async function bootstrap() {
     }),
   );
 
+  // Генератор карточки навигации в описании документа
+  const createNavDescription = (
+    activeTab: 'landing' | 'portal' | 'admin' | 'all',
+    subtitle: string,
+  ) => `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin-bottom: 20px;">
+  <p style="font-size: 14px; color: #4B5563; margin: 0 0 16px 0;">${subtitle}</p>
+
+  <div style="background: #111827; border: 1px solid #374151; border-radius: 8px; padding: 14px 18px; margin: 12px 0 20px 0;">
+    <div style="color: #9CA3AF; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">
+      ⚡️ Разделы документации API (Быстрое переключение):
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+      <a href="/docs/landing" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'landing' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'landing' ? '#3B82F6' : '#374151'};">
+        🌐 Landing & Public API
+      </a>
+      <a href="/docs/portal" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'portal' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'portal' ? '#3B82F6' : '#374151'};">
+        🎓 Student Portal (ЛК)
+      </a>
+      <a href="/docs/admin" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'admin' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'admin' ? '#3B82F6' : '#374151'};">
+        ⚙️ CRM Admin
+      </a>
+      <a href="/docs" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'all' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'all' ? '#3B82F6' : '#374151'};">
+        📑 Все ручки (All)
+      </a>
+      <a href="/docs/dictionary" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #047857; color: #FFFFFF; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 6px; text-decoration: none; border: 1px solid #059669; margin-left: auto;">
+        📖 Словарь данных →
+      </a>
+    </div>
+  </div>
+</div>
+`;
+
   // Базовая конфигурация Swagger DocumentBuilder
   const baseConfig = new DocumentBuilder()
     .setTitle('Atena School API')
     .setDescription(
-      'Академическая система управления (CRM) Atena School (NestJS/Fastify)<br><br>' +
-      '<div style="background: #F7F6F3; border: 1px solid #E9E9E7; border-radius: 6px; padding: 14px 18px; margin: 12px 0 16px 0; display: flex; align-items: center; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">' +
-      '  <div style="display: flex; align-items: center; gap: 12px;">' +
-      '    <span style="font-size: 24px;">📖</span>' +
-      '    <div>' +
-      '      <div style="font-weight: 600; color: #37352F; font-size: 14px;">Словарь данных (Data Dictionary)</div>' +
-      '      <div style="color: #787774; font-size: 13px;">Таблицы числовых статусов (1, 2, 3...), кодов и переводов (IT, EN, RU) в стиле Notion</div>' +
-      '    </div>' +
-      '  </div>' +
-      '  <a href="/docs/dictionary" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #2EAADC; color: #FFFFFF; font-weight: 500; font-size: 13px; padding: 7px 14px; border-radius: 4px; text-decoration: none;">' +
-      '    Открыть словарь →' +
-      '  </a>' +
-      '</div>',
+      createNavDescription(
+        'all',
+        'Полная спецификация REST API платформы Atena School (NestJS / Fastify).',
+      ),
     )
     .setVersion('1.0.0')
     // 1. ЛЕНДИНГ И ЧЕКАУТ
@@ -163,7 +187,10 @@ async function bootstrap() {
         path.startsWith('/courses') ||
         tags.some((t) => t.includes('Landing') || t.includes('Public') || t.includes('Webhook'))),
     '🌐 Atena School — Landing & Public API',
-    'Публичные эндпоинты для лендинга: каталог курсов, чекаут, проверка взноса €30, формы и вебхуки Stripe.',
+    createNavDescription(
+      'landing',
+      'Публичные эндпоинты для лендинга: каталог курсов, чекаут, проверка взноса €30, формы и вебхуки Stripe.',
+    ),
   );
 
   // 2. Документ Личного Кабинета (Portal / LK)
@@ -174,7 +201,10 @@ async function bootstrap() {
         path.startsWith('/auth') ||
         tags.some((t) => t.includes('Portal') || t.includes('Auth'))),
     '🎓 Atena School — Student & Parent Portal (LK)',
-    'Эндпоинты личного кабинета ученика и родителя: Magic Link авторизация, профиль, расписание и история платежей.',
+    createNavDescription(
+      'portal',
+      'Эндпоинты личного кабинета ученика и родителя: Magic Link авторизация, профиль, расписание и история платежей.',
+    ),
   );
 
   // 3. Документ Админки и CRM
@@ -186,7 +216,10 @@ async function bootstrap() {
       path.startsWith('/users') ||
       tags.some((t) => t.startsWith('Admin') || t.includes('Dictionary') || t.includes('Engine')),
     '⚙️ Atena School — CRM & Admin Panel API',
-    'Эндпоинты для секретариата и администрации: дашборд, студенты, POS-чекаут, уроки, журнал посещаемости, триггеры и настройки школы.',
+    createNavDescription(
+      'admin',
+      'Эндпоинты для секретариата и администрации: дашборд, студенты, POS-чекаут, уроки, журнал посещаемости, триггеры и настройки школы.',
+    ),
   );
 
   if (process.env.GENERATE_OPENAPI === 'true' || process.env.EXPORT_OPENAPI === 'true') {
@@ -206,92 +239,44 @@ async function bootstrap() {
 
   // Общие стили и навигационная панель для всех разделов Swagger
   const createSwaggerCustomOptions = (activeTab: 'landing' | 'portal' | 'admin' | 'all') => {
-    const primaryName =
-      activeTab === 'landing'
-        ? '🌐 Landing & Public API'
-        : activeTab === 'portal'
-          ? '🎓 Portal / ЛК Студента'
-          : activeTab === 'admin'
-            ? '⚙️ Admin & CRM Panel'
-            : '📑 Полная спецификация (All)';
-
     return {
       customSiteTitle: `Atena School API Docs — ${activeTab.toUpperCase()}`,
-      swaggerOptions: {
-        urls: [
-          { url: '/docs/openapi-landing.json', name: '🌐 Landing & Public API' },
-          { url: '/docs/openapi-portal.json', name: '🎓 Portal / ЛК Студента' },
-          { url: '/docs/openapi-admin.json', name: '⚙️ Admin & CRM Panel' },
-          { url: '/docs/openapi.json', name: '📑 Полная спецификация (All)' },
-        ],
-        'urls.primaryName': primaryName,
-        persistAuthorization: true,
-        displayRequestDuration: true,
-        filter: true,
-      },
       customCss: `
-        .topbar { display: flex !important; background-color: #111827 !important; padding: 12px 24px !important; border-bottom: 1px solid #374151 !important; }
-        .topbar-wrapper { display: flex !important; width: 100% !important; justify-content: space-between !important; align-items: center !important; flex-wrap: wrap !important; gap: 12px !important; }
-        .topbar-wrapper .link { display: none !important; }
-        .swagger-nav-container {
-          display: flex !important;
-          align-items: center !important;
-          gap: 8px !important;
-          flex-wrap: wrap !important;
-        }
-        .swagger-nav-tab {
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          background: #1F2937 !important;
-          color: #9CA3AF !important;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-          font-size: 13px !important;
-          font-weight: 500 !important;
-          padding: 7px 14px !important;
-          border-radius: 6px !important;
-          border: 1px solid #374151 !important;
-          text-decoration: none !important;
-          transition: all 0.15s ease-in-out !important;
-        }
-        .swagger-nav-tab:hover {
-          background: #374151 !important;
-          color: #F9FAFB !important;
-          border-color: #4B5563 !important;
-        }
-        .swagger-nav-tab.active {
-          background: #2563EB !important;
-          color: #FFFFFF !important;
-          border-color: #3B82F6 !important;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-        }
-        .swagger-nav-tab.dictionary-tab {
-          background: #047857 !important;
-          color: #FFFFFF !important;
-          border-color: #059669 !important;
-          margin-left: 8px !important;
-        }
-        .swagger-nav-tab.dictionary-tab:hover {
-          background: #059669 !important;
+        #atena-sticky-header a:hover {
+          opacity: 0.9 !important;
+          transform: translateY(-1px) !important;
         }
       `,
       customJsStr: `
-        window.addEventListener('DOMContentLoaded', () => {
-          const topbar = document.querySelector('.topbar-wrapper') || document.querySelector('.topbar');
-          if (topbar && !document.getElementById('swagger-custom-nav')) {
-            const nav = document.createElement('div');
-            nav.id = 'swagger-custom-nav';
-            nav.className = 'swagger-nav-container';
-            nav.innerHTML = \`
-              <a href="/docs/landing" class="swagger-nav-tab ${activeTab === 'landing' ? 'active' : ''}">🌐 Landing API</a>
-              <a href="/docs/portal" class="swagger-nav-tab ${activeTab === 'portal' ? 'active' : ''}">🎓 Portal (ЛК)</a>
-              <a href="/docs/admin" class="swagger-nav-tab ${activeTab === 'admin' ? 'active' : ''}">⚙️ CRM Admin</a>
-              <a href="/docs" class="swagger-nav-tab ${activeTab === 'all' ? 'active' : ''}">📑 Все ручки (All)</a>
-              <a href="/docs/dictionary" target="_blank" class="swagger-nav-tab dictionary-tab">📖 Словарь данных</a>
+        (function() {
+          function injectHeader() {
+            if (document.getElementById('atena-sticky-header')) return;
+            var header = document.createElement('div');
+            header.id = 'atena-sticky-header';
+            header.style.cssText = 'position: sticky; top: 0; left: 0; right: 0; z-index: 999999; background: #111827; border-bottom: 2px solid #374151; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;';
+            header.innerHTML = \`
+              <div style="font-weight: 700; color: #F9FAFB; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                🏛 Atena School API Docs
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <a href="/docs/landing" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'landing' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'landing' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">🌐 Landing</a>
+                <a href="/docs/portal" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'portal' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'portal' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">🎓 Portal (ЛК)</a>
+                <a href="/docs/admin" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'admin' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'admin' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">⚙️ CRM Admin</a>
+                <a href="/docs" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'all' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'all' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">📑 Все ручки</a>
+                <a href="/docs/dictionary" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #047857; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid #059669; transition: all 0.15s ease;">📖 Словарь</a>
+              </div>
             \`;
-            topbar.insertBefore(nav, topbar.firstChild);
+            if (document.body) {
+              document.body.insertBefore(header, document.body.firstChild);
+            }
           }
-        });
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', injectHeader);
+          } else {
+            injectHeader();
+          }
+          setInterval(injectHeader, 400);
+        })();
       `,
     };
   };
