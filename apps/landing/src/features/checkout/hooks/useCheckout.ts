@@ -42,12 +42,32 @@ export interface SavedClientProfile {
   students?: StudentItemInput[];
 }
 
-export function useCheckout(typeOrId: string, optionalId?: string) {
+export interface InitialCheckoutData {
+  item?: any;
+  schoolProfile?: any;
+  settings?: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean };
+  formTemplate?: any;
+  user?: User | null;
+}
+
+export function useCheckout(
+  typeOrId: string,
+  optionalIdOrInitialData?: string | InitialCheckoutData,
+  maybeInitialData?: InitialCheckoutData
+) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const type = optionalId ? typeOrId : "course";
-  const id = optionalId ? optionalId : typeOrId;
+  const isLegacy = typeof optionalIdOrInitialData === "string";
+  const type = isLegacy ? typeOrId : "course";
+  const id = isLegacy ? optionalIdOrInitialData : typeOrId;
+  const initialData = isLegacy ? maybeInitialData : (optionalIdOrInitialData as InitialCheckoutData | undefined);
+
+  const initialItem = (initialData?.item || null) as BookingItem | null;
+  const initialProfile = initialData?.schoolProfile;
+  const initialSettings = initialData?.settings;
+  const initialFormTemplate = initialData?.formTemplate || null;
+  const initialUser = initialData?.user || null;
 
   const dateParam = searchParams.get("date");
   const daysParam = searchParams.get("days");
@@ -60,19 +80,25 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
     : decodeScheduleSlot(null, null, null);
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
-  const [registrationFeeAmount, setRegistrationFeeAmount] = useState<number>(30);
-  const [academicYear, setAcademicYear] = useState<string>("2026/2027");
+  const [registrationFeeAmount, setRegistrationFeeAmount] = useState<number>(
+    initialProfile?.registration_fee_eur != null ? Number(initialProfile.registration_fee_eur) : 30
+  );
+  const [academicYear, setAcademicYear] = useState<string>(initialProfile?.academic_year || "2026/2027");
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>(FeeCheckStatus.INITIAL);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
     0: FeeCheckStatus.INITIAL,
   });
-  const [item, setItem] = useState<BookingItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [stripeEnabled, setStripeEnabled] = useState(false);
-  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(false);
-  const [billingScheme, setBillingScheme] = useState<BillingScheme>(BillingScheme.FULL);
+  const [item, setItem] = useState<BookingItem | null>(initialItem);
+  const [loading, setLoading] = useState(!initialItem);
+  const [stripeEnabled, setStripeEnabled] = useState(Boolean(initialSettings?.stripeEnabled));
+  const [subscriptionsEnabled, setSubscriptionsEnabled] = useState(Boolean(initialSettings?.subscriptionsEnabled));
+  const [billingScheme, setBillingScheme] = useState<BillingScheme>(
+    initialItem && Number(initialItem.billing_type) === CourseBillingType.SUBSCRIPTION_ONLY
+      ? BillingScheme.SUBSCRIPTION
+      : BillingScheme.FULL
+  );
   const [submitting, setSubmitting] = useState<false | SubmitAction>(false);
-  const [user, setUser] = useState<User | UserProfile | null>(null);
+  const [user, setUser] = useState<User | UserProfile | null>(initialUser);
   const [savedProfileSource, setSavedProfileSource] = useState<"local" | "account" | "draft" | null>(null);
   const [availableSavedStudents, setAvailableSavedStudents] = useState<Array<{
     firstName: string;
@@ -90,7 +116,7 @@ export function useCheckout(typeOrId: string, optionalId?: string) {
       : `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   );
 
-  const [formTemplate, setFormTemplate] = useState<any>(null);
+  const [formTemplate, setFormTemplate] = useState<any>(initialFormTemplate);
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{
     id: string;

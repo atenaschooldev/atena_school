@@ -509,6 +509,8 @@ export interface BookingRecord {
   item_price?: number;
   total_amount?: number;
   amount?: number;
+  form_id?: string | null;
+  custom_fields?: Record<string, any> | null;
   notes?: string;
   created_at?: string;
 }

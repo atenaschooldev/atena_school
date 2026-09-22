@@ -1,4 +1,4 @@
-import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType, CourseCategory } from '@atena/api-types';
+import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType, CourseCategory, CourseSettingsItem, CourseDeliveryMode } from '@atena/api-types';
 
 export class CourseEntity {
   id: string;
@@ -25,7 +25,16 @@ export class CourseEntity {
   price?: number | null;
   subscriptionPrice?: number | null;
   stripeMonthlyPriceId?: string | null;
+  categoryId?: string | null;
+  categorySlug?: string | null;
+  categoryName?: string | null;
+
+  deliveryMode?: CourseDeliveryMode | number | null;
+  settingsId?: string | null;
+  settings?: CourseSettingsItem | null;
 
   teacherName?: string | null;
+  courseTeachers?: any[];
 }
+
 

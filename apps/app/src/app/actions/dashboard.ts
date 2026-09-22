@@ -99,11 +99,20 @@ export async function getDashboardDataAction() {
     if (courseIds.length > 0) {
       const { data: cData } = await supabaseAdmin
         .from("courses")
-        .select("id, name, price, photo_url, schedule_days, start_time, end_time, course_format, teacher_id")
+        .select("id, name, price, photo_url, settings:course_settings(schedule_days, start_time, end_time, delivery_mode), teacher_id")
         .in("id", courseIds);
 
       if (cData) {
-        coursesMap = new Map(cData.map((c) => [c.id, c]));
+        coursesMap = new Map(cData.map((c: any) => {
+          const st = c.settings as any;
+          return [c.id, {
+            ...c,
+            schedule_days: st?.schedule_days ?? null,
+            start_time: st?.start_time ?? null,
+            end_time: st?.end_time ?? null,
+            course_format: st?.delivery_mode ?? null,
+          }];
+        }));
       }
     }
 

@@ -21,7 +21,7 @@ import {
 import { checkFeeStatus } from './fee.service';
 import { validatePromoCode, incrementPromoCodeUsage } from './promo.service';
 import { processStudentAndBookingLinks } from './student.service';
-import { extractCleanTime, computeEndTime, computeTotalLessonsCount } from './course.service';
+import { extractCleanTime, computeEndTime, computeTotalLessonsCount, getPublicCourseById } from './course.service';
 import { sendBookingNotificationEmails, EmailServiceConfig } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
 import { getSchoolProfile } from '../system/school-profile.service';
@@ -199,15 +199,10 @@ export async function createReservationWorkflow(
     }
   }
 
-  let course: SupabaseCourseRow | null = null;
-
-  if (isUuid) {
-    const { data } = await supabase.from('courses').select('*').eq('id', dto.itemId).maybeSingle();
-    course = data;
-  }
-  if (!course) {
-    const { data } = await supabase.from('courses').select('*').eq('slug', dto.itemId).maybeSingle();
-    course = data;
+  let course: any = null;
+  const courseRes = await getPublicCourseById(supabase, dto.itemId);
+  if (courseRes.success && courseRes.item) {
+    course = courseRes.item;
   }
 
   const courseId = course?.id || dto.itemId;

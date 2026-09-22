@@ -20,6 +20,8 @@ import { useTranslation } from "@/i18n/context";
 import {
   NotificationChannel,
   RecipientType,
+  TriggerTimingType,
+  parseTriggerTimingType,
   SYSTEM_EVENTS_REGISTRY,
 } from "@atena/api-types";
 import type {
@@ -38,20 +40,27 @@ import {
   Save,
   Loader2,
   FileText,
+  Layers,
+  FileCode2,
+  HelpCircle,
+  Sparkles,
+  Info,
+  CheckCircle2,
 } from "lucide-react";
 
 interface TriggerEditorDrawerProps {
-  trigger: NotificationTriggerRecord | null;
-  templates: NotificationTemplateRecord[];
-  systemEvents: Record<string, SystemEventDefinition>;
-  isOpen: boolean;
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
+  trigger?: NotificationTriggerRecord | null;
+  templates: NotificationTemplateRecord[];
+  systemEvents?: Record<string, SystemEventDefinition>;
   onSave: (payload: CreateNotificationTriggerDto | UpdateNotificationTriggerDto) => Promise<any>;
   isLoading?: boolean;
 }
 
 interface TriggerEditorFormProps {
-  trigger: NotificationTriggerRecord | null;
+  trigger?: NotificationTriggerRecord | null;
   templates: NotificationTemplateRecord[];
   systemEvents: Record<string, SystemEventDefinition>;
   onClose: () => void;
@@ -78,14 +87,16 @@ function TriggerEditorForm({
     (tmpl) => Number(tmpl.channel) === Number(trigger?.channel || NotificationChannel.EMAIL)
   );
   const [templateId, setTemplateId] = useState<string>(
-    trigger?.template_id || initialTemplates[0]?.id || ""
+    trigger?.notification_template_id || trigger?.template_id || initialTemplates[0]?.id || ""
   );
 
   const [recipientType, setRecipientType] = useState<number>(
     trigger?.recipient_type || RecipientType.CUSTOMER
   );
   const [customRecipient, setCustomRecipient] = useState(trigger?.custom_recipient || "");
-  const [timingType, setTimingType] = useState<string>(trigger?.timing_type || "immediate");
+  const [timingType, setTimingType] = useState<number>(
+    trigger?.timing_type ? parseTriggerTimingType(trigger.timing_type) : TriggerTimingType.IMMEDIATE
+  );
   const [delayMinutes, setDelayMinutes] = useState<number>(
     trigger?.delay_seconds ? Math.round(trigger.delay_seconds / 60) : 0
   );
@@ -123,13 +134,14 @@ function TriggerEditorForm({
       name: name.trim(),
       description: description.trim() || undefined,
       event_key: eventKey,
+      notification_template_id: templateId,
       template_id: templateId,
       channel,
       recipient_type: recipientType,
       custom_recipient: recipientType === 4 ? customRecipient.trim() : undefined,
       conditions: parsedConditions,
       timing_type: timingType,
-      delay_seconds: timingType === "delayed" ? delayMinutes * 60 : 0,
+      delay_seconds: timingType === TriggerTimingType.DELAYED ? delayMinutes * 60 : 0,
       is_active: isActive,
     };
 
@@ -340,15 +352,15 @@ function TriggerEditorForm({
               {/* Timing */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium">{t("notifications.timingLabel") || "Tempistica Invio"}</Label>
-                <Select value={timingType} onValueChange={setTimingType}>
+                <Select value={String(timingType)} onValueChange={(val) => setTimingType(Number(val))}>
                   <SelectTrigger className="h-9 text-xs bg-background">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediate" className="text-xs">
+                    <SelectItem value={String(TriggerTimingType.IMMEDIATE)} className="text-xs">
                       ⚡ {locale === "en" ? "Immediate (Instant)" : "Immediato (Subito)"}
                     </SelectItem>
-                    <SelectItem value="delayed" className="text-xs">
+                    <SelectItem value={String(TriggerTimingType.DELAYED)} className="text-xs">
                       ⏳ {locale === "en" ? "Delayed (after N minutes)" : "Ritardato (dopo N minuti)"}
                     </SelectItem>
                   </SelectContent>
@@ -370,7 +382,7 @@ function TriggerEditorForm({
               )}
 
               {/* Delay minutes input if delayed */}
-              {timingType === "delayed" && (
+              {timingType === TriggerTimingType.DELAYED && (
                 <div className="sm:col-span-2 space-y-1.5">
                   <Label className="text-xs font-medium">Minuti di attesa prima dell'invio</Label>
                   <Input
@@ -462,15 +474,17 @@ export function TriggerEditorDrawer({
   trigger,
   templates,
   systemEvents = SYSTEM_EVENTS_REGISTRY,
+  open,
   isOpen,
   onClose,
   onSave,
   isLoading = false,
 }: TriggerEditorDrawerProps) {
-  if (!isOpen) return null;
+  const isDrawerOpen = open ?? isOpen ?? false;
+  if (!isDrawerOpen) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isDrawerOpen} onOpenChange={(modalOpen) => !modalOpen && onClose()}>
       <TriggerEditorForm
         key={trigger?.id || "new"}
         trigger={trigger}

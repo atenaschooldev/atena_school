@@ -77,7 +77,10 @@ export class GroupsService {
   }
 
   async createGroup(dto: CreateGroupDto) {
-    const course = await this.prisma.course.findUnique({ where: { id: dto.courseId } });
+    const course = await this.prisma.course.findUnique({
+      where: { id: dto.courseId },
+      include: { settings: true },
+    });
     if (!course) throw new NotFoundException(`Course with ID ${dto.courseId} not found`);
 
     if (dto.teacherId) {
@@ -110,8 +113,8 @@ export class GroupsService {
         endTime: dto.endTime,
         scheduleDays: dto.scheduleDays,
         courseCategory: course.category,
-        totalLessons: course.totalLessons || 8,
-        lessonDuration: course.lessonDurationMinutes || 60,
+        totalLessons: course.settings?.totalLessons || 8,
+        lessonDuration: course.settings?.lessonDurationMinutes || 60,
       });
     }
 

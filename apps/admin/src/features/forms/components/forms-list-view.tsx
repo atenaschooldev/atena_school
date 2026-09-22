@@ -19,6 +19,7 @@ import {
   FormFieldTarget,
   FORM_TYPE_DICTIONARY,
   FORM_FIELD_TARGET_DICTIONARY,
+  parseFormType,
 } from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
@@ -72,10 +73,11 @@ export function FormsListView() {
   const targetCourseParam = searchParams[0]?.get("courseId") || searchParams[0]?.get("course_id");
   const { coursesList } = useCourses();
 
-  const getFormTypeLabel = (val: FormType): string => {
-    const entry = FORM_TYPE_DICTIONARY[val];
+  const getFormTypeLabel = (val: any): string => {
+    const parsed = parseFormType(val);
+    const entry = FORM_TYPE_DICTIONARY[parsed];
     if (entry) return locale === "en" ? entry.label_en : entry.label_it;
-    return val;
+    return String(val);
   };
 
   const getFieldTargetLabel = (val: FormFieldTarget): string => {

@@ -37,7 +37,7 @@ export class FormsService {
     try {
       let query = this.supabase.from('form_templates').select('*').order('created_at', { ascending: false });
 
-      if (filter?.form_type) {
+      if (filter?.form_type !== undefined) {
         query = query.eq('form_type', filter.form_type);
       }
       if (typeof filter?.is_active === 'boolean') {
@@ -46,7 +46,7 @@ export class FormsService {
 
       const defaultList = [DEFAULT_BOOKING_FORM_TEMPLATE, DEFAULT_CONTACT_FORM_TEMPLATE];
       const getFallback = () => {
-        if (filter?.form_type) {
+        if (filter?.form_type !== undefined) {
           return defaultList.filter((f) => f.form_type === filter.form_type);
         }
         return defaultList;

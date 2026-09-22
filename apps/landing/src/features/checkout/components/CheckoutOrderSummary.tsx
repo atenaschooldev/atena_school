@@ -32,7 +32,7 @@ interface CheckoutOrderSummaryProps {
   dateParam?: string | null;
   timeParam?: string | null;
   formattedDateString: (dStr?: string | null) => string | null;
-  formatCategoryName: (cat?: string) => string;
+  formatCategoryName: (cat?: string | number | null) => string;
   mounted: boolean;
   selectedPaymentMode: SubmitAction;
   actionRef: React.MutableRefObject<SubmitAction>;

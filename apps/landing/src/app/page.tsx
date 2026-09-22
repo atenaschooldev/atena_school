@@ -3,7 +3,8 @@ import { AboutSection } from "@/features/about";
 import { TestimonialsSection } from "@/features/reviews";
 import { ContactSection } from "@/features/contact";
 import { env } from "@/config/env";
-import { getSchoolProfile } from "@atena/core";
+import { getSchoolProfile, resolveActiveFormTemplate } from "@atena/core";
+import { FormType } from "@atena/api-types";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 export const revalidate = 60;
@@ -44,10 +45,21 @@ export async function generateMetadata() {
 
 export default async function IndexPage() {
   const supabase = getSupabaseAdmin();
-  const [school, homeData] = await Promise.all([
+  const [school, homeData, templatesResult] = await Promise.all([
     getSchoolProfile(supabase),
     getHomePageData(),
+    Promise.resolve(
+      supabase
+        .from('form_templates')
+        .select('*')
+        .eq('is_active', true)
+    ).catch(() => ({ data: [] })),
   ]);
+
+  const contactTemplate = resolveActiveFormTemplate(templatesResult?.data || [], {
+    form_type: FormType.CONTACT,
+  });
+
   const { hero, about, testimonials, contact } = homeData;
 
   return (
@@ -56,7 +68,11 @@ export default async function IndexPage() {
       <StatsSection />
       <AboutSection data={about} school={school} />
       <TestimonialsSection data={testimonials} school={school} />
-      <ContactSection data={contact} school={school} />
+      <ContactSection
+        data={contact}
+        school={school}
+        initialFormTemplate={contactTemplate}
+      />
     </div>
   );
 }

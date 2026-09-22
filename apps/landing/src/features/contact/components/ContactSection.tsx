@@ -33,9 +33,10 @@ interface ContactSectionProps {
     vat?: string;
   };
   school?: SchoolProfile;
+  initialFormTemplate?: any;
 }
 
-const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: ContactSectionProps) => {
+const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemplate }: ContactSectionProps) => {
   const locale = useLocale();
   const {
     formData,
@@ -50,7 +51,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: ContactSectio
     handleCheckboxChange,
     handleSubmit,
     resetForm,
-  } = useContactForm();
+  } = useContactForm(initialFormTemplate);
 
   const address = formatFullSchoolAddress(school) || data?.address || "";
   const phone = school.phone || data?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";

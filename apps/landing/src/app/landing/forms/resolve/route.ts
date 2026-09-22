@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
 import { resolveActiveFormTemplate } from '@atena/core';
-import { FormType } from '@atena/api-types';
+import { FormType, parseFormType } from '@atena/api-types';
 import { withLandingApiLog } from '@/lib/server/api-logger';
 
 export const runtime = 'nodejs';
@@ -13,8 +13,7 @@ export const GET = withLandingApiLog(
     const courseId = searchParams.get('course_id') || undefined;
     const categorySlug = searchParams.get('category_slug') || undefined;
 
-    const formType =
-      formTypeParam === 'contact' ? FormType.CONTACT : FormType.BOOKING;
+    const formType = parseFormType(formTypeParam);
 
     try {
       const supabase = getSupabaseAdmin();

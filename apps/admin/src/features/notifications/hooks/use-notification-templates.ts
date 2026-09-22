@@ -133,6 +133,8 @@ export interface NotificationLogsResponse {
     request: any;
     response?: any;
     status: number;
+    notification_trigger_id?: string | null;
+    notification_template_id?: string | null;
   }>;
   total: number;
   page: number;

@@ -164,6 +164,8 @@ export const applyPromoCodeSchema = z.object({
   courseId: z.string().optional(),
   coursePrice: z.number().min(0),
   registrationFee: z.number().min(0).default(30),
+  purchaserEmail: z.string().optional(),
+  purchaserTaxCode: z.string().optional(),
 });
 export type ApplyPromoCodeInput = z.infer<typeof applyPromoCodeSchema>;
 

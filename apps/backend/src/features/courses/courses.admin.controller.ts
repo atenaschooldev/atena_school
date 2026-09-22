@@ -38,6 +38,20 @@ export class CoursesController {
     return this.coursesService.listTeachers();
   }
 
+  @Get('categories')
+  @Roles('admin', 'teacher', 'student', 'parent')
+  @ApiOperation({ summary: 'Получить список категорий курсов' })
+  async listCategories() {
+    return this.coursesService.listCategories();
+  }
+
+  @Get('settings')
+  @Roles('admin', 'teacher', 'student', 'parent')
+  @ApiOperation({ summary: 'Получить список пресетов/настроек курсов' })
+  async listSettings() {
+    return this.coursesService.getAllSettings();
+  }
+
   @Get(':id')
   @Roles('admin', 'teacher', 'student', 'parent')
   @ApiOperation({ summary: 'Получить детальную информацию о курсе' })

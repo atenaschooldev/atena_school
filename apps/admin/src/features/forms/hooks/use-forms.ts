@@ -26,7 +26,7 @@ export function useForms(filters?: {
   const { t } = useTranslation();
 
   const queryParams = new URLSearchParams();
-  if (filters?.form_type) queryParams.set("form_type", filters.form_type);
+  if (filters?.form_type !== undefined) queryParams.set("form_type", String(filters.form_type));
   if (filters?.is_active !== undefined) queryParams.set("is_active", String(filters.is_active));
 
   const queryString = queryParams.toString();

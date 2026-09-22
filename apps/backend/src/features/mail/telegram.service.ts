@@ -31,6 +31,7 @@ export class TelegramService {
     inlineKeyboard?: TelegramButton[][],
     notificationType: number = NotificationType.BOOKING_CONFIRMATION,
     customChatId?: string,
+    options?: { notificationTriggerId?: string; notificationTemplateId?: string },
   ): Promise<{ success: boolean; messageId?: number; error?: string }> {
     const creds = await getTelegramCredentials();
     const botToken = creds.botToken || this.configService.get<string>('TELEGRAM_BOT_TOKEN');
@@ -113,6 +114,8 @@ export class TelegramService {
           notificationType,
           recipient,
           subject: 'Telegram Bot Alert',
+          notificationTriggerId: options?.notificationTriggerId || null,
+          notificationTemplateId: options?.notificationTemplateId || null,
           request: payload as any,
           response: result as any,
           status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,

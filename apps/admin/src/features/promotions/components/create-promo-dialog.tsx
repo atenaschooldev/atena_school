@@ -18,9 +18,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Tag, Percent, Euro } from "lucide-react";
+import { Sparkles, Tag, Percent, Euro, BookOpen, User } from "lucide-react";
 import type { PromoCodeItem, CreatePromoCodeInput } from "../types";
-
+import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useTranslation } from "@/i18n/context";
 
 interface CreatePromoDialogProps {
@@ -37,6 +37,7 @@ export function CreatePromoDialog({
   initialData,
 }: CreatePromoDialogProps) {
   const { t } = useTranslation();
+  const { coursesList } = useCourses();
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [discountType, setDiscountType] = useState<number>(1); // 1 = PERCENTAGE, 2 = FIXED_AMOUNT
@@ -44,6 +45,10 @@ export function CreatePromoDialog({
   const [waiveRegistrationFee, setWaiveRegistrationFee] = useState(false);
   const [hasMaxUses, setHasMaxUses] = useState(false);
   const [maxUses, setMaxUses] = useState<number>(100);
+  const [hasMaxUsesPerUser, setHasMaxUsesPerUser] = useState(false);
+  const [maxUsesPerUser, setMaxUsesPerUser] = useState<number>(1);
+  const [hasCourseScope, setHasCourseScope] = useState(false);
+  const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
   const [hasValidDates, setHasValidDates] = useState(false);
   const [validFrom, setValidFrom] = useState("");
   const [validUntil, setValidUntil] = useState("");
@@ -59,6 +64,11 @@ export function CreatePromoDialog({
       setWaiveRegistrationFee(Boolean(initialData.waive_registration_fee));
       setHasMaxUses(initialData.max_uses != null);
       setMaxUses(initialData.max_uses != null ? Number(initialData.max_uses) : 100);
+      setHasMaxUsesPerUser(initialData.max_uses_per_user != null);
+      setMaxUsesPerUser(initialData.max_uses_per_user != null ? Number(initialData.max_uses_per_user) : 1);
+      const courses = Array.isArray(initialData.applicable_course_ids) ? initialData.applicable_course_ids : [];
+      setHasCourseScope(courses.length > 0);
+      setSelectedCourseIds(courses);
       setHasValidDates(Boolean(initialData.valid_from || initialData.valid_until));
       setValidFrom(initialData.valid_from ? initialData.valid_from.substring(0, 10) : "");
       setValidUntil(initialData.valid_until ? initialData.valid_until.substring(0, 10) : "");
@@ -71,6 +81,10 @@ export function CreatePromoDialog({
       setWaiveRegistrationFee(false);
       setHasMaxUses(false);
       setMaxUses(100);
+      setHasMaxUsesPerUser(false);
+      setMaxUsesPerUser(1);
+      setHasCourseScope(false);
+      setSelectedCourseIds([]);
       setHasValidDates(false);
       setValidFrom("");
       setValidUntil("");
@@ -83,6 +97,12 @@ export function CreatePromoDialog({
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     const num = Math.floor(1000 + Math.random() * 9000);
     setCode(`${prefix}${num}`);
+  };
+
+  const toggleCourseSelection = (courseId: string) => {
+    setSelectedCourseIds((prev) =>
+      prev.includes(courseId) ? prev.filter((id) => id !== courseId) : [...prev, courseId]
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,6 +118,8 @@ export function CreatePromoDialog({
         discount_value: Number(discountValue),
         waive_registration_fee: waiveRegistrationFee,
         max_uses: hasMaxUses ? Number(maxUses) : null,
+        max_uses_per_user: hasMaxUsesPerUser ? Number(maxUsesPerUser) : null,
+        applicable_course_ids: hasCourseScope ? selectedCourseIds : [],
         valid_from: hasValidDates && validFrom ? new Date(validFrom).toISOString() : null,
         valid_until: hasValidDates && validUntil ? new Date(`${validUntil}T23:59:59Z`).toISOString() : null,
         is_active: isActive,
@@ -256,6 +278,75 @@ export function CreatePromoDialog({
                   value={maxUses}
                   onChange={(e) => setMaxUses(Number(e.target.value))}
                   placeholder="es. 50"
+                  className="text-xs font-mono font-bold"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Course Scope Selection */}
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-bold text-foreground">
+                  Ambito di applicazione
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {hasCourseScope ? "Applicabile solo ai corsi selezionati" : "Valido per tutti i corsi della scuola"}
+                </p>
+              </div>
+              <Switch
+                checked={hasCourseScope}
+                onCheckedChange={setHasCourseScope}
+              />
+            </div>
+            {hasCourseScope && (
+              <div className="pt-2 space-y-1.5 max-h-40 overflow-y-auto border rounded-md p-2 bg-background">
+                {coursesList.map((course: any) => {
+                  const isSelected = selectedCourseIds.includes(course.id);
+                  return (
+                    <div
+                      key={course.id}
+                      onClick={() => toggleCourseSelection(course.id)}
+                      className={`flex items-center justify-between p-1.5 rounded cursor-pointer text-xs transition-colors ${
+                        isSelected
+                          ? "bg-primary/10 text-primary font-medium"
+                          : "hover:bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      <span className="truncate">{course.nome || course.title || course.name}</span>
+                      <span className="text-[10px] font-mono">{isSelected ? "✓ Selezionato" : "+ Aggiungi"}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Max Uses Per User Limit */}
+          <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-bold text-foreground">
+                  Limite per singolo cliente
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {hasMaxUsesPerUser ? "Numero massimo di utilizzi per ogni cliente" : "Nessun limite per utente"}
+                </p>
+              </div>
+              <Switch
+                checked={hasMaxUsesPerUser}
+                onCheckedChange={setHasMaxUsesPerUser}
+              />
+            </div>
+            {hasMaxUsesPerUser && (
+              <div className="pt-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={maxUsesPerUser}
+                  onChange={(e) => setMaxUsesPerUser(Number(e.target.value))}
+                  placeholder="es. 1"
                   className="text-xs font-mono font-bold"
                 />
               </div>

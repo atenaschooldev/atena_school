@@ -7,7 +7,8 @@ import {
   IsIn,
   ValidateIf,
 } from 'class-validator';
-import { FormType, FormFieldConfig } from '@atena/api-types';
+import { Transform } from 'class-transformer';
+import { FormType, FormFieldConfig, parseFormType } from '@atena/api-types';
 
 export class CreateFormTemplateDto {
   @ApiProperty({ description: 'Название шаблона формы' })
@@ -21,6 +22,7 @@ export class CreateFormTemplateDto {
   description?: string | null;
 
   @ApiProperty({ enum: FormType, description: 'Тип формы' })
+  @Transform(({ value }) => parseFormType(value))
   @IsIn([FormType.BOOKING, FormType.CONTACT, FormType.TEST, FormType.CUSTOM])
   form_type: FormType;
 
@@ -65,6 +67,7 @@ export class UpdateFormTemplateDto {
 
   @ApiPropertyOptional({ enum: FormType, description: 'Тип формы' })
   @IsOptional()
+  @Transform(({ value }) => (value !== undefined ? parseFormType(value) : undefined))
   @IsIn([FormType.BOOKING, FormType.CONTACT, FormType.TEST, FormType.CUSTOM])
   form_type?: FormType;
 
@@ -98,6 +101,7 @@ export class UpdateFormTemplateDto {
 
 export class ResolveFormQueryDto {
   @ApiProperty({ enum: FormType, description: 'Тип формы' })
+  @Transform(({ value }) => parseFormType(value))
   @IsIn([FormType.BOOKING, FormType.CONTACT, FormType.TEST, FormType.CUSTOM])
   form_type: FormType;
 

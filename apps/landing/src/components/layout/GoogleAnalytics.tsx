@@ -23,15 +23,27 @@ import { captureUtmParams } from "@/lib/utm";
  * 2. Default state is configured based on user's saved preferences (denied by default).
  * 3. Dynamic updates: Updates consent dynamically when user accepts/declines cookies in the banner.
  */
-export default function GoogleAnalytics() {
+interface GoogleAnalyticsProps {
+  initialAnalytics?: {
+    gaId?: string;
+    gtmId?: string;
+    clarityId?: string;
+    metaPixelId?: string;
+  };
+}
+
+export default function GoogleAnalytics({ initialAnalytics }: GoogleAnalyticsProps = {}) {
   const [config, setConfig] = useState({
-    gaId: env.NEXT_PUBLIC_GA_ID,
-    gtmId: env.NEXT_PUBLIC_GTM_ID,
-    clarityId: env.NEXT_PUBLIC_CLARITY_ID,
+    gaId: initialAnalytics?.gaId || env.NEXT_PUBLIC_GA_ID,
+    gtmId: initialAnalytics?.gtmId || env.NEXT_PUBLIC_GTM_ID,
+    clarityId: initialAnalytics?.clarityId || env.NEXT_PUBLIC_CLARITY_ID,
   });
 
   useEffect(() => {
     captureUtmParams();
+    if (initialAnalytics?.gaId || initialAnalytics?.gtmId || initialAnalytics?.clarityId) {
+      return;
+    }
     fetch('/landing/settings/analytics')
       .then((res) => res.json())
       .then((data) => {
@@ -44,7 +56,7 @@ export default function GoogleAnalytics() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [initialAnalytics]);
 
   const GA_ID = config.gaId;
   const GTM_ID = config.gtmId;

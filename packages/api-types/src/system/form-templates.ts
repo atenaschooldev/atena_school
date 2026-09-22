@@ -19,10 +19,10 @@ import { DictionaryEntry } from '../common/dictionary';
 // ----------------------------------------------------------------------------
 
 export const FormType = {
-  BOOKING: 'booking',
-  CONTACT: 'contact',
-  TEST: 'test',
-  CUSTOM: 'custom',
+  BOOKING: 1,
+  CONTACT: 2,
+  TEST: 3,
+  CUSTOM: 4,
 } as const;
 export type FormType = (typeof FormType)[keyof typeof FormType];
 
@@ -62,11 +62,17 @@ export const FORM_TYPE_DICTIONARY: Record<FormType, DictionaryEntry> = {
 };
 
 export function parseFormType(val: any): FormType {
+  if (typeof val === 'number') {
+    if (val === 1) return FormType.BOOKING;
+    if (val === 2) return FormType.CONTACT;
+    if (val === 3) return FormType.TEST;
+    if (val === 4) return FormType.CUSTOM;
+  }
   const s = String(val || '').toLowerCase().trim();
-  if (s === 'booking') return FormType.BOOKING;
-  if (s === 'contact') return FormType.CONTACT;
-  if (s === 'test') return FormType.TEST;
-  if (s === 'custom') return FormType.CUSTOM;
+  if (s === '1' || s === 'booking') return FormType.BOOKING;
+  if (s === '2' || s === 'contact') return FormType.CONTACT;
+  if (s === '3' || s === 'test') return FormType.TEST;
+  if (s === '4' || s === 'custom') return FormType.CUSTOM;
   return FormType.BOOKING;
 }
 

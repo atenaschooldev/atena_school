@@ -6,6 +6,8 @@ export interface ValidatePromoCodeParams {
   coursePrice: number;
   registrationFee?: number;
   courseId?: string;
+  purchaserEmail?: string;
+  purchaserTaxCode?: string;
 }
 
 /**
@@ -41,6 +43,20 @@ export async function validatePromoCode(
     return { valid: false, error: 'Questo codice promozionale è scaduto' };
   }
 
+  // Check course scope restriction if configured
+  if (
+    Array.isArray(promo.applicable_course_ids) &&
+    promo.applicable_course_ids.length > 0
+  ) {
+    if (!params.courseId || !promo.applicable_course_ids.includes(params.courseId)) {
+      return {
+        valid: false,
+        error: 'Questo codice promozionale non è valido per il corso selezionato',
+      };
+    }
+  }
+
+  // Check global max uses limit
   if (promo.max_uses != null && Number(promo.max_uses) > 0) {
     const { count: actualUses } = await supabase
       .from('bookings')
@@ -50,6 +66,38 @@ export async function validatePromoCode(
 
     if (actualUses != null && actualUses >= Number(promo.max_uses)) {
       return { valid: false, error: 'Limite di utilizzi per questo codice promozionale raggiunto' };
+    }
+  }
+
+  // Check per-user max uses limit if user identifier is provided
+  if (
+    promo.max_uses_per_user != null &&
+    Number(promo.max_uses_per_user) > 0 &&
+    (params.purchaserEmail || params.purchaserTaxCode)
+  ) {
+    let userQuery = supabase
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .ilike('promo_code', cleanCode)
+      .neq('booking_status', 3);
+
+    if (params.purchaserEmail && params.purchaserTaxCode) {
+      userQuery = userQuery.or(
+        `purchaser_email.eq.${params.purchaserEmail.trim().toLowerCase()},purchaser_tax_code.ilike.${params.purchaserTaxCode.trim()}`
+      );
+    } else if (params.purchaserEmail) {
+      userQuery = userQuery.eq('purchaser_email', params.purchaserEmail.trim().toLowerCase());
+    } else if (params.purchaserTaxCode) {
+      userQuery = userQuery.ilike('purchaser_tax_code', params.purchaserTaxCode.trim());
+    }
+
+    const { count: userUses } = await userQuery;
+
+    if (userUses != null && userUses >= Number(promo.max_uses_per_user)) {
+      return {
+        valid: false,
+        error: 'Hai già raggiunto il limite di utilizzi per questo codice promozionale',
+      };
     }
   }
 

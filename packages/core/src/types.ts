@@ -91,6 +91,10 @@ export interface SupabaseCourseRow {
   subscription_price?: number | string | null;
   stripe_monthly_price_id?: string | null;
   category?: string | null;
+  category_id?: string | null;
+  settings_id?: string | null;
+  settingsId?: string | null;
+  settings?: any | null;
   slug?: string | null;
   updated_at?: string | null;
 }

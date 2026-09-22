@@ -60,22 +60,24 @@ export function CorsiView() {
   ]);
 
   const categories = useMemo(() => {
-    const set = new Set<string>();
+    const map = new Map<string, string>();
     coursesList.forEach((c) => {
-      if (c.categoria) set.add(c.categoria);
+      if (c.categoria) {
+        map.set(c.categoria, c.categoryName || formatCategoryLabel(c.categoria, t));
+      }
     });
-    return Array.from(set);
-  }, [coursesList]);
+    return Array.from(map.entries()).map(([value, label]) => ({ value, label }));
+  }, [coursesList, t]);
 
   const filteredCourses = useMemo(() => {
     return coursesList.filter((c) => {
       const q = searchQuery.toLowerCase().trim();
       if (q) {
         const matchName = (c.nome || "").toLowerCase().includes(q);
-        const matchCat = (c.categoria || "").toLowerCase().includes(q);
+        const matchCat = (c.categoria || "").toLowerCase().includes(q) || (c.categoryName || "").toLowerCase().includes(q);
         if (!matchName && !matchCat) return false;
       }
-      if (categoryFilter !== "all" && c.categoria !== categoryFilter) return false;
+      if (categoryFilter !== "all" && c.categoria !== categoryFilter && c.categoryId !== categoryFilter) return false;
       if (statusFilter !== "all" && (c.stato || "attivo") !== statusFilter) return false;
       if (formatFilter !== "all" && c.courseFormat !== formatFilter) return false;
       return true;
@@ -119,7 +121,7 @@ export function CorsiView() {
               placeholder: t("courses.language"),
               options: [
                 { value: "all", label: t("courses.allCategories") },
-                ...categories.map((cat) => ({ value: cat, label: cat })),
+                ...categories,
               ],
             },
             {

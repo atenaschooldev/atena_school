@@ -30,7 +30,7 @@ const nunito = Nunito({
 });
 
 import { env } from '@/config/env';
-import { getSchoolProfile } from '@atena/core';
+import { getAnalyticsCredentials, getSchoolProfile } from '@atena/core';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
@@ -101,9 +101,17 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const messages = await getMessages();
   const supabase = getSupabaseAdmin();
-  const school = await getSchoolProfile(supabase);
+  const [messages, school, analytics] = await Promise.all([
+    getMessages(),
+    getSchoolProfile(supabase),
+    getAnalyticsCredentials(supabase as any).catch(() => ({
+      gaId: process.env.NEXT_PUBLIC_GA_ID || '',
+      gtmId: process.env.NEXT_PUBLIC_GTM_ID || '',
+      clarityId: process.env.NEXT_PUBLIC_CLARITY_ID || '',
+      metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || '',
+    })),
+  ]);
 
   return (
     <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`} data-scroll-behavior="smooth">
@@ -154,7 +162,7 @@ export default async function RootLayout({
             </div>
             <ScrollToTop />
             <Toaster position="top-right" richColors />
-            <GoogleAnalytics />
+            <GoogleAnalytics initialAnalytics={analytics} />
           </ScrollAnimateProvider>
         </NextIntlClientProvider>
       </body>

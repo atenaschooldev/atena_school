@@ -22,12 +22,35 @@ import {
   DynamicCustomFields,
 } from "@/features/checkout/components";
 import { BillingScheme, FormFieldTarget } from "@atena/api-types";
+import type { InitialCheckoutData } from "@/features/checkout/hooks/useCheckout";
 
 interface CheckoutViewProps {
   id: string;
+  initialCourse?: any;
+  initialUser?: any;
+  initialSchoolProfile?: any;
+  initialSettings?: any;
+  initialFormTemplate?: any;
+  initialData?: InitialCheckoutData;
 }
 
-export function CheckoutView({ id }: CheckoutViewProps) {
+export function CheckoutView({
+  id,
+  initialCourse,
+  initialUser,
+  initialSchoolProfile,
+  initialSettings,
+  initialFormTemplate,
+  initialData,
+}: CheckoutViewProps) {
+  const mergedInitialData: InitialCheckoutData = {
+    item: initialCourse || initialData?.item,
+    schoolProfile: initialSchoolProfile || initialData?.schoolProfile,
+    settings: initialSettings || initialData?.settings,
+    formTemplate: initialFormTemplate || initialData?.formTemplate,
+    user: initialUser || initialData?.user,
+  };
+
   const {
     formMethods,
     item,
@@ -118,12 +141,12 @@ export function CheckoutView({ id }: CheckoutViewProps) {
   const totalPrice = Math.max(0, totalCoursePrice + totalRegistrationFees - discountAmount);
   const title = item?.title_it || item?.name || "Corso Atena School";
 
-  const formatCategoryName = (cat?: string): string => {
+  const formatCategoryName = (cat?: string | number | null): string => {
     if (!cat) return "";
     const lower = String(cat).toLowerCase();
-    if (lower === "languages" || lower === "language") return "Corsi di Lingua";
-    if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
-    if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
+    if (lower === "languages" || lower === "language" || lower === "1") return "Corsi di Lingua";
+    if (lower === "academic" || lower === "recupero" || lower === "2") return "Recupero Scolastico";
+    if (lower === "certipass" || lower === "eipass" || lower === "3") return "Certificazioni EIPASS";
     return String(cat);
   };
 

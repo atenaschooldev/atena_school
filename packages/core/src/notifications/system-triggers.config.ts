@@ -1,4 +1,4 @@
-import { NotificationChannel, RecipientType } from '@atena/api-types';
+import { NotificationChannel, RecipientType, TriggerTimingType } from '@atena/api-types';
 
 export interface SystemTriggerDefinition {
   id: string;
@@ -10,7 +10,7 @@ export interface SystemTriggerDefinition {
   recipient_type: RecipientType | 4; // 1: CUSTOMER, 2: ADMIN, 3: TEACHER, 4: CUSTOM
   custom_recipient?: string | null;
   conditions?: Record<string, any> | null;
-  timing_type: 'immediate' | 'delayed' | 'before_event';
+  timing_type: TriggerTimingType;
   delay_seconds: number;
   is_active: boolean;
 }
@@ -25,7 +25,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'payment_receipt_customer',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.CUSTOMER,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -37,7 +37,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'telegram_booking_alert',
     channel: NotificationChannel.TELEGRAM,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -49,7 +49,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'booking_alert_admin',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -63,7 +63,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'booking_confirmation_customer',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.CUSTOMER,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -75,7 +75,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'telegram_booking_alert',
     channel: NotificationChannel.TELEGRAM,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -87,7 +87,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'booking_alert_admin',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -101,7 +101,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'telegram_lead_alert',
     channel: NotificationChannel.TELEGRAM,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -113,7 +113,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'contact_lead_admin',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.ADMIN,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -127,7 +127,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'booking_cancellation_customer',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.CUSTOMER,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },
@@ -141,7 +141,7 @@ export const SYSTEM_TRIGGERS: SystemTriggerDefinition[] = [
     template_code: 'membership_card_customer',
     channel: NotificationChannel.EMAIL,
     recipient_type: RecipientType.CUSTOMER,
-    timing_type: 'immediate',
+    timing_type: TriggerTimingType.IMMEDIATE,
     delay_seconds: 0,
     is_active: true,
   },

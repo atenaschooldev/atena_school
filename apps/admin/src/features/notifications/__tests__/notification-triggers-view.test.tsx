@@ -2,7 +2,7 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { NotificationTriggersView } from "../components/notification-triggers-view";
-import { NotificationChannel, RecipientType } from "@atena/api-types";
+import { NotificationChannel, RecipientType, TriggerTimingType } from "@atena/api-types";
 import { LanguageProvider } from "@/i18n/context";
 
 const mockUseNotificationTriggers = vi.fn();
@@ -26,10 +26,11 @@ describe("Admin Notifications - NotificationTriggersView Component Strict Tests"
       id: "trg-1",
       name: "Ricevuta Pagamento Stripe",
       event_key: "booking.created_stripe",
+      notification_template_id: "tmpl-1",
       template_id: "tmpl-1",
       channel: NotificationChannel.EMAIL,
       recipient_type: RecipientType.CUSTOMER,
-      timing_type: "immediate",
+      timing_type: TriggerTimingType.IMMEDIATE,
       delay_seconds: 0,
       conditions: {},
       is_active: true,
@@ -39,10 +40,11 @@ describe("Admin Notifications - NotificationTriggersView Component Strict Tests"
       id: "trg-2",
       name: "Alert Telegram Segreteria",
       event_key: "booking.created_stripe",
+      notification_template_id: "tmpl-2",
       template_id: "tmpl-2",
       channel: NotificationChannel.TELEGRAM,
       recipient_type: RecipientType.ADMIN,
-      timing_type: "delayed",
+      timing_type: TriggerTimingType.DELAYED,
       delay_seconds: 300,
       conditions: { min_amount: 50 },
       is_active: false,

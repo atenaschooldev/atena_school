@@ -70,6 +70,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
 
   // Dynamic template resolution
   useEffect(() => {
+    if (!isOpen) return;
     let isMounted = true;
     async function loadTemplate() {
       try {
@@ -86,7 +87,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isOpen]);
   // Disable body scroll when modal is open, compensating for scrollbar width to prevent layout shift
   useEffect(() => {
     if (isOpen) {

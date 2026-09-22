@@ -374,6 +374,7 @@ export class NotificationsService {
         compiledHtml,
         compiledHtml,
         template.notification_type || NotificationType.BOOKING_CONFIRMATION,
+        { notificationTemplateId: template.id },
       );
 
       if (!emailRes.success) {
@@ -409,6 +410,7 @@ export class NotificationsService {
         undefined,
         template.notification_type || NotificationType.BOOKING_CONFIRMATION,
         customChat,
+        { notificationTemplateId: template.id },
       );
 
       if (!tgRes.success) {
@@ -431,6 +433,8 @@ export class NotificationsService {
     channel?: number;
     status?: number;
     search?: string;
+    notification_trigger_id?: string;
+    notification_template_id?: string;
   }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
     const page = Math.max(1, Number(filters?.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(filters?.limit) || 20));
@@ -447,6 +451,12 @@ export class NotificationsService {
     }
     if (filters?.status) {
       query = query.eq('status', Number(filters.status));
+    }
+    if (filters?.notification_trigger_id) {
+      query = query.eq('notification_trigger_id', filters.notification_trigger_id);
+    }
+    if (filters?.notification_template_id) {
+      query = query.eq('notification_template_id', filters.notification_template_id);
     }
     if (filters?.search && filters.search.trim()) {
       const s = filters.search.trim();

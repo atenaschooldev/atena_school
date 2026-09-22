@@ -35,6 +35,16 @@ export class CreatePromoCodeDto {
   @Type(() => Number)
   max_uses?: number | null;
 
+  @ApiPropertyOptional({ example: 1, description: 'Numero massimo di utilizzi per singolo utente (null = illimitato)' })
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  max_uses_per_user?: number | null;
+
+  @ApiPropertyOptional({ example: ['123e4567-e89b-12d3-a456-426614174000'], description: 'Corsi a cui è applicabile (vuoto = tutti)' })
+  @IsOptional()
+  applicable_course_ids?: string[];
+
   @ApiPropertyOptional({ example: '2026-06-01T00:00:00Z', description: 'Data di inizio validità' })
   @IsString()
   @IsOptional()
@@ -85,6 +95,16 @@ export class UpdatePromoCodeDto {
   @IsOptional()
   @Type(() => Number)
   max_uses?: number | null;
+
+  @ApiPropertyOptional({ example: 1 })
+  @IsInt()
+  @IsOptional()
+  @Type(() => Number)
+  max_uses_per_user?: number | null;
+
+  @ApiPropertyOptional({ example: ['123e4567-e89b-12d3-a456-426614174000'] })
+  @IsOptional()
+  applicable_course_ids?: string[];
 
   @ApiPropertyOptional({ example: '2026-06-01T00:00:00Z' })
   @IsString()

@@ -6,6 +6,8 @@ import {
   UpdateNotificationTriggerDto,
   SYSTEM_EVENTS_REGISTRY,
   SystemEventDefinition,
+  TriggerTimingType,
+  parseTriggerTimingType,
 } from '@atena/api-types';
 
 import { SYSTEM_TRIGGERS } from '@atena/core';
@@ -36,12 +38,14 @@ export class NotificationTriggersService {
 
     return SYSTEM_TRIGGERS.map((st) => {
       const tmpl = templateMap.get(st.template_code);
+      const tmplId = tmpl?.id || st.template_code;
       return {
         id: st.id,
         name: st.name,
         description: st.description,
         event_key: st.event_key,
-        template_id: tmpl?.id || st.template_code,
+        notification_template_id: tmplId,
+        template_id: tmplId,
         template: tmpl
           ? {
               id: tmpl.id,
@@ -92,17 +96,22 @@ export class NotificationTriggersService {
   }
 
   async create(dto: CreateNotificationTriggerDto): Promise<NotificationTriggerRecord> {
+    const templateId = dto.notification_template_id || dto.template_id;
+    if (!templateId) {
+      throw new Error('notification_template_id is required');
+    }
+
     const created = await this.prisma.notification_triggers.create({
       data: {
         name: dto.name,
         description: dto.description,
         eventKey: dto.event_key,
-        templateId: dto.template_id,
+        notificationTemplateId: templateId,
         channel: dto.channel,
         recipientType: dto.recipient_type,
         customRecipient: dto.custom_recipient,
         conditions: dto.conditions || {},
-        timingType: dto.timing_type || 'immediate',
+        timingType: dto.timing_type !== undefined ? parseTriggerTimingType(dto.timing_type) : TriggerTimingType.IMMEDIATE,
         delaySeconds: dto.delay_seconds || 0,
         isActive: dto.is_active !== undefined ? dto.is_active : true,
       },
@@ -120,18 +129,20 @@ export class NotificationTriggersService {
       throw new NotFoundException(`Trigger with ID "${id}" not found`);
     }
 
+    const templateId = dto.notification_template_id || dto.template_id;
+
     const updated = await this.prisma.notification_triggers.update({
       where: { id },
       data: {
         name: dto.name !== undefined ? dto.name : undefined,
         description: dto.description !== undefined ? dto.description : undefined,
         eventKey: dto.event_key !== undefined ? dto.event_key : undefined,
-        templateId: dto.template_id !== undefined ? dto.template_id : undefined,
+        notificationTemplateId: templateId !== undefined ? templateId : undefined,
         channel: dto.channel !== undefined ? dto.channel : undefined,
         recipientType: dto.recipient_type !== undefined ? dto.recipient_type : undefined,
         customRecipient: dto.custom_recipient !== undefined ? dto.custom_recipient : undefined,
         conditions: dto.conditions !== undefined ? dto.conditions : undefined,
-        timingType: dto.timing_type !== undefined ? dto.timing_type : undefined,
+        timingType: dto.timing_type !== undefined ? parseTriggerTimingType(dto.timing_type) : undefined,
         delaySeconds: dto.delay_seconds !== undefined ? dto.delay_seconds : undefined,
         isActive: dto.is_active !== undefined ? dto.is_active : undefined,
       },
@@ -158,12 +169,14 @@ export class NotificationTriggersService {
   }
 
   private mapToRecord(r: any): NotificationTriggerRecord {
+    const tmplId = r.notificationTemplateId || r.templateId;
     return {
       id: r.id,
       name: r.name,
       description: r.description,
       event_key: r.eventKey,
-      template_id: r.templateId,
+      notification_template_id: tmplId,
+      template_id: tmplId,
       template: r.template
         ? {
             id: r.template.id,
@@ -189,7 +202,7 @@ export class NotificationTriggersService {
       recipient_type: r.recipientType,
       custom_recipient: r.customRecipient,
       conditions: r.conditions,
-      timing_type: r.timingType as any,
+      timing_type: r.timingType,
       delay_seconds: r.delaySeconds,
       is_active: r.isActive,
       created_at: r.createdAt.toISOString(),

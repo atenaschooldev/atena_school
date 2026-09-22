@@ -6,6 +6,8 @@ import {
   NotificationType,
   NotificationTemplateRecord,
   RecipientType,
+  TriggerTimingType,
+  parseTriggerTimingType,
 } from '@atena/api-types';
 import { formatCourseScheduleText } from '@atena/utils';
 import {
@@ -59,6 +61,8 @@ export interface NotificationLogData {
   recipient: string;
   subject?: string | null;
   status: NotificationStatus;
+  notificationTriggerId?: string | null;
+  notificationTemplateId?: string | null;
   userId?: string | null;
   bookingId?: string | null;
   payload?: any;
@@ -77,6 +81,8 @@ export async function logNotification(
       notification_type: data.type,
       recipient: data.recipient,
       subject: data.subject || null,
+      notification_trigger_id: data.notificationTriggerId || null,
+      notification_template_id: data.notificationTemplateId || null,
       request: {
         payload: data.payload || null,
         userId: data.userId || null,
@@ -190,8 +196,20 @@ export async function sendTelegramMessage(params: {
   inlineKeyboard?: Array<Array<{ text: string; url?: string; callback_data?: string }>>;
   bookingId?: string | null;
   notificationType?: NotificationType;
+  notificationTriggerId?: string | null;
+  notificationTemplateId?: string | null;
 }): Promise<{ success: boolean; messageId?: number; error?: string }> {
-  const { supabase, text, botToken, chatId, inlineKeyboard, bookingId, notificationType } = params;
+  const {
+    supabase,
+    text,
+    botToken,
+    chatId,
+    inlineKeyboard,
+    bookingId,
+    notificationType,
+    notificationTriggerId,
+    notificationTemplateId,
+  } = params;
   let token = botToken;
   let chat = chatId;
 
@@ -239,6 +257,8 @@ export async function sendTelegramMessage(params: {
           recipient: chat,
           subject: 'Telegram Notification',
           status: NotificationStatus.FAILED,
+          notificationTriggerId: notificationTriggerId || null,
+          notificationTemplateId: notificationTemplateId || null,
           bookingId: bookingId || null,
           error: errText,
           provider: 'telegram',
@@ -257,6 +277,8 @@ export async function sendTelegramMessage(params: {
         recipient: chat,
         subject: 'Telegram Notification',
         status: NotificationStatus.SENT,
+        notificationTriggerId: notificationTriggerId || null,
+        notificationTemplateId: notificationTemplateId || null,
         bookingId: bookingId || null,
         messageId: messageId ? String(messageId) : undefined,
         provider: 'telegram',
@@ -272,6 +294,8 @@ export async function sendTelegramMessage(params: {
         recipient: chat,
         subject: 'Telegram Notification',
         status: NotificationStatus.FAILED,
+        notificationTriggerId: notificationTriggerId || null,
+        notificationTemplateId: notificationTemplateId || null,
         bookingId: bookingId || null,
         error: err?.message || 'Network error',
         provider: 'telegram',
@@ -457,13 +481,14 @@ export async function processNotificationTriggers(
       name: string;
       description?: string | null;
       event_key: string;
+      notification_template_id?: string;
       template_code?: string;
       template?: NotificationTemplateRecord | null;
       channel: NotificationChannel;
       recipient_type: number;
       custom_recipient?: string | null;
       conditions?: Record<string, any> | null;
-      timing_type?: string;
+      timing_type?: TriggerTimingType | number;
       delay_seconds?: number;
       is_active: boolean;
     }> = [];
@@ -482,13 +507,14 @@ export async function processNotificationTriggers(
           name: r.name,
           description: r.description,
           event_key: r.event_key,
+          notification_template_id: r.notification_template_id || r.template_id,
           template_code: r.template?.code,
           template: r.template || null,
           channel: (Number(r.channel) || NotificationChannel.EMAIL) as NotificationChannel,
           recipient_type: (Number(r.recipient_type) || RecipientType.CUSTOMER) as RecipientType,
           custom_recipient: r.custom_recipient || null,
           conditions: r.conditions || null,
-          timing_type: r.timing_type || 'immediate',
+          timing_type: parseTriggerTimingType(r.timing_type),
           delay_seconds: r.delay_seconds || 0,
           is_active: r.is_active,
         }));
@@ -589,6 +615,8 @@ export async function processNotificationTriggers(
             recipient,
             subject,
             status: res.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+            notificationTriggerId: trigger.id || null,
+            notificationTemplateId: template?.id || null,
             bookingId: payload.booking_id || null,
             provider: 'resend',
             messageId: res.messageId || null,
@@ -646,6 +674,8 @@ export async function processNotificationTriggers(
             inlineKeyboard,
             bookingId: payload.booking_id || null,
             notificationType: notifType,
+            notificationTriggerId: trigger.id || null,
+            notificationTemplateId: template?.id || null,
           });
         }
       }

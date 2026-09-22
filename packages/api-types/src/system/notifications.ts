@@ -460,18 +460,70 @@ export const SYSTEM_EVENTS_REGISTRY: Record<string, SystemEventDefinition> = {
   },
 };
 
+// ----------------------------------------------------------------------------
+// 3c. Trigger Timing Types
+// ----------------------------------------------------------------------------
+
+export const TriggerTimingType = {
+  IMMEDIATE: 1,    // Send immediately upon event
+  DELAYED: 2,      // Send after delay_seconds
+  BEFORE_EVENT: 3, // Send before event start
+} as const;
+export type TriggerTimingType = (typeof TriggerTimingType)[keyof typeof TriggerTimingType];
+
+export const TRIGGER_TIMING_TYPE_DICTIONARY: Record<TriggerTimingType, DictionaryEntry> = {
+  [TriggerTimingType.IMMEDIATE]: {
+    id: 1,
+    code: 'IMMEDIATE',
+    label_it: 'Immediato',
+    label_en: 'Immediate',
+    label_ru: 'Мгновенно',
+    description: 'Invio immediato al verificarsi dell\'evento',
+  },
+  [TriggerTimingType.DELAYED]: {
+    id: 2,
+    code: 'DELAYED',
+    label_it: 'Ritardato',
+    label_en: 'Delayed',
+    label_ru: 'С задержкой',
+    description: 'Invio ritardato di N minuti/secondi',
+  },
+  [TriggerTimingType.BEFORE_EVENT]: {
+    id: 3,
+    code: 'BEFORE_EVENT',
+    label_it: 'Prima dell\'evento',
+    label_en: 'Before Event',
+    label_ru: 'До события',
+    description: 'Invio programmato prima dell\'inizio dell\'evento',
+  },
+};
+
+export function parseTriggerTimingType(val: any): TriggerTimingType {
+  if (typeof val === 'number') {
+    if (val >= 1 && val <= 3) return val as TriggerTimingType;
+    return TriggerTimingType.IMMEDIATE;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'immediate' || s === 'instant') return TriggerTimingType.IMMEDIATE;
+  if (s === '2' || s === 'delayed') return TriggerTimingType.DELAYED;
+  if (s === '3' || s === 'before_event' || s === 'before') return TriggerTimingType.BEFORE_EVENT;
+  return TriggerTimingType.IMMEDIATE;
+}
+
 export interface NotificationTriggerRecord {
   id: string;
   name: string;
   description?: string | null;
   event_key: string;
-  template_id: string;
+  notification_template_id: string;
+  /** @deprecated Use notification_template_id instead */
+  template_id?: string;
   template?: NotificationTemplateRecord;
   channel: NotificationChannel;
   recipient_type: RecipientType | 4; // 1: CUSTOMER, 2: ADMIN, 3: TEACHER, 4: CUSTOM
   custom_recipient?: string | null;
   conditions?: Record<string, any> | null;
-  timing_type: 'immediate' | 'delayed' | 'before_event';
+  timing_type: TriggerTimingType;
   delay_seconds: number;
   is_active: boolean;
   created_at: string;
@@ -482,12 +534,14 @@ export interface CreateNotificationTriggerDto {
   name: string;
   description?: string;
   event_key: string;
-  template_id: string;
+  notification_template_id?: string;
+  /** @deprecated Use notification_template_id instead */
+  template_id?: string;
   channel: NotificationChannel;
   recipient_type: number;
   custom_recipient?: string;
   conditions?: Record<string, any>;
-  timing_type?: string;
+  timing_type?: TriggerTimingType | number | string;
   delay_seconds?: number;
   is_active?: boolean;
 }
@@ -496,12 +550,14 @@ export interface UpdateNotificationTriggerDto {
   name?: string;
   description?: string;
   event_key?: string;
+  notification_template_id?: string;
+  /** @deprecated Use notification_template_id instead */
   template_id?: string;
   channel?: NotificationChannel;
   recipient_type?: number;
   custom_recipient?: string;
   conditions?: Record<string, any>;
-  timing_type?: string;
+  timing_type?: TriggerTimingType | number | string;
   delay_seconds?: number;
   is_active?: boolean;
 }
@@ -542,5 +598,8 @@ export interface NotificationLog {
   request: Record<string, any>;
   response?: Record<string, any> | null;
   status: NotificationStatus;
+  notification_trigger_id?: string | null;
+  notification_template_id?: string | null;
 }
+
 

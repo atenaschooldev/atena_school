@@ -13,6 +13,7 @@ import { useTranslation } from "@/i18n/context";
 import {
   NotificationChannel,
   RecipientType,
+  TriggerTimingType,
   NOTIFICATION_CHANNEL_DICTIONARY,
 } from "@atena/api-types";
 import type { NotificationTriggerRecord } from "@atena/api-types";
@@ -212,7 +213,9 @@ export function NotificationTriggersView() {
                         {getChannelLabel(trg.channel)}
                       </span>
                       <Badge variant="outline" className="text-[10px] font-mono">
-                        {trg.timing_type === "delayed" ? `⏳ +${Math.round(trg.delay_seconds / 60)}m` : "⚡ Immediato"}
+                        {trg.timing_type === TriggerTimingType.DELAYED || (trg.timing_type as any) === "delayed"
+                          ? `⏳ +${Math.round(trg.delay_seconds / 60)}m`
+                          : "⚡ Immediato"}
                       </Badge>
                     </div>
 
@@ -220,7 +223,7 @@ export function NotificationTriggersView() {
                       <div className="p-1.5 rounded-md bg-background border flex-1 min-w-0">
                         <span className="text-[10px] text-muted-foreground block truncate">{t("notifications.stepTemplate") || "Modello:"}</span>
                         <strong className="text-xs font-semibold text-foreground truncate block">
-                          {trg.template?.name || "Template ID: " + trg.template_id}
+                          {trg.template?.name || "Template ID: " + (trg.notification_template_id || trg.template_id)}
                         </strong>
                       </div>
 

@@ -43,10 +43,17 @@ function calcEndTime(startTime: string, durationMin: number): string {
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+export interface CourseCategoryOption {
+  id: string;
+  slug: string;
+  name: string;
+}
+
 export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: CourseFormProps) {
   const { t } = useTranslation();
   const [form, setForm] = useState<CourseFormValues>(initialValues);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [categories, setCategories] = useState<CourseCategoryOption[]>([]);
   const [slugManual, setSlugManual] = useState(!!initialValues.slug);
 
   const STATUS_OPTIONS = [
@@ -74,7 +81,25 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
         }
       })
       .catch(() => {});
+
+    api.get<CourseCategoryOption[]>("/admin/courses/categories")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setCategories(data);
+        }
+      })
+      .catch(() => {});
+
+    api.get<any[]>("/admin/courses/settings")
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setSettingsPresets(data);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  const [settingsPresets, setSettingsPresets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!slugManual && form.nome) {
@@ -98,12 +123,56 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     });
   };
 
-  // ─── Derived flags ────────────────────────────────────────────────────────
-  const fmt = form.courseFormat || "group";
-  const isGroup = fmt === "group";
-  const isPrivate = fmt === "private";
-  const isCertification = fmt === "certification";
-  const isFixed = isGroup && form.scheduleType === "fixed";
+  // ─── Derived flags & Delivery Mode ───────────────────────────────────────
+  const currentDeliveryMode = Number(form.deliveryMode ?? (
+    form.courseFormat === "certification" || form.courseFormat === 4 ? 4 :
+    form.scheduleType === "flexible" || form.scheduleType === 2 || form.courseFormat === "private" || form.courseFormat === 2 ? 2 : 1
+  ));
+
+  const isFixed = currentDeliveryMode === 1;
+  const isFlexible = currentDeliveryMode === 2;
+  const isCertification = currentDeliveryMode === 4;
+
+  const setDeliveryMode = (mode: number) => {
+    setForm((prev) => ({
+      ...prev,
+      deliveryMode: mode,
+      courseFormat: mode === 4 ? "certification" : (mode === 2 ? "private" : "group"),
+      scheduleType: mode === 1 ? "fixed" : "flexible",
+      scheduleDays: mode === 1 ? prev.scheduleDays : [],
+      startTime: mode === 1 ? prev.startTime : "",
+      endTime: mode === 1 ? prev.endTime : "",
+      totalLessons: mode === 2 ? (prev.totalLessons || 10) : null,
+      totalHours: mode === 4 ? (prev.totalHours || 30) : null,
+      lessonDurationMinutes: mode === 4 ? null : (prev.lessonDurationMinutes || (mode === 1 ? 75 : 60)),
+    }));
+  };
+
+  const handlePresetChange = (presetId: string) => {
+    if (presetId === "custom") {
+      setForm((f) => ({ ...f, settingsId: null }));
+      return;
+    }
+    const preset = settingsPresets.find((p) => p.id === presetId);
+    if (!preset) return;
+    const mode = Number(preset.deliveryMode || preset.delivery_mode || 1);
+    const dayIndices: number[] = Array.isArray(preset.scheduleDays || preset.schedule_days) ? (preset.scheduleDays || preset.schedule_days) : [];
+    const mappedDays = dayIndices.map((d: number) => DAYS_OF_WEEK[d - 1]?.key || String(d));
+    setForm((f) => ({
+      ...f,
+      settingsId: preset.id,
+      deliveryMode: mode,
+      courseFormat: mode === 4 ? "certification" : (mode === 2 ? "private" : "group"),
+      scheduleType: mode === 1 ? "fixed" : "flexible",
+      scheduleDays: mappedDays.length > 0 ? mappedDays : f.scheduleDays,
+      startTime: preset.startTime || preset.start_time || "",
+      endTime: preset.endTime || preset.end_time || "",
+      lessonDurationMinutes: preset.lessonDurationMinutes ?? preset.lesson_duration_minutes ?? null,
+      lessonsPerWeek: preset.lessonsPerWeek ?? preset.lessons_per_week ?? null,
+      totalLessons: preset.totalLessons ?? preset.total_lessons ?? null,
+      totalHours: preset.totalHours ?? preset.total_hours ?? null,
+    }));
+  };
 
   function updateStartTime(start: string) {
     const dur = form.lessonDurationMinutes;
@@ -116,6 +185,45 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     const end = isFixed && start && min ? calcEndTime(start, min) : form.endTime;
     setForm((f) => ({ ...f, lessonDurationMinutes: min, endTime: end }));
   }
+
+  const primaryTeacherId = form.insegnanteIds[0] || "none";
+  const assistantTeacherId = form.insegnanteIds[1] || "none";
+
+  const handlePrimaryTeacherChange = (id: string) => {
+    setForm((f) => {
+      const currentAssistant = f.insegnanteIds[1];
+      if (id === "none") {
+        return { ...f, insegnanteIds: currentAssistant ? [currentAssistant] : [] };
+      }
+      const newIds = [id];
+      if (currentAssistant && currentAssistant !== id) {
+        newIds.push(currentAssistant);
+      }
+      return { ...f, insegnanteIds: newIds };
+    });
+  };
+
+  const handleAssistantTeacherChange = (id: string) => {
+    setForm((f) => {
+      const currentPrimary = f.insegnanteIds[0];
+      if (id === "none") {
+        return { ...f, insegnanteIds: currentPrimary ? [currentPrimary] : [] };
+      }
+      if (!currentPrimary || currentPrimary === "none") {
+        return { ...f, insegnanteIds: [id] };
+      }
+      return { ...f, insegnanteIds: [currentPrimary, id] };
+    });
+  };
+
+  const handleCategoryChange = (catVal: string) => {
+    const matchCat = categories.find((c) => c.id === catVal || c.slug === catVal);
+    if (matchCat) {
+      setForm((f) => ({ ...f, categoryId: matchCat.id, categoria: matchCat.slug }));
+    } else {
+      setForm((f) => ({ ...f, categoria: catVal }));
+    }
+  };
 
   // ─── Styles ───────────────────────────────────────────────────────────────
   const L = "text-xs font-bold text-foreground uppercase tracking-wider block mb-1.5";
@@ -163,49 +271,73 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
             className="h-9 text-xs rounded-xl" />
         </div>
 
-        {/* ── Categoria + Formato ── */}
+        {/* ── Categoria + Modalità di Erogazione ── */}
         <div>
           <Label className={L}>{t("courses.allCategories")}</Label>
-          <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v })}>
+          <Select
+            value={form.categoryId || form.categoria || "languages"}
+            onValueChange={handleCategoryChange}
+          >
             <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
               <SelectValue placeholder={t("courses.allCategories")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="languages" className="cursor-pointer">{t("courses.categories.languages")}</SelectItem>
-              <SelectItem value="academic" className="cursor-pointer">{t("courses.categories.academic")}</SelectItem>
-              <SelectItem value="Certipass" className="cursor-pointer">{t("courses.categories.certipass")}</SelectItem>
-              <SelectItem value="other" className="cursor-pointer">{t("courses.categories.general")}</SelectItem>
+              {categories.length > 0 ? (
+                categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id} className="cursor-pointer">
+                    {c.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <>
+                  <SelectItem value="languages" className="cursor-pointer">{t("courses.categories.languages")}</SelectItem>
+                  <SelectItem value="academic" className="cursor-pointer">{t("courses.categories.academic")}</SelectItem>
+                  <SelectItem value="Certipass" className="cursor-pointer">{t("courses.categories.certipass")}</SelectItem>
+                  <SelectItem value="other" className="cursor-pointer">{t("courses.categories.general")}</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label className={L}>{t("courses.format")} *</Label>
-          <Select value={fmt}
-            onValueChange={(f) => {
-              setForm((prev) => ({
-                ...prev,
-                courseFormat: f,
-                scheduleType: f === "group" ? (prev.scheduleType || "fixed") : "flexible",
-                scheduleDays: f === "group" ? prev.scheduleDays : [],
-                startTime: f === "group" ? prev.startTime : "",
-                endTime: f === "group" ? prev.endTime : "",
-                lessonsPerWeek: f === "group" ? prev.lessonsPerWeek : null,
-                totalLessons: f === "private" ? prev.totalLessons : null,
-                totalHours: f === "certification" ? prev.totalHours : null,
-                lessonDurationMinutes: f === "certification" ? null : prev.lessonDurationMinutes,
-              }));
-            }}>
+          <Label className={L}>Modalità di Erogazione (Settings) *</Label>
+          <Select
+            value={String(currentDeliveryMode)}
+            onValueChange={(val) => setDeliveryMode(Number(val))}
+          >
             <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder={t("courses.format")} />
+              <SelectValue placeholder="Seleziona modalità..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="group" className="cursor-pointer">{t("courses.group")}</SelectItem>
-              <SelectItem value="private" className="cursor-pointer">{t("courses.individual")}</SelectItem>
-              <SelectItem value="online" className="cursor-pointer">{t("courses.online")}</SelectItem>
-              <SelectItem value="certification" className="cursor-pointer">{t("courses.certification")}</SelectItem>
+              <SelectItem value="1" className="cursor-pointer">📅 Orario Fisso (Corsi di Gruppo)</SelectItem>
+              <SelectItem value="2" className="cursor-pointer">🤝 Flessibile / Pacchetti di Lezioni</SelectItem>
+              <SelectItem value="4" className="cursor-pointer">🎓 Certificazione (EIPASS / Monte Ore)</SelectItem>
             </SelectContent>
           </Select>
         </div>
+
+        {/* ── Preset Configurazione (Template) ── */}
+        {settingsPresets.length > 0 && (
+          <div className="col-span-2 bg-blue-50/30 p-3 rounded-xl border border-blue-200/60">
+            <Label className={L}>Preset / Template Configurazione</Label>
+            <Select
+              value={form.settingsId || "custom"}
+              onValueChange={handlePresetChange}
+            >
+              <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer bg-white">
+                <SelectValue placeholder="— Configurazione personalizzata —" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom" className="cursor-pointer">— Personalizzata / Nuovo preset per questo corso —</SelectItem>
+                {settingsPresets.map((p) => (
+                  <SelectItem key={p.id} value={p.id} className="cursor-pointer">
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* ── Stato + Prezzo ── */}
         <div>
@@ -229,12 +361,12 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
             className="h-9 text-xs rounded-xl" />
         </div>
 
-        {/* ── Insegnante ── */}
+        {/* ── Docente Principale (PRIMARY) ── */}
         <div>
-          <Label className={L}>{t("courses.assignedTeacher")}</Label>
+          <Label className={L}>Docente Principale (Lead)</Label>
           <Select
-            value={form.insegnanteIds[0] || "none"}
-            onValueChange={(v) => setForm({ ...form, insegnanteIds: v === "none" ? [] : [v] })}
+            value={primaryTeacherId}
+            onValueChange={handlePrimaryTeacherChange}
           >
             <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
               <SelectValue placeholder={`— ${t("groups.unassigned")} —`} />
@@ -242,38 +374,44 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
             <SelectContent>
               <SelectItem value="none" className="cursor-pointer">— {t("groups.unassigned")} —</SelectItem>
               {teachers.length > 0
-                ? teachers.map((teacher) => <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">{teacher.fullName}</SelectItem>)
+                ? teachers.map((teacher) => (
+                    <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">
+                      {teacher.fullName}
+                    </SelectItem>
+                  ))
                 : <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>}
             </SelectContent>
           </Select>
         </div>
 
-        {/* ══ GROUP ══════════════════════════════════════════════════════════ */}
-        {isGroup && (
+        {/* ── Docente di Supporto (ASSISTANT) ── */}
+        <div>
+          <Label className={L}>Docente Assistente / Supporto</Label>
+          <Select
+            value={assistantTeacherId}
+            onValueChange={handleAssistantTeacherChange}
+          >
+            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
+              <SelectValue placeholder="— Nessun assistente —" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none" className="cursor-pointer">— Nessun assistente —</SelectItem>
+              {teachers.length > 0
+                ? teachers
+                    .filter((t) => t.id !== primaryTeacherId)
+                    .map((teacher) => (
+                      <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">
+                        {teacher.fullName}
+                      </SelectItem>
+                    ))
+                : <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* ══ 1. ORARIO FISSO (FIXED SCHEDULE) ════════════════════════════════ */}
+        {isFixed && (
           <>
-            <div className="col-span-2">
-              <Label className={L}>{t("courses.scheduleType")}</Label>
-              <Select
-                value={form.scheduleType || "fixed"}
-                onValueChange={(sType) =>
-                  setForm((f) => ({
-                    ...f,
-                    scheduleType: sType,
-                    scheduleDays: sType === "flexible" ? [] : f.scheduleDays,
-                    startTime: sType === "flexible" ? "" : f.startTime,
-                    endTime: sType === "flexible" ? "" : f.endTime,
-                  }))
-                }
-              >
-                <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed" className="cursor-pointer">{t("courses.fixed")}</SelectItem>
-                  <SelectItem value="flexible" className="cursor-pointer">{t("courses.flexible")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div>
               <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
               <Input type="number" placeholder="75" min="15" step="5"
@@ -282,24 +420,19 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
                 className="h-9 text-xs rounded-xl" />
             </div>
             <div>
-              <Label className={L}>{t("courses.lessonsCount")}</Label>
+              <Label className={L}>{t("courses.lessonsCount")} / settimana</Label>
               <Input type="number" placeholder="2" min="1"
                 value={form.lessonsPerWeek?.toString() ?? ""}
                 onChange={(e) => setForm({ ...form, lessonsPerWeek: parseInt(e.target.value) || null })}
                 className="h-9 text-xs rounded-xl" />
             </div>
-          </>
-        )}
 
-        {/* Fixed: giorni + start_time + end_time auto */}
-        {isFixed && (
-          <>
             <div className="col-span-2 bg-muted/40 p-3.5 rounded-2xl border border-border/60 space-y-2">
               <div className="flex items-center justify-between">
                 <Label className={L}>{t("courses.scheduleDays")}</Label>
                 {form.lessonsPerWeek && (
                   <span className="text-xs text-muted-foreground">
-                    {form.scheduleDays.length}/{form.lessonsPerWeek} {t("courses.enrolledStudents").toLowerCase()}
+                    {form.scheduleDays.length}/{form.lessonsPerWeek} selezionati
                   </span>
                 )}
               </div>
@@ -326,17 +459,17 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
             </div>
             <div>
               <Label className={L}>
-                {t("courses.endTime")}
+                {t("courses.endTime")} (Calcolato)
               </Label>
               <div className={readOnly}>
-                {form.endTime || <span className="text-muted-foreground">{t("courses.schedule")}</span>}
+                {form.endTime || <span className="text-muted-foreground">—</span>}
               </div>
             </div>
           </>
         )}
 
-        {/* ══ PRIVATE ════════════════════════════════════════════════════════ */}
-        {isPrivate && (
+        {/* ══ 2. FLESSIBILE / PACCHETTO ═════════════════════════════════════ */}
+        {isFlexible && (
           <>
             <div>
               <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
@@ -346,7 +479,7 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
                 className="h-9 text-xs rounded-xl" />
             </div>
             <div>
-              <Label className={L}>{t("courses.lessonsCount")}</Label>
+              <Label className={L}>Numero Totale Lezioni (Pacchetto)</Label>
               <Input type="number" placeholder="10" min="1"
                 value={form.totalLessons?.toString() ?? ""}
                 onChange={(e) => setForm({ ...form, totalLessons: parseInt(e.target.value) || null })}
@@ -355,10 +488,10 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
           </>
         )}
 
-        {/* ══ CERTIFICATION ══════════════════════════════════════════════════ */}
+        {/* ══ 4. CERTIFICAZIONE (EIPASS) ════════════════════════════════════ */}
         {isCertification && (
-          <div>
-            <Label className={L}>{t("courses.totalLessonsEst")}</Label>
+          <div className="col-span-2">
+            <Label className={L}>Monte Ore Complessivo ({t("courses.totalLessonsEst")})</Label>
             <Input type="number" placeholder="30" min="0" step="0.5"
               value={form.totalHours?.toString() ?? ""}
               onChange={(e) => setForm({ ...form, totalHours: parseFloat(e.target.value) || null })}

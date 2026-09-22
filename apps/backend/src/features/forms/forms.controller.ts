@@ -29,7 +29,7 @@ import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 export class FormsPublicController {
   constructor(private readonly formsService: FormsService) {}
 
-  @Get('resolve')
+  @Get(['resolve', 'template', 'templates'])
   @ApiOperation({ summary: 'Разрешить активный шаблон формы для курса/категории (Public)' })
   async resolveForm(
     @Query('form_type') form_type: FormType = FormType.BOOKING,
@@ -40,6 +40,31 @@ export class FormsPublicController {
       form_type,
       course_id,
       category_slug,
+    });
+    return {
+      success: true,
+      template,
+    };
+  }
+
+  @Get(['course/:id/template', 'courses/:id/template', 'course/:id', 'courses/:id'])
+  @ApiOperation({ summary: 'Получить активный шаблон формы для конкретного курса (Public)' })
+  async getCourseForm(@Param('id') id: string) {
+    const template = await this.formsService.resolveForm({
+      form_type: FormType.BOOKING,
+      course_id: id,
+    });
+    return {
+      success: true,
+      template,
+    };
+  }
+
+  @Get(['contact/template', 'contact'])
+  @ApiOperation({ summary: 'Получить активный шаблон контактной формы (Public)' })
+  async getContactForm() {
+    const template = await this.formsService.resolveForm({
+      form_type: FormType.CONTACT,
     });
     return {
       success: true,

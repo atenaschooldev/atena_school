@@ -279,26 +279,56 @@ export function createApiClient(config?: string | ApiClientConfig) {
     },
   };
 
+  const formsCache = new Map<string, Promise<{ success: boolean; template?: any }>>();
+
   const formsService = {
     async resolve(params: { form_type?: string; course_id?: string; category_slug?: string }): Promise<{ success: boolean; template?: any }> {
+      let finalPath = "/forms/template";
       const q = new URLSearchParams();
-      if (params.form_type) q.append("form_type", params.form_type);
-      if (params.course_id) q.append("course_id", params.course_id);
-      if (params.category_slug) q.append("category_slug", params.category_slug);
-      const endpoint = isNest
-        ? `${baseUrl}/forms/resolve?${q.toString()}`
-        : `${prefix}/forms/resolve?${q.toString()}`;
-      const res = await fetch(endpoint, { headers: getHeaders() });
-      const data = await handleResponse<any>(res);
-      if (data && typeof data === "object") {
-        if ("template" in data) {
-          return data;
-        }
-        if ("id" in data) {
-          return { success: true, template: data };
+
+      if (params.course_id && (!params.form_type || params.form_type === "booking" || params.form_type === "1")) {
+        finalPath = `/forms/course/${encodeURIComponent(params.course_id)}/template`;
+      } else if (params.form_type === "contact" || params.form_type === "2") {
+        finalPath = "/forms/contact/template";
+      } else {
+        if (params.form_type) q.append("form_type", params.form_type);
+        if (params.course_id) q.append("course_id", params.course_id);
+        if (params.category_slug) q.append("category_slug", params.category_slug);
+        const queryString = q.toString();
+        if (queryString) {
+          finalPath = `/forms/template?${queryString}`;
         }
       }
-      return { success: false, template: data };
+
+      const endpoint = isNest
+        ? `${baseUrl}${finalPath}`
+        : `${prefix}${finalPath}`;
+
+      if (formsCache.has(endpoint)) {
+        return formsCache.get(endpoint)!;
+      }
+
+      const fetchPromise = (async () => {
+        try {
+          const res = await fetch(endpoint, { headers: getHeaders() });
+          const data = await handleResponse<any>(res);
+          if (data && typeof data === "object") {
+            if ("template" in data) {
+              return data;
+            }
+            if ("id" in data) {
+              return { success: true, template: data };
+            }
+          }
+          return { success: false, template: data };
+        } catch (err) {
+          formsCache.delete(endpoint);
+          throw err;
+        }
+      })();
+
+      formsCache.set(endpoint, fetchPromise);
+      return fetchPromise;
     },
   };
 

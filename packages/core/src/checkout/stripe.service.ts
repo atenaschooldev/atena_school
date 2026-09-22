@@ -21,7 +21,7 @@ import { checkFeeStatus } from './fee.service';
 import { generateNextMembershipNumber } from '../memberships/number-generator';
 import { sendBookingNotificationEmails } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
-import { computeTotalLessonsCount, computeEndTime, extractCleanTime } from './course.service';
+import { computeTotalLessonsCount, computeEndTime, extractCleanTime, getPublicCourseById } from './course.service';
 import { getStripeCredentials } from '../system/integration-secrets.service';
 
 export function getStripeClient(secretKey?: string): Stripe {
@@ -470,7 +470,8 @@ export async function handleStripeWebhook(
         }
 
         // Send confirmation email
-        const { data: course } = await supabase.from('courses').select('*').eq('id', updatedBooking.course_id).maybeSingle();
+        const courseRes = updatedBooking.course_id ? await getPublicCourseById(supabase, updatedBooking.course_id) : null;
+        const course = courseRes?.success ? courseRes.item : null;
         sendBookingNotificationEmails({
           supabase,
           booking: updatedBooking,
@@ -522,7 +523,8 @@ export async function handleStripeWebhook(
         .maybeSingle();
 
       if (booking) {
-        const { data: course } = await supabase.from('courses').select('*').eq('id', booking.course_id).maybeSingle();
+        const courseRes = booking.course_id ? await getPublicCourseById(supabase, booking.course_id) : null;
+        const course = courseRes?.success ? courseRes.item : null;
 
         const currentPeriodEnd = booking.subscription_ends_at ? new Date(booking.subscription_ends_at) : new Date();
         const nextPeriodStart = currentPeriodEnd.toISOString();

@@ -20,7 +20,7 @@ export interface ContactFormData {
 
 export type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
 
-export function useContactForm() {
+export function useContactForm(initialFormTemplate?: any) {
   const [formData, setFormData] = useState<ContactFormData>({
     nome: "",
     cognome: "",
@@ -32,7 +32,7 @@ export function useContactForm() {
     website_url: "",
   });
 
-  const [formTemplate, setFormTemplate] = useState<any>(null);
+  const [formTemplate, setFormTemplate] = useState<any>(initialFormTemplate || null);
   const [customFieldsValues, setCustomFieldsValues] = useState<Record<string, any>>({});
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,7 @@ export function useContactForm() {
 
   // Dynamic template resolution for contact forms (White-Label Form Engine)
   useEffect(() => {
+    if (initialFormTemplate) return;
     let isMounted = true;
     async function loadTemplate() {
       try {
@@ -57,7 +58,7 @@ export function useContactForm() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [initialFormTemplate]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

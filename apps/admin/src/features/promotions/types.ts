@@ -6,6 +6,8 @@ export interface PromoCodeItem {
   discount_value: number;
   waive_registration_fee: boolean;
   max_uses?: number | null;
+  max_uses_per_user?: number | null;
+  applicable_course_ids?: string[] | null;
   used_count: number;
   valid_from?: string | null;
   valid_until?: string | null;
@@ -21,6 +23,8 @@ export interface CreatePromoCodeInput {
   discount_value: number;
   waive_registration_fee?: boolean;
   max_uses?: number | null;
+  max_uses_per_user?: number | null;
+  applicable_course_ids?: string[] | null;
   valid_from?: string | null;
   valid_until?: string | null;
   is_active?: boolean;

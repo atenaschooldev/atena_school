@@ -370,6 +370,18 @@ export function NotificationLogsView() {
                   <span className="text-muted-foreground block text-[10px] uppercase font-bold">{t("notifications.columnSubject") || "Oggetto"}</span>
                   <span className="font-medium text-foreground">{selectedLog.subject || "—"}</span>
                 </div>
+                {selectedLog.notification_trigger_id && (
+                  <div>
+                    <span className="text-muted-foreground block text-[10px] uppercase font-bold">Trigger ID</span>
+                    <span className="font-mono text-[11px] text-muted-foreground truncate block">{selectedLog.notification_trigger_id}</span>
+                  </div>
+                )}
+                {selectedLog.notification_template_id && (
+                  <div>
+                    <span className="text-muted-foreground block text-[10px] uppercase font-bold">Template ID</span>
+                    <span className="font-mono text-[11px] text-muted-foreground truncate block">{selectedLog.notification_template_id}</span>
+                  </div>
+                )}
               </div>
 
               {/* Webhook Events Timeline if present */}

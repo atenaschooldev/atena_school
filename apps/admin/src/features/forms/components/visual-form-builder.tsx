@@ -10,6 +10,7 @@ import {
   FORM_TYPE_DICTIONARY,
   FORM_FIELD_TYPE_DICTIONARY,
   FORM_FIELD_TARGET_DICTIONARY,
+  parseFormType,
 } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,10 +76,11 @@ export function VisualFormBuilder({
   const { t, locale } = useTranslation();
   const { coursesList, loading: loadingCourses } = useCourses();
 
-  const getFormTypeLabel = (val: FormType): string => {
-    const entry = FORM_TYPE_DICTIONARY[val];
+  const getFormTypeLabel = (val: any): string => {
+    const parsed = parseFormType(val);
+    const entry = FORM_TYPE_DICTIONARY[parsed];
     if (entry) return locale === "en" ? entry.label_en : entry.label_it;
-    return val;
+    return String(val);
   };
 
   const getFieldTypeLabel = (val: FormFieldType): string => {

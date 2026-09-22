@@ -265,6 +265,102 @@ export function parseCourseFormat(val: any): CourseFormat {
   return CourseFormat.GROUP;
 }
 
+export const CourseDeliveryMode = {
+  FIXED_SCHEDULE: 1,    // Fixed days and hours (Orario Fisso)
+  FLEXIBLE_SCHEDULE: 2, // Flexible / By agreement / Packages (Flessibile / Da concordare)
+  CERTIFICATION: 4,     // Total program hours (Certificazioni EIPASS)
+} as const;
+export type CourseDeliveryMode = (typeof CourseDeliveryMode)[keyof typeof CourseDeliveryMode];
+
+export const COURSE_DELIVERY_MODE_DICTIONARY: Record<CourseDeliveryMode, DictionaryEntry> = {
+  [CourseDeliveryMode.FIXED_SCHEDULE]: {
+    id: 1,
+    code: 'FIXED_SCHEDULE',
+    label_it: 'Orario Fisso (Giorni e orari prestabiliti)',
+    label_en: 'Fixed Schedule (Set days and times)',
+    label_ru: 'Фиксированное расписание (Чёткие дни и время)',
+    description: 'Групповые занятия с чёткими днями недели и временем',
+  },
+  [CourseDeliveryMode.FLEXIBLE_SCHEDULE]: {
+    id: 2,
+    code: 'FLEXIBLE_SCHEDULE',
+    label_it: 'Flessibile / Pacchetto (Da concordare)',
+    label_en: 'Flexible / Package (By agreement)',
+    label_ru: 'По согласованию / Пакет занятий',
+    description: 'Индивидуальные уроки или группы со свободным графиком',
+  },
+  [CourseDeliveryMode.CERTIFICATION]: {
+    id: 4,
+    code: 'CERTIFICATION',
+    label_it: 'Certificazione (Ore accademiche totali)',
+    label_en: 'Certification (Total academic hours)',
+    label_ru: 'Сертификация (Общий хронометраж)',
+    description: 'IT-сертификации EIPASS с общим количеством академических часов',
+  },
+};
+
+export function parseCourseDeliveryMode(val: any): CourseDeliveryMode {
+  if (typeof val === 'number') {
+    if (val === 1 || val === 2 || val === 4) return val as CourseDeliveryMode;
+    return CourseDeliveryMode.FIXED_SCHEDULE;
+  }
+  const s = String(val || '').toLowerCase().trim();
+  if (s === '1' || s === 'fixed' || s === 'fisso' || s === 'fixed_schedule') return CourseDeliveryMode.FIXED_SCHEDULE;
+  if (s === '2' || s === 'flexible' || s === 'flessibile' || s === 'package' || s === 'flexible_schedule') return CourseDeliveryMode.FLEXIBLE_SCHEDULE;
+  if (s === '4' || s === 'certification' || s === 'certificazione' || s === 'eipass') return CourseDeliveryMode.CERTIFICATION;
+  return CourseDeliveryMode.FIXED_SCHEDULE;
+}
+
+export interface CourseSettingsItem {
+  id?: string;
+  name?: string;
+  delivery_mode: CourseDeliveryMode | number;
+  deliveryMode?: CourseDeliveryMode | number;
+  schedule_days?: number[];
+  scheduleDays?: number[];
+  start_time?: string | null;
+  startTime?: string | null;
+  end_time?: string | null;
+  endTime?: string | null;
+  lesson_duration_minutes?: number | null;
+  lessonDurationMinutes?: number | null;
+  lessons_per_week?: number | null;
+  lessonsPerWeek?: number | null;
+  total_lessons?: number | null;
+  totalLessons?: number | null;
+  total_hours?: number | null;
+  totalHours?: number | null;
+  min_students?: number | null;
+  minStudents?: number | null;
+  max_students?: number | null;
+  maxStudents?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CourseCategoryItem {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CourseTeacherItem {
+  course_id: string;
+  teacher_id: string;
+  role: CourseTeacherRole | number;
+  is_primary: boolean;
+  teacher?: {
+    teacher_id: string;
+    full_name: string;
+    photo_url?: string | null;
+  };
+}
+
 export interface CourseItem {
   id: string;
   name: string;
@@ -276,7 +372,12 @@ export interface CourseItem {
   image_url?: string;
   price: number | string;
   status: CourseStatus | number | string;
-  category?: string;
+  category?: string | number;
+  category_id?: string | null;
+  category_slug?: string | null;
+  category_name?: string | null;
+  settings_id?: string | null;
+  settingsId?: string | null;
   schedule_days?: string[] | number[];
   schedule_type?: CourseScheduleType | number | string;
   course_format?: CourseFormat | number | string;
@@ -295,4 +396,6 @@ export interface CourseItem {
   teachers?: {
     full_name: string;
   };
+  course_teachers?: CourseTeacherItem[];
+  settings?: CourseSettingsItem;
 }

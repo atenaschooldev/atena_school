@@ -77,6 +77,15 @@ describe('NotificationTriggerEngineService', () => {
       '<p>Ciao Giulia Bianchi, la tua prenotazione per Corso di Inglese è confermata.</p>',
       undefined
     );
+
+    expect(mockPrisma.notification_logs.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          notificationTriggerId: 'trg-1',
+          notificationTemplateId: 'tmpl-1',
+        }),
+      })
+    );
   });
 
   it('processes admin telegram trigger and delivers message to chat', async () => {

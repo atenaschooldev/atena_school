@@ -57,12 +57,12 @@ CREATE TABLE public.notification_triggers (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     event_key VARCHAR(100) NOT NULL,
-    template_id UUID NOT NULL REFERENCES public.notification_templates(id) ON DELETE CASCADE,
+    notification_template_id UUID NOT NULL REFERENCES public.notification_templates(id) ON DELETE CASCADE,
     channel SMALLINT NOT NULL DEFAULT 1,
     recipient_type SMALLINT NOT NULL DEFAULT 1,
     custom_recipient VARCHAR(255),
     conditions JSONB DEFAULT '{}'::jsonb,
-    timing_type VARCHAR(50) NOT NULL DEFAULT 'immediate',
+    timing_type SMALLINT NOT NULL DEFAULT 1,  -- 1: IMMEDIATE, 2: DELAYED, 3: BEFORE_EVENT
     delay_seconds INTEGER NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -71,7 +71,7 @@ CREATE TABLE public.notification_triggers (
 
 CREATE INDEX idx_notification_triggers_event_key ON public.notification_triggers(event_key);
 CREATE INDEX idx_notification_triggers_is_active ON public.notification_triggers(is_active);
-CREATE INDEX idx_notification_triggers_template_id ON public.notification_triggers(template_id);
+CREATE INDEX idx_notification_triggers_notification_template_id ON public.notification_triggers(notification_template_id);
 ```
 
 ### 2.3. Таблица журнала отправок (`notification_logs`)
@@ -85,6 +85,8 @@ CREATE TABLE public.notification_logs (
     request JSONB NOT NULL,                     -- { payload, userId, bookingId, provider, etc. }
     response JSONB,                             -- { messageId, error, webhook_events, etc. }
     status SMALLINT NOT NULL,                   -- 1: SENT, 2: FAILED
+    notification_trigger_id UUID REFERENCES public.notification_triggers(id) ON DELETE SET NULL,
+    notification_template_id UUID REFERENCES public.notification_templates(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -93,6 +95,8 @@ CREATE INDEX idx_notification_logs_status ON public.notification_logs(status);
 CREATE INDEX idx_notification_logs_recipient ON public.notification_logs(recipient);
 CREATE INDEX idx_notification_logs_channel ON public.notification_logs(channel);
 CREATE INDEX idx_notification_logs_notification_type ON public.notification_logs(notification_type);
+CREATE INDEX idx_notification_logs_trigger_id ON public.notification_logs(notification_trigger_id);
+CREATE INDEX idx_notification_logs_template_id ON public.notification_logs(notification_template_id);
 ```
 
 ---

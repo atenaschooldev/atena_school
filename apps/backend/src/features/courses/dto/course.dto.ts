@@ -1,8 +1,33 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
-import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType } from '@atena/api-types';
+import { CourseStatus, CourseScheduleType, CourseFormat, CourseBillingType, CourseDeliveryMode, CourseSettingsItem } from '@atena/api-types';
 
 export class CreateCourseDto {
+  @ApiPropertyOptional({
+    description: 'Режим проведения/настройки курса: 1=FIXED_SCHEDULE, 2=FLEXIBLE_SCHEDULE, 4=CERTIFICATION',
+    enum: CourseDeliveryMode,
+    example: CourseDeliveryMode.FIXED_SCHEDULE,
+  })
+  @IsOptional()
+  deliveryMode?: CourseDeliveryMode | number;
+
+  @ApiPropertyOptional({ description: 'Режим проведения (алиас delivery_mode)' })
+  @IsOptional()
+  delivery_mode?: number;
+
+  @ApiPropertyOptional({ description: 'ID пресета/настроек курса из таблицы course_settings (UUID)' })
+  @IsOptional()
+  @IsString()
+  settingsId?: string;
+
+  @ApiPropertyOptional({ description: 'ID пресета/настроек курса (алиас settings_id)' })
+  @IsOptional()
+  @IsString()
+  settings_id?: string;
+
+  @ApiPropertyOptional({ description: 'Конфигурация курса (настройки расписания, длительности, лимитов)' })
+  @IsOptional()
+  settings?: Partial<CourseSettingsItem>;
   @ApiPropertyOptional({
     description: 'Формат оплаты курса: 1=ONE_TIME_ONLY (только разово), 2=SUBSCRIPTION_ONLY (только подписка), 3=BOTH (разово или по подписке)',
     enum: CourseBillingType,
@@ -60,6 +85,27 @@ export class CreateCourseDto {
   @IsOptional()
   @IsString()
   categoria?: string;
+
+  @ApiPropertyOptional({ description: 'ID категории из таблицы course_categories (UUID)', example: '00000000-0000-0000-0001-000000000001' })
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @ApiPropertyOptional({ description: 'ID категории (алиас category_id)' })
+  @IsOptional()
+  @IsString()
+  category_id?: string;
+
+  @ApiPropertyOptional({ description: 'Список назначенных преподавателей с ролями' })
+  @IsOptional()
+  @IsArray()
+  teachers?: Array<{
+    teacherId?: string;
+    teacher_id?: string;
+    role?: number;
+    isPrimary?: boolean;
+    is_primary?: boolean;
+  }>;
 
   @ApiPropertyOptional({ description: 'Стоимость курса в EUR' })
   @IsOptional()

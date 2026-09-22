@@ -50,29 +50,27 @@ model Course {
   photoUrl              String?   @map("photo_url")
   description           String?
   teacherId             String?   @map("teacher_id") @db.Uuid
-  courseFormat          Int       @default(1) @map("course_format") @db.SmallInt
-  scheduleType          Int       @default(1) @map("schedule_type") @db.SmallInt
-  scheduleDays          Int[]     @map("schedule_days")
-  startTime             String?   @map("start_time")
-  endTime               String?   @map("end_time")
-  lessonDurationMinutes Int?      @map("lesson_duration_minutes")
-  lessonsPerWeek        Int?      @map("lessons_per_week")
-  totalLessons          Int?      @map("total_lessons")
-  totalHours            Int?      @map("total_hours")
   billingType           Int       @default(1) @map("billing_type") @db.SmallInt
   price                 Decimal?  @db.Decimal(10, 2)
   subscriptionPrice     Decimal?  @map("subscription_price") @db.Decimal(10, 2)
   stripeMonthlyPriceId  String?   @map("stripe_monthly_price_id")
+  categoryId            String?   @map("category_id") @db.Uuid
+  settingsId            String?   @map("settings_id") @db.Uuid
 
+  courseCategory        CourseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  settings              CourseSettings? @relation(fields: [settingsId], references: [id], onDelete: SetNull)
   bookings              Booking[]
   courseTeachers        CourseTeacher[]
   lessons               Lesson[]
   groups                Group[]
+  formTemplates         FormTemplate[]
 
   @@index([slug], map: "idx_courses_slug")
   @@index([status], map: "idx_courses_status")
   @@index([teacherId], map: "idx_courses_teacher_id")
   @@index([category], map: "idx_courses_category")
+  @@index([categoryId], map: "idx_courses_category_id")
+  @@index([settingsId], map: "idx_courses_settings_id")
   @@map("courses")
 }
 
@@ -164,10 +162,16 @@ model Booking {
   subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
   cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
 
+  formId               String?            @map("form_id") @db.Uuid
+  customFields         Json?              @default("{}") @map("custom_fields")
+  promoCodeId          String?            @map("promo_code_id") @db.Uuid
+
   course               Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
   student              students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
   user                 User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   group                Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  formTemplate         FormTemplate?      @relation(fields: [formId], references: [id], onDelete: SetNull)
+  promoCodeRel         PromoCode?         @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
   lessons              Lesson[]
   payments             Payment[]
   attendanceRecords    AttendanceRecord[]
@@ -177,6 +181,8 @@ model Booking {
   @@index([studentId], map: "idx_bookings_student_id")
   @@index([courseId], map: "idx_bookings_course_id")
   @@index([groupId], map: "idx_bookings_group_id")
+  @@index([formId], map: "idx_bookings_form_id")
+  @@index([promoCodeId], map: "idx_bookings_promo_code_id")
   @@index([sessionId], map: "idx_bookings_session_id")
   @@index([createdAt], map: "idx_bookings_created_at")
   @@index([paymentStatus], map: "idx_bookings_payment_status")
@@ -525,20 +531,27 @@ model admin_api_logs {
 
 
 model notification_logs {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  channel          Int      @db.SmallInt
-  notificationType Int      @map("notification_type") @db.SmallInt
-  recipient        String   @db.VarChar(255)
-  subject          String?  @db.VarChar(255)
-  request          Json
-  response         Json?
-  status           Int      @db.SmallInt
+  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  channel                Int                     @db.SmallInt
+  notificationType       Int                     @map("notification_type") @db.SmallInt
+  recipient              String                  @db.VarChar(255)
+  subject                String?                 @db.VarChar(255)
+  request                Json
+  response               Json?
+  status                 Int                     @db.SmallInt
+  notificationTriggerId  String?                 @map("notification_trigger_id") @db.Uuid
+  notificationTemplateId String?                 @map("notification_template_id") @db.Uuid
+
+  trigger                notification_triggers?  @relation(fields: [notificationTriggerId], references: [id], onDelete: SetNull)
+  template               notification_templates? @relation(fields: [notificationTemplateId], references: [id], onDelete: SetNull)
 
   @@index([channel], map: "idx_notification_logs_channel")
   @@index([recipient], map: "idx_notification_logs_recipient")
   @@index([notificationType], map: "idx_notification_logs_notification_type")
   @@index([status], map: "idx_notification_logs_status")
+  @@index([notificationTriggerId], map: "idx_notification_logs_trigger_id")
+  @@index([notificationTemplateId], map: "idx_notification_logs_template_id")
   @@index([createdAt(sort: Desc)], map: "idx_notification_logs_created_at")
   @@map("notification_logs")
 }
@@ -561,6 +574,7 @@ model notification_templates {
   isActive           Boolean  @default(true) @map("is_active")
 
   triggers           notification_triggers[]
+  logs               notification_logs[]
 
   @@index([code], map: "idx_notification_templates_code")
   @@index([channel], map: "idx_notification_templates_channel")
@@ -570,28 +584,113 @@ model notification_templates {
 }
 
 model notification_triggers {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt       DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  name            String                 @db.VarChar(255)
-  description     String?                @db.Text
-  eventKey        String                 @map("event_key") @db.VarChar(100)
-  templateId      String                 @map("template_id") @db.Uuid
-  channel         Int                    @default(1) @db.SmallInt
-  recipientType   Int                    @default(1) @map("recipient_type") @db.SmallInt
-  customRecipient String?                @map("custom_recipient") @db.VarChar(255)
-  conditions      Json?                  @default("{}")
-  timingType      String                 @default("immediate") @map("timing_type") @db.VarChar(50)
-  delaySeconds    Int                    @default(0) @map("delay_seconds")
-  isActive        Boolean                @default(true) @map("is_active")
+  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name                   String                 @db.VarChar(255)
+  description            String?                @db.Text
+  eventKey               String                 @map("event_key") @db.VarChar(100)
+  notificationTemplateId String                 @map("notification_template_id") @db.Uuid
+  channel                Int                    @default(1) @db.SmallInt
+  recipientType          Int                    @default(1) @map("recipient_type") @db.SmallInt
+  customRecipient        String?                @map("custom_recipient") @db.VarChar(255)
+  conditions             Json?                  @default("{}")
+  timingType             Int                    @default(1) @map("timing_type") @db.SmallInt
+  delaySeconds           Int                    @default(0) @map("delay_seconds")
+  isActive               Boolean                @default(true) @map("is_active")
 
-  template        notification_templates @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template               notification_templates @relation(fields: [notificationTemplateId], references: [id], onDelete: Cascade)
+  logs                   notification_logs[]
 
   @@index([eventKey], map: "idx_notification_triggers_event_key")
   @@index([isActive], map: "idx_notification_triggers_is_active")
-  @@index([templateId], map: "idx_notification_triggers_template_id")
+  @@index([notificationTemplateId], map: "idx_notification_triggers_notification_template_id")
   @@map("notification_triggers")
 }
+
+model FormTemplate {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String    @db.VarChar(255)
+  description  String?   @db.Text
+  formType     Int       @default(1) @map("form_type") @db.SmallInt
+  isDefault    Boolean   @default(false) @map("is_default")
+  isActive     Boolean   @default(true) @map("is_active")
+  categorySlug String?   @map("category_slug") @db.VarChar(64)
+  courseId     String?   @map("course_id") @db.Uuid
+  fieldsConfig Json      @default("[]") @map("fields_config")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course       Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  bookings     Booking[]
+
+  @@index([formType, isActive], map: "idx_form_templates_type_active")
+  @@index([categorySlug], map: "idx_form_templates_category")
+  @@index([courseId], map: "idx_form_templates_course")
+  @@map("form_templates")
+}
+
+model PromoCode {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                 String    @unique
+  description          String?
+  discountType         Int       @default(1) @map("discount_type") @db.SmallInt
+  discountValue        Decimal   @map("discount_value") @db.Decimal(10, 2)
+  waiveRegistrationFee Boolean   @default(false) @map("waive_registration_fee")
+  maxUses              Int?      @map("max_uses")
+  maxUsesPerUser       Int?      @map("max_uses_per_user")
+  applicableCourseIds  String[]  @default([]) @map("applicable_course_ids") @db.Uuid
+  validFrom            DateTime? @map("valid_from") @db.Timestamptz(6)
+  validUntil           DateTime? @map("valid_until") @db.Timestamptz(6)
+  isActive             Boolean   @default(true) @map("is_active")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  bookings             Booking[]
+
+  @@index([code], map: "idx_promo_codes_code")
+  @@index([isActive], map: "idx_promo_codes_is_active")
+  @@map("promo_codes")
+}
+
+model CourseCategory {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug        String    @unique @db.VarChar(64)
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  sortOrder   Int       @default(0) @map("sort_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  courses     Course[]
+
+  @@index([slug], map: "idx_course_categories_slug")
+  @@index([isActive], map: "idx_course_categories_is_active")
+  @@map("course_categories")
+}
+
+model CourseSettings {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String    @default("Configurazione Corso") @db.VarChar(255)
+  deliveryMode          Int       @default(1) @map("delivery_mode") @db.SmallInt
+  scheduleDays          Int[]     @default([]) @map("schedule_days")
+  startTime             String?   @map("start_time") @db.VarChar(8)
+  endTime               String?   @map("end_time") @db.VarChar(8)
+  lessonDurationMinutes Int?      @map("lesson_duration_minutes")
+  lessonsPerWeek        Int?      @map("lessons_per_week")
+  totalLessons          Int?      @map("total_lessons")
+  totalHours            Decimal?  @map("total_hours") @db.Decimal(5, 2)
+  minStudents           Int?      @default(1) @map("min_students")
+  maxStudents           Int?      @default(8) @map("max_students")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  courses               Course[]
+
+  @@map("course_settings")
+}
+
 
 
 

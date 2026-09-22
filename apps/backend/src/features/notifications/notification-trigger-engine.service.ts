@@ -184,6 +184,8 @@ export class NotificationTriggerEngineService {
           notificationType: template.notificationType,
           recipient,
           subject,
+          notificationTriggerId: trigger.id,
+          notificationTemplateId: template.id,
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: sendResult,
           status: sendResult.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
@@ -194,6 +196,8 @@ export class NotificationTriggerEngineService {
           notificationType: template.notificationType,
           recipient,
           subject,
+          notificationTriggerId: trigger.id,
+          notificationTemplateId: template.id,
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: { error: sendErr.message },
           status: NotificationStatus.FAILED,
@@ -224,6 +228,8 @@ export class NotificationTriggerEngineService {
           notificationType: template.notificationType,
           recipient: recipient || 'Telegram Admin',
           subject: 'Telegram Bot Alert',
+          notificationTriggerId: trigger.id,
+          notificationTemplateId: template.id,
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: sendResult,
           status: sendResult.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
@@ -234,6 +240,8 @@ export class NotificationTriggerEngineService {
           notificationType: template.notificationType,
           recipient: recipient || 'Telegram Admin',
           subject: 'Telegram Bot Alert',
+          notificationTriggerId: trigger.id,
+          notificationTemplateId: template.id,
           request: { trigger_id: trigger.id, event_key: trigger.eventKey, payload },
           response: { error: sendErr.message },
           status: NotificationStatus.FAILED,
@@ -247,6 +255,8 @@ export class NotificationTriggerEngineService {
     notificationType: number;
     recipient: string;
     subject?: string;
+    notificationTriggerId?: string;
+    notificationTemplateId?: string;
     request: any;
     response: any;
     status: number;
@@ -258,6 +268,8 @@ export class NotificationTriggerEngineService {
           notificationType: params.notificationType,
           recipient: params.recipient,
           subject: params.subject || null,
+          notificationTriggerId: params.notificationTriggerId || null,
+          notificationTemplateId: params.notificationTemplateId || null,
           request: params.request,
           response: params.response || null,
           status: params.status,

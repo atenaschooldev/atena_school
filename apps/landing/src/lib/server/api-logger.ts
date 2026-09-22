@@ -77,7 +77,6 @@ export async function logLandingApi(params: LogLandingApiParams): Promise<void> 
 
 
 export interface LogNotificationParams {
-
   channel: number; // 1: EMAIL, 2: TELEGRAM
   notificationType: number; // NotificationType
   recipient: string;
@@ -85,6 +84,8 @@ export interface LogNotificationParams {
   request: any;
   response?: any;
   status: number; // 1: SENT, 2: FAILED
+  notificationTriggerId?: string | null;
+  notificationTemplateId?: string | null;
 }
 
 export async function logNotification(params: LogNotificationParams): Promise<void> {
@@ -95,6 +96,8 @@ export async function logNotification(params: LogNotificationParams): Promise<vo
       notification_type: params.notificationType,
       recipient: params.recipient,
       subject: params.subject || null,
+      notification_trigger_id: params.notificationTriggerId || null,
+      notification_template_id: params.notificationTemplateId || null,
       request: params.request || {},
       response: params.response || null,
       status: params.status,

@@ -23,6 +23,8 @@ export abstract class CoursesRepository {
     totalHours?: number | null;
     courseFormat?: CourseFormat | number | string | null;
     slug?: string | null;
+    categoryId?: string | null;
+    settingsId?: string | null;
   }): Promise<CourseEntity>;
   abstract update(id: string, data: Partial<CourseEntity>): Promise<CourseEntity>;
   abstract delete(id: string): Promise<void>;

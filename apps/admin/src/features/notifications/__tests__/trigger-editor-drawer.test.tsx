@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TriggerEditorDrawer } from "../components/trigger-editor-drawer";
-import { NotificationChannel, RecipientType } from "@atena/api-types";
+import { NotificationChannel, RecipientType, TriggerTimingType } from "@atena/api-types";
 import { LanguageProvider } from "@/i18n/context";
 
 function renderWithI18n(ui: React.ReactElement) {
@@ -121,12 +121,13 @@ describe("Admin Notifications - TriggerEditorDrawer Strict Component Tests", () 
         name: "Automazione Notifica Cliente",
         description: undefined,
         event_key: "booking.created_stripe",
+        notification_template_id: "tmpl-email-1",
         template_id: "tmpl-email-1",
         channel: NotificationChannel.EMAIL,
         recipient_type: RecipientType.CUSTOMER,
         custom_recipient: undefined,
         conditions: { purchaser_name: "Mario Rossi" },
-        timing_type: "immediate",
+        timing_type: TriggerTimingType.IMMEDIATE,
         delay_seconds: 0,
         is_active: true,
       });
@@ -165,6 +166,7 @@ describe("Admin Notifications - TriggerEditorDrawer Strict Component Tests", () 
         expect.objectContaining({
           name: "Telegram Notifica Admin",
           channel: NotificationChannel.TELEGRAM,
+          notification_template_id: "tmpl-tg-1",
           template_id: "tmpl-tg-1",
         })
       );
@@ -177,11 +179,12 @@ describe("Admin Notifications - TriggerEditorDrawer Strict Component Tests", () 
       name: "Sollecito Pagamento",
       description: "Invia promemoria dopo 2 ore",
       event_key: "lesson.reminder_24h",
+      notification_template_id: "tmpl-email-1",
       template_id: "tmpl-email-1",
       channel: NotificationChannel.EMAIL,
       recipient_type: 4, // Custom recipient
       custom_recipient: "director@atenaschool.com",
-      timing_type: "delayed",
+      timing_type: TriggerTimingType.DELAYED,
       delay_seconds: 7200, // 120 minutes
       conditions: { min_amount: 50 },
       is_active: false,
@@ -223,12 +226,13 @@ describe("Admin Notifications - TriggerEditorDrawer Strict Component Tests", () 
         name: "Sollecito Pagamento",
         description: "Invia promemoria dopo 2 ore",
         event_key: "lesson.reminder_24h",
+        notification_template_id: "tmpl-email-1",
         template_id: "tmpl-email-1",
         channel: NotificationChannel.EMAIL,
         recipient_type: 4,
         custom_recipient: "director@atenaschool.com",
         conditions: { min_amount: 50 },
-        timing_type: "delayed",
+        timing_type: TriggerTimingType.DELAYED,
         delay_seconds: 3600, // 60 * 60
         is_active: false,
       });

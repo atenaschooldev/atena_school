@@ -207,11 +207,20 @@ export class PortalService {
     if (courseIds.length > 0) {
       const { data: cData } = await this.supabaseAdmin
         .from('courses')
-        .select('id, name, title_it, price, schedule_days, start_time, end_time, schedule_type, teachers!courses_teacher_id_fkey(full_name)')
+        .select('id, name, title_it, price, settings:course_settings(schedule_days, start_time, end_time, delivery_mode), teachers!courses_teacher_id_fkey(full_name)')
         .in('id', courseIds);
 
       if (cData) {
-        coursesMap = new Map(cData.map((c) => [c.id, c]));
+        coursesMap = new Map(cData.map((c: any) => {
+          const st = c.settings as any;
+          return [c.id, {
+            ...c,
+            schedule_days: st?.schedule_days ?? null,
+            start_time: st?.start_time ?? null,
+            end_time: st?.end_time ?? null,
+            schedule_type: st?.delivery_mode === 1 ? 0 : (st?.delivery_mode ? 1 : null),
+          }];
+        }));
       }
     }
 
@@ -309,10 +318,24 @@ export class PortalService {
     if (cid) {
       const { data: cData } = await this.supabaseAdmin
         .from('courses')
-        .select('*')
+        .select('*, settings:course_settings(*)')
         .eq('id', cid)
         .maybeSingle();
-      course = cData;
+      if (cData) {
+        const st = cData.settings as any;
+        course = {
+          ...cData,
+          schedule_days: st?.schedule_days ?? [],
+          start_time: st?.start_time ?? null,
+          end_time: st?.end_time ?? null,
+          lesson_duration_minutes: st?.lesson_duration_minutes ?? null,
+          lessons_per_week: st?.lessons_per_week ?? null,
+          total_lessons: st?.total_lessons ?? null,
+          total_hours: st?.total_hours ?? null,
+          schedule_type: st?.delivery_mode === 1 ? 0 : 1,
+          course_format: st?.delivery_mode ?? null,
+        };
+      }
     }
 
     const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
@@ -421,13 +444,26 @@ export class PortalService {
     }
 
     const cid = booking.course_id || booking.item_id;
-    const { data: course } = await this.supabaseAdmin
+    const { data: cData } = await this.supabaseAdmin
       .from('courses')
-      .select('*')
+      .select('*, settings:course_settings(*)')
       .eq('id', cid)
       .maybeSingle();
 
-    if (!course) throw new NotFoundException('Corso non trovato');
+    if (!cData) throw new NotFoundException('Corso non trovato');
+    const st = cData.settings as any;
+    const course = {
+      ...cData,
+      schedule_days: st?.schedule_days ?? [],
+      start_time: st?.start_time ?? null,
+      end_time: st?.end_time ?? null,
+      lesson_duration_minutes: st?.lesson_duration_minutes ?? null,
+      lessons_per_week: st?.lessons_per_week ?? null,
+      total_lessons: st?.total_lessons ?? null,
+      total_hours: st?.total_hours ?? null,
+      schedule_type: st?.delivery_mode === 1 ? 0 : 1,
+      course_format: st?.delivery_mode ?? null,
+    };
 
     const { count } = await this.supabaseAdmin
       .from('lessons')

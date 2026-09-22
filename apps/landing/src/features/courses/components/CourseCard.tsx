@@ -101,12 +101,12 @@ const CourseCard = ({
     ? `${lessons_per_week} ${lessons_per_week === 1 ? "lezione" : "lezioni"} a settimana`
     : getLessonsPerWeekText(title, formattedSchedule);
 
-  const formatCategoryName = (cat?: string): string => {
+  const formatCategoryName = (cat?: string | number | null): string => {
     if (!cat) return "";
     const lower = String(cat).toLowerCase();
-    if (lower === "languages" || lower === "language") return "Corsi di Lingua";
-    if (lower === "academic" || lower === "recupero") return "Recupero Scolastico";
-    if (lower === "certipass" || lower === "eipass") return "Certificazioni EIPASS";
+    if (lower === "languages" || lower === "language" || lower === "1") return "Corsi di Lingua";
+    if (lower === "academic" || lower === "recupero" || lower === "2") return "Recupero Scolastico";
+    if (lower === "certipass" || lower === "eipass" || lower === "3") return "Certificazioni EIPASS";
     return String(cat);
   };
 

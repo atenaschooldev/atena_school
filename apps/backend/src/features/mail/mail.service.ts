@@ -50,6 +50,7 @@ export class MailService implements OnModuleInit {
     text: string,
     html?: string,
     notificationType: number = NotificationType.BOOKING_CONFIRMATION,
+    options?: { notificationTriggerId?: string; notificationTemplateId?: string },
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     const creds = await getResendCredentials();
     const apiKey = creds.apiKey || this.resendApiKey;
@@ -118,6 +119,8 @@ export class MailService implements OnModuleInit {
         notificationType,
         recipient: to,
         subject,
+        notificationTriggerId: options?.notificationTriggerId || null,
+        notificationTemplateId: options?.notificationTemplateId || null,
         request: { from, to, subject, text, hasHtml: Boolean(html) },
         response: result,
         status: result.success ? NotificationStatus.SENT : NotificationStatus.FAILED,

@@ -47,6 +47,8 @@ export const POST = withLandingApiLog(
         coursePrice: parsed.data.coursePrice,
         registrationFee: parsed.data.registrationFee,
         courseId: parsed.data.courseId,
+        purchaserEmail: parsed.data.purchaserEmail,
+        purchaserTaxCode: parsed.data.purchaserTaxCode,
       });
 
       return NextResponse.json({

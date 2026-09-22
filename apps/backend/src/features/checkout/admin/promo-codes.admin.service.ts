@@ -77,6 +77,8 @@ export class PromoCodesAdminService {
         discount_value: dto.discount_value,
         waive_registration_fee: Boolean(dto.waive_registration_fee),
         max_uses: dto.max_uses != null ? Number(dto.max_uses) : null,
+        max_uses_per_user: dto.max_uses_per_user != null ? Number(dto.max_uses_per_user) : null,
+        applicable_course_ids: dto.applicable_course_ids || [],
         valid_from: dto.valid_from || null,
         valid_until: dto.valid_until || null,
         is_active: dto.is_active !== false,
@@ -117,6 +119,12 @@ export class PromoCodesAdminService {
     }
     if (dto.max_uses !== undefined) {
       updatePayload.max_uses = dto.max_uses != null ? Number(dto.max_uses) : null;
+    }
+    if (dto.max_uses_per_user !== undefined) {
+      updatePayload.max_uses_per_user = dto.max_uses_per_user != null ? Number(dto.max_uses_per_user) : null;
+    }
+    if (dto.applicable_course_ids !== undefined) {
+      updatePayload.applicable_course_ids = dto.applicable_course_ids || [];
     }
     if (dto.valid_from !== undefined) {
       updatePayload.valid_from = dto.valid_from || null;
