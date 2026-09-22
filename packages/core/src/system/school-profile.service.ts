@@ -99,29 +99,6 @@ export async function getSchoolProfile(supabase?: SupabaseClient | null): Promis
       };
     }
 
-    // 2. Secondary fallback: app_settings (key: school_profile)
-    const { data: legacyData } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', AppSettingKey.SCHOOL_PROFILE)
-      .maybeSingle();
-
-    if (legacyData?.value) {
-      const val = legacyData.value as Partial<SchoolProfile>;
-      return {
-        ...DEFAULT_SCHOOL_PROFILE,
-        ...val,
-        site_url: isDev ? 'http://localhost:3000' : (val.site_url || DEFAULT_SCHOOL_PROFILE.site_url),
-        app_url: isDev ? 'http://localhost:3002' : (val.app_url || DEFAULT_SCHOOL_PROFILE.app_url),
-        admin_url: isDev ? 'http://localhost:3001' : (val.admin_url || DEFAULT_SCHOOL_PROFILE.admin_url),
-        address: cleanStreetAddress(val.address || DEFAULT_SCHOOL_PROFILE.address),
-        socials: {
-          ...DEFAULT_SCHOOL_PROFILE.socials,
-          ...(val.socials || {}),
-        },
-      };
-    }
-
     if (isDev) {
       return {
         ...DEFAULT_SCHOOL_PROFILE,
@@ -162,7 +139,7 @@ export async function updateSchoolProfile(
 
   const recordId = current.id || '00000000-0000-0000-0000-000000000001';
 
-  // 1. Save to dedicated school_profiles table
+  // Save directly to dedicated school_profiles table
   const { error: profileError } = await supabase
     .from('school_profiles')
     .upsert({
@@ -203,19 +180,6 @@ export async function updateSchoolProfile(
 
   if (profileError) {
     throw new Error(`Failed to update school profile: ${profileError.message}`);
-  }
-
-  // 2. Keep app_settings in sync as backwards-compatible mirror
-  try {
-    await supabase
-      .from('app_settings')
-      .upsert({
-        key: AppSettingKey.SCHOOL_PROFILE,
-        value: updated,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'key' });
-  } catch (err) {
-    console.warn('[SchoolProfile] Failed to mirror to app_settings:', err);
   }
 
   return updated;
