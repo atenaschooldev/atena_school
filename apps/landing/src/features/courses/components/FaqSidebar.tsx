@@ -1,36 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Minus } from "@phosphor-icons/react";
 import { DEFAULT_SCHOOL_PROFILE, cleanStreetAddress } from "@atena/core";
+import type { SchoolProfile } from "@atena/api-types";
 
-const school = DEFAULT_SCHOOL_PROFILE;
+interface FaqSidebarProps {
+  school?: SchoolProfile;
+}
 
-const faqs = [
-  {
-    q: `Dove si trova ${school.name}?`,
-    a: `${school.name} si trova in ${cleanStreetAddress(school.address)} a ${school.city} (${school.province}). Offriamo corsi in presenza dal lunedì al venerdì, dalle 09:00 alle 18:00.`,
-  },
-  {
-    q: "Quali certificazioni offrite?",
-    a: "Siamo un centro autorizzato Cambridge English (KET, PET, FCE, CAE) e offriamo anche le certificazioni informatiche EIPASS riconosciute a livello europeo.",
-  },
-  {
-    q: "I corsi sono adatti anche ai bambini?",
-    a: "Sì. Organizziamo corsi di lingua per bambini, ragazzi e adulti, con percorsi personalizzati per ogni fascia d'età e livello di partenza.",
-  },
-  {
-    q: "Come posso iscrivermi?",
-    a: `Puoi compilare il modulo di contatto qui accanto, oppure chiamarci al ${school.phone || school.whatsapp || '+39 375 605 2362'}. Offriamo una consulenza gratuita per trovare il corso più adatto a te.`,
-  },
-  {
-    q: "Fate anche recupero scolastico?",
-    a: "Sì, offriamo doposcuola e recupero delle materie scolastiche per studenti delle scuole medie e superiori, con tutor qualificati.",
-  },
-];
-
-const FaqSidebar = () => {
+const FaqSidebar = ({ school = DEFAULT_SCHOOL_PROFILE }: FaqSidebarProps) => {
   const [open, setOpen] = useState<number | null>(null);
+
+  const faqs = useMemo(() => [
+    {
+      q: `Dove si trova ${school.name}?`,
+      a: `${school.name} si trova in ${cleanStreetAddress(school.address)} a ${school.city} (${school.province}). ${school.secretariat_hours ? `Orari di segreteria: ${school.secretariat_hours}.` : "Offriamo corsi in presenza dal lunedì al venerdì, dalle 09:00 alle 18:00."}`,
+    },
+    {
+      q: "Quali certificazioni offrite?",
+      a: "Siamo un centro autorizzato Cambridge English (KET, PET, FCE, CAE) e offriamo anche le certificazioni informatiche EIPASS riconosciute a livello europeo.",
+    },
+    {
+      q: "I corsi sono adatti anche ai bambini?",
+      a: "Sì. Organizziamo corsi di lingua per bambini, ragazzi e adulti, con percorsi personalizzati per ogni fascia d'età e livello di partenza.",
+    },
+    {
+      q: "Come posso iscrivermi?",
+      a: `Puoi compilare il modulo di contatto qui accanto, oppure chiamarci al ${school.phone || school.whatsapp || '+39 375 605 2362'}. Offriamo una consulenza gratuita per trovare il corso più adatto a te.`,
+    },
+    {
+      q: "Fate anche recupero scolastico?",
+      a: "Sì, offriamo doposcuola e recupero delle materie scolastiche per studenti delle scuole medie e superiori, con tutor qualificati.",
+    },
+  ], [school]);
 
   const faqSchema = {
     "@context": "https://schema.org",

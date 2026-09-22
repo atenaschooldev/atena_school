@@ -140,7 +140,11 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                     </div>
                     <div className="text-left">
                       <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none">Orari di apertura</p>
-                      <p className="text-xs font-bold text-gray-800 mt-1 leading-snug">Lunedì – Venerdì <span className="block text-gray-500 mt-0.5">09:00 - 18:00</span></p>
+                      <p className="text-xs font-bold text-gray-800 mt-1 leading-snug">
+                        {school.secretariat_hours || (
+                          <>Lunedì – Venerdì <span className="block text-gray-500 mt-0.5">09:00 - 18:00</span></>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>

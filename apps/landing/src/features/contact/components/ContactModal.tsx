@@ -326,7 +326,11 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                     </div>
                     <div className="text-left">
                       <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider leading-none">Orari di apertura</p>
-                      <p className="text-xs font-bold text-gray-800 mt-0.5 leading-snug">Lunedì – Venerdì <span className="block text-gray-500">09:00 - 18:00</span></p>
+                      <p className="text-xs font-bold text-gray-800 mt-0.5 leading-snug">
+                        {school.secretariat_hours || (
+                          <>Lunedì – Venerdì <span className="block text-gray-500">09:00 - 18:00</span></>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>

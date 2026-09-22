@@ -349,18 +349,20 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
               <Link href="/" className="flex items-center gap-2" onClick={(e) => handleLinkClick(e, "/")}>
                 <Image
                   src={logo}
-                  alt="Atena School"
+                  alt={school.name}
                   width={40}
                   height={40}
                   className="object-contain"
                 />
                 <div className="flex flex-col items-start leading-tight">
                   <span className="font-serif font-black text-sm tracking-wider uppercase select-none whitespace-nowrap text-[#00328F]">
-                    Atena <span className="text-[#FAA904]">School</span>
+                    {school.name.split(' ')[0]} <span className="text-[#FAA904]">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                   </span>
-                  <span className="text-[8px] tracking-widest uppercase select-none whitespace-nowrap text-[#9FA2AC]">
-                    civitatis ornamento
-                  </span>
+                  {school.tagline && (
+                    <span className="text-[8px] tracking-widest uppercase select-none whitespace-nowrap text-[#9FA2AC]">
+                      {school.tagline}
+                    </span>
+                  )}
                 </div>
               </Link>
 

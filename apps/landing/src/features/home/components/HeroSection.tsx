@@ -49,11 +49,13 @@ const HeroSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: HeroSectionProps
             </div>
             <div className="flex flex-col items-center leading-tight">
               <span className="font-serif font-black text-xl xs:text-2xl tracking-wider uppercase text-[#043569]">
-                Atena <span className="text-[#F8861D]">School</span>
+                {school.name.split(' ')[0]} <span className="text-[#F8861D]">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
               </span>
-              <span className="text-[9px] xs:text-[10px] tracking-[0.22em] font-bold text-slate-400 uppercase mt-0.5">
-                Civitatis Ornamento
-              </span>
+              {school.tagline && (
+                <span className="text-[9px] xs:text-[10px] tracking-[0.22em] font-bold text-slate-400 uppercase mt-0.5">
+                  {school.tagline}
+                </span>
+              )}
             </div>
           </div>
 

@@ -85,7 +85,7 @@ export function CheckoutView({
     customFields,
     actionRef,
     onSubmit,
-  } = useCheckout(id);
+  } = useCheckout(id, mergedInitialData);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
 

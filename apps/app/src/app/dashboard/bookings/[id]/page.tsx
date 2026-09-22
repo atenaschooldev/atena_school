@@ -198,7 +198,9 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                     <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/40">Sede Lezioni</p>
                     <p className="text-sm font-bold text-foreground">
                       {schoolProfile?.name || SCHOOL_INFO.NAME},{' '}
-                      {schoolProfile?.address || SCHOOL_INFO.ADDRESS}
+                      {schoolProfile?.address
+                        ? `${schoolProfile.address}${schoolProfile.cap || schoolProfile.city ? `, ${[schoolProfile.cap, schoolProfile.city].filter(Boolean).join(' ')}` : ''}${schoolProfile.province ? ` (${schoolProfile.province})` : ''}`
+                        : SCHOOL_INFO.ADDRESS}
                     </p>
                   </div>
                 </div>
