@@ -642,31 +642,16 @@ export function VisualFormBuilder({
 
             <CardContent className="p-3">
               {formData.fields_config.length === 0 ? (
-                <div className="flex items-center justify-between py-4 px-3.5 border border-dashed rounded-lg bg-muted/20">
-                  <div className="flex items-center gap-2.5">
-                    <HelpCircle className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-                    <div>
-                      <p className="text-xs font-medium text-foreground">{t("forms.builderEmptyFields")}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {locale === "en"
-                          ? "Add additional questions from the database catalog (e.g. SDI code, notes, level)."
-                          : "Aggiungi domande e campi extra dal catalogo database (es. Codice SDI, note, livello)."}
-                      </p>
-                    </div>
+                <div className="flex items-center gap-3 py-3 px-3.5 border border-dashed rounded-lg bg-muted/15">
+                  <HelpCircle className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                  <div>
+                    <p className="text-xs font-medium text-foreground">{t("forms.builderEmptyFields")}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {locale === "en"
+                        ? "Click \"Add Field\" above to include additional questions from the database catalog."
+                        : "Clicca su \"Aggiungi Campo\" in alto per includere campi extra dal catalogo database."}
+                    </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setCatalogSearch("");
-                      setCatalogTargetFilter("all");
-                      setCatalogModalOpen(true);
-                    }}
-                    className="text-xs cursor-pointer h-7 px-2.5 shrink-0 font-medium"
-                  >
-                    <Plus className="w-3 h-3 mr-1 text-primary" /> {t("forms.builderAddFirst")}
-                  </Button>
                 </div>
               ) : (
                 <div className="space-y-1.5">
