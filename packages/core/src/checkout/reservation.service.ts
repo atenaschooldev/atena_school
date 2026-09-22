@@ -378,6 +378,8 @@ export async function createReservationWorkflow(
         notes: dto.notes || '',
         sdi_code: dto.sdiCode || null,
         pec_email: dto.pecEmail || null,
+        custom_fields: dto.custom_fields || {},
+        form_id: dto.form_id || null,
       })
       .select('*')
       .single();

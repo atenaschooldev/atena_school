@@ -646,6 +646,35 @@ export function BookingDetailDialog({
               <p className="text-amber-900 dark:text-amber-300 leading-relaxed">{booking.notes}</p>
             </div>
           )}
+
+          {/* Section 6: Dynamic Custom Form Answers */}
+          {booking.custom_fields &&
+            typeof booking.custom_fields === "object" &&
+            Object.keys(booking.custom_fields).length > 0 && (
+              <div className="rounded-lg border bg-blue-50/50 dark:bg-blue-950/10 border-blue-200 dark:border-blue-900/30 p-3.5 text-xs space-y-2">
+                <p className="font-semibold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>{locale === "en" ? "Custom Form Answers" : "Risposte Modulo Personalizzato"}</span>
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-blue-200/60 dark:border-blue-900/40">
+                  {Object.entries(booking.custom_fields).map(([key, val]) => {
+                    if (val === null || val === undefined || val === "") return null;
+                    const displayVal = typeof val === "object" ? JSON.stringify(val) : String(val);
+                    const formattedKey = key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+                    return (
+                      <div key={key} className="bg-white/80 dark:bg-card/80 p-2 rounded-md border border-blue-100 dark:border-blue-900/20">
+                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                          {formattedKey}
+                        </span>
+                        <span className="font-medium text-foreground text-xs break-words">
+                          {displayVal}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Single Row Footer Bar */}

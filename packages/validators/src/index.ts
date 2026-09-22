@@ -246,6 +246,8 @@ const reservationBaseObject = z.object({
   paymentStatus: z.union([z.number().int(), z.string()]).optional(),
   paymentMethod: z.union([z.number().int(), z.string()]).optional(),
   idempotencyKey: z.string().max(100).optional(),
+  custom_fields: z.record(z.any()).optional(),
+  form_id: z.string().optional(),
 });
 
 /**
@@ -448,6 +450,8 @@ export const contactFormSchema = z.object({
     .min(10, "Il messaggio deve contenere almeno 10 caratteri")
     .max(2000, "Il messaggio non può superare i 2000 caratteri"),
   privacy: z.boolean().optional(),
+  custom_fields: z.record(z.any()).optional(),
+  form_id: z.string().optional(),
 });
 
 export type ContactFormInput = z.infer<typeof contactFormSchema>;

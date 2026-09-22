@@ -23,6 +23,8 @@ export async function submitContactWorkflow(
     interest: interest,
     message: message,
     status: ContactMessageStatus.NEW,
+    custom_fields: dto.custom_fields || {},
+    form_id: dto.form_id || null,
   });
 
   if (error) {

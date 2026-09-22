@@ -47,6 +47,8 @@ export interface CreateReservationParams {
   paymentMethod?: PaymentMethod | string | number;
   paymentStatus?: BookingPaymentStatus | string | number;
   idempotencyKey?: string;
+  custom_fields?: Record<string, any>;
+  form_id?: string;
 }
 
 export interface VerifyPaymentParams {
@@ -66,6 +68,8 @@ export interface ContactFormParams {
   interest?: string;
   interesse?: string | null;
   courseInterest?: string;
+  custom_fields?: Record<string, any>;
+  form_id?: string;
 }
 
 export interface SupabaseCourseRow {
