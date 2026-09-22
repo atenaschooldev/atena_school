@@ -211,7 +211,18 @@ export function FormsListView() {
     });
   }, [forms, typeFilter, statusFilter, targetFilter, searchQuery]);
 
+  const isSystemTemplate = (form: FormTemplate): boolean => {
+    return (
+      form.id === "00000000-0000-0000-0000-000000000001" ||
+      form.id === "00000000-0000-0000-0000-000000000002" ||
+      form.id === "default-booking-form" ||
+      form.id === "default-contact-form" ||
+      form.is_default
+    );
+  };
+
   const handleToggleStatus = async (form: FormTemplate, checked: boolean) => {
+    if (isSystemTemplate(form)) return;
     await updateForm({
       id: form.id,
       payload: {
@@ -221,7 +232,7 @@ export function FormsListView() {
   };
 
   const handleDeleteForm = async (form: FormTemplate) => {
-    if (form.is_default) {
+    if (isSystemTemplate(form)) {
       return;
     }
     await deleteForm(form.id);
@@ -421,7 +432,7 @@ export function FormsListView() {
         header: t("forms.columnStatus"),
         cell: ({ row }) => {
           const form = row.original;
-          if (form.is_default) {
+          if (isSystemTemplate(form)) {
             return <StatusBadge status="attivo" />;
           }
           return (
@@ -444,6 +455,7 @@ export function FormsListView() {
         enableHiding: false,
         cell: ({ row }) => {
           const form = row.original;
+          const isSys = isSystemTemplate(form);
           return (
             <div className="flex items-center gap-1">
               {!form.is_default && (
@@ -484,7 +496,7 @@ export function FormsListView() {
               >
                 <Pencil className="h-4 w-4" />
               </Button>
-              {!form.is_default && (
+              {!isSys && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -779,7 +791,7 @@ export function FormsListView() {
                               </Badge>
                             )}
                           </div>
-                          {!form.is_default && (
+                          {!isSystemTemplate(form) && (
                             <Switch
                               checked={form.is_active}
                               onCheckedChange={(checked) => handleToggleStatus(form, checked)}
@@ -866,7 +878,7 @@ export function FormsListView() {
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </Button>
-                          {!form.is_default && (
+                          {!isSystemTemplate(form) && (
                             <Button
                               size="sm"
                               variant="ghost"
