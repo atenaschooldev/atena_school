@@ -348,8 +348,13 @@ export async function sendBookingNotificationEmails(params: {
     }
   }
 
+  const customFields = (booking as any).custom_fields || dto.custom_fields || {};
+
   // Common dynamic variables dictionary for template engine
   const templateVariables: Record<string, any> = {
+    ...customFields,
+    custom_fields: customFields,
+    customFields,
     course_name: courseName,
     courseName,
     purchaser_name: purchaserName,
@@ -437,7 +442,12 @@ export async function sendContactFormNotificationEmail(params: {
   data.schoolProfile = schoolProfile;
   const senderName = `${data.firstName} ${data.lastName}`.trim();
 
+  const customFields = data.custom_fields || (data as any).customFields || {};
+
   const leadVariables: Record<string, any> = {
+    ...customFields,
+    custom_fields: customFields,
+    customFields,
     sender_name: senderName,
     senderName,
     sender_email: data.email,

@@ -39,6 +39,8 @@ export interface BookingEmailTemplateData {
   stripePaymentIntentId?: string;
   stripeDashboardUrl?: string;
   createdAtFormatted?: string;
+  custom_fields?: Record<string, any>;
+  form_id?: string;
 }
 
 export interface ContactEmailTemplateData {
@@ -51,6 +53,8 @@ export interface ContactEmailTemplateData {
   message: string;
   createdAt?: string;
   schoolProfile?: SchoolProfile;
+  custom_fields?: Record<string, any>;
+  form_id?: string;
 }
 
 /**

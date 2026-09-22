@@ -725,8 +725,8 @@ export function compileTgTemplateVariables(
   variables: Record<string, any>
 ): string {
   if (!text) return '';
-  return text.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_match, key) => {
-    const val = variables[key];
+  return text.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_match, key) => {
+    const val = getFieldValue(variables, key);
     if (val === undefined || val === null) {
       return '';
     }

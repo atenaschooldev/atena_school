@@ -149,6 +149,20 @@ export class NotificationTriggerEngineService {
     return null;
   }
 
+  private async getSchoolProfile(): Promise<any> {
+    try {
+      const setting = await this.prisma.appSetting.findUnique({
+        where: { key: 'school_profile' },
+      });
+      if (setting?.value && typeof setting.value === 'object') {
+        return { ...DEFAULT_SCHOOL_PROFILE, ...(setting.value as any) };
+      }
+    } catch {
+      // Fallback to default
+    }
+    return DEFAULT_SCHOOL_PROFILE;
+  }
+
   private async dispatchNotification(
     trigger: any,
     recipient: string,
@@ -162,7 +176,8 @@ export class NotificationTriggerEngineService {
       let html = template.bodyHtml || '';
 
       if (template.blocksConfig && template.blocksConfig.blocks?.length) {
-        const rendered = renderEmailFromBlocks(template.blocksConfig, payload, DEFAULT_SCHOOL_PROFILE);
+        const schoolProfile = payload.schoolProfile || (await this.getSchoolProfile());
+        const rendered = renderEmailFromBlocks(template.blocksConfig, payload, schoolProfile);
         subject = template.subject ? compileTemplate(template.subject, payload) : (rendered.subject || subject);
         html = rendered.html;
       } else {
