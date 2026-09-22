@@ -172,6 +172,38 @@ export function WhiteLabelIntegrations() {
   const [adminUrl, setAdminUrl] = useState("");
   const [savingDomains, setSavingDomains] = useState(false);
   const [testingDomains, setTestingDomains] = useState(false);
+  const [revealingProvider, setRevealingProvider] = useState<string | null>(null);
+
+  const handleToggleReveal = async (
+    provider: string,
+    field: string,
+    currentVal: string,
+    setter: (val: string) => void,
+    showState: boolean,
+    setShowState: (val: boolean) => void
+  ) => {
+    if (showState) {
+      setShowState(false);
+      return;
+    }
+
+    if (currentVal.includes("••••")) {
+      setRevealingProvider(`${provider}_${field}`);
+      try {
+        const revealed = await api.post<Record<string, any>>(`/admin/integrations/${provider}/reveal`, {});
+        if (revealed && revealed[field]) {
+          setter(String(revealed[field]));
+        }
+        setShowState(true);
+      } catch (err: any) {
+        toast.error(err.message || "Impossibile recuperare il valore decifrato");
+      } finally {
+        setRevealingProvider(null);
+      }
+    } else {
+      setShowState(true);
+    }
+  };
 
   const loadData = async (initial: boolean = false) => {
     try {
@@ -682,10 +714,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowResendKey(!showResendKey)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "resend",
+                      "apiKey",
+                      resendKey,
+                      setResendKey,
+                      showResendKey,
+                      setShowResendKey
+                    )
+                  }
+                  disabled={revealingProvider === "resend_apiKey"}
                   title={showResendKey ? "Nascondi chiave" : "Mostra chiave"}
                 >
-                  {showResendKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "resend_apiKey" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showResendKey ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -730,10 +778,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowResendWebhookSecret(!showResendWebhookSecret)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "resend",
+                      "webhookSecret",
+                      resendWebhookSecret,
+                      setResendWebhookSecret,
+                      showResendWebhookSecret,
+                      setShowResendWebhookSecret
+                    )
+                  }
+                  disabled={revealingProvider === "resend_webhookSecret"}
                   title={showResendWebhookSecret ? "Nascondi secret" : "Mostra secret"}
                 >
-                  {showResendWebhookSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "resend_webhookSecret" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showResendWebhookSecret ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -814,10 +878,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowTgToken(!showTgToken)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "telegram",
+                      "botToken",
+                      tgToken,
+                      setTgToken,
+                      showTgToken,
+                      setShowTgToken
+                    )
+                  }
+                  disabled={revealingProvider === "telegram_botToken"}
                   title={showTgToken ? "Nascondi token" : "Mostra token"}
                 >
-                  {showTgToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "telegram_botToken" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showTgToken ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -882,9 +962,9 @@ export function WhiteLabelIntegrations() {
                     className="mt-0.5"
                   />
                   <div className="space-y-0.5">
-                    <span className="text-xs font-semibold block text-foreground">Saldo in Sede (Contanti)</span>
+                    <span className="text-xs font-semibold block text-foreground">Pagamenti di Persona (Contanti / POS)</span>
                     <span className="text-[11px] text-muted-foreground block leading-tight">
-                      Avviso quando la prenotazione richiede saldo di persona
+                      Iscrizioni confermate con pagamento previsto in sede
                     </span>
                   </div>
                 </label>
@@ -896,9 +976,9 @@ export function WhiteLabelIntegrations() {
                     className="mt-0.5"
                   />
                   <div className="space-y-0.5">
-                    <span className="text-xs font-semibold block text-foreground">Lead & Modulo Contatti</span>
+                    <span className="text-xs font-semibold block text-foreground">Nuovi Lead / Modulo Contatto</span>
                     <span className="text-[11px] text-muted-foreground block leading-tight">
-                      Messaggi e richieste di informazioni inviati dal modulo contatti
+                      Richieste di informazioni inviate dal form di contatto del sito
                     </span>
                   </div>
                 </label>
@@ -911,8 +991,8 @@ export function WhiteLabelIntegrations() {
             onClear={() => setTgStatus(null)}
           />
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -926,7 +1006,7 @@ export function WhiteLabelIntegrations() {
                 ) : (
                   <Send className="h-3.5 w-3.5 mr-1.5" />
                 )}
-                Invia Test Telegram
+                Invia Notifica di Test
               </Button>
               <Button
                 type="button"
@@ -935,13 +1015,14 @@ export function WhiteLabelIntegrations() {
                 onClick={handleSetTelegramWebhook}
                 disabled={settingWebhook}
                 className="text-xs cursor-pointer"
+                title="Configura automaticamente l'URL di webhook su Telegram API"
               >
                 {settingWebhook ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 ) : (
                   <Radio className="h-3.5 w-3.5 mr-1.5" />
                 )}
-                Registra Webhook Bot
+                Registra Webhook
               </Button>
             </div>
             <Button type="button" size="sm" onClick={handleSaveTelegram} disabled={savingTg} className="cursor-pointer">
@@ -995,10 +1076,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowStripeSecret(!showStripeSecret)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "stripe",
+                      "secretKey",
+                      stripeSecret,
+                      setStripeSecret,
+                      showStripeSecret,
+                      setShowStripeSecret
+                    )
+                  }
+                  disabled={revealingProvider === "stripe_secretKey"}
                   title={showStripeSecret ? "Nascondi chiave" : "Mostra chiave"}
                 >
-                  {showStripeSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "stripe_secretKey" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showStripeSecret ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -1019,10 +1116,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowStripePublishable(!showStripePublishable)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "stripe",
+                      "publishableKey",
+                      stripePublishable,
+                      setStripePublishable,
+                      showStripePublishable,
+                      setShowStripePublishable
+                    )
+                  }
+                  disabled={revealingProvider === "stripe_publishableKey"}
                   title={showStripePublishable ? "Nascondi chiave" : "Mostra chiave"}
                 >
-                  {showStripePublishable ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "stripe_publishableKey" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showStripePublishable ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
@@ -1043,10 +1156,26 @@ export function WhiteLabelIntegrations() {
                   variant="ghost"
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
-                  onClick={() => setShowStripeWebhook(!showStripeWebhook)}
+                  onClick={() =>
+                    handleToggleReveal(
+                      "stripe",
+                      "webhookSecret",
+                      stripeWebhook,
+                      setStripeWebhook,
+                      showStripeWebhook,
+                      setShowStripeWebhook
+                    )
+                  }
+                  disabled={revealingProvider === "stripe_webhookSecret"}
                   title={showStripeWebhook ? "Nascondi secret" : "Mostra secret"}
                 >
-                  {showStripeWebhook ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {revealingProvider === "stripe_webhookSecret" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : showStripeWebhook ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>

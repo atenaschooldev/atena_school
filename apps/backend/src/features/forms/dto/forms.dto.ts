@@ -115,3 +115,101 @@ export class ResolveFormQueryDto {
   @IsString()
   category_slug?: string;
 }
+
+export class CreateFormFieldDto {
+  @ApiProperty({ description: 'Системный уникальный ключ латиницей' })
+  @IsString()
+  key: string;
+
+  @ApiProperty({ description: 'Название поля на итальянском' })
+  @IsString()
+  label_it: string;
+
+  @ApiProperty({ description: 'Название поля на английском' })
+  @IsString()
+  label_en: string;
+
+  @ApiPropertyOptional({ description: 'Плейсхолдер на итальянском' })
+  @IsOptional()
+  @IsString()
+  placeholder_it?: string;
+
+  @ApiPropertyOptional({ description: 'Плейсхолдер на английском' })
+  @IsOptional()
+  @IsString()
+  placeholder_en?: string;
+
+  @ApiProperty({ description: 'Тип поля' })
+  @IsString()
+  field_type: string;
+
+  @ApiProperty({ description: 'Целевой объект (purchaser, student, booking, contact)' })
+  @IsString()
+  target: string;
+
+  @ApiPropertyOptional({ description: 'Опции для селекта / радио' })
+  @IsOptional()
+  @IsArray()
+  options?: any[];
+
+  @ApiPropertyOptional({ description: 'Системное ли поле' })
+  @IsOptional()
+  @IsBoolean()
+  is_system?: boolean;
+
+  @ApiPropertyOptional({ description: 'Обязательное по умолчанию' })
+  @IsOptional()
+  @IsBoolean()
+  is_required_default?: boolean;
+
+  @ApiPropertyOptional({ description: 'Порядок сортировки' })
+  @IsOptional()
+  sort_order?: number;
+}
+
+export class UpdateFormFieldDto {
+  @ApiPropertyOptional({ description: 'Название поля на итальянском' })
+  @IsOptional()
+  @IsString()
+  label_it?: string;
+
+  @ApiPropertyOptional({ description: 'Название поля на английском' })
+  @IsOptional()
+  @IsString()
+  label_en?: string;
+
+  @ApiPropertyOptional({ description: 'Плейсхолдер на итальянском' })
+  @IsOptional()
+  @IsString()
+  placeholder_it?: string;
+
+  @ApiPropertyOptional({ description: 'Плейсхолдер на английском' })
+  @IsOptional()
+  @IsString()
+  placeholder_en?: string;
+
+  @ApiPropertyOptional({ description: 'Тип поля' })
+  @IsOptional()
+  @IsString()
+  field_type?: string;
+
+  @ApiPropertyOptional({ description: 'Целевой объект' })
+  @IsOptional()
+  @IsString()
+  target?: string;
+
+  @ApiPropertyOptional({ description: 'Опции для селекта / радио' })
+  @IsOptional()
+  @IsArray()
+  options?: any[];
+
+  @ApiPropertyOptional({ description: 'Обязательное по умолчанию' })
+  @IsOptional()
+  @IsBoolean()
+  is_required_default?: boolean;
+
+  @ApiPropertyOptional({ description: 'Порядок сортировки' })
+  @IsOptional()
+  sort_order?: number;
+}
+

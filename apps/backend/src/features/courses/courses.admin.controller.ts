@@ -45,11 +45,61 @@ export class CoursesController {
     return this.coursesService.listCategories();
   }
 
+  @Post('categories')
+  @Roles('admin')
+  @Audit('courses', 'create_category')
+  @ApiOperation({ summary: 'Создать новую категорию курса' })
+  async createCategory(@Body() dto: any) {
+    return this.coursesService.createCategory(dto);
+  }
+
+  @Put('categories/:id')
+  @Roles('admin')
+  @Audit('courses', 'update_category')
+  @ApiOperation({ summary: 'Обновить категорию курса' })
+  async updateCategory(@Param('id') id: string, @Body() dto: any) {
+    return this.coursesService.updateCategory(id, dto);
+  }
+
+  @Delete('categories/:id')
+  @Roles('admin')
+  @Audit('courses', 'delete_category')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Удалить категорию курса' })
+  async deleteCategory(@Param('id') id: string) {
+    await this.coursesService.deleteCategory(id);
+  }
+
   @Get('settings')
   @Roles('admin', 'teacher', 'student', 'parent')
   @ApiOperation({ summary: 'Получить список пресетов/настроек курсов' })
   async listSettings() {
     return this.coursesService.getAllSettings();
+  }
+
+  @Post('settings')
+  @Roles('admin')
+  @Audit('courses', 'create_settings')
+  @ApiOperation({ summary: 'Создать новый пресет настроек курса' })
+  async createSettings(@Body() dto: any) {
+    return this.coursesService.createSettings(dto);
+  }
+
+  @Put('settings/:id')
+  @Roles('admin')
+  @Audit('courses', 'update_settings')
+  @ApiOperation({ summary: 'Обновить пресет настроек курса' })
+  async updateSettings(@Param('id') id: string, @Body() dto: any) {
+    return this.coursesService.updateSettings(id, dto);
+  }
+
+  @Delete('settings/:id')
+  @Roles('admin')
+  @Audit('courses', 'delete_settings')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Удалить пресет настроек курса' })
+  async deleteSettings(@Param('id') id: string) {
+    await this.coursesService.deleteSettings(id);
   }
 
   @Get(':id')

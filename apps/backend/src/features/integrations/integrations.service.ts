@@ -13,16 +13,24 @@ import {
   getStripeCredentials,
   getAnalyticsCredentials,
   getDomainsCredentials,
+  revealIntegrationCredentials,
   clearSecretsCache,
   sendEmailViaResend,
   sendTelegramMessage,
   getStripeClient,
+  encryptSecret,
 } from '@atena/core';
 import {
   UpdateIntegrationDto,
   TestIntegrationDto,
   SetTelegramWebhookDto,
 } from './dto/integration.dto';
+
+const SENSITIVE_FIELDS: Record<string, string[]> = {
+  [IntegrationProvider.RESEND]: ['apiKey', 'webhookSecret'],
+  [IntegrationProvider.TELEGRAM]: ['botToken'],
+  [IntegrationProvider.STRIPE]: ['secretKey', 'webhookSecret'],
+};
 
 @Injectable()
 export class IntegrationsService {
@@ -53,6 +61,22 @@ export class IntegrationsService {
     return getMaskedIntegrationsSummary(this.supabase);
   }
 
+  async revealIntegration(provider: string): Promise<Record<string, any>> {
+    const validProviders = [
+      IntegrationProvider.RESEND,
+      IntegrationProvider.TELEGRAM,
+      IntegrationProvider.STRIPE,
+      IntegrationProvider.ANALYTICS,
+      IntegrationProvider.DOMAINS,
+    ];
+
+    if (!validProviders.includes(provider as any)) {
+      throw new BadRequestException(`Provider non valido: ${provider}`);
+    }
+
+    return revealIntegrationCredentials(provider, this.supabase);
+  }
+
   async updateIntegration(
     provider: string,
     dto: UpdateIntegrationDto,
@@ -81,16 +105,22 @@ export class IntegrationsService {
 
     // Merge credentials: if new value is empty string, unchanged, or masked (contains ••••), retain existing value
     const mergedCreds: Record<string, any> = { ...existingCreds };
+    const sensitiveKeys = SENSITIVE_FIELDS[provider] || [];
 
     for (const [key, val] of Object.entries(dto.credentials || {})) {
       if (typeof val === 'string') {
         const trimmed = val.trim();
         if (trimmed.includes('••••')) {
-          // Keep existing
+          // Keep existing value
           continue;
         }
         if (trimmed !== '') {
-          mergedCreds[key] = trimmed;
+          // Encrypt sensitive fields with AES-256-GCM before writing to database
+          if (sensitiveKeys.includes(key)) {
+            mergedCreds[key] = encryptSecret(trimmed);
+          } else {
+            mergedCreds[key] = trimmed;
+          }
         }
       } else if (val !== undefined && val !== null) {
         mergedCreds[key] = val;

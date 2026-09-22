@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import {
   type FormTemplate,
   type FormFieldConfig,
+  type FormFieldItem,
   FormFieldType,
   FormFieldTarget,
   FormType,
@@ -12,6 +13,8 @@ import {
   FORM_FIELD_TARGET_DICTIONARY,
   parseFormType,
 } from "../types";
+import { useFormFields } from "../hooks/use-form-fields";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,6 +78,7 @@ export function VisualFormBuilder({
 }: VisualFormBuilderProps) {
   const { t, locale } = useTranslation();
   const { coursesList, loading: loadingCourses } = useCourses();
+  const { fields: catalogFields } = useFormFields();
 
   const getFormTypeLabel = (val: any): string => {
     const parsed = parseFormType(val);
@@ -155,6 +159,7 @@ export function VisualFormBuilder({
   // Field modal state
   const [editingField, setEditingField] = useState<FormFieldConfig | null>(null);
   const [fieldDialogOpen, setFieldDialogOpen] = useState(false);
+  const [selectedCatalogFieldId, setSelectedCatalogFieldId] = useState<string>("custom");
   const [fieldKey, setFieldKey] = useState("");
   const [fieldLabel, setFieldLabel] = useState("");
   const [fieldPlaceholder, setFieldPlaceholder] = useState("");
@@ -186,6 +191,7 @@ export function VisualFormBuilder({
 
   const handleOpenAddField = () => {
     setEditingField(null);
+    setSelectedCatalogFieldId("custom");
     setFieldKey("");
     setFieldLabel("");
     setFieldPlaceholder("");
@@ -200,6 +206,7 @@ export function VisualFormBuilder({
 
   const handleOpenEditField = (f: FormFieldConfig) => {
     setEditingField(f);
+    setSelectedCatalogFieldId("custom");
     setFieldKey(f.key);
     setFieldLabel(f.label);
     setFieldPlaceholder(f.placeholder || "");
@@ -217,6 +224,52 @@ export function VisualFormBuilder({
     );
     setFieldDialogOpen(true);
   };
+
+  const handleSelectCatalogFieldInDialog = (fieldId: string) => {
+    setSelectedCatalogFieldId(fieldId);
+    if (fieldId === "custom") return;
+
+    const catalogField = catalogFields.find((f) => f.id === fieldId || f.key === fieldId);
+    if (!catalogField) return;
+
+    setFieldKey(catalogField.key);
+    setFieldLabel(locale === "en" ? catalogField.label_en : catalogField.label_it);
+    setFieldPlaceholder((locale === "en" ? catalogField.placeholder_en : catalogField.placeholder_it) || "");
+    setFieldType(catalogField.field_type);
+    setFieldTarget(catalogField.target);
+    setFieldRequired(catalogField.is_required_default);
+    setFieldOptionsText(
+      Array.isArray(catalogField.options)
+        ? catalogField.options
+            .map((o) => (typeof o === "string" ? `${o}:${o}` : `${o.label}:${o.value}`))
+            .join("\n")
+        : ""
+    );
+  };
+
+  const handleAttachCatalogField = (catalogField: FormFieldItem) => {
+    const existing = formData.fields_config.find((f) => f.key === catalogField.key);
+    if (existing) return;
+
+    const newField: FormFieldConfig = {
+      id: `field-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      key: catalogField.key,
+      label: locale === "en" ? catalogField.label_en : catalogField.label_it,
+      placeholder: (locale === "en" ? catalogField.placeholder_en : catalogField.placeholder_it) || undefined,
+      field_type: catalogField.field_type,
+      target: catalogField.target,
+      is_required: catalogField.is_required_default,
+      is_enabled: true,
+      sort_order: formData.fields_config.length + 1,
+      options: Array.isArray(catalogField.options) && catalogField.options.length > 0 ? catalogField.options : undefined,
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      fields_config: [...prev.fields_config, newField],
+    }));
+  };
+
 
 
   const handleSaveFieldDialog = () => {
@@ -610,6 +663,38 @@ export function VisualFormBuilder({
               </CardHeader>
 
               <CardContent className="p-4">
+                {/* 1-Click Quick Catalog Attachment Bar */}
+                {catalogFields.filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key)).length > 0 && (
+                  <div className="mb-4 p-3 rounded-lg bg-muted/40 border border-border/60">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                        <Layers className="w-3.5 h-3.5 text-primary" />
+                        {locale === "en" ? "Quick Attach from Database Catalog:" : "Campi disponibili dal catalogo (attiva in 1 click):"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {catalogFields.filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key)).length} {locale === "en" ? "ready to attach" : "disponibili"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                      {catalogFields
+                        .filter((cf) => !formData.fields_config.some((fc) => fc.key === cf.key))
+                        .map((cf) => (
+                          <button
+                            key={cf.id}
+                            type="button"
+                            onClick={() => handleAttachCatalogField(cf)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-background border border-border hover:border-primary/50 hover:bg-primary/5 text-foreground transition-all cursor-pointer shadow-2xs"
+                            title={locale === "en" ? `Add "${cf.label_en}"` : `Aggiungi "${cf.label_it}"`}
+                          >
+                            <Plus className="w-3 h-3 text-primary shrink-0" />
+                            <span className="font-medium">{locale === "en" ? cf.label_en : cf.label_it}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">({cf.key})</span>
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Fields List or Empty State */}
                 {formData.fields_config.length === 0 ? (
                   <div className="flex items-center justify-between py-3 px-4 border border-dashed rounded-lg bg-muted/20">
@@ -628,6 +713,7 @@ export function VisualFormBuilder({
                     </Button>
                   </div>
                 ) : (
+
                   <div className="space-y-1.5">
                     {formData.fields_config.map((field, index) => {
                       const isStudent = field.target === FormFieldTarget.STUDENT;
@@ -1183,6 +1269,56 @@ export function VisualFormBuilder({
           </DialogHeader>
 
           <div className="space-y-4 py-1">
+            {/* Catalog Selector Dropdown */}
+            {!editingField && (
+              <div className="space-y-1.5 bg-muted/40 p-3 rounded-lg border border-border/70">
+                <Label className="text-xs font-semibold flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-primary" />
+                    {locale === "en" ? "Select from Database Catalog" : "Seleziona dal Catalogo Campi"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-normal">
+                    {catalogFields.length} {locale === "en" ? "fields" : "campi"}
+                  </span>
+                </Label>
+                <select
+                  value={selectedCatalogFieldId}
+                  onChange={(e) => handleSelectCatalogFieldInDialog(e.target.value)}
+                  className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-xs text-foreground font-medium"
+                >
+                  <option value="custom">✨ {locale === "en" ? "-- Custom ad-hoc field --" : "-- Campo personalizzato libero --"}</option>
+                  <optgroup label={locale === "en" ? "Purchaser Fields" : "Campi Acquirente"}>
+                    {catalogFields.filter(f => f.target === FormFieldTarget.PURCHASER).map(f => (
+                      <option key={f.id} value={f.id}>
+                        👤 {locale === "en" ? f.label_en : f.label_it} ({f.key})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={locale === "en" ? "Student Fields" : "Campi Studente"}>
+                    {catalogFields.filter(f => f.target === FormFieldTarget.STUDENT).map(f => (
+                      <option key={f.id} value={f.id}>
+                        🎓 {locale === "en" ? f.label_en : f.label_it} ({f.key})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={locale === "en" ? "Booking Fields" : "Campi Iscrizione"}>
+                    {catalogFields.filter(f => f.target === FormFieldTarget.BOOKING).map(f => (
+                      <option key={f.id} value={f.id}>
+                        📅 {locale === "en" ? f.label_en : f.label_it} ({f.key})
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label={locale === "en" ? "Contact Fields" : "Campi Contatto"}>
+                    {catalogFields.filter(f => f.target === FormFieldTarget.CONTACT).map(f => (
+                      <option key={f.id} value={f.id}>
+                        ✉️ {locale === "en" ? f.label_en : f.label_it} ({f.key})
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label className="text-xs font-medium">{t("forms.builderDialogLabelLabel")} *</Label>
               <Input
@@ -1192,6 +1328,7 @@ export function VisualFormBuilder({
                 className="text-xs"
               />
             </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">

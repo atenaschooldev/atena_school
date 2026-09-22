@@ -183,9 +183,14 @@ export class FormsService {
   async deleteForm(id: string): Promise<{ success: boolean; id: string }> {
     const current = await this.getFormById(id);
 
-    if (current.is_default) {
-      throw new BadRequestException('Non è possibile eliminare il modulo predefinito. Imposta prima un altro modulo come predefinito.');
+    if (
+      current.is_default ||
+      id === '00000000-0000-0000-0000-000000000001' ||
+      id === '00000000-0000-0000-0000-000000000002'
+    ) {
+      throw new BadRequestException('Non è possibile eliminare un modulo di sistema predefinito.');
     }
+
 
     const { error } = await this.supabase
       .from('form_templates')

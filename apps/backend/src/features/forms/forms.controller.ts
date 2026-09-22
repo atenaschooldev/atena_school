@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Delete,
   Body,
@@ -12,10 +13,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FormsService } from './forms.service';
+import { FormFieldsService } from './form-fields.service';
 import {
   CreateFormTemplateDto,
   UpdateFormTemplateDto,
   ResolveFormQueryDto,
+  CreateFormFieldDto,
+  UpdateFormFieldDto,
 } from './dto/forms.dto';
 import { FormType } from '@atena/api-types';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -27,7 +31,10 @@ import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 @ApiTags('Forms — Public & Resolution')
 @Controller(['forms', 'landing/forms'])
 export class FormsPublicController {
-  constructor(private readonly formsService: FormsService) {}
+  constructor(
+    private readonly formsService: FormsService,
+    private readonly formFieldsService: FormFieldsService,
+  ) {}
 
   @Get(['resolve', 'template', 'templates'])
   @ApiOperation({ summary: 'Разрешить активный шаблон формы для курса/категории (Public)' })
@@ -71,6 +78,16 @@ export class FormsPublicController {
       template,
     };
   }
+
+  @Get('fields')
+  @ApiOperation({ summary: 'Получить каталог полей форм (Public)' })
+  async getPublicFields(
+    @Query('target') target?: string,
+    @Query('is_system') is_system?: string,
+  ) {
+    const isSystemBool = is_system !== undefined ? is_system === 'true' : undefined;
+    return this.formFieldsService.getFields({ target, is_system: isSystemBool });
+  }
 }
 
 @ApiTags('Admin — Forms Engine')
@@ -79,7 +96,64 @@ export class FormsPublicController {
 @UseInterceptors(AuditInterceptor)
 @Controller('admin/forms')
 export class FormsAdminController {
-  constructor(private readonly formsService: FormsService) {}
+  constructor(
+    private readonly formsService: FormsService,
+    private readonly formFieldsService: FormFieldsService,
+  ) {}
+
+  // --------------------------------------------------------------------------
+  // FORM FIELDS CATALOG ENDPOINTS
+  // --------------------------------------------------------------------------
+
+  @Get('fields')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить каталог полей формы' })
+  async getFields(
+    @Query('target') target?: string,
+    @Query('is_system') is_system?: string,
+  ) {
+    const isSystemBool = is_system !== undefined ? is_system === 'true' : undefined;
+    return this.formFieldsService.getFields({ target, is_system: isSystemBool });
+  }
+
+  @Post('fields')
+  @Roles('admin')
+  @Audit('forms', 'create_form_field')
+  @ApiOperation({ summary: 'Создать новое поле в каталоге' })
+  async createField(@Body() dto: CreateFormFieldDto) {
+    return this.formFieldsService.createField(dto);
+  }
+
+  @Get('fields/:id')
+  @Roles('admin', 'secretary')
+  @ApiOperation({ summary: 'Получить поле каталога по ID' })
+  async getFieldById(@Param('id') id: string) {
+    return this.formFieldsService.getFieldById(id);
+  }
+
+  @Put('fields/:id')
+  @Patch('fields/:id')
+  @Roles('admin')
+  @Audit('forms', 'update_form_field')
+  @ApiOperation({ summary: 'Обновить поле каталога' })
+  async updateField(
+    @Param('id') id: string,
+    @Body() dto: UpdateFormFieldDto,
+  ) {
+    return this.formFieldsService.updateField(id, dto);
+  }
+
+  @Delete('fields/:id')
+  @Roles('admin')
+  @Audit('forms', 'delete_form_field')
+  @ApiOperation({ summary: 'Удалить поле из каталога (только кастомные)' })
+  async deleteField(@Param('id') id: string) {
+    return this.formFieldsService.deleteField(id);
+  }
+
+  // --------------------------------------------------------------------------
+  // FORM TEMPLATES ENDPOINTS
+  // --------------------------------------------------------------------------
 
   @Get()
   @Roles('admin', 'secretary')
@@ -142,3 +216,4 @@ export class FormsAdminController {
     return this.formsService.duplicateForm(id);
   }
 }
+

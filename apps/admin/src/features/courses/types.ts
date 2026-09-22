@@ -1,4 +1,4 @@
-import { CourseStatus as CourseStatusEnum, CourseScheduleType, CourseFormat, CourseDeliveryMode, CourseSettingsItem } from '@atena/api-types';
+import { CourseStatus as CourseStatusEnum, CourseScheduleType, CourseFormat, CourseDeliveryMode, type CourseSettingsItem } from '@atena/api-types';
 
 export type Level = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 export const LEVELS: Level[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -257,3 +257,85 @@ export function mapCourseToApiPayload(
     slug: form.slug || null,
   };
 }
+
+export interface CourseCategoryRecord {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  sortOrder: number;
+  sort_order?: number;
+  isActive: boolean;
+  is_active?: boolean;
+  coursesCount?: number;
+  courses_count?: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface CreateCourseCategoryDto {
+  name: string;
+  slug?: string;
+  description?: string;
+  sortOrder?: number;
+  sort_order?: number;
+  isActive?: boolean;
+  is_active?: boolean;
+}
+
+export type UpdateCourseCategoryDto = Partial<CreateCourseCategoryDto>;
+
+export interface CourseSettingsRecord {
+  id: string;
+  name: string;
+  deliveryMode: number;
+  delivery_mode?: number;
+  scheduleDays: any[];
+  schedule_days?: any[];
+  startTime?: string | null;
+  start_time?: string | null;
+  endTime?: string | null;
+  end_time?: string | null;
+  lessonDurationMinutes?: number | null;
+  lesson_duration_minutes?: number | null;
+  lessonsPerWeek?: number | null;
+  lessons_per_week?: number | null;
+  totalLessons?: number | null;
+  total_lessons?: number | null;
+  totalHours?: number | null;
+  total_hours?: number | null;
+  minStudents?: number | null;
+  min_students?: number | null;
+  maxStudents?: number | null;
+  max_students?: number | null;
+  coursesCount?: number;
+  courses_count?: number;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+export interface CreateCourseSettingsDto {
+  name: string;
+  deliveryMode?: number;
+  delivery_mode?: number;
+  scheduleDays?: any[];
+  schedule_days?: any[];
+  startTime?: string;
+  start_time?: string;
+  endTime?: string;
+  end_time?: string;
+  lessonDurationMinutes?: number;
+  lesson_duration_minutes?: number;
+  lessonsPerWeek?: number;
+  lessons_per_week?: number;
+  totalLessons?: number;
+  total_lessons?: number;
+  totalHours?: number;
+  total_hours?: number;
+  minStudents?: number;
+  min_students?: number;
+  maxStudents?: number;
+  max_students?: number;
+}
+
+export type UpdateCourseSettingsDto = Partial<CreateCourseSettingsDto>;

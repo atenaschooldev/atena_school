@@ -148,6 +148,11 @@ export class CoursesService {
 
   async getAllSettings(): Promise<any[]> {
     const list = await this.prisma.courseSettings.findMany({
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
       orderBy: { name: 'asc' },
     });
     return list.map((s) => ({
@@ -173,6 +178,8 @@ export class CoursesService {
       min_students: s.minStudents,
       maxStudents: s.maxStudents,
       max_students: s.maxStudents,
+      coursesCount: s._count?.courses ?? 0,
+      courses_count: s._count?.courses ?? 0,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
     }));
@@ -449,9 +456,268 @@ export class CoursesService {
   }
 
   async listCategories() {
-    return this.prisma.courseCategory.findMany({
+    try {
+      const categoriesAll = await this.prisma.courseCategory.findMany();
+      for (const cat of categoriesAll) {
+        const catNum = parseCourseCategory(cat.slug);
+        await this.prisma.$executeRaw`
+          UPDATE courses 
+          SET category_id = ${cat.id}::uuid 
+          WHERE category_id IS NULL AND (category = ${catNum} OR slug ILIKE ${'%' + cat.slug + '%'})
+        `;
+      }
+    } catch {}
+
+    const categories = await this.prisma.courseCategory.findMany({
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
       orderBy: { sortOrder: 'asc' },
     });
+    return categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      description: c.description,
+      sortOrder: c.sortOrder,
+      sort_order: c.sortOrder,
+      isActive: c.isActive,
+      is_active: c.isActive,
+      coursesCount: c._count?.courses ?? 0,
+      courses_count: c._count?.courses ?? 0,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+    }));
+  }
+
+  async createCategory(dto: any) {
+    const slug = dto.slug || slugify(dto.name || 'categoria');
+    const sortOrder = dto.sortOrder != null ? Number(dto.sortOrder) : (dto.sort_order != null ? Number(dto.sort_order) : 0);
+    const isActive = dto.isActive !== undefined ? !!dto.isActive : (dto.is_active !== undefined ? !!dto.is_active : true);
+    const created = await this.prisma.courseCategory.create({
+      data: {
+        name: dto.name,
+        slug,
+        description: dto.description || null,
+        sortOrder,
+        isActive,
+      },
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
+    });
+    return {
+      id: created.id,
+      name: created.name,
+      slug: created.slug,
+      description: created.description,
+      sortOrder: created.sortOrder,
+      sort_order: created.sortOrder,
+      isActive: created.isActive,
+      is_active: created.isActive,
+      coursesCount: created._count?.courses ?? 0,
+      courses_count: created._count?.courses ?? 0,
+      createdAt: created.createdAt,
+      updatedAt: created.updatedAt,
+    };
+  }
+
+  async updateCategory(id: string, dto: any) {
+    const updateData: any = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.slug !== undefined) updateData.slug = dto.slug;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.sortOrder !== undefined || dto.sort_order !== undefined) {
+      updateData.sortOrder = Number(dto.sortOrder ?? dto.sort_order);
+    }
+    if (dto.isActive !== undefined || dto.is_active !== undefined) {
+      updateData.isActive = dto.isActive !== undefined ? !!dto.isActive : !!dto.is_active;
+    }
+
+    const updated = await this.prisma.courseCategory.update({
+      where: { id },
+      data: updateData,
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
+    });
+    return {
+      id: updated.id,
+      name: updated.name,
+      slug: updated.slug,
+      description: updated.description,
+      sortOrder: updated.sortOrder,
+      sort_order: updated.sortOrder,
+      isActive: updated.isActive,
+      is_active: updated.isActive,
+      coursesCount: updated._count?.courses ?? 0,
+      courses_count: updated._count?.courses ?? 0,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  async deleteCategory(id: string) {
+    await this.prisma.course.updateMany({
+      where: { categoryId: id },
+      data: { categoryId: null },
+    });
+    await this.prisma.courseCategory.delete({
+      where: { id },
+    });
+    return { success: true };
+  }
+
+  async createSettings(dto: any) {
+    const deliveryMode = dto.deliveryMode ?? dto.delivery_mode ?? 1;
+    const scheduleDays = dto.scheduleDays ? mapDaysToDb(dto.scheduleDays) : (dto.schedule_days ? mapDaysToDb(dto.schedule_days) : []);
+    const rawMax = dto.maxStudents ?? dto.max_students;
+    const parsedMax = rawMax !== undefined && rawMax !== null && rawMax !== '' && Number(rawMax) > 0 ? Number(rawMax) : null;
+
+    const created = await this.prisma.courseSettings.create({
+      data: {
+        name: dto.name || 'Configurazione Corso',
+        deliveryMode: Number(deliveryMode),
+        scheduleDays,
+        startTime: dto.startTime ?? dto.start_time ?? null,
+        endTime: dto.endTime ?? dto.end_time ?? null,
+        lessonDurationMinutes: dto.lessonDurationMinutes != null ? Number(dto.lessonDurationMinutes) : (dto.lesson_duration_minutes != null ? Number(dto.lesson_duration_minutes) : null),
+        lessonsPerWeek: dto.lessonsPerWeek != null ? Number(dto.lessonsPerWeek) : (dto.lessons_per_week != null ? Number(dto.lessons_per_week) : null),
+        totalLessons: dto.totalLessons != null ? Number(dto.totalLessons) : (dto.total_lessons != null ? Number(dto.total_lessons) : null),
+        totalHours: dto.totalHours != null ? Number(dto.totalHours) : (dto.total_hours != null ? Number(dto.total_hours) : null),
+        minStudents: dto.minStudents != null ? Number(dto.minStudents) : (dto.min_students != null ? Number(dto.min_students) : 1),
+        maxStudents: parsedMax,
+      },
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
+    });
+    return {
+      id: created.id,
+      name: created.name,
+      deliveryMode: created.deliveryMode,
+      delivery_mode: created.deliveryMode,
+      scheduleDays: created.scheduleDays,
+      schedule_days: created.scheduleDays,
+      startTime: created.startTime,
+      start_time: created.startTime,
+      endTime: created.endTime,
+      end_time: created.endTime,
+      lessonDurationMinutes: created.lessonDurationMinutes,
+      lesson_duration_minutes: created.lessonDurationMinutes,
+      lessonsPerWeek: created.lessonsPerWeek,
+      lessons_per_week: created.lessonsPerWeek,
+      totalLessons: created.totalLessons,
+      total_lessons: created.totalLessons,
+      totalHours: created.totalHours ? Number(created.totalHours) : null,
+      total_hours: created.totalHours ? Number(created.totalHours) : null,
+      minStudents: created.minStudents,
+      min_students: created.minStudents,
+      maxStudents: created.maxStudents,
+      max_students: created.maxStudents,
+      coursesCount: created._count?.courses ?? 0,
+      courses_count: created._count?.courses ?? 0,
+      createdAt: created.createdAt,
+      updatedAt: created.updatedAt,
+    };
+  }
+
+  async updateSettings(id: string, dto: any) {
+    const updateData: any = {};
+    if (dto.name !== undefined) updateData.name = dto.name;
+    if (dto.deliveryMode !== undefined || dto.delivery_mode !== undefined) {
+      updateData.deliveryMode = Number(dto.deliveryMode ?? dto.delivery_mode);
+    }
+    if (dto.scheduleDays !== undefined || dto.schedule_days !== undefined) {
+      updateData.scheduleDays = mapDaysToDb(dto.scheduleDays ?? dto.schedule_days ?? []);
+    }
+    if (dto.startTime !== undefined || dto.start_time !== undefined) {
+      updateData.startTime = dto.startTime ?? dto.start_time;
+    }
+    if (dto.endTime !== undefined || dto.end_time !== undefined) {
+      updateData.endTime = dto.endTime ?? dto.end_time;
+    }
+    if (dto.lessonDurationMinutes !== undefined || dto.lesson_duration_minutes !== undefined) {
+      const val = dto.lessonDurationMinutes ?? dto.lesson_duration_minutes;
+      updateData.lessonDurationMinutes = val != null ? Number(val) : null;
+    }
+    if (dto.lessonsPerWeek !== undefined || dto.lessons_per_week !== undefined) {
+      const val = dto.lessonsPerWeek ?? dto.lessons_per_week;
+      updateData.lessonsPerWeek = val != null ? Number(val) : null;
+    }
+    if (dto.totalLessons !== undefined || dto.total_lessons !== undefined) {
+      const val = dto.totalLessons ?? dto.total_lessons;
+      updateData.totalLessons = val != null ? Number(val) : null;
+    }
+    if (dto.totalHours !== undefined || dto.total_hours !== undefined) {
+      const val = dto.totalHours ?? dto.total_hours;
+      updateData.totalHours = val != null ? Number(val) : null;
+    }
+    if (dto.minStudents !== undefined || dto.min_students !== undefined) {
+      const val = dto.minStudents ?? dto.min_students;
+      updateData.minStudents = val != null ? Number(val) : null;
+    }
+    if (dto.maxStudents !== undefined || dto.max_students !== undefined) {
+      const rawMax = dto.maxStudents ?? dto.max_students;
+      updateData.maxStudents = rawMax !== undefined && rawMax !== null && rawMax !== '' && Number(rawMax) > 0 ? Number(rawMax) : null;
+    }
+
+    const updated = await this.prisma.courseSettings.update({
+      where: { id },
+      data: updateData,
+      include: {
+        _count: {
+          select: { courses: true },
+        },
+      },
+    });
+    return {
+      id: updated.id,
+      name: updated.name,
+      deliveryMode: updated.deliveryMode,
+      delivery_mode: updated.deliveryMode,
+      scheduleDays: updated.scheduleDays,
+      schedule_days: updated.scheduleDays,
+      startTime: updated.startTime,
+      start_time: updated.startTime,
+      endTime: updated.endTime,
+      end_time: updated.endTime,
+      lessonDurationMinutes: updated.lessonDurationMinutes,
+      lesson_duration_minutes: updated.lessonDurationMinutes,
+      lessonsPerWeek: updated.lessonsPerWeek,
+      lessons_per_week: updated.lessonsPerWeek,
+      totalLessons: updated.totalLessons,
+      total_lessons: updated.totalLessons,
+      totalHours: updated.totalHours ? Number(updated.totalHours) : null,
+      total_hours: updated.totalHours ? Number(updated.totalHours) : null,
+      minStudents: updated.minStudents,
+      min_students: updated.minStudents,
+      maxStudents: updated.maxStudents,
+      max_students: updated.maxStudents,
+      coursesCount: updated._count?.courses ?? 0,
+      courses_count: updated._count?.courses ?? 0,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  async deleteSettings(id: string) {
+    await this.prisma.course.updateMany({
+      where: { settingsId: id },
+      data: { settingsId: null },
+    });
+    await this.prisma.courseSettings.delete({
+      where: { id },
+    });
+    return { success: true };
   }
 
   async listTeachers() {

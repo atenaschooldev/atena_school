@@ -9,6 +9,7 @@ import {
   IntegrationSecretRecord,
   MaskedIntegrationSecretRecord,
 } from '@atena/api-types';
+import { decryptSecret } from './encryption';
 
 interface CacheEntry<T> {
   data: T;
@@ -50,7 +51,8 @@ export function clearSecretsCache(provider?: string): void {
  */
 export function maskSecret(secret?: string | null): string {
   if (!secret) return '';
-  const str = String(secret).trim();
+  const decrypted = decryptSecret(secret);
+  const str = String(decrypted).trim();
   if (str.length <= 8) {
     return '••••••••';
   }
@@ -97,7 +99,7 @@ async function getSecretFromDb<T>(
 }
 
 // ----------------------------------------------------------------------------
-// Provider Specific Loaders with .env Fallback
+// Provider Specific Loaders with .env Fallback & Auto-Decryption
 // ----------------------------------------------------------------------------
 
 export async function getResendCredentials(
@@ -105,8 +107,11 @@ export async function getResendCredentials(
 ): Promise<ResendCredentials> {
   const dbCreds = await getSecretFromDb<Partial<ResendCredentials>>(supabase, IntegrationProvider.RESEND);
 
+  const rawApiKey = dbCreds?.apiKey ? decryptSecret(dbCreds.apiKey) : '';
+  const rawWebhookSecret = dbCreds?.webhookSecret ? decryptSecret(dbCreds.webhookSecret) : '';
+
   return {
-    apiKey: dbCreds?.apiKey || process.env.RESEND_API_KEY || '',
+    apiKey: rawApiKey || process.env.RESEND_API_KEY || '',
     fromEmail:
       dbCreds?.fromEmail ||
       process.env.RESEND_FROM_EMAIL ||
@@ -117,7 +122,7 @@ export async function getResendCredentials(
       process.env.ADMIN_EMAIL ||
       'atenaschool20@gmail.com',
     webhookSecret:
-      dbCreds?.webhookSecret ||
+      rawWebhookSecret ||
       process.env.RESEND_WEBHOOK_SECRET ||
       '',
   };
@@ -128,8 +133,10 @@ export async function getTelegramCredentials(
 ): Promise<TelegramCredentials> {
   const dbCreds = await getSecretFromDb<Partial<TelegramCredentials>>(supabase, IntegrationProvider.TELEGRAM);
 
+  const rawBotToken = dbCreds?.botToken ? decryptSecret(dbCreds.botToken) : '';
+
   return {
-    botToken: dbCreds?.botToken || process.env.TELEGRAM_BOT_TOKEN || '',
+    botToken: rawBotToken || process.env.TELEGRAM_BOT_TOKEN || '',
     chatId: dbCreds?.chatId || process.env.TELEGRAM_CHAT_ID || '',
     chatIds: dbCreds?.chatIds || [],
     locale: (dbCreds?.locale || process.env.TELEGRAM_LOCALE || 'it') as 'it' | 'en' | 'ru',
@@ -145,18 +152,21 @@ export async function getStripeCredentials(
 ): Promise<StripeCredentials> {
   const dbCreds = await getSecretFromDb<Partial<StripeCredentials>>(supabase, IntegrationProvider.STRIPE);
 
+  const rawSecretKey = dbCreds?.secretKey ? decryptSecret(dbCreds.secretKey) : '';
+  const rawWebhookSecret = dbCreds?.webhookSecret ? decryptSecret(dbCreds.webhookSecret) : '';
+
   return {
-    secretKey: dbCreds?.secretKey || process.env.STRIPE_SECRET_KEY || '',
+    secretKey: rawSecretKey || process.env.STRIPE_SECRET_KEY || '',
     publishableKey:
       dbCreds?.publishableKey ||
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
       process.env.STRIPE_PUBLISHABLE_KEY ||
       '',
-    webhookSecret: dbCreds?.webhookSecret || process.env.STRIPE_WEBHOOK_SECRET || '',
+    webhookSecret: rawWebhookSecret || process.env.STRIPE_WEBHOOK_SECRET || '',
     isLive:
       typeof dbCreds?.isLive === 'boolean'
         ? dbCreds.isLive
-        : process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') || false,
+        : (rawSecretKey || process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_'),
   };
 }
 
@@ -358,3 +368,38 @@ export async function getMaskedIntegrationsSummary(
     },
   };
 }
+
+/**
+ * Returns raw, unmasked decrypted credentials for a specific provider.
+ * Strictly intended for Superadmin Eye (reveal) actions in Admin CRM.
+ */
+export async function revealIntegrationCredentials(
+  provider: string,
+  supabase?: SupabaseClient | null
+): Promise<Record<string, any>> {
+  switch (provider) {
+    case IntegrationProvider.RESEND: {
+      const creds = await getResendCredentials(supabase);
+      return creds as Record<string, any>;
+    }
+    case IntegrationProvider.TELEGRAM: {
+      const creds = await getTelegramCredentials(supabase);
+      return creds as Record<string, any>;
+    }
+    case IntegrationProvider.STRIPE: {
+      const creds = await getStripeCredentials(supabase);
+      return creds as Record<string, any>;
+    }
+    case IntegrationProvider.ANALYTICS: {
+      const creds = await getAnalyticsCredentials(supabase);
+      return creds as Record<string, any>;
+    }
+    case IntegrationProvider.DOMAINS: {
+      const creds = await getDomainsCredentials(supabase);
+      return creds as Record<string, any>;
+    }
+    default:
+      return {};
+  }
+}
+

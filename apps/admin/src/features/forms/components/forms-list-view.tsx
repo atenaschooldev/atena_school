@@ -23,8 +23,10 @@ import {
 } from "../types";
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
+import { FormFieldsView } from "./form-fields-view";
 import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
 import { useCourses } from "@/features/courses/hooks/use-courses";
+import { useFormFields } from "../hooks/use-form-fields";
 import { useTranslation } from "@/i18n/context";
 
 // shadcn / CRM UI components
@@ -65,6 +67,7 @@ import {
   Users,
   Calendar,
   HelpCircle,
+  Sliders,
 } from "lucide-react";
 
 export function FormsListView() {
@@ -72,6 +75,7 @@ export function FormsListView() {
   const searchParams = useSearchParams();
   const targetCourseParam = searchParams[0]?.get("courseId") || searchParams[0]?.get("course_id");
   const { coursesList } = useCourses();
+  const { fields: catalogFields } = useFormFields();
 
   const getFormTypeLabel = (val: any): string => {
     const parsed = parseFormType(val);
@@ -100,7 +104,8 @@ export function FormsListView() {
     isDeleting,
   } = useForms();
 
-  const [activeTab, setActiveTab] = useState<"templates" | "fields_guide" | "quota">("templates");
+  const [activeTab, setActiveTab] = useState<"templates" | "fields_catalog" | "fields_guide" | "quota">("templates");
+
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [targetFilter, setTargetFilter] = useState<string>("all");
@@ -460,10 +465,10 @@ export function FormsListView() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Top Navigation Tabs (Templates vs Fields Guide vs Quota Associativa) ── */}
+      {/* ── Top Navigation Tabs (Templates vs Catalogo Campi vs Fields Guide vs Quota Associativa) ── */}
       <div className="px-4 lg:px-6 flex items-center justify-between border-b pb-3">
         <div className="flex items-center gap-2">
-          <div className="flex rounded-xl bg-muted/50 p-1 border">
+          <div className="flex rounded-xl bg-muted/50 p-1 border flex-wrap">
             <button
               type="button"
               onClick={() => setActiveTab("templates")}
@@ -475,6 +480,18 @@ export function FormsListView() {
             >
               <Layers className="h-4 w-4" />
               {t("forms.tabTemplates")} ({forms.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("fields_catalog")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeTab === "fields_catalog"
+                  ? "bg-background shadow-xs text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Sliders className="h-4 w-4 text-primary" />
+              {t("forms.tabFieldsCatalog") || "Catalogo Campi"} ({catalogFields.length})
             </button>
             <button
               type="button"
@@ -504,7 +521,11 @@ export function FormsListView() {
         </div>
       </div>
 
-      {activeTab === "fields_guide" ? (
+      {activeTab === "fields_catalog" ? (
+        <div className="@container/main px-4 lg:px-6 space-y-4">
+          <FormFieldsView />
+        </div>
+      ) : activeTab === "fields_guide" ? (
         <div className="@container/main px-4 lg:px-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border">
@@ -518,6 +539,7 @@ export function FormsListView() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="text-xs text-muted-foreground space-y-2">
+
                 <p>• Esempi: <em>"Come ci hai conosciuto?", "Necessità fattura aziendale", "Codice SDI"</em>.</p>
                 <p>• Viene renderizzato nel primo blocco di anagrafica del checkout online.</p>
               </CardContent>

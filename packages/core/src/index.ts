@@ -6,4 +6,5 @@ export * from './portal/index';
 export * from './system/school-profile.service';
 export * from './system/integration-secrets.service';
 export * from './system/form-resolver.service';
+export * from './system/encryption';
 

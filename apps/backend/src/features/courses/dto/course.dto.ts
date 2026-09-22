@@ -225,3 +225,148 @@ export class CreateCourseDto {
 }
 
 export class UpdateCourseDto extends CreateCourseDto {}
+
+export class CreateCourseCategoryDto {
+  @ApiPropertyOptional({ description: 'Название категории (напр. Corsi di Lingua)' })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({ description: 'Уникальный slug категории (напр. languages)' })
+  @IsOptional()
+  @IsString()
+  slug?: string;
+
+  @ApiPropertyOptional({ description: 'Описание категории' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ description: 'Порядок сортировки (1, 2, 3...)', example: 1 })
+  @IsOptional()
+  @IsNumber()
+  sort_order?: number;
+
+  @ApiPropertyOptional({ description: 'Порядок сортировки (алиас sortOrder)', example: 1 })
+  @IsOptional()
+  @IsNumber()
+  sortOrder?: number;
+
+  @ApiPropertyOptional({ description: 'Флаг активности категории', example: true })
+  @IsOptional()
+  is_active?: boolean;
+
+  @ApiPropertyOptional({ description: 'Флаг активности (алиас isActive)', example: true })
+  @IsOptional()
+  isActive?: boolean;
+}
+
+export class UpdateCourseCategoryDto extends CreateCourseCategoryDto {}
+
+export class CreateCourseSettingsDto {
+  @ApiPropertyOptional({ description: 'Название пресета настроек (напр. Gruppo Fisso Bisettimanale)' })
+  @IsString()
+  name: string;
+
+  @ApiPropertyOptional({
+    description: 'Режим проведения: 1=FIXED_SCHEDULE, 2=FLEXIBLE_SCHEDULE, 4=CERTIFICATION',
+    example: 1,
+  })
+  @IsOptional()
+  delivery_mode?: number;
+
+  @ApiPropertyOptional({ description: 'Режим проведения (алиас deliveryMode)', example: 1 })
+  @IsOptional()
+  deliveryMode?: number;
+
+  @ApiPropertyOptional({ description: 'Дни недели занятий (1=Пн..7=Вс)', example: [1, 3] })
+  @IsOptional()
+  @IsArray()
+  schedule_days?: any[];
+
+  @ApiPropertyOptional({ description: 'Дни недели (алиас scheduleDays)', example: [1, 3] })
+  @IsOptional()
+  @IsArray()
+  scheduleDays?: any[];
+
+  @ApiPropertyOptional({ description: 'Время начала урока (HH:MM)', example: '18:00' })
+  @IsOptional()
+  @IsString()
+  start_time?: string;
+
+  @ApiPropertyOptional({ description: 'Время начала (алиас startTime)', example: '18:00' })
+  @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @ApiPropertyOptional({ description: 'Время окончания урока (HH:MM)', example: '19:30' })
+  @IsOptional()
+  @IsString()
+  end_time?: string;
+
+  @ApiPropertyOptional({ description: 'Время окончания (алиас endTime)', example: '19:30' })
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @ApiPropertyOptional({ description: 'Длительность одного урока в минутах', example: 60 })
+  @IsOptional()
+  @IsNumber()
+  lesson_duration_minutes?: number;
+
+  @ApiPropertyOptional({ description: 'Длительность урока (алиас lessonDurationMinutes)', example: 60 })
+  @IsOptional()
+  @IsNumber()
+  lessonDurationMinutes?: number;
+
+  @ApiPropertyOptional({ description: 'Количество занятий в неделю', example: 2 })
+  @IsOptional()
+  @IsNumber()
+  lessons_per_week?: number;
+
+  @ApiPropertyOptional({ description: 'Уроков в неделю (алиас lessonsPerWeek)', example: 2 })
+  @IsOptional()
+  @IsNumber()
+  lessonsPerWeek?: number;
+
+  @ApiPropertyOptional({ description: 'Всего уроков в курсе', example: 32 })
+  @IsOptional()
+  @IsNumber()
+  total_lessons?: number;
+
+  @ApiPropertyOptional({ description: 'Всего уроков (алиас totalLessons)', example: 32 })
+  @IsOptional()
+  @IsNumber()
+  totalLessons?: number;
+
+  @ApiPropertyOptional({ description: 'Всего академических часов', example: 48 })
+  @IsOptional()
+  @IsNumber()
+  total_hours?: number;
+
+  @ApiPropertyOptional({ description: 'Всего часов (алиас totalHours)', example: 48 })
+  @IsOptional()
+  @IsNumber()
+  totalHours?: number;
+
+  @ApiPropertyOptional({ description: 'Минимум студентов в группе', example: 3 })
+  @IsOptional()
+  @IsNumber()
+  min_students?: number;
+
+  @ApiPropertyOptional({ description: 'Минимум студентов (алиас minStudents)', example: 3 })
+  @IsOptional()
+  @IsNumber()
+  minStudents?: number;
+
+  @ApiPropertyOptional({ description: 'Максимум студентов в группе', example: 8 })
+  @IsOptional()
+  @IsNumber()
+  max_students?: number;
+
+  @ApiPropertyOptional({ description: 'Максимум студентов (алиас maxStudents)', example: 8 })
+  @IsOptional()
+  @IsNumber()
+  maxStudents?: number;
+}
+
+export class UpdateCourseSettingsDto extends CreateCourseSettingsDto {}

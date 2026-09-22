@@ -50,6 +50,16 @@ export class IntegrationsController {
     return this.integrationsService.updateIntegration(provider, dto, userId);
   }
 
+  @Post(':provider/reveal')
+  @Roles('admin')
+  @Audit('integrations', 'reveal_provider_secret')
+  @ApiOperation({ summary: 'Расшифровать и показать реальный ключ интеграции для администратора (Eye)' })
+  async revealIntegration(
+    @Param('provider') provider: string
+  ) {
+    return this.integrationsService.revealIntegration(provider);
+  }
+
   @Post('telegram/set-webhook')
   @Roles('admin')
   @Audit('integrations', 'set_telegram_webhook')

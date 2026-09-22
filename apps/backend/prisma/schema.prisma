@@ -691,6 +691,29 @@ model CourseSettings {
   @@map("course_settings")
 }
 
+model FormField {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key               String   @unique @db.VarChar(64)
+  labelIt           String   @map("label_it") @db.VarChar(255)
+  labelEn           String   @map("label_en") @db.VarChar(255)
+  placeholderIt     String?  @map("placeholder_it") @db.VarChar(255)
+  placeholderEn     String?  @map("placeholder_en") @db.VarChar(255)
+  fieldType         String   @default("text") @map("field_type") @db.VarChar(32)
+  target            String   @default("purchaser") @db.VarChar(32)
+  options           Json?    @default("[]")
+  isSystem          Boolean  @default(false) @map("is_system")
+  isRequiredDefault Boolean  @default(false) @map("is_required_default")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([target], map: "idx_form_fields_target")
+  @@index([key], map: "idx_form_fields_key")
+  @@index([isSystem], map: "idx_form_fields_system")
+  @@map("form_fields")
+}
+
+
 
 
 

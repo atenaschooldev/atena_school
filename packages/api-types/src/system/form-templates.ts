@@ -190,6 +190,7 @@ export const FormFieldTarget = {
   PURCHASER: 'purchaser', // Относится к плательщику/родителю
   STUDENT: 'student',     // Относится к студенту/ребёнку
   BOOKING: 'booking',     // Общие параметры бронирования/заявки
+  CONTACT: 'contact',     // Поля формы обратной связи / контактов
 } as const;
 export type FormFieldTarget = (typeof FormFieldTarget)[keyof typeof FormFieldTarget];
 
@@ -218,6 +219,14 @@ export const FORM_FIELD_TARGET_DICTIONARY: Record<FormFieldTarget, DictionaryEnt
     label_ru: 'Бронирование / Общее',
     description: 'Поле относится к параметрам бронирования в целом',
   },
+  [FormFieldTarget.CONTACT]: {
+    id: 4,
+    code: 'CONTACT',
+    label_it: 'Modulo Contatto',
+    label_en: 'Contact Form',
+    label_ru: 'Форма связи',
+    description: 'Поле относится к форме обратной связи / лид-форме',
+  },
 };
 
 export function parseFormFieldTarget(val: any): FormFieldTarget {
@@ -225,16 +234,60 @@ export function parseFormFieldTarget(val: any): FormFieldTarget {
   if (s === 'purchaser') return FormFieldTarget.PURCHASER;
   if (s === 'student') return FormFieldTarget.STUDENT;
   if (s === 'booking') return FormFieldTarget.BOOKING;
+  if (s === 'contact') return FormFieldTarget.CONTACT;
   return FormFieldTarget.PURCHASER;
 }
 
 // ----------------------------------------------------------------------------
-// 4. FormFieldOption & FormFieldConfig
+// 4. FormFieldOption & FormFieldConfig & FormFieldItem (Catalog)
 // ----------------------------------------------------------------------------
 
 export interface FormFieldOption {
   label: string;
   value: string;
+}
+
+export interface FormFieldItem {
+  id: string;
+  key: string;
+  label_it: string;
+  label_en: string;
+  placeholder_it?: string | null;
+  placeholder_en?: string | null;
+  field_type: FormFieldType;
+  target: FormFieldTarget;
+  options?: FormFieldOption[];
+  is_system: boolean;
+  is_required_default: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateFormFieldDto {
+  key: string;
+  label_it: string;
+  label_en: string;
+  placeholder_it?: string;
+  placeholder_en?: string;
+  field_type: FormFieldType;
+  target: FormFieldTarget;
+  options?: FormFieldOption[];
+  is_system?: boolean;
+  is_required_default?: boolean;
+  sort_order?: number;
+}
+
+export interface UpdateFormFieldDto {
+  label_it?: string;
+  label_en?: string;
+  placeholder_it?: string;
+  placeholder_en?: string;
+  field_type?: FormFieldType;
+  target?: FormFieldTarget;
+  options?: FormFieldOption[];
+  is_required_default?: boolean;
+  sort_order?: number;
 }
 
 export interface FormFieldConfig {
@@ -298,5 +351,6 @@ export interface UpdateFormTemplateDto {
   course_id?: string | null;
   fields_config?: FormFieldConfig[];
 }
+
 
 
