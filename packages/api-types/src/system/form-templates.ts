@@ -299,6 +299,7 @@ export interface FormFieldConfig {
   target: FormFieldTarget;
   is_required: boolean;
   is_enabled: boolean;
+  is_system?: boolean;                  // Признак системного поля из каталога (нельзя удалить из формы)
   sort_order: number;
   options?: FormFieldOption[];          // Для select, radio
   help_text?: string;

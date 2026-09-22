@@ -61,36 +61,13 @@ import {
   Phone,
   Mail,
   HelpCircle,
+  Lock,
 } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useTranslation } from "@/i18n/context";
 
-const CORE_BASE_KEYS_BOOKING = new Set([
-  "purchaser_first_name",
-  "purchaser_last_name",
-  "purchaser_email",
-  "purchaser_phone",
-  "purchaser_tax_code",
-  "purchaser_birth_date",
-  "purchaser_birth_place",
-  "student_first_name",
-  "student_last_name",
-  "student_email",
-  "student_phone",
-  "student_tax_code",
-  "student_birth_date",
-  "student_birth_place",
-]);
-
-const CORE_BASE_KEYS_CONTACT = new Set([
-  "contact_full_name",
-  "contact_email",
-  "contact_phone",
-  "inquiry_subject",
-  "inquiry_message",
-  "privacy_consent",
-]);
+// No hardcoded keys — system fields are determined by is_system flag from the database catalog.
 
 interface VisualFormBuilderProps {
   initialForm?: FormTemplate | null;
@@ -217,15 +194,16 @@ export function VisualFormBuilder({
     }
   };
 
-  // Base core keys for this form type
-  const baseCoreKeys = useMemo(() => {
-    return formData.form_type === FormType.CONTACT ? CORE_BASE_KEYS_CONTACT : CORE_BASE_KEYS_BOOKING;
-  }, [formData.form_type]);
-
-  // Available catalog fields (excluding base core fields)
+  // Available catalog fields — exclude system (core) fields; they are not selectable from catalog.
+  // System fields are added automatically by the checkout engine, not via the form builder UI.
   const availableCatalogFields = useMemo(() => {
-    return catalogFields.filter((cf) => !baseCoreKeys.has(cf.key));
-  }, [catalogFields, baseCoreKeys]);
+    return catalogFields.filter((cf) => !cf.is_system);
+  }, [catalogFields]);
+
+  // System fields from catalog for the current form type (shown as read-only indicator below the builder)
+  const systemCatalogFields = useMemo(() => {
+    return catalogFields.filter((cf) => cf.is_system);
+  }, [catalogFields]);
 
   // Filtered catalog fields for the selection modal
   const filteredCatalogFields = useMemo(() => {
@@ -259,6 +237,7 @@ export function VisualFormBuilder({
       target: catalogField.target,
       is_required: catalogField.is_required_default,
       is_enabled: true,
+      is_system: catalogField.is_system ?? false,
       sort_order: formData.fields_config.length + 1,
       options: Array.isArray(catalogField.options) && catalogField.options.length > 0 ? catalogField.options : undefined,
     };
@@ -740,16 +719,29 @@ export function VisualFormBuilder({
                             >
                               <Edit2 className="w-3 h-3" />
                             </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                              onClick={() => handleRemoveField(field.id)}
-                              title={locale === "en" ? "Remove field" : "Rimuovi campo"}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            {field.is_system ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                disabled
+                                className="h-6 w-6 p-0 text-muted-foreground/30 cursor-not-allowed"
+                                title={locale === "en" ? "System field — cannot be removed" : "Campo di sistema — non rimovibile"}
+                              >
+                                <Lock className="w-3 h-3" />
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
+                                onClick={() => handleRemoveField(field.id)}
+                                title={locale === "en" ? "Remove field" : "Rimuovi campo"}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -760,35 +752,20 @@ export function VisualFormBuilder({
             </CardContent>
           </Card>
 
-          {/* System Core Fields — Compact flat indicator */}
-          <div className="flex items-center gap-1.5 flex-wrap px-1 text-muted-foreground">
-            <div className="flex items-center gap-1 shrink-0">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="text-[10px] font-medium">{t("forms.builderSystemFieldsLabel")}</span>
+          {/* System Core Fields — driven by catalog (is_system=true), no hardcoding */}
+          {systemCatalogFields.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap px-1 text-muted-foreground">
+              <div className="flex items-center gap-1 shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-[10px] font-medium">{t("forms.builderSystemFieldsLabel")}</span>
+              </div>
+              {systemCatalogFields.map((cf) => (
+                <span key={cf.key} className="text-[9px] font-medium bg-muted/60 border rounded px-1.5 py-0.5 text-muted-foreground">
+                  {locale === "en" ? cf.label_en : cf.label_it}
+                </span>
+              ))}
             </div>
-            {(formData.form_type === FormType.CONTACT
-              ? [
-                  locale === "en" ? "Full Name" : "Nome & Cognome",
-                  "Email",
-                  locale === "en" ? "Phone" : "Telefono",
-                  locale === "en" ? "Course of Interest" : "Corso d'Interesse",
-                  locale === "en" ? "Message" : "Messaggio",
-                  "Privacy GDPR",
-                ]
-              : [
-                  locale === "en" ? "Full Name" : "Nome & Cognome",
-                  "Email",
-                  locale === "en" ? "Phone" : "Telefono",
-                  locale === "en" ? "Tax Code" : "Codice Fiscale",
-                  locale === "en" ? "Date & Place of Birth" : "Data & Luogo Nascita",
-                  locale === "en" ? "Parent Mode" : "Modalità Genitore",
-                ]
-            ).map((name) => (
-              <span key={name} className="text-[9px] font-medium bg-muted/60 border rounded px-1.5 py-0.5 text-muted-foreground">
-                {name}
-              </span>
-            ))}
-          </div>
+          )}
         </div>
       ) : (
         <div className="bg-slate-100 p-6 rounded-3xl border border-slate-200 shadow-inner">
