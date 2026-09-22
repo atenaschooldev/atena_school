@@ -63,6 +63,8 @@ export interface SchoolSocials {
 }
 
 export interface SchoolProfile {
+  id?: string;
+  is_default?: boolean;
   name: string;
   legal_name?: string;
   tagline?: string;

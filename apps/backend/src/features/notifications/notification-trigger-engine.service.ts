@@ -151,6 +151,46 @@ export class NotificationTriggerEngineService {
 
   private async getSchoolProfile(): Promise<any> {
     try {
+      const profile = await this.prisma.schoolProfile.findFirst({
+        orderBy: { isDefault: 'desc' },
+      });
+      if (profile) {
+        return {
+          ...DEFAULT_SCHOOL_PROFILE,
+          id: profile.id,
+          name: profile.name,
+          legal_name: profile.legalName,
+          tagline: profile.tagline,
+          founders: profile.founders,
+          logo_url: profile.logoUrl,
+          website: profile.website,
+          site_url: profile.siteUrl,
+          app_url: profile.appUrl,
+          admin_url: profile.adminUrl,
+          address: profile.address,
+          city: profile.city,
+          cap: profile.cap,
+          province: profile.province,
+          country: profile.country,
+          maps_url: profile.mapsUrl,
+          phone: profile.phone,
+          landline: profile.landline,
+          whatsapp: profile.whatsapp,
+          email: profile.email,
+          secretariat_email: profile.secretariatEmail,
+          support_email: profile.supportEmail,
+          secretariat_hours: profile.secretariatHours,
+          vat_code: profile.vatCode,
+          registration_fee_enabled: profile.registrationFeeEnabled,
+          registration_fee_eur: Number(profile.registrationFeeEur),
+          academic_year: profile.academicYear,
+          iban: profile.iban,
+          bank_name: profile.bankName,
+          account_holder: profile.accountHolder,
+          socials: profile.socials as any,
+        };
+      }
+
       const setting = await this.prisma.appSetting.findUnique({
         where: { key: 'school_profile' },
       });

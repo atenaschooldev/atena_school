@@ -457,6 +457,45 @@ model AppSetting {
   @@map("app_settings")
 }
 
+model SchoolProfile {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  isDefault              Boolean  @default(true) @map("is_default")
+  name                   String   @default("Atena School") @db.VarChar(255)
+  legalName              String?  @map("legal_name") @db.VarChar(255)
+  tagline                String?  @db.VarChar(255)
+  founders               String?  @db.VarChar(255)
+  logoUrl                String?  @map("logo_url") @db.Text
+  website                String?  @db.VarChar(255)
+  siteUrl                String?  @map("site_url") @db.VarChar(255)
+  appUrl                 String?  @map("app_url") @db.VarChar(255)
+  adminUrl               String?  @map("admin_url") @db.VarChar(255)
+  address                String?  @db.VarChar(255)
+  city                   String?  @db.VarChar(100)
+  cap                    String?  @db.VarChar(20)
+  province               String?  @db.VarChar(10)
+  country                String?  @default("Italia") @db.VarChar(100)
+  mapsUrl                String?  @map("maps_url") @db.Text
+  phone                  String?  @db.VarChar(50)
+  landline               String?  @db.VarChar(50)
+  whatsapp               String?  @db.VarChar(50)
+  email                  String?  @db.VarChar(255)
+  secretariatEmail       String?  @map("secretariat_email") @db.VarChar(255)
+  supportEmail           String?  @map("support_email") @db.VarChar(255)
+  secretariatHours       String?  @map("secretariat_hours") @db.Text
+  vatCode                String?  @map("vat_code") @db.VarChar(100)
+  registrationFeeEnabled Boolean  @default(true) @map("registration_fee_enabled")
+  registrationFeeEur     Decimal  @default(30.00) @map("registration_fee_eur") @db.Decimal(10, 2)
+  academicYear           String   @default("2026/2027") @map("academic_year") @db.VarChar(50)
+  iban                   String?  @db.VarChar(100)
+  bankName               String?  @map("bank_name") @db.VarChar(100)
+  accountHolder          String?  @map("account_holder") @db.VarChar(255)
+  socials                Json     @default("{}")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("school_profiles")
+}
+
 model landing_api_logs {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
