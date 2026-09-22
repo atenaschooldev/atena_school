@@ -16,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
 import { SchoolProfileCard } from "@/components/shared/school-profile-card"
 import { useTranslation } from "@/i18n/context"
 
@@ -64,9 +63,6 @@ export default function AccountSettings() {
 
         {/* School Profile & Brand Configuration */}
         <SchoolProfileCard />
-
-        {/* Master Stripe Toggle */}
-        <StripeSettingsCard />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
