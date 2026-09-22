@@ -6,11 +6,14 @@ import {
   ResolveFormQuery,
 } from '@atena/api-types';
 
+export const SYSTEM_BOOKING_FORM_ID = '00000000-0000-0000-0000-000000000001';
+export const SYSTEM_CONTACT_FORM_ID = '00000000-0000-0000-0000-000000000002';
+
 /**
  * Стандартный дефолтный шаблон формы бронирования курса
  */
 export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
-  id: 'default-booking-form',
+  id: SYSTEM_BOOKING_FORM_ID,
   title: 'Modulo Iscrizione Standard',
   description: 'Modulo predefinito per la prenotazione e acquisto dei corsi',
   form_type: FormType.BOOKING,
@@ -22,7 +25,7 @@ export const DEFAULT_BOOKING_FORM_TEMPLATE: FormTemplate = {
 };
 
 export const DEFAULT_CONTACT_FORM_TEMPLATE: FormTemplate = {
-  id: 'default-contact-form',
+  id: SYSTEM_CONTACT_FORM_ID,
   title: 'Modulo Contatto Standard',
   description: 'Modulo predefinito per le richieste di informazioni e contatto',
   form_type: FormType.CONTACT,

@@ -69,21 +69,31 @@ export class FormsService {
     }
   }
 
+  private resolveFormId(id: string): string {
+    if (id === 'default-booking-form') return '00000000-0000-0000-0000-000000000001';
+    if (id === 'default-contact-form') return '00000000-0000-0000-0000-000000000002';
+    return id;
+  }
+
   /**
    * Получить форму по ID
    */
   async getFormById(id: string): Promise<FormTemplate> {
-    if (id === DEFAULT_BOOKING_FORM_TEMPLATE.id) {
-      return DEFAULT_BOOKING_FORM_TEMPLATE;
-    }
+    const targetId = this.resolveFormId(id);
 
     const { data, error } = await this.supabase
       .from('form_templates')
       .select('*')
-      .eq('id', id)
+      .eq('id', targetId)
       .single();
 
     if (error || !data) {
+      if (targetId === '00000000-0000-0000-0000-000000000001') {
+        return DEFAULT_BOOKING_FORM_TEMPLATE;
+      }
+      if (targetId === '00000000-0000-0000-0000-000000000002') {
+        return DEFAULT_CONTACT_FORM_TEMPLATE;
+      }
       throw new NotFoundException(`Modulo con ID "${id}" non trovato.`);
     }
 
@@ -141,7 +151,8 @@ export class FormsService {
    * Обновить существующий шаблон формы
    */
   async updateForm(id: string, dto: UpdateFormTemplateDto): Promise<FormTemplate> {
-    const current = await this.getFormById(id);
+    const targetId = this.resolveFormId(id);
+    const current = await this.getFormById(targetId);
 
     const formType = dto.form_type || current.form_type;
 
@@ -166,11 +177,34 @@ export class FormsService {
     const { data, error } = await this.supabase
       .from('form_templates')
       .update(updatePayload)
-      .eq('id', id)
+      .eq('id', targetId)
       .select()
       .single();
 
     if (error || !data) {
+      // If updating a system template that doesn't exist yet in the DB table, upsert it
+      if (targetId === '00000000-0000-0000-0000-000000000001' || targetId === '00000000-0000-0000-0000-000000000002') {
+        const { data: upsertData, error: upsertErr } = await this.supabase
+          .from('form_templates')
+          .upsert({
+            id: targetId,
+            title: dto.title ?? current.title,
+            description: dto.description ?? current.description,
+            form_type: formType,
+            is_default: dto.is_default ?? current.is_default,
+            is_active: dto.is_active ?? current.is_active,
+            category_slug: dto.category_slug ?? current.category_slug,
+            course_id: dto.course_id ?? current.course_id,
+            fields_config: dto.fields_config ?? current.fields_config,
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (!upsertErr && upsertData) {
+          return upsertData as FormTemplate;
+        }
+      }
       throw new BadRequestException(`Errore aggiornamento modulo: ${error?.message}`);
     }
 
@@ -181,21 +215,21 @@ export class FormsService {
    * Удалить шаблон формы
    */
   async deleteForm(id: string): Promise<{ success: boolean; id: string }> {
-    const current = await this.getFormById(id);
+    const targetId = this.resolveFormId(id);
+    const current = await this.getFormById(targetId);
 
     if (
       current.is_default ||
-      id === '00000000-0000-0000-0000-000000000001' ||
-      id === '00000000-0000-0000-0000-000000000002'
+      targetId === '00000000-0000-0000-0000-000000000001' ||
+      targetId === '00000000-0000-0000-0000-000000000002'
     ) {
       throw new BadRequestException('Non è possibile eliminare un modulo di sistema predefinito.');
     }
 
-
     const { error } = await this.supabase
       .from('form_templates')
       .delete()
-      .eq('id', id);
+      .eq('id', targetId);
 
     if (error) {
       throw new BadRequestException(`Errore eliminazione modulo: ${error.message}`);
