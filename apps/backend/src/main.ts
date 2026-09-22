@@ -205,73 +205,96 @@ async function bootstrap() {
   }
 
   // Общие стили и навигационная панель для всех разделов Swagger
-  const createSwaggerCustomOptions = (activeTab: 'landing' | 'portal' | 'admin' | 'all') => ({
-    customSiteTitle: `Atena School API Docs — ${activeTab.toUpperCase()}`,
-    customCss: `
-      .topbar { display: flex !important; background-color: #111827 !important; padding: 12px 24px !important; border-bottom: 1px solid #374151 !important; }
-      .topbar-wrapper { display: flex !important; width: 100% !important; justify-content: space-between !important; align-items: center !important; flex-wrap: wrap !important; gap: 12px !important; }
-      .topbar-wrapper .link { display: none !important; }
-      .swagger-nav-container {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        flex-wrap: wrap !important;
-      }
-      .swagger-nav-tab {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        background: #1F2937 !important;
-        color: #9CA3AF !important;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        padding: 7px 14px !important;
-        border-radius: 6px !important;
-        border: 1px solid #374151 !important;
-        text-decoration: none !important;
-        transition: all 0.15s ease-in-out !important;
-      }
-      .swagger-nav-tab:hover {
-        background: #374151 !important;
-        color: #F9FAFB !important;
-        border-color: #4B5563 !important;
-      }
-      .swagger-nav-tab.active {
-        background: #2563EB !important;
-        color: #FFFFFF !important;
-        border-color: #3B82F6 !important;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
-      }
-      .swagger-nav-tab.dictionary-tab {
-        background: #047857 !important;
-        color: #FFFFFF !important;
-        border-color: #059669 !important;
-        margin-left: 8px !important;
-      }
-      .swagger-nav-tab.dictionary-tab:hover {
-        background: #059669 !important;
-      }
-    `,
-    customJsStr: `
-      window.addEventListener('DOMContentLoaded', () => {
-        const topbar = document.querySelector('.topbar-wrapper') || document.querySelector('.topbar');
-        if (topbar && !document.getElementById('swagger-custom-nav')) {
-          const nav = document.createElement('div');
-          nav.id = 'swagger-custom-nav';
-          nav.className = 'swagger-nav-container';
-          nav.innerHTML = \`
-            <a href="/docs/landing" class="swagger-nav-tab ${activeTab === 'landing' ? 'active' : ''}">🌐 Landing API</a>
-            <a href="/docs/portal" class="swagger-nav-tab ${activeTab === 'portal' ? 'active' : ''}">🎓 Portal (ЛК)</a>
-            <a href="/docs/admin" class="swagger-nav-tab ${activeTab === 'admin' ? 'active' : ''}">⚙️ CRM Admin</a>
-            <a href="/docs" class="swagger-nav-tab ${activeTab === 'all' ? 'active' : ''}">📑 Все ручки (All)</a>
-            <a href="/docs/dictionary" target="_blank" class="swagger-nav-tab dictionary-tab">📖 Словарь данных</a>
-          \`;
-          topbar.appendChild(nav);
+  const createSwaggerCustomOptions = (activeTab: 'landing' | 'portal' | 'admin' | 'all') => {
+    const primaryName =
+      activeTab === 'landing'
+        ? '🌐 Landing & Public API'
+        : activeTab === 'portal'
+          ? '🎓 Portal / ЛК Студента'
+          : activeTab === 'admin'
+            ? '⚙️ Admin & CRM Panel'
+            : '📑 Полная спецификация (All)';
+
+    return {
+      customSiteTitle: `Atena School API Docs — ${activeTab.toUpperCase()}`,
+      swaggerOptions: {
+        urls: [
+          { url: '/docs/openapi-landing.json', name: '🌐 Landing & Public API' },
+          { url: '/docs/openapi-portal.json', name: '🎓 Portal / ЛК Студента' },
+          { url: '/docs/openapi-admin.json', name: '⚙️ Admin & CRM Panel' },
+          { url: '/docs/openapi.json', name: '📑 Полная спецификация (All)' },
+        ],
+        'urls.primaryName': primaryName,
+        persistAuthorization: true,
+        displayRequestDuration: true,
+        filter: true,
+      },
+      customCss: `
+        .topbar { display: flex !important; background-color: #111827 !important; padding: 12px 24px !important; border-bottom: 1px solid #374151 !important; }
+        .topbar-wrapper { display: flex !important; width: 100% !important; justify-content: space-between !important; align-items: center !important; flex-wrap: wrap !important; gap: 12px !important; }
+        .topbar-wrapper .link { display: none !important; }
+        .swagger-nav-container {
+          display: flex !important;
+          align-items: center !important;
+          gap: 8px !important;
+          flex-wrap: wrap !important;
         }
-      });
-    `,
-  });
+        .swagger-nav-tab {
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          background: #1F2937 !important;
+          color: #9CA3AF !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          padding: 7px 14px !important;
+          border-radius: 6px !important;
+          border: 1px solid #374151 !important;
+          text-decoration: none !important;
+          transition: all 0.15s ease-in-out !important;
+        }
+        .swagger-nav-tab:hover {
+          background: #374151 !important;
+          color: #F9FAFB !important;
+          border-color: #4B5563 !important;
+        }
+        .swagger-nav-tab.active {
+          background: #2563EB !important;
+          color: #FFFFFF !important;
+          border-color: #3B82F6 !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+        }
+        .swagger-nav-tab.dictionary-tab {
+          background: #047857 !important;
+          color: #FFFFFF !important;
+          border-color: #059669 !important;
+          margin-left: 8px !important;
+        }
+        .swagger-nav-tab.dictionary-tab:hover {
+          background: #059669 !important;
+        }
+      `,
+      customJsStr: `
+        window.addEventListener('DOMContentLoaded', () => {
+          const topbar = document.querySelector('.topbar-wrapper') || document.querySelector('.topbar');
+          if (topbar && !document.getElementById('swagger-custom-nav')) {
+            const nav = document.createElement('div');
+            nav.id = 'swagger-custom-nav';
+            nav.className = 'swagger-nav-container';
+            nav.innerHTML = \`
+              <a href="/docs/landing" class="swagger-nav-tab ${activeTab === 'landing' ? 'active' : ''}">🌐 Landing API</a>
+              <a href="/docs/portal" class="swagger-nav-tab ${activeTab === 'portal' ? 'active' : ''}">🎓 Portal (ЛК)</a>
+              <a href="/docs/admin" class="swagger-nav-tab ${activeTab === 'admin' ? 'active' : ''}">⚙️ CRM Admin</a>
+              <a href="/docs" class="swagger-nav-tab ${activeTab === 'all' ? 'active' : ''}">📑 Все ручки (All)</a>
+              <a href="/docs/dictionary" target="_blank" class="swagger-nav-tab dictionary-tab">📖 Словарь данных</a>
+            \`;
+            topbar.insertBefore(nav, topbar.firstChild);
+          }
+        });
+      `,
+    };
+  };
 
   // Настройка изолированных страниц Swagger
   SwaggerModule.setup('docs/landing', app, landingDocument, createSwaggerCustomOptions('landing'));
@@ -279,8 +302,14 @@ async function bootstrap() {
   SwaggerModule.setup('docs/admin', app, adminDocument, createSwaggerCustomOptions('admin'));
   SwaggerModule.setup('docs', app, fullDocument, createSwaggerCustomOptions('all'));
 
-  // Маршруты для страницы словаря в стиле Notion
+  // Маршруты для отдачи OpenAPI JSON спецификаций напрямую
   const fastify = app.getHttpAdapter().getInstance();
+  fastify.get('/docs/openapi.json', (req: any, reply: any) => reply.send(fullDocument));
+  fastify.get('/docs/openapi-landing.json', (req: any, reply: any) => reply.send(landingDocument));
+  fastify.get('/docs/openapi-portal.json', (req: any, reply: any) => reply.send(portalDocument));
+  fastify.get('/docs/openapi-admin.json', (req: any, reply: any) => reply.send(adminDocument));
+
+  // Маршруты для страницы словаря в стиле Notion
   const sendDictionary = (request: any, reply: any) => {
     const dictionaryService = app.get(DictionaryService);
     reply.type('text/html; charset=utf-8').send(dictionaryService.renderHtml());
