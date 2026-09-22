@@ -190,7 +190,7 @@ export async function processStudentAndBookingLinks(params: {
               membership_number: nextMembershipNumber,
               student_id: studentId || null,
               user_id: linkedUserId || studentAuthUserId || null,
-              amount: regFee > 0 ? regFee : 30.00,
+              amount: Number(regFee || 0),
               payment_method: pMethod,
               paid_at: new Date().toISOString(),
               expires_at: ACADEMIC_YEAR.EXPIRY_DATE,

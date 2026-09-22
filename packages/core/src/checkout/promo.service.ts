@@ -102,7 +102,7 @@ export async function validatePromoCode(
   }
 
   const coursePrice = Number(params.coursePrice) || 0;
-  const regFee = params.registrationFee != null ? Number(params.registrationFee) : 30;
+  const regFee = params.registrationFee != null ? Number(params.registrationFee) : 0;
   const discountType = Number(promo.discount_type) as DiscountType;
   const discountValue = Number(promo.discount_value) || 0;
   const waiveFee = Boolean(promo.waive_registration_fee);
