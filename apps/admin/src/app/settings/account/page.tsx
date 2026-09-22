@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/form"
 import { StripeSettingsCard } from "@/components/shared/stripe-settings-card"
 import { SchoolProfileCard } from "@/components/shared/school-profile-card"
-import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card"
 import { useTranslation } from "@/i18n/context"
 
 const accountFormSchema = z.object({
@@ -68,9 +67,6 @@ export default function AccountSettings() {
 
         {/* Master Stripe Toggle */}
         <StripeSettingsCard />
-
-        {/* Italian Legal Quota Associativa & Membership Fee Management */}
-        <RegistrationFeeSettingsCard />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

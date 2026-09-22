@@ -577,8 +577,10 @@ export const it = {
 
   // Annual Memberships Page
   memberships: {
-    title: "Iscrizioni Annuali (€30)",
-    subtitle: "Registro ufficiale dei soci e tesseramenti per l'anno accademico 2026/2027.",
+    title: "Iscrizioni & Quota Associativa",
+    subtitle: "Registro ufficiale dei soci, tesseramenti e configurazione quota per l'anno accademico.",
+    tabRegistry: "Registro Soci & Tessere",
+    tabSettings: "Configurazione Quota",
     academicYear: "Anno Accademico",
     activeMembers: "Soci Attivi",
     membershipFee: "Quota Iscrizione",

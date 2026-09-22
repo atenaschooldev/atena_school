@@ -655,9 +655,9 @@ export function SchoolProfileCard() {
                 />
               </TabsContent>
 
-              {/* 4. FISCALE & QUOTA */}
+              {/* 4. FISCALE & DATI BANCARI */}
               <TabsContent value="finance" className="space-y-4 pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="vat_code"
@@ -669,38 +669,6 @@ export function SchoolProfileCard() {
                         </FormControl>
                         <FormDescription className="text-[11px]">
                           {t("schoolProfile.vatCode")}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="registration_fee_eur"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-bold">{t("schoolProfile.registrationFee")}</FormLabel>
-                        <FormControl>
-                          <Input type="number" min={0} max={500} step={1} {...field} />
-                        </FormControl>
-                        <FormDescription className="text-[11px]">
-                          {t("schoolProfile.registrationFeeDesc")}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="academic_year"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-bold">{t("schoolProfile.academicYear")}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="2026/2027" {...field} />
-                        </FormControl>
-                        <FormDescription className="text-[11px]">
-                          {t("schoolProfile.academicYearDesc")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

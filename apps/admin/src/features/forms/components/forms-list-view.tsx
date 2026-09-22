@@ -24,7 +24,6 @@ import {
 import { VisualFormBuilder } from "./visual-form-builder";
 import { FormPreviewModal } from "./form-preview-modal";
 import { FormFieldsView } from "./form-fields-view";
-import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useFormFields } from "../hooks/use-form-fields";
 import { useTranslation } from "@/i18n/context";
@@ -62,7 +61,6 @@ import {
   GraduationCap,
   Folder,
   Globe,
-  Award,
   HelpCircle,
   Sliders,
   ArrowDown,
@@ -104,7 +102,7 @@ export function FormsListView() {
     isDeleting,
   } = useForms();
 
-  const [activeTab, setActiveTab] = useState<"templates" | "fields_catalog" | "quota">("templates");
+  const [activeTab, setActiveTab] = useState<"templates" | "fields_catalog">("templates");
 
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -562,18 +560,6 @@ export function FormsListView() {
               <Sliders className="h-4 w-4 text-primary" />
               {t("forms.tabFieldsCatalog") || "Catalogo Campi"} ({catalogFields.length})
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("quota")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                activeTab === "quota"
-                  ? "bg-background shadow-xs text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Award className="h-4 w-4 text-amber-500" />
-              {t("forms.tabQuota")} (€30)
-            </button>
           </div>
         </div>
       </div>
@@ -581,10 +567,6 @@ export function FormsListView() {
       {activeTab === "fields_catalog" ? (
         <div className="@container/main px-4 lg:px-6 space-y-4">
           <FormFieldsView />
-        </div>
-      ) : activeTab === "quota" ? (
-        <div className="@container/main px-4 lg:px-6">
-          <RegistrationFeeSettingsCard />
         </div>
       ) : (
         <>

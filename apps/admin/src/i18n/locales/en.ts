@@ -577,8 +577,10 @@ export const en = {
 
   // Annual Memberships Page
   memberships: {
-    title: "Annual Memberships (€30)",
-    subtitle: "Official register of student memberships for the 2026/2027 academic year.",
+    title: "Annual Memberships & Registration Fee",
+    subtitle: "Official register of student memberships and fee configuration for the academic year.",
+    tabRegistry: "Members Register & Cards",
+    tabSettings: "Fee Configuration",
     academicYear: "Academic Year",
     activeMembers: "Active Members",
     membershipFee: "Membership Fee",
