@@ -318,6 +318,7 @@ export interface FormTemplate {
   form_type: FormType;                  // 'booking' | 'contact' | 'test' | 'custom'
   is_default: boolean;                  // Основная форма по умолчанию для данного типа
   is_active: boolean;                   // Активен ли шаблон
+  is_system?: boolean;                  // Системный шаблон — нельзя удалить
   category_slug?: string | null;        // Привязка к категории курсов (null = все)
   course_id?: string | null;            // Привязка к конкретному курсу (null = все)
   fields_config: FormFieldConfig[];     // Список полей

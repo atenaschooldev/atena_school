@@ -211,14 +211,10 @@ export function FormsListView() {
     });
   }, [forms, typeFilter, statusFilter, targetFilter, searchQuery]);
 
+  // A template is "system" when the DB marks it so (is_system=true).
+  // Default forms created by users are NOT system — they can be deleted.
   const isSystemTemplate = (form: FormTemplate): boolean => {
-    return (
-      form.id === "00000000-0000-0000-0000-000000000001" ||
-      form.id === "00000000-0000-0000-0000-000000000002" ||
-      form.id === "default-booking-form" ||
-      form.id === "default-contact-form" ||
-      form.is_default
-    );
+    return form.is_system === true;
   };
 
   const handleToggleStatus = async (form: FormTemplate, checked: boolean) => {

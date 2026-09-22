@@ -73,6 +73,7 @@ export class FormsService {
   }
 
   private resolveFormId(id: string): string {
+    // Legacy slug aliases — kept for backward compatibility with old API calls
     if (id === 'default-booking-form') return '00000000-0000-0000-0000-000000000001';
     if (id === 'default-contact-form') return '00000000-0000-0000-0000-000000000002';
     return id;
@@ -91,6 +92,7 @@ export class FormsService {
       .single();
 
     if (error || !data) {
+      // Fallback to built-in templates only for the two system UUIDs (offline resilience)
       if (targetId === '00000000-0000-0000-0000-000000000001') {
         return DEFAULT_BOOKING_FORM_TEMPLATE;
       }
@@ -186,8 +188,8 @@ export class FormsService {
       .single();
 
     if (error || !data) {
-      // If updating a system template that doesn't exist yet in the DB table, upsert it
-      if (targetId === '00000000-0000-0000-0000-000000000001' || targetId === '00000000-0000-0000-0000-000000000002') {
+      // If updating a system template that doesn't exist yet in DB — upsert it
+      if (current.is_system) {
         const { data: upsertData, error: upsertErr } = await this.supabase
           .from('form_templates')
           .upsert({
@@ -197,6 +199,7 @@ export class FormsService {
             form_type: formType,
             is_default: dto.is_default ?? current.is_default,
             is_active: dto.is_active ?? current.is_active,
+            is_system: true,
             category_slug: dto.category_slug ?? current.category_slug,
             course_id: dto.course_id ?? current.course_id,
             fields_config: dto.fields_config ?? current.fields_config,
@@ -222,11 +225,8 @@ export class FormsService {
     const targetId = this.resolveFormId(id);
     const current = await this.getFormById(targetId);
 
-    if (
-      current.is_default ||
-      targetId === '00000000-0000-0000-0000-000000000001' ||
-      targetId === '00000000-0000-0000-0000-000000000002'
-    ) {
+    // Protection: system templates cannot be deleted (DB trigger also enforces this)
+    if (current.is_system) {
       throw new BadRequestException('Non è possibile eliminare un modulo di sistema predefinito.');
     }
 
