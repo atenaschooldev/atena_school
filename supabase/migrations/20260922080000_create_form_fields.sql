@@ -55,15 +55,15 @@ INSERT INTO public.form_fields (
     ('purchaser_last_name', 'Cognome Acquirente', 'Purchaser Last Name', 'es. Rossi', 'e.g. Doe', 'text', 'purchaser', true, true, 20, '[]'::jsonb),
     ('purchaser_email', 'Email Acquirente', 'Purchaser Email', 'mario.rossi@email.com', 'john.doe@email.com', 'email', 'purchaser', true, true, 30, '[]'::jsonb),
     ('purchaser_phone', 'Telefono Acquirente', 'Purchaser Phone', '+39 333 1234567', '+1 555 123456', 'phone', 'purchaser', true, true, 40, '[]'::jsonb),
-    ('purchaser_tax_code', 'Codice Fiscale Acquirente', 'Purchaser Tax Code', 'RSSMRA80A01H501U', 'Tax / Fiscal Code', 'text', 'purchaser', true, false, 50, '[]'::jsonb),
+    ('purchaser_tax_code', 'Codice Fiscale Acquirente', 'Purchaser Tax Code', 'RSSMRA80A01H501U', 'Tax / Fiscal Code', 'text', 'purchaser', true, true, 50, '[]'::jsonb),
     ('purchaser_address', 'Indirizzo di Residenza', 'Residential Address', 'Via Roma 10, Milano', '123 Main St', 'text', 'purchaser', false, false, 60, '[]'::jsonb),
     ('sdi_code', 'Codice SDI / PEC', 'SDI Code / PEC', 'M5UXCR1 o pec@email.it', 'Electronic invoice code', 'text', 'purchaser', false, false, 70, '[]'::jsonb),
 
     -- System Student Fields
     ('student_first_name', 'Nome Studente', 'Student First Name', 'es. Luca', 'e.g. Alex', 'text', 'student', true, true, 100, '[]'::jsonb),
     ('student_last_name', 'Cognome Studente', 'Student Last Name', 'es. Rossi', 'e.g. Doe', 'text', 'student', true, true, 110, '[]'::jsonb),
-    ('student_birth_date', 'Data di Nascita Studente', 'Student Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'student', true, false, 120, '[]'::jsonb),
-    ('student_tax_code', 'Codice Fiscale Studente', 'Student Tax Code', 'RSSLCA10A01H501U', 'Student Fiscal Code', 'text', 'student', false, false, 130, '[]'::jsonb),
+    ('student_birth_date', 'Data di Nascita Studente', 'Student Birth Date', 'GG/MM/AAAA', 'DD/MM/YYYY', 'date', 'student', true, true, 120, '[]'::jsonb),
+    ('student_tax_code', 'Codice Fiscale Studente', 'Student Tax Code', 'RSSLCA10A01H501U', 'Student Fiscal Code', 'text', 'student', true, true, 130, '[]'::jsonb),
     ('study_level', 'Livello Linguistico di Partenza', 'Starting Language Level', 'Seleziona livello', 'Select level', 'select', 'student', false, false, 140, '[
         {"label": "Principiante assoluto (A0/A1)", "value": "A1"},
         {"label": "Elementare / Pre-intermedio (A2)", "value": "A2"},
@@ -97,5 +97,7 @@ ON CONFLICT (key) DO UPDATE SET
     field_type = EXCLUDED.field_type,
     target = EXCLUDED.target,
     is_system = EXCLUDED.is_system,
+    is_required_default = EXCLUDED.is_required_default,
+    sort_order = EXCLUDED.sort_order,
     options = CASE WHEN EXCLUDED.options != '[]'::jsonb THEN EXCLUDED.options ELSE public.form_fields.options END,
     updated_at = now();
