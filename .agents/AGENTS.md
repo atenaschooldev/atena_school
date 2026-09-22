@@ -29,9 +29,9 @@
 - Два платежа на бронь: `type='payment'` (курс) + `type='registration_fee'` (взнос €30)
 - Ищи клиента в `bookings` по `purchaser_email` / `purchaser_phone` / `purchaser_tax_code` — не `email`/`phone`
 - Взнос проверяй по данным **студента** (при isForChild — ребёнка, не родителя)
-- **GIT & VERCEL ОКРУЖЕНИЯ:**
-  - `atenaschool.dev@gmail.com` — **ПРОДАКШЕН** Vercel и Git (`https://github.com/atenaschooldev/atena_school.git`). Автор коммитов: `atenaschooldev <atenaschool.dev@gmail.com>`.
-  - `yukinoaruu@gmail.com` — **ДЕВ** Vercel и Git (`https://github.com/yukinoaruu/atena_school.git`).
+- **GIT, VERCEL & SUPABASE ОКРУЖЕНИЯ:**
+  - `atenaschool.dev@gmail.com` — **ПРОДАКШЕН** Vercel, Git (`https://github.com/atenaschooldev/atena_school.git`), Supabase DB ID: `jnfbfihzpplyersbhkch`. Автор коммитов: `atenaschooldev <atenaschool.dev@gmail.com>`.
+  - `yukinoaruu@gmail.com` — **ДЕВ** Vercel, Git (`https://github.com/yukinoaruu/atena_school.git`), Supabase DB ID: `hcxpfzsmzusolvhtuhhm`.
   - **ПУШ:** Всегда пушить в обе репы одной командой: `git push all main`.
 
 ### 🔍 ПЕРЕД КОДИНГОМ:
