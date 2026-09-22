@@ -39,6 +39,7 @@ import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
