@@ -5,6 +5,7 @@ import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutService } from '../public/checkout.public.service';
 import { CheckoutCoreService } from '../checkout-core.service';
 import { calculateLessonDates } from '@atena/utils';
+import { generateNextMembershipNumber } from '@atena/core';
 import {
   BookingPaymentStatus,
   BookingSchedulingStatus,
@@ -26,6 +27,7 @@ import {
   MembershipStatus,
   StudentStatus,
   LanguageLevel,
+  ACADEMIC_YEAR,
 } from '@atena/api-types';
 
 @Injectable()
@@ -430,16 +432,10 @@ export class BookingsAdminService {
             .from('annual_memberships')
             .select('id, membership_number')
             .ilike('tax_code', sTaxCode)
-            .eq('academic_year', '2026/2027')
+            .eq('academic_year', ACADEMIC_YEAR.CURRENT)
             .maybeSingle();
 
-          const { count } = await this.supabaseAdmin
-            .from('annual_memberships')
-            .select('id', { count: 'exact', head: true })
-            .eq('academic_year', '2026/2027')
-            .not('membership_number', 'is', null);
-
-          const nextMembershipNumber = `ATN-2026-${String((count || 0) + 1).padStart(4, '0')}`;
+          const nextMembershipNumber = await generateNextMembershipNumber(this.supabaseAdmin, ACADEMIC_YEAR.CURRENT);
 
           if (existingMem?.id) {
             await this.supabaseAdmin
@@ -464,13 +460,13 @@ export class BookingsAdminService {
                 user_id: updatedBooking.userId || null,
                 tax_code: sTaxCode,
                 membership_number: nextMembershipNumber,
-                academic_year: '2026/2027',
+                academic_year: ACADEMIC_YEAR.CURRENT,
                 status: MembershipStatus.ACTIVE,
                 payment_id: regFeePayment?.id || null,
                 payment_method: updatedBooking.paymentMethod || 1,
                 amount: regFeePayment ? Number(regFeePayment.amount) : Number((updatedBooking as any).registration_fee || (updatedBooking as any).registrationFee || 0),
                 paid_at: new Date().toISOString(),
-                expires_at: '2027-08-31T23:59:59.000Z',
+                expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
               });
           }
         }

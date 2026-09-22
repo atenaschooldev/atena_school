@@ -4,11 +4,13 @@ import {
   processStudentAndBookingLinks as processStudentAndBookingLinksCore,
   generateAndSaveLessons as generateAndSaveLessonsCore,
   recordPaymentLedger as recordPaymentLedgerCore,
+  CreateReservationParams,
+  SupabaseCourseRow,
 } from '@atena/core';
 import { PaymentMethod, BookingPaymentStatus } from '@atena/api-types';
 
 export interface ProcessStudentParams {
-  dto: any;
+  dto: CreateReservationParams;
   bookingId: string;
   feeStatus: { annualFeePaid: boolean; requiresFee?: boolean };
   regFee: number;
@@ -36,7 +38,7 @@ export class CheckoutCoreService {
 
   async generateAndSaveLessons(
     bookingId: string,
-    course: any,
+    course: SupabaseCourseRow | null,
     lessons: Array<{ startsAt: string; endsAt: string }>,
     supabase: SupabaseClient,
     studentId?: string | null
