@@ -38,8 +38,9 @@ export class FormsService {
     try {
       let query = this.supabase.from('form_templates').select('*').order('created_at', { ascending: false });
 
-      if (filter?.form_type !== undefined) {
-        query = query.eq('form_type', filter.form_type);
+      if (filter?.form_type !== undefined && filter?.form_type !== null) {
+        const parsedType = parseFormType(filter.form_type);
+        query = query.eq('form_type', parsedType);
       }
       if (typeof filter?.is_active === 'boolean') {
         query = query.eq('is_active', filter.is_active);
@@ -47,8 +48,9 @@ export class FormsService {
 
       const defaultList = [DEFAULT_BOOKING_FORM_TEMPLATE, DEFAULT_CONTACT_FORM_TEMPLATE];
       const getFallback = () => {
-        if (filter?.form_type !== undefined) {
-          return defaultList.filter((f) => f.form_type === filter.form_type);
+        if (filter?.form_type !== undefined && filter?.form_type !== null) {
+          const parsedType = parseFormType(filter.form_type);
+          return defaultList.filter((f) => f.form_type === parsedType);
         }
         return defaultList;
       };

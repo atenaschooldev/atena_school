@@ -21,7 +21,7 @@ import {
   CreateFormFieldDto,
   UpdateFormFieldDto,
 } from './dto/forms.dto';
-import { FormType } from '@atena/api-types';
+import { FormType, parseFormType } from '@atena/api-types';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
@@ -39,14 +39,17 @@ export class FormsPublicController {
   @Get(['resolve', 'template', 'templates'])
   @ApiOperation({ summary: 'Разрешить активный шаблон формы для курса/категории (Public)' })
   async resolveForm(
-    @Query('form_type') form_type: FormType = FormType.BOOKING,
+    @Query('form_type') form_type?: string,
     @Query('course_id') course_id?: string,
     @Query('category_slug') category_slug?: string,
   ) {
+    const parsedType = (form_type !== undefined && form_type !== '' && form_type !== 'undefined' && form_type !== 'null')
+      ? parseFormType(form_type)
+      : FormType.BOOKING;
     const template = await this.formsService.resolveForm({
-      form_type,
-      course_id,
-      category_slug,
+      form_type: parsedType,
+      course_id: course_id || undefined,
+      category_slug: category_slug || undefined,
     });
     return {
       success: true,
@@ -85,8 +88,11 @@ export class FormsPublicController {
     @Query('target') target?: string,
     @Query('is_system') is_system?: string,
   ) {
-    const isSystemBool = is_system !== undefined ? is_system === 'true' : undefined;
-    return this.formFieldsService.getFields({ target, is_system: isSystemBool });
+    const isSystemBool = (is_system !== undefined && is_system !== '' && is_system !== 'undefined')
+      ? is_system === 'true'
+      : undefined;
+    const cleanTarget = (target !== undefined && target !== '' && target !== 'all') ? target : undefined;
+    return this.formFieldsService.getFields({ target: cleanTarget, is_system: isSystemBool });
   }
 }
 
@@ -112,8 +118,11 @@ export class FormsAdminController {
     @Query('target') target?: string,
     @Query('is_system') is_system?: string,
   ) {
-    const isSystemBool = is_system !== undefined ? is_system === 'true' : undefined;
-    return this.formFieldsService.getFields({ target, is_system: isSystemBool });
+    const isSystemBool = (is_system !== undefined && is_system !== '' && is_system !== 'undefined')
+      ? is_system === 'true'
+      : undefined;
+    const cleanTarget = (target !== undefined && target !== '' && target !== 'all') ? target : undefined;
+    return this.formFieldsService.getFields({ target: cleanTarget, is_system: isSystemBool });
   }
 
   @Post('fields')
@@ -159,11 +168,16 @@ export class FormsAdminController {
   @Roles('admin', 'secretary')
   @ApiOperation({ summary: 'Получить список всех шаблонов форм' })
   async getForms(
-    @Query('form_type') form_type?: FormType,
+    @Query('form_type') form_type?: string,
     @Query('is_active') is_active?: string,
   ) {
-    const isActiveBool = is_active !== undefined ? is_active === 'true' : undefined;
-    return this.formsService.getForms({ form_type, is_active: isActiveBool });
+    const parsedFormType = (form_type !== undefined && form_type !== '' && form_type !== 'undefined' && form_type !== 'null')
+      ? parseFormType(form_type)
+      : undefined;
+    const isActiveBool = (is_active !== undefined && is_active !== '' && is_active !== 'undefined')
+      ? is_active === 'true'
+      : undefined;
+    return this.formsService.getForms({ form_type: parsedFormType, is_active: isActiveBool });
   }
 
   @Post()
