@@ -33,6 +33,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 
 const schema = z.object({
   firstName: z.string().min(1, "Il nome è obbligatorio"),
@@ -54,6 +55,9 @@ interface CreateMembershipDialogProps {
 export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProps) {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { profile } = useSchoolProfile();
+  const feeAmount = profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30;
+  const academicYear = profile?.academic_year || "2026/2027";
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -108,17 +112,17 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
       <DialogTrigger asChild>
         <Button className="cursor-pointer font-bold text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-2xs gap-1.5">
           <Plus className="h-4 w-4" />
-          <span>+ Nuova Iscrizione (€30)</span>
+          <span>+ Nuova Iscrizione (€{feeAmount})</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[560px] p-6">
         <DialogHeader className="pb-2 border-b border-border/50">
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Shield className="w-5 h-5 text-amber-500" />
-            <span>Nuova Iscrizione Annuale (€30.00)</span>
+            <span>Nuova Iscrizione Annuale (€{feeAmount.toFixed(2)})</span>
           </DialogTitle>
           <p className="text-xs text-muted-foreground">
-            Compila i dati anagrafici per registrare la quota associativa (A.A. 2026/2027).
+            Compila i dati anagrafici per registrare la quota associativa (A.A. {academicYear}).
           </p>
         </DialogHeader>
 
@@ -139,7 +143,7 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Nome *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Mario" className="h-10 text-sm bg-background" {...field} />
+                        <Input placeholder="Mario" className="h-10 text-xs bg-background" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -153,13 +157,15 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Cognome *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Rossi" className="h-10 text-sm bg-background" {...field} />
+                        <Input placeholder="Rossi" className="h-10 text-xs bg-background" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <FormField
                   control={form.control}
                   name="email"
@@ -167,7 +173,7 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">Email</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="mario.rossi@email.com" className="h-10 text-sm bg-background" {...field} />
+                        <Input type="email" placeholder="mario.rossi@email.com" className="h-10 text-xs bg-background" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -179,24 +185,32 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Telefono</FormLabel>
+                      <FormLabel className="text-xs font-semibold">Telefono / WhatsApp</FormLabel>
                       <FormControl>
-                        <Input placeholder="+39 340 1234567" className="h-10 text-sm bg-background" {...field} />
+                        <Input placeholder="+39 333 1234567" className="h-10 text-xs bg-background" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <FormField
                   control={form.control}
                   name="taxCode"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Codice Fiscale</FormLabel>
+                      <FormLabel className="text-xs font-semibold">Codice Fiscale (opzionale)</FormLabel>
                       <FormControl>
-                        <Input placeholder="RSSMRA80A01H501Z" className="uppercase font-mono h-10 text-sm bg-background" {...field} />
+                        <Input
+                          placeholder="RSSMRA..."
+                          className="h-10 text-xs font-mono uppercase bg-background"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        />
                       </FormControl>
+                      <FormDescription className="text-[10px]">Per emissione ricevuta fiscale</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -207,9 +221,9 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                   name="birthDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Data Nascita / Età</FormLabel>
+                      <FormLabel className="text-xs font-semibold">Data di Nascita</FormLabel>
                       <FormControl>
-                        <Input type="date" className="h-10 text-sm bg-background" {...field} />
+                        <Input type="date" className="h-10 text-xs bg-background" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -226,7 +240,7 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                   <span>2. Stato e Modalità di Pagamento</span>
                 </div>
                 <Badge variant="outline" className="font-mono font-bold text-xs bg-amber-500/20 text-amber-900 dark:text-amber-200 border-amber-500/30 px-3 py-1">
-                  €30.00
+                  €{feeAmount.toFixed(2)}
                 </Badge>
               </div>
 
@@ -305,7 +319,7 @@ export function CreateMembershipDialog({ onSuccess }: CreateMembershipDialogProp
                 ) : (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Registra Quota (€30.00)</span>
+                    <span>Registra Quota (€{feeAmount.toFixed(2)})</span>
                   </>
                 )}
               </Button>

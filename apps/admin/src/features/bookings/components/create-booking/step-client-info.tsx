@@ -22,6 +22,7 @@ import {
   Baby,
 } from "lucide-react";
 import type { CreateBookingValues, ClientItem } from "./types";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 
 interface StepClientInfoProps {
   form: UseFormReturn<CreateBookingValues>;
@@ -56,6 +57,9 @@ export function StepClientInfo({
   membershipFeeStatus,
 }: StepClientInfoProps) {
   const isForChild = form.watch("isForChild");
+  const { profile } = useSchoolProfile();
+  const feeAmount = profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30;
+  const academicYear = profile?.academic_year || "2026/2027";
 
   return (
     <div className="space-y-6">
@@ -423,13 +427,13 @@ export function StepClientInfo({
               <div>
                 <p className="font-bold text-sm">
                   {membershipFeeStatus.paid
-                    ? "Quota Associativa A.A. 2026/2027 già saldata"
-                    : "Quota Associativa A.A. 2026/2027 da saldare"}
+                    ? `Quota Associativa A.A. ${academicYear} già saldata`
+                    : `Quota Associativa A.A. ${academicYear} da saldare`}
                 </p>
                 <p className="text-xs opacity-90">
                   {membershipFeeStatus.paid
-                    ? `L'iscrizione annuale di €30 risulta già pagata per ${isForChild ? "lo studente" : "il cliente"}.`
-                    : `Il cliente deve pagare la quota associativa di iscrizione (€30).`}
+                    ? `L'iscrizione annuale di €${feeAmount} risulta già pagata per ${isForChild ? "lo studente" : "il cliente"}.`
+                    : `Il cliente deve pagare la quota associativa di iscrizione (€${feeAmount}).`}
                 </p>
               </div>
             </div>
@@ -439,7 +443,7 @@ export function StepClientInfo({
                 membershipFeeStatus.paid ? "bg-emerald-600 text-white" : "bg-amber-600 text-white"
               }`}
             >
-              {membershipFeeStatus.paid ? "€0.00" : "+ €30.00"}
+              {membershipFeeStatus.paid ? "€0.00" : `+ €${feeAmount.toFixed(2)}`}
             </Badge>
           </div>
         )}

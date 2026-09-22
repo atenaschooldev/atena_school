@@ -32,6 +32,7 @@ import {
   PaymentType,
 } from "@atena/api-types";
 import { useTranslation } from "@/i18n/context";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 
 interface UniversalPosCheckoutModalProps {
   open: boolean;
@@ -86,7 +87,8 @@ export function UniversalPosCheckoutModal({
   );
 
   const [payRegistrationFee, setPayRegistrationFee] = useState(defaultFeeOnly);
-  const [registrationFeeAmount] = useState<number>(30);
+  const { profile } = useSchoolProfile();
+  const registrationFeeAmount = profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30;
 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [notes, setNotes] = useState("");
@@ -305,11 +307,11 @@ export function UniversalPosCheckoutModal({
                     onCheckedChange={(v) => setPayRegistrationFee(Boolean(v))}
                   />
                   <label htmlFor="item-fee" className="text-xs font-semibold cursor-pointer">
-                    {t("payments.typeMembership")} (€30.00)
+                    {t("payments.typeMembership")} (€{registrationFeeAmount.toFixed(2)})
                   </label>
                 </div>
                 <span className="font-bold font-mono text-xs text-emerald-600 dark:text-emerald-400">
-                  €30.00
+                  €{registrationFeeAmount.toFixed(2)}
                 </span>
               </div>
             </div>

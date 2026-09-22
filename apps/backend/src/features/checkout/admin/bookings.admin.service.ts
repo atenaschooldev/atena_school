@@ -452,7 +452,7 @@ export class BookingsAdminService {
                 user_id: updatedBooking.userId || null,
                 payment_id: regFeePayment?.id || undefined,
                 payment_method: updatedBooking.paymentMethod || undefined,
-                amount: regFeePayment ? Number(regFeePayment.amount) : 30.00,
+                amount: regFeePayment ? Number(regFeePayment.amount) : Number((updatedBooking as any).registration_fee || (updatedBooking as any).registrationFee || 0),
                 paid_at: new Date().toISOString(),
               })
               .eq('id', existingMem.id);
@@ -468,7 +468,7 @@ export class BookingsAdminService {
                 status: MembershipStatus.ACTIVE,
                 payment_id: regFeePayment?.id || null,
                 payment_method: updatedBooking.paymentMethod || 1,
-                amount: regFeePayment ? Number(regFeePayment.amount) : 30.00,
+                amount: regFeePayment ? Number(regFeePayment.amount) : Number((updatedBooking as any).registration_fee || (updatedBooking as any).registrationFee || 0),
                 paid_at: new Date().toISOString(),
                 expires_at: '2027-08-31T23:59:59.000Z',
               });
