@@ -60,7 +60,7 @@ VALUES (
   '00000000-0000-0000-0000-000000000001',
   'Modulo Iscrizione Standard',
   'Modulo predefinito per la prenotazione e acquisto dei corsi',
-  'booking',
+  1,
   TRUE,
   TRUE,
   '[
