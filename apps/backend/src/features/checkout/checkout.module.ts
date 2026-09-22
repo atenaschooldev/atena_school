@@ -7,6 +7,7 @@ import { SettingsPublicController } from './public/settings.public.controller';
 import { StripeWebhookController } from './stripe-webhook.controller';
 import { BookingsAdminController } from './admin/bookings.admin.controller';
 import { PromoCodesAdminController } from './admin/promo-codes.admin.controller';
+import { SettingsAdminController } from './admin/settings.admin.controller';
 import { CheckoutService } from './public/checkout.public.service';
 import { BookingsAdminService } from './admin/bookings.admin.service';
 import { PromoCodesAdminService } from './admin/promo-codes.admin.service';
@@ -25,6 +26,7 @@ import { MailModule } from '../mail/mail.module';
     StripeWebhookController,
     BookingsAdminController,
     PromoCodesAdminController,
+    SettingsAdminController,
   ],
   providers: [CheckoutCoreService, CheckoutService, BookingsAdminService, PromoCodesAdminService],
   exports: [CheckoutCoreService, CheckoutService, BookingsAdminService, PromoCodesAdminService],
