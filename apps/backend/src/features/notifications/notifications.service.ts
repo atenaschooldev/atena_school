@@ -11,6 +11,7 @@ import {
 import {
   compileTemplate,
   getDefaultBlocksForTemplate,
+  getSchoolProfile,
   renderEmailFromBlocks,
   renderTelegramFromBlocks,
 } from '@atena/core';
@@ -187,7 +188,8 @@ export class NotificationsService {
       updatePayload.blocks_config = dto.blocks_config;
 
       if (existing.channel === NotificationChannel.EMAIL) {
-        const compiled = renderEmailFromBlocks(dto.blocks_config, getSampleDataForTemplate(existing.code));
+        const schoolProfile = await getSchoolProfile(this.supabase);
+        const compiled = renderEmailFromBlocks(dto.blocks_config, getSampleDataForTemplate(existing.code), schoolProfile);
         updatePayload.body_html = compiled.html;
         if (dto.subject || dto.subject_template) {
           updatePayload.subject = dto.subject || dto.subject_template;
@@ -259,7 +261,8 @@ export class NotificationsService {
     let bodyText = dto.body_text || '';
 
     if (channel === NotificationChannel.EMAIL) {
-      const compiled = renderEmailFromBlocks(blocksConfig, getSampleDataForTemplate(rawCode));
+      const schoolProfile = await getSchoolProfile(this.supabase);
+      const compiled = renderEmailFromBlocks(blocksConfig, getSampleDataForTemplate(rawCode), schoolProfile);
       bodyHtml = bodyHtml || compiled.html;
       subject = subject || compiled.subject;
     } else {
@@ -358,7 +361,8 @@ export class NotificationsService {
             : (!htmlBody ? getDefaultBlocksForTemplate(template.code, NotificationChannel.EMAIL) : null));
 
       if (blocksConfig) {
-        const compiled = renderEmailFromBlocks(blocksConfig, sampleData);
+        const schoolProfile = await getSchoolProfile(this.supabase);
+        const compiled = renderEmailFromBlocks(blocksConfig, sampleData, schoolProfile);
         htmlBody = compiled.html;
         if (!dto.subject && !dto.subject_template) {
           subject = template.subject ? compileTemplate(template.subject, sampleData) : compiled.subject;

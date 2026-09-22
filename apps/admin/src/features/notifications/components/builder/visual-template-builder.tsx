@@ -31,6 +31,7 @@ import {
   renderTelegramFromBlocks,
   DEFAULT_SCHOOL_PROFILE,
 } from "@atena/core";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 const SAMPLE_PREVIEW_DATA: Record<string, string> = {
   student_name: "Viktoria Petukhova",
   purchaser_name: "Petukhov Andrii",
@@ -916,14 +917,16 @@ function VisualTemplateBuilderContent({
     toast.success(t("notifications.resetDefaultSuccess") || "Modello ripristinato allo standard originale Atena School");
   };
 
+  const { profile } = useSchoolProfile();
+
   // Compile real live preview
   const liveRendered = useMemo(() => {
     if (isEmail) {
-      return renderEmailFromBlocks(blocksConfig, customVars, DEFAULT_SCHOOL_PROFILE);
+      return renderEmailFromBlocks(blocksConfig, customVars, profile || DEFAULT_SCHOOL_PROFILE);
     }
     const compiledTg = renderTelegramFromBlocks(blocksConfig, customVars);
     return { subject: "", html: compiledTg.text };
-  }, [blocksConfig, customVars, isEmail]);
+  }, [blocksConfig, customVars, isEmail, profile]);
 
   const handleCopyCleanHtml = useCallback(async () => {
     try {
