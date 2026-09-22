@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,10 +26,11 @@ import {
   Save,
   RotateCcw,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n/context";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 import { DEFAULT_SCHOOL_PROFILE, type SchoolProfile } from "@atena/api-types";
 
 const schoolProfileSchema = z.object({
@@ -56,11 +55,8 @@ const schoolProfileSchema = z.object({
   secretariat_email: z.string().email("Invalid email").or(z.literal("")).optional(),
   support_email: z.string().email("Invalid email").or(z.literal("")).optional(),
   secretariat_hours: z.string().optional(),
-  // Fiscale & Quota & Bonifico
+  // Fiscale & Bonifico
   vat_code: z.string().optional(),
-  registration_fee_enabled: z.boolean().optional(),
-  registration_fee_eur: z.coerce.number().min(0).max(500),
-  academic_year: z.string().optional(),
   iban: z.string().optional(),
   bank_name: z.string().optional(),
   account_holder: z.string().optional(),
@@ -76,142 +72,118 @@ type SchoolProfileFormValues = z.infer<typeof schoolProfileSchema>;
 
 export function SchoolProfileCard() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState<boolean>(true);
-  const [saving, setSaving] = useState<boolean>(false);
+  const { profile, isLoading, updateProfile, isUpdating } = useSchoolProfile();
 
   const form = useForm<SchoolProfileFormValues>({
     resolver: zodResolver(schoolProfileSchema) as any,
     defaultValues: {
-      name: DEFAULT_SCHOOL_PROFILE.name,
-      legal_name: DEFAULT_SCHOOL_PROFILE.legal_name || "",
-      tagline: DEFAULT_SCHOOL_PROFILE.tagline || "",
-      founders: DEFAULT_SCHOOL_PROFILE.founders || "",
-      logo_url: DEFAULT_SCHOOL_PROFILE.logo_url || "",
-      website: DEFAULT_SCHOOL_PROFILE.website || "",
-      address: DEFAULT_SCHOOL_PROFILE.address || "",
-      city: DEFAULT_SCHOOL_PROFILE.city || "",
-      cap: DEFAULT_SCHOOL_PROFILE.cap || "",
-      province: DEFAULT_SCHOOL_PROFILE.province || "",
-      country: DEFAULT_SCHOOL_PROFILE.country || "Italia",
-      maps_url: DEFAULT_SCHOOL_PROFILE.maps_url || "",
-      phone: DEFAULT_SCHOOL_PROFILE.phone || "",
-      landline: DEFAULT_SCHOOL_PROFILE.landline || "",
-      whatsapp: DEFAULT_SCHOOL_PROFILE.whatsapp || "",
-      email: DEFAULT_SCHOOL_PROFILE.email || "",
-      secretariat_email: DEFAULT_SCHOOL_PROFILE.secretariat_email || "",
-      support_email: DEFAULT_SCHOOL_PROFILE.support_email || "",
-      secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
-      vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
-      registration_fee_enabled: DEFAULT_SCHOOL_PROFILE.registration_fee_enabled ?? true,
-      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur ?? 30,
-      academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
-      iban: DEFAULT_SCHOOL_PROFILE.iban || "",
-      bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
-      account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
-      instagram: DEFAULT_SCHOOL_PROFILE.instagram || "",
-      facebook: DEFAULT_SCHOOL_PROFILE.facebook || "",
-      linkedin: DEFAULT_SCHOOL_PROFILE.linkedin || "",
-      youtube: DEFAULT_SCHOOL_PROFILE.youtube || "",
-      tiktok: DEFAULT_SCHOOL_PROFILE.tiktok || "",
+      name: profile?.name || DEFAULT_SCHOOL_PROFILE.name,
+      legal_name: profile?.legal_name || "",
+      tagline: profile?.tagline || "",
+      founders: profile?.founders || "",
+      logo_url: profile?.logo_url || "",
+      website: profile?.website || profile?.site_url || "",
+      address: profile?.address || "",
+      city: profile?.city || "",
+      cap: profile?.cap || "",
+      province: profile?.province || "",
+      country: profile?.country || "Italia",
+      maps_url: profile?.maps_url || "",
+      phone: profile?.phone || "",
+      landline: profile?.landline || "",
+      whatsapp: profile?.whatsapp || "",
+      email: profile?.email || "",
+      secretariat_email: profile?.secretariat_email || "",
+      support_email: profile?.support_email || "",
+      secretariat_hours: profile?.secretariat_hours || "",
+      vat_code: profile?.vat_code || "",
+      iban: profile?.iban || "",
+      bank_name: profile?.bank_name || "",
+      account_holder: profile?.account_holder || "",
+      instagram: profile?.socials?.instagram || "",
+      facebook: profile?.socials?.facebook || "",
+      linkedin: profile?.socials?.linkedin || "",
+      youtube: profile?.socials?.youtube || "",
+      tiktok: profile?.socials?.tiktok || "",
     },
   });
 
+  // Database-First: Reset form values when profile from DB loads/updates
   useEffect(() => {
-    let mounted = true;
-    async function loadProfile() {
-      try {
-        setLoading(true);
-        const data = await api.get<SchoolProfile>("/school-profile");
-        if (mounted && data) {
-          form.reset({
-            name: data.name || DEFAULT_SCHOOL_PROFILE.name,
-            legal_name: data.legal_name || "",
-            tagline: data.tagline || "",
-            founders: data.founders || "",
-            logo_url: data.logo_url || "",
-            website: data.website || "",
-            address: data.address || "",
-            city: data.city || "",
-            cap: data.cap || "",
-            province: data.province || "",
-            country: data.country || "Italia",
-            maps_url: data.maps_url || "",
-            phone: data.phone || "",
-            landline: data.landline || "",
-            whatsapp: data.whatsapp || "",
-            email: data.email || "",
-            secretariat_email: data.secretariat_email || "",
-            support_email: data.support_email || "",
-            secretariat_hours: data.secretariat_hours || "",
-            vat_code: data.vat_code || "",
-            registration_fee_enabled: data.registration_fee_enabled !== false,
-            registration_fee_eur: data.registration_fee_eur ?? 30,
-            academic_year: data.academic_year || "2026/2027",
-            iban: data.iban || "",
-            bank_name: data.bank_name || "",
-            account_holder: data.account_holder || "",
-            instagram: data.instagram || "",
-            facebook: data.facebook || "",
-            linkedin: data.linkedin || "",
-            youtube: data.youtube || "",
-            tiktok: data.tiktok || "",
-          });
-        }
-      } catch (err) {
-        console.warn("[SchoolProfileCard] Failed to fetch profile:", err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+    if (profile) {
+      form.reset({
+        name: profile.name || DEFAULT_SCHOOL_PROFILE.name,
+        legal_name: profile.legal_name || "",
+        tagline: profile.tagline || "",
+        founders: profile.founders || "",
+        logo_url: profile.logo_url || "",
+        website: profile.website || profile.site_url || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        cap: profile.cap || "",
+        province: profile.province || "",
+        country: profile.country || "Italia",
+        maps_url: profile.maps_url || "",
+        phone: profile.phone || "",
+        landline: profile.landline || "",
+        whatsapp: profile.whatsapp || "",
+        email: profile.email || "",
+        secretariat_email: profile.secretariat_email || "",
+        support_email: profile.support_email || "",
+        secretariat_hours: profile.secretariat_hours || "",
+        vat_code: profile.vat_code || "",
+        iban: profile.iban || "",
+        bank_name: profile.bank_name || "",
+        account_holder: profile.account_holder || "",
+        instagram: profile.socials?.instagram || "",
+        facebook: profile.socials?.facebook || "",
+        linkedin: profile.socials?.linkedin || "",
+        youtube: profile.socials?.youtube || "",
+        tiktok: profile.socials?.tiktok || "",
+      });
     }
-
-    loadProfile();
-    return () => {
-      mounted = false;
-    };
-  }, [form]);
+  }, [profile, form]);
 
   const onSubmit = async (values: SchoolProfileFormValues) => {
     try {
-      setSaving(true);
-      const updated = await api.put<SchoolProfile>("/school-profile", values);
-      form.reset({
-        name: updated.name || values.name,
-        legal_name: updated.legal_name || "",
-        tagline: updated.tagline || "",
-        founders: updated.founders || "",
-        logo_url: updated.logo_url || "",
-        website: updated.website || "",
-        address: updated.address || "",
-        city: updated.city || "",
-        cap: updated.cap || "",
-        province: updated.province || "",
-        country: updated.country || "Italia",
-        maps_url: updated.maps_url || "",
-        phone: updated.phone || "",
-        landline: updated.landline || "",
-        whatsapp: updated.whatsapp || "",
-        email: updated.email || "",
-        secretariat_email: updated.secretariat_email || "",
-        support_email: updated.support_email || "",
-        secretariat_hours: updated.secretariat_hours || "",
-        vat_code: updated.vat_code || "",
-        registration_fee_enabled: updated.registration_fee_enabled !== false,
-        registration_fee_eur: updated.registration_fee_eur ?? 30,
-        academic_year: updated.academic_year || "2026/2027",
-        iban: updated.iban || "",
-        bank_name: updated.bank_name || "",
-        account_holder: updated.account_holder || "",
-        instagram: updated.instagram || "",
-        facebook: updated.facebook || "",
-        linkedin: updated.linkedin || "",
-        youtube: updated.youtube || "",
-        tiktok: updated.tiktok || "",
-      });
-      toast.success(t("schoolProfile.profileSaved"));
+      const payload: Partial<SchoolProfile> = {
+        name: values.name,
+        legal_name: values.legal_name || "",
+        tagline: values.tagline || "",
+        founders: values.founders || "",
+        logo_url: values.logo_url || "",
+        website: values.website || "",
+        site_url: values.website || profile?.site_url,
+        address: values.address || "",
+        city: values.city || "",
+        cap: values.cap || "",
+        province: values.province || "",
+        country: values.country || "Italia",
+        maps_url: values.maps_url || "",
+        phone: values.phone || "",
+        landline: values.landline || "",
+        whatsapp: values.whatsapp || "",
+        email: values.email || "",
+        secretariat_email: values.secretariat_email || "",
+        support_email: values.support_email || "",
+        secretariat_hours: values.secretariat_hours || "",
+        vat_code: values.vat_code || "",
+        iban: values.iban || "",
+        bank_name: values.bank_name || "",
+        account_holder: values.account_holder || "",
+        socials: {
+          instagram: values.instagram || "",
+          facebook: values.facebook || "",
+          linkedin: values.linkedin || "",
+          youtube: values.youtube || "",
+          tiktok: values.tiktok || "",
+        },
+      };
+
+      await updateProfile(payload);
+      toast.success(t("schoolProfile.profileSaved") || "Profilo della scuola salvato con successo!");
     } catch (err: any) {
-      toast.error(err.message || "Error saving profile");
-    } finally {
-      setSaving(false);
+      toast.error(err?.message || "Errore durante il salvataggio del profilo");
     }
   };
 
@@ -237,19 +209,19 @@ export function SchoolProfileCard() {
       support_email: DEFAULT_SCHOOL_PROFILE.support_email || "",
       secretariat_hours: DEFAULT_SCHOOL_PROFILE.secretariat_hours || "",
       vat_code: DEFAULT_SCHOOL_PROFILE.vat_code || "",
-      registration_fee_eur: DEFAULT_SCHOOL_PROFILE.registration_fee_eur ?? 30,
-      academic_year: DEFAULT_SCHOOL_PROFILE.academic_year || "2026/2027",
       iban: DEFAULT_SCHOOL_PROFILE.iban || "",
       bank_name: DEFAULT_SCHOOL_PROFILE.bank_name || "",
       account_holder: DEFAULT_SCHOOL_PROFILE.account_holder || "",
-      instagram: DEFAULT_SCHOOL_PROFILE.instagram || "",
-      facebook: DEFAULT_SCHOOL_PROFILE.facebook || "",
-      linkedin: DEFAULT_SCHOOL_PROFILE.linkedin || "",
-      youtube: DEFAULT_SCHOOL_PROFILE.youtube || "",
-      tiktok: DEFAULT_SCHOOL_PROFILE.tiktok || "",
+      instagram: DEFAULT_SCHOOL_PROFILE.socials?.instagram || "",
+      facebook: DEFAULT_SCHOOL_PROFILE.socials?.facebook || "",
+      linkedin: DEFAULT_SCHOOL_PROFILE.socials?.linkedin || "",
+      youtube: DEFAULT_SCHOOL_PROFILE.socials?.youtube || "",
+      tiktok: DEFAULT_SCHOOL_PROFILE.socials?.tiktok || "",
     });
     toast.info(t("schoolProfile.resetConfirmDesc"));
   };
+
+  const watchedLogo = form.watch("logo_url");
 
   return (
     <Card className="border-2 border-primary/20 shadow-sm overflow-hidden">
@@ -277,7 +249,7 @@ export function SchoolProfileCard() {
               variant="outline"
               size="sm"
               onClick={handleResetDefaults}
-              disabled={loading || saving}
+              disabled={isLoading || isUpdating}
               className="cursor-pointer text-xs"
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
@@ -287,10 +259,10 @@ export function SchoolProfileCard() {
               type="button"
               size="sm"
               onClick={form.handleSubmit(onSubmit)}
-              disabled={loading || saving}
+              disabled={isLoading || isUpdating}
               className="cursor-pointer text-xs bg-primary hover:bg-primary/90"
             >
-              {saving ? (
+              {isUpdating ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                   {t("schoolProfile.saving")}
@@ -406,9 +378,25 @@ export function SchoolProfileCard() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl")}</FormLabel>
-                        <FormControl>
-                          <Input placeholder="/assets/logo.webp" {...field} />
-                        </FormControl>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg border border-border/80 bg-muted/40 flex items-center justify-center shrink-0 overflow-hidden">
+                            {watchedLogo ? (
+                              <img
+                                src={watchedLogo}
+                                alt="Logo"
+                                className="w-full h-full object-contain p-1"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <ImageIcon className="h-5 w-5 text-muted-foreground/60" />
+                            )}
+                          </div>
+                          <FormControl>
+                            <Input placeholder="/assets/logo.webp" {...field} />
+                          </FormControl>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

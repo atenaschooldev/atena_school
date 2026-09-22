@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ interface RegistrationFeeSettingsCardProps {
 
 export function RegistrationFeeSettingsCard({ onSaved, className }: RegistrationFeeSettingsCardProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
 
@@ -88,6 +90,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
         setFeeEnabled(res.profile.registration_fee_enabled !== false);
         setFeeAmount(res.profile.registration_fee_eur ?? 30);
         setAcademicYear(res.profile.academic_year || "2026/2027");
+        queryClient.invalidateQueries({ queryKey: ["school-profile"] });
         onSaved?.(res.profile);
       }
 
