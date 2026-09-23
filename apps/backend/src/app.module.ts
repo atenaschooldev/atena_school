@@ -20,6 +20,7 @@ import { ReportsModule } from './features/reports/reports.module';
 import { AuditLogsModule } from './features/audit-logs/audit-logs.module';
 import { StudentsModule } from './features/students/students.module';
 import { GroupsModule } from './features/groups/groups.module';
+import { ActiveServicesModule } from './features/active-services/active-services.module';
 
 import { DictionaryModule } from './features/dictionary/dictionary.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
@@ -37,6 +38,7 @@ const businessModules = [
   NotificationsModule,
   IntegrationsModule,
   FormsModule,
+  ActiveServicesModule,
   AuthModule,
   CoursesModule,
   GroupsModule,

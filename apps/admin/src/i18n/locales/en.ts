@@ -8,6 +8,7 @@ export const en = {
     courses: "Courses",
     groups: "Class Groups",
     bookings: "Bookings & Orders",
+    activeServices: "Active Services",
     payments: "Payments & Invoices",
     attendance: "Attendance & Register",
     annualMemberships: "Annual Memberships",
@@ -1069,8 +1070,31 @@ export const en = {
       deleteError: "Error deleting field",
     },
   },
+  activeServices: {
+    title: "Active Services & Enrollments",
+    subtitle: "Real-time monitoring of purchased courses, subscriptions and lesson progress",
+    searchPlaceholder: "Search by student, email, tax code or course...",
+    totalActive: "Total Active Services",
+    totalActiveDesc: "Active courses and enrollments",
+    subscriptions: "Stripe Subscriptions",
+    subscriptionsDesc: "Active recurring plans",
+    lessonsRatio: "Remaining Lessons",
+    completed: "completed",
+    unpaidAnnualFees: "Annual Fees to Regularize (€30)",
+    unpaidAnnualFeesDesc: "Students without annual fee",
+    subscription: "Stripe Subscription",
+    fullPayment: "One-Time Payment",
+    lessonProgress: "Lesson Progress",
+    lessons: "lessons",
+    remaining: "remaining",
+    nextLesson: "Next Lesson",
+    noUpcomingLessons: "None scheduled",
+    annualFee: "Annual Fee €30",
+    feePaid: "Regular",
+    feePending: "Pending",
+    noServicesFound: "No active services found.",
+  },
 } as const;
 
 
 export type TranslationKey = typeof en;
-

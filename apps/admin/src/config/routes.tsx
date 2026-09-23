@@ -14,6 +14,7 @@ const Orari = lazy(() => import('@/app/orari/page'))
 const Iscrizioni = lazy(() => import('@/app/iscrizioni/page'))
 const Insegnanti = lazy(() => import('@/app/insegnanti/page'))
 const Promozioni = lazy(() => import('@/app/promozioni/page'))
+const ServiziAttivi = lazy(() => import('@/app/servizi-attivi/page'))
 const Notifiche = lazy(() => import('@/app/notifiche/page'))
 const Moduli = lazy(() => import('@/app/moduli/page'))
 const FAQs = lazy(() => import('@/app/faqs/page'))
@@ -82,6 +83,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/prenotazioni",
     element: <Prenotazioni />
+  },
+  {
+    path: "/servizi-attivi",
+    element: <ServiziAttivi />
   },
   {
     path: "/pagamenti",

@@ -19,6 +19,7 @@ import {
   Building2,
   Palette,
   ClipboardList,
+  Sparkles,
 } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Logo } from "@/components/logo"
@@ -80,6 +81,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           title: t("nav.bookings"),
           url: "/prenotazioni",
           icon: CreditCard,
+        },
+        {
+          title: t("nav.activeServices") || "Servizi Attivi",
+          url: "/servizi-attivi",
+          icon: Sparkles,
         },
         {
           title: t("nav.payments"),
