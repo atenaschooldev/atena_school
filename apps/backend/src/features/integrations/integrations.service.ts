@@ -20,6 +20,8 @@ import {
   sendTelegramMessage,
   getStripeClient,
   encryptSecret,
+  decryptSecret,
+  captureExceptionToSentry,
 } from '@atena/core';
 import {
   UpdateIntegrationDto,
@@ -364,23 +366,51 @@ export class IntegrationsService {
     }
 
     if (provider === IntegrationProvider.SENTRY) {
+      clearSecretsCache(IntegrationProvider.SENTRY);
       const creds = await getSentryCredentials(this.supabase);
-      if (!creds.dsn) {
+      let dsn = (dto as any).dsn || creds.dsn;
+      if (dsn?.startsWith('enc:v1:')) {
+        dsn = decryptSecret(dsn);
+      }
+      if (!dsn || dsn.includes('••••')) {
+        const { data: dbRow } = await this.supabase
+          .from('integration_secrets')
+          .select('credentials')
+          .eq('provider', 'sentry')
+          .maybeSingle();
+        const rawFromDb = dbRow?.credentials?.dsn;
+        if (rawFromDb) {
+          dsn = rawFromDb.startsWith('enc:v1:') ? decryptSecret(rawFromDb) : rawFromDb;
+        }
+      }
+
+      if (!dsn) {
         throw new BadRequestException('Sentry DSN non configurato.');
       }
 
       try {
-        const url = new URL(creds.dsn);
+        const url = new URL(dsn);
         if (!['http:', 'https:'].includes(url.protocol) || !url.username) {
           return {
             success: false,
             message: 'Formato Sentry DSN non valido (manca public key o host)',
           };
         }
+
+        const eventId = await captureExceptionToSentry(
+          new Error('Atena CRM Test Verification Event'),
+          { instance: 'crm-admin-test-button', tags: { source: 'admin-test' } },
+          { dsn, supabase: this.supabase }
+        );
+
         return {
           success: true,
-          message: `Sentry DSN configurato e valido per il progetto: ${url.pathname.replace('/', '')} (${url.host})`,
-          details: { host: url.host, project: url.pathname.replace('/', '') },
+          message: `Sentry DSN verificato e connesso! Progetto: ${url.pathname.replace('/', '')} (${url.host})`,
+          details: {
+            host: url.host,
+            project: url.pathname.replace('/', ''),
+            testEventId: eventId || 'sent',
+          },
         };
       } catch (e: any) {
         return {
