@@ -3,6 +3,7 @@
 import type { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   FormControl,
   FormField,
@@ -166,9 +167,24 @@ export function StepClientInfo({
 
         <div className="relative">
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
-              <input
+            <div className="flex-1">
+              <Input
+                startIcon={<Search />}
+                endIcon={
+                  searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setIsSearchOpen(false);
+                        setClientFound(null);
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                    >
+                      ✕
+                    </button>
+                  ) : undefined
+                }
                 placeholder="Digita Nome, Codice Fiscale, Email..."
                 value={searchQuery}
                 onFocus={() => setIsSearchOpen(true)}
@@ -183,21 +199,7 @@ export function StepClientInfo({
                     handleManualLookup();
                   }
                 }}
-                className="w-full pl-9 pr-8 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setIsSearchOpen(false);
-                    setClientFound(null);
-                  }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
-                >
-                  ✕
-                </button>
-              )}
             </div>
 
             <Button
@@ -278,14 +280,11 @@ export function StepClientInfo({
                     {isForChild ? "Nome Genitore *" : "Nome *"}
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        placeholder="Mario"
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<User />}
+                      placeholder="Mario"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -302,14 +301,11 @@ export function StepClientInfo({
                     {isForChild ? "Cognome Genitore *" : "Cognome *"}
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        placeholder="Rossi"
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<User />}
+                      placeholder="Rossi"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -326,15 +322,12 @@ export function StepClientInfo({
                     {isForChild ? "Email Genitore *" : "Email *"}
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="email"
-                        placeholder="mario.rossi@email.com"
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<Mail />}
+                      type="email"
+                      placeholder="mario.rossi@email.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -351,14 +344,11 @@ export function StepClientInfo({
                     {isForChild ? "Telefono Genitore" : "Telefono (WhatsApp)"}
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Phone className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        placeholder="+39 340 1234567"
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<Phone />}
+                      placeholder="+39 340 1234567"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -375,15 +365,13 @@ export function StepClientInfo({
                     Codice Fiscale {isForChild ? "Genitore" : "Cliente"}
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        placeholder="RSSMRA80A01H501Z"
-                        className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                        onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<CreditCard />}
+                      placeholder="RSSMRA80A01H501Z"
+                      className="uppercase font-mono tracking-wider"
+                      {...field}
+                      onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -411,14 +399,11 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Nome Figlio *</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          placeholder="Luca"
-                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<User />}
+                        placeholder="Luca"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -433,14 +418,11 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Cognome Figlio *</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          placeholder="Rossi"
-                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<User />}
+                        placeholder="Rossi"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -455,14 +437,11 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Data Nascita Figlio</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="date"
-                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<CalendarIcon />}
+                        type="date"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -477,15 +456,13 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Codice Fiscale Figlio</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          placeholder="RSSLCU10A01H501Z"
-                          className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                          onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<CreditCard />}
+                        placeholder="RSSLCU10A01H501Z"
+                        className="uppercase font-mono tracking-wider"
+                        {...field}
+                        onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -500,15 +477,12 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Email Figlio (opzionale)</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="email"
-                          placeholder="luca@email.com"
-                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<Mail />}
+                        type="email"
+                        placeholder="luca@email.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>
@@ -523,14 +497,11 @@ export function StepClientInfo({
                   <FormItem>
                     <FormLabel className="text-xs font-bold text-foreground">Tel. Figlio (opzionale)</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Phone className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          placeholder="+39 340 9876543"
-                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                          {...field}
-                        />
-                      </div>
+                      <Input
+                        startIcon={<Phone />}
+                        placeholder="+39 340 9876543"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage className="text-[10px]" />
                   </FormItem>

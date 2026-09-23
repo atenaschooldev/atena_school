@@ -172,3 +172,18 @@ html {
 .animate-logo-scroll:hover {
   animation-play-state: paused;
 }
+
+/* iOS Safari WebKit date/time input reset to prevent horizontal overflow */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+

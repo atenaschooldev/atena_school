@@ -203,15 +203,13 @@ export function StepPaymentSummary({
                 <FormItem>
                   <FormLabel className="text-xs font-bold text-foreground">Codice SDI (7 caratteri)</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        placeholder="SUBM70N"
-                        maxLength={7}
-                        className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<CreditCard />}
+                      placeholder="SUBM70N"
+                      maxLength={7}
+                      className="uppercase font-mono tracking-wider"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
@@ -224,15 +222,12 @@ export function StepPaymentSummary({
                 <FormItem>
                   <FormLabel className="text-xs font-bold text-foreground">Indirizzo PEC Aziendale</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="email"
-                        placeholder="amministrazione@pec.it"
-                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
-                        {...field}
-                      />
-                    </div>
+                    <Input
+                      startIcon={<Mail />}
+                      type="email"
+                      placeholder="amministrazione@pec.it"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
