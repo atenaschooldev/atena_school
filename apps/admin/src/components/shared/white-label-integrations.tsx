@@ -686,7 +686,7 @@ export function WhiteLabelIntegrations() {
     setTestingSentry(true);
     setSentryStatus(null);
     try {
-      const res = await api.post<TestIntegrationResult>("/admin/integrations/sentry/test", {});
+      const res = await api.post<TestIntegrationResult>("/admin/integrations/test/sentry", {});
       const now = new Date().toLocaleTimeString("it-IT");
       if (res && res.success) {
         setSentryStatus({

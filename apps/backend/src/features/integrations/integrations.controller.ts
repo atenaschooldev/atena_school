@@ -78,4 +78,15 @@ export class IntegrationsController {
   ) {
     return this.integrationsService.testIntegration(provider, dto);
   }
+
+  @Post(':provider/test')
+  @Roles('admin')
+  @Audit('integrations', 'test_provider')
+  @ApiOperation({ summary: 'Алиас проверки работоспособности интеграции' })
+  async testIntegrationAlias(
+    @Param('provider') provider: string,
+    @Body() dto: TestIntegrationDto
+  ) {
+    return this.integrationsService.testIntegration(provider, dto);
+  }
 }
