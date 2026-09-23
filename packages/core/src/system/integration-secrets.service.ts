@@ -196,13 +196,15 @@ export async function getAnalyticsCredentials(
 export async function getSentryCredentials(
   supabase?: SupabaseClient | null
 ): Promise<SentryCredentials> {
-  const dbCreds = await getSecretFromDb<SentryCredentials>(
+  const dbCreds = await getSecretFromDb<Partial<SentryCredentials>>(
     supabase,
     IntegrationProvider.SENTRY
   );
 
+  const rawDsn = dbCreds?.dsn ? decryptSecret(dbCreds.dsn) : '';
+
   return {
-    dsn: dbCreds?.dsn || process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
+    dsn: rawDsn || process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
   };
 }
 
