@@ -97,7 +97,7 @@ export function ActiveServiceCard({ item, onSelect }: ActiveServiceCardProps) {
 
           <div className="space-y-0.5">
             <span className="text-muted-foreground text-[10px] block">
-              {t("activeServices.annualFee") || "Quota €30"}
+              {t("activeServices.annualFee") || "Quota Associativa"}
             </span>
             {item.student_annual_fee_paid ? (
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0">

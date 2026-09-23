@@ -178,7 +178,7 @@ export function getActiveServicesTableColumns({
     },
     {
       accessorKey: "student_annual_fee_paid",
-      header: t("activeServices.annualFee") || "Quota €30",
+      header: t("activeServices.annualFee") || "Quota Associativa",
       cell: ({ row }) => {
         const isPaid = row.original.student_annual_fee_paid;
         return isPaid ? (

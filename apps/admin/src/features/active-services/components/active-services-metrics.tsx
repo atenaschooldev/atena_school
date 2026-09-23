@@ -33,7 +33,7 @@ export function ActiveServicesMetrics({ stats }: ActiveServicesMetricsProps) {
       color: "text-emerald-500",
     },
     {
-      title: t("activeServices.unpaidAnnualFees") || "Quote €30 da Regolarizzare",
+      title: t("activeServices.unpaidAnnualFees") || "Quote Associative da Regolarizzare",
       value: stats.unpaidAnnualFeeCount,
       description: t("activeServices.unpaidAnnualFeesDesc") || "Studenti senza quota annuale",
       icon: AlertTriangle,

@@ -2,14 +2,18 @@
 
 import { BaseLayout } from "@/components/layouts/base-layout";
 import { FormsListView } from "@/features/forms";
+import { useTranslation } from "@/i18n/context";
 
 export default function ModuliPage() {
+  const { t } = useTranslation();
+
   return (
     <BaseLayout
-      title="Gestione Moduli & Form Engine"
-      description="Crea, personalizza e collega i moduli di iscrizione e contatto per il sito web e il checkout dei corsi."
+      title={t("forms.title")}
+      description={t("forms.subtitle")}
     >
       <FormsListView />
     </BaseLayout>
   );
 }
+
