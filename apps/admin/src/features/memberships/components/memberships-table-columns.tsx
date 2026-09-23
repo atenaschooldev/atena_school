@@ -82,11 +82,24 @@ export function getMembershipsTableColumns({
       },
     },
     {
+      accessorKey: "membershipNumber",
+      header: t("memberships.cardNumber") || "N° Tessera",
+      cell: ({ row }) => {
+        const num = row.original.membershipNumber || (row.original as any).membership_number;
+        if (!num) return <span className="text-xs text-muted-foreground italic">—</span>;
+        return (
+          <Badge variant="outline" className="font-mono text-[11px] font-semibold bg-muted/30">
+            {num}
+          </Badge>
+        );
+      },
+    },
+    {
       accessorKey: "academicYear",
       header: t("memberships.academicYear"),
       cell: ({ row }) => (
         <Badge variant="outline" className="font-mono text-xs">
-          {row.original.academicYear || "2026/2027"}
+          {row.original.academicYear || "—"}
         </Badge>
       ),
     },
