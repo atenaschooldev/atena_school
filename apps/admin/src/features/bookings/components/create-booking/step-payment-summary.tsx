@@ -201,16 +201,19 @@ export function StepPaymentSummary({
               name="sdiCode"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">Codice SDI (7 caratteri)</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">Codice SDI (7 caratteri)</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="SUBM70N"
-                      maxLength={7}
-                      className="h-9 text-xs bg-background uppercase font-mono"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        placeholder="SUBM70N"
+                        maxLength={7}
+                        className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
@@ -219,16 +222,19 @@ export function StepPaymentSummary({
               name="pecEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">Indirizzo PEC Aziendale</FormLabel>
+                  <FormLabel className="text-xs font-bold text-foreground">Indirizzo PEC Aziendale</FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="amministrazione@pec.it"
-                      className="h-9 text-xs bg-background"
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="amministrazione@pec.it"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />

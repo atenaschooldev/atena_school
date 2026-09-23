@@ -1,7 +1,6 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,9 +17,14 @@ import {
   Loader2,
   User,
   Baby,
+  Mail,
+  Phone,
+  CreditCard,
+  Calendar as CalendarIcon,
   UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sanitizeTaxCode } from "@atena/utils";
 import type { CreateBookingValues, ClientItem } from "./types";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 
@@ -164,7 +168,7 @@ export function StepClientInfo({
           <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/70" />
-              <Input
+              <input
                 placeholder="Digita Nome, Codice Fiscale, Email..."
                 value={searchQuery}
                 onFocus={() => setIsSearchOpen(true)}
@@ -179,7 +183,7 @@ export function StepClientInfo({
                     handleManualLookup();
                   }
                 }}
-                className="pl-9 pr-8 h-9 text-xs bg-background rounded-lg"
+                className="w-full pl-9 pr-8 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
               />
               {searchQuery && (
                 <button
@@ -201,7 +205,7 @@ export function StepClientInfo({
               variant="secondary"
               disabled={isSearchingClient || !searchQuery.trim()}
               onClick={handleManualLookup}
-              className="h-9 px-3.5 text-xs font-semibold cursor-pointer shrink-0"
+              className="h-9 px-3.5 text-xs font-semibold cursor-pointer shrink-0 rounded-xl"
             >
               {isSearchingClient ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Cerca"}
             </Button>
@@ -252,70 +256,136 @@ export function StepClientInfo({
         </div>
       </div>
 
-      {/* 3. Form Cards */}
+      {/* 3. Form Cards (Landing-style Inputs with Left Icons) */}
       <div className="space-y-4">
         {/* Genitore / Acquirente Card */}
         <div className="p-4 bg-muted/20 rounded-xl border border-border/60 space-y-3">
           <div className="flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-primary" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              {isForChild ? "Genitore / Intestatario Pagamento" : "Dati Anagrafici Cliente"}
+              {isForChild ? "Dati del Genitore / Acquirente" : "Dati Anagrafici Cliente"}
             </h3>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            {/* Nome */}
             <FormField
               control={form.control}
               name="purchaserFirstName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">{isForChild ? "Nome Genitore *" : "Nome *"}</FormLabel>
-                  <FormControl><Input placeholder="Mario" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                  <FormMessage className="text-[11px]" />
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    {isForChild ? "Nome Genitore *" : "Nome *"}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        placeholder="Mario"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
+
+            {/* Cognome */}
             <FormField
               control={form.control}
               name="purchaserLastName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">{isForChild ? "Cognome Genitore *" : "Cognome *"}</FormLabel>
-                  <FormControl><Input placeholder="Rossi" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                  <FormMessage className="text-[11px]" />
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    {isForChild ? "Cognome Genitore *" : "Cognome *"}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        placeholder="Rossi"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
+
+            {/* Email */}
             <FormField
               control={form.control}
               name="purchaserEmail"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">{isForChild ? "Email Genitore *" : "Email *"}</FormLabel>
-                  <FormControl><Input type="email" placeholder="mario.rossi@email.com" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                  <FormMessage className="text-[11px]" />
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    {isForChild ? "Email Genitore *" : "Email *"}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="mario.rossi@email.com"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
+
+            {/* Telefono */}
             <FormField
               control={form.control}
               name="purchaserPhone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-semibold">{isForChild ? "Telefono Genitore" : "Telefono"}</FormLabel>
-                  <FormControl><Input placeholder="+39 340 1234567" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                  <FormMessage className="text-[11px]" />
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    {isForChild ? "Telefono Genitore" : "Telefono (WhatsApp)"}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Phone className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        placeholder="+39 340 1234567"
+                        className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
+
+            {/* Codice Fiscale */}
             <FormField
               control={form.control}
               name="purchaserTaxCode"
               render={({ field }) => (
                 <FormItem className="col-span-2">
-                  <FormLabel className="text-xs font-semibold">Codice Fiscale {isForChild ? "Genitore" : "Cliente"}</FormLabel>
-                  <FormControl><Input placeholder="RSSMRA80A01H501Z" className="uppercase font-mono h-9 text-xs bg-background" {...field} /></FormControl>
-                  <FormMessage className="text-[11px]" />
+                  <FormLabel className="text-xs font-bold text-foreground">
+                    Codice Fiscale {isForChild ? "Genitore" : "Cliente"}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        placeholder="RSSMRA80A01H501Z"
+                        className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                        {...field}
+                        onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
@@ -333,69 +403,136 @@ export function StepClientInfo({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+              {/* Nome Figlio */}
               <FormField
                 control={form.control}
                 name="studentFirstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Nome Figlio *</FormLabel>
-                    <FormControl><Input placeholder="Luca" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Nome Figlio *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          placeholder="Luca"
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
+
+              {/* Cognome Figlio */}
               <FormField
                 control={form.control}
                 name="studentLastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Cognome Figlio *</FormLabel>
-                    <FormControl><Input placeholder="Rossi" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Cognome Figlio *</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <User className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          placeholder="Rossi"
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
+
+              {/* Data Nascita Figlio */}
               <FormField
                 control={form.control}
                 name="studentBirthDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Data Nascita Figlio</FormLabel>
-                    <FormControl><Input type="date" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Data Nascita Figlio</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="date"
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
+
+              {/* Codice Fiscale Figlio */}
               <FormField
                 control={form.control}
                 name="studentTaxCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Codice Fiscale Figlio</FormLabel>
-                    <FormControl><Input placeholder="RSSLCU10A01H501Z" className="uppercase font-mono h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Codice Fiscale Figlio</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <CreditCard className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          placeholder="RSSLCU10A01H501Z"
+                          className="w-full pl-9 pr-3 py-2 text-xs uppercase font-mono tracking-wider border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                          onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
+
+              {/* Email Figlio */}
               <FormField
                 control={form.control}
                 name="studentEmail"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Email Figlio (opzionale)</FormLabel>
-                    <FormControl><Input type="email" placeholder="luca@email.com" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Email Figlio (opzionale)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Mail className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="email"
+                          placeholder="luca@email.com"
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
+
+              {/* Tel Figlio */}
               <FormField
                 control={form.control}
                 name="studentPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-semibold">Tel. Figlio (opzionale)</FormLabel>
-                    <FormControl><Input placeholder="+39 340 9876543" className="h-9 text-xs bg-background" {...field} /></FormControl>
-                    <FormMessage className="text-[11px]" />
+                    <FormLabel className="text-xs font-bold text-foreground">Tel. Figlio (opzionale)</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Phone className="w-3.5 h-3.5 text-muted-foreground/70 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          placeholder="+39 340 9876543"
+                          className="w-full pl-9 pr-3 py-2 text-xs border border-border/70 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background font-medium transition-all"
+                          {...field}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage className="text-[10px]" />
                   </FormItem>
                 )}
               />
