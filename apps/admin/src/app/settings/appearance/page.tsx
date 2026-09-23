@@ -16,6 +16,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useTranslation } from "@/i18n/context"
+import { LanguageManagerCard } from "@/components/shared/language-manager-card"
 
 const appearanceFormSchema = z.object({
   theme: z.enum(["light", "dark"]),
@@ -136,6 +137,11 @@ export default function AppearanceSettings() {
             </div>
           </form>
         </Form>
+
+        {/* Language & AI Localization Manager */}
+        <div className="pt-6 border-t border-border/40">
+          <LanguageManagerCard />
+        </div>
       </div>
     </BaseLayout>
   )

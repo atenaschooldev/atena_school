@@ -1,23 +1,24 @@
 import * as React from "react";
-import { useTranslation, type Locale } from "@/i18n/context";
+import { useTranslation } from "@/i18n/context";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Languages, Check } from "lucide-react";
+import { Check, Globe, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useTranslation();
+  const { locale, setLocale, languages } = useTranslation();
 
-  const languages: { code: Locale; label: string; flag: string }[] = [
-    { code: "en", label: "English", flag: "🇬🇧" },
-    { code: "it", label: "Italiano", flag: "🇮🇹" },
-  ];
-
-  const currentLang = languages.find((l) => l.code === locale) || languages[0];
+  const currentLang = languages.find((l) => l.code === locale) || languages[0] || {
+    code: "en",
+    label: "English",
+    flag: "🇬🇧",
+  };
 
   return (
     <DropdownMenu>
@@ -31,7 +32,7 @@ export function LanguageSwitcher() {
           <span className="uppercase font-bold tracking-wider">{currentLang.code}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
+      <DropdownMenuContent align="end" className="w-48">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
@@ -41,10 +42,27 @@ export function LanguageSwitcher() {
             <div className="flex items-center gap-2">
               <span className="text-base">{lang.flag}</span>
               <span>{lang.label}</span>
+              {lang.isCustom && (
+                <span className="text-[10px] bg-primary/10 text-primary px-1 rounded font-semibold">
+                  AI
+                </span>
+              )}
             </div>
             {locale === lang.code && <Check className="w-3.5 h-3.5 text-primary" />}
           </DropdownMenuItem>
         ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link
+            to="/settings/localization"
+            className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground py-2 font-medium"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Gestisci lingue & AI...</span>
+          </Link>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

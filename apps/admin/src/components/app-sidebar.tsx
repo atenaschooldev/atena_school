@@ -148,6 +148,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           icon: Building2,
         },
         {
+          title: "Lingue & Traduzione AI",
+          url: "/settings/localization",
+          icon: Globe,
+        },
+        {
           title: t("nav.appearance"),
           url: "/settings/appearance",
           icon: Palette,

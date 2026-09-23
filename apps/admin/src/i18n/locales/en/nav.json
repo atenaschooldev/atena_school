@@ -1,0 +1,23 @@
+{
+  "overview": "Overview",
+  "dashboard": "Dashboard",
+  "website": "Website (Landing)",
+  "schoolManagement": "School Management",
+  "courses": "Courses",
+  "groups": "Class Groups",
+  "bookings": "Bookings & Orders",
+  "activeServices": "Active Services",
+  "payments": "Payments & Invoices",
+  "attendance": "Attendance & Register",
+  "annualMemberships": "Annual Memberships",
+  "teachers": "Teachers",
+  "schedule": "Schedule & Calendar",
+  "promotions": "Promo Codes",
+  "users": "Users & Students",
+  "notifications": "Notifications & Templates",
+  "settings": "Settings",
+  "integrations": "Integrations & White-Label",
+  "accountSettings": "School Profile & Details",
+  "appearance": "Appearance & Theme",
+  "adminDashboard": "Admin Dashboard"
+}

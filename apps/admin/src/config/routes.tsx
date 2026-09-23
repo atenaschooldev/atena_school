@@ -43,6 +43,7 @@ const AccountSettings = lazy(() => import('@/app/settings/account/page'))
 const AppearanceSettings = lazy(() => import('@/app/settings/appearance/page'))
 const NotificationSettings = lazy(() => import('@/app/settings/notifications/page'))
 const ConnectionSettings = lazy(() => import('@/app/settings/connections/page'))
+const LocalizationSettings = lazy(() => import('@/app/settings/localization/page'))
 
 export interface RouteConfig {
   path: string
@@ -213,6 +214,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/settings/connections",
     element: <ConnectionSettings />
+  },
+  {
+    path: "/settings/localization",
+    element: <LocalizationSettings />
   },
 
   // Catch-all route for 404

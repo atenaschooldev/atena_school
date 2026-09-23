@@ -1,0 +1,17 @@
+{
+  "title": "Orari & Calendario",
+  "subtitle": "Orario settimanale e mensile di tutte le lezioni e aule della scuola.",
+  "weekView": "Vista Settimana",
+  "monthView": "Vista Mese",
+  "dayView": "Vista Giorno",
+  "allTeachers": "Tutti i Docenti",
+  "allClassrooms": "Tutte le Aule",
+  "allCourses": "Tutti i Corsi",
+  "calendar": "Orari e Calendario",
+  "newLesson": "Nuova Lezione",
+  "lesson": "Lezione",
+  "exam": "Esame",
+  "workshop": "Laboratorio",
+  "other": "Altro",
+  "important": "Importante"
+}

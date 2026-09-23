@@ -1,0 +1,17 @@
+{
+  "title": "Timetable & Calendar",
+  "subtitle": "Weekly and monthly timetable of all school lessons and classrooms.",
+  "weekView": "Week View",
+  "monthView": "Month View",
+  "dayView": "Day View",
+  "allTeachers": "All Teachers",
+  "allClassrooms": "All Classrooms",
+  "allCourses": "All Courses",
+  "calendar": "Timetable & Calendar",
+  "newLesson": "New Lesson",
+  "lesson": "Lesson",
+  "exam": "Exam",
+  "workshop": "Workshop",
+  "other": "Other",
+  "important": "Important"
+}

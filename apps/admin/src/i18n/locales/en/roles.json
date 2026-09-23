@@ -1,0 +1,8 @@
+{
+  "admin": "Administrator",
+  "superadmin": "Superadmin",
+  "secretary": "Secretary",
+  "teacher": "Teacher",
+  "student": "Student",
+  "parent": "Parent"
+}
