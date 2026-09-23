@@ -36,6 +36,7 @@ import {
   PaymentMethod,
   PaymentType,
 } from "@atena/api-types";
+import { useTranslation } from "@/i18n/context";
 import type { CreatePaymentFormValues } from "../types";
 
 const paymentFormSchema = z.object({
@@ -53,6 +54,7 @@ interface PaymentFormDialogProps {
 }
 
 export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState("");
   const [searching, setSearching] = useState(false);
@@ -292,13 +294,13 @@ export function PaymentFormDialog({ onCreatePayment }: PaymentFormDialogProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>Pagamento Corso</SelectItem>
-                      <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>Quota Iscrizione (€30)</SelectItem>
+                      <SelectItem value={String(PaymentType.COURSE_PAYMENT)}>{t("payments.typeTuition") || "Pagamento Corso"}</SelectItem>
+                      <SelectItem value={String(PaymentType.REGISTRATION_FEE)}>{t("payments.typeMembership") || "Quota Iscrizione Annuale"}</SelectItem>
                       <SelectItem value={String(PaymentType.EXAM_FEE)}>Esame Cambridge / CELI</SelectItem>
                       <SelectItem value={String(PaymentType.CERTIFICATE_FEE)}>Rilascio Certificato</SelectItem>
                       <SelectItem value={String(PaymentType.MATERIAL_TEXTBOOK)}>Libro / Materiale Didattico</SelectItem>
-                      <SelectItem value={String(PaymentType.SINGLE_LESSON)}>Lezione Singola</SelectItem>
-                      <SelectItem value={String(PaymentType.OTHER)}>Altro</SelectItem>
+                      <SelectItem value={String(PaymentType.SINGLE_LESSON)}>{t("payments.typeSingleLesson") || "Lezione Singola"}</SelectItem>
+                      <SelectItem value={String(PaymentType.OTHER)}>{t("common.other") || "Altro"}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

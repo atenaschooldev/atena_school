@@ -298,7 +298,7 @@ export function UniversalPosCheckoutModal({
                 )}
               </div>
 
-              {/* Option B: Registration Fee €30 */}
+              {/* Option B: Registration Fee (Dynamic from DB) */}
               <div className="flex items-center justify-between p-2 rounded-lg border bg-background">
                 <div className="flex items-center space-x-2.5">
                   <Checkbox

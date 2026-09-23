@@ -118,7 +118,7 @@ export function ActiveServicesView() {
             {
               value: feeStatusFilter,
               onChange: setFeeStatusFilter,
-              placeholder: t("activeServices.annualFee") || "Quota €30",
+              placeholder: t("activeServices.annualFee") || "Quota Associativa",
               options: [
                 { value: "all", label: t("common.all") || "Tutte le quote" },
                 { value: "paid", label: t("activeServices.feePaid") || "Quota Regolare" },

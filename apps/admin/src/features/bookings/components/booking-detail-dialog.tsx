@@ -431,7 +431,7 @@ export function BookingDetailDialog({
                     <p className="font-bold text-sm font-mono">€{remaining.toFixed(2)}</p>
                   </div>
                   <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-1">
-                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">{t("courses.registrationFee")} €30</span>
+                    <span className="text-[10px] text-amber-700 dark:text-amber-400 block font-medium uppercase truncate">{t("courses.registrationFee")}</span>
                     <p className="font-bold text-xs font-mono text-amber-600 dark:text-amber-400 truncate">
                       {registrationFeePaid ? t("bookings.feePaid") : t("bookings.feePending")}
                     </p>

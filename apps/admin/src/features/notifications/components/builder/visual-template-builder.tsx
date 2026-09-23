@@ -442,7 +442,7 @@ function SortableBlockItem({
                   { key: "show_birth_place", label: "📍 Место рождения" },
                   { key: "show_start_date", label: "📅 Дата старта курса" },
                   { key: "show_schedule", label: "⏰ Расписание уроков" },
-                  { key: "show_reg_fee", label: "💶 Взнос ассоциации (€30)" },
+                  { key: "show_reg_fee", label: "💶 Quota / Взнос ассоциации" },
                   { key: "show_total", label: "💰 Итоговая сумма" },
                 ].map(({ key, label }) => (
                   <label

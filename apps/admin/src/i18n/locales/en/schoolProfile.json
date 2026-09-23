@@ -40,7 +40,7 @@
   "secretariatHoursDesc": "Publicly visible office schedule (e.g. Lun-Ven: 09:00 - 19:30).",
   "vatCode": "VAT Number / Tax Code (P.IVA / CF)",
   "registrationFee": "Default Annual Registration Fee (€)",
-  "registrationFeeDesc": "Standard annual membership fee charged once per calendar year (default €30).",
+  "registrationFeeDesc": "Standard annual membership fee charged once per calendar year.",
   "academicYear": "Current Academic Year",
   "academicYearDesc": "Active school year (e.g. 2025/2026).",
   "iban": "Bank Account IBAN",
