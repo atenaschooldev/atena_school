@@ -9,12 +9,22 @@ import {
   Loader2,
   BookOpen,
   Baby,
+  CreditCard,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 import type { CreateBookingDialogProps } from "./create-booking/types";
 import { STEPS } from "./create-booking/types";
@@ -23,6 +33,7 @@ import { useCreateBookingForm } from "./create-booking/use-create-booking-form";
 import { StepClientInfo } from "./create-booking/step-client-info";
 import { StepCourseSchedule } from "./create-booking/step-course-schedule";
 import { StepPaymentSummary } from "./create-booking/step-payment-summary";
+import { LiveReceiptCard } from "./create-booking/live-receipt-card";
 
 export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProps) {
   const [open, setOpen] = useState(false);
@@ -67,19 +78,26 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
   } = useCreateBookingForm({ open, setOpen, onCreateBooking });
 
   const isForChild = form.watch("isForChild");
+  const paymentStatus = form.watch("paymentStatus");
+  const paymentMethod = form.watch("paymentMethod");
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
-      <SheetTrigger asChild>
-        <Button className="cursor-pointer font-medium shadow-sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Nuova Prenotazione
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) handleClose();
+        else setOpen(true);
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button className="cursor-pointer font-semibold shadow-sm gap-2 h-9 px-4">
+          <Plus className="h-4 w-4" />
+          <span>Nuova Prenotazione</span>
         </Button>
-      </SheetTrigger>
+      </DialogTrigger>
 
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-[740px] p-0 flex flex-col h-full border-l border-border/60 bg-background shadow-2xl overflow-hidden"
+      <DialogContent
+        className="w-full sm:max-w-5xl p-0 gap-0 border border-border/70 bg-card/95 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
         <Form {...form}>
           <form
@@ -94,25 +112,40 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                 e.preventDefault();
               }
             }}
-            className="flex flex-col h-full"
+            className="flex flex-col h-full overflow-hidden"
           >
-            {/* ── TOP DRAWER HEADER ───────────────────────────────────── */}
-            <div className="px-6 pt-5 pb-4 border-b border-border/60 bg-muted/20 shrink-0 space-y-4 pr-14">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                  <GraduationCap className="h-5 w-5 text-primary" />
+            {/* ── 1. MODAL HEADER & STEPPER ───────────────────────────── */}
+            <div className="px-6 py-4 border-b border-border/60 bg-muted/20 shrink-0 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-base font-bold leading-tight text-foreground">
+                      Nuova Prenotazione in Sede
+                    </DialogTitle>
+                    <p className="text-xs text-muted-foreground">
+                      Desk Checkout & Point of Sale · Atena Scuola
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-base font-bold leading-tight">Nuova Prenotazione in Sede</h2>
-                  <p className="text-xs text-muted-foreground">Reception Wizard · Atena School</p>
-                </div>
+
+                <Badge
+                  variant="outline"
+                  className="hidden sm:inline-flex text-xs font-semibold px-2.5 py-1 bg-background/80"
+                >
+                  Passo {currentStep} di 3
+                </Badge>
               </div>
 
-              {/* Stepper Navigation Tabs */}
-              <div className="grid grid-cols-3 gap-2 bg-background p-1.5 rounded-xl border border-border/60 shadow-xs">
+              {/* Responsive Stepper Navigation */}
+              <div className="grid grid-cols-3 gap-2 bg-background/90 p-1.5 rounded-xl border border-border/60 shadow-2xs">
                 {STEPS.map((s) => {
                   const Icon = s.icon;
                   const isActive = currentStep === s.id;
+                  const isCompleted = currentStep > s.id;
+
                   return (
                     <button
                       key={s.id}
@@ -120,10 +153,15 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                       onClick={async () => {
                         if (s.id === currentStep) return;
                         if (s.id > 1 && currentStep === 1) {
-                          const pName = form.getValues("purchaserFirstName") || form.getValues("purchaserName");
+                          const pName =
+                            form.getValues("purchaserFirstName") || form.getValues("purchaserName");
                           const pEmail = form.getValues("purchaserEmail");
                           if (!pName || !pEmail) {
-                            form.trigger(["purchaserFirstName", "purchaserLastName", "purchaserEmail"]);
+                            form.trigger([
+                              "purchaserFirstName",
+                              "purchaserLastName",
+                              "purchaserEmail",
+                            ]);
                             return;
                           }
                         }
@@ -136,165 +174,173 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                         }
                         setCurrentStep(s.id as 1 | 2 | 3);
                       }}
-                      className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      className={cn(
+                        "flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs transition-all cursor-pointer",
                         isActive
-                          ? "bg-primary text-primary-foreground shadow-sm font-bold"
-                          : "text-foreground hover:bg-muted font-medium"
-                      }`}
+                          ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                          : isCompleted
+                          ? "text-foreground font-semibold hover:bg-muted/60"
+                          : "text-muted-foreground hover:bg-muted/40 font-medium"
+                      )}
                     >
-                      <Icon className="w-3.5 h-3.5" />
-                      <span>{s.id}. {s.label}</span>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      ) : (
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {s.id}. {s.label}
+                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* ── LIVE SUMMARY BAR ────────────────────────────────────── */}
-            <div className="px-6 py-3 bg-muted/40 border-b border-border/50 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-muted-foreground font-medium">Cliente: </span>
-                  <span className="font-bold text-foreground">
-                    {computedPurchaserName || "Non specificato"}
-                    {isForChild && <span className="text-primary font-normal"> (Genitore)</span>}
-                  </span>
+            {/* ── 2. TWO-COLUMN WORKSPACE BODY ────────────────────────── */}
+            <div className="flex-1 overflow-y-auto min-h-0">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
+                {/* Left Side: Active Step Form (7 of 12 cols = 58%) */}
+                <div className="lg:col-span-7 space-y-6">
+                  {currentStep === 1 && (
+                    <StepClientInfo
+                      form={form}
+                      searchQuery={searchQuery}
+                      setSearchQuery={setSearchQuery}
+                      isSearchingClient={isSearchingClient}
+                      clientFound={clientFound}
+                      setClientFound={setClientFound}
+                      clientsList={clientsList}
+                      isLoadingClients={isLoadingClients}
+                      isSearchOpen={isSearchOpen}
+                      setIsSearchOpen={setIsSearchOpen}
+                      filteredClients={filteredClients}
+                      applyClientData={applyClientData}
+                      handleManualLookup={handleManualLookup}
+                      membershipFeeStatus={membershipFeeStatus}
+                    />
+                  )}
+
+                  {currentStep === 2 && (
+                    <StepCourseSchedule
+                      form={form}
+                      coursesList={coursesList}
+                      selectedCourse={selectedCourse}
+                      handleCourseChange={handleCourseChange}
+                      isFixedSchedule={isFixedSchedule}
+                      isFlexibleSchedule={isFlexibleSchedule}
+                      selectedDateState={selectedDateState}
+                      handleDateSelect={handleDateSelect}
+                      allowedDays={allowedDays}
+                      formattedScheduleText={formattedScheduleText}
+                      previewLessons={previewLessons}
+                    />
+                  )}
+
+                  {currentStep === 3 && (
+                    <StepPaymentSummary
+                      form={form}
+                      amountPaid={amountPaid}
+                      registrationFee={registrationFee}
+                      totalAmount={totalAmount}
+                    />
+                  )}
                 </div>
-                {isForChild && (
-                  <div className="border-l pl-4 border-border/60 flex items-center gap-1.5">
-                    <Baby className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-muted-foreground font-medium">Studente: </span>
-                    <span className="font-bold text-foreground">{computedStudentName}</span>
-                  </div>
-                )}
-                {selectedCourse && (
-                  <div className="border-l pl-4 border-border/60 flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-muted-foreground font-medium">Corso: </span>
-                    <span className="font-bold text-foreground">{selectedCourse.nome}</span>
-                  </div>
-                )}
-              </div>
 
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-medium">Totale:</span>
-                <Badge variant="secondary" className="font-mono font-bold text-sm bg-primary/10 text-primary border-primary/20 px-3 py-0.5">
-                  €{totalAmount.toFixed(2)}
-                </Badge>
+                {/* Right Side: Sticky Live Summary Receipt (5 of 12 cols = 42%) */}
+                <div className="lg:col-span-5 flex flex-col">
+                  <div className="sticky top-0">
+                    <LiveReceiptCard
+                      currentStep={currentStep}
+                      selectedCourse={selectedCourse}
+                      selectedDateState={selectedDateState}
+                      previewLessons={previewLessons}
+                      formattedScheduleText={formattedScheduleText}
+                      isForChild={isForChild}
+                      purchaserName={computedPurchaserName}
+                      studentName={computedStudentName}
+                      amountPaid={amountPaid}
+                      registrationFee={registrationFee}
+                      totalAmount={totalAmount}
+                      paymentStatus={paymentStatus}
+                      paymentMethod={paymentMethod}
+                      membershipFeeStatus={membershipFeeStatus}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* ── SCROLLABLE STEP CONTENT ─────────────────────────────── */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {currentStep === 1 && (
-                <StepClientInfo
-                  form={form}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  isSearchingClient={isSearchingClient}
-                  clientFound={clientFound}
-                  setClientFound={setClientFound}
-                  clientsList={clientsList}
-                  isLoadingClients={isLoadingClients}
-                  isSearchOpen={isSearchOpen}
-                  setIsSearchOpen={setIsSearchOpen}
-                  filteredClients={filteredClients}
-                  applyClientData={applyClientData}
-                  handleManualLookup={handleManualLookup}
-                  membershipFeeStatus={membershipFeeStatus}
-                />
-              )}
-
-              {currentStep === 2 && (
-                <StepCourseSchedule
-                  form={form}
-                  coursesList={coursesList}
-                  selectedCourse={selectedCourse}
-                  handleCourseChange={handleCourseChange}
-                  isFixedSchedule={isFixedSchedule}
-                  isFlexibleSchedule={isFlexibleSchedule}
-                  selectedDateState={selectedDateState}
-                  handleDateSelect={handleDateSelect}
-                  allowedDays={allowedDays}
-                  formattedScheduleText={formattedScheduleText}
-                  previewLessons={previewLessons}
-                />
-              )}
-
-              {currentStep === 3 && (
-                <StepPaymentSummary
-                  form={form}
-                  amountPaid={amountPaid}
-                  registrationFee={registrationFee}
-                  totalAmount={totalAmount}
-                />
-              )}
-            </div>
-
-            {/* ── STICKY FOOTER ACTIONS ───────────────────────────────── */}
-            <div className="px-6 py-4 border-t border-border/60 bg-muted/30 flex items-center justify-between shrink-0">
+            {/* ── 3. MODAL FOOTER ACTIONS ─────────────────────────────── */}
+            <div className="px-6 py-3.5 border-t border-border/60 bg-muted/20 flex items-center justify-between shrink-0">
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   if (currentStep > 1) setCurrentStep((prev) => (prev - 1) as 1 | 2);
                   else handleClose();
                 }}
-                className="cursor-pointer text-xs font-semibold"
+                className="cursor-pointer text-xs font-semibold h-9"
               >
-                {currentStep > 1 ? <ChevronLeft className="mr-1 h-4 w-4" /> : null}
+                {currentStep > 1 ? <ChevronLeft className="mr-1 h-3.5 w-3.5" /> : null}
                 {currentStep > 1 ? "Indietro" : "Annulla"}
               </Button>
 
-              {currentStep < 3 ? (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    if (currentStep === 1) {
-                      const pName = form.getValues("purchaserFirstName") || form.getValues("purchaserName");
-                      const pEmail = form.getValues("purchaserEmail");
-                      if (!pName || !pEmail) {
-                        form.trigger(["purchaserFirstName", "purchaserLastName", "purchaserEmail"]);
-                        return;
+              <div className="flex items-center gap-3">
+                {currentStep < 3 ? (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (currentStep === 1) {
+                        const pName =
+                          form.getValues("purchaserFirstName") || form.getValues("purchaserName");
+                        const pEmail = form.getValues("purchaserEmail");
+                        if (!pName || !pEmail) {
+                          form.trigger([
+                            "purchaserFirstName",
+                            "purchaserLastName",
+                            "purchaserEmail",
+                          ]);
+                          return;
+                        }
                       }
-                    }
-                    if (currentStep === 2) {
-                      const courseId = form.getValues("courseId");
-                      if (!courseId) {
-                        form.trigger("courseName");
-                        return;
+                      if (currentStep === 2) {
+                        const courseId = form.getValues("courseId");
+                        if (!courseId) {
+                          form.trigger("courseName");
+                          return;
+                        }
                       }
-                    }
-                    setCurrentStep((prev) => (prev + 1) as 2 | 3);
-                  }}
-                  className="cursor-pointer text-xs font-bold px-5"
-                >
-                  Prosegui
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  onClick={() => {
-                    setIsFinalSubmitRequested(true);
-                  }}
-                  className="cursor-pointer font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all text-xs px-6"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creazione...
-                    </>
-                  ) : (
-                    "Conferma & Crea Prenotazione"
-                  )}
-                </Button>
-              )}
+                      setCurrentStep((prev) => (prev + 1) as 2 | 3);
+                    }}
+                    className="cursor-pointer text-xs font-bold px-5 h-9"
+                  >
+                    Prosegui al Passo Successivo →
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    onClick={() => {
+                      setIsFinalSubmitRequested(true);
+                    }}
+                    className="cursor-pointer font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all text-xs px-6 h-9"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                        Registrazione in corso...
+                      </>
+                    ) : (
+                      "Conferma & Registra Iscrizione"
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
