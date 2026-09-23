@@ -9,7 +9,6 @@ import { useCourseCategories } from "../hooks/use-course-categories";
 import { useCourseSettings } from "../hooks/use-course-settings";
 import { CoursesMetrics } from "./courses-metrics";
 import { getCoursesTableColumns } from "./courses-table-columns";
-import { CourseCard } from "./course-card";
 import { CourseForm } from "./course-form";
 import { CourseCategoriesView } from "./course-categories-view";
 import { CourseSettingsView } from "./course-settings-view";
@@ -63,7 +62,6 @@ export function CorsiView() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [formatFilter, setFormatFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [deletingCourse, setDeletingCourse] = useState<Course | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: "nome", desc: false },
@@ -206,70 +204,50 @@ export function CorsiView() {
                   <Plus className="mr-1.5 h-4 w-4" /> {t("courses.addCourse")}
                 </Button>
               }
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
             />
 
-            {viewMode === "table" ? (
-              <div className="space-y-4">
-                <div className="rounded-md border bg-card">
-                  <Table>
-                    <TableHeader>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead key={header.id}>
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </TableHead>
+            <div className="space-y-4">
+              <div className="rounded-md border bg-card">
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                    ) : table.getRowModel().rows?.length ? (
+                      table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
                           ))}
                         </TableRow>
-                      ))}
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                      ) : table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                          <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell key={cell.id}>
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                            {t("courses.noCoursesFound") || "Nessun corso trovato."}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                          {t("courses.noCoursesFound") || "Nessun corso trovato."}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
 
-                <DataTablePagination table={table} />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {filteredCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    onEdit={handleEditClick}
-                    onDelete={(c) => setDeletingCourse(c)}
-                  />
-                ))}
-                {filteredCourses.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                    {t("courses.noCoursesFound") || "Nessun corso trovato."}
-                  </div>
-                )}
-              </div>
-            )}
+              <DataTablePagination table={table} />
+            </div>
           </div>
 
           <Dialog open={open} onOpenChange={(v) => !v && handleCloseDialog()}>

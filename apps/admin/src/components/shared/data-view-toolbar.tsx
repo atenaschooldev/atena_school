@@ -1,8 +1,7 @@
 "use client";
 
-import { Search, List, LayoutGrid } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslation } from "@/i18n/context";
 
 export interface FilterOption {
   value: string;
@@ -30,12 +30,8 @@ export interface DataViewToolbarProps {
   searchPlaceholder?: string;
   filters?: FilterConfig[];
   actionElement?: React.ReactNode;
-  viewMode?: "table" | "grid";
-  onViewModeChange?: (mode: "table" | "grid") => void;
   className?: string;
 }
-
-import { useTranslation } from "@/i18n/context";
 
 export function DataViewToolbar({
   searchQuery,
@@ -43,12 +39,11 @@ export function DataViewToolbar({
   searchPlaceholder,
   filters = [],
   actionElement,
-  viewMode,
-  onViewModeChange,
   className,
 }: DataViewToolbarProps) {
   const { t } = useTranslation();
   const effectivePlaceholder = searchPlaceholder || t("common.search");
+
   return (
     <div className={`flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ${className || ""}`}>
       <div className="flex flex-1 items-center space-x-2">
@@ -80,29 +75,6 @@ export function DataViewToolbar({
 
       <div className="flex items-center space-x-2">
         {actionElement}
-
-        {onViewModeChange && viewMode && (
-          <div className="flex items-center rounded-lg border bg-background p-1">
-            <Button
-              variant={viewMode === "table" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => onViewModeChange("table")}
-              className="h-8 px-2.5 cursor-pointer"
-            >
-              <List className="h-4 w-4 mr-1" />
-              <span>Tabella</span>
-            </Button>
-            <Button
-              variant={viewMode === "grid" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => onViewModeChange("grid")}
-              className="h-8 px-2.5 cursor-pointer"
-            >
-              <LayoutGrid className="h-4 w-4 mr-1" />
-              <span>Griglia</span>
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

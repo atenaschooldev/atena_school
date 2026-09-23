@@ -20,8 +20,6 @@ type State = {
   addCourse: (c: Omit<Course, "id">) => void;
   updateCourse: (id: string, patch: Partial<Course>) => void;
   removeCourse: (id: string) => void;
-  viewMode: Record<string, "table" | "cards">;
-  setViewMode: (key: string, mode: "table" | "cards") => void;
   tableSearch: string;
   setTableSearch: (s: string) => void;
   tableActions: TableActions | null;
@@ -52,14 +50,6 @@ export const useAppStore = create<State>()(
         set((s) => ({
           courses: s.courses.filter((co) => co.id !== id),
         })),
-      viewMode: { corsi: "table", orari: "table", prenotazioni: "table" },
-      setViewMode: (key, mode) =>
-        set((s) => ({
-          viewMode: {
-            ...s.viewMode,
-            [key]: mode,
-          },
-        })),
       tableSearch: "",
       setTableSearch: (tableSearch) => set({ tableSearch }),
       tableActions: null,
@@ -69,7 +59,6 @@ export const useAppStore = create<State>()(
       name: "atena-scuola",
       partialize: (state) => ({
         role: state.role,
-        viewMode: state.viewMode,
       }),
     },
   ),

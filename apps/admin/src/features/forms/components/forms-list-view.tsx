@@ -108,7 +108,6 @@ export function FormsListView() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [targetFilter, setTargetFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "title", desc: false },
   ]);
@@ -628,198 +627,50 @@ export function FormsListView() {
                   <Plus className="mr-1.5 h-4 w-4" /> {t("forms.newFormBtn")}
                 </Button>
               }
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
             />
 
-            {viewMode === "table" ? (
-              <div className="space-y-4">
-                <div className="rounded-md border bg-card">
-                  <Table>
-                    <TableHeader>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                          {headerGroup.headers.map((header) => (
-                            <TableHead key={header.id}>
-                              {header.isPlaceholder
-                                ? null
-                                : flexRender(header.column.columnDef.header, header.getContext())}
-                            </TableHead>
+            <div className="space-y-4">
+              <div className="rounded-md border bg-card">
+                <Table>
+                  <TableHeader>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <TableHead key={header.id}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(header.column.columnDef.header, header.getContext())}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                    ) : table.getRowModel().rows?.length ? (
+                      table.getRowModel().rows.map((row) => (
+                        <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </TableCell>
                           ))}
                         </TableRow>
-                      ))}
-                    </TableHeader>
-                    <TableBody>
-                      {isLoading ? (
-                        <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                      ) : table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                          <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                            {row.getVisibleCells().map((cell) => (
-                              <TableCell key={cell.id}>
-                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                            {t("forms.noFormsFound")}
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                <DataTablePagination table={table} />
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                          {t("forms.noFormsFound")}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-                {filteredForms.map((form) => {
-                  const fieldsCount = form.fields_config?.length || 0;
-                  const enabledCount = form.fields_config?.filter((f) => f.is_enabled).length || 0;
-                  return (
-                    <Card
-                      key={form.id}
-                      className={`border flex flex-col justify-between hover:shadow-sm transition-all ${
-                        form.is_default ? "border-amber-400/80 ring-1 ring-amber-400/30" : ""
-                      }`}
-                    >
-                      <CardHeader className="pb-3 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
-                              {getFormTypeLabel(form.form_type)}
-                            </Badge>
-                            {form.is_default && (
-                              <Badge className="bg-amber-500 text-slate-950 font-black text-[10px] gap-1 px-1.5 py-0.5">
-                                <Star className="w-3 h-3 fill-current" />
-                                {t("forms.badgeDefault")}
-                              </Badge>
-                            )}
-                          </div>
-                          {!isSystemTemplate(form) && (
-                            <Switch
-                              checked={form.is_active}
-                              onCheckedChange={(checked) => handleToggleStatus(form, checked)}
-                              disabled={isUpdating}
-                              className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
-                            />
-                          )}
-                        </div>
 
-                        <div>
-                          <CardTitle className="text-sm font-bold text-foreground">
-                            {form.title}
-                          </CardTitle>
-                          {form.description && (
-                            <CardDescription className="text-xs text-muted-foreground line-clamp-2 mt-1">
-                              {form.description}
-                            </CardDescription>
-                          )}
-                        </div>
-                      </CardHeader>
-
-                      <CardContent className="space-y-3 pb-3 text-xs">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-semibold text-muted-foreground">Target:</span>
-                          {form.course_id ? (
-                            <Badge variant="outline" className="text-purple-600 dark:text-purple-400 border-purple-500/30 bg-purple-500/5 font-semibold text-[11px] gap-1">
-                              <GraduationCap className="w-3 h-3" />
-                              {coursesList.find((c) => c.id === form.course_id)?.nome || t("forms.targetCourse")}
-                            </Badge>
-                          ) : form.category_slug ? (
-                            <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 font-semibold text-[11px] gap-1">
-                              <Folder className="w-3 h-3" />
-                              {t("forms.targetCategory")}: {form.category_slug.toUpperCase()}
-                            </Badge>
-                          ) : form.form_type === FormType.CONTACT ? (
-                            <Badge variant="outline" className="text-blue-600 dark:text-blue-400 border-blue-500/30 bg-blue-500/5 text-[11px] gap-1">
-                              <Globe className="w-3 h-3 text-blue-500" />
-                              {t("forms.targetContactSite")}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-[11px] gap-1">
-                              <Globe className="w-3 h-3" />
-                              {t("forms.targetGlobal")}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="text-xs text-muted-foreground flex items-center justify-between">
-                          <span>{t("forms.columnFields")}:</span>
-                          <span className="font-bold text-foreground">
-                            {enabledCount} {t("forms.badgeActive").toLowerCase()} {fieldsCount !== enabledCount && `(${fieldsCount} tot)`}
-                          </span>
-                        </div>
-                      </CardContent>
-
-                      <div className="p-3 border-t flex items-center justify-between gap-1">
-                        <div className="flex items-center gap-1">
-                          {!form.is_default && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-amber-600 cursor-pointer"
-                              title={t("forms.badgeDefault")}
-                              onClick={() => setDefaultForm(form.id)}
-                            >
-                              <Star className="w-3.5 h-3.5" />
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Preview"
-                            onClick={() => setPreviewForm(form)}
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                            title={t("forms.actionDuplicate")}
-                            onClick={() => duplicateForm(form.id)}
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </Button>
-                          {!isSystemTemplate(form) && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
-                              title={t("forms.actionDelete")}
-                              onClick={() => handleDeleteForm(form)}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          )}
-                        </div>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 text-xs cursor-pointer gap-1 px-2.5"
-                          onClick={() => setEditingForm(form)}
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                          {t("forms.actionEdit")}
-                        </Button>
-                      </div>
-                    </Card>
-                  );
-                })}
-                {filteredForms.length === 0 && (
-                  <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                    {t("forms.noFormsFound")}
-                  </div>
-                )}
-              </div>
-            )}
+              <DataTablePagination table={table} />
+            </div>
           </div>
         </>
       )}

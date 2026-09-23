@@ -84,7 +84,6 @@ export function CourseSettingsView() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [modeFilter, setModeFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -532,146 +531,50 @@ export function CourseSettingsView() {
               </Button>
             </div>
           }
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
         />
 
-        {viewMode === "table" ? (
-          <div className="space-y-4">
-            <div className="rounded-md border bg-card">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+        <div className="space-y-4">
+          <div className="rounded-md border bg-card">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        {t("courses.noSettingsFound") || "Nessun preset di configurazione trovato."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            <DataTablePagination table={table} />
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      {t("courses.noSettingsFound") || "Nessun preset di configurazione trovato."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {filteredSettings.map((item) => {
-              const mode = Number(item.deliveryMode ?? item.delivery_mode ?? 1);
-              const days = normalizeDays(item.scheduleDays ?? item.schedule_days);
-              const count = item.coursesCount ?? item.courses_count ?? 0;
 
-              return (
-                <Card
-                  key={item.id}
-                  className="flex flex-col justify-between border-border/80 hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-md"
-                >
-                  <CardHeader className="p-4 pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="p-2 rounded-xl shrink-0 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                          <Settings className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <CardTitle className="text-sm font-bold truncate">{item.name}</CardTitle>
-                          <div className="mt-1">{getDeliveryModeBadge(mode)}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="p-4 pt-0 space-y-3">
-                    <div className="space-y-2 text-xs">
-                      {days.length > 0 ? (
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {days.map((d) => {
-                            const w = WEEKDAYS.find((elem) => elem.id === d);
-                            return (
-                              <Badge key={d} variant="secondary" className="text-[10px] font-bold px-1.5 py-0.5">
-                                {locale === "en" ? w?.labelEn : w?.labelIt}
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground italic">{t("courses.flexibleDays") || "Flessibile / Su accordo"}</span>
-                      )}
-
-                      {(item.startTime || item.start_time) && (
-                        <div className="flex items-center justify-between text-muted-foreground">
-                          <span>{t("courses.columnTimeDuration") || "Orario"}:</span>
-                          <span className="font-semibold text-foreground">
-                            {item.startTime || item.start_time} – {item.endTime || item.end_time || ""}
-                          </span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between pt-1 border-t border-border/40 text-muted-foreground">
-                        <span>{t("courses.columnCoursesCount") || "Corsi collegati"}:</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {count}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-4 pt-3 border-t border-border/40 bg-muted/10 gap-1.5">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1 text-xs gap-1.5 h-8 cursor-pointer font-semibold shadow-xs"
-                      onClick={() => handleOpenEdit(item)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      {t("common.edit") || "Modifica"}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                      onClick={() => setDeletingSettings(item)}
-                      disabled={isDeleting}
-                      title={t("common.delete") || "Elimina"}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-            {filteredSettings.length === 0 && (
-              <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                {t("courses.noSettingsFound") || "Nessun preset di configurazione trovato."}
-              </div>
-            )}
-          </div>
-        )}
+          <DataTablePagination table={table} />
+        </div>
       </div>
 
       {/* Add / Edit Settings Dialog */}

@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useActiveServices } from "../hooks/use-active-services";
 import { ActiveServicesMetrics } from "./active-services-metrics";
 import { getActiveServicesTableColumns } from "./active-services-table-columns";
-import { ActiveServiceCard } from "./active-service-card";
 import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { TableSkeletonRows } from "@/components/ui/table-skeleton";
@@ -52,7 +51,6 @@ export function ActiveServicesView() {
 
   const { updateBookingStatus, deleteBooking } = useBookings();
 
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([
@@ -126,73 +124,53 @@ export function ActiveServicesView() {
               ],
             },
           ]}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
         />
 
-        {viewMode === "table" ? (
-          <div className="space-y-4">
-            <div className="rounded-md border bg-card">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+        <div className="space-y-4">
+          <div className="rounded-md border bg-card">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow
-                        key={row.id}
-                        className="hover:bg-muted/50 transition-colors"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        {t("activeServices.noServicesFound") || "Nessun servizio attivo trovato."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            <DataTablePagination table={table} />
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      {t("activeServices.noServicesFound") || "Nessun servizio attivo trovato."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {activeServices.map((item) => (
-              <ActiveServiceCard
-                key={item.booking_id}
-                item={item}
-                onSelect={handleOpenDetail}
-              />
-            ))}
 
-            {activeServices.length === 0 && !loading && (
-              <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                {t("activeServices.noServicesFound") || "Nessun servizio attivo trovato."}
-              </div>
-            )}
-          </div>
-        )}
+          <DataTablePagination table={table} />
+        </div>
       </div>
 
       <BookingDetailDialog

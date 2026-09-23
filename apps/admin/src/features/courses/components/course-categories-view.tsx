@@ -66,7 +66,6 @@ export function CourseCategoriesView() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "sortOrder", desc: false },
   ]);
@@ -417,141 +416,50 @@ export function CourseCategoriesView() {
               </Button>
             </div>
           }
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
         />
 
-        {viewMode === "table" ? (
-          <div className="space-y-4">
-            <div className="rounded-md border bg-card">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+        <div className="space-y-4">
+          <div className="rounded-md border bg-card">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        {t("courses.noCategoriesFound") || "Nessuna categoria trovata."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            <DataTablePagination table={table} />
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      {t("courses.noCategoriesFound") || "Nessuna categoria trovata."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {filteredCategories.map((category) => {
-              const isActive = category.isActive ?? category.is_active ?? true;
-              const count = category.coursesCount ?? category.courses_count ?? 0;
 
-              return (
-                <Card
-                  key={category.id}
-                  className="flex flex-col justify-between border-border/80 hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-md"
-                >
-                  <CardHeader className="p-4 pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="p-2 rounded-xl shrink-0 bg-primary/10 text-primary">
-                          <Folder className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <CardTitle className="text-sm font-bold truncate">{category.name}</CardTitle>
-                          <CardDescription className="text-xs font-mono truncate text-muted-foreground mt-0.5">
-                            {category.slug}
-                          </CardDescription>
-                        </div>
-                      </div>
-
-                      <Switch
-                        checked={isActive}
-                        onCheckedChange={(checked) => handleToggleStatus(category, checked)}
-                        disabled={isUpdating}
-                        className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600 shrink-0"
-                      />
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="p-4 pt-0 space-y-3">
-                    <div className="space-y-2 text-xs">
-                      {category.description && (
-                        <p className="text-muted-foreground line-clamp-2">{category.description}</p>
-                      )}
-
-                      <div className="flex items-center justify-between pt-1 border-t border-border/40 text-muted-foreground">
-                        <span>{t("courses.columnCoursesCount") || "Corsi"}:</span>
-                        <Badge variant="secondary" className="font-bold">
-                          {count}
-                        </Badge>
-                      </div>
-
-                      <div className="flex items-center justify-between text-muted-foreground">
-                        <span>{t("courses.sortOrder") || "Ordinamento"}:</span>
-                        <span className="font-mono font-semibold text-foreground">
-                          #{category.sortOrder ?? category.sort_order ?? 0}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-4 pt-3 border-t border-border/40 bg-muted/10 gap-1.5">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1 text-xs gap-1.5 h-8 cursor-pointer font-semibold shadow-xs"
-                      onClick={() => handleOpenEdit(category)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      {t("common.edit") || "Modifica"}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                      onClick={() => setDeletingCategory(category)}
-                      disabled={isDeleting}
-                      title={t("common.delete") || "Elimina"}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-            {filteredCategories.length === 0 && (
-              <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                {t("courses.noCategoriesFound") || "Nessuna categoria trovata."}
-              </div>
-            )}
-          </div>
-        )}
+          <DataTablePagination table={table} />
+        </div>
       </div>
 
       {/* Add / Edit Category Dialog */}

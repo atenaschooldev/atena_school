@@ -91,7 +91,6 @@ export function FormFieldsView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [targetFilter, setTargetFilter] = useState<string>("all");
   const [systemFilter, setSystemFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "sort_order", desc: false },
   ]);
@@ -616,149 +615,50 @@ export function FormFieldsView() {
             <Plus className="mr-1.5 h-4 w-4" /> {locale === "en" ? "New Field" : "Nuovo Campo"}
           </Button>
         }
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
       />
 
-      {/* ── Content: Table or Grid View ── */}
-      {viewMode === "table" ? (
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
+      <div className="space-y-4">
+        <div className="rounded-md border bg-card">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
+              ) : table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {locale === "en" ? "No fields found matching criteria." : "Nessun campo trovato con i criteri specificati."}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                    {locale === "en" ? "No fields found matching criteria." : "Nessun campo trovato con i criteri specificati."}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-          <DataTablePagination table={table} />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-          {filteredData.map((field) => {
-            const targetMeta = getTargetMeta(field.target);
-            const typeMeta = getFieldTypeMeta(field.field_type);
-            return (
-              <Card key={field.id} className="border flex flex-col justify-between hover:shadow-sm transition-all">
-                <CardHeader className="pb-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge variant="outline" className={`text-[10px] font-semibold ${targetMeta.badgeClass}`}>
-                      {targetMeta.shortLabel}
-                    </Badge>
-                    <div className="flex items-center gap-1">
-                      {field.is_system ? (
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-muted/60 text-muted-foreground border-border/80 flex items-center gap-0.5 font-medium">
-                          <Lock className="w-2.5 h-2.5" />
-                          {locale === "en" ? "System" : "Sistema"}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div>
-                    <CardTitle className="text-sm font-bold text-foreground">
-                      {locale === "en" ? field.label_en : field.label_it}
-                    </CardTitle>
-                    <code className="text-[11px] font-mono text-muted-foreground mt-0.5 block">
-                      {field.key}
-                    </code>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2.5 pb-3 text-xs">
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span>{locale === "en" ? "Type:" : "Tipo:"}</span>
-                    <span className="font-medium text-foreground flex items-center">
-                      {typeMeta.icon}
-                      {typeMeta.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span>{locale === "en" ? "Required:" : "Obbligatorio:"}</span>
-                    <span className={`font-semibold ${field.is_required_default ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
-                      {field.is_required_default ? (locale === "en" ? "Yes" : "Sì") : (locale === "en" ? "No" : "No")}
-                    </span>
-                  </div>
-                  {field.placeholder_it && (
-                    <div className="text-[11px] text-muted-foreground italic truncate">
-                      «{field.placeholder_it}»
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter className="pt-2 border-t flex items-center justify-between">
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    #{field.sort_order}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 px-2.5 text-xs cursor-pointer text-muted-foreground hover:text-foreground"
-                      onClick={() => handleOpenEdit(field)}
-                    >
-                      <Pencil className="w-3.5 h-3.5 mr-1" />
-                      {locale === "en" ? "Edit" : "Modifica"}
-                    </Button>
-                    {!field.is_system ? (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 w-8 p-0 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
-                        onClick={() => setDeletingField(field)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        disabled
-                        className="h-8 w-8 p-0 text-muted-foreground/30 cursor-not-allowed"
-                      >
-                        <Lock className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-            );
-          })}
-          {filteredData.length === 0 && (
-            <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-              {locale === "en" ? "No fields found matching criteria." : "Nessun campo trovato con i criteri specificati."}
-            </div>
-          )}
-        </div>
-      )}
+        <DataTablePagination table={table} />
+      </div>
 
       {/* ── Create / Edit Modal Dialog ── */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

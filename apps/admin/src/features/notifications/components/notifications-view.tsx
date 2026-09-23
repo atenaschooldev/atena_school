@@ -111,7 +111,6 @@ export function NotificationsView() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const [sorting, setSorting] = useState<SortingState>([
     { id: "name", desc: false },
   ]);
@@ -593,172 +592,50 @@ export function NotificationsView() {
               </Button>
             </div>
           }
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
         />
 
-        {viewMode === "table" ? (
-          <div className="space-y-4">
-            <div className="rounded-md border bg-card">
-              <Table>
-                <TableHeader>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+        <div className="space-y-4">
+          <div className="rounded-md border bg-card">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeletonRows columnsCount={columns.length} rowCount={7} />
+                ) : table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       ))}
                     </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableSkeletonRows columnsCount={columns.length} rowCount={7} />
-                  ) : table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                      <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                        {row.getVisibleCells().map((cell) => (
-                          <TableCell key={cell.id}>
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                        {t("notifications.noTemplatesFound") || "Nessun template trovato."}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            <DataTablePagination table={table} />
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                      {t("notifications.noTemplatesFound") || "Nessun template trovato."}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {filteredTemplates.map((template) => {
-              const isEmail = template.channel === NotificationChannel.EMAIL;
 
-              return (
-                <Card
-                  key={template.id}
-                  className="flex flex-col justify-between border-border/80 hover:border-primary/50 transition-all duration-200 shadow-xs hover:shadow-md"
-                >
-                  <CardHeader className="p-4 pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div
-                          className={`p-2 rounded-xl shrink-0 ${
-                            isEmail
-                              ? "bg-primary/10 text-primary"
-                              : "bg-sky-500/10 text-sky-500"
-                          }`}
-                        >
-                          {isEmail ? <Mail className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
-                        </div>
-                        <div className="min-w-0">
-                          <CardTitle className="text-sm font-bold truncate">
-                            {template.name}
-                          </CardTitle>
-                          <CardDescription className="text-xs font-mono truncate text-muted-foreground mt-0.5">
-                            {template.code}
-                          </CardDescription>
-                        </div>
-                      </div>
-
-                      <Switch
-                        checked={template.is_active}
-                        onCheckedChange={(checked) => handleToggleStatus(template, checked)}
-                        disabled={isUpdating}
-                        className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600 shrink-0"
-                      />
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="p-4 pt-0 space-y-3">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <Badge variant="secondary" className="text-xs font-medium">
-                          {getChannelLabel(template.channel)}
-                        </Badge>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs font-medium ${
-                            template.recipient_type === RecipientType.CUSTOMER
-                              ? "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5"
-                              : "border-blue-500/30 text-blue-600 dark:text-blue-400 bg-blue-500/5"
-                          }`}
-                        >
-                          {getRecipientLabel(template.recipient_type)}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs font-medium text-muted-foreground">
-                          {getNotificationTypeLabel(template.notification_type)}
-                        </Badge>
-                      </div>
-
-                      {template.subject_template && (
-                        <div className="p-2 rounded-lg bg-muted/40 border border-border/50 text-xs">
-                          <span className="text-muted-foreground font-medium">{t("notifications.subjectPrefix") || "Oggetto: "}</span>
-                          <span className="font-mono text-foreground">{template.subject_template}</span>
-                        </div>
-                      )}
-
-                      {template.description && (
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {template.description}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="p-4 pt-3 border-t border-border/40 bg-muted/10 gap-1.5">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 text-xs gap-1.5 h-8 cursor-pointer"
-                      onClick={() => handleOpenTest(template)}
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      {t("notifications.sendTest") || "Test"}
-                    </Button>
-
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-1 text-xs gap-1.5 h-8 cursor-pointer font-semibold shadow-xs"
-                      onClick={() => handleOpenEdit(template)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      {t("notifications.editTemplate") || "Modifica"}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                      onClick={() => handleDeleteTemplate(template)}
-                      disabled={isDeleting}
-                      title={t("common.delete") || "Elimina"}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-            {filteredTemplates.length === 0 && (
-              <div className="col-span-full py-12 text-center text-sm text-muted-foreground border rounded-md">
-                {t("notifications.noTemplatesFound") || "Nessun template trovato."}
-              </div>
-            )}
-          </div>
-        )}
+          <DataTablePagination table={table} />
+        </div>
       </div>
       </>
       )}
