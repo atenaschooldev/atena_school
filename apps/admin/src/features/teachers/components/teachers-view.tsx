@@ -7,22 +7,14 @@ import { useTeachers } from "../hooks/use-teachers";
 import { TeachersMetrics } from "./teachers-metrics";
 import { getTeachersTableColumns } from "./teachers-table-columns";
 import { TeacherFormDialog } from "./dialogs/teacher-form-dialog";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { useTranslation } from "@/i18n/context";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -41,6 +33,9 @@ export function TeachersView() {
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [deletingTeacherId, setDeletingTeacherId] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
@@ -71,110 +66,86 @@ export function TeachersView() {
   const table = useReactTable({
     data: filteredTeachers,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const statusOptions = [
+    { value: "all", label: t("common.all") },
+    { value: "active", label: t("common.active") },
+    { value: "inactive", label: t("common.inactive") },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <TeachersMetrics teachers={teachers} />
 
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        <DataTableToolbar
+          table={table}
+          searchKey="fullName"
           searchPlaceholder={t("teachers.searchPlaceholder")}
-          filters={[
-            {
-              value: statusFilter,
-              onChange: setStatusFilter,
-              placeholder: t("teachers.teacherStatus"),
-              options: [
-                { value: "all", label: t("common.all") },
-                { value: "active", label: t("common.active") },
-                { value: "inactive", label: t("common.inactive") },
-              ],
-            },
-          ]}
-          actionElement={
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterKey="status"
+          filterTitle={t("teachers.teacherStatus")}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={
             <Button
+              size="sm"
               onClick={() => {
                 setEditingTeacher(null);
                 setFormDialogOpen(true);
               }}
-              className="font-medium cursor-pointer shadow-xs text-xs"
+              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
             >
-              <Plus className="mr-1.5 h-4 w-4" /> {t("teachers.newTeacher")}
+              <Plus className="h-4 w-4" />
+              <span>{t("teachers.newTeacher")}</span>
             </Button>
           }
         />
 
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowsCount={6} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {t("teachers.noTeachersFound")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </div>
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("teachers.emptyState.title") || t("teachers.searchPlaceholder")}
+        />
       </div>
 
       <TeacherFormDialog
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
-        initialValues={editingTeacher}
+        initialData={editingTeacher}
         onSubmit={async (values) => {
           if (editingTeacher) {
-            await updateTeacher(editingTeacher.id, values);
+            await updateTeacher({ id: editingTeacher.id, ...values });
           } else {
             await createTeacher(values);
           }
+          setFormDialogOpen(false);
+          setEditingTeacher(null);
         }}
       />
 
       <DeleteConfirmDialog
         open={!!deletingTeacherId}
-        onOpenChange={(v) => !v && setDeletingTeacherId(null)}
-        title={t("teachers.deleteConfirmTitle")}
-        description={t("teachers.deleteConfirmDesc")}
+        onOpenChange={(open) => !open && setDeletingTeacherId(null)}
         onConfirm={async () => {
           if (deletingTeacherId) {
             await deleteTeacher(deletingTeacherId);

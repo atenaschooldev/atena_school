@@ -5,22 +5,14 @@ import { useUsers } from "../hooks/use-users";
 import { UsersMetrics } from "./users-metrics";
 import { getUsersTableColumns } from "./users-table-columns";
 import { UserFormDialog } from "./dialogs/user-form-dialog";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { useTranslation } from "@/i18n/context";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -36,6 +28,9 @@ export function UsersView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
@@ -52,9 +47,7 @@ export function UsersView() {
   const columns = useMemo(
     () =>
       getUsersTableColumns({
-        onEdit: (u) => {
-          // Edit handler
-        },
+        onEdit: (_u) => {},
         onDelete: (id) => setDeletingUserId(id),
         t,
       }),
@@ -64,88 +57,60 @@ export function UsersView() {
   const table = useReactTable({
     data: filteredUsers,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const roleOptions = [
+    { value: "all", label: t("users.allRoles") },
+    { value: "admin", label: t("roles.admin") },
+    { value: "teacher", label: t("roles.teacher") },
+    { value: "student", label: t("roles.student") },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <UsersMetrics users={users} />
 
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        <DataTableToolbar
+          table={table}
+          searchKey="name"
           searchPlaceholder={t("users.searchPlaceholder")}
-          filters={[
-            {
-              value: selectedRole,
-              onChange: setSelectedRole,
-              placeholder: t("users.role"),
-              options: [
-                { value: "all", label: t("users.allRoles") },
-                { value: "admin", label: t("roles.admin") },
-                { value: "teacher", label: t("roles.teacher") },
-                { value: "student", label: t("roles.student") },
-              ],
-            },
-          ]}
-          actionElement={<UserFormDialog onAddUser={addUser} />}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterKey="role"
+          filterTitle={t("users.role")}
+          filterValue={selectedRole}
+          onFilterChange={setSelectedRole}
+          filterOptions={roleOptions}
+          actionButton={<UserFormDialog onAddUser={addUser} />}
         />
 
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {t("users.noUsersFound")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </div>
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("users.noUsersFound")}
+        />
       </div>
 
       <DeleteConfirmDialog
         open={!!deletingUserId}
-        onOpenChange={(v) => !v && setDeletingUserId(null)}
-        title={t("users.deleteConfirmTitle")}
-        description={t("users.deleteConfirmDesc")}
+        onOpenChange={(open) => !open && setDeletingUserId(null)}
         onConfirm={async () => {
           if (deletingUserId) {
             await deleteUser(deletingUserId);

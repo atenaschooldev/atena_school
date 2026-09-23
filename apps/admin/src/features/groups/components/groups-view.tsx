@@ -7,27 +7,19 @@ import { getGroupsTableColumns } from "./groups-table-columns";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { GroupDetailDialog } from "./group-detail-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, Users, RefreshCw } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Plus, Users, RefreshCw } from "lucide-react";
 import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { useTranslation } from "@/i18n/context";
 import type { Group } from "../types";
 
@@ -39,6 +31,8 @@ export function GroupsView() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const {
     groups,
@@ -86,29 +80,36 @@ export function GroupsView() {
     columns,
     state: {
       sorting,
+      columnFilters,
+      columnVisibility,
     },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
   });
+
+  const statusOptions = [
+    { label: t("groups.allStatuses"), value: "all" },
+    { label: t("groups.recruiting"), value: "1" },
+    { label: t("groups.inProgress"), value: "2" },
+    { label: t("groups.completed"), value: "3" },
+    { label: t("groups.archived"), value: "4" },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="px-4 lg:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Users className="w-6 h-6 text-primary" />
+          <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
             {t("groups.title")}
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-0.5">
             {t("groups.subtitle")}
           </p>
         </div>
@@ -117,7 +118,7 @@ export function GroupsView() {
             variant="outline"
             size="sm"
             onClick={() => refetch()}
-            className="h-9 gap-1.5 text-xs cursor-pointer"
+            className="h-8 gap-1.5 text-xs cursor-pointer rounded-lg border-border/60 hover:bg-muted/80"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             {t("common.refresh")}
@@ -125,7 +126,7 @@ export function GroupsView() {
           <Button
             size="sm"
             onClick={() => setIsCreateOpen(true)}
-            className="h-9 gap-1.5 text-xs shadow-xs cursor-pointer"
+            className="h-8 gap-1.5 text-xs shadow-xs cursor-pointer rounded-lg font-medium"
           >
             <Plus className="w-4 h-4" />
             {t("groups.newGroup")}
@@ -134,78 +135,43 @@ export function GroupsView() {
       </div>
 
       {/* Metrics Cards */}
-      <GroupsMetrics groups={groups} />
-
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t("groups.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 text-xs h-9"
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="text-xs h-9 px-3 rounded-lg border border-input bg-background text-foreground cursor-pointer"
-          >
-            <option value="all">{t("groups.allStatuses")}</option>
-            <option value="1">{t("groups.recruiting")}</option>
-            <option value="2">{t("groups.inProgress")}</option>
-            <option value="3">{t("groups.completed")}</option>
-            <option value="4">{t("groups.archived")}</option>
-          </select>
-        </div>
+      <div className="@container/main px-4 lg:px-6">
+        <GroupsMetrics groups={groups} />
       </div>
 
-      {/* Main Table */}
-      <div className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-xs">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableSkeletonRows columnsCount={columns.length} rowsCount={5} />
-            ) : table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="text-xs py-3">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-32 text-center text-xs text-muted-foreground">
-                  {t("groups.noGroupsFound")}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+      {/* Main Container with Standard Padding */}
+      <div className="@container/main px-4 lg:px-6 space-y-4">
+        {/* Toolbar on Steroids */}
+        <DataTableToolbar
+          table={table}
+          searchKey="name"
+          searchPlaceholder={t("groups.searchPlaceholder")}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterKey="status"
+          filterTitle={t("common.status")}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={
+            <Button
+              size="sm"
+              onClick={() => setIsCreateOpen(true)}
+              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{t("groups.newGroup")}</span>
+            </Button>
+          }
+        />
 
-        {table.getPageCount() > 1 && (
-          <div className="p-3 border-t">
-            <DataTablePagination table={table} />
-          </div>
-        )}
+        {/* Universal Atena Data Table */}
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={isLoading}
+          emptyMessage={t("groups.noGroupsFound")}
+        />
       </div>
 
       {/* Create Dialog */}
@@ -222,7 +188,6 @@ export function GroupsView() {
         onOpenChange={setIsDetailOpen}
         onAddMember={async (groupId, values) => {
           await addMember({ groupId, values });
-          // Refresh local selected group
           refetch().then((res) => {
             const updated = res.data?.find((g) => g.id === groupId);
             if (updated) setSelectedGroup(updated);

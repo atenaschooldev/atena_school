@@ -12,22 +12,11 @@ import { getCoursesTableColumns } from "./courses-table-columns";
 import { CourseForm } from "./course-form";
 import { CourseCategoriesView } from "./course-categories-view";
 import { CourseSettingsView } from "./course-settings-view";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
+import { AtenaDataTable, DataTableToolbar } from "@/components/shared/data-table";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
 import { formatCategoryLabel } from "../utils";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   type SortingState,
-  flexRender,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -173,10 +162,15 @@ export function CorsiView() {
           <CoursesMetrics courses={coursesList} />
 
           <div className="@container/main px-4 lg:px-6 space-y-4">
-            <DataViewToolbar
+            <DataTableToolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               searchPlaceholder={t("courses.searchPlaceholder") || t("common.search")}
+              onResetFilters={() => {
+                setSearchQuery("");
+                setCategoryFilter("all");
+                setStatusFilter("all");
+              }}
               filters={[
                 {
                   value: categoryFilter,
@@ -199,6 +193,7 @@ export function CorsiView() {
                   ],
                 },
               ]}
+              table={table}
               actionElement={
                 <Button onClick={handleNewClick} className="font-medium cursor-pointer shadow-sm text-xs">
                   <Plus className="mr-1.5 h-4 w-4" /> {t("courses.addCourse")}
@@ -206,48 +201,17 @@ export function CorsiView() {
               }
             />
 
-            <div className="space-y-4">
-              <div className="rounded-md border bg-card">
-                <Table>
-                  <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(header.column.columnDef.header, header.getContext())}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableHeader>
-                  <TableBody>
-                    {loading ? (
-                      <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                    ) : table.getRowModel().rows?.length ? (
-                      table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                          {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                          {t("courses.noCoursesFound") || "Nessun corso trovato."}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <DataTablePagination table={table} />
-            </div>
+            <AtenaDataTable
+              table={table}
+              loading={loading}
+              columnsCount={columns.length}
+              emptyTitle={t("courses.noCoursesFound") || "Nessun corso trovato."}
+              onResetFilters={() => {
+                setSearchQuery("");
+                setCategoryFilter("all");
+                setStatusFilter("all");
+              }}
+            />
           </div>
 
           <Dialog open={open} onOpenChange={(v) => !v && handleCloseDialog()}>

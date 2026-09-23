@@ -1,13 +1,15 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, Ban, RotateCcw } from "lucide-react";
+import { Ban, RotateCcw, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
 import type { Membership } from "../types";
 
 export interface GetMembershipsTableColumnsProps {
@@ -49,46 +51,40 @@ export function getMembershipsTableColumns({
     {
       accessorKey: "studentName",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.student")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.student")} />
       ),
       cell: ({ row }) => {
         const m = row.original;
         const name = m.studentName || m.student_name || t("common.student");
         const email = m.studentEmail || m.student_email || "";
         const taxCode = m.studentTaxCode || m.student_tax_code || "";
+        const sub = [email, taxCode ? `CF: ${taxCode}` : ""].filter(Boolean).join(" • ");
 
         return (
-          <div className="flex flex-col min-w-[180px] gap-0.5">
-            <span className="font-bold text-sm text-foreground">{name}</span>
-            {email ? <span className="text-xs text-muted-foreground truncate max-w-[200px]">{email}</span> : null}
-            {taxCode ? <span className="text-[11px] text-muted-foreground font-mono">CF: {taxCode}</span> : null}
-            <CellCopyableId id={m.id} />
+          <div className="flex flex-col gap-0.5">
+            <CellAvatar
+              title={name}
+              subtitle={sub}
+              icon={Award}
+              badgeColor="bg-amber-500/10 text-amber-600"
+            />
+            <div className="pl-11">
+              <CellCopyableId id={m.id} />
+            </div>
           </div>
         );
       },
     },
     {
       accessorKey: "membershipNumber",
-      header: t("memberships.cardNumber") || "N° Tessera",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("memberships.cardNumber")} />
+      ),
       cell: ({ row }) => {
         const num = row.original.membershipNumber || (row.original as any).membership_number;
         if (!num) return <span className="text-xs text-muted-foreground italic">—</span>;
         return (
-          <Badge variant="outline" className="font-mono text-[11px] font-semibold bg-muted/30">
+          <Badge variant="outline" className="font-mono text-[11px] font-semibold bg-muted/30 border-border/60">
             {num}
           </Badge>
         );
@@ -96,55 +92,49 @@ export function getMembershipsTableColumns({
     },
     {
       accessorKey: "academicYear",
-      header: t("memberships.academicYear"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("memberships.academicYear")} />
+      ),
       cell: ({ row }) => (
-        <Badge variant="outline" className="font-mono text-xs">
+        <Badge variant="outline" className="font-mono text-xs border-border/60">
           {row.original.academicYear || "—"}
         </Badge>
       ),
     },
     {
       accessorKey: "status",
-      header: t("memberships.cardStatus"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("memberships.cardStatus")} />
+      ),
       cell: ({ row }) => <StatusBadge status={row.original.status || "active"} />,
     },
     {
       accessorKey: "createdAt",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.date")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.date")} />
       ),
       cell: ({ row }) => <CellFormattedDate dateValue={row.original.createdAt || row.original.created_at} />,
     },
     {
       id: "actions",
-      header: t("common.actions"),
+      header: () => (
+        <div className="text-right text-xs font-medium text-muted-foreground">
+          {t("common.actions")}
+        </div>
+      ),
       enableHiding: false,
       cell: ({ row }) => {
         const m = row.original;
         const isRevoked = String(m.status ?? "").toLowerCase() === "revoked" || Number(m.status) === 2;
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 text-xs cursor-pointer ${
+              className={`h-8 text-xs cursor-pointer rounded-lg transition-all ${
                 isRevoked
-                  ? "text-emerald-600 hover:text-emerald-700"
-                  : "text-rose-600 hover:text-rose-700"
+                  ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
+                  : "text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
               }`}
               onClick={() => onToggleStatus(m.id)}
               title={isRevoked ? t("common.confirm") : t("common.cancel")}

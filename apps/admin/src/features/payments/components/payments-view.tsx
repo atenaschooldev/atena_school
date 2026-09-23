@@ -1,27 +1,21 @@
+"use client";
+
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
-import { Plus, Receipt } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePayments } from "../hooks/use-payments";
 import { PaymentsMetrics } from "./payments-metrics";
 import { getPaymentsTableColumns } from "./payments-table-columns";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { UniversalPosCheckoutModal } from "./universal-pos-checkout-modal";
 import { PaymentFormDialog } from "./payment-form-dialog";
 import { PaymentDetailDialog } from "./payment-detail-dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -29,12 +23,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import type { Payment } from "../types";
-
 import {
   PaymentMethod,
   PaymentRecordStatus,
 } from "@atena/api-types";
-
 import { useTranslation } from "@/i18n/context";
 
 export function PaymentsView() {
@@ -70,6 +62,9 @@ export function PaymentsView() {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "created_at", desc: true },
   ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
   const columns = useMemo(
     () =>
@@ -88,117 +83,90 @@ export function PaymentsView() {
   const table = useReactTable({
     data: payments,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const methodOptions = [
+    { value: "all", label: t("common.all") },
+    { value: String(PaymentMethod.CASH), label: t("common.cash") },
+    { value: String(PaymentMethod.POS), label: t("common.card") },
+    { value: String(PaymentMethod.STRIPE), label: "Stripe Online" },
+    { value: String(PaymentMethod.BANK_TRANSFER), label: t("common.transfer") },
+  ];
+
+  const statusOptions = [
+    { value: "all", label: t("common.all") },
+    { value: String(PaymentRecordStatus.SUCCEEDED), label: t("common.paid") },
+    { value: String(PaymentRecordStatus.PENDING), label: t("common.pending") },
+    { value: String(PaymentRecordStatus.FAILED), label: t("common.failed") },
+    { value: String(PaymentRecordStatus.REFUNDED), label: t("common.refunded") },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <PaymentsMetrics summary={summary} />
 
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
+        <DataTableToolbar
+          table={table}
+          searchKey="purchaser_name"
           searchPlaceholder={t("common.search")}
-          filters={[
-            {
-              value: methodFilter,
-              onChange: setMethodFilter,
-              placeholder: t("payments.filterMethod"),
-              options: [
-                { value: "all", label: t("common.all") },
-                { value: String(PaymentMethod.CASH), label: t("common.cash") },
-                { value: String(PaymentMethod.POS), label: t("common.card") },
-                { value: String(PaymentMethod.STRIPE), label: "Stripe Online" },
-                { value: String(PaymentMethod.BANK_TRANSFER), label: t("common.transfer") },
-              ],
-            },
-            {
-              value: statusFilter,
-              onChange: setStatusFilter,
-              placeholder: t("common.status"),
-              options: [
-                { value: "all", label: t("common.all") },
-                { value: String(PaymentRecordStatus.SUCCEEDED), label: t("common.paid") },
-                { value: String(PaymentRecordStatus.PENDING), label: t("common.pending") },
-                { value: String(PaymentRecordStatus.FAILED), label: t("common.failed") },
-                { value: String(PaymentRecordStatus.REFUNDED), label: t("common.refunded") },
-              ],
-            },
-          ]}
-          actionElement={
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setPosCheckoutOpen(true)}
-                className="cursor-pointer font-medium text-xs border-primary/30 text-primary hover:bg-primary/5"
-              >
-                <Plus className="mr-1.5 h-4 w-4" /> {t("payments.recordPayment")}
-              </Button>
-            </div>
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          filterKey="status"
+          filterTitle={t("common.status")}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={
+            <Button
+              size="sm"
+              onClick={() => setPosCheckoutOpen(true)}
+              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t("payments.recordPayment")}</span>
+            </Button>
           }
         />
 
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {t("payments.noPaymentsFound")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </div>
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("payments.emptyState.title") || t("common.search")}
+        />
       </div>
 
-      <UniversalPosCheckoutModal open={posCheckoutOpen} onOpenChange={setPosCheckoutOpen} />
+      <UniversalPosCheckoutModal
+        open={posCheckoutOpen}
+        onOpenChange={setPosCheckoutOpen}
+        onSuccess={() => {}}
+      />
 
       <PaymentFormDialog
         open={createDialogOpen || !!editingPayment}
-        onOpenChange={(v) => {
-          if (!v) {
+        onOpenChange={(open) => {
+          if (!open) {
             setCreateDialogOpen(false);
             setEditingPayment(null);
           }
         }}
-        initialValues={editingPayment || undefined}
+        initialData={editingPayment}
         onSubmit={async (values) => {
           if (editingPayment) {
             await updatePayment({ id: editingPayment.id, ...values });
@@ -213,14 +181,12 @@ export function PaymentsView() {
       <PaymentDetailDialog
         payment={selectedPaymentDetail}
         open={!!selectedPaymentDetail}
-        onOpenChange={(v) => !v && setSelectedPaymentDetail(null)}
+        onOpenChange={(open) => !open && setSelectedPaymentDetail(null)}
       />
 
       <DeleteConfirmDialog
         open={!!deletingPaymentId}
-        onOpenChange={(v) => !v && setDeletingPaymentId(null)}
-        title={t("payments.deletePaymentTitle")}
-        description={t("payments.deletePaymentDesc")}
+        onOpenChange={(open) => !open && setDeletingPaymentId(null)}
         onConfirm={async () => {
           if (deletingPaymentId) {
             await deletePayment(deletingPaymentId);

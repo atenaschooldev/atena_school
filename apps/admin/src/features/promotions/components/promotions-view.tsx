@@ -1,25 +1,19 @@
+"use client";
+
 import { useState, useMemo } from "react";
-import { Plus, Tag, Percent, Sparkles, CheckCircle2 } from "lucide-react";
+import { Plus, Tag, Sparkles, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePromoCodes } from "../hooks/use-promo-codes";
 import { getPromoCodesTableColumns } from "./promo-codes-table-columns";
 import { CreatePromoDialog } from "./create-promo-dialog";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { useTranslation } from "@/i18n/context";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -34,6 +28,11 @@ export function PromotionsView() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PromoCodeItem | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "code", desc: false },
+  ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const {
     promoCodes: allPromoCodes,
@@ -43,10 +42,6 @@ export function PromotionsView() {
     togglePromoCode,
     deletePromoCode,
   } = usePromoCodes();
-
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "code", desc: false },
-  ]);
 
   const filteredPromoCodes = useMemo(() => {
     return allPromoCodes.filter((p) => {
@@ -89,8 +84,14 @@ export function PromotionsView() {
   const table = useReactTable({
     data: filteredPromoCodes,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+    },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -125,21 +126,28 @@ export function PromotionsView() {
     },
   ];
 
+  const statusOptions = [
+    { value: "all", label: t("common.all") },
+    { value: "active", label: t("common.active") },
+    { value: "inactive", label: t("common.inactive") },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Metric summary banner */}
       <div className="@container/main px-4 lg:px-6">
         <div className="grid gap-4 sm:grid-cols-3">
           {metrics.map((metric, index) => (
-            <Card key={index} className="border">
-              <CardContent className="space-y-4 pt-6">
+            <Card key={index} className="border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
+              <CardContent className="space-y-3 p-5">
                 <div className="flex items-center justify-between">
-                  <metric.icon className="text-muted-foreground size-6" />
+                  <span className="text-muted-foreground text-xs font-semibold">{metric.title}</span>
+                  <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                    <metric.icon className="size-4" />
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-muted-foreground text-sm font-medium">{metric.title}</p>
-                  <div className="text-2xl font-bold">{metric.value}</div>
-                  <div className="text-muted-foreground text-xs">{metric.description}</div>
+                <div>
+                  <div className="text-2xl font-bold text-foreground">{metric.value}</div>
                 </div>
               </CardContent>
             </Card>
@@ -148,99 +156,45 @@ export function PromotionsView() {
       </div>
 
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        <DataTableToolbar
+          table={table}
+          searchKey="code"
           searchPlaceholder={t("common.search")}
-          filters={[
-            {
-              value: statusFilter,
-              onChange: setStatusFilter,
-              placeholder: t("common.status"),
-              options: [
-                { value: "all", label: t("common.all") },
-                { value: "active", label: t("common.active") },
-                { value: "inactive", label: t("common.inactive") },
-              ],
-            },
-          ]}
-          actionElement={
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterKey="is_active"
+          filterTitle={t("common.status")}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={
             <Button
+              size="sm"
               onClick={() => {
                 setEditingItem(null);
                 setCreateDialogOpen(true);
               }}
-              className="font-medium cursor-pointer shadow-sm text-xs"
+              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
             >
-              <Plus className="mr-1.5 h-4 w-4" />
-              {t("promotions.newPromo")}
+              <Plus className="h-4 w-4" />
+              <span>{t("promotions.createPromoCode")}</span>
             </Button>
           }
         />
 
-        <div className="rounded-md border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-muted/50 transition-all duration-200"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-32 text-center text-muted-foreground text-xs font-medium"
-                  >
-                    Nessun codice promozionale trovato.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <DataTablePagination table={table} />
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("promotions.emptyState.title") || t("common.search")}
+        />
       </div>
 
       <CreatePromoDialog
         open={createDialogOpen}
-        onOpenChange={(open) => {
-          setCreateDialogOpen(open);
-          if (!open) setEditingItem(null);
-        }}
-        onSubmit={handleCreateOrUpdate}
+        onOpenChange={setCreateDialogOpen}
         initialData={editingItem}
+        onSubmit={handleCreateOrUpdate}
       />
     </div>
   );

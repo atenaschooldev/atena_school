@@ -1,15 +1,16 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Pencil, Trash2, User, Clock } from "lucide-react";
+import { Eye, Pencil, Trash2, User, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { PaymentMethodBadge } from "@/components/shared/payment-method-badge";
 import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import { CellCurrency } from "@/components/shared/cell-currency";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
 import type { Booking } from "../types/booking";
 
 export interface GetBookingsTableColumnsProps {
@@ -55,90 +56,58 @@ export function getBookingsTableColumns({
     {
       accessorKey: "course_name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.course")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.course")} />
       ),
-      cell: ({ row }) => (
-        <div className="flex flex-col min-w-[180px] gap-0.5">
-          <span className="font-medium text-sm text-foreground">{row.original.course_name}</span>
-          <CellCopyableId id={row.original.id} />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const b = row.original;
+        return (
+          <div className="flex flex-col gap-0.5">
+            <CellAvatar
+              title={b.course_name}
+              icon={BookOpen}
+              badgeColor="bg-primary/10 text-primary"
+            />
+            <div className="pl-11">
+              <CellCopyableId id={b.id} />
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "purchaser_name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.purchaser")} / {t("common.student")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={`${t("common.purchaser")} / ${t("common.student")}`} />
       ),
       cell: ({ row }) => {
         const b = row.original;
         const diffStudent = b.student_name && b.student_name !== b.purchaser_name;
+        const sub = diffStudent
+          ? `${t("common.student")}: ${b.student_name}`
+          : b.purchaser_email || "";
+
         return (
-          <div className="flex flex-col min-w-[180px] gap-0.5">
-            <span className="font-medium text-sm text-foreground">{b.purchaser_name}</span>
-            {diffStudent ? (
-              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                <User className="w-3 h-3 text-primary/70 shrink-0" />
-                {t("common.student")}: <strong className="font-semibold text-foreground/80">{b.student_name}</strong>
-              </span>
-            ) : (
-              <span className="text-xs text-muted-foreground truncate max-w-[200px]">{b.purchaser_email}</span>
-            )}
-          </div>
+          <CellAvatar
+            title={b.purchaser_name}
+            subtitle={sub}
+            icon={User}
+            badgeColor="bg-muted text-foreground"
+          />
         );
       },
     },
     {
       accessorKey: "payment_status",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.status")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.status")} />
       ),
       cell: ({ row }) => <StatusBadge status={row.original.payment_status} />,
     },
     {
       accessorKey: "payment_method",
-      header: t("payments.filterMethod"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("payments.filterMethod")} />
+      ),
       cell: ({ row }) => (
         <PaymentMethodBadge method={row.original.payment_method} />
       ),
@@ -146,57 +115,33 @@ export function getBookingsTableColumns({
     {
       accessorKey: "amount_paid",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.amount")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.amount")} />
       ),
       cell: ({ row }) => <CellCurrency amount={Number(row.original.amount_paid || 0)} />,
     },
     {
       accessorKey: "created_at",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.date")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.date")} />
       ),
       cell: ({ row }) => <CellFormattedDate dateValue={row.original.created_at} />,
     },
     {
       id: "actions",
-      header: t("common.actions"),
+      header: () => (
+        <div className="text-right text-xs font-medium text-muted-foreground">
+          {t("common.actions")}
+        </div>
+      ),
       enableHiding: false,
       cell: ({ row }) => {
         const b = row.original;
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg"
               onClick={() => onViewDetail(b)}
               title={t("common.details")}
             >
@@ -205,7 +150,7 @@ export function getBookingsTableColumns({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg"
               onClick={() => onEdit(b)}
               title={t("common.edit")}
             >
@@ -214,7 +159,7 @@ export function getBookingsTableColumns({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
+              className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg dark:hover:text-rose-400"
               onClick={() => onDelete(b.id)}
               title={t("common.delete")}
             >

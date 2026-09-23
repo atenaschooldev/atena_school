@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +11,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Edit, Trash2, Copy, Percent, Euro, Check, Calendar } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Copy, Percent, Euro, Calendar, Tag } from "lucide-react";
 import { toast } from "sonner";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import type { PromoCodeItem } from "../types";
 
 interface PromoColumnsProps {
@@ -29,7 +32,9 @@ export function getPromoCodesTableColumns({
   return [
     {
       accessorKey: "code",
-      header: t("promotions.promoCode"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("promotions.promoCode")} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const copyToClipboard = () => {
@@ -41,14 +46,14 @@ export function getPromoCodesTableColumns({
           <div className="flex items-center gap-2">
             <Badge
               variant="outline"
-              className="font-mono font-bold text-xs sm:text-sm px-2.5 py-1 tracking-wider bg-muted/40 border-border text-foreground"
+              className="font-mono font-bold text-xs px-2.5 py-1 tracking-wider bg-muted/40 border-border/60 text-foreground"
             >
               {item.code}
             </Badge>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg hover:bg-muted/80"
               onClick={copyToClipboard}
               title={t("promotions.copiedToClipboard")}
             >
@@ -60,7 +65,9 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "discount_value",
-      header: t("promotions.discountApplied"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("promotions.discountApplied")} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const isPercentage = Number(item.discount_type) === 1;
@@ -100,7 +107,9 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "description",
-      header: t("promotions.description"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("promotions.description")} />
+      ),
       cell: ({ row }) => {
         const desc = row.original.description;
         return (
@@ -112,7 +121,9 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "used_count",
-      header: t("promotions.actualUses"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("promotions.actualUses")} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const used = item.used_count || 0;
@@ -144,7 +155,9 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "valid_until",
-      header: t("promotions.validity"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("promotions.validity")} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const now = new Date();
@@ -198,7 +211,9 @@ export function getPromoCodesTableColumns({
     },
     {
       accessorKey: "is_active",
-      header: t("common.status"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("common.status")} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         return (
@@ -222,14 +237,19 @@ export function getPromoCodesTableColumns({
     },
     {
       id: "actions",
-      header: "",
+      header: () => (
+        <div className="text-right text-xs font-medium text-muted-foreground">
+          {t("common.actions")}
+        </div>
+      ),
+      enableHiding: false,
       cell: ({ row }) => {
         const item = row.original;
         return (
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer">
+                <Button variant="ghost" className="h-8 w-8 p-0 cursor-pointer rounded-lg hover:bg-muted/80">
                   <span className="sr-only">{t("common.actions")}</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>

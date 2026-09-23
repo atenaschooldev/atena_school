@@ -1,13 +1,15 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, CheckCircle2, AlertCircle, RefreshCw, Calendar, Sparkles } from "lucide-react";
+import { Eye, CheckCircle2, AlertCircle, RefreshCw, Calendar, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import { CellCurrency } from "@/components/shared/cell-currency";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
 import type { ActiveServiceItem } from "../types/active-service";
 
 export interface GetActiveServicesTableColumnsProps {
@@ -23,42 +25,22 @@ export function getActiveServicesTableColumns({
     {
       accessorKey: "course_name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.course") || "Corso"}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.course") || "Corso"} />
       ),
       cell: ({ row }) => {
         const item = row.original;
+        const sub = [item.course_category, item.course_format].filter(Boolean).join(" • ");
         return (
-          <div className="flex flex-col min-w-[200px] gap-1">
-            <div className="flex items-center gap-1.5">
-              <span className="font-semibold text-sm text-foreground">{item.course_name}</span>
+          <div className="flex flex-col gap-0.5">
+            <CellAvatar
+              title={item.course_name}
+              subtitle={sub}
+              icon={BookOpen}
+              badgeColor="bg-primary/10 text-primary"
+            />
+            <div className="pl-11">
+              <CellCopyableId id={item.booking_id} />
             </div>
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-              {item.course_category && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                  {item.course_category}
-                </Badge>
-              )}
-              {item.course_format && (
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                  {item.course_format}
-                </Badge>
-              )}
-            </div>
-            <CellCopyableId id={item.booking_id} />
           </div>
         );
       },
@@ -66,48 +48,30 @@ export function getActiveServicesTableColumns({
     {
       accessorKey: "student_name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.student") || "Studente"}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.student") || "Studente"} />
       ),
       cell: ({ row }) => {
         const item = row.original;
         const isChild = Boolean(item.purchaser_name && item.purchaser_name !== item.student_name);
+        const sub = [
+          isChild ? `${t("bookings.parent") || "Genitore"}: ${item.purchaser_name}` : null,
+          item.student_email || item.purchaser_email,
+          item.student_tax_code ? `CF: ${item.student_tax_code}` : null,
+        ].filter(Boolean).join(" • ");
+
         return (
-          <div className="flex flex-col min-w-[180px] gap-0.5">
-            <span className="font-medium text-sm text-foreground">{item.student_name}</span>
-            {isChild && (
-              <span className="text-xs text-muted-foreground">
-                {t("bookings.parent") || "Genitore"}: {item.purchaser_name}
-              </span>
-            )}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <span>{item.student_email || item.purchaser_email}</span>
-            </div>
-            {item.student_tax_code && (
-              <span className="font-mono text-[11px] text-muted-foreground">
-                {item.student_tax_code}
-              </span>
-            )}
-          </div>
+          <CellAvatar
+            title={item.student_name}
+            subtitle={sub}
+          />
         );
       },
     },
     {
       accessorKey: "billing_scheme",
-      header: t("common.billingScheme") || "Piano / Pagamento",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("common.billingScheme") || "Piano / Pagamento"} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const isSub = item.billing_scheme === 2;
@@ -119,7 +83,7 @@ export function getActiveServicesTableColumns({
                 {t("activeServices.subscription") || "Abbonamento"}
               </Badge>
             ) : (
-              <Badge variant="outline" className="w-fit text-xs font-normal">
+              <Badge variant="outline" className="w-fit text-xs font-normal border-border/60">
                 {t("activeServices.fullPayment") || "Pagamento Unico"}
               </Badge>
             )}
@@ -132,7 +96,9 @@ export function getActiveServicesTableColumns({
     },
     {
       accessorKey: "progress",
-      header: t("activeServices.lessonProgress") || "Progresso Lezioni",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("activeServices.lessonProgress") || "Progresso Lezioni"} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         const total = item.total_lessons_count || item.scheduled_lessons_count || 0;
@@ -141,14 +107,14 @@ export function getActiveServicesTableColumns({
         const percentage = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
 
         return (
-          <div className="flex flex-col gap-1.5 min-w-[150px]">
+          <div className="flex flex-col gap-1.5 min-w-[140px]">
             <div className="flex items-center justify-between text-xs">
               <span className="font-semibold text-foreground">
                 {completed} / {total} {t("activeServices.lessons") || "lezioni"}
               </span>
-              <span className="text-muted-foreground font-medium">{percentage}%</span>
+              <span className="text-muted-foreground font-medium text-[11px]">{percentage}%</span>
             </div>
-            <Progress value={percentage} className="h-2" />
+            <Progress value={percentage} className="h-1.5 bg-muted" />
             <span className="text-[11px] text-muted-foreground">
               {remaining} {t("activeServices.remaining") || "rimanenti"}
             </span>
@@ -158,7 +124,9 @@ export function getActiveServicesTableColumns({
     },
     {
       accessorKey: "next_lesson_at",
-      header: t("activeServices.nextLesson") || "Prossima Lezione",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("activeServices.nextLesson") || "Prossima Lezione"} />
+      ),
       cell: ({ row }) => {
         const item = row.original;
         if (!item.next_lesson_at) {
@@ -178,7 +146,9 @@ export function getActiveServicesTableColumns({
     },
     {
       accessorKey: "student_annual_fee_paid",
-      header: t("activeServices.annualFee") || "Quota Associativa",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("activeServices.annualFee") || "Quota Associativa"} />
+      ),
       cell: ({ row }) => {
         const isPaid = row.original.student_annual_fee_paid;
         return isPaid ? (
@@ -196,6 +166,11 @@ export function getActiveServicesTableColumns({
     },
     {
       id: "actions",
+      header: () => (
+        <div className="text-right text-xs font-medium text-muted-foreground">
+          {t("common.actions")}
+        </div>
+      ),
       cell: ({ row }) => {
         const item = row.original;
         return (
@@ -203,7 +178,7 @@ export function getActiveServicesTableColumns({
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs font-medium"
+              className="h-8 gap-1.5 text-xs font-medium cursor-pointer rounded-lg border-border/60 hover:bg-muted/80"
               onClick={() => onViewDetail(item)}
             >
               <Eye className="h-3.5 w-3.5" />

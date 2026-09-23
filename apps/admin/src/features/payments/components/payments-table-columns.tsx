@@ -1,15 +1,16 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/shared/status-badge";
 import { PaymentMethodBadge } from "@/components/shared/payment-method-badge";
 import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import { CellCurrency } from "@/components/shared/cell-currency";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
 import {
   Select,
   SelectContent,
@@ -19,7 +20,6 @@ import {
 import {
   PaymentType,
   PaymentRecordStatus,
-  PAYMENT_TYPE_DICTIONARY,
 } from "@atena/api-types";
 import type { Payment } from "../types";
 
@@ -68,34 +68,24 @@ export function getPaymentsTableColumns({
     {
       accessorKey: "purchaser_name",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.purchaser")} / {t("common.student")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={`${t("common.purchaser")} / ${t("common.student")}`} />
       ),
       cell: ({ row }) => {
         const p = row.original;
         const name = p.purchaser_name || p.purchaserName || p.student_name || t("common.purchaser");
         const email = p.purchaser_email || p.purchaserEmail || p.student_email || "";
-
         const id = p.id;
+
         return (
-          <div className="flex flex-col min-w-[200px] gap-0.5">
-            <span className="font-bold text-sm text-foreground">{name}</span>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex flex-col gap-0.5">
+            <CellAvatar
+              title={name}
+              subtitle={email}
+              icon={Receipt}
+              badgeColor="bg-emerald-500/10 text-emerald-600"
+            />
+            <div className="pl-11">
               <CellCopyableId id={id} />
-              {email && <span>• {email}</span>}
             </div>
           </div>
         );
@@ -103,20 +93,22 @@ export function getPaymentsTableColumns({
     },
     {
       accessorKey: "type",
-      header: t("payments.paymentType"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("payments.paymentType")} />
+      ),
       cell: ({ row }) => {
         const type = Number(row.original.type);
         const desc = row.original.description;
         if (type === PaymentType.REGISTRATION_FEE) {
           return (
-            <Badge variant="outline" className="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 border-emerald-500/30">
+            <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-emerald-500/30">
               {t("payments.typeMembership")}
             </Badge>
           );
         }
         if (type === PaymentType.SINGLE_LESSON) {
           return (
-            <Badge variant="outline" className="text-purple-600 bg-purple-50 dark:bg-purple-950/20 border-purple-500/30">
+            <Badge variant="outline" className="text-purple-600 bg-purple-500/10 border-purple-500/30">
               {t("courses.individual")}
             </Badge>
           );
@@ -143,27 +135,15 @@ export function getPaymentsTableColumns({
     },
     {
       accessorKey: "payment_method",
-      header: t("payments.filterMethod"),
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title={t("payments.filterMethod")} />
+      ),
       cell: ({ row }) => <PaymentMethodBadge method={row.original.payment_method ?? row.original.paymentMethod} />,
     },
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.status")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.status")} />
       ),
       cell: ({ row }) => {
         const payment = row.original;
@@ -229,57 +209,33 @@ export function getPaymentsTableColumns({
     {
       accessorKey: "amount",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.amount")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.amount")} />
       ),
       cell: ({ row }) => <CellCurrency amount={Number(row.original.amount || 0)} />,
     },
     {
       accessorKey: "created_at",
       header: ({ column }) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>{t("common.date")}</span>
-          {column.getIsSorted() === "desc" ? (
-            <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : column.getIsSorted() === "asc" ? (
-            <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-          ) : (
-            <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-          )}
-        </Button>
+        <DataTableColumnHeader column={column} title={t("common.date")} />
       ),
       cell: ({ row }) => <CellFormattedDate dateValue={row.original.created_at || row.original.paid_at} />,
     },
     {
       id: "actions",
-      header: t("common.actions"),
+      header: () => (
+        <div className="text-right text-xs font-medium text-muted-foreground">
+          {t("common.actions")}
+        </div>
+      ),
       enableHiding: false,
       cell: ({ row }) => {
         const p = row.original;
         return (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg"
               onClick={() => onViewDetail(p)}
               title={t("common.details")}
             >
@@ -288,7 +244,7 @@ export function getPaymentsTableColumns({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 cursor-pointer text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg"
               onClick={() => onEdit(p)}
               title={t("common.edit")}
             >
@@ -297,7 +253,7 @@ export function getPaymentsTableColumns({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 dark:hover:text-rose-400"
+              className="h-8 w-8 cursor-pointer text-rose-600/70 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg dark:hover:text-rose-400"
               onClick={() => onDelete(p.id)}
               title={t("common.delete")}
             >
@@ -310,5 +266,4 @@ export function getPaymentsTableColumns({
   ];
 }
 
-// Helper export needed by bookings view
 export { PaymentMethodBadge as getPaymentMethodBadge };

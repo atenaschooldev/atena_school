@@ -8,21 +8,13 @@ import { EditBookingDialog } from "./edit-booking-dialog";
 import { CreateBookingDialog } from "./create-booking-dialog";
 import { BookingsMetrics } from "./bookings-metrics";
 import { getBookingsTableColumns } from "./bookings-table-columns";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -30,7 +22,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import type { Booking } from "../types/booking";
-
 import { useTranslation } from "@/i18n/context";
 
 export function BookingsView() {
@@ -58,6 +49,9 @@ export function BookingsView() {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "created_at", desc: true },
   ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
 
   useEffect(() => {
     if (targetId && bookings.length > 0) {
@@ -85,140 +79,80 @@ export function BookingsView() {
   const table = useReactTable({
     data: bookings,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const statusOptions = [
+    { value: "all", label: t("common.all") },
+    { value: "completed", label: t("bookings.confirmedBookings") },
+    { value: "reserved", label: t("common.reserved") },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       {/* Top Stat Cards */}
       <BookingsMetrics stats={stats} />
 
       {/* Toolbar & Main Content */}
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        <DataTableToolbar
+          table={table}
+          searchKey="purchaser_name"
           searchPlaceholder={t("bookings.searchPlaceholder")}
-          filters={[
-            {
-              value: statusFilter,
-              onChange: setStatusFilter,
-              placeholder: t("common.status"),
-              options: [
-                { value: "all", label: t("common.all") },
-                { value: "completed", label: t("bookings.confirmedBookings") },
-                { value: "reserved", label: t("common.reserved") },
-              ],
-            },
-          ]}
-          actionElement={<CreateBookingDialog onCreateBooking={createManualBooking} />}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          filterKey="status"
+          filterTitle={t("common.status")}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={<CreateBookingDialog onCreateBooking={createManualBooking} />}
         />
 
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => {
-                    const b = row.original;
-                    const isTarget = Boolean(
-                      targetId &&
-                        (b.id === targetId ||
-                          b.id.startsWith(targetId) ||
-                          targetId.startsWith(b.id) ||
-                          (targetId.length >= 6 && b.id.toLowerCase().includes(targetId.toLowerCase())))
-                    );
-                    return (
-                      <TableRow
-                        key={row.id}
-                        id={`booking-row-${b.id}`}
-                        className={`transition-all duration-300 ${
-                          isTarget
-                            ? "font-bold ring-2 ring-primary/70 shadow-lg"
-                            : "hover:bg-muted/50"
-                        }`}
-                      >
-                        {row.getVisibleCells().map((cell, idx) => (
-                          <TableCell
-                            key={cell.id}
-                            className={
-                              isTarget
-                                ? `bg-primary/20 dark:bg-primary/30 text-foreground font-bold ${
-                                    idx === 0 ? "border-l-4 border-l-primary" : ""
-                                  }`
-                                : undefined
-                            }
-                            onClick={(e) => {
-                              if (
-                                cell.column.id === "actions" ||
-                                cell.column.id === "select" ||
-                                cell.column.id === "payment_status"
-                              ) {
-                                e.stopPropagation();
-                              }
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {t("bookings.noBookingsFound")}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </div>
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("bookings.emptyState.title") || t("bookings.searchPlaceholder")}
+        />
       </div>
 
       <BookingDetailDialog
         booking={selectedBooking}
-        isOpen={!!selectedBooking}
-        onClose={() => setSelectedBooking(null)}
-        onUpdateStatus={(id, status) => updateBookingStatus(id, status)}
-        onDelete={deleteBooking}
+        open={!!selectedBooking}
+        onOpenChange={(open) => !open && setSelectedBooking(null)}
+        onStatusChange={async (bookingId, newStatus) => {
+          await updateBookingStatus({ id: bookingId, status: newStatus });
+          if (selectedBooking && selectedBooking.id === bookingId) {
+            setSelectedBooking({ ...selectedBooking, payment_status: newStatus });
+          }
+        }}
       />
 
       <EditBookingDialog
         booking={editingBooking}
         open={!!editingBooking}
         onOpenChange={(open) => !open && setEditingBooking(null)}
-        onSuccess={createManualBooking}
+        onSave={() => {}}
       />
 
       <DeleteConfirmDialog
         open={!!deletingBookingId}
-        onOpenChange={(v) => !v && setDeletingBookingId(null)}
-        title={t("bookings.deleteOrder")}
-        description={t("bookings.deleteBookingDesc")}
+        onOpenChange={(open) => !open && setDeletingBookingId(null)}
         onConfirm={async () => {
           if (deletingBookingId) {
             await deleteBooking(deletingBookingId);

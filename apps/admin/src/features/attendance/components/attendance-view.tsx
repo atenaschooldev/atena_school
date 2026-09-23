@@ -1,28 +1,26 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { BookingPaymentStatus, PaymentMethod, BillingScheme, LessonAttendance, parseLessonAttendance } from "@atena/api-types";
+import {
+  BookingPaymentStatus,
+  PaymentMethod,
+  BillingScheme,
+  LessonAttendance,
+  parseLessonAttendance,
+} from "@atena/api-types";
 import { useAttendance } from "../hooks/use-attendance";
 import { BookingDetailDialog } from "@/features/bookings/components/booking-detail-dialog";
 import { AttendanceMetrics } from "./attendance-metrics";
 import { getAttendanceTableColumns } from "./attendance-table-columns";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, BookOpen, Filter } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   type SortingState,
-  flexRender,
+  type ColumnFiltersState,
+  type VisibilityState,
   getCoreRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -40,6 +38,8 @@ export function AttendanceView() {
   const [courseFilter, setCourseFilter] = useState<string>("all");
   const [selectedBookingForDetail, setSelectedBookingForDetail] = useState<Booking | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const {
     lessons,
@@ -78,16 +78,23 @@ export function AttendanceView() {
     lessons.forEach((l) => {
       if (l.course_name) set.add(l.course_name);
     });
-    return Array.from(set);
+    return Array.from(set).map((course) => ({
+      label: course,
+      value: course,
+    }));
   }, [lessons]);
 
   const totalCount = filteredLessons.length;
   const presentCount = filteredLessons.filter((l) => {
-    const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+    const s = l.attendance_record
+      ? parseLessonAttendance(l.attendance_record.status)
+      : LessonAttendance.PENDING;
     return s === LessonAttendance.PRESENT || s === LessonAttendance.LATE;
   }).length;
   const absentCount = filteredLessons.filter((l) => {
-    const s = l.attendance_record ? parseLessonAttendance(l.attendance_record.status) : LessonAttendance.PENDING;
+    const s = l.attendance_record
+      ? parseLessonAttendance(l.attendance_record.status)
+      : LessonAttendance.PENDING;
     return s === LessonAttendance.ABSENT;
   }).length;
   const pendingPaymentCount = filteredLessons.filter(
@@ -124,8 +131,14 @@ export function AttendanceView() {
   const table = useReactTable({
     data: filteredLessons,
     columns,
-    state: { sorting },
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+    },
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -136,6 +149,7 @@ export function AttendanceView() {
 
   return (
     <div className="space-y-6">
+      {/* Metrics Row */}
       <AttendanceMetrics
         totalCount={totalCount}
         presentCount={presentCount}
@@ -143,20 +157,22 @@ export function AttendanceView() {
         pendingPaymentCount={pendingPaymentCount}
       />
 
-      <div className="space-y-4">
+      {/* Main Container with Standard Padding */}
+      <div className="@container/main px-4 lg:px-6 space-y-4">
         {/* Date Filter & Selector Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card p-4 rounded-xl border">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/70 backdrop-blur-sm p-3.5 rounded-xl border border-border/60 shadow-xs">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
+              className="h-8 w-8 cursor-pointer rounded-lg border-border/60"
               onClick={() => handleDateChange(-1)}
+              title={t("common.previous")}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
 
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border text-xs font-semibold">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border border-border/60 text-xs font-semibold">
               <CalendarIcon className="w-4 h-4 text-primary" />
               <span>
                 {new Date(selectedDate).toLocaleDateString(dateLocale, {
@@ -171,8 +187,9 @@ export function AttendanceView() {
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8 cursor-pointer"
+              className="h-8 w-8 cursor-pointer rounded-lg border-border/60"
               onClick={() => handleDateChange(1)}
+              title={t("common.next")}
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -180,7 +197,7 @@ export function AttendanceView() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs cursor-pointer"
+              className="h-8 text-xs cursor-pointer rounded-lg hover:bg-muted/80"
               onClick={() => setSelectedDate(new Date().toISOString().split("T")[0])}
             >
               {t("dashboard.upcomingLessons").split(" ")[0]}
@@ -189,69 +206,44 @@ export function AttendanceView() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {courseOptions.length > 0 && (
-              <select
-                aria-label={t("courses.allCategories")}
-                value={courseFilter}
-                onChange={(e) => setCourseFilter(e.target.value)}
-                className="h-8 text-xs rounded-lg border bg-background px-2.5 font-medium cursor-pointer"
-              >
-                <option value="all">{t("attendance.allCourses")} ({courseOptions.length})</option>
-                {courseOptions.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+              <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                <BookOpen className="w-3.5 h-3.5 text-muted-foreground hidden sm:inline" />
+                <select
+                  aria-label={t("courses.allCategories")}
+                  value={courseFilter}
+                  onChange={(e) => setCourseFilter(e.target.value)}
+                  className="h-8 text-xs rounded-lg border border-border/60 bg-background/80 px-2.5 font-medium cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">
+                    {t("attendance.allCourses")} ({courseOptions.length})
                   </option>
-                ))}
-              </select>
+                  {courseOptions.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
         </div>
 
-        <DataViewToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
+        {/* Toolbar on Steroids */}
+        <DataTableToolbar
+          table={table}
+          searchKey="student_name"
           searchPlaceholder={t("attendance.searchPlaceholder")}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
-        <div className="rounded-md border bg-card">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableSkeletonRows columnsCount={columns.length} rowCount={6} />
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    {t("attendance.noAttendanceFound")}
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <DataTablePagination table={table} />
+        {/* Universal Atena Data Table */}
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("attendance.noAttendanceFound")}
+        />
       </div>
 
       {selectedBookingForDetail && (

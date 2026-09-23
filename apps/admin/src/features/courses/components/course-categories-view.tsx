@@ -21,18 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { DataViewToolbar } from "@/components/shared/data-view-toolbar";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
-import { TableSkeletonRows } from "@/components/ui/table-skeleton";
+import { AtenaDataTable, DataTableToolbar, DataTableColumnHeader, CellAvatar } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/i18n/context";
 import {
@@ -208,21 +198,7 @@ export function CourseCategoriesView() {
       {
         accessorKey: "sortOrder",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <span>#</span>
-            {column.getIsSorted() === "desc" ? (
-              <ArrowDown className="ml-1 h-3 w-3 text-primary" />
-            ) : column.getIsSorted() === "asc" ? (
-              <ArrowUp className="ml-1 h-3 w-3 text-primary" />
-            ) : (
-              <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
-            )}
-          </Button>
+          <DataTableColumnHeader column={column} title="#" />
         ),
         cell: ({ row }) => (
           <span className="font-mono text-xs text-muted-foreground font-semibold">
@@ -234,33 +210,18 @@ export function CourseCategoriesView() {
       {
         accessorKey: "name",
         header: ({ column }) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="-ml-3 h-8 cursor-pointer font-semibold text-xs text-muted-foreground hover:bg-accent/50"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <span>{t("courses.columnCategoryName") || "Nome Categoria"}</span>
-            {column.getIsSorted() === "desc" ? (
-              <ArrowDown className="ml-1.5 h-3.5 w-3.5 text-primary" />
-            ) : column.getIsSorted() === "asc" ? (
-              <ArrowUp className="ml-1.5 h-3.5 w-3.5 text-primary" />
-            ) : (
-              <ArrowUpDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
-            )}
-          </Button>
+          <DataTableColumnHeader
+            column={column}
+            title={t("courses.columnCategoryName") || "Nome Categoria"}
+          />
         ),
         cell: ({ row }) => {
           return (
-            <div className="flex items-center gap-3 min-w-[200px]">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20">
-                <Folder className="h-4 w-4" />
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span className="font-bold text-sm text-foreground truncate">{row.original.name}</span>
-                <span className="text-xs text-muted-foreground font-mono truncate">{row.original.slug}</span>
-              </div>
-            </div>
+            <CellAvatar
+              title={row.original.name}
+              subtitle={<span className="font-mono">{row.original.slug}</span>}
+              icon={Folder}
+            />
           );
         },
       },
@@ -377,10 +338,14 @@ export function CourseCategoriesView() {
 
       {/* ── Main Toolbar & Content Container ── */}
       <div className="@container/main px-4 lg:px-6 space-y-4">
-        <DataViewToolbar
+        <DataTableToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           searchPlaceholder={t("courses.searchCategoriesPlaceholder") || "Cerca per nome, slug o descrizione..."}
+          onResetFilters={() => {
+            setSearchQuery("");
+            setStatusFilter("all");
+          }}
           filters={[
             {
               value: statusFilter,
@@ -393,6 +358,7 @@ export function CourseCategoriesView() {
               ],
             },
           ]}
+          table={table}
           actionElement={
             <div className="flex items-center gap-2">
               <Button
@@ -418,48 +384,16 @@ export function CourseCategoriesView() {
           }
         />
 
-        <div className="space-y-4">
-          <div className="rounded-md border bg-card">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableSkeletonRows columnsCount={columns.length} rowCount={5} />
-                ) : table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/50 transition-all duration-200">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      {t("courses.noCategoriesFound") || "Nessuna categoria trovata."}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination table={table} />
-        </div>
+        <AtenaDataTable
+          table={table}
+          loading={loading}
+          columnsCount={columns.length}
+          emptyTitle={t("courses.noCategoriesFound") || "Nessuna categoria trovata."}
+          onResetFilters={() => {
+            setSearchQuery("");
+            setStatusFilter("all");
+          }}
+        />
       </div>
 
       {/* Add / Edit Category Dialog */}

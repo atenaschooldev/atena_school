@@ -8,9 +8,7 @@ export default function GruppiPage() {
   const { t } = useTranslation();
   return (
     <BaseLayout title={t("groups.title")} description={t("groups.subtitle")}>
-      <div className="px-4 lg:px-6 pt-0 pb-8">
-        <GroupsView />
-      </div>
+      <GroupsView />
     </BaseLayout>
   );
 }
