@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAnalyticsCredentials } from '@atena/core';
+import { getAnalyticsCredentials, getSentryCredentials } from '@atena/core';
 import { createClient } from '@/lib/supabase/server';
 import { handleCorsOptions, withCors } from '@/lib/server/cors';
 
@@ -12,8 +12,11 @@ export async function OPTIONS() {
 export async function GET() {
   try {
     const supabase = createClient();
-    const analytics = await getAnalyticsCredentials(supabase as any);
-    return withCors(NextResponse.json({ success: true, analytics }));
+    const [analytics, sentry] = await Promise.all([
+      getAnalyticsCredentials(supabase as any),
+      getSentryCredentials(supabase as any),
+    ]);
+    return withCors(NextResponse.json({ success: true, analytics, sentryDsn: sentry.dsn || '' }));
   } catch (err: any) {
     return withCors(
       NextResponse.json({
@@ -24,6 +27,7 @@ export async function GET() {
           clarityId: process.env.NEXT_PUBLIC_CLARITY_ID || '',
           metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || '',
         },
+        sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
       })
     );
   }

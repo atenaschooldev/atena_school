@@ -23,6 +23,7 @@ export const IntegrationProvider = {
   STRIPE: 'stripe',
   ANALYTICS: 'analytics',
   DOMAINS: 'domains',
+  SENTRY: 'sentry',
 } as const;
 export type IntegrationProvider = (typeof IntegrationProvider)[keyof typeof IntegrationProvider];
 
@@ -66,6 +67,14 @@ export const INTEGRATION_PROVIDERS_DICTIONARY: Record<string, DictionaryEntry> =
     label_en: 'Official Domains & URLs',
     label_ru: 'Официальные домены и URL школы',
     description: 'URL витрины сайта, личного кабинета ученика и CRM-панели для ссылок в письмах и боте',
+  },
+  [IntegrationProvider.SENTRY]: {
+    id: 6,
+    code: IntegrationProvider.SENTRY,
+    label_it: 'Sentry Error Monitoring',
+    label_en: 'Sentry Error Monitoring',
+    label_ru: 'Sentry Мониторинг ошибок',
+    description: 'Клиентский DSN ключ для отлова ошибок браузера на чекауте и лендинге',
   },
 };
 
@@ -135,12 +144,17 @@ export interface DomainsCredentials {
   adminUrl?: string;
 }
 
+export interface SentryCredentials {
+  dsn?: string;
+}
+
 export type AnyIntegrationCredentials =
   | ResendCredentials
   | TelegramCredentials
   | StripeCredentials
   | AnalyticsCredentials
   | DomainsCredentials
+  | SentryCredentials
   | Record<string, any>;
 
 // ----------------------------------------------------------------------------

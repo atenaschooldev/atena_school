@@ -6,6 +6,7 @@ import {
   StripeCredentials,
   AnalyticsCredentials,
   DomainsCredentials,
+  SentryCredentials,
   IntegrationSecretRecord,
   MaskedIntegrationSecretRecord,
 } from '@atena/api-types';
@@ -189,6 +190,22 @@ export async function getAnalyticsCredentials(
   };
 }
 
+/**
+ * Fetch Sentry credentials from DB with ENV fallback
+ */
+export async function getSentryCredentials(
+  supabase?: SupabaseClient | null
+): Promise<SentryCredentials> {
+  const dbCreds = await getSecretFromDb<SentryCredentials>(
+    supabase,
+    IntegrationProvider.SENTRY
+  );
+
+  return {
+    dsn: dbCreds?.dsn || process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
+  };
+}
+
 function isLocalhost(url?: string | null): boolean {
   if (!url) return false;
   return url.includes('localhost') || url.includes('127.0.0.1');
@@ -298,6 +315,13 @@ export async function getMaskedIntegrationsSummary(
   const domainsSource: 'database' | 'env' = (domainsRaw?.siteUrl || domainsRaw?.appUrl || domainsRaw?.adminUrl) ? 'database' : 'env';
   const domainsCreds = await getDomainsCredentials(supabase);
 
+  // Sentry
+  const sentryDb = dbMap.get(IntegrationProvider.SENTRY);
+  const sentryActive = sentryDb?.is_active ?? true;
+  const sentryRaw = sentryDb?.credentials as Partial<SentryCredentials> | undefined;
+  const sentrySource: 'database' | 'env' = sentryRaw?.dsn ? 'database' : 'env';
+  const sentryCreds = await getSentryCredentials(supabase);
+
   return {
     [IntegrationProvider.RESEND]: {
       provider: IntegrationProvider.RESEND,
@@ -366,6 +390,16 @@ export async function getMaskedIntegrationsSummary(
       source: domainsSource,
       updated_at: domainsDb?.updated_at || null,
     },
+    [IntegrationProvider.SENTRY]: {
+      provider: IntegrationProvider.SENTRY,
+      credentials: {
+        dsn: maskSecret(sentryCreds.dsn),
+      },
+      is_active: sentryActive,
+      is_configured: Boolean(sentryCreds.dsn),
+      source: sentrySource,
+      updated_at: sentryDb?.updated_at || null,
+    },
   };
 }
 
@@ -398,8 +432,11 @@ export async function revealIntegrationCredentials(
       const creds = await getDomainsCredentials(supabase);
       return creds as Record<string, any>;
     }
+    case IntegrationProvider.SENTRY: {
+      const creds = await getSentryCredentials(supabase);
+      return creds as Record<string, any>;
+    }
     default:
       return {};
   }
 }
-

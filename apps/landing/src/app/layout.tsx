@@ -30,8 +30,9 @@ const nunito = Nunito({
 });
 
 import { env } from '@/config/env';
-import { getAnalyticsCredentials, getSchoolProfile } from '@atena/core';
+import { getAnalyticsCredentials, getSchoolProfile, getSentryCredentials } from '@atena/core';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
+import { SentryMonitoring } from '@/components/monitoring/SentryMonitoring';
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
@@ -102,7 +103,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const supabase = getSupabaseAdmin();
-  const [messages, school, analytics] = await Promise.all([
+  const [messages, school, analytics, sentry] = await Promise.all([
     getMessages(),
     getSchoolProfile(supabase),
     getAnalyticsCredentials(supabase as any).catch(() => ({
@@ -110,6 +111,9 @@ export default async function RootLayout({
       gtmId: process.env.NEXT_PUBLIC_GTM_ID || '',
       clarityId: process.env.NEXT_PUBLIC_CLARITY_ID || '',
       metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || '',
+    })),
+    getSentryCredentials(supabase as any).catch(() => ({
+      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
     })),
   ]);
 
@@ -163,6 +167,7 @@ export default async function RootLayout({
             <ScrollToTop />
             <Toaster position="top-right" richColors />
             <GoogleAnalytics initialAnalytics={analytics} />
+            <SentryMonitoring initialDsn={sentry.dsn} />
           </ScrollAnimateProvider>
         </NextIntlClientProvider>
       </body>

@@ -23,6 +23,7 @@ import {
   EyeOff,
   Bell,
   Globe,
+  ShieldAlert,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -172,6 +173,12 @@ export function WhiteLabelIntegrations() {
   const [adminUrl, setAdminUrl] = useState("");
   const [savingDomains, setSavingDomains] = useState(false);
   const [testingDomains, setTestingDomains] = useState(false);
+
+  const [sentryStatus, setSentryStatus] = useState<StatusFeedback | null>(null);
+  const [sentryDsn, setSentryDsn] = useState("");
+  const [savingSentry, setSavingSentry] = useState(false);
+  const [testingSentry, setTestingSentry] = useState(false);
+  const [showSentryDsn, setShowSentryDsn] = useState(false);
   const [revealingProvider, setRevealingProvider] = useState<string | null>(null);
 
   const handleToggleReveal = async (
@@ -244,6 +251,9 @@ export function WhiteLabelIntegrations() {
             setSiteUrl(String(data.domains.credentials.siteUrl || ""));
             setAppUrl(String(data.domains.credentials.appUrl || ""));
             setAdminUrl(String(data.domains.credentials.adminUrl || ""));
+          }
+          if (data.sentry?.credentials) {
+            setSentryDsn(String(data.sentry.credentials.dsn || ""));
           }
         }
       }
@@ -654,6 +664,61 @@ export function WhiteLabelIntegrations() {
     }
   };
 
+  // Handlers for Sentry
+  const handleSaveSentry = async () => {
+    setSavingSentry(true);
+    try {
+      await api.patch("/admin/integrations/sentry", {
+        credentials: {
+          dsn: sentryDsn,
+        },
+      });
+      toast.success("Configurazione Sentry salvata con successo");
+      await loadData();
+    } catch (err: any) {
+      toast.error(err.message || "Errore durante il salvataggio di Sentry");
+    } finally {
+      setSavingSentry(false);
+    }
+  };
+
+  const handleTestSentry = async () => {
+    setTestingSentry(true);
+    setSentryStatus(null);
+    try {
+      const res = await api.post<TestIntegrationResult>("/admin/integrations/sentry/test", {});
+      const now = new Date().toLocaleTimeString("it-IT");
+      if (res && res.success) {
+        setSentryStatus({
+          type: "success",
+          message: res.message,
+          details: res.details ? JSON.stringify(res.details, null, 2) : undefined,
+          timestamp: now,
+        });
+        toast.success(res.message);
+      } else {
+        setSentryStatus({
+          type: "error",
+          message: res?.message || "Verifica Sentry DSN fallita",
+          details: res?.details ? JSON.stringify(res.details, null, 2) : undefined,
+          timestamp: now,
+        });
+        toast.error(res?.message || "Verifica Sentry DSN fallita");
+      }
+    } catch (err: any) {
+      const errMsg = err?.message || String(err);
+      setSentryStatus({
+        type: "error",
+        message: "Errore durante la verifica di Sentry DSN",
+        details: errMsg,
+        timestamp: new Date().toLocaleTimeString("it-IT"),
+      });
+      toast.error(errMsg);
+    } finally {
+      setTestingSentry(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12 text-muted-foreground">
@@ -668,6 +733,7 @@ export function WhiteLabelIntegrations() {
   const stripeInfo = integrations.stripe;
   const analyticsInfo = integrations.analytics;
   const domainsInfo = integrations.domains;
+  const sentryInfo = integrations.sentry;
 
   return (
     <div className="space-y-6">
@@ -1409,6 +1475,104 @@ export function WhiteLabelIntegrations() {
             <Button type="button" size="sm" onClick={handleSaveDomains} disabled={savingDomains} className="cursor-pointer">
               {savingDomains && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
               Salva Domini & URL
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sentry Error Monitoring Card */}
+      <Card className="border-border shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400">
+                <ShieldAlert className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Sentry (Monitoraggio Errori Client-side)</CardTitle>
+                <CardDescription>
+                  Tracciamento automatico e tempestivo dei crash del browser su checkout e catalogo corsi con zero impatto sulle prestazioni
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant={sentryInfo?.source === "database" ? "default" : "secondary"}>
+                {sentryInfo?.source === "database" ? "Database (White-label)" : "ENV Fallback"}
+              </Badge>
+              <Badge variant={sentryInfo?.is_configured ? "outline" : "destructive"}>
+                {sentryInfo?.is_configured ? "Configurato" : "Mancante"}
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="sentryDsn">Sentry DSN (Client Key)</Label>
+            <div className="relative">
+              <Input
+                id="sentryDsn"
+                type={showSentryDsn ? "text" : "password"}
+                value={sentryDsn}
+                onChange={(e) => setSentryDsn(e.target.value)}
+                placeholder="https://••••••••@••••.ingest.sentry.io/••••••"
+                className="font-mono text-sm pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-muted-foreground hover:text-foreground cursor-pointer"
+                onClick={() =>
+                  handleToggleReveal(
+                    "sentry",
+                    "dsn",
+                    sentryDsn,
+                    setSentryDsn,
+                    showSentryDsn,
+                    setShowSentryDsn
+                  )
+                }
+                disabled={revealingProvider === "sentry_dsn"}
+                title={showSentryDsn ? "Nascondi DSN" : "Mostra DSN"}
+              >
+                {revealingProvider === "sentry_dsn" ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : showSentryDsn ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Inserisci il DSN del tuo progetto Sentry. Verrà caricato in modalità asincrona e ritardata per non impattare Core Web Vitals e SEO.
+            </p>
+          </div>
+
+          <FeedbackBanner
+            status={sentryStatus}
+            onClear={() => setSentryStatus(null)}
+          />
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleTestSentry}
+              disabled={testingSentry}
+              className="text-xs cursor-pointer"
+            >
+              {testingSentry ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+              ) : (
+                <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Verifica Sentry DSN
+            </Button>
+            <Button type="button" size="sm" onClick={handleSaveSentry} disabled={savingSentry} className="cursor-pointer">
+              {savingSentry && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              Salva Configurazione Sentry
             </Button>
           </div>
         </CardContent>

@@ -13,6 +13,7 @@ import {
   getStripeCredentials,
   getAnalyticsCredentials,
   getDomainsCredentials,
+  getSentryCredentials,
   revealIntegrationCredentials,
   clearSecretsCache,
   sendEmailViaResend,
@@ -30,6 +31,7 @@ const SENSITIVE_FIELDS: Record<string, string[]> = {
   [IntegrationProvider.RESEND]: ['apiKey', 'webhookSecret'],
   [IntegrationProvider.TELEGRAM]: ['botToken'],
   [IntegrationProvider.STRIPE]: ['secretKey', 'webhookSecret'],
+  [IntegrationProvider.SENTRY]: ['dsn'],
 };
 
 @Injectable()
@@ -68,6 +70,7 @@ export class IntegrationsService {
       IntegrationProvider.STRIPE,
       IntegrationProvider.ANALYTICS,
       IntegrationProvider.DOMAINS,
+      IntegrationProvider.SENTRY,
     ];
 
     if (!validProviders.includes(provider as any)) {
@@ -88,6 +91,7 @@ export class IntegrationsService {
       IntegrationProvider.STRIPE,
       IntegrationProvider.ANALYTICS,
       IntegrationProvider.DOMAINS,
+      IntegrationProvider.SENTRY,
     ];
 
     if (!validProviders.includes(provider as any)) {
@@ -357,6 +361,33 @@ export class IntegrationsService {
         message: `Domini e URL configurati e validi: Sito (${creds.siteUrl}), Portale (${creds.appUrl}), CRM (${creds.adminUrl || 'default'})`,
         details: creds,
       };
+    }
+
+    if (provider === IntegrationProvider.SENTRY) {
+      const creds = await getSentryCredentials(this.supabase);
+      if (!creds.dsn) {
+        throw new BadRequestException('Sentry DSN non configurato.');
+      }
+
+      try {
+        const url = new URL(creds.dsn);
+        if (!['http:', 'https:'].includes(url.protocol) || !url.username) {
+          return {
+            success: false,
+            message: 'Formato Sentry DSN non valido (manca public key o host)',
+          };
+        }
+        return {
+          success: true,
+          message: `Sentry DSN configurato e valido per il progetto: ${url.pathname.replace('/', '')} (${url.host})`,
+          details: { host: url.host, project: url.pathname.replace('/', '') },
+        };
+      } catch (e: any) {
+        return {
+          success: false,
+          message: `DSN non valido: ${e.message}`,
+        };
+      }
     }
 
     throw new BadRequestException(`Test non supportato per provider: ${provider}`);
