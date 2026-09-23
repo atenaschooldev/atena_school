@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { captureExceptionToSentry } from '@atena/core';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -65,13 +66,20 @@ export function apiError(
 }
 
 /**
- * Safely handles and formats unhandled server exceptions conforming to RFC 7807.
+ * Safely handles and formats unhandled server exceptions conforming to RFC 7807,
+ * and reports them asynchronously to Sentry.
  */
 export function handleApiError(err: unknown, fallbackMessage = 'Internal Server Error', instance?: string): NextResponse {
   const isProd = process.env.NODE_ENV === 'production';
   const message = err instanceof Error ? err.message : fallbackMessage;
 
   console.error('[API Error]:', err);
+
+  // Asynchronously forward to Sentry without blocking response
+  captureExceptionToSentry(err, {
+    instance: instance || 'landing-api',
+    tags: { runtime: 'nextjs-api-route' },
+  }).catch(() => {});
 
   const payload: Record<string, unknown> = {
     success: false,

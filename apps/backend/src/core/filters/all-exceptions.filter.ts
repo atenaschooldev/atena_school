@@ -1,5 +1,6 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
+import { captureExceptionToSentry } from '@atena/core';
 
 const HTTP_STATUS_TITLES: Record<number, string> = {
   400: 'Bad Request',
@@ -52,6 +53,26 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const typeUri = `https://httpstatuses.com/${status}`;
 
     console.error(`[${request.method}] ${request.url} [${status} ${title}] - Detail:`, formattedMessage);
+
+    // Forward unhandled server crashes & 500 errors to Sentry
+    if (status >= 500) {
+      captureExceptionToSentry(exception, {
+        instance: 'nest-backend',
+        tags: {
+          runtime: 'nestjs-fastify',
+          status,
+          method: request.method,
+          url: request.url,
+        },
+        req: {
+          url: request.url,
+          method: request.method,
+          headers: request.headers as Record<string, string>,
+          ip: request.ip,
+        },
+        level: status === 500 ? 'error' : 'fatal',
+      }).catch(() => {});
+    }
 
     const problemDetails: Record<string, any> = {
       type: typeUri,

@@ -1,13 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { reportClientError } from "../components/monitoring/SentryMonitoring";
 
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    reportClientError(error, { digest: error.digest, context: "global-error" });
+  }, [error]);
+
   return (
     <html lang="it">
       <body className="min-h-screen flex items-center justify-center bg-slate-100 font-sans p-4">

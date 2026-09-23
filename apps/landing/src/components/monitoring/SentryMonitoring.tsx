@@ -12,6 +12,13 @@ interface SentryParsedDsn {
   projectId: string;
 }
 
+declare global {
+  interface Window {
+    __sentryDsn?: string;
+    __reportToSentry?: (error: unknown, extra?: Record<string, any>) => void;
+  }
+}
+
 function parseDsn(dsn?: string): SentryParsedDsn | null {
   if (!dsn || !dsn.trim()) return null;
   try {
@@ -27,30 +34,50 @@ function parseDsn(dsn?: string): SentryParsedDsn | null {
 }
 
 /**
+ * Manually capture exception from React Error Boundary or client code.
+ */
+export function reportClientError(error: unknown, extra?: Record<string, any>) {
+  if (typeof window !== 'undefined' && window.__reportToSentry) {
+    window.__reportToSentry(error, extra);
+  } else {
+    console.error('[Client Error]:', error, extra);
+  }
+}
+
+/**
  * Ultra-lightweight Sentry Error Reporter (<1 KB, 0ms LCP / TBT impact).
- * Hooks into window error events after page load and forwards crashes directly to Sentry Ingest.
+ * Hooks into window error events, unhandled rejections, and React Error Boundaries.
  */
 export function SentryMonitoring({ initialDsn }: SentryMonitoringProps) {
-  const dsnInfo = parseDsn(initialDsn || process.env.NEXT_PUBLIC_SENTRY_DSN);
+  const activeDsn = initialDsn || (typeof window !== 'undefined' ? window.__sentryDsn : undefined) || process.env.NEXT_PUBLIC_SENTRY_DSN;
+  const dsnInfo = parseDsn(activeDsn);
   const isInitialized = useRef(false);
 
   useEffect(() => {
-    if (!dsnInfo || isInitialized.current) return;
-    isInitialized.current = true;
+    if (typeof window !== 'undefined' && activeDsn) {
+      window.__sentryDsn = activeDsn;
+    }
 
-    // Send Sentry Envelope
+    if (!dsnInfo) return;
+
+    // Direct event sender to Sentry Ingest
     const sendEventToSentry = (eventData: Record<string, any>) => {
       try {
         const { publicKey, host, projectId } = dsnInfo;
         const endpoint = `https://${host}/api/${projectId}/envelope/?sentry_key=${publicKey}&sentry_version=7`;
 
-        const eventId = crypto.randomUUID().replace(/-/g, '');
+        const eventId = (
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36)
+        ).replace(/-/g, '');
+
         const sentAt = new Date().toISOString();
 
         const envelopeHeader = JSON.stringify({
           event_id: eventId,
           sent_at: sentAt,
-          dsn: initialDsn,
+          dsn: activeDsn,
         });
 
         const itemHeader = JSON.stringify({
@@ -88,9 +115,36 @@ export function SentryMonitoring({ initialDsn }: SentryMonitoringProps) {
           }).catch(() => {});
         }
       } catch {
-        // Non-blocking catch to ensure client UI is never interrupted
+        // Non-blocking
       }
     };
+
+    // Expose programmatic error reporter for React error boundaries
+    window.__reportToSentry = (err: unknown, extra?: Record<string, any>) => {
+      const errorObj = err instanceof Error ? err : new Error(typeof err === 'string' ? err : 'Manual exception');
+      sendEventToSentry({
+        exception: {
+          values: [
+            {
+              type: errorObj.name || 'Error',
+              value: errorObj.message || 'Unknown Error',
+              stacktrace: errorObj.stack
+                ? {
+                    frames: errorObj.stack
+                      .split('\n')
+                      .slice(1, 12)
+                      .map((line) => ({ filename: line.trim() })),
+                  }
+                : undefined,
+            },
+          ],
+        },
+        extra,
+      });
+    };
+
+    if (isInitialized.current) return;
+    isInitialized.current = true;
 
     // Idle-delayed listeners initialization so it never impacts LCP / TBT
     const attachHandlers = () => {
@@ -106,7 +160,7 @@ export function SentryMonitoring({ initialDsn }: SentryMonitoringProps) {
                   ? {
                       frames: event.error.stack
                         .split('\n')
-                        .slice(1, 10)
+                        .slice(1, 12)
                         .map((line: string) => ({ filename: line.trim() })),
                     }
                   : undefined,
@@ -134,7 +188,7 @@ export function SentryMonitoring({ initialDsn }: SentryMonitoringProps) {
                   ? {
                       frames: reason.stack
                         .split('\n')
-                        .slice(1, 10)
+                        .slice(1, 12)
                         .map((line: string) => ({ filename: line.trim() })),
                     }
                   : undefined,
@@ -160,7 +214,7 @@ export function SentryMonitoring({ initialDsn }: SentryMonitoringProps) {
         setTimeout(attachHandlers, 1500);
       }
     }
-  }, [dsnInfo, initialDsn]);
+  }, [dsnInfo, activeDsn]);
 
   return null;
 }
