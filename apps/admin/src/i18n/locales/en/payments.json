@@ -46,5 +46,8 @@
   "payCourseTuition": "Pay Course Tuition",
   "payRegistrationFee": "Pay Registration Fee",
   "totalToCollect": "Total to Collect",
-  "confirmAndPrint": "Confirm & Record Payment"
+  "confirmAndPrint": "Confirm & Record Payment",
+  "emptyState": {
+    "title": "No payments found"
+  }
 }

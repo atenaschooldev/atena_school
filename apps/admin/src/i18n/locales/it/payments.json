@@ -46,5 +46,8 @@
   "payCourseTuition": "Incassa Quota Corso",
   "payRegistrationFee": "Incassa Quota Iscrizione",
   "totalToCollect": "Totale da Incassare",
-  "confirmAndPrint": "Conferma Incasso"
+  "confirmAndPrint": "Conferma Incasso",
+  "emptyState": {
+    "title": "Nessun pagamento trovato"
+  }
 }

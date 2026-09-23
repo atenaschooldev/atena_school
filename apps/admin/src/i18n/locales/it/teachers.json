@@ -35,5 +35,8 @@
   "contact": "Contatto",
   "ratePerHour": "Tariffa / Ora",
   "activeClasses": "Classi Attive",
-  "specialization": "Specializzazione"
+  "specialization": "Specializzazione",
+  "emptyState": {
+    "title": "Nessun insegnante trovato"
+  }
 }

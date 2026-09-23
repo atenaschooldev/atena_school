@@ -50,5 +50,8 @@
   "memberAddedSuccess": "Student enrolled in group",
   "memberRemovedSuccess": "Student removed from group",
   "lessonScheduled": "Scheduled",
-  "lessonCompleted": "Completed"
+  "lessonCompleted": "Completed",
+  "emptyState": {
+    "title": "No groups found"
+  }
 }

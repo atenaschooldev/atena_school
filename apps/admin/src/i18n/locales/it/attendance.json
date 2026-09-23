@@ -30,5 +30,8 @@
   "coursePaymentStatus": "Stato Pagamento Corso",
   "noAttendanceFound": "Nessun record di presenza trovato.",
   "markedSuccess": "Presenza aggiornata con successo",
-  "viewBooking": "Vedi Ordine / Iscrizione"
+  "viewBooking": "Vedi Ordine / Iscrizione",
+  "emptyState": {
+    "title": "Nessun registro presenze trovato"
+  }
 }

@@ -31,7 +31,7 @@
     "expiredDesc": "Past year or revoked cards"
   },
   "emptyState": {
-    "title": "No members found",
+    "title": "No memberships found",
     "description": "No membership cards match the selected filters.",
     "clearFilters": "Reset Filters",
     "createFirst": "Register First Member"
@@ -58,5 +58,6 @@
     "submitting": "Registering...",
     "success": "Membership registered successfully",
     "error": "Error registering membership"
-  }
+  },
+  "allAcademicYears": "All academic years"
 }

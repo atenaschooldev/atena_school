@@ -50,5 +50,8 @@
   "memberAddedSuccess": "Studente inserito nel gruppo",
   "memberRemovedSuccess": "Studente rimosso dal gruppo",
   "lessonScheduled": "Programmata",
-  "lessonCompleted": "Completata"
+  "lessonCompleted": "Completata",
+  "emptyState": {
+    "title": "Nessun gruppo trovato"
+  }
 }

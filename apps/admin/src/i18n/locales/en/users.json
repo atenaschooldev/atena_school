@@ -30,5 +30,9 @@
   "languageLevel": "Language Level",
   "registeredDate": "Registered On",
   "linkedBookings": "Bookings History",
-  "userDirectory": "User Accounts & Profiles"
+  "userDirectory": "User Accounts & Profiles",
+  "fullName": "Full Name",
+  "emptyState": {
+    "title": "No users found"
+  }
 }

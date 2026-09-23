@@ -65,5 +65,9 @@
   "registrationFeeExempt": "Annual Fee already active",
   "billingScheme": "Billing Scheme",
   "fullPayment": "Full Payment",
-  "monthlySubscription": "Monthly Subscription"
+  "monthlySubscription": "Monthly Subscription",
+  "emptyState": {
+    "title": "No bookings found",
+    "description": "No bookings match the selected criteria."
+  }
 }

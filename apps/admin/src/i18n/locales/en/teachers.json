@@ -35,5 +35,8 @@
   "contact": "Contact",
   "ratePerHour": "Rate / Hour",
   "activeClasses": "Active Classes",
-  "specialization": "Specialization"
+  "specialization": "Specialization",
+  "emptyState": {
+    "title": "No teachers found"
+  }
 }

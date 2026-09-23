@@ -107,5 +107,22 @@
     "updateError": "Error updating field",
     "deleteSuccess": "Field deleted from catalog",
     "deleteError": "Error deleting field"
-  }
+  },
+  "metricTotalForms": "Total Forms",
+  "metricTotalFormsDesc": "Forms registered in the system",
+  "metricActiveForms": "Active Forms",
+  "metricActiveFormsDesc": "Currently published forms",
+  "metricBookingForms": "Booking Forms",
+  "metricBookingFormsDesc": "Forms for course bookings",
+  "metricContactForms": "Contact Forms",
+  "metricContactFormsDesc": "Forms for general inquiries",
+  "metricFieldsCatalog": "Fields Catalog",
+  "metricFieldsCatalogDesc": "Available custom fields",
+  "cannotDeleteSystemForm": "Cannot delete a system form",
+  "deleteConfirm": "Are you sure you want to delete the form \"{title}\"?",
+  "columnName": "Form Name",
+  "emptyState": {
+    "title": "No forms found"
+  },
+  "metricActiveCount": "active in the system"
 }

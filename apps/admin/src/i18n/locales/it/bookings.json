@@ -65,5 +65,9 @@
   "registrationFeeExempt": "Quota Annuale già attiva",
   "billingScheme": "Piano di Pagamento",
   "fullPayment": "Pagamento Completo",
-  "monthlySubscription": "Abbonamento Mensile"
+  "monthlySubscription": "Abbonamento Mensile",
+  "emptyState": {
+    "title": "Nessuna iscrizione trovata",
+    "description": "Nessuna iscrizione corrisponde ai criteri selezionati."
+  }
 }

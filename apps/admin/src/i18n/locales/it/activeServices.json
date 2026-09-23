@@ -20,5 +20,9 @@
   "annualFee": "Quota Associativa",
   "feePaid": "Regolare",
   "feePending": "Da pagare",
-  "noServicesFound": "Nessun servizio attivo trovato."
+  "noServicesFound": "Nessun servizio attivo trovato.",
+  "emptyState": {
+    "title": "Nessun servizio attivo trovato",
+    "description": "Nessun servizio attivo corrisponde ai criteri selezionati."
+  }
 }

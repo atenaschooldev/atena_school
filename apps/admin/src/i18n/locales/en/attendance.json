@@ -30,5 +30,8 @@
   "coursePaymentStatus": "Course Payment Status",
   "noAttendanceFound": "No attendance records found.",
   "markedSuccess": "Attendance recorded successfully",
-  "viewBooking": "View Order / Booking"
+  "viewBooking": "View Order / Booking",
+  "emptyState": {
+    "title": "No attendance records found"
+  }
 }

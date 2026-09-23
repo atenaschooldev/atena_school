@@ -32,5 +32,9 @@
   "updatedSuccess": "Promo code updated",
   "deletedSuccess": "Promo code deleted",
   "copiedToClipboard": "Promo code copied to clipboard",
-  "noPromoFound": "No promo codes found."
+  "noPromoFound": "No promo codes found.",
+  "createPromoCode": "Create Promo Code",
+  "emptyState": {
+    "title": "No promotions found"
+  }
 }

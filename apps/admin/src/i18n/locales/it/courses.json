@@ -138,5 +138,9 @@
     "certipass": "Certificazioni EIPASS",
     "general": "Generale / Altro",
     "all": "Tutte le categorie"
+  },
+  "registrationFee": "Quota Iscrizione (€30)",
+  "emptyState": {
+    "title": "Nessun corso trovato"
   }
 }

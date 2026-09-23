@@ -107,5 +107,22 @@
     "updateError": "Errore durante l'aggiornamento del campo",
     "deleteSuccess": "Campo eliminato dal catalogo",
     "deleteError": "Errore durante l'eliminazione del campo"
-  }
+  },
+  "metricTotalForms": "Totale Moduli",
+  "metricTotalFormsDesc": "Moduli registrati nel sistema",
+  "metricActiveForms": "Moduli Attivi",
+  "metricActiveFormsDesc": "Moduli attualmente pubblicati",
+  "metricBookingForms": "Moduli Iscrizione",
+  "metricBookingFormsDesc": "Moduli per prenotazioni corsi",
+  "metricContactForms": "Moduli Contatto",
+  "metricContactFormsDesc": "Moduli per richieste informazioni",
+  "metricFieldsCatalog": "Catalogo Campi",
+  "metricFieldsCatalogDesc": "Campi personalizzati disponibili",
+  "cannotDeleteSystemForm": "Non è possibile eliminare un modulo di sistema",
+  "deleteConfirm": "Sei sicuro di voler eliminare il modulo \"{title}\"?",
+  "columnName": "Nome Modulo",
+  "emptyState": {
+    "title": "Nessun modulo trovato"
+  },
+  "metricActiveCount": "attivi nel sistema"
 }

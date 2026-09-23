@@ -32,5 +32,9 @@
   "updatedSuccess": "Codice promozionale aggiornato",
   "deletedSuccess": "Codice promozionale eliminato",
   "copiedToClipboard": "Codice promozionale copiato negli appunti",
-  "noPromoFound": "Nessun codice promozionale trovato."
+  "noPromoFound": "Nessun codice promozionale trovato.",
+  "createPromoCode": "Crea Codice Promo",
+  "emptyState": {
+    "title": "Nessuna promozione trovata"
+  }
 }

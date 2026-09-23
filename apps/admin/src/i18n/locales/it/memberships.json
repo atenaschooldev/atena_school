@@ -31,7 +31,7 @@
     "expiredDesc": "Tessere pregresse o revocate"
   },
   "emptyState": {
-    "title": "Nessun socio trovato",
+    "title": "Nessuna quota associativa trovata",
     "description": "Non ci sono tessere associative che corrispondono ai filtri selezionati.",
     "clearFilters": "Reimposta Filtri",
     "createFirst": "Registra Primo Socio"
@@ -58,5 +58,6 @@
     "submitting": "Registrazione in corso...",
     "success": "Quota associativa registrata con successo",
     "error": "Errore durante la registrazione della quota"
-  }
+  },
+  "allAcademicYears": "Tutti gli anni"
 }

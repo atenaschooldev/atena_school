@@ -20,5 +20,9 @@
   "annualFee": "Annual Fee",
   "feePaid": "Regular",
   "feePending": "Pending",
-  "noServicesFound": "No active services found."
+  "noServicesFound": "No active services found.",
+  "emptyState": {
+    "title": "No active services found",
+    "description": "No active services match the selected criteria."
+  }
 }

@@ -138,5 +138,9 @@
     "certipass": "EIPASS Certifications",
     "general": "General / Other",
     "all": "All Categories"
+  },
+  "registrationFee": "Registration Fee (€30)",
+  "emptyState": {
+    "title": "No courses found"
   }
 }
