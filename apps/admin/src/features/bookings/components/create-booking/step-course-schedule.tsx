@@ -25,6 +25,7 @@ import {
   BookOpen,
   Clock,
   Sparkles,
+  GraduationCap,
 } from "lucide-react";
 import type { Course } from "@/features/courses/types";
 import type { CreateBookingValues } from "./types";
@@ -57,8 +58,8 @@ export function StepCourseSchedule({
   previewLessons,
 }: StepCourseScheduleProps) {
   return (
-    <div className="space-y-5">
-      {/* Select Course Dropdown */}
+    <div className="space-y-4">
+      {/* 1. Select Course Dropdown */}
       <FormField
         control={form.control}
         name="courseId"
@@ -75,13 +76,13 @@ export function StepCourseSchedule({
               value={field.value}
             >
               <FormControl>
-                <SelectTrigger className="cursor-pointer h-11 text-sm bg-background border-border/70 shadow-2xs">
+                <SelectTrigger className="cursor-pointer h-10 text-xs bg-background border-border/70 rounded-xl">
                   <SelectValue placeholder="Scegli un corso dal catalogo..." />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent>
+              <SelectContent className="max-h-60">
                 {coursesList.map((c) => (
-                  <SelectItem key={c.id} value={c.id} className="cursor-pointer text-sm font-medium">
+                  <SelectItem key={c.id} value={c.id} className="cursor-pointer text-xs font-medium">
                     {c.nome} {c.prezzo ? `(€${Number(c.prezzo).toFixed(2)})` : ""}
                   </SelectItem>
                 ))}
@@ -92,138 +93,104 @@ export function StepCourseSchedule({
         )}
       />
 
-      {/* 1. TOP PANEL: CALENDAR PICKER */}
-      <div className="space-y-2">
+      {/* 2. Calendar + Info Grid */}
+      <div className="space-y-3">
         <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-          {isFixedSchedule ? "1. Seleziona Data di Inizio *" : "Orario Flessibile"}
+          {isFixedSchedule ? "Data Inizio e Calendario Lezioni *" : "Orario Flessibile"}
         </FormLabel>
 
         {!selectedCourse ? (
-          <div className="h-44 flex flex-col items-center justify-center bg-muted/10 border border-dashed rounded-2xl p-6 text-center">
+          <div className="h-44 flex flex-col items-center justify-center bg-muted/10 border border-dashed rounded-xl p-6 text-center">
             <BookOpen className="w-8 h-8 text-muted-foreground/30 mb-2" />
             <p className="text-xs font-semibold text-foreground">Nessun corso selezionato</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Seleziona prima un corso dal catalogo per abilitare il calendario.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Seleziona prima un corso dal catalogo per abilitare il calendario.
+            </p>
           </div>
         ) : isFlexibleSchedule ? (
-          <div className="p-5 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-            <div className="flex items-center gap-2 font-bold text-sm text-amber-600 dark:text-amber-300">
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+            <div className="flex items-center gap-2 font-bold text-xs text-amber-600 dark:text-amber-300">
               <Sparkles className="w-4 h-4 text-amber-500" />
               Orario Flessibile
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Questo corso non ha giorni fissi. Gli orari verranno concordati direttamente con la scuola dopo la prenotazione.
+              Questo corso non ha giorni fissi a calendario. Gli orari verranno concordati direttamente
+              con la scuola dopo l'iscrizione.
             </p>
           </div>
         ) : (
-          <div className="p-3 bg-background rounded-2xl border border-border/70 shadow-2xs flex justify-center items-center">
-            <Calendar
-              mode="single"
-              selected={selectedDateState}
-              onSelect={handleDateSelect}
-              locale={dateLocale}
-              disabled={(date) => {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                if (date < today) return true;
-                if (isFixedSchedule) return !allowedDays.includes(date.getDay());
-                return date.getDay() === 0 || date.getDay() === 6;
-              }}
-              modifiers={{
-                free: (date) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Left: Compact Calendar */}
+            <div className="p-2 bg-background rounded-xl border border-border/70 shadow-2xs flex justify-center items-center">
+              <Calendar
+                mode="single"
+                selected={selectedDateState}
+                onSelect={handleDateSelect}
+                locale={dateLocale}
+                disabled={(date) => {
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
-                  if (date < today) return false;
-                  if (isFixedSchedule) return allowedDays.includes(date.getDay());
-                  return date.getDay() !== 0 && date.getDay() !== 6;
-                },
-              }}
-              modifiersClassNames={{
-                free: "font-bold text-primary bg-primary/15 border border-primary/25 rounded-lg hover:bg-primary/25",
-              }}
-              fixedWeeks
-              className="rounded-md border-0 p-1"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* 2. BOTTOM PANEL: COURSE DETAILS & LESSONS BREAKDOWN */}
-      {selectedCourse && (
-        <div className="p-5 bg-gradient-to-br from-card via-card/95 to-muted/20 rounded-2xl border border-border/80 shadow-md space-y-4">
-          {/* Title, Category & Price Header */}
-          <div className="flex items-start justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-[10px] uppercase tracking-widest font-extrabold bg-primary/10 text-primary border-primary/20 px-2.5 py-0.5 rounded-md">
-                  {selectedCourse.categoria || "Corso"}
-                </Badge>
-                <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-                  <User className="w-3.5 h-3.5 text-muted-foreground" />
-                  {selectedCourse.teacherName || "Staff Atena School"}
-                </span>
-              </div>
-              <h3 className="text-lg font-extrabold text-foreground tracking-tight leading-snug">{selectedCourse.nome}</h3>
+                  if (date < today) return true;
+                  if (isFixedSchedule) return !allowedDays.includes(date.getDay());
+                  return date.getDay() === 0 || date.getDay() === 6;
+                }}
+                modifiers={{
+                  free: (date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    if (date < today) return false;
+                    if (isFixedSchedule) return allowedDays.includes(date.getDay());
+                    return date.getDay() !== 0 && date.getDay() !== 6;
+                  },
+                }}
+                modifiersClassNames={{
+                  free: "font-bold text-primary bg-primary/15 border border-primary/25 rounded-lg hover:bg-primary/25",
+                }}
+                fixedWeeks
+                className="rounded-md border-0 p-0 text-xs scale-90 sm:scale-95 origin-top"
+              />
             </div>
-            <Badge className="text-base font-black font-mono bg-primary text-primary-foreground px-3.5 py-1 rounded-xl shadow-xs border-0">
-              €{Number(selectedCourse.prezzo || 0).toFixed(2)}
-            </Badge>
-          </div>
 
-          {/* Hours & Schedule Info Cards */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/50">
-              <Clock className="w-4 h-4 text-primary shrink-0" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Durata e Frequenza</p>
-                <p className="font-semibold text-foreground mt-0.5">
-                  {selectedCourse.totalHours ? `${selectedCourse.totalHours} ore totali` : "Corso modulare"} · {selectedCourse.lessonDurationMinutes || 60} min/lez.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/50">
-              <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Orari & Giorni</p>
-                <p className="font-semibold text-foreground mt-0.5">
-                  {formattedScheduleText || "Orario flessibile"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Start Date & Lessons Breakdown */}
-          {selectedDateState && isFixedSchedule && (
-            <div className="space-y-3.5 text-xs pt-1">
-              <div className="flex justify-between items-center bg-primary/10 p-3 rounded-xl border border-primary/25">
-                <span className="text-primary font-bold flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-primary" />
-                  Data Inizio Corso:
-                </span>
-                <span className="font-extrabold text-primary font-mono text-sm">
-                  {format(selectedDateState, "dd MMMM yyyy", { locale: dateLocale })}
-                </span>
-              </div>
-
-              {previewLessons.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
-                    <span>Calendario Lezioni Generato</span>
-                    <Badge variant="outline" className="text-[10px] font-mono font-bold bg-background text-foreground px-2 py-0.5">
-                      {previewLessons.length} lezioni
-                    </Badge>
+            {/* Right: Schedule Details & Generated Lessons */}
+            <div className="space-y-3 flex flex-col justify-between">
+              <div className="p-3.5 bg-muted/20 rounded-xl border border-border/60 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-[11px] font-medium">Orari & Frequenza:</span>
+                  <Badge variant="outline" className="text-[10px] bg-background">
+                    {selectedCourse.totalHours ? `${selectedCourse.totalHours}h tot.` : "Modulare"}
+                  </Badge>
+                </div>
+                <div className="font-semibold text-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>{formattedScheduleText || "Orario da definire"}</span>
+                </div>
+                {selectedCourse.teacherName && (
+                  <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1.5 border-t border-border/40">
+                    <User className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>Docente: {selectedCourse.teacherName}</span>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                )}
+              </div>
+
+              {/* Generated Lessons Pill Box */}
+              {previewLessons.length > 0 && (
+                <div className="p-3 bg-muted/20 rounded-xl border border-border/60 space-y-2 text-xs">
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground font-bold uppercase tracking-wider">
+                    <span>Lezioni a Calendario</span>
+                    <span className="text-primary font-mono font-bold">{previewLessons.length}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
                     {previewLessons.map((l, i) => (
                       <Badge
                         key={i}
                         variant="secondary"
-                        className="text-xs font-mono px-2.5 py-1 bg-muted/40 hover:bg-primary/10 border border-border/60 text-foreground transition-all flex items-center gap-1.5 rounded-lg"
+                        className="text-[10px] font-mono px-2 py-0.5 bg-background border border-border/60 text-foreground flex items-center gap-1 rounded-md"
                       >
-                        <span className="text-[10px] font-bold text-primary bg-primary/15 px-1.5 py-0.2 rounded font-mono">
-                          #{i + 1}
-                        </span>
-                        <span className="font-semibold">
-                          {l.startsAt ? format(new Date(l.startsAt), "EEE d MMM", { locale: dateLocale }) : l.date}
+                        <span className="font-bold text-primary font-mono">#{i + 1}</span>
+                        <span>
+                          {l.startsAt
+                            ? format(new Date(l.startsAt), "d MMM", { locale: dateLocale })
+                            : l.date}
                         </span>
                       </Badge>
                     ))}
@@ -231,9 +198,9 @@ export function StepCourseSchedule({
                 </div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
