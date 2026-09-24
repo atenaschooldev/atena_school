@@ -15,10 +15,12 @@ import {
   CheckCircle2,
   ShieldCheck,
   AlertCircle,
+  Tag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/features/courses/types";
+import type { AppliedPromo } from "./types";
 
 interface LiveReceiptCardProps {
   currentStep: 1 | 2 | 3;
@@ -35,6 +37,8 @@ interface LiveReceiptCardProps {
   registrationFee: number;
   feePerStudent?: number;
   academicYear?: string;
+  appliedPromo?: AppliedPromo | null;
+  discountAmount?: number;
   totalAmount: number;
   paymentStatus: string;
   paymentMethod: string;
@@ -65,6 +69,8 @@ export function LiveReceiptCard({
   registrationFee,
   feePerStudent = 30,
   academicYear = "2026/2027",
+  appliedPromo,
+  discountAmount = 0,
   totalAmount,
   paymentStatus,
   paymentMethod,
@@ -143,6 +149,10 @@ export function LiveReceiptCard({
                         {sFee.paid ? (
                           <>
                             <CheckCircle2 className="h-3 w-3" /> Quota 0€
+                          </>
+                        ) : appliedPromo?.waiveRegistrationFee ? (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Quota 0€ (Promo)
                           </>
                         ) : (
                           <>
@@ -238,12 +248,24 @@ export function LiveReceiptCard({
               €{Number(amountPaid || 0).toFixed(2)}
             </span>
           </div>
+
+          {appliedPromo && discountAmount > 0 && (
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="flex items-center gap-1">
+                <Tag className="w-3 h-3" /> Sconto ({appliedPromo.code}):
+              </span>
+              <span className="font-mono">-€{discountAmount.toFixed(2)}</span>
+            </div>
+          )}
+
           <div className="flex justify-between text-muted-foreground">
             <span className="flex items-center gap-1">
               Quota Associativa (Annuale):
-              {registrationFee === 0 && membershipFeeStatus.paid && (
+              {appliedPromo?.waiveRegistrationFee ? (
+                <span className="text-[10px] text-emerald-600 font-semibold">(Promo azzerata)</span>
+              ) : registrationFee === 0 && membershipFeeStatus.paid ? (
                 <span className="text-[10px] text-emerald-600 font-semibold">(Attiva)</span>
-              )}
+              ) : null}
             </span>
             <span
               className={cn(

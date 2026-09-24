@@ -7,11 +7,13 @@ import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 import type { Course } from "@/features/courses/types";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import type {
   CreateBookingValues,
   ClientItem,
   StudentItem,
   SavedStudentItem,
+  AppliedPromo,
 } from "./types";
 import {
   createBookingSchema,
@@ -38,6 +40,11 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, { checked: boolean; paid: boolean }>>({
     0: { checked: false, paid: false },
   });
+
+  // Promo code state
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchingClient, setIsSearchingClient] = useState(false);
@@ -248,16 +255,65 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     : 0;
   const academicYear = profile?.academic_year || "2026/2027";
 
-  // Recalculate amountPaid and registrationFee
+  const applyPromoCode = async (overrideCode?: string) => {
+    const raw = typeof overrideCode === "string" ? overrideCode : promoCodeInput;
+    const code = (raw || "").trim().toUpperCase();
+    if (!code) {
+      toast.error("Inserisci un codice promozionale valido");
+      return;
+    }
+    setIsApplyingPromo(true);
+    try {
+      const res = await api.post<{ valid?: boolean; success?: boolean; promo?: any; error?: string }>(
+        "/admin/promo-codes/validate",
+        {
+          code,
+          courseId: selectedCourse?.id || undefined,
+          coursePrice: (selectedCourse?.prezzo != null ? Number(selectedCourse.prezzo) : 0) * (isForChild ? Math.max(1, studentsList.length) : 1),
+          registrationFee: feePerStudent,
+          purchaserEmail: purchaserEmail || undefined,
+          purchaserTaxCode: purchaserTaxCode || undefined,
+        }
+      );
+
+      const isValid = Boolean(res?.valid || res?.success);
+      if (!isValid || !res?.promo) {
+        toast.error(res?.error || "Codice promozionale non valido o scaduto");
+        return;
+      }
+
+      setAppliedPromo(res.promo);
+      form.setValue("promoCode", res.promo.code);
+      toast.success(`Promozione "${res.promo.code}" applicata con successo!`);
+    } catch (err: any) {
+      toast.error(err?.message || "Errore durante la verifica del codice promo");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    setPromoCodeInput("");
+    form.setValue("promoCode", "");
+    toast.info("Codice promozionale rimosso");
+  };
+
+  // Recalculate amountPaid and registrationFee with promo discounts
   const courseUnitPrice = selectedCourse?.prezzo != null ? Number(selectedCourse.prezzo) : 0;
   const studentsCount = isForChild ? Math.max(1, studentsList.length) : 1;
-  const computedCourseAmount = courseUnitPrice * studentsCount;
+  const rawBaseCourseAmount = courseUnitPrice * studentsCount;
+  const discountAmount = appliedPromo ? Number(appliedPromo.discountAmount || 0) : 0;
+  const computedCourseAmount = Math.max(0, rawBaseCourseAmount - discountAmount);
 
-  const computedRegFee = (isForChild ? studentsList : [studentsList[0]]).reduce((sum, _, idx) => {
-    const fee = studentFeeStatuses[idx];
-    const isPaid = fee?.checked && fee?.paid;
-    return sum + (isPaid ? 0 : feePerStudent);
-  }, 0);
+  const isFeeWaived = Boolean(appliedPromo?.waiveRegistrationFee);
+  const computedRegFee = isFeeWaived
+    ? 0
+    : (isForChild ? studentsList : [studentsList[0]]).reduce((sum, _, idx) => {
+        const fee = studentFeeStatuses[idx];
+        const isPaid = fee?.checked && fee?.paid;
+        return sum + (isPaid ? 0 : feePerStudent);
+      }, 0);
 
   useEffect(() => {
     if (computedCourseAmount > 0) {
@@ -507,6 +563,8 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       ]);
       setAvailableSavedStudents([]);
       setStudentFeeStatuses({ 0: { checked: false, paid: false } });
+      setAppliedPromo(null);
+      setPromoCodeInput("");
       setIsFinalSubmitRequested(false);
     }, 200);
   };
@@ -542,6 +600,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         studentBirthDate: data.students?.[0]?.birthDate || undefined,
         amountPaid: Number(data.amountPaid),
         registrationFee: Number(data.registrationFee),
+        promoCode: appliedPromo?.code || data.promoCode || undefined,
         billingScheme: data.billingScheme || "full",
         paymentStatus: data.paymentStatus,
         paymentMethod: data.paymentMethod,
@@ -591,6 +650,13 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     feePerStudent,
     academicYear,
     isFeeEnabled,
+    promoCodeInput,
+    setPromoCodeInput,
+    appliedPromo,
+    isApplyingPromo,
+    applyPromoCode,
+    removePromoCode,
+    discountAmount,
     totalAmount,
     filteredClients,
     allowedDays,

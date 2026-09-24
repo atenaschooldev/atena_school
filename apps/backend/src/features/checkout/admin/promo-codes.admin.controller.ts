@@ -18,7 +18,7 @@ import { Roles } from '../../../core/decorators/roles.decorator';
 import { Audit } from '../../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../../core/interceptors/audit.interceptor';
 import { PromoCodesAdminService } from './promo-codes.admin.service';
-import { CreatePromoCodeDto, UpdatePromoCodeDto } from '../dto/promo-codes.admin.dto';
+import { CreatePromoCodeDto, UpdatePromoCodeDto, ValidatePromoCodeDto } from '../dto/promo-codes.admin.dto';
 
 @ApiTags('Admin — Promo Codes')
 @ApiBearerAuth('JWT-auth')
@@ -33,6 +33,14 @@ export class PromoCodesAdminController {
   @ApiOperation({ summary: 'List all promo codes with dynamic usage counts' })
   async listAll() {
     return this.promoCodesAdminService.listAllPromoCodes();
+  }
+
+  @Post('validate')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Validate promo code and compute discount' })
+  async validate(@Body() dto: ValidatePromoCodeDto) {
+    return this.promoCodesAdminService.validatePromoCode(dto);
   }
 
   @Post()

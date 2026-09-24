@@ -116,6 +116,7 @@ export const createBookingSchema = z.object({
   pecEmail: z.string().optional(),
   amountPaid: z.coerce.number().min(0),
   registrationFee: z.coerce.number().min(0).default(0),
+  promoCode: z.string().optional(),
   billingScheme: z.string().default("full"),
   paymentStatus: z.string().min(1),
   paymentMethod: z.string().min(1),
@@ -123,6 +124,16 @@ export const createBookingSchema = z.object({
 });
 
 export type CreateBookingValues = z.infer<typeof createBookingSchema>;
+
+export interface AppliedPromo {
+  id: string;
+  code: string;
+  description?: string | null;
+  discountType: number; // 1=PERCENTAGE, 2=FIXED_AMOUNT
+  discountValue: number;
+  waiveRegistrationFee: boolean;
+  discountAmount: number;
+}
 
 export interface ClientItem {
   id: string;

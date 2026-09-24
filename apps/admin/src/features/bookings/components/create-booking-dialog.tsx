@@ -71,6 +71,13 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
     registrationFee,
     feePerStudent,
     academicYear,
+    promoCodeInput,
+    setPromoCodeInput,
+    appliedPromo,
+    isApplyingPromo,
+    applyPromoCode,
+    removePromoCode,
+    discountAmount,
     totalAmount,
     filteredClients,
     allowedDays,
@@ -263,6 +270,12 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                     amountPaid={amountPaid}
                     registrationFee={registrationFee}
                     totalAmount={totalAmount}
+                    promoCodeInput={promoCodeInput}
+                    setPromoCodeInput={setPromoCodeInput}
+                    appliedPromo={appliedPromo}
+                    isApplyingPromo={isApplyingPromo}
+                    applyPromoCode={applyPromoCode}
+                    removePromoCode={removePromoCode}
                   />
                 )}
               </div>
@@ -284,6 +297,8 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                   registrationFee={registrationFee}
                   feePerStudent={feePerStudent}
                   academicYear={academicYear}
+                  appliedPromo={appliedPromo}
+                  discountAmount={discountAmount}
                   totalAmount={totalAmount}
                   paymentStatus={paymentStatus}
                   paymentMethod={paymentMethod}

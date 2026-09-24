@@ -121,3 +121,38 @@ export class UpdatePromoCodeDto {
   @IsOptional()
   is_active?: boolean;
 }
+
+export class ValidatePromoCodeDto {
+  @ApiProperty({ example: 'ESTATE2026', description: 'Codice promozionale da validare' })
+  @IsString()
+  @IsNotEmpty()
+  code: string;
+
+  @ApiPropertyOptional({ example: '123e4567-e89b-12d3-a456-426614174000', description: 'ID del corso' })
+  @IsString()
+  @IsOptional()
+  courseId?: string;
+
+  @ApiPropertyOptional({ example: 120.0, description: 'Prezzo del corso in EUR' })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  coursePrice?: number;
+
+  @ApiPropertyOptional({ example: 30.0, description: 'Quota associativa in EUR' })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  registrationFee?: number;
+
+  @ApiPropertyOptional({ example: 'mario.rossi@email.com' })
+  @IsString()
+  @IsOptional()
+  purchaserEmail?: string;
+
+  @ApiPropertyOptional({ example: 'RSSMRA80A01H501Z' })
+  @IsString()
+  @IsOptional()
+  purchaserTaxCode?: string;
+}
+

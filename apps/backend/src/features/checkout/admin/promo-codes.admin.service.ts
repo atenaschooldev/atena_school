@@ -1,7 +1,8 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { CreatePromoCodeDto, UpdatePromoCodeDto } from '../dto/promo-codes.admin.dto';
+import { validatePromoCode } from '@atena/core';
+import { CreatePromoCodeDto, UpdatePromoCodeDto, ValidatePromoCodeDto } from '../dto/promo-codes.admin.dto';
 
 @Injectable()
 export class PromoCodesAdminService {
@@ -200,5 +201,16 @@ export class PromoCodesAdminService {
     }
 
     return { success: true, id };
+  }
+
+  async validatePromoCode(dto: ValidatePromoCodeDto) {
+    return validatePromoCode(this.supabaseAdmin, {
+      code: dto.code,
+      coursePrice: dto.coursePrice || 0,
+      registrationFee: dto.registrationFee,
+      courseId: dto.courseId,
+      purchaserEmail: dto.purchaserEmail,
+      purchaserTaxCode: dto.purchaserTaxCode,
+    });
   }
 }
