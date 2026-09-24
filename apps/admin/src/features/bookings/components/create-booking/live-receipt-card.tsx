@@ -24,7 +24,7 @@ interface LiveReceiptCardProps {
   currentStep: 1 | 2 | 3;
   selectedCourse: Course | null;
   selectedDateState?: Date;
-  previewLessons: Array<{ date: string; startsAt?: string; endsAt?: string }>;
+  previewLessons: Array<{ date?: string; startsAt?: string; endsAt?: string }>;
   formattedScheduleText: string;
   isForChild: boolean;
   purchaserName?: string;
@@ -39,11 +39,20 @@ interface LiveReceiptCardProps {
   membershipFeeStatus?: { checked: boolean; paid: boolean };
 }
 
+function safeFormatLessonDate(lesson?: { date?: string; startsAt?: string }): string | null {
+  if (!lesson) return null;
+  const val = lesson.startsAt || lesson.date;
+  if (!val) return null;
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return null;
+  return format(d, "d MMM yyyy", { locale: dateLocale });
+}
+
 export function LiveReceiptCard({
   currentStep,
   selectedCourse,
   selectedDateState,
-  previewLessons,
+  previewLessons = [],
   formattedScheduleText,
   isForChild,
   purchaserName,
@@ -57,8 +66,8 @@ export function LiveReceiptCard({
   paymentMethod,
   membershipFeeStatus = { checked: false, paid: false },
 }: LiveReceiptCardProps) {
-  const firstLesson = previewLessons[0];
-  const lastLesson = previewLessons[previewLessons.length - 1];
+  const firstLessonDate = safeFormatLessonDate(previewLessons[0]);
+  const lastLessonDate = safeFormatLessonDate(previewLessons[previewLessons.length - 1]);
   const count = isForChild ? Math.max(1, studentsList.length) : 1;
 
   return (
@@ -189,12 +198,12 @@ export function LiveReceiptCard({
                 </div>
               )}
 
-              {previewLessons.length > 0 && firstLesson && lastLesson && (
+              {previewLessons.length > 0 && firstLessonDate && lastLessonDate && (
                 <div className="flex items-center justify-between bg-muted/40 p-2 rounded-lg text-[11px] font-medium">
                   <div>
                     <span className="text-muted-foreground block text-[10px]">Inizio:</span>
                     <span className="text-foreground">
-                      {format(new Date(firstLesson.date), "d MMM yyyy", { locale: dateLocale })}
+                      {firstLessonDate}
                     </span>
                   </div>
                   <div className="text-center px-2">
@@ -206,7 +215,7 @@ export function LiveReceiptCard({
                   <div className="text-right">
                     <span className="text-muted-foreground block text-[10px]">Fine:</span>
                     <span className="text-foreground">
-                      {format(new Date(lastLesson.date), "d MMM yyyy", { locale: dateLocale })}
+                      {lastLessonDate}
                     </span>
                   </div>
                 </div>

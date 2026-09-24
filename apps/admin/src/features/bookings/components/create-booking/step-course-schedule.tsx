@@ -180,20 +180,21 @@ export function StepCourseSchedule({
                     <span className="text-primary font-mono font-bold">{previewLessons.length}</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-                    {previewLessons.map((l, i) => (
-                      <Badge
-                        key={i}
-                        variant="secondary"
-                        className="text-[10px] font-mono px-2 py-0.5 bg-background border border-border/60 text-foreground flex items-center gap-1 rounded-md"
-                      >
-                        <span className="font-bold text-primary font-mono">#{i + 1}</span>
-                        <span>
-                          {l.startsAt
-                            ? format(new Date(l.startsAt), "d MMM", { locale: dateLocale })
-                            : l.date}
-                        </span>
-                      </Badge>
-                    ))}
+                    {previewLessons.map((l, i) => {
+                      const raw = l.startsAt || l.date;
+                      const d = raw ? new Date(raw) : null;
+                      const dateText = d && !isNaN(d.getTime()) ? format(d, "d MMM", { locale: dateLocale }) : raw || `#${i + 1}`;
+                      return (
+                        <Badge
+                          key={i}
+                          variant="secondary"
+                          className="text-[10px] font-mono px-2 py-0.5 bg-background border border-border/60 text-foreground flex items-center gap-1 rounded-md"
+                        >
+                          <span className="font-bold text-primary font-mono">#{i + 1}</span>
+                          <span>{dateText}</span>
+                        </Badge>
+                      );
+                    })}
                   </div>
                 </div>
               )}
