@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 import { LanguageProvider } from '@/i18n/context'
 import { ThemeCustomizerProvider } from '@/contexts/theme-customizer-context'
+import { DiagnosticLoggerWidget } from '@/components/shared/diagnostic-logger-widget'
 
 // Get basename from environment (for deployment) or use empty string for development
 const basename = import.meta.env.VITE_BASENAME || ''
@@ -36,6 +37,7 @@ function App() {
               <SidebarConfigProvider>
                 <Router basename={basename}>
                   <AppRouter />
+                  <DiagnosticLoggerWidget />
                 </Router>
               </SidebarConfigProvider>
             </LanguageProvider>

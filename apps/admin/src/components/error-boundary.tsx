@@ -1,6 +1,7 @@
 import { Component, ReactNode, ErrorInfo } from "react";
 import { AlertTriangle, RefreshCw, Home, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { diagnosticLogger } from "@/utils/diagnostic-logger";
 
 interface Props {
   children: ReactNode;
@@ -27,6 +28,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
+    diagnosticLogger.logError("React ErrorBoundary Exception", error, {
+      componentStack: errorInfo.componentStack,
+    });
     console.error("[ErrorBoundary] Uncaught Exception:", error, errorInfo);
   }
 
