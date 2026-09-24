@@ -63,17 +63,48 @@ export function getFirstAvailableAllowedDate(allowedDays: number[]): Date {
   return today;
 }
 
+export interface StudentItem {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  taxCode: string;
+  birthDate?: string;
+  birthPlace?: string;
+}
+
+export interface SavedStudentItem {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  taxCode?: string;
+  birthDate?: string;
+  birthPlace?: string;
+}
+
+export const studentItemSchema = z.object({
+  firstName: z.string().min(2, "Nome obbligatorio (min 2 car.)"),
+  lastName: z.string().min(2, "Cognome obbligatorio (min 2 car.)"),
+  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  phone: z.string().optional(),
+  taxCode: z.string().min(16, "Codice Fiscale deve avere 16 caratteri").max(16),
+  birthDate: z.string().optional(),
+  birthPlace: z.string().optional(),
+});
+
 export const createBookingSchema = z.object({
   courseId: z.string().optional(),
   courseName: z.string().min(2, { message: "Inserisci il nome del corso." }),
   startDate: z.string().optional(),
-  purchaserFirstName: z.string().optional(),
-  purchaserLastName: z.string().optional(),
+  purchaserFirstName: z.string().min(2, { message: "Il nome deve avere almeno 2 caratteri" }),
+  purchaserLastName: z.string().min(2, { message: "Il cognome deve avere almeno 2 caratteri" }),
   purchaserName: z.string().optional(),
   purchaserEmail: z.string().email({ message: "Email non valida." }),
-  purchaserPhone: z.string().optional(),
-  purchaserTaxCode: z.string().optional(),
+  purchaserPhone: z.string().min(6, { message: "Numero di telefono non valido" }),
+  purchaserTaxCode: z.string().min(16, { message: "Codice Fiscale deve avere 16 caratteri" }).max(16),
   isForChild: z.boolean().default(false),
+  students: z.array(studentItemSchema).min(1, { message: "Almeno uno studente è richiesto" }),
   studentFirstName: z.string().optional(),
   studentLastName: z.string().optional(),
   studentEmail: z.string().optional(),
@@ -111,6 +142,7 @@ export interface ClientItem {
   studentTaxCode?: string;
   studentBirthDate?: string;
   isForChild?: boolean;
+  savedStudents?: SavedStudentItem[];
   [key: string]: any;
 }
 
@@ -123,3 +155,4 @@ export const STEPS = [
   { id: 2, label: "Corso", sublabel: "Calendario", icon: CalendarIcon },
   { id: 3, label: "Pagamento", sublabel: "Riepilogo", icon: CreditCard },
 ];
+

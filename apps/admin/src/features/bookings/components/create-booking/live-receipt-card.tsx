@@ -29,12 +29,14 @@ interface LiveReceiptCardProps {
   isForChild: boolean;
   purchaserName?: string;
   studentName?: string;
+  studentsList?: Array<{ firstName: string; lastName: string; taxCode?: string }>;
+  studentFeeStatuses?: Record<number, { checked: boolean; paid: boolean }>;
   amountPaid: number;
   registrationFee: number;
   totalAmount: number;
   paymentStatus: string;
   paymentMethod: string;
-  membershipFeeStatus: { checked: boolean; paid: boolean };
+  membershipFeeStatus?: { checked: boolean; paid: boolean };
 }
 
 export function LiveReceiptCard({
@@ -46,15 +48,18 @@ export function LiveReceiptCard({
   isForChild,
   purchaserName,
   studentName,
+  studentsList = [],
+  studentFeeStatuses = {},
   amountPaid,
   registrationFee,
   totalAmount,
   paymentStatus,
   paymentMethod,
-  membershipFeeStatus,
+  membershipFeeStatus = { checked: false, paid: false },
 }: LiveReceiptCardProps) {
   const firstLesson = previewLessons[0];
   const lastLesson = previewLessons[previewLessons.length - 1];
+  const count = isForChild ? Math.max(1, studentsList.length) : 1;
 
   return (
     <div className="flex flex-col h-full bg-card/60 dark:bg-card/40 border border-border/70 rounded-2xl p-5 shadow-xs backdrop-blur-sm justify-between space-y-4">
@@ -94,7 +99,7 @@ export function LiveReceiptCard({
               {isForChild ? (
                 <>
                   <Baby className="h-3.5 w-3.5 text-primary" />
-                  Studente (Minorenne)
+                  {count > 1 ? `${count} Studenti (Minorenni)` : "Studente (Minorenne)"}
                 </>
               ) : (
                 <>
@@ -103,31 +108,49 @@ export function LiveReceiptCard({
                 </>
               )}
             </span>
-            {membershipFeeStatus.checked && (
-              <span
-                className={cn(
-                  "text-[10px] flex items-center gap-1 font-semibold",
-                  membershipFeeStatus.paid ? "text-emerald-600" : "text-amber-600"
-                )}
-              >
-                {membershipFeeStatus.paid ? (
-                  <>
-                    <CheckCircle2 className="h-3 w-3" /> Quota 26/27 OK
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-3 w-3" /> +Quota €30
-                  </>
-                )}
-              </span>
-            )}
           </div>
-          <div className="font-semibold text-foreground text-sm truncate">
-            {studentName || "In attesa di dati..."}
-          </div>
+
+          {isForChild && studentsList.length > 0 ? (
+            <div className="space-y-1.5">
+              {studentsList.map((st, sIdx) => {
+                const sFee = studentFeeStatuses[sIdx];
+                const sFullName = `${st.firstName} ${st.lastName}`.trim() || `Studente #${sIdx + 1}`;
+                return (
+                  <div key={sIdx} className="flex items-center justify-between text-xs py-0.5">
+                    <span className="font-semibold text-foreground truncate max-w-[170px]">
+                      {sIdx + 1}. {sFullName}
+                    </span>
+                    {sFee?.checked && (
+                      <span
+                        className={cn(
+                          "text-[10px] flex items-center gap-1 font-semibold",
+                          sFee.paid ? "text-emerald-600" : "text-amber-600"
+                        )}
+                      >
+                        {sFee.paid ? (
+                          <>
+                            <CheckCircle2 className="h-3 w-3" /> Quota 0€
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="h-3 w-3" /> Quota +30€
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="font-semibold text-foreground text-sm truncate">
+              {studentName || "In attesa di dati..."}
+            </div>
+          )}
+
           {isForChild && purchaserName && (
-            <div className="text-[11px] text-muted-foreground pt-1 border-t border-border/40 flex justify-between">
-              <span>Genitore:</span>
+            <div className="text-[11px] text-muted-foreground pt-1.5 border-t border-border/40 flex justify-between">
+              <span>Genitore / Acquirente:</span>
               <span className="font-medium text-foreground truncate max-w-[150px]">
                 {purchaserName}
               </span>

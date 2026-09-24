@@ -221,6 +221,15 @@ export class BookingsAdminService {
     purchaserPhone?: string;
     purchaserTaxCode?: string;
     isForChild?: boolean;
+    students?: Array<{
+      firstName: string;
+      lastName: string;
+      email?: string;
+      phone?: string;
+      taxCode: string;
+      birthDate?: string;
+      birthPlace?: string;
+    }>;
     studentName?: string;
     studentEmail?: string;
     studentPhone?: string;
@@ -294,6 +303,7 @@ export class BookingsAdminService {
       phone: dto.purchaserPhone || '',
       isForChild,
       purchaserTaxCode: dto.purchaserTaxCode || '',
+      students: dto.students && dto.students.length > 0 ? (dto.students as any) : undefined,
       studentFirstName: sFirstName,
       studentLastName: sLastName,
       studentEmail: dto.studentEmail || '',
@@ -684,6 +694,43 @@ export class BookingsAdminService {
       });
 
       if (booking) {
+        const allFamilyBookings = await this.prisma.booking.findMany({
+          where: {
+            OR: [
+              ...(booking.purchaserEmail ? [{ purchaserEmail: booking.purchaserEmail }] : []),
+              ...(booking.purchaserTaxCode ? [{ purchaserTaxCode: booking.purchaserTaxCode }] : []),
+              ...(booking.purchaserPhone ? [{ purchaserPhone: booking.purchaserPhone }] : []),
+            ],
+          },
+          select: {
+            studentName: true,
+            studentTaxCode: true,
+            studentBirthDate: true,
+            studentEmail: true,
+            studentPhone: true,
+          },
+        });
+
+        const savedStudentsMap = new Map<string, any>();
+        for (const fb of allFamilyBookings) {
+          if (fb.studentName) {
+            const parts = fb.studentName.trim().split(' ');
+            const sFirst = parts[0] || '';
+            const sLast = parts.slice(1).join(' ') || '';
+            const sKey = (fb.studentTaxCode || fb.studentName).toLowerCase();
+            if (!savedStudentsMap.has(sKey)) {
+              savedStudentsMap.set(sKey, {
+                firstName: sFirst,
+                lastName: sLast,
+                taxCode: fb.studentTaxCode || '',
+                birthDate: fb.studentBirthDate ? (fb.studentBirthDate instanceof Date ? fb.studentBirthDate.toISOString().split('T')[0] : String(fb.studentBirthDate).split('T')[0]) : '',
+                email: fb.studentEmail || '',
+                phone: fb.studentPhone || '',
+              });
+            }
+          }
+        }
+
         return {
           found: true,
           purchaserName: booking.purchaserName || '',
@@ -696,6 +743,7 @@ export class BookingsAdminService {
           studentEmail: booking.studentEmail || '',
           studentBirthDate: booking.studentBirthDate ? booking.studentBirthDate.toISOString().split('T')[0] : '',
           isForChild: !!(booking.studentName && booking.studentName !== booking.purchaserName),
+          savedStudents: Array.from(savedStudentsMap.values()),
         };
       }
 

@@ -23,14 +23,27 @@ import {
   CreditCard,
   Calendar as CalendarIcon,
   UserCheck,
+  Plus,
+  Trash,
+  MapPin,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sanitizeTaxCode } from "@atena/utils";
-import type { CreateBookingValues, ClientItem } from "./types";
+import type { CreateBookingValues, ClientItem, StudentItem, SavedStudentItem } from "./types";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 
 interface StepClientInfoProps {
   form: UseFormReturn<CreateBookingValues>;
+  studentsList: StudentItem[];
+  availableSavedStudents: SavedStudentItem[];
+  studentFeeStatuses: Record<number, { checked: boolean; paid: boolean }>;
+  addStudent: () => void;
+  removeStudent: (index: number) => void;
+  updateStudent: (index: number, field: keyof StudentItem, value: string) => void;
+  onSelectSavedStudent: (saved: SavedStudentItem, targetIndex?: number) => void;
+  coursePrice?: number;
   searchQuery: string;
   setSearchQuery: (val: string) => void;
   isSearchingClient: boolean;
@@ -43,11 +56,18 @@ interface StepClientInfoProps {
   filteredClients: ClientItem[];
   applyClientData: (found: ClientItem) => void;
   handleManualLookup: () => Promise<void>;
-  membershipFeeStatus: { checked: boolean; paid: boolean };
 }
 
 export function StepClientInfo({
   form,
+  studentsList,
+  availableSavedStudents,
+  studentFeeStatuses,
+  addStudent,
+  removeStudent,
+  updateStudent,
+  onSelectSavedStudent,
+  coursePrice = 0,
   searchQuery,
   setSearchQuery,
   isSearchingClient,
@@ -59,7 +79,6 @@ export function StepClientInfo({
   filteredClients,
   applyClientData,
   handleManualLookup,
-  membershipFeeStatus,
 }: StepClientInfoProps) {
   const isForChild = form.watch("isForChild");
   const { profile } = useSchoolProfile();
@@ -68,48 +87,6 @@ export function StepClientInfo({
 
   const handleCustomerTypeChange = (forChild: boolean) => {
     form.setValue("isForChild", forChild);
-    if (forChild) {
-      const pFirst = form.getValues("purchaserFirstName");
-      const pLast = form.getValues("purchaserLastName");
-      const pEmail = form.getValues("purchaserEmail");
-      const pPhone = form.getValues("purchaserPhone");
-      const pTax = form.getValues("purchaserTaxCode");
-
-      if (pFirst || pLast || pEmail || pPhone || pTax) {
-        if (!form.getValues("studentFirstName")) form.setValue("studentFirstName", pFirst || "");
-        if (!form.getValues("studentLastName")) form.setValue("studentLastName", pLast || "");
-        if (!form.getValues("studentEmail")) form.setValue("studentEmail", pEmail || "");
-        if (!form.getValues("studentPhone")) form.setValue("studentPhone", pPhone || "");
-        if (!form.getValues("studentTaxCode")) form.setValue("studentTaxCode", pTax || "");
-
-        form.setValue("purchaserFirstName", "");
-        form.setValue("purchaserLastName", "");
-        form.setValue("purchaserEmail", "");
-        form.setValue("purchaserPhone", "");
-        form.setValue("purchaserTaxCode", "");
-      }
-    } else {
-      const sFirst = form.getValues("studentFirstName");
-      const sLast = form.getValues("studentLastName");
-      const sEmail = form.getValues("studentEmail");
-      const sPhone = form.getValues("studentPhone");
-      const sTax = form.getValues("studentTaxCode");
-
-      if (sFirst || sLast || sEmail || sPhone || sTax) {
-        if (!form.getValues("purchaserFirstName")) form.setValue("purchaserFirstName", sFirst || "");
-        if (!form.getValues("purchaserLastName")) form.setValue("purchaserLastName", sLast || "");
-        if (!form.getValues("purchaserEmail")) form.setValue("purchaserEmail", sEmail || "");
-        if (!form.getValues("purchaserPhone")) form.setValue("purchaserPhone", sPhone || "");
-        if (!form.getValues("purchaserTaxCode")) form.setValue("purchaserTaxCode", sTax || "");
-
-        form.setValue("studentFirstName", "");
-        form.setValue("studentLastName", "");
-        form.setValue("studentEmail", "");
-        form.setValue("studentPhone", "");
-        form.setValue("studentTaxCode", "");
-        form.setValue("studentBirthDate", "");
-      }
-    }
     setSearchQuery("");
     setClientFound(null);
   };
@@ -265,7 +242,7 @@ export function StepClientInfo({
           <div className="flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-primary" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
-              {isForChild ? "Dati del Genitore / Acquirente" : "Dati Anagrafici Cliente"}
+              {isForChild ? "Dati del Genitore / Acquirente" : "Dati Anagrafici e Fiscali"}
             </h3>
           </div>
 
@@ -360,157 +337,251 @@ export function StepClientInfo({
               control={form.control}
               name="purchaserTaxCode"
               render={({ field }) => (
-                <FormItem className="col-span-2">
-                  <FormLabel className="text-xs font-bold text-foreground">
-                    Codice Fiscale {isForChild ? "Genitore" : "Cliente"}
-                  </FormLabel>
+                <FormItem className={isForChild ? "col-span-2" : "col-span-2"}>
+                  <div className="flex items-center justify-between">
+                    <FormLabel className="text-xs font-bold text-foreground">
+                      Codice Fiscale {isForChild ? "Genitore" : "Cliente"} *
+                    </FormLabel>
+                    {field.value && field.value.length < 16 && (
+                      <span className="text-[10px] font-mono font-semibold text-muted-foreground">
+                        {field.value.length}/16
+                      </span>
+                    )}
+                  </div>
                   <FormControl>
                     <Input
                       startIcon={<CreditCard />}
                       placeholder="RSSMRA80A01H501Z"
+                      maxLength={16}
                       className="uppercase font-mono tracking-wider"
                       {...field}
-                      onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
+                      onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value).slice(0, 16))}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
                 </FormItem>
               )}
             />
+
+            {/* Adult Extra Fields (Birth date & place) */}
+            {!isForChild && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="studentBirthDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold text-foreground">Data di Nascita</FormLabel>
+                      <FormControl>
+                        <Input
+                          startIcon={<CalendarIcon />}
+                          type="date"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-1">
+                  <FormLabel className="text-xs font-bold text-foreground">Luogo di Nascita</FormLabel>
+                  <Input
+                    startIcon={<MapPin />}
+                    placeholder="es. Milano (MI)"
+                    value={studentsList[0]?.birthPlace || ""}
+                    onChange={(e) => updateStudent(0, "birthPlace", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Studente (Figlio) Card - Only shown when isForChild is true */}
+        {/* 4. Studenti / Figli Section (Only shown when isForChild is true) */}
         {isForChild && (
-          <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 space-y-3">
-            <div className="flex items-center gap-2">
-              <Baby className="w-4 h-4 text-primary" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
-                Dati dello Studente Minorenne (Figlio)
-              </h3>
+          <div className="space-y-4 pt-1">
+            {/* Quick-chips for saved students / children from past bookings */}
+            {availableSavedStudents && availableSavedStudents.length > 0 && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-2">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#F8861D]" />
+                  Figli registrati in precedenza (clicca per inserire):
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {availableSavedStudents.map((saved, sIdx) => (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      onClick={() => onSelectSavedStudent(saved, 0)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground bg-background hover:bg-muted/80 border border-border/80 hover:border-primary px-3 py-1.5 rounded-lg transition-all shadow-2xs cursor-pointer"
+                    >
+                      <User className="w-3 h-3 text-primary" />
+                      <span>{saved.firstName} {saved.lastName}</span>
+                      {saved.taxCode && <span className="text-[10px] font-mono text-muted-foreground">({saved.taxCode.slice(0, 6)}...)</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* List of Children Cards */}
+            <div className="space-y-3">
+              {studentsList.map((student, idx) => {
+                const fee = studentFeeStatuses[idx];
+                return (
+                  <div
+                    key={idx}
+                    className="p-4 bg-primary/[0.03] border border-primary/20 rounded-xl space-y-3 transition-all"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between pb-2 border-b border-border/50">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-black flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <h4 className="text-xs font-black uppercase tracking-wider text-primary">
+                          Studente #{idx + 1} {student.firstName ? `— ${student.firstName} ${student.lastName}` : ""}
+                        </h4>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Status Badge */}
+                        {fee?.checked && fee?.paid && (
+                          <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Quota 2026/2027 saldata (0€)
+                          </span>
+                        )}
+                        {fee?.checked && !fee?.paid && (
+                          <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                            <Info className="w-3 h-3" />
+                            Quota annuale (+30€)
+                          </span>
+                        )}
+
+                        {/* Remove Student Button */}
+                        {studentsList.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeStudent(idx)}
+                            className="text-muted-foreground hover:text-destructive p-1 rounded-md hover:bg-destructive/10 transition-colors cursor-pointer"
+                            title="Rimuovi studente"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Nome Figlio */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Nome Figlio *</label>
+                        <Input
+                          startIcon={<User />}
+                          placeholder="Luca"
+                          value={student.firstName}
+                          onChange={(e) => updateStudent(idx, "firstName", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Cognome Figlio */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Cognome Figlio *</label>
+                        <Input
+                          startIcon={<User />}
+                          placeholder="Rossi"
+                          value={student.lastName}
+                          onChange={(e) => updateStudent(idx, "lastName", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Codice Fiscale Figlio */}
+                      <div className="col-span-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-bold text-foreground">Codice Fiscale Figlio *</label>
+                          {student.taxCode && student.taxCode.length < 16 && (
+                            <span className="text-[10px] font-mono font-semibold text-muted-foreground">
+                              {student.taxCode.length}/16
+                            </span>
+                          )}
+                        </div>
+                        <Input
+                          startIcon={<CreditCard />}
+                          placeholder="RSSLCU10A01H501Z"
+                          maxLength={16}
+                          className="uppercase font-mono tracking-wider"
+                          value={student.taxCode}
+                          onChange={(e) => updateStudent(idx, "taxCode", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Data di Nascita Figlio */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Data di Nascita</label>
+                        <Input
+                          startIcon={<CalendarIcon />}
+                          type="date"
+                          value={student.birthDate || ""}
+                          onChange={(e) => updateStudent(idx, "birthDate", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Luogo di Nascita */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Luogo di Nascita</label>
+                        <Input
+                          startIcon={<MapPin />}
+                          placeholder="es. Roma (RM)"
+                          value={student.birthPlace || ""}
+                          onChange={(e) => updateStudent(idx, "birthPlace", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Email Figlio (opzionale) */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Email Figlio (opzionale)</label>
+                        <Input
+                          startIcon={<Mail />}
+                          type="email"
+                          placeholder="luca@email.com"
+                          value={student.email || ""}
+                          onChange={(e) => updateStudent(idx, "email", e.target.value)}
+                        />
+                      </div>
+
+                      {/* Tel Figlio (opzionale) */}
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1">Tel Figlio (opzionale)</label>
+                        <Input
+                          startIcon={<Phone />}
+                          placeholder="+39 340 0000000"
+                          value={student.phone || ""}
+                          onChange={(e) => updateStudent(idx, "phone", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {/* Nome Figlio */}
-              <FormField
-                control={form.control}
-                name="studentFirstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Nome Figlio *</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<User />}
-                        placeholder="Luca"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Cognome Figlio */}
-              <FormField
-                control={form.control}
-                name="studentLastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Cognome Figlio *</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<User />}
-                        placeholder="Rossi"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Data Nascita Figlio */}
-              <FormField
-                control={form.control}
-                name="studentBirthDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Data Nascita Figlio</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<CalendarIcon />}
-                        type="date"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Codice Fiscale Figlio */}
-              <FormField
-                control={form.control}
-                name="studentTaxCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Codice Fiscale Figlio</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<CreditCard />}
-                        placeholder="RSSLCU10A01H501Z"
-                        className="uppercase font-mono tracking-wider"
-                        {...field}
-                        onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Email Figlio */}
-              <FormField
-                control={form.control}
-                name="studentEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Email Figlio (opzionale)</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<Mail />}
-                        type="email"
-                        placeholder="luca@email.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Tel Figlio */}
-              <FormField
-                control={form.control}
-                name="studentPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-bold text-foreground">Tel. Figlio (opzionale)</FormLabel>
-                    <FormControl>
-                      <Input
-                        startIcon={<Phone />}
-                        placeholder="+39 340 9876543"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className="text-[10px]" />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Add Another Student Button */}
+            <button
+              type="button"
+              onClick={addStudent}
+              disabled={studentsList.length >= 10}
+              className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Aggiungi un altro figlio / studente {coursePrice > 0 ? `(+${coursePrice.toFixed(2)}€)` : ""}</span>
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 }
+

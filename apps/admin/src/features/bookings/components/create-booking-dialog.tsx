@@ -45,7 +45,13 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
     setCurrentStep,
     selectedCourse,
     selectedDateState,
-    membershipFeeStatus,
+    studentsList,
+    availableSavedStudents,
+    studentFeeStatuses,
+    addStudent,
+    removeStudent,
+    updateStudent,
+    onSelectSavedStudent,
     searchQuery,
     setSearchQuery,
     isSearchingClient,
@@ -210,6 +216,14 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                 {currentStep === 1 && (
                   <StepClientInfo
                     form={form}
+                    studentsList={studentsList}
+                    availableSavedStudents={availableSavedStudents}
+                    studentFeeStatuses={studentFeeStatuses}
+                    addStudent={addStudent}
+                    removeStudent={removeStudent}
+                    updateStudent={updateStudent}
+                    onSelectSavedStudent={onSelectSavedStudent}
+                    coursePrice={selectedCourse?.prezzo != null ? Number(selectedCourse.prezzo) : 0}
                     searchQuery={searchQuery}
                     setSearchQuery={setSearchQuery}
                     isSearchingClient={isSearchingClient}
@@ -222,7 +236,6 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                     filteredClients={filteredClients}
                     applyClientData={applyClientData}
                     handleManualLookup={handleManualLookup}
-                    membershipFeeStatus={membershipFeeStatus}
                   />
                 )}
 
@@ -263,12 +276,13 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                   isForChild={isForChild}
                   purchaserName={computedPurchaserName}
                   studentName={computedStudentName}
+                  studentsList={studentsList}
+                  studentFeeStatuses={studentFeeStatuses}
                   amountPaid={amountPaid}
                   registrationFee={registrationFee}
                   totalAmount={totalAmount}
                   paymentStatus={paymentStatus}
                   paymentMethod={paymentMethod}
-                  membershipFeeStatus={membershipFeeStatus}
                 />
               </div>
             </div>

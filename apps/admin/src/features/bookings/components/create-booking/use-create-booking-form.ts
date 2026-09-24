@@ -2,13 +2,15 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { calculateLessonDates, formatCourseScheduleText } from "@atena/utils";
+import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode } from "@atena/utils";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import type { Course } from "@/features/courses/types";
 import { api } from "@/lib/api";
 import type {
   CreateBookingValues,
   ClientItem,
+  StudentItem,
+  SavedStudentItem,
 } from "./types";
 import {
   createBookingSchema,
@@ -26,9 +28,14 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedDateState, setSelectedDateState] = useState<Date | undefined>(undefined);
-  const [membershipFeeStatus, setMembershipFeeStatus] = useState<{ checked: boolean; paid: boolean }>({
-    checked: false,
-    paid: false,
+
+  // Multi-student state
+  const [studentsList, setStudentsList] = useState<StudentItem[]>([
+    { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" },
+  ]);
+  const [availableSavedStudents, setAvailableSavedStudents] = useState<SavedStudentItem[]>([]);
+  const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, { checked: boolean; paid: boolean }>>({
+    0: { checked: false, paid: false },
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,6 +76,9 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       purchaserPhone: "",
       purchaserTaxCode: "",
       isForChild: false,
+      students: [
+        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" },
+      ],
       studentFirstName: "",
       studentLastName: "",
       studentEmail: "",
@@ -87,24 +97,174 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   });
 
   const isForChild = form.watch("isForChild");
-  const amountPaid = form.watch("amountPaid") || 0;
-  const registrationFee = form.watch("registrationFee") || 0;
   const purchaserEmail = form.watch("purchaserEmail");
   const purchaserFirstName = form.watch("purchaserFirstName");
   const purchaserLastName = form.watch("purchaserLastName");
+  const purchaserPhone = form.watch("purchaserPhone");
   const purchaserTaxCode = form.watch("purchaserTaxCode");
-  const studentEmail = form.watch("studentEmail");
-  const studentFirstName = form.watch("studentFirstName");
-  const studentLastName = form.watch("studentLastName");
-  const studentTaxCode = form.watch("studentTaxCode");
+
+  // Keep single adult student synchronized with purchaser
+  useEffect(() => {
+    if (!isForChild) {
+      const s0: StudentItem = {
+        firstName: purchaserFirstName || "",
+        lastName: purchaserLastName || "",
+        email: purchaserEmail || "",
+        phone: purchaserPhone || "",
+        taxCode: purchaserTaxCode || "",
+        birthDate: form.getValues("studentBirthDate") || "",
+        birthPlace: "",
+      };
+      setStudentsList([s0]);
+      form.setValue("students", [s0]);
+      form.setValue("studentFirstName", s0.firstName);
+      form.setValue("studentLastName", s0.lastName);
+      form.setValue("studentEmail", s0.email);
+      form.setValue("studentPhone", s0.phone);
+      form.setValue("studentTaxCode", s0.taxCode);
+    }
+  }, [isForChild, purchaserFirstName, purchaserLastName, purchaserEmail, purchaserPhone, purchaserTaxCode, form]);
+
+  // Manage students array
+  const addStudent = () => {
+    if (studentsList.length >= 10) return;
+    const newStudent: StudentItem = {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      taxCode: "",
+      birthDate: "",
+      birthPlace: "",
+    };
+    const next = [...studentsList, newStudent];
+    setStudentsList(next);
+    form.setValue("students", next);
+  };
+
+  const removeStudent = (index: number) => {
+    if (studentsList.length <= 1) return;
+    const next = studentsList.filter((_, i) => i !== index);
+    setStudentsList(next);
+    form.setValue("students", next);
+  };
+
+  const updateStudent = (index: number, field: keyof StudentItem, value: string) => {
+    const next = [...studentsList];
+    const sanitizedVal = field === "taxCode" ? sanitizeTaxCode(value).slice(0, 16) : value;
+    next[index] = { ...next[index], [field]: sanitizedVal };
+    setStudentsList(next);
+    form.setValue("students", next);
+
+    if (index === 0) {
+      if (field === "firstName") form.setValue("studentFirstName", sanitizedVal);
+      if (field === "lastName") form.setValue("studentLastName", sanitizedVal);
+      if (field === "email") form.setValue("studentEmail", sanitizedVal);
+      if (field === "phone") form.setValue("studentPhone", sanitizedVal);
+      if (field === "taxCode") form.setValue("studentTaxCode", sanitizedVal);
+      if (field === "birthDate") form.setValue("studentBirthDate", sanitizedVal);
+    }
+  };
+
+  const onSelectSavedStudent = (saved: SavedStudentItem, targetIndex = 0) => {
+    const next = [...studentsList];
+    const idx = targetIndex < next.length ? targetIndex : next.length;
+    const filledItem: StudentItem = {
+      firstName: saved.firstName || next[idx]?.firstName || "",
+      lastName: saved.lastName || next[idx]?.lastName || "",
+      email: saved.email || next[idx]?.email || "",
+      phone: saved.phone || next[idx]?.phone || "",
+      taxCode: saved.taxCode || next[idx]?.taxCode || "",
+      birthDate: saved.birthDate || next[idx]?.birthDate || "",
+      birthPlace: saved.birthPlace || next[idx]?.birthPlace || "",
+    };
+
+    if (idx < next.length) {
+      next[idx] = filledItem;
+    } else {
+      next.push(filledItem);
+    }
+
+    setStudentsList(next);
+    form.setValue("students", next);
+
+    if (idx === 0) {
+      form.setValue("studentFirstName", filledItem.firstName);
+      form.setValue("studentLastName", filledItem.lastName);
+      form.setValue("studentEmail", filledItem.email);
+      form.setValue("studentPhone", filledItem.phone);
+      form.setValue("studentTaxCode", filledItem.taxCode);
+      form.setValue("studentBirthDate", filledItem.birthDate);
+    }
+  };
+
+  // Check membership fees for each student
+  useEffect(() => {
+    const activeList = isForChild ? studentsList : [{ taxCode: purchaserTaxCode, email: purchaserEmail }];
+    const timers: NodeJS.Timeout[] = [];
+
+    activeList.forEach((st, idx) => {
+      const taxToUse = st.taxCode?.trim();
+      const emailToUse = st.email?.trim();
+
+      if (!taxToUse || taxToUse.length < 16) {
+        setStudentFeeStatuses((prev) => ({
+          ...prev,
+          [idx]: { checked: false, paid: false },
+        }));
+        return;
+      }
+
+      const t = setTimeout(async () => {
+        try {
+          const query = new URLSearchParams();
+          query.set("taxCode", taxToUse);
+          if (emailToUse) query.set("email", emailToUse);
+          const res = await api.get<{ annualFeePaid?: boolean }>(
+            `/admin/bookings/check-membership?${query.toString()}`
+          );
+          setStudentFeeStatuses((prev) => ({
+            ...prev,
+            [idx]: { checked: true, paid: Boolean(res?.annualFeePaid) },
+          }));
+        } catch (err) {
+          console.error(`Failed to check fee for student #${idx}:`, err);
+        }
+      }, 400);
+
+      timers.push(t);
+    });
+
+    return () => {
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [studentsList, isForChild, purchaserTaxCode, purchaserEmail]);
+
+  // Recalculate amountPaid and registrationFee
+  const courseUnitPrice = selectedCourse?.prezzo != null ? Number(selectedCourse.prezzo) : 0;
+  const studentsCount = isForChild ? Math.max(1, studentsList.length) : 1;
+  const computedCourseAmount = courseUnitPrice * studentsCount;
+
+  const computedRegFee = (isForChild ? studentsList : [studentsList[0]]).reduce((sum, _, idx) => {
+    const fee = studentFeeStatuses[idx];
+    const isPaid = fee?.checked && fee?.paid;
+    return sum + (isPaid ? 0 : 30);
+  }, 0);
+
+  useEffect(() => {
+    if (computedCourseAmount > 0) {
+      form.setValue("amountPaid", computedCourseAmount);
+    }
+    form.setValue("registrationFee", computedRegFee);
+  }, [computedCourseAmount, computedRegFee, form]);
 
   const computedPurchaserName =
     `${purchaserFirstName || ""} ${purchaserLastName || ""}`.trim() || form.watch("purchaserName") || "";
   const computedStudentName = isForChild
-    ? `${studentFirstName || ""} ${studentLastName || ""}`.trim() || "Figlio non specificato"
+    ? studentsList.map((s) => `${s.firstName} ${s.lastName}`.trim()).filter(Boolean).join(", ") || "Figli non specificati"
     : computedPurchaserName || "Cliente non specificato";
 
-  const totalAmount = Number(amountPaid) + Number(registrationFee);
+  const totalAmount = computedCourseAmount + computedRegFee;
 
   const filteredClients = useMemo(() => {
     if (!searchQuery.trim()) return clientsList.slice(0, 10);
@@ -155,45 +315,15 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     return formatCourseScheduleText(allowedDays, selectedCourse?.startTime, selectedCourse?.endTime);
   }, [allowedDays, selectedCourse]);
 
-  useEffect(() => {
-    const taxToUse = isForChild ? studentTaxCode?.trim() || null : purchaserTaxCode?.trim() || null;
-    const emailToUse = isForChild ? studentEmail?.trim() || null : purchaserEmail?.trim() || null;
-
-    if (!emailToUse && !taxToUse) {
-      setMembershipFeeStatus({ checked: false, paid: false });
-      form.setValue("registrationFee", 0);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        const query = new URLSearchParams();
-        if (taxToUse) query.set("taxCode", taxToUse);
-        if (emailToUse) query.set("email", emailToUse);
-        const res = await api.get<{ annualFeePaid?: boolean }>(
-          `/admin/bookings/check-membership?${query.toString()}`
-        );
-        if (res?.annualFeePaid) {
-          setMembershipFeeStatus({ checked: true, paid: true });
-          form.setValue("registrationFee", 0);
-        } else {
-          setMembershipFeeStatus({ checked: true, paid: false });
-          form.setValue("registrationFee", 30);
-        }
-      } catch (err) {
-        console.error("Failed to check membership status:", err);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [purchaserEmail, purchaserTaxCode, studentEmail, studentTaxCode, isForChild, form]);
-
   const handleCourseChange = (courseId: string) => {
     const found = coursesList.find((c) => c.id === courseId);
     if (found) {
       setSelectedCourse(found);
       form.setValue("courseId", found.id);
       form.setValue("courseName", found.nome);
-      if (found.prezzo) form.setValue("amountPaid", Number(found.prezzo));
+      if (found.prezzo) {
+        form.setValue("amountPaid", Number(found.prezzo) * (isForChild ? studentsList.length : 1));
+      }
 
       const courseAllowedDays = normalizeScheduleDays(found.scheduleDays);
       const validDays = courseAllowedDays.length > 0 ? courseAllowedDays : [1, 2, 3, 4, 5];
@@ -218,6 +348,12 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const applyClientData = (found: any) => {
     if (!found) return;
     setClientFound(true);
+
+    if (found.savedStudents && Array.isArray(found.savedStudents) && found.savedStudents.length > 0) {
+      setAvailableSavedStudents(found.savedStudents);
+    } else {
+      setAvailableSavedStudents([]);
+    }
 
     const hasParentAndChild = Boolean(
       found.isForChild ||
@@ -246,23 +382,25 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       }
 
       const sName = found.studentName || "";
-      if (sName) {
-        const [sFirst = "", ...sRest] = sName.trim().split(" ");
-        form.setValue("studentFirstName", sFirst);
-        form.setValue("studentLastName", sRest.join(" ") || sFirst);
-      }
-      if (found.studentEmail) {
-        form.setValue("studentEmail", found.studentEmail);
-      }
-      if (found.studentPhone) {
-        form.setValue("studentPhone", found.studentPhone);
-      }
-      if (found.studentTaxCode) {
-        form.setValue("studentTaxCode", found.studentTaxCode);
-      }
-      if (found.studentBirthDate || found.birthDate) {
-        form.setValue("studentBirthDate", found.studentBirthDate || found.birthDate || "");
-      }
+      const [sFirst = "", ...sRest] = sName.trim().split(" ");
+      const firstChild: StudentItem = {
+        firstName: sFirst,
+        lastName: sRest.join(" ") || sFirst,
+        email: found.studentEmail || "",
+        phone: found.studentPhone || "",
+        taxCode: found.studentTaxCode || "",
+        birthDate: found.studentBirthDate || found.birthDate || "",
+        birthPlace: "",
+      };
+
+      setStudentsList([firstChild]);
+      form.setValue("students", [firstChild]);
+      form.setValue("studentFirstName", firstChild.firstName);
+      form.setValue("studentLastName", firstChild.lastName);
+      form.setValue("studentEmail", firstChild.email);
+      form.setValue("studentPhone", firstChild.phone);
+      form.setValue("studentTaxCode", firstChild.taxCode);
+      form.setValue("studentBirthDate", firstChild.birthDate);
     } else {
       const currentlyIsForChild = form.getValues("isForChild");
       const fullName = found.name || found.purchaserName || found.studentName || "";
@@ -270,22 +408,23 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       const lastName = rest.join(" ");
 
       if (currentlyIsForChild) {
-        if (fullName) {
-          form.setValue("studentFirstName", first);
-          form.setValue("studentLastName", lastName);
-        }
-        if (found.email || found.studentEmail || found.purchaserEmail) {
-          form.setValue("studentEmail", found.email || found.studentEmail || found.purchaserEmail || "");
-        }
-        if (found.phone || found.studentPhone || found.purchaserPhone) {
-          form.setValue("studentPhone", found.phone || found.studentPhone || found.purchaserPhone || "");
-        }
-        if (found.taxCode || found.studentTaxCode || found.purchaserTaxCode) {
-          form.setValue("studentTaxCode", found.taxCode || found.studentTaxCode || found.purchaserTaxCode || "");
-        }
-        if (found.birthDate || found.studentBirthDate) {
-          form.setValue("studentBirthDate", found.birthDate || found.studentBirthDate || "");
-        }
+        const firstChild: StudentItem = {
+          firstName: first,
+          lastName,
+          email: found.email || found.studentEmail || found.purchaserEmail || "",
+          phone: found.phone || found.studentPhone || found.purchaserPhone || "",
+          taxCode: found.taxCode || found.studentTaxCode || found.purchaserTaxCode || "",
+          birthDate: found.birthDate || found.studentBirthDate || "",
+          birthPlace: "",
+        };
+        setStudentsList([firstChild]);
+        form.setValue("students", [firstChild]);
+        form.setValue("studentFirstName", first);
+        form.setValue("studentLastName", lastName);
+        form.setValue("studentEmail", firstChild.email);
+        form.setValue("studentPhone", firstChild.phone);
+        form.setValue("studentTaxCode", firstChild.taxCode);
+        form.setValue("studentBirthDate", firstChild.birthDate);
       } else {
         if (fullName) {
           form.setValue("purchaserFirstName", first);
@@ -323,6 +462,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         studentEmail?: string;
         studentBirthDate?: string;
         isForChild?: boolean;
+        savedStudents?: SavedStudentItem[];
       }>(`/admin/bookings/lookup-client?q=${encodeURIComponent(searchQuery.trim())}`);
 
       setClientFound(res.found);
@@ -331,8 +471,8 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       } else {
         const currentlyIsForChild = form.getValues("isForChild");
         if (currentlyIsForChild) {
-          if (searchQuery.includes("@")) form.setValue("studentEmail", searchQuery);
-          else form.setValue("studentTaxCode", searchQuery);
+          if (searchQuery.includes("@")) updateStudent(0, "email", searchQuery);
+          else updateStudent(0, "taxCode", searchQuery);
         } else {
           if (searchQuery.includes("@")) form.setValue("purchaserEmail", searchQuery);
           else form.setValue("purchaserTaxCode", searchQuery);
@@ -354,7 +494,11 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       setCurrentStep(1);
       setSearchQuery("");
       setClientFound(null);
-      setMembershipFeeStatus({ checked: false, paid: false });
+      setStudentsList([
+        { firstName: "", lastName: "", email: "", phone: "", taxCode: "", birthDate: "", birthPlace: "" },
+      ]);
+      setAvailableSavedStudents([]);
+      setStudentFeeStatuses({ 0: { checked: false, paid: false } });
       setIsFinalSubmitRequested(false);
     }, 200);
   };
@@ -370,10 +514,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         `${data.purchaserFirstName || ""} ${data.purchaserLastName || ""}`.trim() ||
         data.purchaserName ||
         "Cliente";
-      let finalStudentName = fullPurchaserName;
-      if (data.isForChild && (data.studentFirstName || data.studentLastName)) {
-        finalStudentName = `${data.studentFirstName || ""} ${data.studentLastName || ""}`.trim();
-      }
+      
       const payload = {
         courseId: data.courseId || undefined,
         courseName: data.courseName,
@@ -383,11 +524,14 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         purchaserPhone: data.purchaserPhone || undefined,
         purchaserTaxCode: data.purchaserTaxCode || undefined,
         isForChild: data.isForChild,
-        studentName: finalStudentName,
-        studentEmail: data.studentEmail || data.purchaserEmail,
-        studentPhone: data.studentPhone || data.purchaserPhone || undefined,
-        studentTaxCode: data.studentTaxCode || data.purchaserTaxCode || undefined,
-        studentBirthDate: data.studentBirthDate || undefined,
+        students: data.students && data.students.length > 0 ? data.students : undefined,
+        studentName: data.isForChild
+          ? data.students?.map((s) => `${s.firstName} ${s.lastName}`).join(", ")
+          : fullPurchaserName,
+        studentEmail: data.students?.[0]?.email || data.purchaserEmail,
+        studentPhone: data.students?.[0]?.phone || data.purchaserPhone || undefined,
+        studentTaxCode: data.students?.[0]?.taxCode || data.purchaserTaxCode || undefined,
+        studentBirthDate: data.students?.[0]?.birthDate || undefined,
         amountPaid: Number(data.amountPaid),
         registrationFee: Number(data.registrationFee),
         billingScheme: data.billingScheme || "full",
@@ -412,7 +556,13 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     setCurrentStep,
     selectedCourse,
     selectedDateState,
-    membershipFeeStatus,
+    studentsList,
+    availableSavedStudents,
+    studentFeeStatuses,
+    addStudent,
+    removeStudent,
+    updateStudent,
+    onSelectSavedStudent,
     searchQuery,
     setSearchQuery,
     isSearchingClient,
@@ -428,8 +578,8 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     coursesList,
     computedPurchaserName,
     computedStudentName,
-    amountPaid,
-    registrationFee,
+    amountPaid: computedCourseAmount,
+    registrationFee: computedRegFee,
     totalAmount,
     filteredClients,
     allowedDays,
@@ -445,3 +595,4 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     onSubmit,
   };
 }
+
