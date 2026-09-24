@@ -48,6 +48,8 @@ class DiagnosticLogger {
   private lastFrameTime = performance.now();
   private frameCount = 0;
   private lastFpsCalcTime = performance.now();
+  private notifyScheduled = false;
+  private isLogging = false;
 
   public init() {
     if (this.isInitialized || typeof window === "undefined") return;
@@ -65,13 +67,19 @@ class DiagnosticLogger {
   }
 
   private notify() {
-    this.subscribers.forEach((cb) => {
-      try {
-        cb();
-      } catch (err) {
-        // ignore subscriber errors
-      }
-    });
+    if (this.notifyScheduled) return;
+    this.notifyScheduled = true;
+    // Asynchronously dispatch notification in macro-task to prevent React reentrancy / Maximum update depth
+    setTimeout(() => {
+      this.notifyScheduled = false;
+      this.subscribers.forEach((cb) => {
+        try {
+          cb();
+        } catch {
+          // ignore subscriber errors
+        }
+      });
+    }, 250);
   }
 
   private getTimestamp(): string {
@@ -102,50 +110,69 @@ class DiagnosticLogger {
   }
 
   public logError(title: string, errorOrMessage: unknown, extra?: Record<string, any>) {
-    let message = "";
-    let stack = "";
+    if (this.isLogging) return;
+    this.isLogging = true;
 
-    if (errorOrMessage instanceof Error) {
-      message = errorOrMessage.message;
-      stack = errorOrMessage.stack || "";
-    } else if (typeof errorOrMessage === "string") {
-      message = errorOrMessage;
-    } else {
-      try {
-        message = JSON.stringify(errorOrMessage);
-      } catch {
-        message = String(errorOrMessage);
+    try {
+      let message = "";
+      let stack = "";
+
+      if (errorOrMessage instanceof Error) {
+        message = errorOrMessage.message;
+        stack = errorOrMessage.stack || "";
+      } else if (typeof errorOrMessage === "string") {
+        message = errorOrMessage;
+      } else {
+        try {
+          message = JSON.stringify(errorOrMessage);
+        } catch {
+          message = String(errorOrMessage);
+        }
       }
+
+      // Ignore recursive react loop warnings caused by devtools
+      if (message.includes("Maximum update depth") && this.logs.some(l => l.message.includes("Maximum update depth"))) {
+        return;
+      }
+
+      const entry: LogEntry = {
+        id: "err_" + Math.random().toString(36).substring(2, 9),
+        timestamp: this.getTimestamp(),
+        type: "error",
+        title,
+        message,
+        stack,
+        details: extra,
+      };
+
+      this.logs.unshift(entry);
+      if (this.logs.length > this.maxLogs) this.logs.pop();
+      this.notify();
+    } finally {
+      this.isLogging = false;
     }
-
-    const entry: LogEntry = {
-      id: "err_" + Math.random().toString(36).substring(2, 9),
-      timestamp: this.getTimestamp(),
-      type: "error",
-      title,
-      message,
-      stack,
-      details: extra,
-    };
-
-    this.logs.unshift(entry);
-    if (this.logs.length > this.maxLogs) this.logs.pop();
-    this.notify();
   }
 
   public logWarning(title: string, message: string, extra?: Record<string, any>) {
-    const entry: LogEntry = {
-      id: "warn_" + Math.random().toString(36).substring(2, 9),
-      timestamp: this.getTimestamp(),
-      type: "warn",
-      title,
-      message,
-      details: extra,
-    };
+    if (this.isLogging) return;
+    this.isLogging = true;
 
-    this.logs.unshift(entry);
-    if (this.logs.length > this.maxLogs) this.logs.pop();
-    this.notify();
+    try {
+      const entry: LogEntry = {
+        id: "warn_" + Math.random().toString(36).substring(2, 9),
+        timestamp: this.getTimestamp(),
+        type: "warn",
+        title,
+        message,
+        details: extra,
+      };
+
+      this.logs.unshift(entry);
+      if (this.logs.length > this.maxLogs) this.logs.pop();
+      this.notify();
+    } finally {
+      this.isLogging = false;
+    }
   }
 
   private setupGlobalErrorHandlers() {
@@ -168,10 +195,14 @@ class DiagnosticLogger {
 
     console.error = (...args: any[]) => {
       try {
-        const firstArg = args[0];
-        const title = typeof firstArg === "string" ? firstArg : "Console Error";
-        const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" ");
-        this.logError("Console.error: " + title.slice(0, 40), message);
+        if (!this.isLogging) {
+          const firstArg = args[0];
+          const title = typeof firstArg === "string" ? firstArg : "Console Error";
+          const message = args.map((a) => (typeof a === "object" ? (a instanceof Error ? a.message : JSON.stringify(a)) : String(a))).join(" ");
+          if (!message.includes("Maximum update depth") || !this.logs.some(l => l.message.includes("Maximum update depth"))) {
+            this.logError("Console.error: " + title.slice(0, 40), message);
+          }
+        }
       } catch {
         // fallback
       }
@@ -180,12 +211,14 @@ class DiagnosticLogger {
 
     console.warn = (...args: any[]) => {
       try {
-        const firstArg = args[0];
-        const title = typeof firstArg === "string" ? firstArg : "Console Warning";
-        const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" ");
-        // Ignore noise from React DevTools or benign warnings
-        if (!message.includes("Vite") && !message.includes("React DevTools")) {
-          this.logWarning(title.slice(0, 40), message);
+        if (!this.isLogging) {
+          const firstArg = args[0];
+          const title = typeof firstArg === "string" ? firstArg : "Console Warning";
+          const message = args.map((a) => (typeof a === "object" ? JSON.stringify(a) : String(a))).join(" ");
+          // Ignore noise from React DevTools or benign warnings
+          if (!message.includes("Vite") && !message.includes("React DevTools")) {
+            this.logWarning(title.slice(0, 40), message);
+          }
         }
       } catch {
         // fallback
