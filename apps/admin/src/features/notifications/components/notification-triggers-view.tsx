@@ -1,15 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { useNotificationTriggers } from "../hooks/use-notification-triggers";
 import { useNotificationTemplates } from "../hooks/use-notification-templates";
-import { TriggerEditorDrawer } from "./trigger-editor-drawer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/i18n/context";
+
+const TriggerEditorDrawer = lazy(() =>
+  import("./trigger-editor-drawer").then((m) => ({
+    default: m.TriggerEditorDrawer,
+  }))
+);
 import {
   NotificationChannel,
   RecipientType,
@@ -275,15 +280,19 @@ export function NotificationTriggersView() {
       )}
 
       {/* Editor Modal */}
-      <TriggerEditorDrawer
-        trigger={selectedTrigger}
-        templates={templates}
-        systemEvents={systemEvents}
-        isOpen={isEditorOpen}
-        onClose={() => setIsEditorOpen(false)}
-        onSave={handleSave}
-        isLoading={isCreating || isUpdating}
-      />
+      {isEditorOpen && (
+        <Suspense fallback={null}>
+          <TriggerEditorDrawer
+            trigger={selectedTrigger}
+            templates={templates}
+            systemEvents={systemEvents}
+            isOpen={isEditorOpen}
+            onClose={() => setIsEditorOpen(false)}
+            onSave={handleSave}
+            isLoading={isCreating || isUpdating}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
