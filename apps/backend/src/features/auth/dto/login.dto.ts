@@ -20,3 +20,11 @@ export class MagicLinkDto {
   @IsNotEmpty({ message: 'Email обязателен' })
   email: string;
 }
+
+export class RefreshTokenDto {
+  @ApiProperty({ example: 'refresh_token_string', description: 'Supabase Refresh Token' })
+  @IsString({ message: 'Refresh token должен быть строкой' })
+  @IsNotEmpty({ message: 'Refresh token обязателен' })
+  refresh_token: string;
+}
+

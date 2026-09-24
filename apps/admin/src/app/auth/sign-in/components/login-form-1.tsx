@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { api, setAdminToken } from "@/lib/api"
+import { api, setAdminSession } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -51,9 +51,9 @@ export function LoginForm1({
   async function onSubmit(values: LoginFormValues) {
     try {
       setLoading(true)
-      const res = await api.post<{ access_token: string; user?: any }>("/admin/auth/login", values)
+      const res = await api.post<{ access_token: string; refresh_token?: string; user?: any }>("/admin/auth/login", values)
       if (res.access_token) {
-        setAdminToken(res.access_token)
+        setAdminSession(res.access_token, res.refresh_token)
         toast.success("Accesso effettuato con successo")
         navigate("/dashboard")
       } else {

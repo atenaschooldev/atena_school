@@ -1,7 +1,7 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, MagicLinkDto } from './dto/login.dto';
+import { LoginDto, MagicLinkDto, RefreshTokenDto } from './dto/login.dto';
 
 @ApiTags('Auth')
 @Controller(['auth', 'landing/auth', 'admin/auth', 'app/auth'])
@@ -17,6 +17,7 @@ export class AuthController {
     schema: {
       example: {
         access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        refresh_token: '8x_sample_refresh_token...',
         token_type: 'bearer',
         expires_in: 3600,
         user: {
@@ -30,6 +31,18 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Неверные учетные данные' })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Обновление сессии по Refresh токену' })
+  @ApiResponse({
+    status: 200,
+    description: 'Сессия успешно обновлена',
+  })
+  @ApiResponse({ status: 401, description: 'Недействительный refresh токен' })
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto.refresh_token);
   }
 
   @Post('magic-link')
