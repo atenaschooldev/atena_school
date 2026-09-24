@@ -686,6 +686,7 @@ export class CoursesService {
         },
       },
     });
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
       id: updated.id,
       name: updated.name,
@@ -724,6 +725,7 @@ export class CoursesService {
     await this.prisma.courseSettings.delete({
       where: { id },
     });
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return { success: true };
   }
 

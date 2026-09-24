@@ -28,6 +28,7 @@ import {
   TestIntegrationDto,
   SetTelegramWebhookDto,
 } from './dto/integration.dto';
+import { revalidateLanding } from '../../core/utils/revalidate-landing';
 
 const SENSITIVE_FIELDS: Record<string, string[]> = {
   [IntegrationProvider.RESEND]: ['apiKey', 'webhookSecret'],
@@ -152,6 +153,7 @@ export class IntegrationsService {
 
     // Invalidate memory cache so next call picks up the new credentials immediately
     clearSecretsCache(provider);
+    revalidateLanding({ tag: provider }).catch(() => {});
 
     const all = await getMaskedIntegrationsSummary(this.supabase);
     return all[provider];
