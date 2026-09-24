@@ -356,10 +356,7 @@
   fill: currentColor !important;
 }
 
-/* GSAP animated elements utility */
-[data-gsap] {
-  will-change: transform, opacity;
-}
+/* GSAP animated elements utility - will-change is managed dynamically by GSAP during tweens */
 
 /* From Uiverse.io by vinodjangid07 */ 
 .Btn {

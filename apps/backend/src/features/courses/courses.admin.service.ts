@@ -13,6 +13,7 @@ import {
   parseCourseFormat,
   parseCourseCategory,
 } from '@atena/api-types';
+import { revalidateLanding } from '../../core/utils/revalidate-landing';
 
 export interface CourseResponseDto {
   id: string;
@@ -312,6 +313,7 @@ export class CoursesService {
     }
 
     const fresh = await this.coursesRepository.findOne(c.id);
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return this.toDto(fresh ?? c);
   }
 
@@ -447,11 +449,13 @@ export class CoursesService {
     }
 
     const fresh = await this.coursesRepository.findOne(c.id);
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return this.toDto(fresh ?? c);
   }
 
   async deleteCourse(id: string) {
     await this.coursesRepository.delete(id);
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return { success: true };
   }
 
@@ -510,6 +514,7 @@ export class CoursesService {
         },
       },
     });
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
       id: created.id,
       name: created.name,
@@ -547,6 +552,7 @@ export class CoursesService {
         },
       },
     });
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
       id: updated.id,
       name: updated.name,
@@ -571,6 +577,7 @@ export class CoursesService {
     await this.prisma.courseCategory.delete({
       where: { id },
     });
+    revalidateLanding({ tag: 'courses' }).catch(() => {});
     return { success: true };
   }
 

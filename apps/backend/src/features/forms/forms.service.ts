@@ -20,6 +20,7 @@ import {
   CreateFormTemplateDto,
   UpdateFormTemplateDto,
 } from './dto/forms.dto';
+import { revalidateLanding } from '../../core/utils/revalidate-landing';
 
 @Injectable()
 export class FormsService {
@@ -150,6 +151,7 @@ export class FormsService {
       throw new BadRequestException(`Errore creazione modulo: ${error?.message}`);
     }
 
+    revalidateLanding({ tag: 'form-templates' }).catch(() => {});
     return data as FormTemplate;
   }
 
@@ -209,12 +211,14 @@ export class FormsService {
           .single();
 
         if (!upsertErr && upsertData) {
+          revalidateLanding({ tag: 'form-templates' }).catch(() => {});
           return upsertData as FormTemplate;
         }
       }
       throw new BadRequestException(`Errore aggiornamento modulo: ${error?.message}`);
     }
 
+    revalidateLanding({ tag: 'form-templates' }).catch(() => {});
     return data as FormTemplate;
   }
 
@@ -239,6 +243,7 @@ export class FormsService {
       throw new BadRequestException(`Errore eliminazione modulo: ${error.message}`);
     }
 
+    revalidateLanding({ tag: 'form-templates' }).catch(() => {});
     return { success: true, id };
   }
 
@@ -264,6 +269,7 @@ export class FormsService {
       throw new BadRequestException(`Errore impostazione modulo predefinito: ${error?.message}`);
     }
 
+    revalidateLanding({ tag: 'form-templates' }).catch(() => {});
     return data as FormTemplate;
   }
 

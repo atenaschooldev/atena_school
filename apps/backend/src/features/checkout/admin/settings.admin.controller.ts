@@ -7,6 +7,8 @@ import { Roles } from '../../../core/decorators/roles.decorator';
 import { Audit } from '../../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../../core/interceptors/audit.interceptor';
 
+import { revalidateLanding } from '../../../core/utils/revalidate-landing';
+
 @ApiTags('Admin — Settings & School Profile')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AuthGuard, RolesGuard)
@@ -44,6 +46,7 @@ export class SettingsAdminController {
   })
   async updatePaymentGateway(@Body() body: { stripeEnabled?: boolean; subscriptionsEnabled?: boolean }) {
     const settings = await this.checkoutService.updateSettings(body);
+    revalidateLanding({ tag: 'payment-settings' }).catch(() => {});
     return { success: true, settings };
   }
 
@@ -68,6 +71,7 @@ export class SettingsAdminController {
   })
   async updateSchoolProfile(@Body() body: any) {
     const profile = await this.checkoutService.updateSchoolProfile(body);
+    revalidateLanding({ tag: 'school-profile' }).catch(() => {});
     return { success: true, profile };
   }
 

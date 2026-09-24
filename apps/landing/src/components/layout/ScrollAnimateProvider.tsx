@@ -240,10 +240,11 @@ export default function ScrollAnimateProvider({
       root
       ref={lenisRef}
       options={{
-        lerp: 0.08,
-        duration: 1.2,
+        lerp: 0.1,
+        duration: 1.0,
         smoothWheel: true,
         syncTouch: false,
+        touchMultiplier: 0,
       }}
     >
       <LenisScrollTriggerSync />
