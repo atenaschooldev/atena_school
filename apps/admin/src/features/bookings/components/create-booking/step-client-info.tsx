@@ -450,13 +450,13 @@ export function StepClientInfo({
                         {fee?.checked && fee?.paid && (
                           <span className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                             <CheckCircle2 className="w-3 h-3" />
-                            Quota 2026/2027 saldata (0€)
+                            Quota {academicYear} saldata (0€)
                           </span>
                         )}
                         {fee?.checked && !fee?.paid && (
                           <span className="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                             <Info className="w-3 h-3" />
-                            Quota annuale (+30€)
+                            Quota annuale (+{feeAmount}€)
                           </span>
                         )}
 

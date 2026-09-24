@@ -19,6 +19,7 @@ import {
   CheckCircle2,
   Clock,
   FileText,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CreateBookingValues } from "./types";

@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode } from "@atena/utils";
 import { useCourses } from "@/features/courses/hooks/use-courses";
+import { useSchoolProfile } from "@/hooks/use-school-profile";
 import type { Course } from "@/features/courses/types";
 import { api } from "@/lib/api";
 import type {
@@ -240,6 +241,13 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     };
   }, [studentsList, isForChild, purchaserTaxCode, purchaserEmail]);
 
+  const { profile } = useSchoolProfile();
+  const isFeeEnabled = profile?.registration_fee_enabled !== false;
+  const feePerStudent = isFeeEnabled
+    ? (profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30)
+    : 0;
+  const academicYear = profile?.academic_year || "2026/2027";
+
   // Recalculate amountPaid and registrationFee
   const courseUnitPrice = selectedCourse?.prezzo != null ? Number(selectedCourse.prezzo) : 0;
   const studentsCount = isForChild ? Math.max(1, studentsList.length) : 1;
@@ -248,7 +256,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const computedRegFee = (isForChild ? studentsList : [studentsList[0]]).reduce((sum, _, idx) => {
     const fee = studentFeeStatuses[idx];
     const isPaid = fee?.checked && fee?.paid;
-    return sum + (isPaid ? 0 : 30);
+    return sum + (isPaid ? 0 : feePerStudent);
   }, 0);
 
   useEffect(() => {
@@ -580,6 +588,9 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     computedStudentName,
     amountPaid: computedCourseAmount,
     registrationFee: computedRegFee,
+    feePerStudent,
+    academicYear,
+    isFeeEnabled,
     totalAmount,
     filteredClients,
     allowedDays,

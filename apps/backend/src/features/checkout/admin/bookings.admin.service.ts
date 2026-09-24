@@ -281,7 +281,9 @@ export class BookingsAdminService {
     if (finalRegFee === undefined) {
       const taxCodeToCheck = isForChild ? (dto.studentTaxCode || dto.purchaserTaxCode) : dto.purchaserTaxCode;
       const feeStatus = await this.checkoutService.checkFeeStatus({ taxCode: taxCodeToCheck });
-      finalRegFee = feeStatus.annualFeePaid ? 0 : 30;
+      const profile = await this.checkoutService.getSchoolProfile();
+      const defaultFee = profile?.registration_fee_enabled !== false ? (profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30) : 0;
+      finalRegFee = feeStatus.annualFeePaid ? 0 : defaultFee;
     }
 
     const normalizedStatus = typeof dto.paymentStatus === 'number'
@@ -579,6 +581,10 @@ export class BookingsAdminService {
       }
     }
 
+    const profile = await this.checkoutService.getSchoolProfile();
+    const academicYear = profile?.academic_year || '2026/2027';
+    const feeAmount = profile?.registration_fee_enabled !== false ? Number(profile?.registration_fee_eur ?? 30.0) : 0.0;
+
     const { data: membership, error: mErr } = await this.supabaseAdmin
       .from('annual_memberships')
       .insert({
@@ -586,7 +592,7 @@ export class BookingsAdminService {
         tax_code: sTaxCode,
         email: sEmail,
         phone: dto.phone || null,
-        academic_year: '2026/2027',
+        academic_year: academicYear,
         status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
         paid_at: new Date().toISOString(),
         expires_at: '2027-08-31T23:59:59.000Z',
@@ -601,13 +607,13 @@ export class BookingsAdminService {
         data: {
           bookingId: null,
           studentId: studentId || null,
-          amount: 30.0,
+          amount: feeAmount,
           currency: PaymentCurrency.EUR,
           paymentMethod: parsePaymentMethod(pMethod) ?? PaymentMethod.CASH,
           type: PaymentType.REGISTRATION_FEE,
           status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
           provider: PaymentProvider.MANUAL,
-          notes: `Quota d'iscrizione annuale A.A. 2026/2027 (${sName}) [membership_id:${membership.id}]`,
+          notes: `Quota d'iscrizione annuale A.A. ${academicYear} (${sName}) [membership_id:${membership.id}]`,
         },
       });
     } catch (payErr) {

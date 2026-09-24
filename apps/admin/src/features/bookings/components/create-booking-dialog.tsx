@@ -69,6 +69,8 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
     computedStudentName,
     amountPaid,
     registrationFee,
+    feePerStudent,
+    academicYear,
     totalAmount,
     filteredClients,
     allowedDays,
@@ -280,6 +282,8 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                   studentFeeStatuses={studentFeeStatuses}
                   amountPaid={amountPaid}
                   registrationFee={registrationFee}
+                  feePerStudent={feePerStudent}
+                  academicYear={academicYear}
                   totalAmount={totalAmount}
                   paymentStatus={paymentStatus}
                   paymentMethod={paymentMethod}

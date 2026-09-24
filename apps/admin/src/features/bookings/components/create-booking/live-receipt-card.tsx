@@ -33,6 +33,8 @@ interface LiveReceiptCardProps {
   studentFeeStatuses?: Record<number, { checked: boolean; paid: boolean }>;
   amountPaid: number;
   registrationFee: number;
+  feePerStudent?: number;
+  academicYear?: string;
   totalAmount: number;
   paymentStatus: string;
   paymentMethod: string;
@@ -61,6 +63,8 @@ export function LiveReceiptCard({
   studentFeeStatuses = {},
   amountPaid,
   registrationFee,
+  feePerStudent = 30,
+  academicYear = "2026/2027",
   totalAmount,
   paymentStatus,
   paymentMethod,
@@ -142,7 +146,7 @@ export function LiveReceiptCard({
                           </>
                         ) : (
                           <>
-                            <AlertCircle className="h-3 w-3" /> Quota +30€
+                            <AlertCircle className="h-3 w-3" /> Quota +{feePerStudent}€
                           </>
                         )}
                       </span>
