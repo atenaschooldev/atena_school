@@ -5,7 +5,7 @@ import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export interface CellCopyableIdProps {
-  id?: string | null;
+  id?: string | number | bigint | null;
   prefix?: string;
   className?: string;
 }
@@ -13,24 +13,25 @@ export interface CellCopyableIdProps {
 export function CellCopyableId({ id, prefix = "#", className }: CellCopyableIdProps) {
   const [copied, setCopied] = useState(false);
 
-  if (!id) return <span className="text-muted-foreground text-xs font-mono">—</span>;
+  const strId = id != null ? String(id) : "";
+  if (!strId) return <span className="text-muted-foreground text-xs font-mono">—</span>;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(id);
+    navigator.clipboard.writeText(strId);
     setCopied(true);
     toast.success("ID copiato negli appunti!");
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const shortId = id.length > 8 ? id.slice(0, 8) : id;
+  const shortId = strId.length > 8 ? strId.slice(0, 8) : strId;
 
   return (
     <button
       type="button"
       onClick={handleCopy}
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 hover:bg-muted text-[11px] text-muted-foreground hover:text-foreground font-mono transition-all duration-150 cursor-pointer border border-transparent hover:border-border select-none group ${className || ""}`}
-      title={`${id} (Clicca per copiare)`}
+      title={`${strId} (Clicca per copiare)`}
     >
       {copied ? (
         <Check className="w-3 h-3 text-emerald-500 shrink-0" />

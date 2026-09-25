@@ -48,7 +48,7 @@ export async function validatePromoCode(
     Array.isArray(promo.applicable_course_ids) &&
     promo.applicable_course_ids.length > 0
   ) {
-    if (!params.courseId || !promo.applicable_course_ids.includes(params.courseId)) {
+    if (!params.courseId || !promo.applicable_course_ids.map(String).includes(String(params.courseId))) {
       return {
         valid: false,
         error: 'Questo codice promozionale non è valido per il corso selezionato',

@@ -7,15 +7,13 @@ export class CreateGroupDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ description: 'UUID курса' })
-  @IsUUID()
+  @ApiProperty({ description: 'ID курса' })
   @IsNotEmpty()
-  courseId: string;
+  courseId: string | number;
 
-  @ApiPropertyOptional({ description: 'UUID преподавателя' })
-  @IsUUID()
+  @ApiPropertyOptional({ description: 'ID преподавателя' })
   @IsOptional()
-  teacherId?: string;
+  teacherId?: string | number;
 
   @ApiPropertyOptional({ description: 'Аудитория / класс' })
   @IsString()
@@ -74,15 +72,13 @@ export class UpdateGroupDto {
   @IsOptional()
   name?: string;
 
-  @ApiPropertyOptional({ description: 'UUID курса' })
-  @IsUUID()
+  @ApiPropertyOptional({ description: 'ID курса' })
   @IsOptional()
-  courseId?: string;
+  courseId?: string | number;
 
-  @ApiPropertyOptional({ description: 'UUID преподавателя' })
-  @IsUUID()
+  @ApiPropertyOptional({ description: 'ID преподавателя' })
   @IsOptional()
-  teacherId?: string;
+  teacherId?: string | number;
 
   @ApiPropertyOptional({ description: 'Аудитория / класс' })
   @IsString()

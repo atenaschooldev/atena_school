@@ -137,10 +137,10 @@ export async function getPublicCourses(supabase: SupabaseClient): Promise<GetPub
 }
 
 export async function getPublicCourseById(supabase: SupabaseClient, id: string): Promise<GetItemResult> {
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const isNumericOrUuid = /^\d+$/.test(id) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   let courseData: SupabaseCourseRow | null = null;
-  if (isUuid) {
+  if (isNumericOrUuid) {
     const { data } = await supabase.from('courses').select('*, settings:course_settings(*)').eq('id', id).maybeSingle<SupabaseCourseRow>();
     courseData = data;
   }
@@ -159,7 +159,7 @@ export async function getPublicCourseById(supabase: SupabaseClient, id: string):
     const { data: teacher } = await supabase
       .from('teachers')
       .select('full_name, photo_url')
-      .eq('teacher_id', courseData.teacher_id)
+      .eq('id', courseData.teacher_id)
       .maybeSingle<TeacherRow>();
     if (teacher) {
       teacherName = teacher.full_name;

@@ -105,7 +105,7 @@ export async function getDashboardDataAction() {
       if (cData) {
         coursesMap = new Map(cData.map((c: any) => {
           const st = c.settings as any;
-          return [c.id, {
+          return [String(c.id), {
             ...c,
             schedule_days: st?.schedule_days ?? null,
             start_time: st?.start_time ?? null,
@@ -122,10 +122,10 @@ export async function getDashboardDataAction() {
     if (teacherIds.length > 0) {
       const { data: tData } = await supabaseAdmin
         .from("teachers")
-        .select("teacher_id, full_name")
-        .in("teacher_id", teacherIds);
+        .select("id, full_name")
+        .in("id", teacherIds);
       if (tData) {
-        teachersMap = new Map(tData.map(t => [t.teacher_id, t.full_name || ""]));
+        teachersMap = new Map(tData.map(t => [String(t.id), t.full_name || ""]));
       }
     }
 
@@ -141,11 +141,11 @@ export async function getDashboardDataAction() {
     let isAnyParentBooking = false;
     const enrichedBookings = bookingsList.map((b: any) => {
       const cid = b.course_id || b.item_id;
-      const c = coursesMap.get(cid);
+      const c = cid ? coursesMap.get(String(cid)) : null;
       const title = c?.name || b.course_name || `Corso ${schoolProfile.name}`;
       const coursePrice = c?.price ? Number(c.price) : Number(b.amount_paid || 0);
       const totalAmount = Number(b.amount_paid || coursePrice || 0);
-      const teacherName = c?.teacher_id ? teachersMap.get(c.teacher_id) || schoolProfile.name : (c?.teacher_name || `Docente ${schoolProfile.name}`);
+      const teacherName = c?.teacher_id ? teachersMap.get(String(c.teacher_id)) || schoolProfile.name : (c?.teacher_name || `Docente ${schoolProfile.name}`);
 
       const bdateStr = b.start_date || b.created_at;
       let isFuture = true;

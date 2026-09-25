@@ -96,6 +96,7 @@ describe('Personal Cabinet (apps/app) — Dashboard Server Actions Strict Tests'
 
     const mockTeachersData = [
       {
+        id: 'teacher-1',
         teacher_id: 'teacher-1',
         full_name: 'Prof. John Doe',
       },

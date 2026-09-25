@@ -173,8 +173,8 @@ export async function createStripeSession(
   const stripe = options?.stripe || getStripeClient();
 
   let resolvedItemId = dto.itemId;
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
-  if (!isUuid) {
+  const isNumericOrUuid = /^\d+$/.test(dto.itemId) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.itemId);
+  if (!isNumericOrUuid) {
     const { data: course } = await supabase.from('courses').select('id').eq('slug', dto.itemId).maybeSingle();
     if (course?.id) {
       resolvedItemId = course.id;

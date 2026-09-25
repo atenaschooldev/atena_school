@@ -56,7 +56,7 @@ export function resolveActiveFormTemplate(
   // 1. Проверка по конкретному курсу
   if (query.course_id) {
     const courseSpecific = activeTemplates.find(
-      (t) => t.course_id === query.course_id
+      (t) => t.course_id != null && String(t.course_id) === String(query.course_id)
     );
     if (courseSpecific) return courseSpecific;
   }
