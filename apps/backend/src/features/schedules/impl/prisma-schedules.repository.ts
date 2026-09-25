@@ -4,6 +4,15 @@ import { ScheduleEntity } from '../domain/schedule.entity';
 import { SchedulesRepository } from '../domain/schedules.repository.interface';
 import { BookingPaymentStatus, LessonStatus, LessonLocationType, parseLessonStatus } from '@atena/api-types';
 
+const toBigInt = (val: any): bigint | undefined => {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+};
+
 @Injectable()
 export class PrismaSchedulesRepository implements SchedulesRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -14,7 +23,6 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     startDate?: Date;
     endDate?: Date;
   }): Promise<ScheduleEntity[]> {
-    // Fetch directly from `lessons` table in PostgreSQL database
     const rawLessons = await this.prisma.lesson.findMany({
       include: {
         booking: {
@@ -25,8 +33,8 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
         teacher: true,
       },
       where: {
-        ...(filters?.teacherId ? { teacherId: filters.teacherId } : {}),
-        ...(filters?.courseId ? { booking: { courseId: filters.courseId } } : {}),
+        ...(filters?.teacherId ? { teacherId: toBigInt(filters.teacherId) } : {}),
+        ...(filters?.courseId ? { courseId: toBigInt(filters.courseId) } : {}),
         ...(filters?.startDate || filters?.endDate
           ? {
               startsAt: {
@@ -40,9 +48,9 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     });
 
     return rawLessons.map((l) => ({
-      id: l.id,
-      courseId: l.booking?.courseId || '',
-      teacherId: l.teacherId || '',
+      id: l.id.toString(),
+      courseId: (l.booking?.courseId ?? l.courseId)?.toString() || '',
+      teacherId: l.teacherId?.toString() || '',
       room: l.teacherNotes || null,
       status: l.status,
       startDate: l.startsAt,
@@ -55,8 +63,11 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
   }
 
   async findOne(id: string): Promise<ScheduleEntity | null> {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) return null;
+
     const l = await this.prisma.lesson.findUnique({
-      where: { id },
+      where: { id: bigId },
       include: {
         booking: { include: { course: true } },
         teacher: true,
@@ -65,9 +76,9 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
 
     if (l) {
       return {
-        id: l.id,
-        courseId: l.booking?.courseId || '',
-        teacherId: l.teacherId || '',
+        id: l.id.toString(),
+        courseId: (l.booking?.courseId ?? l.courseId)?.toString() || '',
+        teacherId: l.teacherId?.toString() || '',
         room: l.teacherNotes || null,
         status: l.status,
         startDate: l.startsAt,
@@ -92,16 +103,20 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     lessonType?: string;
     meetingUrl?: string | null;
   }): Promise<ScheduleEntity> {
-    let booking = await this.prisma.booking.findFirst({
-      where: { courseId: data.courseId },
-    });
+    const bigCourseId = toBigInt(data.courseId);
+    const bigTeacherId = toBigInt(data.teacherId);
+
+    let booking = bigCourseId ? await this.prisma.booking.findFirst({
+      where: { courseId: bigCourseId },
+    }) : null;
+
     if (!booking) {
       booking = await this.prisma.booking.findFirst();
     }
     if (!booking) {
       booking = await this.prisma.booking.create({
         data: {
-          courseId: data.courseId,
+          courseId: bigCourseId || null,
           courseName: 'Corso Sistema',
           purchaserName: 'Sistema Atena',
           studentName: 'Sistema Atena',
@@ -114,7 +129,8 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     const l = await this.prisma.lesson.create({
       data: {
         bookingId: booking.id,
-        teacherId: data.teacherId || null,
+        courseId: bigCourseId || null,
+        teacherId: bigTeacherId || null,
         startsAt: data.startDate,
         endsAt: data.endDate,
         status: data.status !== undefined ? parseLessonStatus(data.status) : LessonStatus.SCHEDULED,
@@ -129,7 +145,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     });
 
     return {
-      id: l.id,
+      id: l.id.toString(),
       courseId: data.courseId,
       teacherId: data.teacherId,
       room: data.room || null,
@@ -157,28 +173,31 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
   }
 
   async update(id: string, data: Partial<ScheduleEntity>): Promise<ScheduleEntity> {
-    const existingLesson = await this.prisma.lesson.findUnique({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new Error(`Invalid Lesson ID ${id}`);
+
+    const existingLesson = await this.prisma.lesson.findUnique({ where: { id: bigId } });
 
     if (existingLesson) {
       const updateData: any = {};
       if (data.startDate !== undefined) updateData.startsAt = data.startDate;
       if (data.endDate !== undefined) updateData.endsAt = data.endDate;
       if (data.status !== undefined) updateData.status = data.status;
-      if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+      if (data.teacherId !== undefined) updateData.teacherId = toBigInt(data.teacherId) || null;
       if (data.lessonType !== undefined) updateData.locationType = data.lessonType === 'online' ? LessonLocationType.ONLINE : LessonLocationType.IN_PERSON;
       if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
       if (data.room !== undefined) updateData.teacherNotes = data.room ? (data.room.startsWith('Aula') ? data.room : `Aula ${data.room}`) : null;
 
       const l = await this.prisma.lesson.update({
-        where: { id },
+        where: { id: bigId },
         data: updateData,
         include: { booking: true, teacher: true },
       });
 
       return {
-        id: l.id,
-        courseId: l.booking?.courseId || '',
-        teacherId: l.teacherId || '',
+        id: l.id.toString(),
+        courseId: (l.booking?.courseId ?? l.courseId)?.toString() || '',
+        teacherId: l.teacherId?.toString() || '',
         room: l.teacherNotes || null,
         status: l.status,
         startDate: l.startsAt,
@@ -191,7 +210,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     }
 
     const updateData: any = {};
-    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+    if (data.teacherId !== undefined) updateData.teacherId = toBigInt(data.teacherId) || null;
     if (data.room !== undefined) updateData.teacherNotes = data.room;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.startDate !== undefined) updateData.startsAt = data.startDate;
@@ -200,7 +219,7 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     if (data.meetingUrl !== undefined) updateData.meetingLink = data.meetingUrl;
 
     const l = await this.prisma.lesson.update({
-      where: { id },
+      where: { id: bigId },
       data: updateData,
       include: {
         booking: { include: { course: true } },
@@ -209,9 +228,9 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
     });
 
     return {
-      id: l.id,
-      courseId: l.booking?.courseId || '',
-      teacherId: l.teacherId || '',
+      id: l.id.toString(),
+      courseId: (l.booking?.courseId ?? l.courseId)?.toString() || '',
+      teacherId: l.teacherId?.toString() || '',
       room: l.teacherNotes || null,
       status: l.status,
       startDate: l.startsAt,
@@ -224,6 +243,9 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.lesson.delete({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId !== undefined) {
+      await this.prisma.lesson.delete({ where: { id: bigId } });
+    }
   }
 }

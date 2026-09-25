@@ -216,13 +216,13 @@ export class SchedulesService {
     const where: any = {
       startsAt: { gte: start, lte: end },
     };
-    if (dto.originalTeacherId) where.teacherId = dto.originalTeacherId;
-    if (dto.courseId) where.booking = { courseId: dto.courseId };
+    if (dto.originalTeacherId) where.teacherId = BigInt(dto.originalTeacherId);
+    if (dto.courseId) where.courseId = BigInt(dto.courseId);
 
     const updated = await this.prisma.lesson.updateMany({
       where,
       data: {
-        teacherId: dto.substituteTeacherId,
+        teacherId: BigInt(dto.substituteTeacherId),
       },
     });
 

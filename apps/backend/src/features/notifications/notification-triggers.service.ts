@@ -12,6 +12,15 @@ import {
 
 import { SYSTEM_TRIGGERS } from '@atena/core';
 
+const toBigInt = (val: any): bigint | undefined => {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+};
+
 @Injectable()
 export class NotificationTriggersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -38,7 +47,7 @@ export class NotificationTriggersService {
 
     return SYSTEM_TRIGGERS.map((st) => {
       const tmpl = templateMap.get(st.template_code);
-      const tmplId = tmpl?.id || st.template_code;
+      const tmplId = tmpl?.id ? tmpl.id.toString() : st.template_code;
       return {
         id: st.id,
         name: st.name,
@@ -48,7 +57,7 @@ export class NotificationTriggersService {
         template_id: tmplId,
         template: tmpl
           ? {
-              id: tmpl.id,
+              id: tmpl.id ? tmpl.id.toString() : '',
               code: tmpl.code,
               name: tmpl.name,
               description: tmpl.description,
@@ -81,8 +90,11 @@ export class NotificationTriggersService {
   }
 
   async findOne(id: string): Promise<NotificationTriggerRecord> {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Trigger with ID "${id}" not found`);
+
     const record = await this.prisma.notification_triggers.findUnique({
-      where: { id },
+      where: { id: bigId },
       include: {
         template: true,
       },
@@ -96,9 +108,10 @@ export class NotificationTriggersService {
   }
 
   async create(dto: CreateNotificationTriggerDto): Promise<NotificationTriggerRecord> {
-    const templateId = dto.notification_template_id || dto.template_id;
-    if (!templateId) {
-      throw new Error('notification_template_id is required');
+    const rawTemplateId = dto.notification_template_id || dto.template_id;
+    const templateId = toBigInt(rawTemplateId);
+    if (templateId === undefined) {
+      throw new Error('Valid notification_template_id is required');
     }
 
     const created = await this.prisma.notification_triggers.create({
@@ -124,15 +137,19 @@ export class NotificationTriggersService {
   }
 
   async update(id: string, dto: UpdateNotificationTriggerDto): Promise<NotificationTriggerRecord> {
-    const existing = await this.prisma.notification_triggers.findUnique({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Trigger with ID "${id}" not found`);
+
+    const existing = await this.prisma.notification_triggers.findUnique({ where: { id: bigId } });
     if (!existing) {
       throw new NotFoundException(`Trigger with ID "${id}" not found`);
     }
 
-    const templateId = dto.notification_template_id || dto.template_id;
+    const rawTemplateId = dto.notification_template_id || dto.template_id;
+    const templateId = toBigInt(rawTemplateId);
 
     const updated = await this.prisma.notification_triggers.update({
-      where: { id },
+      where: { id: bigId },
       data: {
         name: dto.name !== undefined ? dto.name : undefined,
         description: dto.description !== undefined ? dto.description : undefined,
@@ -155,12 +172,15 @@ export class NotificationTriggersService {
   }
 
   async delete(id: string): Promise<{ success: boolean }> {
-    const existing = await this.prisma.notification_triggers.findUnique({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Trigger with ID "${id}" not found`);
+
+    const existing = await this.prisma.notification_triggers.findUnique({ where: { id: bigId } });
     if (!existing) {
       throw new NotFoundException(`Trigger with ID "${id}" not found`);
     }
 
-    await this.prisma.notification_triggers.delete({ where: { id } });
+    await this.prisma.notification_triggers.delete({ where: { id: bigId } });
     return { success: true };
   }
 
@@ -169,9 +189,9 @@ export class NotificationTriggersService {
   }
 
   private mapToRecord(r: any): NotificationTriggerRecord {
-    const tmplId = r.notificationTemplateId || r.templateId;
+    const tmplId = r.notificationTemplateId ? r.notificationTemplateId.toString() : (r.templateId ? r.templateId.toString() : '');
     return {
-      id: r.id,
+      id: r.id ? r.id.toString() : '',
       name: r.name,
       description: r.description,
       event_key: r.eventKey,
@@ -179,7 +199,7 @@ export class NotificationTriggersService {
       template_id: tmplId,
       template: r.template
         ? {
-            id: r.template.id,
+            id: r.template.id ? r.template.id.toString() : '',
             code: r.template.code,
             name: r.template.name,
             description: r.template.description,

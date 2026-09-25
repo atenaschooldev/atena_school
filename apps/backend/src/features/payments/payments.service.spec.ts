@@ -13,17 +13,8 @@ const jest = vi;
 
 describe('PaymentsService — Business Logic Tests', () => {
   let service: PaymentsService;
-  let repository: jest.Mocked<PaymentsRepository>;
-  let prisma: {
-    booking: {
-      findUnique: jest.Mock;
-      update: jest.Mock;
-    };
-    payment: {
-      create: jest.Mock;
-    };
-    $executeRawUnsafe: jest.Mock;
-  };
+  let repository: any;
+  let prisma: any;
 
   beforeEach(async () => {
     repository = {

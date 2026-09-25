@@ -43,7 +43,7 @@ describe('NotificationTriggerEngineService', () => {
   it('processes active email trigger and resolves customer recipient correctly', async () => {
     mockPrisma.notification_triggers.findMany.mockResolvedValue([
       {
-        id: 'trg-1',
+        id: 1n,
         name: 'Confirmation to Customer',
         eventKey: 'booking.created_stripe',
         channel: NotificationChannel.EMAIL,
@@ -51,7 +51,7 @@ describe('NotificationTriggerEngineService', () => {
         conditions: {},
         isActive: true,
         template: {
-          id: 'tmpl-1',
+          id: 10n,
           code: 'email_booking_confirmation',
           subject: 'Conferma prenotazione {{course_name}}',
           isActive: true,
@@ -81,8 +81,8 @@ describe('NotificationTriggerEngineService', () => {
     expect(mockPrisma.notification_logs.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          notificationTriggerId: 'trg-1',
-          notificationTemplateId: 'tmpl-1',
+          notificationTriggerId: 1n,
+          notificationTemplateId: 10n,
         }),
       })
     );

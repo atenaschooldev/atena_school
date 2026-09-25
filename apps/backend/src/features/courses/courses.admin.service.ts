@@ -87,6 +87,15 @@ function mapDaysToDb(days: any[]): number[] {
   }).filter(d => !!d);
 }
 
+function toBigInt(val: any): bigint | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+}
+
 @Injectable()
 export class CoursesService {
   constructor(
@@ -257,7 +266,7 @@ export class CoursesService {
             maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : 8,
           },
         });
-        settingsId = createdSettings.id;
+        settingsId = createdSettings.id.toString();
       } catch (csErr) {
         console.warn('Error creating courseSettings on create:', csErr);
       }
@@ -288,6 +297,7 @@ export class CoursesService {
 
     // Multi-teacher sync to course_teachers pivot table
     const teachersList = dto.teachers ?? dto.courseTeachers ?? dto.course_teachers;
+    const bigCourseId = BigInt(c.id);
     if (Array.isArray(teachersList) && teachersList.length > 0) {
       for (const t of teachersList) {
         const tId = t.teacherId ?? t.teacher_id;
@@ -295,18 +305,20 @@ export class CoursesService {
         const role = t.role != null ? Number(t.role) : (t.isPrimary || t.is_primary ? 1 : 2);
         const isPrimary = !!(t.isPrimary || t.is_primary);
         try {
+          const bigTeacherId = BigInt(tId);
           await this.prisma.$executeRaw`
             INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
-            VALUES (${c.id}::uuid, ${tId}::uuid, ${role}, ${isPrimary})
+            VALUES (${bigCourseId}, ${bigTeacherId}, ${role}, ${isPrimary})
             ON CONFLICT (course_id, teacher_id) DO UPDATE SET role = ${role}, is_primary = ${isPrimary}
           `;
         } catch {}
       }
     } else if (teacherId) {
       try {
+        const bigTeacherId = BigInt(teacherId);
         await this.prisma.$executeRaw`
           INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
-          VALUES (${c.id}::uuid, ${teacherId}::uuid, 1, true)
+          VALUES (${bigCourseId}, ${bigTeacherId}, 1, true)
           ON CONFLICT (course_id, teacher_id) DO UPDATE SET is_primary = true, role = 1
         `;
       } catch {}
@@ -378,24 +390,27 @@ export class CoursesService {
     );
 
     if (targetSettingsId) {
-      try {
-        await this.prisma.courseSettings.update({
-          where: { id: targetSettingsId },
-          data: {
-            deliveryMode: Number(deliveryMode),
-            scheduleDays: (updateData.scheduleDays !== undefined && updateData.scheduleDays !== null) ? updateData.scheduleDays : undefined,
-            startTime: updateData.startTime !== undefined ? updateData.startTime : undefined,
-            endTime: updateData.endTime !== undefined ? updateData.endTime : undefined,
-            lessonDurationMinutes: updateData.lessonDurationMinutes !== undefined ? updateData.lessonDurationMinutes : undefined,
-            lessonsPerWeek: updateData.lessonsPerWeek !== undefined ? updateData.lessonsPerWeek : undefined,
-            totalLessons: updateData.totalLessons !== undefined ? updateData.totalLessons : undefined,
-            totalHours: updateData.totalHours !== undefined ? updateData.totalHours : undefined,
-            minStudents: dto.minStudents != null ? Number(dto.minStudents) : undefined,
-            maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : undefined,
-          },
-        });
-      } catch (csErr) {
-        console.warn('Error saving courseSettings on update:', csErr);
+      const bigSettingsId = toBigInt(targetSettingsId);
+      if (bigSettingsId !== undefined) {
+        try {
+          await this.prisma.courseSettings.update({
+            where: { id: bigSettingsId },
+            data: {
+              deliveryMode: Number(deliveryMode),
+              scheduleDays: (updateData.scheduleDays !== undefined && updateData.scheduleDays !== null) ? updateData.scheduleDays : undefined,
+              startTime: updateData.startTime !== undefined ? updateData.startTime : undefined,
+              endTime: updateData.endTime !== undefined ? updateData.endTime : undefined,
+              lessonDurationMinutes: updateData.lessonDurationMinutes !== undefined ? updateData.lessonDurationMinutes : undefined,
+              lessonsPerWeek: updateData.lessonsPerWeek !== undefined ? updateData.lessonsPerWeek : undefined,
+              totalLessons: updateData.totalLessons !== undefined ? updateData.totalLessons : undefined,
+              totalHours: updateData.totalHours !== undefined ? updateData.totalHours : undefined,
+              minStudents: dto.minStudents != null ? Number(dto.minStudents) : undefined,
+              maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : undefined,
+            },
+          });
+        } catch (csErr) {
+          console.warn('Error saving courseSettings on update:', csErr);
+        }
       }
     } else {
       try {
@@ -414,35 +429,38 @@ export class CoursesService {
             maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : 8,
           },
         });
-        updateData.settingsId = createdSettings.id;
+        updateData.settingsId = createdSettings.id.toString();
       } catch (csErr) {
         console.warn('Error creating courseSettings on update:', csErr);
       }
     }
 
     const c = await this.coursesRepository.update(id, updateData);
+    const bigCourseId = BigInt(c.id);
 
     // Sync course_teachers pivot table
     if (Array.isArray(teachersList)) {
-      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${id}::uuid`;
+      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${bigCourseId}`;
       for (const t of teachersList) {
         const tId = t.teacherId ?? t.teacher_id;
         if (!tId) continue;
         const role = t.role != null ? Number(t.role) : (t.isPrimary || t.is_primary ? 1 : 2);
         const isPrimary = !!(t.isPrimary || t.is_primary);
+        const bigTeacherId = BigInt(tId);
         await this.prisma.$executeRaw`
           INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
-          VALUES (${id}::uuid, ${tId}::uuid, ${role}, ${isPrimary})
+          VALUES (${bigCourseId}, ${bigTeacherId}, ${role}, ${isPrimary})
           ON CONFLICT (course_id, teacher_id) DO UPDATE SET role = ${role}, is_primary = ${isPrimary}
         `;
       }
     } else if (dto.teacherId !== undefined || dto.teacher_id !== undefined) {
       const newTeacherId: string | null = dto.teacherId ?? dto.teacher_id ?? null;
-      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${id}::uuid AND is_primary = true`;
+      await this.prisma.$executeRaw`DELETE FROM course_teachers WHERE course_id = ${bigCourseId} AND is_primary = true`;
       if (newTeacherId) {
+        const bigTeacherId = BigInt(newTeacherId);
         await this.prisma.$executeRaw`
           INSERT INTO course_teachers (course_id, teacher_id, role, is_primary)
-          VALUES (${id}::uuid, ${newTeacherId}::uuid, 1, true)
+          VALUES (${bigCourseId}, ${bigTeacherId}, 1, true)
           ON CONFLICT (course_id, teacher_id) DO UPDATE SET is_primary = true, role = 1
         `;
       }
@@ -466,7 +484,7 @@ export class CoursesService {
         const catNum = parseCourseCategory(cat.slug);
         await this.prisma.$executeRaw`
           UPDATE courses 
-          SET category_id = ${cat.id}::uuid 
+          SET category_id = ${cat.id} 
           WHERE category_id IS NULL AND (category = ${catNum} OR slug ILIKE ${'%' + cat.slug + '%'})
         `;
       }
@@ -481,7 +499,7 @@ export class CoursesService {
       orderBy: { sortOrder: 'asc' },
     });
     return categories.map((c) => ({
-      id: c.id,
+      id: c.id.toString(),
       name: c.name,
       slug: c.slug,
       description: c.description,
@@ -516,7 +534,7 @@ export class CoursesService {
     });
     revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
-      id: created.id,
+      id: created.id.toString(),
       name: created.name,
       slug: created.slug,
       description: created.description,
@@ -532,6 +550,9 @@ export class CoursesService {
   }
 
   async updateCategory(id: string, dto: any) {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new Error('Invalid Category ID');
+
     const updateData: any = {};
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.slug !== undefined) updateData.slug = dto.slug;
@@ -544,7 +565,7 @@ export class CoursesService {
     }
 
     const updated = await this.prisma.courseCategory.update({
-      where: { id },
+      where: { id: bigId },
       data: updateData,
       include: {
         _count: {
@@ -554,7 +575,7 @@ export class CoursesService {
     });
     revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
-      id: updated.id,
+      id: updated.id.toString(),
       name: updated.name,
       slug: updated.slug,
       description: updated.description,
@@ -570,13 +591,16 @@ export class CoursesService {
   }
 
   async deleteCategory(id: string) {
-    await this.prisma.course.updateMany({
-      where: { categoryId: id },
-      data: { categoryId: null },
-    });
-    await this.prisma.courseCategory.delete({
-      where: { id },
-    });
+    const bigId = toBigInt(id);
+    if (bigId !== undefined) {
+      await this.prisma.course.updateMany({
+        where: { categoryId: bigId },
+        data: { categoryId: null },
+      });
+      await this.prisma.courseCategory.delete({
+        where: { id: bigId },
+      });
+    }
     revalidateLanding({ tag: 'courses' }).catch(() => {});
     return { success: true };
   }
@@ -608,7 +632,7 @@ export class CoursesService {
       },
     });
     return {
-      id: created.id,
+      id: created.id.toString(),
       name: created.name,
       deliveryMode: created.deliveryMode,
       delivery_mode: created.deliveryMode,
@@ -638,6 +662,9 @@ export class CoursesService {
   }
 
   async updateSettings(id: string, dto: any) {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new Error('Invalid Settings ID');
+
     const updateData: any = {};
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.deliveryMode !== undefined || dto.delivery_mode !== undefined) {
@@ -678,7 +705,7 @@ export class CoursesService {
     }
 
     const updated = await this.prisma.courseSettings.update({
-      where: { id },
+      where: { id: bigId },
       data: updateData,
       include: {
         _count: {
@@ -688,7 +715,7 @@ export class CoursesService {
     });
     revalidateLanding({ tag: 'courses' }).catch(() => {});
     return {
-      id: updated.id,
+      id: updated.id.toString(),
       name: updated.name,
       deliveryMode: updated.deliveryMode,
       delivery_mode: updated.deliveryMode,
@@ -718,13 +745,16 @@ export class CoursesService {
   }
 
   async deleteSettings(id: string) {
-    await this.prisma.course.updateMany({
-      where: { settingsId: id },
-      data: { settingsId: null },
-    });
-    await this.prisma.courseSettings.delete({
-      where: { id },
-    });
+    const bigId = toBigInt(id);
+    if (bigId !== undefined) {
+      await this.prisma.course.updateMany({
+        where: { settingsId: bigId },
+        data: { settingsId: null },
+      });
+      await this.prisma.courseSettings.delete({
+        where: { id: bigId },
+      });
+    }
     revalidateLanding({ tag: 'courses' }).catch(() => {});
     return { success: true };
   }
@@ -732,11 +762,11 @@ export class CoursesService {
   async listTeachers() {
     const teachers = await this.prisma.teacher.findMany({
       where: { isActive: true },
-      select: { teacherId: true, fullName: true },
+      select: { id: true, fullName: true },
       orderBy: { fullName: 'asc' },
     });
     return teachers.map((t) => ({
-      teacherId: t.teacherId,
+      teacherId: t.id.toString(),
       fullName: t.fullName ?? '',
     }));
   }

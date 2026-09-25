@@ -251,11 +251,11 @@ export class BookingsAdminService {
         where: dto.courseName ? { name: { contains: dto.courseName, mode: 'insensitive' } } : undefined,
       });
       if (foundCourse) {
-        resolvedCourseId = foundCourse.id;
+        resolvedCourseId = foundCourse.id.toString();
       } else {
         const fallbackCourse = await this.prisma.course.findFirst();
         if (fallbackCourse) {
-          resolvedCourseId = fallbackCourse.id;
+          resolvedCourseId = fallbackCourse.id.toString();
         }
       }
     }
@@ -346,7 +346,7 @@ export class BookingsAdminService {
     });
 
     return lessons.map((l) => ({
-      id: l.id,
+      id: l.id ? l.id.toString() : '',
       booking_id: l.bookingId,
       starts_at: l.startsAt,
       ends_at: l.endsAt,
@@ -361,11 +361,12 @@ export class BookingsAdminService {
     const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
     if (!booking) throw new NotFoundException(`Booking ${bookingId} not found`);
 
-    const lesson = await this.prisma.lesson.findUnique({ where: { id: lessonId } });
+    const bigLessonId = BigInt(lessonId);
+    const lesson = await this.prisma.lesson.findUnique({ where: { id: bigLessonId } });
     if (!lesson || lesson.bookingId !== bookingId) throw new NotFoundException(`Lesson ${lessonId} not found`);
 
     await this.prisma.lesson.update({
-      where: { id: lessonId },
+      where: { id: bigLessonId },
       data: {
         status: LessonStatus.COMPLETED,
       },

@@ -4,6 +4,15 @@ import { calculateLessonDates } from '@atena/utils';
 import { GroupStatus, GroupMemberStatus, LessonStatus, LessonLocationType } from '@atena/api-types';
 import { CreateGroupDto, UpdateGroupDto, AddGroupMemberDto } from './dto/group.dto';
 
+function toBigInt(val: any): bigint | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+}
+
 @Injectable()
 export class GroupsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -15,8 +24,8 @@ export class GroupsService {
     search?: string;
   }) {
     const where: any = {};
-    if (params?.courseId) where.courseId = params.courseId;
-    if (params?.teacherId) where.teacherId = params.teacherId;
+    if (params?.courseId) where.courseId = toBigInt(params.courseId);
+    if (params?.teacherId) where.teacherId = toBigInt(params.teacherId);
     if (params?.status) where.status = params.status;
     if (params?.search) {
       where.OR = [
@@ -29,7 +38,7 @@ export class GroupsService {
       where,
       include: {
         course: { select: { id: true, name: true, category: true, billingType: true } },
-        teacher: { select: { teacherId: true, fullName: true, photoUrl: true } },
+        teacher: { select: { id: true, fullName: true, photoUrl: true } },
         members: {
           include: {
             student: {
@@ -49,8 +58,11 @@ export class GroupsService {
   }
 
   async getGroup(id: string) {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Group with ID ${id} not found`);
+
     const group = await this.prisma.group.findUnique({
-      where: { id },
+      where: { id: bigId },
       include: {
         course: true,
         teacher: true,
@@ -77,22 +89,26 @@ export class GroupsService {
   }
 
   async createGroup(dto: CreateGroupDto) {
+    const bigCourseId = toBigInt(dto.courseId);
+    if (bigCourseId === undefined) throw new NotFoundException(`Course with ID ${dto.courseId} not found`);
+
     const course = await this.prisma.course.findUnique({
-      where: { id: dto.courseId },
+      where: { id: bigCourseId },
       include: { settings: true },
     });
     if (!course) throw new NotFoundException(`Course with ID ${dto.courseId} not found`);
 
-    if (dto.teacherId) {
-      const teacher = await this.prisma.teacher.findUnique({ where: { teacherId: dto.teacherId } });
+    const bigTeacherId = toBigInt(dto.teacherId);
+    if (bigTeacherId !== undefined) {
+      const teacher = await this.prisma.teacher.findUnique({ where: { id: bigTeacherId } });
       if (!teacher) throw new NotFoundException(`Teacher with ID ${dto.teacherId} not found`);
     }
 
     const group = await this.prisma.group.create({
       data: {
         name: dto.name,
-        courseId: dto.courseId,
-        teacherId: dto.teacherId || null,
+        courseId: bigCourseId,
+        teacherId: bigTeacherId || null,
         room: dto.room || null,
         maxStudents: dto.maxStudents || 8,
         status: dto.status || GroupStatus.RECRUITING,
@@ -107,7 +123,7 @@ export class GroupsService {
 
     // Auto-generate initial lessons if requested and startDate is provided
     if (dto.generateLessons !== false && dto.startDate && dto.scheduleDays?.length > 0) {
-      await this.generateLessonsForGroup(group.id, {
+      await this.generateLessonsForGroup(group.id.toString(), {
         startDate: dto.startDate,
         startTime: dto.startTime,
         endTime: dto.endTime,
@@ -118,19 +134,22 @@ export class GroupsService {
       });
     }
 
-    return this.getGroup(group.id);
+    return this.getGroup(group.id.toString());
   }
 
   async updateGroup(id: string, dto: UpdateGroupDto) {
-    const existing = await this.prisma.group.findUnique({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Group with ID ${id} not found`);
+
+    const existing = await this.prisma.group.findUnique({ where: { id: bigId } });
     if (!existing) throw new NotFoundException(`Group with ID ${id} not found`);
 
     const updated = await this.prisma.group.update({
-      where: { id },
+      where: { id: bigId },
       data: {
         name: dto.name !== undefined ? dto.name : existing.name,
-        courseId: dto.courseId !== undefined ? dto.courseId : existing.courseId,
-        teacherId: dto.teacherId !== undefined ? dto.teacherId : existing.teacherId,
+        courseId: dto.courseId !== undefined ? (toBigInt(dto.courseId) || null) : existing.courseId,
+        teacherId: dto.teacherId !== undefined ? (toBigInt(dto.teacherId) || null) : existing.teacherId,
         room: dto.room !== undefined ? dto.room : existing.room,
         maxStudents: dto.maxStudents !== undefined ? dto.maxStudents : existing.maxStudents,
         status: dto.status !== undefined ? dto.status : existing.status,
@@ -143,20 +162,26 @@ export class GroupsService {
       },
     });
 
-    return this.getGroup(updated.id);
+    return this.getGroup(updated.id.toString());
   }
 
   async deleteGroup(id: string) {
-    const existing = await this.prisma.group.findUnique({ where: { id } });
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new NotFoundException(`Group with ID ${id} not found`);
+
+    const existing = await this.prisma.group.findUnique({ where: { id: bigId } });
     if (!existing) throw new NotFoundException(`Group with ID ${id} not found`);
 
-    await this.prisma.group.delete({ where: { id } });
+    await this.prisma.group.delete({ where: { id: bigId } });
     return { success: true, id };
   }
 
   async addMember(groupId: string, dto: AddGroupMemberDto) {
+    const bigGroupId = toBigInt(groupId);
+    if (bigGroupId === undefined) throw new NotFoundException(`Group with ID ${groupId} not found`);
+
     const group = await this.prisma.group.findUnique({
-      where: { id: groupId },
+      where: { id: bigGroupId },
       include: { members: true, lessons: true },
     });
     if (!group) throw new NotFoundException(`Group with ID ${groupId} not found`);
@@ -168,12 +193,10 @@ export class GroupsService {
     const student = await this.prisma.students.findUnique({ where: { id: dto.studentId } });
     if (!student) throw new NotFoundException(`Student with ID ${dto.studentId} not found`);
 
-    const existingMember = await this.prisma.groupMember.findUnique({
+    const existingMember = await this.prisma.groupMember.findFirst({
       where: {
-        groupId_studentId: {
-          groupId,
-          studentId: dto.studentId,
-        },
+        groupId: bigGroupId,
+        studentId: dto.studentId,
       },
     });
 
@@ -183,7 +206,7 @@ export class GroupsService {
 
     const member = await this.prisma.groupMember.create({
       data: {
-        groupId,
+        groupId: bigGroupId,
         studentId: dto.studentId,
         bookingId: dto.bookingId || null,
         status: dto.status || GroupMemberStatus.ACTIVE,
@@ -194,39 +217,41 @@ export class GroupsService {
     if (dto.bookingId) {
       await this.prisma.booking.update({
         where: { id: dto.bookingId },
-        data: { groupId },
+        data: { groupId: bigGroupId },
       });
     }
 
     // Auto-create attendance records for all upcoming lessons of this group
     for (const lesson of group.lessons) {
-      await this.prisma.attendanceRecord.upsert({
+      const existingAtt = await this.prisma.attendanceRecord.findFirst({
         where: {
-          lessonId_studentId: {
-            lessonId: lesson.id,
-            studentId: dto.studentId,
-          },
-        },
-        update: {},
-        create: {
           lessonId: lesson.id,
           studentId: dto.studentId,
-          bookingId: dto.bookingId || null,
-          status: 1, // PENDING
         },
       });
+      if (!existingAtt) {
+        await this.prisma.attendanceRecord.create({
+          data: {
+            lessonId: lesson.id,
+            studentId: dto.studentId,
+            bookingId: dto.bookingId || null,
+            status: 1, // PENDING
+          },
+        });
+      }
     }
 
     return member;
   }
 
   async removeMember(groupId: string, studentId: string) {
-    const member = await this.prisma.groupMember.findUnique({
+    const bigGroupId = toBigInt(groupId);
+    if (bigGroupId === undefined) throw new NotFoundException(`Group with ID ${groupId} not found`);
+
+    const member = await this.prisma.groupMember.findFirst({
       where: {
-        groupId_studentId: {
-          groupId,
-          studentId,
-        },
+        groupId: bigGroupId,
+        studentId,
       },
     });
 
@@ -258,7 +283,10 @@ export class GroupsService {
       lessonDuration: number;
     },
   ) {
-    const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    const bigGroupId = toBigInt(groupId);
+    if (bigGroupId === undefined) return;
+
+    const group = await this.prisma.group.findUnique({ where: { id: bigGroupId } });
     if (!group) return;
 
     const dates = calculateLessonDates(
@@ -276,7 +304,7 @@ export class GroupsService {
     for (const d of dates) {
       await this.prisma.lesson.create({
         data: {
-          groupId,
+          groupId: bigGroupId,
           courseId: group.courseId,
           teacherId: group.teacherId || null,
           startsAt: new Date(d.startsAt),
@@ -290,16 +318,16 @@ export class GroupsService {
 
   private mapGroupResponse(g: any) {
     return {
-      id: g.id,
+      id: g.id ? g.id.toString() : '',
       createdAt: g.createdAt instanceof Date ? g.createdAt.toISOString() : g.createdAt,
       updatedAt: g.updatedAt instanceof Date ? g.updatedAt.toISOString() : g.updatedAt,
       name: g.name,
-      courseId: g.courseId,
+      courseId: g.courseId ? g.courseId.toString() : null,
       courseName: g.course?.name || null,
-      course: g.course,
-      teacherId: g.teacherId,
+      course: g.course ? { ...g.course, id: g.course.id ? g.course.id.toString() : '' } : null,
+      teacherId: g.teacherId ? g.teacherId.toString() : null,
       teacherName: g.teacher?.fullName || null,
-      teacher: g.teacher,
+      teacher: g.teacher ? { ...g.teacher, id: g.teacher.id ? g.teacher.id.toString() : '' } : null,
       room: g.room,
       maxStudents: g.maxStudents,
       currentEnrolledCount: g.members?.length || 0,
@@ -312,7 +340,7 @@ export class GroupsService {
       notes: g.notes,
       members: g.members?.map((m: any) => ({
         id: m.id,
-        groupId: m.groupId,
+        groupId: m.groupId ? m.groupId.toString() : null,
         studentId: m.studentId,
         bookingId: m.bookingId,
         joinedAt: m.joinedAt instanceof Date ? m.joinedAt.toISOString() : m.joinedAt,
@@ -328,7 +356,7 @@ export class GroupsService {
           : null,
       })) || [],
       lessons: g.lessons?.map((l: any) => ({
-        id: l.id,
+        id: l.id ? l.id.toString() : '',
         startsAt: l.startsAt instanceof Date ? l.startsAt.toISOString() : l.startsAt,
         endsAt: l.endsAt instanceof Date ? l.endsAt.toISOString() : l.endsAt,
         status: l.status,

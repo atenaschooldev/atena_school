@@ -10,26 +10,24 @@ datasource db {
 }
 
 model User {
-  id        String   @id @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  email     String   @unique
-  fullName  String   @map("full_name")
-  role      Int      @default(1) @db.SmallInt
-  isActive  Boolean  @default(true) @map("is_active")
-  phone     String?
-  taxCode   String?  @map("tax_code")
-  sdiCode   String?  @map("sdi_code")
-  pecEmail  String?  @map("pec_email")
-  avatarUrl String?  @map("avatar_url")
-  notes     String?
-
-  teacher          Teacher?
-  bookings         Booking[]
-  payments         Payment[]
-  landing_api_logs landing_api_logs[]
-  app_api_logs     app_api_logs[]
-  admin_api_logs   admin_api_logs[]
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  email              String             @unique
+  fullName           String             @map("full_name")
+  role               Int                @default(1) @db.SmallInt
+  isActive           Boolean            @default(true) @map("is_active")
+  phone              String?
+  taxCode            String?            @map("tax_code")
+  sdiCode            String?            @map("sdi_code")
+  pecEmail           String?            @map("pec_email")
+  avatarUrl          String?            @map("avatar_url")
+  notes              String?
+  annual_memberships AnnualMembership[]
+  bookings           Booking[]
+  payments           Payment[]
+  students           students[]
+  teachers           Teacher[]
 
   @@index([role], map: "idx_users_role")
   @@index([taxCode], map: "idx_users_tax_code")
@@ -39,58 +37,56 @@ model User {
 }
 
 model Course {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  name                  String
-  slug                  String    @unique
-  category              Int       @default(1) @db.SmallInt
-  status                Int       @default(1) @db.SmallInt
-  sortOrder             Int?      @default(0) @map("sort_order")
-  photoUrl              String?   @map("photo_url")
-  description           String?
-  teacherId             String?   @map("teacher_id") @db.Uuid
-  billingType           Int       @default(1) @map("billing_type") @db.SmallInt
-  price                 Decimal?  @db.Decimal(10, 2)
-  subscriptionPrice     Decimal?  @map("subscription_price") @db.Decimal(10, 2)
-  stripeMonthlyPriceId  String?   @map("stripe_monthly_price_id")
-  categoryId            String?   @map("category_id") @db.Uuid
-  settingsId            String?   @map("settings_id") @db.Uuid
-
-  courseCategory        CourseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  settings              CourseSettings? @relation(fields: [settingsId], references: [id], onDelete: SetNull)
-  bookings              Booking[]
-  courseTeachers        CourseTeacher[]
-  lessons               Lesson[]
-  groups                Group[]
-  formTemplates         FormTemplate[]
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name                 String
+  slug                 String          @unique
+  category             Int             @default(1) @db.SmallInt
+  status               Int             @default(1) @db.SmallInt
+  sortOrder            Int?            @default(0) @map("sort_order")
+  photoUrl             String?         @map("photo_url")
+  description          String?
+  billingType          Int             @default(1) @map("billing_type") @db.SmallInt
+  price                Decimal?        @db.Decimal(10, 2)
+  subscriptionPrice    Decimal?        @map("subscription_price") @db.Decimal(10, 2)
+  stripeMonthlyPriceId String?         @map("stripe_monthly_price_id")
+  categoryId           BigInt?         @map("category_id")
+  settingsId           BigInt?         @map("settings_id")
+  teacherId            BigInt?         @map("teacher_id")
+  id                   BigInt          @id @default(autoincrement())
+  bookings             Booking[]
+  courseTeachers       CourseTeacher[]
+  courseCategory       CourseCategory? @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
+  settings             CourseSettings? @relation(fields: [settingsId], references: [id], onUpdate: NoAction)
+  teachers             Teacher?        @relation(fields: [teacherId], references: [id], onUpdate: NoAction)
+  formTemplates        FormTemplate[]
+  groups               Group[]
+  lessons              Lesson[]
 
   @@index([slug], map: "idx_courses_slug")
   @@index([status], map: "idx_courses_status")
-  @@index([teacherId], map: "idx_courses_teacher_id")
   @@index([category], map: "idx_courses_category")
-  @@index([categoryId], map: "idx_courses_category_id")
-  @@index([settingsId], map: "idx_courses_settings_id")
   @@map("courses")
 }
 
 model Teacher {
-  teacherId  String    @id @map("teacher_id") @db.Uuid
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  fullName   String?   @map("full_name")
-  isActive   Boolean   @default(true) @map("is_active")
-  experience String?
-  photoUrl   String?   @map("photo_url")
-  colorValue BigInt?   @default(4279899379) @map("color_value")
-  hireDate   DateTime? @default(now()) @map("hire_date") @db.Date
-  birthDate  DateTime? @map("birth_date") @db.Date
-  contractId String?   @map("contract_id") @db.Uuid
-
-  user           User?     @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  lessons        Lesson[]
+  user_id        String?         @db.Uuid
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  fullName       String?         @map("full_name")
+  isActive       Boolean         @default(true) @map("is_active")
+  experience     String?
+  photoUrl       String?         @map("photo_url")
+  colorValue     BigInt?         @default(4279899379) @map("color_value")
+  hireDate       DateTime?       @default(dbgenerated("CURRENT_DATE")) @map("hire_date") @db.Date
+  birthDate      DateTime?       @map("birth_date") @db.Date
+  contractId     String?         @map("contract_id") @db.Uuid
+  id             BigInt          @id @default(autoincrement())
   courseTeachers CourseTeacher[]
+  courses        Course[]
   groups         Group[]
+  lessons        Lesson[]
+  users          User?           @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@index([isActive], map: "idx_teachers_is_active")
   @@index([hireDate], map: "idx_teachers_hire_date")
@@ -99,168 +95,144 @@ model Teacher {
 }
 
 model CourseTeacher {
-  courseId  String   @map("course_id") @db.Uuid
-  teacherId String   @map("teacher_id") @db.Uuid
   role      Int      @default(1) @db.SmallInt
   isPrimary Boolean  @default(true) @map("is_primary")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  teacher Teacher @relation(fields: [teacherId], references: [teacherId], onDelete: Cascade)
+  teacherId BigInt   @map("teacher_id")
+  courseId  BigInt   @map("course_id")
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([courseId, teacherId])
-  @@index([teacherId], map: "idx_course_teachers_teacher_id")
   @@map("course_teachers")
 }
 
 model Booking {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  sessionId            String?   @map("session_id")
-  userId               String?   @map("user_id") @db.Uuid
-  studentId            String?   @map("student_id") @db.Uuid
-  courseId             String?   @map("course_id") @db.Uuid
-  groupId              String?   @map("group_id") @db.Uuid
-  courseName           String?   @map("course_name")
-
-  studentName          String    @map("student_name")
-  studentEmail         String?   @map("student_email")
-  studentPhone         String?   @map("student_phone")
-  studentTaxCode       String?   @map("student_tax_code")
-  studentBirthDate     DateTime? @map("student_birth_date") @db.Date
-
-  purchaserName        String?   @map("purchaser_name")
-  purchaserEmail       String?   @map("purchaser_email")
-  purchaserPhone       String?   @map("purchaser_phone")
-  purchaserTaxCode     String?   @map("purchaser_tax_code")
-  sdiCode              String?   @map("sdi_code")
-  pecEmail             String?   @map("pec_email")
-
-  bookingStatus        Int       @default(1) @map("booking_status") @db.SmallInt
-  paymentStatus        Int       @default(1) @map("payment_status") @db.SmallInt
-  schedulingStatus     Int       @default(1) @map("scheduling_status") @db.SmallInt
-
-  billingScheme        Int       @default(1) @map("billing_scheme") @db.SmallInt
-  paymentMethod        Int       @default(1) @map("payment_method") @db.SmallInt
-  amountPaid           Decimal   @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
-  registrationFee      Decimal   @default(0.00) @map("registration_fee") @db.Decimal(10, 2)
-  discountAmount       Decimal   @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
-  promoCode            String?   @map("promo_code")
-
-  startDate            DateTime? @map("start_date") @db.Date
-  scheduleDays         Int[]     @map("schedule_days")
-  startTime            String?   @map("start_time")
-  endTime              String?   @map("end_time")
-  totalLessonsCount    Int?      @map("total_lessons_count")
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sessionId            String?            @map("session_id")
+  userId               String?            @map("user_id") @db.Uuid
+  studentId            String?            @map("student_id") @db.Uuid
+  courseName           String?            @map("course_name")
+  studentName          String             @map("student_name")
+  studentEmail         String?            @map("student_email")
+  studentPhone         String?            @map("student_phone")
+  studentTaxCode       String?            @map("student_tax_code")
+  studentBirthDate     DateTime?          @map("student_birth_date") @db.Date
+  purchaserName        String?            @map("purchaser_name")
+  purchaserEmail       String?            @map("purchaser_email")
+  purchaserPhone       String?            @map("purchaser_phone")
+  purchaserTaxCode     String?            @map("purchaser_tax_code")
+  sdiCode              String?            @map("sdi_code")
+  pecEmail             String?            @map("pec_email")
+  bookingStatus        Int                @default(1) @map("booking_status") @db.SmallInt
+  paymentStatus        Int                @default(1) @map("payment_status") @db.SmallInt
+  schedulingStatus     Int                @default(1) @map("scheduling_status") @db.SmallInt
+  billingScheme        Int                @default(1) @map("billing_scheme") @db.SmallInt
+  paymentMethod        Int                @default(1) @map("payment_method") @db.SmallInt
+  amountPaid           Decimal            @default(0.00) @map("amount_paid") @db.Decimal(10, 2)
+  registrationFee      Decimal            @default(0.00) @map("registration_fee") @db.Decimal(10, 2)
+  discountAmount       Decimal            @default(0.00) @map("discount_amount") @db.Decimal(10, 2)
+  promoCode            String?            @map("promo_code")
+  startDate            DateTime?          @map("start_date") @db.Date
+  scheduleDays         Int[]              @map("schedule_days")
+  startTime            String?            @map("start_time")
+  endTime              String?            @map("end_time")
+  totalLessonsCount    Int?               @map("total_lessons_count")
   notes                String?
-
-  stripeCustomerId     String?   @map("stripe_customer_id")
-  stripeSubscriptionId String?   @map("stripe_subscription_id")
-  subscriptionStatus   Int?      @map("subscription_status") @db.SmallInt
-  subscriptionStartsAt DateTime? @map("subscription_starts_at") @db.Timestamptz(6)
-  subscriptionEndsAt   DateTime? @map("subscription_ends_at") @db.Timestamptz(6)
-  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
-
-  formId               String?            @map("form_id") @db.Uuid
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?            @map("stripe_subscription_id")
+  subscriptionStatus   Int?               @map("subscription_status") @db.SmallInt
+  subscriptionStartsAt DateTime?          @map("subscription_starts_at") @db.Timestamptz(6)
+  subscriptionEndsAt   DateTime?          @map("subscription_ends_at") @db.Timestamptz(6)
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  student_birth_place  String?
   customFields         Json?              @default("{}") @map("custom_fields")
-  promoCodeId          String?            @map("promo_code_id") @db.Uuid
-
-  course               Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  student              students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  user                 User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
-  group                Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  formTemplate         FormTemplate?      @relation(fields: [formId], references: [id], onDelete: SetNull)
-  promoCodeRel         PromoCode?         @relation(fields: [promoCodeId], references: [id], onDelete: SetNull)
+  courseId             BigInt?            @map("course_id")
+  groupId              BigInt?            @map("group_id")
+  promoCodeId          BigInt?            @map("promo_code_id")
+  formId               BigInt?            @map("form_id")
+  attendanceRecords    AttendanceRecord[]
+  course               Course?            @relation(fields: [courseId], references: [id], onUpdate: NoAction)
+  formTemplate         FormTemplate?      @relation(fields: [formId], references: [id], onUpdate: NoAction)
+  group                Group?             @relation(fields: [groupId], references: [id], onUpdate: NoAction)
+  promoCodeRel         PromoCode?         @relation(fields: [promoCodeId], references: [id], onUpdate: NoAction)
+  student              students?          @relation(fields: [studentId], references: [id], onUpdate: NoAction)
+  user                 User?              @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  groupMembers         GroupMember[]
   lessons              Lesson[]
   payments             Payment[]
-  attendanceRecords    AttendanceRecord[]
-  groupMembers         GroupMember[]
 
   @@index([userId], map: "idx_bookings_user_id")
   @@index([studentId], map: "idx_bookings_student_id")
-  @@index([courseId], map: "idx_bookings_course_id")
-  @@index([groupId], map: "idx_bookings_group_id")
-  @@index([formId], map: "idx_bookings_form_id")
-  @@index([promoCodeId], map: "idx_bookings_promo_code_id")
-  @@index([sessionId], map: "idx_bookings_session_id")
-  @@index([createdAt], map: "idx_bookings_created_at")
+  @@index([createdAt(sort: Desc)], map: "idx_bookings_created_at")
   @@index([paymentStatus], map: "idx_bookings_payment_status")
   @@index([bookingStatus], map: "idx_bookings_booking_status")
-  @@index([schedulingStatus], map: "idx_bookings_scheduling_status")
   @@index([purchaserTaxCode], map: "idx_bookings_purchaser_tax_code")
   @@index([studentTaxCode], map: "idx_bookings_student_tax_code")
-  @@index([stripeSubscriptionId], map: "idx_bookings_stripe_subscription_id")
-  @@index([studentId, courseId, paymentStatus, bookingStatus], map: "idx_bookings_active_services")
+  @@index([customFields], map: "idx_bookings_custom_fields", type: Gin)
   @@map("bookings")
 }
 
 model Lesson {
-  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt       DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
-  bookingId       String?   @map("booking_id") @db.Uuid
-  groupId         String?   @map("group_id") @db.Uuid
-  courseId        String?   @map("course_id") @db.Uuid
-  studentId       String?   @map("student_id") @db.Uuid
-  teacherId       String?   @map("teacher_id") @db.Uuid
-  startsAt        DateTime  @map("starts_at") @db.Timestamptz(6)
-  endsAt          DateTime  @map("ends_at") @db.Timestamptz(6)
-  status          Int       @default(1)
-  attendance      Int       @default(1)
-  locationType    Int       @default(1) @map("location_type")
-  meetingLink     String?   @map("meeting_link")
-  homework        String?
-  teacherNotes    String?   @map("teacher_notes")
-  rescheduleCount Int       @default(0) @map("reschedule_count")
-  rescheduledAt   DateTime? @map("rescheduled_at") @db.Timestamptz(6)
-  updatedAt       DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  group             Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  course            Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  student           students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  teacher           Teacher?           @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
+  createdAt         DateTime?          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  bookingId         String?            @map("booking_id") @db.Uuid
+  studentId         String?            @map("student_id") @db.Uuid
+  startsAt          DateTime           @map("starts_at") @db.Timestamptz(6)
+  endsAt            DateTime           @map("ends_at") @db.Timestamptz(6)
+  status            Int                @default(1)
+  attendance        Int                @default(1)
+  locationType      Int                @default(1) @map("location_type")
+  meetingLink       String?            @map("meeting_link")
+  homework          String?
+  teacherNotes      String?            @map("teacher_notes")
+  rescheduleCount   Int                @default(0) @map("reschedule_count")
+  rescheduledAt     DateTime?          @map("rescheduled_at") @db.Timestamptz(6)
+  teacherId         BigInt?            @map("teacher_id")
+  courseId          BigInt?            @map("course_id")
+  groupId           BigInt?            @map("group_id")
+  id                BigInt             @id @default(autoincrement())
   attendanceRecords AttendanceRecord[]
+  booking           Booking?           @relation(fields: [bookingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  course            Course?            @relation(fields: [courseId], references: [id], onUpdate: NoAction)
+  group             Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  student           students?          @relation(fields: [studentId], references: [id], onUpdate: NoAction)
+  teacher           Teacher?           @relation(fields: [teacherId], references: [id], onUpdate: NoAction)
 
   @@index([bookingId], map: "idx_lessons_booking_id")
-  @@index([groupId], map: "idx_lessons_group_id")
-  @@index([courseId], map: "idx_lessons_course_id")
   @@index([studentId], map: "idx_lessons_student_id")
-  @@index([teacherId], map: "idx_lessons_teacher_id")
   @@index([startsAt], map: "idx_lessons_starts_at")
   @@index([status], map: "idx_lessons_status")
   @@map("lessons")
 }
 
 model Payment {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  paidAt                DateTime? @default(now()) @map("paid_at") @db.Timestamptz(6)
-  updatedAt             DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  bookingId             String?   @map("booking_id") @db.Uuid
-  studentId             String?   @map("student_id") @db.Uuid
-  userId                String?   @map("user_id") @db.Uuid
-
-  amount                Decimal   @db.Decimal(10, 2)
-  currency              Int       @default(1) @db.SmallInt
-  type                  Int       @default(1) @db.SmallInt
-  status                Int       @default(2) @db.SmallInt
-  paymentMethod         Int       @default(1) @map("payment_method") @db.SmallInt
-  provider              Int       @default(1) @db.SmallInt
-  providerTransactionId String?   @map("provider_transaction_id")
+  id                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt             DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  paidAt                DateTime?          @default(now()) @map("paid_at") @db.Timestamptz(6)
+  updatedAt             DateTime?          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  bookingId             String?            @map("booking_id") @db.Uuid
+  studentId             String?            @map("student_id") @db.Uuid
+  userId                String?            @map("user_id") @db.Uuid
+  amount                Decimal            @db.Decimal(10, 2)
+  currency              Int                @default(1) @db.SmallInt
+  type                  Int                @default(1) @db.SmallInt
+  status                Int                @default(2) @db.SmallInt
+  paymentMethod         Int                @default(1) @map("payment_method") @db.SmallInt
+  provider              Int                @default(1) @db.SmallInt
+  providerTransactionId String?            @map("provider_transaction_id")
   notes                 String?
-
-  booking               Booking?           @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  student               students?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  user                  User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   annualMemberships     AnnualMembership[]
+  booking               Booking?           @relation(fields: [bookingId], references: [id], onUpdate: NoAction)
+  student               students?          @relation(fields: [studentId], references: [id], onUpdate: NoAction)
+  user                  User?              @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
   @@index([bookingId], map: "idx_payments_booking_id")
   @@index([studentId], map: "idx_payments_student_id")
   @@index([userId], map: "idx_payments_user_id")
-  @@index([createdAt], map: "idx_payments_created_at")
-  @@index([paidAt], map: "idx_payments_paid_at")
+  @@index([createdAt(sort: Desc)], map: "idx_payments_created_at")
   @@index([status], map: "idx_payments_status")
   @@index([type], map: "idx_payments_type")
   @@map("payments")
@@ -280,36 +252,37 @@ model AnnualMembership {
   academicYear     String    @default("2026/2027") @map("academic_year")
   paidAt           DateTime  @default(now()) @map("paid_at") @db.Timestamptz(6)
   expiresAt        DateTime  @map("expires_at") @db.Timestamptz(6)
+  payment          Payment?  @relation(fields: [paymentId], references: [id], onUpdate: NoAction)
+  student          students? @relation(fields: [studentId], references: [id], onUpdate: NoAction)
+  users            User?     @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
-  student   students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
-  payment   Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
-
-  @@unique([taxCode, academicYear])
+  @@unique([taxCode, academicYear], map: "uq_tax_academic_year")
   @@index([studentId], map: "idx_annual_memberships_student_id")
   @@index([userId], map: "idx_annual_memberships_user_id")
-  @@index([paymentId], map: "idx_annual_memberships_payment_id")
   @@index([academicYear], map: "idx_annual_memberships_academic_year")
-  @@index([status], map: "idx_annual_memberships_status")
   @@map("annual_memberships")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ContactMessage {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  email     String
-  phone     String?
-  interest  String?
-  message   String
-  status    Int      @default(1) @db.SmallInt
-  notes     String?
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  firstName      String        @map("first_name")
+  lastName       String        @map("last_name")
+  email          String
+  phone          String?
+  interest       String?
+  message        String
+  status         Int           @default(1) @db.SmallInt
+  notes          String?
+  custom_fields  Json?         @default("{}")
+  form_id        BigInt?
+  form_templates FormTemplate? @relation(fields: [form_id], references: [id], onUpdate: NoAction)
 
   @@index([createdAt(sort: Desc)], map: "idx_contact_messages_created_at")
   @@index([status], map: "idx_contact_messages_status")
-  @@index([email], map: "idx_contact_messages_email")
+  @@index([custom_fields], map: "idx_contact_messages_custom_fields", type: Gin)
   @@map("contact_messages")
 }
 
@@ -321,8 +294,8 @@ model documents {
   student_name    String
   student_email   String
   parent_name     String?
-  joining_date    DateTime @default(now()) @db.Date
-  template_data   Json
+  joining_date    DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  template_data   Json     @default("{}")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -331,38 +304,37 @@ model stripe_webhook_events {
   stripe_event_id String   @unique
   event_type      String
   processed_at    DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([processed_at], map: "idx_stripe_webhook_events_processed_at")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model students {
-  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  created_at         DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime           @default(now()) @updatedAt @db.Timestamptz(6)
   first_name         String
   last_name          String
   full_name          String?
   email              String?
   phone              String?
   tax_code           String?
-  birth_date         DateTime? @db.Date
+  birth_date         DateTime?          @db.Date
   photo_url          String?
-  language_level     Int       @default(1) @db.SmallInt
-  status             Int       @default(1) @db.SmallInt
-  annual_fee_paid    Boolean   @default(false)
-  annual_fee_paid_at DateTime? @db.Timestamptz(6)
-  registration_date  DateTime  @default(now()) @db.Date
-  parent_id          String?   @db.Uuid
-  student_user_id    String?   @db.Uuid
-  contract_id        String?   @db.Uuid
-
-  payments          Payment[]
-  annualMemberships AnnualMembership[]
-  lessons           Lesson[]
-  bookings          Booking[]
-  attendanceRecords AttendanceRecord[]
-  groupMembers      GroupMember[]
+  language_level     Int                @default(1) @db.SmallInt
+  status             Int                @default(1) @db.SmallInt
+  annual_fee_paid    Boolean            @default(false)
+  annual_fee_paid_at DateTime?          @db.Timestamptz(6)
+  registration_date  DateTime           @default(dbgenerated("CURRENT_DATE")) @db.Date
+  parent_id          String?            @db.Uuid
+  student_user_id    String?            @db.Uuid
+  contract_id        String?            @db.Uuid
+  birth_place        String?
+  annualMemberships  AnnualMembership[]
+  attendanceRecords  AttendanceRecord[]
+  bookings           Booking[]
+  groupMembers       GroupMember[]
+  lessons            Lesson[]
+  payments           Payment[]
+  users              User?              @relation(fields: [student_user_id], references: [id], onUpdate: NoAction)
 
   @@index([parent_id], map: "idx_students_parent_id")
   @@index([student_user_id], map: "idx_students_student_user_id")
@@ -374,30 +346,27 @@ model students {
 }
 
 model Group {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  name          String
-  courseId      String    @map("course_id") @db.Uuid
-  teacherId     String?   @map("teacher_id") @db.Uuid
-  room          String?
-  maxStudents   Int       @default(8) @map("max_students")
-  status        Int       @default(1) @db.SmallInt
-  startDate     DateTime? @map("start_date") @db.Date
-  endDate       DateTime? @map("end_date") @db.Date
-  scheduleDays  Int[]     @map("schedule_days")
-  startTime     String?   @map("start_time")
-  endTime       String?   @map("end_time")
-  notes         String?
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name         String
+  room         String?
+  maxStudents  Int           @default(8) @map("max_students")
+  status       Int           @default(1) @db.SmallInt
+  startDate    DateTime?     @map("start_date") @db.Date
+  endDate      DateTime?     @map("end_date") @db.Date
+  scheduleDays Int[]         @map("schedule_days")
+  startTime    String?       @map("start_time")
+  endTime      String?       @map("end_time")
+  notes        String?
+  teacherId    BigInt?       @map("teacher_id")
+  courseId     BigInt?       @map("course_id")
+  id           BigInt        @id @default(autoincrement())
+  bookings     Booking[]
+  members      GroupMember[]
+  course       Course?       @relation(fields: [courseId], references: [id], onUpdate: NoAction)
+  teacher      Teacher?      @relation(fields: [teacherId], references: [id], onUpdate: NoAction)
+  lessons      Lesson[]
 
-  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  teacher       Teacher?      @relation(fields: [teacherId], references: [teacherId], onDelete: SetNull)
-  members       GroupMember[]
-  lessons       Lesson[]
-  bookings      Booking[]
-
-  @@index([courseId], map: "idx_groups_course_id")
-  @@index([teacherId], map: "idx_groups_teacher_id")
   @@index([status], map: "idx_groups_status")
   @@map("groups")
 }
@@ -406,45 +375,35 @@ model GroupMember {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  groupId   String   @map("group_id") @db.Uuid
   studentId String   @map("student_id") @db.Uuid
   bookingId String?  @map("booking_id") @db.Uuid
   joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
   status    Int      @default(1) @db.SmallInt
+  groupId   BigInt?  @map("group_id")
+  booking   Booking? @relation(fields: [bookingId], references: [id], onUpdate: NoAction)
+  group     Group?   @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  student   students @relation(fields: [studentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  student   students @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-
-  @@unique([groupId, studentId], map: "uq_group_student")
-  @@index([groupId], map: "idx_group_members_group_id")
   @@index([studentId], map: "idx_group_members_student_id")
-  @@index([bookingId], map: "idx_group_members_booking_id")
   @@map("group_members")
 }
 
 model AttendanceRecord {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  markedAt  DateTime @default(now()) @map("marked_at") @db.Timestamptz(6)
-  lessonId  String   @map("lesson_id") @db.Uuid
-  bookingId String?  @map("booking_id") @db.Uuid
-  studentId String?  @map("student_id") @db.Uuid
-  status    Int      @default(1) @db.SmallInt
-  markedBy  String?  @map("marked_by")
-  notes     String?  @db.Text
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  markedAt  DateTime  @default(now()) @map("marked_at") @db.Timestamptz(6)
+  bookingId String?   @map("booking_id") @db.Uuid
+  studentId String?   @map("student_id") @db.Uuid
+  status    Int       @default(1) @db.SmallInt
+  markedBy  String?   @map("marked_by")
+  notes     String?
+  lessonId  BigInt?   @map("lesson_id")
+  booking   Booking?  @relation(fields: [bookingId], references: [id], onUpdate: NoAction)
+  lesson    Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  student   students? @relation(fields: [studentId], references: [id], onUpdate: NoAction)
 
-  lesson  Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  booking Booking?  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
-  student students? @relation(fields: [studentId], references: [id], onDelete: SetNull)
-
-  @@unique([lessonId, studentId], map: "uq_attendance_lesson_student")
-  @@index([lessonId], map: "idx_attendance_records_lesson_id")
   @@index([studentId], map: "idx_attendance_records_student_id")
-  @@index([bookingId], map: "idx_attendance_records_booking_id")
-  @@index([status], map: "idx_attendance_records_status")
-  @@index([markedAt(sort: Desc)], map: "idx_attendance_records_marked_at")
   @@map("attendance_records")
 }
 
@@ -458,13 +417,12 @@ model AppSetting {
 }
 
 model SchoolProfile {
-  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   isDefault              Boolean  @default(true) @map("is_default")
   name                   String   @default("Atena School") @db.VarChar(255)
   legalName              String?  @map("legal_name") @db.VarChar(255)
   tagline                String?  @db.VarChar(255)
   founders               String?  @db.VarChar(255)
-  logoUrl                String?  @map("logo_url") @db.Text
+  logoUrl                String?  @map("logo_url")
   website                String?  @db.VarChar(255)
   siteUrl                String?  @map("site_url") @db.VarChar(255)
   appUrl                 String?  @map("app_url") @db.VarChar(255)
@@ -474,14 +432,14 @@ model SchoolProfile {
   cap                    String?  @db.VarChar(20)
   province               String?  @db.VarChar(10)
   country                String?  @default("Italia") @db.VarChar(100)
-  mapsUrl                String?  @map("maps_url") @db.Text
+  mapsUrl                String?  @map("maps_url")
   phone                  String?  @db.VarChar(50)
   landline               String?  @db.VarChar(50)
   whatsapp               String?  @db.VarChar(50)
   email                  String?  @db.VarChar(255)
   secretariatEmail       String?  @map("secretariat_email") @db.VarChar(255)
   supportEmail           String?  @map("support_email") @db.VarChar(255)
-  secretariatHours       String?  @map("secretariat_hours") @db.Text
+  secretariatHours       String?  @map("secretariat_hours")
   vatCode                String?  @map("vat_code") @db.VarChar(100)
   registrationFeeEnabled Boolean  @default(true) @map("registration_fee_enabled")
   registrationFeeEur     Decimal  @default(30.00) @map("registration_fee_eur") @db.Decimal(10, 2)
@@ -492,60 +450,53 @@ model SchoolProfile {
   socials                Json     @default("{}")
   createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt              DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                     BigInt   @id @default(autoincrement())
 
   @@map("school_profiles")
 }
 
 model landing_api_logs {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  controller String   @db.VarChar(100)
-  action     String   @db.VarChar(100)
-  httpMethod String   @map("http_method") @db.VarChar(10)
-  endpoint   String   @db.VarChar(255)
-  userId     String?  @map("user_id") @db.Uuid
-  userRole   Int?     @map("user_role") @db.SmallInt
-  ipAddress  String?  @map("ip_address") @db.VarChar(45)
-  userAgent  String?  @map("user_agent") @db.Text
-  request    Json?
-  response   Json?
-  statusCode Int      @map("status_code")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  controller       String   @db.VarChar(100)
+  action           String   @db.VarChar(100)
+  httpMethod       String   @map("http_method") @db.VarChar(10)
+  endpoint         String   @db.VarChar(255)
+  userId           String?  @map("user_id") @db.Uuid
+  userRole         Int?     @map("user_role") @db.SmallInt
+  ipAddress        String?  @map("ip_address") @db.VarChar(45)
+  userAgent        String?  @map("user_agent")
+  request          Json?
+  response         Json?
+  statusCode       Int      @map("status_code")
+  session_id       String?
+  guest_identifier String?
+  id               BigInt   @id @default(autoincrement())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([controller, action], map: "idx_landing_api_logs_controller_action")
-  @@index([userId], map: "idx_landing_api_logs_user_id")
-  @@index([statusCode], map: "idx_landing_api_logs_status_code")
   @@index([createdAt(sort: Desc)], map: "idx_landing_api_logs_created_at")
   @@map("landing_api_logs")
 }
 
 model app_api_logs {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  controller String   @db.VarChar(100)
-  action     String   @db.VarChar(100)
-  httpMethod String   @map("http_method") @db.VarChar(10)
-  endpoint   String   @db.VarChar(255)
-  userId     String?  @map("user_id") @db.Uuid
-  userRole   Int?     @map("user_role") @db.SmallInt
-  ipAddress  String?  @map("ip_address") @db.VarChar(45)
-  userAgent  String?  @map("user_agent") @db.Text
-  request    Json?
-  response   Json?
-  statusCode Int      @map("status_code")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  controller       String   @db.VarChar(100)
+  action           String   @db.VarChar(100)
+  httpMethod       String   @map("http_method") @db.VarChar(10)
+  endpoint         String   @db.VarChar(255)
+  userId           String?  @map("user_id") @db.Uuid
+  userRole         Int?     @map("user_role") @db.SmallInt
+  ipAddress        String?  @map("ip_address") @db.VarChar(45)
+  userAgent        String?  @map("user_agent")
+  request          Json?
+  response         Json?
+  statusCode       Int      @map("status_code")
+  session_id       String?
+  guest_identifier String?
+  id               BigInt   @id @default(autoincrement())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([controller, action], map: "idx_app_api_logs_controller_action")
-  @@index([userId], map: "idx_app_api_logs_user_id")
-  @@index([statusCode], map: "idx_app_api_logs_status_code")
-  @@index([createdAt(sort: Desc)], map: "idx_app_api_logs_created_at")
   @@map("app_api_logs")
 }
 
 model admin_api_logs {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   controller String   @db.VarChar(100)
   action     String   @db.VarChar(100)
@@ -554,154 +505,139 @@ model admin_api_logs {
   userId     String?  @map("user_id") @db.Uuid
   userRole   Int?     @map("user_role") @db.SmallInt
   ipAddress  String?  @map("ip_address") @db.VarChar(45)
-  userAgent  String?  @map("user_agent") @db.Text
+  userAgent  String?  @map("user_agent")
   request    Json?
   response   Json?
   statusCode Int      @map("status_code")
+  id         BigInt   @id @default(autoincrement())
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([controller, action], map: "idx_admin_api_logs_controller_action")
-  @@index([userId], map: "idx_admin_api_logs_user_id")
-  @@index([statusCode], map: "idx_admin_api_logs_status_code")
-  @@index([createdAt(sort: Desc)], map: "idx_admin_api_logs_created_at")
   @@map("admin_api_logs")
 }
 
-
 model notification_logs {
-  id                     String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
   channel                Int                     @db.SmallInt
   notificationType       Int                     @map("notification_type") @db.SmallInt
   recipient              String                  @db.VarChar(255)
   subject                String?                 @db.VarChar(255)
-  request                Json
+  request                Json                    @default("{}")
   response               Json?
   status                 Int                     @db.SmallInt
-  notificationTriggerId  String?                 @map("notification_trigger_id") @db.Uuid
-  notificationTemplateId String?                 @map("notification_template_id") @db.Uuid
+  notificationTemplateId BigInt?                 @map("notification_template_id")
+  notificationTriggerId  BigInt?                 @map("notification_trigger_id")
+  id                     BigInt                  @id @default(autoincrement())
+  template               notification_templates? @relation(fields: [notificationTemplateId], references: [id], onUpdate: NoAction)
+  trigger                notification_triggers?  @relation(fields: [notificationTriggerId], references: [id], onUpdate: NoAction)
 
-  trigger                notification_triggers?  @relation(fields: [notificationTriggerId], references: [id], onDelete: SetNull)
-  template               notification_templates? @relation(fields: [notificationTemplateId], references: [id], onDelete: SetNull)
-
-  @@index([channel], map: "idx_notification_logs_channel")
   @@index([recipient], map: "idx_notification_logs_recipient")
-  @@index([notificationType], map: "idx_notification_logs_notification_type")
-  @@index([status], map: "idx_notification_logs_status")
-  @@index([notificationTriggerId], map: "idx_notification_logs_trigger_id")
-  @@index([notificationTemplateId], map: "idx_notification_logs_template_id")
   @@index([createdAt(sort: Desc)], map: "idx_notification_logs_created_at")
   @@map("notification_logs")
 }
 
 model notification_templates {
-  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt          DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  code               String   @unique @db.VarChar(100)
-  name               String   @db.VarChar(255)
-  description        String?  @db.Text
-  channel            Int      @default(1) @db.SmallInt
-  notificationType   Int      @default(1) @map("notification_type") @db.SmallInt
-  recipientType      Int      @default(1) @map("recipient_type") @db.SmallInt
-  subject            String?  @db.VarChar(255)
-  bodyHtml           String?  @map("body_html") @db.Text
-  bodyText           String   @default("") @map("body_text") @db.Text
-  availableVariables Json     @default("[]") @map("available_variables")
-  blocksConfig       Json?    @map("blocks_config")
-  isActive           Boolean  @default(true) @map("is_active")
-
-  triggers           notification_triggers[]
+  createdAt          DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  code               String                  @unique @db.VarChar(100)
+  name               String                  @db.VarChar(255)
+  description        String?
+  channel            Int                     @default(1) @db.SmallInt
+  notificationType   Int                     @map("notification_type") @db.SmallInt
+  recipientType      Int                     @default(1) @map("recipient_type") @db.SmallInt
+  subject            String?                 @db.VarChar(255)
+  bodyHtml           String?                 @map("body_html")
+  bodyText           String                  @map("body_text")
+  availableVariables Json                    @default("[]") @map("available_variables")
+  isActive           Boolean                 @default(true) @map("is_active")
+  blocksConfig       Json?                   @map("blocks_config")
+  id                 BigInt                  @id @default(autoincrement())
   logs               notification_logs[]
+  triggers           notification_triggers[]
 
   @@index([code], map: "idx_notification_templates_code")
   @@index([channel], map: "idx_notification_templates_channel")
   @@index([recipientType], map: "idx_notification_templates_recipient_type")
   @@index([isActive], map: "idx_notification_templates_is_active")
+  @@index([notificationType], map: "idx_notification_templates_type")
   @@map("notification_templates")
 }
 
 model notification_triggers {
-  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt              DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt              DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  name                   String                 @db.VarChar(255)
-  description            String?                @db.Text
-  eventKey               String                 @map("event_key") @db.VarChar(100)
-  notificationTemplateId String                 @map("notification_template_id") @db.Uuid
-  channel                Int                    @default(1) @db.SmallInt
-  recipientType          Int                    @default(1) @map("recipient_type") @db.SmallInt
-  customRecipient        String?                @map("custom_recipient") @db.VarChar(255)
-  conditions             Json?                  @default("{}")
-  timingType             Int                    @default(1) @map("timing_type") @db.SmallInt
-  delaySeconds           Int                    @default(0) @map("delay_seconds")
-  isActive               Boolean                @default(true) @map("is_active")
-
-  template               notification_templates @relation(fields: [notificationTemplateId], references: [id], onDelete: Cascade)
+  createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name                   String                  @db.VarChar(255)
+  description            String?
+  eventKey               String                  @map("event_key") @db.VarChar(100)
+  channel                Int                     @default(1) @db.SmallInt
+  recipientType          Int                     @default(1) @map("recipient_type") @db.SmallInt
+  customRecipient        String?                 @map("custom_recipient") @db.VarChar(255)
+  conditions             Json                    @default("{}")
+  timingType             Int                     @default(1) @map("timing_type") @db.SmallInt
+  delaySeconds           Int                     @default(0) @map("delay_seconds")
+  isActive               Boolean                 @default(true) @map("is_active")
+  notificationTemplateId BigInt?                 @map("notification_template_id")
+  id                     BigInt                  @id @default(autoincrement())
   logs                   notification_logs[]
+  template               notification_templates? @relation(fields: [notificationTemplateId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([eventKey], map: "idx_notification_triggers_event_key")
   @@index([isActive], map: "idx_notification_triggers_is_active")
-  @@index([notificationTemplateId], map: "idx_notification_triggers_notification_template_id")
   @@map("notification_triggers")
 }
 
 model FormTemplate {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  title        String    @db.VarChar(255)
-  description  String?   @db.Text
-  formType     Int       @default(1) @map("form_type") @db.SmallInt
-  isDefault    Boolean   @default(false) @map("is_default")
-  isActive     Boolean   @default(true) @map("is_active")
-  categorySlug String?   @map("category_slug") @db.VarChar(64)
-  courseId     String?   @map("course_id") @db.Uuid
-  fieldsConfig Json      @default("[]") @map("fields_config")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  course       Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  bookings     Booking[]
+  title            String           @db.VarChar(255)
+  description      String?
+  formType         Int              @default(1) @map("form_type") @db.SmallInt
+  isDefault        Boolean          @default(false) @map("is_default")
+  isActive         Boolean          @default(true) @map("is_active")
+  categorySlug     String?          @map("category_slug") @db.VarChar(64)
+  fieldsConfig     Json             @default("[]") @map("fields_config")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  is_system        Boolean          @default(false)
+  courseId         BigInt?          @map("course_id")
+  id               BigInt           @id @default(autoincrement())
+  bookings         Booking[]
+  contact_messages ContactMessage[]
+  course           Course?          @relation(fields: [courseId], references: [id], onUpdate: NoAction)
 
   @@index([formType, isActive], map: "idx_form_templates_type_active")
-  @@index([categorySlug], map: "idx_form_templates_category")
-  @@index([courseId], map: "idx_form_templates_course")
+  @@index([is_system], map: "idx_form_templates_is_system")
   @@map("form_templates")
 }
 
 model PromoCode {
-  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   code                 String    @unique
   description          String?
   discountType         Int       @default(1) @map("discount_type") @db.SmallInt
   discountValue        Decimal   @map("discount_value") @db.Decimal(10, 2)
   waiveRegistrationFee Boolean   @default(false) @map("waive_registration_fee")
   maxUses              Int?      @map("max_uses")
-  maxUsesPerUser       Int?      @map("max_uses_per_user")
-  applicableCourseIds  String[]  @default([]) @map("applicable_course_ids") @db.Uuid
   validFrom            DateTime? @map("valid_from") @db.Timestamptz(6)
   validUntil           DateTime? @map("valid_until") @db.Timestamptz(6)
   isActive             Boolean   @default(true) @map("is_active")
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
+  applicableCourseIds  String[]  @default([]) @map("applicable_course_ids") @db.Uuid
+  maxUsesPerUser       Int?      @map("max_uses_per_user")
+  id                   BigInt    @id @default(autoincrement())
   bookings             Booking[]
 
   @@index([code], map: "idx_promo_codes_code")
   @@index([isActive], map: "idx_promo_codes_is_active")
+  @@index([applicableCourseIds], map: "idx_promo_codes_applicable_courses", type: Gin)
   @@map("promo_codes")
 }
 
 model CourseCategory {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug        String    @unique @db.VarChar(64)
-  name        String    @db.VarChar(255)
-  description String?   @db.Text
-  sortOrder   Int       @default(0) @map("sort_order")
-  isActive    Boolean   @default(true) @map("is_active")
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
+  slug        String   @unique @db.VarChar(64)
+  name        String   @db.VarChar(255)
+  description String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id          BigInt   @id @default(autoincrement())
   courses     Course[]
 
   @@index([slug], map: "idx_course_categories_slug")
@@ -710,28 +646,26 @@ model CourseCategory {
 }
 
 model CourseSettings {
-  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                  String    @default("Configurazione Corso") @db.VarChar(255)
-  deliveryMode          Int       @default(1) @map("delivery_mode") @db.SmallInt
-  scheduleDays          Int[]     @default([]) @map("schedule_days")
-  startTime             String?   @map("start_time") @db.VarChar(8)
-  endTime               String?   @map("end_time") @db.VarChar(8)
-  lessonDurationMinutes Int?      @map("lesson_duration_minutes")
-  lessonsPerWeek        Int?      @map("lessons_per_week")
-  totalLessons          Int?      @map("total_lessons")
-  totalHours            Decimal?  @map("total_hours") @db.Decimal(5, 2)
-  minStudents           Int?      @default(1) @map("min_students")
-  maxStudents           Int?      @default(8) @map("max_students")
-  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
+  deliveryMode          Int      @default(1) @map("delivery_mode") @db.SmallInt
+  scheduleDays          Int[]    @default([]) @map("schedule_days")
+  startTime             String?  @map("start_time") @db.VarChar(8)
+  endTime               String?  @map("end_time") @db.VarChar(8)
+  lessonDurationMinutes Int?     @map("lesson_duration_minutes")
+  lessonsPerWeek        Int?     @map("lessons_per_week")
+  totalLessons          Int?     @map("total_lessons")
+  totalHours            Decimal? @map("total_hours") @db.Decimal(5, 2)
+  minStudents           Int?     @default(1) @map("min_students")
+  maxStudents           Int?     @default(8) @map("max_students")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  name                  String   @default("Configurazione Corso") @db.VarChar(255)
+  id                    BigInt   @id @default(autoincrement())
   courses               Course[]
 
   @@map("course_settings")
 }
 
 model FormField {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   key               String   @unique @db.VarChar(64)
   labelIt           String   @map("label_it") @db.VarChar(255)
   labelEn           String   @map("label_en") @db.VarChar(255)
@@ -745,6 +679,7 @@ model FormField {
   sortOrder         Int      @default(0) @map("sort_order")
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id                BigInt   @id @default(autoincrement())
 
   @@index([target], map: "idx_form_fields_target")
   @@index([key], map: "idx_form_fields_key")
@@ -752,10 +687,13 @@ model FormField {
   @@map("form_fields")
 }
 
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model integration_secrets {
+  provider    String   @id @db.VarChar(50)
+  credentials Json     @default("{}")
+  is_active   Boolean  @default(true)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_by  String?  @db.Uuid
 
-
-
-
-
-
-
+  @@index([provider], map: "idx_integration_secrets_provider")
+}

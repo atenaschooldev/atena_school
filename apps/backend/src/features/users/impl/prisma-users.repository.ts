@@ -77,20 +77,28 @@ export class PrismaUsersRepository implements UsersRepository {
     });
 
     if (user.role === UserRole.TEACHER) {
-      await this.prisma.teacher
-        .upsert({
-          where: { teacherId: user.id },
-          create: {
-            teacherId: user.id,
-            fullName: user.fullName,
-            isActive: user.isActive,
-          },
-          update: {
-            fullName: user.fullName,
-            isActive: user.isActive,
-          },
-        })
-        .catch((e) => console.warn('Could not sync teacher:', e));
+      const existingTeacher = await this.prisma.teacher.findFirst({ where: { user_id: user.id } });
+      if (existingTeacher) {
+        await this.prisma.teacher
+          .update({
+            where: { id: existingTeacher.id },
+            data: {
+              fullName: user.fullName,
+              isActive: user.isActive,
+            },
+          })
+          .catch((e) => console.warn('Could not sync teacher:', e));
+      } else {
+        await this.prisma.teacher
+          .create({
+            data: {
+              user_id: user.id,
+              fullName: user.fullName,
+              isActive: user.isActive,
+            },
+          })
+          .catch((e) => console.warn('Could not sync teacher:', e));
+      }
     }
 
     return toEntity(user);
@@ -125,27 +133,35 @@ export class PrismaUsersRepository implements UsersRepository {
     });
 
     if (user.role === UserRole.TEACHER) {
-      await this.prisma.teacher
-        .upsert({
-          where: { teacherId: user.id },
-          create: {
-            teacherId: user.id,
-            fullName: user.fullName,
-            isActive: user.isActive,
-          },
-          update: {
-            fullName: user.fullName,
-            isActive: user.isActive,
-          },
-        })
-        .catch((e) => console.warn('Could not sync teacher update:', e));
+      const existingTeacher = await this.prisma.teacher.findFirst({ where: { user_id: user.id } });
+      if (existingTeacher) {
+        await this.prisma.teacher
+          .update({
+            where: { id: existingTeacher.id },
+            data: {
+              fullName: user.fullName,
+              isActive: user.isActive,
+            },
+          })
+          .catch((e) => console.warn('Could not sync teacher update:', e));
+      } else {
+        await this.prisma.teacher
+          .create({
+            data: {
+              user_id: user.id,
+              fullName: user.fullName,
+              isActive: user.isActive,
+            },
+          })
+          .catch((e) => console.warn('Could not sync teacher update:', e));
+      }
     }
 
     return toEntity(user);
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.teacher.delete({ where: { teacherId: id } }).catch(() => {});
+    await this.prisma.teacher.deleteMany({ where: { user_id: id } }).catch(() => {});
     await this.prisma.user.delete({
       where: { id },
     });

@@ -319,12 +319,21 @@ export class NotificationTriggerEngineService {
     notificationType: number;
     recipient: string;
     subject?: string;
-    notificationTriggerId?: string;
-    notificationTemplateId?: string;
+    notificationTriggerId?: string | number | bigint;
+    notificationTemplateId?: string | number | bigint;
     request: any;
     response: any;
     status: number;
   }) {
+    const toBigInt = (val: any): bigint | null => {
+      if (val === null || val === undefined || val === '') return null;
+      try {
+        return BigInt(val);
+      } catch {
+        return null;
+      }
+    };
+
     try {
       await this.prisma.notification_logs.create({
         data: {
@@ -332,8 +341,8 @@ export class NotificationTriggerEngineService {
           notificationType: params.notificationType,
           recipient: params.recipient,
           subject: params.subject || null,
-          notificationTriggerId: params.notificationTriggerId || null,
-          notificationTemplateId: params.notificationTemplateId || null,
+          notificationTriggerId: toBigInt(params.notificationTriggerId),
+          notificationTemplateId: toBigInt(params.notificationTemplateId),
           request: params.request,
           response: params.response || null,
           status: params.status,

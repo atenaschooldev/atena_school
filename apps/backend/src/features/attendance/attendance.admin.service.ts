@@ -2,6 +2,15 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { BookingPaymentStatus, LessonAttendance, LessonStatus, parseLessonAttendance } from '@atena/api-types';
 
+function toBigInt(val: any): bigint | undefined {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+}
+
 @Injectable()
 export class AttendanceService {
   private readonly logger = new Logger(AttendanceService.name);
@@ -16,18 +25,20 @@ export class AttendanceService {
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
 
+    const bigCourseId = toBigInt(courseId);
+
     const lessons = await this.prisma.lesson.findMany({
       where: {
         startsAt: {
           gte: startOfDay,
           lte: endOfDay,
         },
-        ...(courseId
+        ...(bigCourseId
           ? {
               OR: [
-                { courseId },
-                { booking: { courseId } },
-                { group: { courseId } },
+                { courseId: bigCourseId },
+                { booking: { courseId: bigCourseId } },
+                { group: { courseId: bigCourseId } },
               ],
             }
           : {}),
@@ -91,16 +102,16 @@ export class AttendanceService {
         : (b?.studentName || b?.purchaserName || 'Studente');
 
       return {
-        id: l.id,
+        id: l.id ? l.id.toString() : '',
         starts_at: l.startsAt,
         ends_at: l.endsAt,
         status: l.status,
         payment_status: bookingPaymentStatus,
         location_type: l.locationType,
-        teacher_id: l.teacherId,
+        teacher_id: l.teacherId ? l.teacherId.toString() : null,
         teacher_name: l.teacher?.fullName || 'Docente',
         booking_id: l.bookingId,
-        group_id: l.groupId,
+        group_id: l.groupId ? l.groupId.toString() : null,
         group_name: grp?.name || null,
         is_group: isGroup,
         course_name: courseName,
@@ -159,8 +170,11 @@ export class AttendanceService {
     notes?: string;
     markedBy?: string;
   }) {
+    const bigLessonId = toBigInt(dto.lessonId);
+    if (bigLessonId === undefined) throw new NotFoundException(`Invalid Lesson ID ${dto.lessonId}`);
+
     const lesson = await this.prisma.lesson.findUnique({
-      where: { id: dto.lessonId },
+      where: { id: bigLessonId },
       include: { booking: true },
     });
 
@@ -175,7 +189,7 @@ export class AttendanceService {
     // Create or update attendance record
     const existing = await this.prisma.attendanceRecord.findFirst({
       where: {
-        lessonId: dto.lessonId,
+        lessonId: bigLessonId,
         ...(studentId ? { studentId } : {}),
       },
     });
@@ -194,7 +208,7 @@ export class AttendanceService {
     } else {
       record = await this.prisma.attendanceRecord.create({
         data: {
-          lessonId: dto.lessonId,
+          lessonId: bigLessonId,
           bookingId: bookingId || null,
           studentId: studentId || null,
           status: numericStatus,
@@ -211,7 +225,7 @@ export class AttendanceService {
       numericStatus === LessonAttendance.LATE ||
       numericStatus === LessonAttendance.ABSENT;
     await this.prisma.lesson.update({
-      where: { id: dto.lessonId },
+      where: { id: bigLessonId },
       data: {
         attendance: numericStatus,
         status: isCompleted ? LessonStatus.COMPLETED : lesson.status,
@@ -283,7 +297,7 @@ export class AttendanceService {
     });
 
     const record = await this.markAttendance({
-      lessonId: lesson.id,
+      lessonId: lesson.id.toString(),
       bookingId: dto.bookingId,
       status: dto.status,
       notes: dto.notes,
@@ -294,22 +308,20 @@ export class AttendanceService {
   }
 
   async deleteAttendance(lessonId: string) {
-    const records = await this.prisma.attendanceRecord.findMany({
-      where: { lessonId },
-    });
-    if (records.length > 0) {
+    const bigLessonId = toBigInt(lessonId);
+    if (bigLessonId !== undefined) {
       await this.prisma.attendanceRecord.deleteMany({
-        where: { lessonId },
+        where: { lessonId: bigLessonId },
+      });
+
+      await this.prisma.lesson.update({
+        where: { id: bigLessonId },
+        data: {
+          attendance: LessonAttendance.PENDING,
+          status: LessonStatus.SCHEDULED,
+        },
       });
     }
-
-    await this.prisma.lesson.update({
-      where: { id: lessonId },
-      data: {
-        attendance: LessonAttendance.PENDING,
-        status: LessonStatus.SCHEDULED,
-      },
-    });
 
     return { success: true };
   }

@@ -9,10 +9,8 @@ const jest = vi;
 
 describe('MembershipsService — Business Logic Tests', () => {
   let service: MembershipsService;
-  let repository: jest.Mocked<MembershipsRepository>;
-  let prisma: {
-    $executeRawUnsafe: jest.Mock;
-  };
+  let repository: any;
+  let prisma: any;
 
   beforeEach(async () => {
     repository = {

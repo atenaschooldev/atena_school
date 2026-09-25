@@ -8,6 +8,11 @@ import fastifyHelmet from '@fastify/helmet';
 
 import { DictionaryService } from './features/dictionary/dictionary.service';
 
+// Enable automatic JSON serialization for BigInt (Prisma BIGSERIAL / int8 IDs)
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 async function bootstrap() {
   // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB) и подписью rawBody для Stripe
   const app = await NestFactory.create<NestFastifyApplication>(

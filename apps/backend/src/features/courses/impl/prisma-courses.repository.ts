@@ -15,6 +15,15 @@ import {
 } from '@atena/api-types';
 import { slugify } from '@atena/utils';
 
+const toBigInt = (val: any): bigint | undefined => {
+  if (val === null || val === undefined || val === '') return undefined;
+  try {
+    return BigInt(val);
+  } catch {
+    return undefined;
+  }
+};
+
 @Injectable()
 export class PrismaCoursesRepository implements CoursesRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -24,12 +33,15 @@ export class PrismaCoursesRepository implements CoursesRepository {
     if (!teacherIds.length) return map;
 
     try {
+      const ids = teacherIds.map((id) => toBigInt(id)).filter((id): id is bigint => id !== undefined);
+      if (!ids.length) return map;
+
       const teachers = await this.prisma.teacher.findMany({
-        where: { teacherId: { in: teacherIds } },
-        select: { teacherId: true, fullName: true },
+        where: { id: { in: ids } },
+        select: { id: true, fullName: true },
       });
       for (const t of teachers) {
-        if (t.fullName) map.set(t.teacherId, t.fullName);
+        if (t.fullName) map.set(t.id.toString(), t.fullName);
       }
     } catch {}
     return map;
@@ -67,8 +79,11 @@ export class PrismaCoursesRepository implements CoursesRepository {
   }
 
   async findOne(id: string): Promise<CourseEntity | null> {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) return null;
+
     const c = await this.prisma.course.findUnique({
-      where: { id },
+      where: { id: bigId },
       include: {
         courseCategory: true,
         settings: true,
@@ -112,13 +127,13 @@ export class PrismaCoursesRepository implements CoursesRepository {
       data: {
         name: data.name,
         category: data.category !== undefined && data.category !== null ? parseCourseCategory(data.category) : CourseCategory.LANGUAGES,
-        categoryId: data.categoryId || null,
-        settingsId: data.settingsId || null,
+        categoryId: toBigInt(data.categoryId) || null,
+        settingsId: toBigInt(data.settingsId) || null,
         price: data.price != null ? new Prisma.Decimal(data.price) : null,
         status: data.status !== undefined && data.status !== null ? parseCourseStatus(data.status) : CourseStatus.ACTIVE,
         photoUrl: data.photoUrl,
         description: data.description ?? '',
-        teacherId: data.teacherId || null,
+        teacherId: toBigInt(data.teacherId) || null,
         sortOrder: data.sortOrder ?? 0,
         slug: data.slug || slugify(data.name || 'course'),
       },
@@ -132,21 +147,24 @@ export class PrismaCoursesRepository implements CoursesRepository {
   }
 
   async update(id: string, data: Partial<CourseEntity>): Promise<CourseEntity> {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) throw new Error('Invalid Course ID');
+
     const updateData: any = {};
     if (data.name !== undefined) updateData.name = data.name;
     if (data.category !== undefined && data.category !== null) updateData.category = parseCourseCategory(data.category);
-    if (data.categoryId !== undefined) updateData.categoryId = data.categoryId || null;
-    if (data.settingsId !== undefined) updateData.settingsId = data.settingsId || null;
+    if (data.categoryId !== undefined) updateData.categoryId = toBigInt(data.categoryId) || null;
+    if (data.settingsId !== undefined) updateData.settingsId = toBigInt(data.settingsId) || null;
     if (data.price !== undefined) updateData.price = data.price != null ? new Prisma.Decimal(data.price) : null;
     if (data.status !== undefined && data.status !== null) updateData.status = parseCourseStatus(data.status);
     if (data.photoUrl !== undefined) updateData.photoUrl = data.photoUrl;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.teacherId !== undefined) updateData.teacherId = data.teacherId;
+    if (data.teacherId !== undefined) updateData.teacherId = toBigInt(data.teacherId) || null;
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
     if (data.slug !== undefined) updateData.slug = data.slug;
 
     const c = await this.prisma.course.update({
-      where: { id },
+      where: { id: bigId },
       data: updateData,
       include: {
         courseCategory: true,
@@ -158,25 +176,27 @@ export class PrismaCoursesRepository implements CoursesRepository {
   }
 
   async delete(id: string): Promise<void> {
+    const bigId = toBigInt(id);
+    if (bigId === undefined) return;
     await this.prisma.course.delete({
-      where: { id },
+      where: { id: bigId },
     });
   }
 
   private mapToEntity(c: any): CourseEntity {
     const primaryTeacher = c.courseTeachers?.find((ct: any) => ct.isPrimary) || c.courseTeachers?.[0];
     const teacherName = primaryTeacher?.teacher?.fullName ?? null;
-    const teacherId = primaryTeacher?.teacherId ?? c.teacherId ?? null;
+    const teacherId = primaryTeacher?.teacherId ? primaryTeacher.teacherId.toString() : (c.teacherId ? c.teacherId.toString() : null);
 
     const courseTeachers = Array.isArray(c.courseTeachers)
       ? c.courseTeachers.map((ct: any) => ({
-          course_id: ct.courseId,
-          teacher_id: ct.teacherId,
+          course_id: ct.courseId ? ct.courseId.toString() : null,
+          teacher_id: ct.teacherId ? ct.teacherId.toString() : null,
           role: ct.role,
           is_primary: ct.isPrimary,
           teacher: ct.teacher
             ? {
-                teacher_id: ct.teacher.teacherId,
+                teacher_id: ct.teacher.id ? ct.teacher.id.toString() : '',
                 full_name: ct.teacher.fullName,
                 photo_url: ct.teacher.photoUrl,
               }
@@ -186,7 +206,7 @@ export class PrismaCoursesRepository implements CoursesRepository {
 
     const settings = c.settings
       ? {
-          id: c.settings.id,
+          id: c.settings.id ? c.settings.id.toString() : '',
           name: c.settings.name,
           delivery_mode: c.settings.deliveryMode,
           deliveryMode: c.settings.deliveryMode,
@@ -216,16 +236,16 @@ export class PrismaCoursesRepository implements CoursesRepository {
     const deliveryMode = settings?.delivery_mode ?? 1;
 
     return {
-      id: c.id,
+      id: c.id ? c.id.toString() : '',
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       name: c.name,
       slug: c.slug,
       category: c.category,
-      categoryId: c.categoryId ?? null,
+      categoryId: c.categoryId ? c.categoryId.toString() : null,
       categorySlug: c.courseCategory?.slug ?? null,
       categoryName: c.courseCategory?.name ?? null,
-      settingsId: c.settingsId ?? null,
+      settingsId: c.settingsId ? c.settingsId.toString() : null,
       price: c.price ? Number(c.price) : null,
       status: c.status,
       photoUrl: c.photoUrl,

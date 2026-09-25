@@ -39,38 +39,41 @@ export class AuditLogsService {
           orderBy: { createdAt: 'desc' },
           skip,
           take: limit,
-          include: {
-            user: {
-              select: {
-                id: true,
-                email: true,
-                fullName: true,
-              },
-            },
-          },
         }),
         this.prisma.admin_api_logs.count({ where }),
       ]);
 
+      const userIds = Array.from(new Set(logs.map((l) => l.userId).filter((id): id is string => !!id)));
+      const users = userIds.length > 0
+        ? await this.prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, email: true, fullName: true },
+          })
+        : [];
+      const userMap = new Map(users.map((u) => [u.id, u]));
+
       return {
-        items: logs.map((l) => ({
-          id: l.id,
-          createdAt: l.createdAt,
-          operatorId: l.userId,
-          operatorName: l.user?.fullName || l.user?.email || 'Администратор',
-          action: l.action,
-          module: l.controller.replace(/Controller$/i, ''),
-          targetId: (l.request as any)?.params?.id || null,
-          details: {
-            endpoint: l.endpoint,
-            httpMethod: l.httpMethod,
-            statusCode: l.statusCode,
-            request: l.request,
-            response: l.response,
-            ipAddress: l.ipAddress,
-          },
-          status: l.statusCode < 400 ? 'success' : 'failed',
-        })),
+        items: logs.map((l) => {
+          const u = l.userId ? userMap.get(l.userId) : null;
+          return {
+            id: l.id ? l.id.toString() : '',
+            createdAt: l.createdAt,
+            operatorId: l.userId,
+            operatorName: u?.fullName || u?.email || 'Администратор',
+            action: l.action,
+            module: l.controller.replace(/Controller$/i, ''),
+            targetId: (l.request as any)?.params?.id || null,
+            details: {
+              endpoint: l.endpoint,
+              httpMethod: l.httpMethod,
+              statusCode: l.statusCode,
+              request: l.request,
+              response: l.response,
+              ipAddress: l.ipAddress,
+            },
+            status: l.statusCode < 400 ? 'success' : 'failed',
+          };
+        }),
         total,
         page,
         limit,
