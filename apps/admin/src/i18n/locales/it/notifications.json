@@ -83,7 +83,7 @@
   "logColSubject": "Oggetto / Dettagli",
   "logColStatus": "Stato",
   "logColActions": "Azioni",
-  "logDetailTitle": "Dettaglio Notifica Inviata",
+  "logDetailTitle": "Dettaglio Invio Notifica",
   "logDetailDesc": "Payload completo, risposta del server di invio e cronologia eventi webhook Resend.",
   "logSectionPayload": "Dati Payload (JSON)",
   "logSectionResponse": "Risposta Server / ID",

@@ -83,7 +83,7 @@
   "logColSubject": "Subject / Details",
   "logColStatus": "Status",
   "logColActions": "Actions",
-  "logDetailTitle": "Notification Log Details",
+  "logDetailTitle": "Delivery Details",
   "logDetailDesc": "Full payload, server delivery response and Resend webhook tracking timeline.",
   "logSectionPayload": "Payload Data (JSON)",
   "logSectionResponse": "Server Response / ID",
