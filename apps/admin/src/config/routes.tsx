@@ -125,6 +125,10 @@ export const routes: RouteConfig[] = [
     path: "/moduli",
     element: <Moduli />
   },
+  {
+    path: "/faqs",
+    element: <FAQs />
+  },
 
   // Authentication Routes
   {
