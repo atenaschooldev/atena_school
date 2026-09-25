@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { AtenaDataTable, DataTableToolbar, DataTableColumnHeader, CellAvatar } from "@/components/shared/data-table";
+import { AtenaDataTable, DataTableToolbar, DataTableColumnHeader, CellAvatar, CellCopyableId } from "@/components/shared/data-table";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/i18n/context";
@@ -194,6 +194,14 @@ export function CourseCategoriesView() {
         ),
         enableSorting: false,
         size: 40,
+      },
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="ID" />
+        ),
+        cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+        size: 110,
       },
       {
         accessorKey: "sortOrder",

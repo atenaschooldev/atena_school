@@ -49,6 +49,14 @@ export function getMembershipsTableColumns({
       size: 40,
     },
     {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
+    },
+    {
       accessorKey: "studentName",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t("common.student")} />
@@ -61,17 +69,12 @@ export function getMembershipsTableColumns({
         const sub = [email, taxCode ? `CF: ${taxCode}` : ""].filter(Boolean).join(" • ");
 
         return (
-          <div className="flex flex-col gap-0.5">
-            <CellAvatar
-              title={name}
-              subtitle={sub}
-              icon={Award}
-              badgeColor="bg-amber-500/10 text-amber-600"
-            />
-            <div className="pl-11">
-              <CellCopyableId id={m.id} />
-            </div>
-          </div>
+          <CellAvatar
+            title={name}
+            subtitle={sub}
+            icon={Award}
+            badgeColor="bg-amber-500/10 text-amber-600"
+          />
         );
       },
     },

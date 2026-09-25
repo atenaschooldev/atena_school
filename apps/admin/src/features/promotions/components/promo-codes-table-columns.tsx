@@ -14,6 +14,7 @@ import {
 import { MoreHorizontal, Edit, Trash2, Copy, Percent, Euro, Calendar, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import type { PromoCodeItem } from "../types";
 
 interface PromoColumnsProps {
@@ -30,6 +31,14 @@ export function getPromoCodesTableColumns({
   t,
 }: PromoColumnsProps): ColumnDef<PromoCodeItem>[] {
   return [
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
+    },
     {
       accessorKey: "code",
       header: ({ column }) => (

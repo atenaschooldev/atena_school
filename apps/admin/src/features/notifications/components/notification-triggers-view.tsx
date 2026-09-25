@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { useTranslation } from "@/i18n/context";
 
 const TriggerEditorDrawer = lazy(() =>
@@ -187,6 +188,7 @@ export function NotificationTriggersView() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
+                      <CellCopyableId id={trg.id} />
                       <Switch
                         checked={trg.is_active}
                         onCheckedChange={(val) => toggleTrigger(trg.id, val)}

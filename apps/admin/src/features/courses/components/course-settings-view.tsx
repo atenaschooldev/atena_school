@@ -26,7 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
-import { AtenaDataTable, DataTableToolbar, DataTableColumnHeader, CellAvatar } from "@/components/shared/data-table";
+import { AtenaDataTable, DataTableToolbar, DataTableColumnHeader, CellAvatar, CellCopyableId } from "@/components/shared/data-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "@/i18n/context";
 import {
@@ -285,6 +285,14 @@ export function CourseSettingsView() {
         ),
         enableSorting: false,
         size: 40,
+      },
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="ID" />
+        ),
+        cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+        size: 110,
       },
       {
         accessorKey: "name",

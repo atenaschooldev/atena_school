@@ -23,6 +23,14 @@ export function getActiveServicesTableColumns({
 }: GetActiveServicesTableColumnsProps): ColumnDef<ActiveServiceItem>[] {
   return [
     {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id || row.original.booking_id} />,
+      size: 110,
+    },
+    {
       accessorKey: "course_name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t("common.course") || "Corso"} />
@@ -31,17 +39,12 @@ export function getActiveServicesTableColumns({
         const item = row.original;
         const sub = [item.course_category, item.course_format].filter(Boolean).join(" • ");
         return (
-          <div className="flex flex-col gap-0.5">
-            <CellAvatar
-              title={item.course_name}
-              subtitle={sub}
-              icon={BookOpen}
-              badgeColor="bg-primary/10 text-primary"
-            />
-            <div className="pl-11">
-              <CellCopyableId id={item.booking_id} />
-            </div>
-          </div>
+          <CellAvatar
+            title={item.course_name}
+            subtitle={sub}
+            icon={BookOpen}
+            badgeColor="bg-primary/10 text-primary"
+          />
         );
       },
     },

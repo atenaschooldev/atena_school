@@ -28,6 +28,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import {
   Mail,
   MessageSquare,
@@ -213,6 +214,7 @@ export function NotificationLogsView() {
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
+                <TableHead className="w-[110px] text-xs font-semibold">ID</TableHead>
                 <TableHead className="w-[170px] text-xs font-semibold">{t("notifications.logColDate") || "Data / Ora"}</TableHead>
                 <TableHead className="w-[120px] text-xs font-semibold">{t("notifications.logColChannel") || "Canale"}</TableHead>
                 <TableHead className="text-xs font-semibold">{t("notifications.logColRecipient") || "Destinatario"}</TableHead>
@@ -224,14 +226,14 @@ export function NotificationLogsView() {
             <TableBody>
               {loading && logs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
                     {t("common.loading") || "Caricamento..."}
                   </TableCell>
                 </TableRow>
               ) : logs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
                     {t("notifications.noLogsFound") || "Nessun log registrato."}
                   </TableCell>
                 </TableRow>
@@ -243,6 +245,9 @@ export function NotificationLogsView() {
 
                   return (
                     <TableRow key={log.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell>
+                        <CellCopyableId id={log.id} />
+                      </TableCell>
                       <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                         {formatDate(log.created_at)}
                       </TableCell>

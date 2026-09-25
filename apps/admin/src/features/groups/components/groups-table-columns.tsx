@@ -8,6 +8,7 @@ import { GroupStatus } from "@atena/api-types";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import type { Group } from "../types";
 
 const WEEKDAY_KEYS: Record<number, string> = {
@@ -31,6 +32,14 @@ export function getGroupsTableColumns({
   t: (k: string) => string;
 }): ColumnDef<Group>[] {
   return [
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
+    },
     {
       accessorKey: "name",
       header: ({ column }) => (

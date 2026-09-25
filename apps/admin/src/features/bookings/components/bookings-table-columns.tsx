@@ -54,6 +54,14 @@ export function getBookingsTableColumns({
       size: 40,
     },
     {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
+    },
+    {
       accessorKey: "course_name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t("common.course")} />
@@ -61,16 +69,11 @@ export function getBookingsTableColumns({
       cell: ({ row }) => {
         const b = row.original;
         return (
-          <div className="flex flex-col gap-0.5">
-            <CellAvatar
-              title={b.course_name}
-              icon={BookOpen}
-              badgeColor="bg-primary/10 text-primary"
-            />
-            <div className="pl-11">
-              <CellCopyableId id={b.id} />
-            </div>
-          </div>
+          <CellAvatar
+            title={b.course_name}
+            icon={BookOpen}
+            badgeColor="bg-primary/10 text-primary"
+          />
         );
       },
     },

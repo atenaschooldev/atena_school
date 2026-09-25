@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import type { Teacher } from "../types";
 
 export interface GetTeachersTableColumnsProps {
@@ -46,6 +47,14 @@ export function getTeachersTableColumns({
       ),
       enableSorting: false,
       size: 40,
+    },
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
     },
     {
       accessorKey: "fullName",

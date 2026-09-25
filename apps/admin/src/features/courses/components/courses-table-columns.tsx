@@ -11,6 +11,7 @@ import {
   DataTableColumnHeader,
   CellAvatar,
   CellSchedule,
+  CellCopyableId,
 } from "@/components/shared/data-table";
 import type { Course } from "../types";
 import { formatCourseFrequencyDetails } from "@atena/utils";
@@ -54,6 +55,14 @@ export function getCoursesTableColumns({
       enableSorting: false,
       enableHiding: false,
       size: 40,
+    },
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
     },
     {
       accessorKey: "nome",

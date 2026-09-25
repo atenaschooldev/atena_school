@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CellFormattedDate } from "@/components/shared/cell-formatted-date";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { UserRole, parseUserRole } from "@atena/api-types";
 import type { User } from "../types";
 
@@ -48,6 +49,14 @@ export function getUsersTableColumns({
       ),
       enableSorting: false,
       size: 40,
+    },
+    {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
     },
     {
       accessorKey: "name",

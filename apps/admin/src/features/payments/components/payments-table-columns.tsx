@@ -66,6 +66,14 @@ export function getPaymentsTableColumns({
       size: 40,
     },
     {
+      accessorKey: "id",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="ID" />
+      ),
+      cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+      size: 110,
+    },
+    {
       accessorKey: "purchaser_name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={`${t("common.purchaser")} / ${t("common.student")}`} />
@@ -74,20 +82,14 @@ export function getPaymentsTableColumns({
         const p = row.original;
         const name = p.purchaser_name || p.purchaserName || p.student_name || t("common.purchaser");
         const email = p.purchaser_email || p.purchaserEmail || p.student_email || "";
-        const id = p.id;
 
         return (
-          <div className="flex flex-col gap-0.5">
-            <CellAvatar
-              title={name}
-              subtitle={email}
-              icon={Receipt}
-              badgeColor="bg-emerald-500/10 text-emerald-600"
-            />
-            <div className="pl-11">
-              <CellCopyableId id={id} />
-            </div>
-          </div>
+          <CellAvatar
+            title={name}
+            subtitle={email}
+            icon={Receipt}
+            badgeColor="bg-emerald-500/10 text-emerald-600"
+          />
         );
       },
     },

@@ -6,3 +6,4 @@ export * from "./data-table-empty-state";
 export * from "./data-table-floating-bar";
 export * from "./cells/cell-avatar";
 export * from "./cells/cell-schedule";
+export * from "../cell-copyable-id";
