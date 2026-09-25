@@ -53,7 +53,7 @@ interface TriggerEditorDrawerProps {
   isOpen?: boolean;
   onClose: () => void;
   trigger?: NotificationTriggerRecord | null;
-  templates: NotificationTemplateRecord[];
+  templates?: NotificationTemplateRecord[];
   systemEvents?: Record<string, SystemEventDefinition>;
   onSave: (payload: CreateNotificationTriggerDto | UpdateNotificationTriggerDto) => Promise<any>;
   isLoading?: boolean;
@@ -61,8 +61,8 @@ interface TriggerEditorDrawerProps {
 
 interface TriggerEditorFormProps {
   trigger?: NotificationTriggerRecord | null;
-  templates: NotificationTemplateRecord[];
-  systemEvents: Record<string, SystemEventDefinition>;
+  templates?: NotificationTemplateRecord[];
+  systemEvents?: Record<string, SystemEventDefinition>;
   onClose: () => void;
   onSave: (payload: CreateNotificationTriggerDto | UpdateNotificationTriggerDto) => Promise<any>;
   isLoading?: boolean;
@@ -70,20 +70,23 @@ interface TriggerEditorFormProps {
 
 function TriggerEditorForm({
   trigger,
-  templates,
-  systemEvents,
+  templates = [],
+  systemEvents = SYSTEM_EVENTS_REGISTRY,
   onClose,
   onSave,
   isLoading = false,
 }: TriggerEditorFormProps) {
   const { t, locale } = useTranslation();
 
+  const safeTemplates = Array.isArray(templates) ? templates : [];
+  const safeSystemEvents = systemEvents || SYSTEM_EVENTS_REGISTRY;
+
   const [name, setName] = useState(trigger?.name || "");
   const [description, setDescription] = useState(trigger?.description || "");
   const [eventKey, setEventKey] = useState(trigger?.event_key || "booking.created_stripe");
   const [channel, setChannel] = useState<number>(trigger?.channel || NotificationChannel.EMAIL);
 
-  const initialTemplates = templates.filter(
+  const initialTemplates = safeTemplates.filter(
     (tmpl) => Number(tmpl.channel) === Number(trigger?.channel || NotificationChannel.EMAIL)
   );
   const [templateId, setTemplateId] = useState<string>(
@@ -107,11 +110,11 @@ function TriggerEditorForm({
     trigger?.is_active !== undefined ? trigger.is_active : true
   );
 
-  const availableTemplates = templates.filter((tmpl) => Number(tmpl.channel) === Number(channel));
+  const availableTemplates = safeTemplates.filter((tmpl) => Number(tmpl.channel) === Number(channel));
 
   const handleChannelChange = (newChannel: number) => {
     setChannel(newChannel);
-    const newTemplates = templates.filter((tmpl) => Number(tmpl.channel) === Number(newChannel));
+    const newTemplates = safeTemplates.filter((tmpl) => Number(tmpl.channel) === Number(newChannel));
     if (!newTemplates.some((tmpl) => tmpl.id === templateId)) {
       setTemplateId(newTemplates[0]?.id || "");
     }
@@ -472,7 +475,7 @@ function TriggerEditorForm({
 
 export function TriggerEditorDrawer({
   trigger,
-  templates,
+  templates = [],
   systemEvents = SYSTEM_EVENTS_REGISTRY,
   open,
   isOpen,

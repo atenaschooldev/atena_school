@@ -502,6 +502,8 @@ export function NotificationTriggersView() {
           <TriggerEditorDrawer
             trigger={selectedTrigger}
             isOpen={isEditorOpen}
+            templates={templates || []}
+            systemEvents={systemEvents || {}}
             onClose={() => setIsEditorOpen(false)}
             onSave={handleSave}
             isLoading={isCreating || isUpdating}
