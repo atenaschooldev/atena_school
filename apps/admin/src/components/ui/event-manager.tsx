@@ -611,8 +611,8 @@ function WeekView({ currentDate, events, onEventClick, onDragStart, onDragEnd, o
       </div>
       <div className="grid grid-cols-7">
         {hours.map((hour) => (
-          <>
-            <div key={`t-${hour}`} className="border-b border-r p-1 text-[10px] text-muted-foreground sm:p-2 sm:text-xs font-mono">
+          <React.Fragment key={`hour-row-${hour}`}>
+            <div className="border-b border-r p-1 text-[10px] text-muted-foreground sm:p-2 sm:text-xs font-mono">
               {hour.toString().padStart(2, "0")}:00
             </div>
             {weekDays.map((day, di) => {
@@ -630,7 +630,7 @@ function WeekView({ currentDate, events, onEventClick, onDragStart, onDragEnd, o
                 </div>
               )
             })}
-          </>
+          </React.Fragment>
         ))}
       </div>
     </Card>
