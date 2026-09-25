@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 import logo from "@/assets/logo.webp";
 import { InstagramLogo, FacebookLogo, LinkedinLogo, WhatsappLogo, Phone, EnvelopeSimple, MapPin } from "@phosphor-icons/react";
+import { TikTokLogo, YoutubeLogo } from "@/components/icons/SocialLogos";
 import { usePathname } from "next/navigation";
 import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
 import type { SchoolProfile } from "@atena/api-types";
@@ -298,6 +299,28 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
                 aria-label="Instagram"
               >
                 <InstagramLogo size={18} weight="bold" />
+              </a>
+            )}
+            {school.socials?.tiktok && (
+              <a
+                href={school.socials.tiktok}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="TikTok"
+              >
+                <TikTokLogo size={18} />
+              </a>
+            )}
+            {school.socials?.youtube && (
+              <a
+                href={school.socials.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition-colors duration-200"
+                aria-label="YouTube"
+              >
+                <YoutubeLogo size={18} />
               </a>
             )}
             {school.whatsapp && (

@@ -19,6 +19,7 @@ import {
   Headset,
   Lock,
 } from "@phosphor-icons/react";
+import { TikTokLogo, YoutubeLogo } from "@/components/icons/SocialLogos";
 import { useLocale } from "next-intl";
 import { useContactForm } from "@/features/contact/hooks/useContactForm";
 import { DEFAULT_SCHOOL_PROFILE, formatFullSchoolAddress } from "@atena/core";
@@ -156,28 +157,57 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">
                     Seguici sui social
                   </span>
-                  <div className="flex gap-2">
-                    <a
-                      href={school.socials?.instagram || "https://instagram.com"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-                    >
-                      <InstagramLogo className="w-4 h-4" weight="bold" />
-                    </a>
-                    <a
-                      href={school.socials?.facebook || "https://facebook.com"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-                    >
-                      <FacebookLogo className="w-4 h-4" weight="bold" />
-                    </a>
+                  <div className="flex flex-wrap gap-2">
+                    {school.socials?.instagram && (
+                      <a
+                        href={school.socials.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        aria-label="Instagram"
+                      >
+                        <InstagramLogo className="w-4 h-4" weight="bold" />
+                      </a>
+                    )}
+                    {school.socials?.facebook && (
+                      <a
+                        href={school.socials.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        aria-label="Facebook"
+                      >
+                        <FacebookLogo className="w-4 h-4" weight="bold" />
+                      </a>
+                    )}
+                    {school.socials?.tiktok && (
+                      <a
+                        href={school.socials.tiktok}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        aria-label="TikTok"
+                      >
+                        <TikTokLogo size={15} />
+                      </a>
+                    )}
+                    {school.socials?.youtube && (
+                      <a
+                        href={school.socials.youtube}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        aria-label="YouTube"
+                      >
+                        <YoutubeLogo size={15} />
+                      </a>
+                    )}
                     <a
                       href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                      aria-label="WhatsApp"
                     >
                       <WhatsappLogo className="w-4 h-4" weight="bold" />
                     </a>

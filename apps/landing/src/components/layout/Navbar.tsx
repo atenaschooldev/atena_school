@@ -4,7 +4,8 @@ import Image from "next/image";
 import logo from "@/assets/logo.webp";
 import { useEffect, useState, useTransition, useRef } from "react";
 import { createPortal } from "react-dom";
-import { InstagramLogo, FacebookLogo, House, Users, GraduationCap, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
+import { InstagramLogo, FacebookLogo, LinkedinLogo, House, Users, GraduationCap, EnvelopeSimple, Sparkle } from "@phosphor-icons/react";
+import { TikTokLogo, YoutubeLogo } from "@/components/icons/SocialLogos";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
@@ -431,7 +432,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                     <p className="font-bold text-gray-800">{formatFullSchoolAddress(school)}</p>
                     <p className="text-gray-500">Tel: {school.phone}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {school.socials?.instagram && (
                       <a
                         href={school.socials.instagram}
@@ -452,6 +453,39 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                         aria-label="Facebook"
                       >
                         <FacebookLogo className="w-5 h-5" />
+                      </a>
+                    )}
+                    {school.socials?.tiktok && (
+                      <a
+                        href={school.socials.tiktok}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                        aria-label="TikTok"
+                      >
+                        <TikTokLogo size={18} />
+                      </a>
+                    )}
+                    {school.socials?.youtube && (
+                      <a
+                        href={school.socials.youtube}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                        aria-label="YouTube"
+                      >
+                        <YoutubeLogo size={18} />
+                      </a>
+                    )}
+                    {school.socials?.linkedin && (
+                      <a
+                        href={school.socials.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-gray-200 transition active:scale-90 duration-300"
+                        aria-label="LinkedIn"
+                      >
+                        <LinkedinLogo className="w-5 h-5" />
                       </a>
                     )}
                   </div>
