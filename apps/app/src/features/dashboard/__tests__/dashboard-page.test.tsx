@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DashboardPage from '@/app/dashboard/page';
 import { BookingPaymentStatus } from '@atena/api-types';
 
@@ -30,7 +30,7 @@ describe('Personal Cabinet (apps/app) — DashboardPage Component Strict Tests',
     });
 
     const { container } = render(<DashboardPage />);
-    expect(container.querySelector('.animate-spin')).toBeInTheDocument();
+    expect(container.querySelector('.animate-spin')).toBeTruthy();
   });
 
   it('renders "Accesso richiesto" and login link when user is null and not loading', () => {
@@ -40,9 +40,9 @@ describe('Personal Cabinet (apps/app) — DashboardPage Component Strict Tests',
     });
 
     render(<DashboardPage />);
-    expect(screen.getByText('Accesso richiesto')).toBeInTheDocument();
+    expect(screen.getByText('Accesso richiesto')).toBeTruthy();
     const loginLink = screen.getByRole('link', { name: /accedi ora/i });
-    expect(loginLink).toHaveAttribute('href', '/autenticazione/accedi?redirect=/dashboard');
+    expect(loginLink.getAttribute('href')).toBe('/autenticazione/accedi?redirect=/dashboard');
   });
 
   it('renders parent panel when userRole is "parent" with upcoming bookings', () => {
@@ -82,12 +82,12 @@ describe('Personal Cabinet (apps/app) — DashboardPage Component Strict Tests',
 
     render(<DashboardPage />);
 
-    expect(screen.getByText(/area genitore \/ acquirente/i)).toBeInTheDocument();
-    expect(screen.getByText(/pannello genitore/i)).toBeInTheDocument();
-    expect(screen.getByText('Inglese per Bambini')).toBeInTheDocument();
-    expect(screen.getByText(/docente: prof. john doe/i)).toBeInTheDocument();
-    expect(screen.getByText('€180.00')).toBeInTheDocument();
-    expect(screen.getByText(/✓ pagato/i)).toBeInTheDocument();
+    expect(screen.getByText(/area genitore \/ acquirente/i)).toBeTruthy();
+    expect(screen.getByText(/pannello genitore/i)).toBeTruthy();
+    expect(screen.getByText('Inglese per Bambini')).toBeTruthy();
+    expect(screen.getByText(/docente: prof. john doe/i)).toBeTruthy();
+    expect(screen.getByText('€180.00')).toBeTruthy();
+    expect(screen.getByText(/✓ pagato/i)).toBeTruthy();
 
     // Click on past tab
     const pastTabBtn = screen.getByRole('button', { name: /passati/i });
@@ -119,7 +119,7 @@ describe('Personal Cabinet (apps/app) — DashboardPage Component Strict Tests',
 
     render(<DashboardPage />);
 
-    expect(screen.getByText(/pannello studente/i)).toBeInTheDocument();
-    expect(screen.getByText(/nessuna lezione o corso trovato in questa sezione/i)).toBeInTheDocument();
+    expect(screen.getByText(/pannello studente/i)).toBeTruthy();
+    expect(screen.getByText(/nessuna lezione o corso trovato in questa sezione/i)).toBeTruthy();
   });
 });

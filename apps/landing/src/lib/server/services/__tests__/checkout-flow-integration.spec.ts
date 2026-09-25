@@ -107,12 +107,12 @@ describe('Landing Checkout Flow Integration — End-to-End Business Logic', () =
       phone: '+39 340 9988776',
       purchaserTaxCode: 'NRELRA90A01H501Z',
       billingScheme: BillingScheme.FULL,
-      paymentMethod: PaymentMethod.RECEPTION,
+      paymentMethod: PaymentMethod.CASH,
     };
 
     const validation = createReservationSchema.safeParse(reservationPayload);
     expect(validation.success).toBe(true);
-    expect(reservationPayload.paymentMethod).toBe(PaymentMethod.RECEPTION);
+    expect(reservationPayload.paymentMethod).toBe(PaymentMethod.CASH);
   });
 
   it('generates unique membership card number for newly registered student in current academic year', () => {

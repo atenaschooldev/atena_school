@@ -4,9 +4,9 @@ import {
   FormFieldType,
   FormFieldTarget,
   FormTemplate,
-  DEFAULT_BOOKING_FORM_TEMPLATE,
   SchoolProfile,
 } from '@atena/api-types';
+import { DEFAULT_BOOKING_FORM_TEMPLATE } from '@atena/core';
 
 describe('🔥 Landing & Checkout Forms Integration — Extreme Roast Test Suite', () => {
   describe('1. Checkout Custom Fields Extraction & Submission Payload', () => {
@@ -27,7 +27,11 @@ describe('🔥 Landing & Checkout Forms Integration — Extreme Roast Test Suite
             is_required: true,
             is_enabled: true,
             sort_order: 1,
-            options: ['B1', 'B2', 'C1'],
+            options: [
+              { label: 'B1', value: 'B1' },
+              { label: 'B2', value: 'B2' },
+              { label: 'C1', value: 'C1' },
+            ],
           },
           {
             id: 'f2',
@@ -38,7 +42,10 @@ describe('🔥 Landing & Checkout Forms Integration — Extreme Roast Test Suite
             is_required: false,
             is_enabled: true,
             sort_order: 2,
-            options: ['In Sede', 'Online'],
+            options: [
+              { label: 'In Sede', value: 'In Sede' },
+              { label: 'Online', value: 'Online' },
+            ],
           },
         ],
       };

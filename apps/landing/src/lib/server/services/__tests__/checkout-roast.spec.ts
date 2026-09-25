@@ -95,7 +95,7 @@ describe('Landing Checkout Roast — Strict Edge-Case Verification', () => {
       let amount = 0;
       if (discount.type === DiscountType.PERCENTAGE) {
         amount = Math.round((originalPrice * discount.value) / 100);
-      } else if (discount.type === DiscountType.FIXED) {
+      } else if (discount.type === DiscountType.FIXED_AMOUNT) {
         amount = discount.value;
       }
 
@@ -110,13 +110,13 @@ describe('Landing Checkout Roast — Strict Edge-Case Verification', () => {
     });
 
     it('computes fixed €50 discount accurately', () => {
-      const res = applyDiscount(180, { type: DiscountType.FIXED, value: 50 });
+      const res = applyDiscount(180, { type: DiscountType.FIXED_AMOUNT, value: 50 });
       expect(res.discountAmount).toBe(50);
       expect(res.discountedPrice).toBe(130);
     });
 
     it('caps discount so price never becomes negative even if discount exceeds price', () => {
-      const res = applyDiscount(30, { type: DiscountType.FIXED, value: 100 });
+      const res = applyDiscount(30, { type: DiscountType.FIXED_AMOUNT, value: 100 });
       expect(res.discountAmount).toBe(30);
       expect(res.discountedPrice).toBe(0);
     });
