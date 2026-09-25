@@ -5,8 +5,6 @@ import { getMessages } from 'next-intl/server';
 import {
   Navbar,
   Footer,
-  CookieBanner,
-  ScrollToTop,
   GoogleAnalytics,
   ScrollAnimateProvider,
   NavigationProgressBar,
@@ -14,6 +12,13 @@ import {
 import '@/index.css';
 import { Nunito } from 'next/font/google';
 import type { Viewport } from 'next';
+
+const CookieBanner = dynamic(() => import('@/components/layout/CookieBanner'));
+const ScrollToTop = dynamic(() => import('@/components/layout/ScrollToTop'));
+const SentryMonitoring = dynamic(
+  () => import('@/components/monitoring/SentryMonitoring').then((m) => m.SentryMonitoring)
+);
+const Toaster = dynamic(() => import('sonner').then((mod) => mod.Toaster));
 
 export const revalidate = 3600;
 
@@ -27,12 +32,12 @@ const nunito = Nunito({
   subsets: ['latin', 'latin-ext', 'cyrillic'],
   display: 'swap',
   variable: '--font-nunito',
+  adjustFontFallback: true,
 });
 
 import { env } from '@/config/env';
 import { getAnalyticsCredentials, getSchoolProfile, getSentryCredentials } from '@atena/core';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
-import { SentryMonitoring } from '@/components/monitoring/SentryMonitoring';
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
@@ -95,7 +100,6 @@ export async function generateMetadata() {
   };
 }
 
-import { Toaster } from 'sonner';
 
 export default async function RootLayout({
   children,

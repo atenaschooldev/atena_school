@@ -43,6 +43,7 @@ const HeroSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: HeroSectionProps
                 alt="Atena School"
                 width={70}
                 height={70}
+                sizes="70px"
                 className="w-full h-full object-contain"
                 priority
               />
@@ -291,8 +292,11 @@ const HeroSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: HeroSectionProps
                 alt="Studente Atena School"
                 width={800}
                 height={960}
+                sizes="(max-width: 1024px) 340px, (max-width: 1280px) 380px, (max-width: 1536px) 420px, 620px"
                 className="object-contain max-h-[430px] lg:max-h-[490px] xl:max-h-[540px] [@media(min-width:1024px)_and_(min-height:850px)]:max-h-[740px] drop-shadow-[0_25px_35px_rgba(0,0,0,0.35)] animate-in fade-in zoom-in-95 duration-700 pointer-events-auto"
                 priority
+                fetchPriority="high"
+                decoding="async"
               />
             </div>
 

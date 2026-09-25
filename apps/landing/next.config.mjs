@@ -19,6 +19,14 @@ const nextConfig = {
     '@repo/design',
   ],
   poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: [
+      '@phosphor-icons/react',
+      'lucide-react',
+      'date-fns',
+      'sonner',
+    ],
+  },
   logging: {
     fetches: {
       fullUrl: false,
