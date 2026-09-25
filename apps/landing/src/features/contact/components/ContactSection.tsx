@@ -59,7 +59,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
   const email = school.secretariat_email || school.email || data?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
 
   return (
-    <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-slate-50/70 overflow-hidden">
+    <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-slate-50/70 overflow-hidden cv-auto">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
 

@@ -545,5 +545,11 @@
   transform: none;
 }
 
+/* Defer layout and rendering of off-screen sections until scrolled near */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 700px;
+}
+
 
 

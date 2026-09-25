@@ -48,9 +48,9 @@ const CtaBanner = () => {
             src={bannerBg}
             alt="Students studying"
             fill
-            sizes="100vw"
+            sizes="(max-width: 1024px) 100vw, 1200px"
             className="object-cover object-[center_35%] lg:object-center lg:scale-[1.0] lg:-translate-x-[20%] opacity-75 lg:opacity-95 filter brightness-[0.8] saturate-[0.9] transition-transform duration-500"
-            priority
+            loading="lazy"
           />
           {/* Gradient overlay adapting to mobile/desktop to keep image visible but text readable */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#091420]/60 via-[#091420]/75 to-[#091420]/85 lg:bg-gradient-to-r lg:from-[#091420]/75 lg:via-[#091420]/35 lg:to-transparent" />

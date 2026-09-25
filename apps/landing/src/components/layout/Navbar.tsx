@@ -38,8 +38,9 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    let ticking = false;
 
-    const handleScroll = () => {
+    const updateScroll = () => {
       const currentScrollY = window.scrollY;
       const limit = isHome ? window.innerHeight - 80 : 20;
 
@@ -56,9 +57,17 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
       }
 
       lastScrollY.current = currentScrollY;
+      ticking = false;
     };
 
-    handleScroll();
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScroll);
+        ticking = true;
+      }
+    };
+
+    updateScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", handleScroll, { passive: true });
     return () => {

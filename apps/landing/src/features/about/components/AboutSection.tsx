@@ -22,7 +22,7 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
   const p2 = data?.content || t("p2");
 
   return (
-    <section id="chi-siamo" className="relative py-20 lg:py-28 bg-slate-50/70 overflow-hidden px-0">
+    <section id="chi-siamo" className="relative py-20 lg:py-28 bg-slate-50/70 overflow-hidden px-0 cv-auto">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
 
@@ -76,8 +76,9 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
                     src={aboutStudent}
                     alt="Student holding notebook"
                     fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 300px, 350px"
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
                 {/* Image 2 - Girls studying */}
@@ -86,8 +87,9 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
                     src={aboutStudying}
                     alt="Students studying together"
                     fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 300px, 350px"
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
               </div>
@@ -110,8 +112,9 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
                     src={aboutClassroom}
                     alt="Teacher in classroom"
                     fill
-                    sizes="(max-width: 768px) 100vw, 50vw"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 300px, 350px"
                     className="object-cover"
+                    loading="lazy"
                   />
                 </div>
               </div>

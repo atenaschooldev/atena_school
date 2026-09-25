@@ -171,7 +171,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
   }, [emblaApi, onSelect, activeTestimonial]);
 
   return (
-    <section className="py-14 sm:py-20 px-4 bg-slate-50/70 relative overflow-hidden" id="recensioni">
+    <section className="py-14 sm:py-20 px-4 bg-slate-50/70 relative overflow-hidden cv-auto" id="recensioni">
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px] pointer-events-none -z-0" />
 
