@@ -1,48 +1,94 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react';
+import { Printer, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react';
 import { DocumentPaperFormat, type DocumentBlocksConfig } from '../../types';
 import { compileDocumentHtml } from '@atena/core';
 
 interface DocumentLivePreviewProps {
   blocksConfig: DocumentBlocksConfig;
-  data: Record<string, any>;
+  data?: Record<string, any>;
+  formData?: Record<string, any>;
   documentTitle?: string;
   documentNumber?: string;
+  className?: string;
 }
 
 export function DocumentLivePreview({
   blocksConfig,
   data,
+  formData,
   documentTitle,
   documentNumber,
+  className = '',
 }: DocumentLivePreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [zoom, setZoom] = useState(100);
   const [compiledHtml, setCompiledHtml] = useState('');
+  const isInitializedRef = useRef(false);
 
+  const activeData = data || formData || {};
+
+  // Debounced smooth live update without tearing down the iframe window/DOM
   useEffect(() => {
-    try {
-      const html = compileDocumentHtml({
-        blocksConfig,
-        data,
-        documentTitle: documentTitle || 'Anteprima Documento',
-        documentNumber: documentNumber || 'DOC-ANTEPRIMA',
-      });
-      setCompiledHtml(html);
+    const timer = setTimeout(() => {
+      try {
+        const fullHtml = compileDocumentHtml({
+          blocksConfig,
+          data: activeData,
+          documentTitle: documentTitle || 'Anteprima Documento',
+          documentNumber: documentNumber || 'DOC-ANTEPRIMA',
+        });
+        setCompiledHtml(fullHtml);
 
-      if (iframeRef.current) {
-        const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-        if (doc) {
+        const iframe = iframeRef.current;
+        if (!iframe) return;
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
+
+        // If iframe is not initialized or empty, do initial full write
+        if (!isInitializedRef.current || !doc.body || !doc.head) {
           doc.open();
-          doc.write(html);
+          doc.write(fullHtml);
           doc.close();
+          isInitializedRef.current = true;
+        } else {
+          // Smooth live update: preserve scroll position and avoid destroying iframe context/styles
+          const scrollY = iframe.contentWindow?.scrollY ?? 0;
+          const scrollX = iframe.contentWindow?.scrollX ?? 0;
+
+          const parser = new DOMParser();
+          const newDoc = parser.parseFromString(fullHtml, 'text/html');
+
+          if (doc.title !== newDoc.title) {
+            doc.title = newDoc.title;
+          }
+
+          const oldStyle = doc.querySelector('style');
+          const newStyle = newDoc.querySelector('style');
+          if (newStyle && oldStyle) {
+            if (oldStyle.textContent !== newStyle.textContent) {
+              oldStyle.textContent = newStyle.textContent;
+            }
+          } else if (newStyle && !oldStyle) {
+            doc.head.appendChild(newStyle.cloneNode(true));
+          }
+
+          // Update body content seamlessly
+          doc.body.innerHTML = newDoc.body.innerHTML;
+
+          // Restore scroll position
+          if (iframe.contentWindow) {
+            iframe.contentWindow.scrollTo(scrollX, scrollY);
+          }
         }
+      } catch (err) {
+        console.error('Error compiling document preview:', err);
       }
-    } catch (err) {
-      console.error('Error compiling document preview:', err);
-    }
-  }, [blocksConfig, data, documentTitle, documentNumber]);
+    }, 80); // 80ms debounce: lightning fast feel without any DOM thrashing or flashing
+
+    return () => clearTimeout(timer);
+  }, [blocksConfig, activeData, documentTitle, documentNumber]);
 
   const handlePrint = () => {
     if (iframeRef.current?.contentWindow) {
@@ -54,17 +100,18 @@ export function DocumentLivePreview({
   const handleOpenNewWindow = () => {
     const win = window.open('', '_blank');
     if (win) {
+      win.document.open();
       win.document.write(compiledHtml);
       win.document.close();
     }
   };
 
-  const isLandscape = blocksConfig.paper_format === DocumentPaperFormat.A4_LANDSCAPE;
+  const isLandscape = blocksConfig?.paper_format === DocumentPaperFormat.A4_LANDSCAPE;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 border rounded-xl overflow-hidden shadow-2xl">
+    <div className={`flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl ${className}`}>
       {/* Control Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 text-slate-200 text-xs">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 text-slate-200 text-xs shrink-0">
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 uppercase tracking-wider">
             {isLandscape ? 'A4 Landscape' : 'A4 Portrait'}
@@ -141,7 +188,7 @@ export function DocumentLivePreview({
           <iframe
             ref={iframeRef}
             title="Anteprima Documento A4"
-            className="border-0 bg-white"
+            className="border-0 bg-white block"
             style={{
               width: isLandscape ? '1120px' : '860px',
               height: isLandscape ? '790px' : '1180px',
