@@ -3,7 +3,7 @@
 import React from "react";
 import { CreditCard, Storefront } from "@phosphor-icons/react";
 import type { UseFormSetValue } from "react-hook-form";
-import { ANNUAL_REGISTRATION_FEE_EUR } from "@/constants";
+import { ANNUAL_REGISTRATION_FEE_EUR, getCurrentAcademicYear } from "@atena/utils";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
 
 interface CheckoutRegistrationFeeSelectorProps {
@@ -23,7 +23,7 @@ export function CheckoutRegistrationFeeSelector({
   includeRegistrationFee,
   setValue,
   registrationFeeAmount = ANNUAL_REGISTRATION_FEE_EUR,
-  academicYear = "2026/2027",
+  academicYear = getCurrentAcademicYear().academicYear,
 }: CheckoutRegistrationFeeSelectorProps) {
   if (!stripeEnabled || !hasAnyFeeDue) {
     return null;

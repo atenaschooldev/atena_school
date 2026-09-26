@@ -6,7 +6,14 @@ import { useSearchParams } from "next/navigation";
 import { useForm, useWatch, type FieldPath } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { decodeScheduleSlot, verifySlotSignature, sanitizeTaxCode, extractBirthDateFromTaxCode } from "@atena/utils";
+import {
+  decodeScheduleSlot,
+  verifySlotSignature,
+  sanitizeTaxCode,
+  extractBirthDateFromTaxCode,
+  getCurrentAcademicYear,
+  ANNUAL_REGISTRATION_FEE_EUR,
+} from "@atena/utils";
 import { checkoutFormSchema, isValidCodiceFiscale } from "@atena/validators";
 import type { CheckoutFormValues, StudentItemInput } from "@atena/validators";
 import { getSessionId } from "@/lib/utils";
@@ -81,9 +88,11 @@ export function useCheckout(
 
   const [hasPaidAnnualFee, setHasPaidAnnualFee] = useState(false);
   const [registrationFeeAmount, setRegistrationFeeAmount] = useState<number>(
-    initialProfile?.registration_fee_eur != null ? Number(initialProfile.registration_fee_eur) : 30
+    initialProfile?.registration_fee_eur != null ? Number(initialProfile.registration_fee_eur) : ANNUAL_REGISTRATION_FEE_EUR
   );
-  const [academicYear, setAcademicYear] = useState<string>(initialProfile?.academic_year || "2026/2027");
+  const [academicYear, setAcademicYear] = useState<string>(
+    initialProfile?.academic_year || getCurrentAcademicYear().academicYear
+  );
   const [feeCheckStatus, setFeeCheckStatus] = useState<FeeCheckStatus>(FeeCheckStatus.INITIAL);
   const [studentFeeStatuses, setStudentFeeStatuses] = useState<Record<number, FeeCheckStatus>>({
     0: FeeCheckStatus.INITIAL,

@@ -19,7 +19,7 @@ import type { UseFormRegister, UseFormWatch, FieldErrors } from "react-hook-form
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { UserProfile, FormFieldConfig } from "@atena/api-types";
 import { FormFieldTarget } from "@atena/api-types";
-import { sanitizeTaxCode } from "@atena/utils";
+import { sanitizeTaxCode, getCurrentAcademicYear, ANNUAL_REGISTRATION_FEE_EUR } from "@atena/utils";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
 import { FeeCheckStatus } from "@/constants";
 import { getStudentPortalUrl, getLandingSiteUrl } from "@/lib/urls";
@@ -55,8 +55,8 @@ export function CheckoutPurchaserFields({
   onClearSavedProfile,
   onOpenAuthModal,
   customFields = [],
-  academicYear = "2026/2027",
-  registrationFeeAmount = 30,
+  academicYear = getCurrentAcademicYear().academicYear,
+  registrationFeeAmount = ANNUAL_REGISTRATION_FEE_EUR,
 }: CheckoutPurchaserFieldsProps) {
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");

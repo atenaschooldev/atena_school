@@ -17,7 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import type { CheckoutFormValues } from "@/features/checkout/hooks/useCheckout";
-import { sanitizeTaxCode } from "@atena/utils";
+import { sanitizeTaxCode, getCurrentAcademicYear, ANNUAL_REGISTRATION_FEE_EUR } from "@atena/utils";
 import { FeeCheckStatus } from "@/constants";
 import type { FormFieldConfig } from "@atena/api-types";
 import { FormFieldTarget } from "@atena/api-types";
@@ -71,8 +71,8 @@ export function CheckoutStudentsList({
   onSelectSavedStudent,
   customFields = [],
   register,
-  academicYear = "2026/2027",
-  registrationFeeAmount = 30,
+  academicYear = getCurrentAcademicYear().academicYear,
+  registrationFeeAmount = ANNUAL_REGISTRATION_FEE_EUR,
 }: CheckoutStudentsListProps) {
   return (
     <div className="space-y-4 pt-3 border-t border-slate-100">
