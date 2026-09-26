@@ -28,7 +28,7 @@ export function DocumentEditorDrawer({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[96vw] w-[1500px] h-[92vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
+      <DialogContent className="w-[96vw] max-w-[1500px] sm:max-w-[96vw] h-[92vh] max-h-[95vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
         <VisualDocumentBuilder
           template={template}
           onSave={onSave}

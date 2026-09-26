@@ -578,8 +578,8 @@ export function DocumentsView() {
       {/* Document View / Print Modal */}
       {previewingDoc && (
         <Dialog open={!!previewingDoc} onOpenChange={(open) => !open && setPreviewingDoc(null)}>
-          <DialogContent className="max-w-[96vw] w-[1100px] max-h-[92vh] flex flex-col p-0 overflow-hidden bg-background">
-            <DialogHeader className="p-4 border-b bg-muted/40 flex flex-row items-center justify-between">
+          <DialogContent className="w-[96vw] max-w-[1200px] sm:max-w-[96vw] h-[92vh] max-h-[95vh] flex flex-col p-0 overflow-hidden bg-background">
+            <DialogHeader className="p-4 border-b bg-muted/40 flex flex-row items-center justify-between shrink-0">
               <div>
                 <DialogTitle className="text-base font-bold flex items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-500" />

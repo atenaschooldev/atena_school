@@ -156,9 +156,9 @@ export function GenerateDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-[1400px] h-[90vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
+      <DialogContent className="w-[96vw] max-w-[1500px] sm:max-w-[96vw] h-[92vh] max-h-[95vh] p-0 flex flex-col gap-0 overflow-hidden bg-background">
         {/* Header */}
-        <DialogHeader className="px-6 py-3.5 border-b flex-row items-center justify-between space-y-0 bg-card">
+        <DialogHeader className="px-6 py-3.5 border-b flex-row items-center justify-between space-y-0 bg-card shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-500/10 text-blue-600 rounded-lg">
               <FileText className="h-5 w-5" />
