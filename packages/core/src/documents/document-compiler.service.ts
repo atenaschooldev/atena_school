@@ -29,8 +29,9 @@ export interface CompileDocumentOptions {
 /**
  * Replaces placeholders like {{student.full_name}} with actual data values
  */
-export function interpolateVariables(template: string, data: Record<string, any>): string {
-  if (!template) return '';
+export function interpolateVariables(template: any, data: Record<string, any>): string {
+  if (template === null || template === undefined) return '';
+  if (typeof template !== 'string') return String(template);
   return template.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (match, path) => {
     const keys = path.split('.');
     let val: any = data;

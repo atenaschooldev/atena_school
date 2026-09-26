@@ -169,13 +169,13 @@ export class DocumentsService {
       studentData?.first_name && studentData?.last_name
         ? `${studentData.first_name} ${studentData.last_name}`
         : bookingData?.student_name ||
-          formData?.student_first_name
-        ? `${formData.student_first_name} ${formData.student_last_name || ''}`
-        : bookingData?.purchaser_name || 'Mario Rossi';
+          (formData?.student_first_name
+            ? `${formData.student_first_name} ${formData.student_last_name || ''}`.trim()
+            : bookingData?.purchaser_name || '');
 
     const purchaserFullName =
       bookingData?.purchaser_name ||
-      (formData?.parent_first_name ? `${formData.parent_first_name} ${formData.parent_last_name || ''}` : studentFullName);
+      (formData?.parent_first_name ? `${formData.parent_first_name} ${formData.parent_last_name || ''}`.trim() : studentFullName);
 
     const isChild = Boolean(bookingData?.is_for_child || formData?.is_for_child);
 
@@ -185,7 +185,16 @@ export class DocumentsService {
         ? Number(bookingData.registration_fee)
         : defaultFeeFromDb;
 
-    const totalAmount = Number(bookingData?.total_amount || paymentData?.amount || courseData?.price || (130 + registrationFee));
+    const coursePrice = Number(courseData?.price || 0);
+    const totalAmount = Number(
+      bookingData?.total_amount != null
+        ? bookingData.total_amount
+        : paymentData?.amount != null
+        ? paymentData.amount
+        : coursePrice > 0
+        ? coursePrice + (registrationFee || 0)
+        : 0
+    );
     const courseFee = totalAmount >= registrationFee ? totalAmount - registrationFee : totalAmount;
 
     return {
@@ -283,17 +292,29 @@ export class DocumentsService {
     const paperFormat = template?.paper_format || DocumentPaperFormat.A4_PORTRAIT;
     const blocksConfig = dto.blocks_config || template?.blocks_config || { version: 1, paper_format: paperFormat, blocks: [] };
 
-    // 2. Aggregate Data Snapshot
+    // 2. Aggregate Data Snapshot with Safe Deep Merge
     const autofillData = await this.extractAutofillData(supabase, {
       bookingId: dto.booking_id,
       studentId: dto.student_id,
       teacherId: dto.teacher_id,
     });
 
-    const mergedData = {
-      ...autofillData,
-      ...(dto.custom_data || {}),
+    const isObj = (item: any) => item && typeof item === 'object' && !Array.isArray(item);
+    const deepMerge = (target: any, source: any): any => {
+      if (!source) return target;
+      const output = { ...target };
+      for (const key of Object.keys(source)) {
+        const sVal = source[key];
+        if (sVal !== undefined && sVal !== null && isObj(sVal) && isObj(target?.[key])) {
+          output[key] = deepMerge(target[key], sVal);
+        } else if (sVal !== undefined && sVal !== null) {
+          output[key] = sVal;
+        }
+      }
+      return output;
     };
+
+    const mergedData = deepMerge(autofillData, dto.custom_data || {});
 
     // 3. Generate Sequential Number
     const { count } = await supabase.from('documents').select('*', { count: 'exact', head: true });
