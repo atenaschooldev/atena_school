@@ -277,6 +277,14 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
       icon: ClipboardList,
     },
     {
+      title: tr("nav.documents", isEn ? "Documents & Contracts" : "Documenti & Contratti"),
+      subtitle: isEn ? "Registration forms, teacher contracts, payment receipts, and certificates" : "Moduli di iscrizione, contratti docenti, ricevute fiscali e attestati",
+      keywords: "documenti documents contratti contracts ricevute receipts attestati certificati",
+      url: "/documenti",
+      group: tr("nav.schoolManagement", isEn ? "School Management" : "Gestione Didattica & Scuola"),
+      icon: FileText,
+    },
+    {
       title: tr("nav.faqs", isEn ? "FAQs & Help Center" : "Domande Frequenti (FAQs)"),
       subtitle: isEn ? "School frequently asked questions and student support" : "Domande frequenti, risposte standard e supporto allievi",
       keywords: "faqs domande frequenti aiuto supporto help guida",

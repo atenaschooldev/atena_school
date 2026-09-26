@@ -50,4 +50,4 @@ export * from './system/notifications';
 export * from './system/contact';
 export * from './system/integrations';
 export * from './system/form-templates';
-
+export * from './system/documents';

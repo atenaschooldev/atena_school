@@ -55,6 +55,57 @@ export function generateMembershipNumber(academicYear?: string | null, sequenceN
   return `ATN-${yearPrefix}-${paddedSeq}`;
 }
 
+/**
+ * Official School Holidays Calendar for Academic Year 2026/2027
+ * (As specified in Modulo di Iscrizione e Regolamento)
+ */
+export interface SchoolHolidayPeriod {
+  name: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+  description: string;
+}
+
+export const ATENA_HOLIDAYS_2026_2027: SchoolHolidayPeriod[] = [
+  {
+    name: "Ponte dei Defunti",
+    startDate: "2026-11-02",
+    endDate: "2026-11-02",
+    description: "Chiusura per ponte dei defunti (Lunedì)",
+  },
+  {
+    name: "Ponte dell'Immacolata",
+    startDate: "2026-12-07",
+    endDate: "2026-12-08",
+    description: "Festa dell'Immacolata Concezione",
+  },
+  {
+    name: "Vacanze di Natale",
+    startDate: "2026-12-23",
+    endDate: "2027-01-06",
+    description: "Festività natalizie ed Epifania",
+  },
+  {
+    name: "Vacanze di Pasqua",
+    startDate: "2027-03-25",
+    endDate: "2027-03-30",
+    description: "Festività pasquali",
+  },
+  {
+    name: "Festa della Repubblica",
+    startDate: "2027-06-02",
+    endDate: "2027-06-02",
+    description: "Festa Nazionale della Repubblica Italiana",
+  },
+];
+
+export function isSchoolHoliday(date: Date | string, holidays: SchoolHolidayPeriod[] = ATENA_HOLIDAYS_2026_2027): boolean {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(d.getTime())) return false;
+  const dateStr = d.toISOString().split("T")[0];
+
+  return holidays.some((h) => dateStr >= h.startDate && dateStr <= h.endDate);
+}
 
 /**
  * Format currency amount to EUR (e.g. €152.00)

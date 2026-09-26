@@ -1,0 +1,397 @@
+/**
+ * ============================================================================
+ * ATENA SCHOOL — CORE DOCUMENTS SERVICE
+ * ============================================================================
+ * @module @atena/core/documents/documents.service
+ * @description
+ * Complete business logic service for managing and generating official school documents:
+ * - Fetch active templates and categories
+ * - Autofill snapshot data from DB entities (Booking, Student, Teacher, Payment)
+ * - Compile HTML and create immutable records in `public.documents`
+ * - Log audit events into `public.document_logs`
+ * ============================================================================
+ */
+
+import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  DocumentCategoryRecord,
+  DocumentGenerationSource,
+  DocumentLogAction,
+  DocumentPaperFormat,
+  DocumentRecord,
+  DocumentStatus,
+  DocumentTemplateRecord,
+  DocumentTemplateType,
+  DocumentType,
+  GenerateDocumentDto,
+  parseDocumentCategoryType,
+  parseDocumentPaperFormat,
+  parseDocumentStatus,
+  parseDocumentTemplateType,
+  parseDocumentType,
+} from '@atena/api-types';
+import { DEFAULT_SCHOOL_PROFILE, getSchoolProfile } from '../system/school-profile.service';
+import { compileDocumentHtml } from './document-compiler.service';
+import { formatDocumentNumber } from './document-number.service';
+
+export class DocumentsService {
+  /**
+   * Fetch all active document categories
+   */
+  static async getCategories(supabase: SupabaseClient): Promise<DocumentCategoryRecord[]> {
+    const { data, error } = await supabase
+      .from('document_categories')
+      .select('*')
+      .eq('is_active', true)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('[DocumentsService] Failed to load categories:', error);
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      ...row,
+      category_type: parseDocumentCategoryType(row.category_type),
+    }));
+  }
+
+  /**
+   * Fetch all document templates
+   */
+  static async getTemplates(supabase: SupabaseClient): Promise<DocumentTemplateRecord[]> {
+    const { data, error } = await supabase
+      .from('document_templates')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      console.error('[DocumentsService] Failed to load templates:', error);
+      return [];
+    }
+
+    return (data || []).map((row: any) => ({
+      ...row,
+      template_type: parseDocumentTemplateType(row.template_type),
+      category_type: parseDocumentCategoryType(row.category_type),
+      document_type: parseDocumentType(row.document_type),
+      paper_format: parseDocumentPaperFormat(row.paper_format),
+    }));
+  }
+
+  /**
+   * Fetch template by template_type
+   */
+  static async getTemplateByType(
+    supabase: SupabaseClient,
+    templateType: DocumentTemplateType
+  ): Promise<DocumentTemplateRecord | null> {
+    const { data, error } = await supabase
+      .from('document_templates')
+      .select('*')
+      .eq('template_type', templateType)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      ...data,
+      template_type: parseDocumentTemplateType(data.template_type),
+      category_type: parseDocumentCategoryType(data.category_type),
+      document_type: parseDocumentType(data.document_type),
+      paper_format: parseDocumentPaperFormat(data.paper_format),
+    };
+  }
+
+  /**
+   * Autofills document data from database entities (booking, student, teacher, payment)
+   */
+  static async extractAutofillData(
+    supabase: SupabaseClient,
+    dto: {
+      bookingId?: string;
+      studentId?: string;
+      teacherId?: number;
+    }
+  ): Promise<Record<string, any>> {
+    const school = await getSchoolProfile(supabase);
+
+    let bookingData: any = null;
+    let studentData: any = null;
+    let teacherData: any = null;
+    let courseData: any = null;
+    let paymentData: any = null;
+
+    // 1. Fetch Booking if provided
+    if (dto.bookingId) {
+      const { data: b } = await supabase
+        .from('bookings')
+        .select('*, courses(*), payments(*)')
+        .eq('id', dto.bookingId)
+        .single();
+
+      if (b) {
+        bookingData = b;
+        courseData = b.courses;
+        if (b.payments && b.payments.length > 0) {
+          paymentData = b.payments[0];
+        }
+      }
+    }
+
+    // 2. Fetch Student if provided or from booking
+    const targetStudentId = dto.studentId || bookingData?.student_id;
+    if (targetStudentId) {
+      const { data: s } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', targetStudentId)
+        .single();
+      studentData = s;
+    }
+
+    // 3. Fetch Teacher if provided
+    if (dto.teacherId) {
+      const { data: t } = await supabase
+        .from('teachers')
+        .select('*')
+        .eq('id', dto.teacherId)
+        .single();
+      teacherData = t;
+    }
+
+    // Extract form data from booking if present
+    const formData = bookingData?.form_data || {};
+
+    const studentFullName =
+      studentData?.first_name && studentData?.last_name
+        ? `${studentData.first_name} ${studentData.last_name}`
+        : bookingData?.student_name ||
+          formData?.student_first_name
+        ? `${formData.student_first_name} ${formData.student_last_name || ''}`
+        : bookingData?.purchaser_name || 'Mario Rossi';
+
+    const purchaserFullName =
+      bookingData?.purchaser_name ||
+      (formData?.parent_first_name ? `${formData.parent_first_name} ${formData.parent_last_name || ''}` : studentFullName);
+
+    const isChild = Boolean(bookingData?.is_for_child || formData?.is_for_child);
+
+    const totalAmount = Number(bookingData?.total_amount || paymentData?.amount || courseData?.price || 160);
+    const registrationFee = Number(bookingData?.registration_fee || 30);
+    const courseFee = totalAmount > registrationFee ? totalAmount - registrationFee : totalAmount;
+
+    return {
+      school,
+      student: {
+        id: studentData?.id || bookingData?.student_id,
+        full_name: studentFullName,
+        email: studentData?.email || bookingData?.student_email || bookingData?.purchaser_email,
+        phone: studentData?.phone || bookingData?.student_phone || bookingData?.purchaser_phone,
+        tax_code: studentData?.tax_code || bookingData?.student_tax_code || bookingData?.purchaser_tax_code || formData?.student_tax_code,
+        birth_date: studentData?.birth_date || formData?.student_birth_date,
+        birth_place: studentData?.birth_place || formData?.student_birth_place,
+        address: studentData?.address || formData?.student_address,
+        school_grade: formData?.student_school_and_grade || studentData?.school_and_grade,
+      },
+      parent: isChild
+        ? {
+            full_name: purchaserFullName,
+            email: bookingData?.purchaser_email,
+            phone: bookingData?.purchaser_phone,
+            tax_code: bookingData?.purchaser_tax_code || formData?.parent_tax_code,
+          }
+        : null,
+      teacher: teacherData
+        ? {
+            id: teacherData.id,
+            full_name: teacherData.name,
+            email: teacherData.email,
+            phone: teacherData.phone,
+            tax_code: teacherData.tax_code,
+            hourly_rate: teacherData.hourly_rate,
+          }
+        : null,
+      course: courseData
+        ? {
+            id: courseData.id,
+            title: courseData.title,
+            level: courseData.level,
+            schedule_text: courseData.schedule_text || bookingData?.schedule_time,
+            start_date: courseData.start_date || bookingData?.start_date,
+            total_hours: courseData.total_hours,
+            classroom: courseData.classroom,
+          }
+        : {
+            title: bookingData?.course_name || 'Corso di Lingua',
+            schedule_text: bookingData?.schedule_time || 'Orario da definire',
+            start_date: bookingData?.start_date,
+          },
+      payment: {
+        amount_total: totalAmount,
+        amount_course: courseFee,
+        registration_fee: registrationFee,
+        payment_method_label: paymentData?.payment_method || bookingData?.payment_method || 'Stripe / Carta di Credito',
+        is_paid: bookingData?.status === 2 || paymentData?.status === 'succeeded',
+        receipt_number: paymentData?.receipt_number,
+      },
+      delegates: {
+        delegate_1_name: formData?.pickup_delegate_1_name,
+        delegate_1_relation: formData?.pickup_delegate_1_relation,
+        delegate_1_phone: formData?.pickup_delegate_1_phone,
+        delegate_2_name: formData?.pickup_delegate_2_name,
+        delegate_2_relation: formData?.pickup_delegate_2_relation,
+        delegate_2_phone: formData?.pickup_delegate_2_phone,
+        self_exit_authorized: Boolean(formData?.self_exit_authorized_11plus),
+      },
+      issue_date: new Date().toLocaleDateString('it-IT'),
+    };
+  }
+
+  /**
+   * Generates, compiles and persists an official document record in database
+   */
+  static async generateDocument(
+    supabase: SupabaseClient,
+    dto: GenerateDocumentDto,
+    createdByUserId?: string
+  ): Promise<DocumentRecord> {
+    const schoolProfile = await getSchoolProfile(supabase);
+
+    // 1. Resolve Template
+    let template: DocumentTemplateRecord | null = null;
+    if (dto.template_id) {
+      const { data } = await supabase.from('document_templates').select('*').eq('id', dto.template_id).single();
+      template = data;
+    } else if (dto.template_type) {
+      template = await this.getTemplateByType(supabase, dto.template_type);
+    }
+
+    if (!template) {
+      template = await this.getTemplateByType(supabase, DocumentTemplateType.MODULO_ISCRIZIONE_STANDARD);
+    }
+
+    const docType = dto.document_type || template?.document_type || DocumentType.REGISTRATION_CONTRACT;
+    const catType = dto.category_type || template?.category_type || 1;
+    const paperFormat = template?.paper_format || DocumentPaperFormat.A4_PORTRAIT;
+    const blocksConfig = dto.blocks_config || template?.blocks_config || { version: 1, paper_format: paperFormat, blocks: [] };
+
+    // 2. Aggregate Data Snapshot
+    const autofillData = await this.extractAutofillData(supabase, {
+      bookingId: dto.booking_id,
+      studentId: dto.student_id,
+      teacherId: dto.teacher_id,
+    });
+
+    const mergedData = {
+      ...autofillData,
+      ...(dto.custom_data || {}),
+    };
+
+    // 3. Generate Sequential Number
+    const { count } = await supabase.from('documents').select('*', { count: 'exact', head: true });
+    const nextSeq = (count || 0) + 1;
+    const documentNumber = formatDocumentNumber(docType, nextSeq);
+
+    const title = dto.title || template?.name || 'Documento Ufficiale';
+
+    // 4. Compile HTML
+    const renderedHtml = compileDocumentHtml({
+      blocksConfig,
+      data: mergedData,
+      schoolProfile,
+      documentNumber,
+      documentTitle: title,
+    });
+
+    // 5. Insert Document Record (Database-First with Immutable Snapshot)
+    const recipientName =
+      dto.recipient_name ||
+      mergedData.student?.full_name ||
+      mergedData.parent?.full_name ||
+      mergedData.teacher?.full_name ||
+      'Destinatario';
+
+    const recipientEmail =
+      dto.recipient_email ||
+      mergedData.student?.email ||
+      mergedData.parent?.email ||
+      mergedData.teacher?.email;
+
+    const recipientTaxCode =
+      dto.recipient_tax_code ||
+      mergedData.student?.tax_code ||
+      mergedData.parent?.tax_code ||
+      mergedData.teacher?.tax_code;
+
+    const { data: newDoc, error } = await supabase
+      .from('documents')
+      .insert({
+        document_number: documentNumber,
+        document_type: docType,
+        category_type: catType,
+        status: DocumentStatus.GENERATED,
+        source: dto.source || DocumentGenerationSource.CRM_MANUAL,
+        paper_format: paperFormat,
+        template_id: template?.id,
+        template_type: template?.template_type,
+        booking_id: dto.booking_id,
+        student_id: dto.student_id,
+        teacher_id: dto.teacher_id,
+        title,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        recipient_tax_code: recipientTaxCode,
+        template_data: mergedData,
+        rendered_html: renderedHtml,
+        created_by: createdByUserId,
+      })
+      .select('*')
+      .single();
+
+    if (error || !newDoc) {
+      console.error('[DocumentsService] Failed to insert document:', error);
+      throw new Error(`Failed to generate document: ${error?.message}`);
+    }
+
+    // 6. Record Audit Log
+    await supabase.from('document_logs').insert({
+      document_id: newDoc.id,
+      action: DocumentLogAction.GENERATED,
+      performed_by: createdByUserId,
+      metadata: {
+        document_number: documentNumber,
+        template_name: template?.name,
+        source: dto.source || DocumentGenerationSource.CRM_MANUAL,
+      },
+    });
+
+    return {
+      ...newDoc,
+      document_type: parseDocumentType(newDoc.document_type),
+      category_type: parseDocumentCategoryType(newDoc.category_type),
+      status: parseDocumentStatus(newDoc.status),
+      paper_format: parseDocumentPaperFormat(newDoc.paper_format),
+    };
+  }
+
+  /**
+   * Log action for a document
+   */
+  static async logAction(
+    supabase: SupabaseClient,
+    documentId: string,
+    action: DocumentLogAction,
+    userId?: string,
+    metadata?: Record<string, any>
+  ) {
+    await supabase.from('document_logs').insert({
+      document_id: documentId,
+      action,
+      performed_by: userId,
+      metadata: metadata || {},
+    });
+  }
+}
