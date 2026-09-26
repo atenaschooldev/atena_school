@@ -238,11 +238,12 @@ export async function createStripeSession(
 
   const bookingRegFee = Number(b.registrationFee || (b as any).registration_fee || 0);
   if (bookingRegFee > 0) {
+    const { academicYear: currentAcademicYear } = getCurrentAcademicYear();
     lineItems.push({
       price_data: {
         currency: 'eur',
         product_data: {
-          name: `Quota Associativa Annuale 2026/2027 (${b.studentName || `${dto.firstName} ${dto.lastName}`})`,
+          name: `Quota Associativa Annuale ${currentAcademicYear} (${b.studentName || `${dto.firstName} ${dto.lastName}`})`,
         },
         unit_amount: Math.round(bookingRegFee * 100),
       },

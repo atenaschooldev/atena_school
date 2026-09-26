@@ -13,6 +13,7 @@ import {
   parsePaymentRecordStatus,
   MembershipStatus,
 } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 
 @Injectable()
 export class PaymentsService {
@@ -354,9 +355,10 @@ export class PaymentsService {
             `UPDATE annual_memberships SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = '${id}'::uuid WHERE id = '${memId}'::uuid`
           ).catch(() => null);
         } else if (studentTaxCode) {
+          const { academicYear, expiresAt } = getCurrentAcademicYear();
           await this.prisma.$executeRawUnsafe(`
             INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, payment_id, paid_at, expires_at)
-            VALUES (gen_random_uuid(), '${studentTaxCode}', '2026/2027', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${id}'::uuid, NOW(), '2027-08-31 23:59:59+00'::timestamptz)
+            VALUES (gen_random_uuid(), '${studentTaxCode}', '${academicYear}', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${id}'::uuid, NOW(), '${expiresAt}'::timestamptz)
             ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = EXCLUDED.payment_id, student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id);
           `).catch(() => null);
         }
@@ -372,8 +374,9 @@ export class PaymentsService {
             `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE id = '${memId}'::uuid`
           ).catch(() => null);
         } else if (studentTaxCode) {
+          const { academicYear } = getCurrentAcademicYear();
           await this.prisma.$executeRawUnsafe(
-            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE LOWER(tax_code) = LOWER('${studentTaxCode}') AND academic_year = '2026/2027'`
+            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING} WHERE LOWER(tax_code) = LOWER('${studentTaxCode}') AND academic_year = '${academicYear}'`
           ).catch(() => null);
         }
       }
@@ -447,20 +450,19 @@ export class PaymentsService {
       createdPayments.push(payment);
 
       if ((itemType === PaymentType.REGISTRATION_FEE || Number(item.amount) === 30) && (dto.purchaserTaxCode || dto.studentId)) {
-        const expiresAt = new Date();
-        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+        const { academicYear, expiresAt } = getCurrentAcademicYear();
 
         try {
           const taxCode = dto.purchaserTaxCode || (dto.studentId ? (await this.prisma.students.findUnique({ where: { id: dto.studentId } }))?.tax_code : null);
           if (taxCode) {
             await this.prisma.$executeRawUnsafe(
               `INSERT INTO annual_memberships (id, tax_code, student_id, user_id, status, academic_year, paid_at, expires_at)
-               VALUES (gen_random_uuid(), $1, $2::uuid, $3::uuid, ${MembershipStatus.ACTIVE}, '2026/2027', NOW(), $4::timestamptz)
+               VALUES (gen_random_uuid(), $1, $2::uuid, $3::uuid, ${MembershipStatus.ACTIVE}, '${academicYear}', NOW(), $4::timestamptz)
                ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id)`,
               taxCode,
               dto.studentId || null,
               payment.userId || null,
-              expiresAt.toISOString(),
+              expiresAt,
             ).catch((e) => console.error("Error inserting annual_membership:", e));
           }
         } catch (err) {
