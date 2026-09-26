@@ -375,12 +375,16 @@ USING (
 -- ============================================================================
 -- 6. PERMISSIONS & GRANTS
 -- ============================================================================
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
 GRANT ALL ON TABLE public.document_categories TO postgres, service_role, authenticated, anon;
 GRANT ALL ON TABLE public.document_templates TO postgres, service_role, authenticated, anon;
 GRANT ALL ON TABLE public.documents TO postgres, service_role, authenticated, anon;
 GRANT ALL ON TABLE public.document_logs TO postgres, service_role, authenticated, anon;
 
-GRANT ALL ON SEQUENCE public.document_categories_id_seq TO postgres, service_role, authenticated, anon;
-GRANT ALL ON SEQUENCE public.document_templates_id_seq TO postgres, service_role, authenticated, anon;
-GRANT ALL ON SEQUENCE public.document_logs_id_seq TO postgres, service_role, authenticated, anon;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO postgres, service_role, authenticated, anon;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO postgres, service_role, authenticated, anon;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO postgres, service_role, authenticated, anon;
+
 
