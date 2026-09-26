@@ -222,7 +222,7 @@ export function CreateTemplateDialog({
                   id="template-subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
-                  placeholder="e.g. Conferma Iscrizione: {{course_name}} • Atena School"
+                  placeholder="e.g. Conferma Iscrizione: {{course_name}}"
                 />
                 <span className="text-[11px] text-muted-foreground">
                   Supporta variabili dinamiche come <code>{"{{course_name}}"}</code>, <code>{"{{student_name}}"}</code>.

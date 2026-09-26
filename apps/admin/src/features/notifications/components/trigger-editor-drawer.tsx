@@ -343,7 +343,7 @@ function TriggerEditorForm({
                       🧑‍🏫 {locale === "en" ? "Teacher (Course Instructor)" : "Insegnante / Docente del Corso"}
                     </SelectItem>
                     <SelectItem value={String(RecipientType.ADMIN)} className="text-xs">
-                      🏢 {locale === "en" ? "School Administration" : "Segreteria Atena School"}
+                      🏢 {locale === "en" ? "School Administration" : "Segreteria / Amministrazione"}
                     </SelectItem>
                     <SelectItem value="4" className="text-xs">
                       ✍️ {locale === "en" ? "Custom Recipient..." : "Destinatario Personalizzato..."}

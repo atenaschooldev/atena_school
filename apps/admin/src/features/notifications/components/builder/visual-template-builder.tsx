@@ -914,7 +914,7 @@ function VisualTemplateBuilderContent({
     const defaults = getDefaultBlocksForTemplate(template.code, template.channel);
     commitConfigChange(defaults);
     setExpandedBlockId(defaults.blocks[0]?.id || null);
-    toast.success(t("notifications.resetDefaultSuccess") || "Modello ripristinato allo standard originale Atena School");
+    toast.success(t("notifications.resetDefaultSuccess") || "Modello ripristinato allo standard originale");
   };
 
   const { profile } = useSchoolProfile();
@@ -1291,7 +1291,7 @@ function VisualTemplateBuilderContent({
                       <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                       <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                       <span className="font-bold text-[11px] text-white ml-1 truncate">
-                        {liveRendered.subject || "Atena School — Conferma Iscrizione"}
+                        {liveRendered.subject || "Notifica — Conferma Iscrizione"}
                       </span>
                     </div>
 
@@ -1304,7 +1304,7 @@ function VisualTemplateBuilderContent({
                   {/* Sender Bar */}
                   <div className="bg-slate-50 border-b border-slate-200 px-3.5 py-1.5 text-[11px] flex items-center justify-between text-slate-600 shrink-0">
                     <div className="truncate">
-                      <span className="font-bold text-slate-800">{t("notifications.emailFrom") || "Da:"}</span> Atena School &lt;info@atenaschool.com&gt;
+                      <span className="font-bold text-slate-800">{t("notifications.emailFrom") || "Da:"}</span> info@scuola.com
                     </div>
                     <div className="text-[10px] text-slate-500 font-mono">{t("notifications.emailHtmlFormatted") || "HTML 5 • Formattato"}</div>
                   </div>
@@ -1325,14 +1325,14 @@ function VisualTemplateBuilderContent({
                   <div className="bg-[#242f3d] px-4 py-3 flex items-center justify-between border-b border-[#1f2936] text-xs shrink-0 select-none">
                     <div className="flex items-center gap-2.5">
                       <div className="h-7 w-7 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center font-bold text-xs text-white">
-                        AS
+                        TG
                       </div>
                       <div>
                         <div className="font-bold text-xs flex items-center gap-1 text-white">
-                          Atena School Bot
+                          Telegram Bot
                           <span className="text-[9px] bg-sky-500/20 text-sky-400 px-1 py-0.2 rounded font-mono">bot</span>
                         </div>
-                        <div className="text-[10px] text-slate-400">Canale Segreteria Atena</div>
+                        <div className="text-[10px] text-slate-400">Canale Segreteria</div>
                       </div>
                     </div>
                     <span className="text-xs text-sky-400 font-semibold flex items-center gap-1">
