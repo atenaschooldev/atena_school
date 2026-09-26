@@ -38,6 +38,8 @@ interface CheckoutPurchaserFieldsProps {
   onClearSavedProfile?: () => void;
   onOpenAuthModal?: () => void;
   customFields?: FormFieldConfig[];
+  academicYear?: string;
+  registrationFeeAmount?: number;
 }
 
 export function CheckoutPurchaserFields({
@@ -53,6 +55,8 @@ export function CheckoutPurchaserFields({
   onClearSavedProfile,
   onOpenAuthModal,
   customFields = [],
+  academicYear = "2026/2027",
+  registrationFeeAmount = 30,
 }: CheckoutPurchaserFieldsProps) {
   const isForChild = watch("isForChild");
   const needsCompanyInvoice = watch("needsCompanyInvoice");
@@ -371,13 +375,13 @@ export function CheckoutPurchaserFields({
                   {feeCheckStatus === FeeCheckStatus.PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                       <CheckCircle className="w-3 h-3 text-emerald-600" weight="fill" />
-                      Quota 2026/2027 saldata (0€)
+                      Quota {academicYear} saldata (0€)
                     </span>
                   )}
                   {feeCheckStatus === FeeCheckStatus.NOT_PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                       <Info className="w-3 h-3 text-amber-600" weight="bold" />
-                      Quota annuale (+30€)
+                      Quota annuale (+{registrationFeeAmount}€)
                     </span>
                   )}
                 </div>

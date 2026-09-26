@@ -55,6 +55,8 @@ interface CheckoutStudentsListProps {
   onSelectSavedStudent?: (student: SavedStudentItem, targetIndex?: number) => void;
   customFields?: FormFieldConfig[];
   register?: UseFormRegister<any>;
+  academicYear?: string;
+  registrationFeeAmount?: number;
 }
 
 export function CheckoutStudentsList({
@@ -69,6 +71,8 @@ export function CheckoutStudentsList({
   onSelectSavedStudent,
   customFields = [],
   register,
+  academicYear = "2026/2027",
+  registrationFeeAmount = 30,
 }: CheckoutStudentsListProps) {
   return (
     <div className="space-y-4 pt-3 border-t border-slate-100">
@@ -138,13 +142,13 @@ export function CheckoutStudentsList({
                   {studentFee === FeeCheckStatus.PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs">
                       <CheckCircle className="w-3 h-3 text-emerald-600" weight="fill" />
-                      Quota 2026/2027 saldata (0€)
+                      Quota {academicYear} saldata (0€)
                     </span>
                   )}
                   {studentFee === FeeCheckStatus.NOT_PAID && (
                     <span className="flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shadow-2xs">
                       <Info className="w-3 h-3 text-amber-600" weight="bold" />
-                      Quota annuale (+30€)
+                      Quota annuale (+{registrationFeeAmount}€)
                     </span>
                   )}
 

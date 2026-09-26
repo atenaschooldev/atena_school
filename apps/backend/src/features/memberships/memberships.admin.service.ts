@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { MembershipsRepository } from './domain/memberships.repository.interface';
 import { PrismaService } from '../../core/prisma/prisma.service';
 import { MembershipStatus, parseMembershipStatus, PaymentRecordStatus } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 
 @Injectable()
 export class MembershipsService {
@@ -72,7 +73,8 @@ export class MembershipsService {
             membershipNumber: { not: null },
           },
         });
-        const yearPrefix = (existing.academicYear || '2026/2027').split('/')[0] || '2026';
+        const currentYear = existing.academicYear || getCurrentAcademicYear().academicYear;
+        const yearPrefix = currentYear.split('/')[0] || String(new Date().getFullYear());
         membershipNumber = `ATN-${yearPrefix}-${String(count + 1).padStart(4, '0')}`;
       }
 

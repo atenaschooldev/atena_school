@@ -211,6 +211,8 @@ export function CheckoutView({
               onClearSavedProfile={clearSavedProfile}
               onOpenAuthModal={() => setAuthModalOpen(true)}
               customFields={customFields}
+              academicYear={academicYear}
+              registrationFeeAmount={registrationFeeAmount}
             />
 
             {isForChild && (
@@ -226,6 +228,8 @@ export function CheckoutView({
                 onSelectSavedStudent={selectSavedStudent}
                 customFields={customFields}
                 register={register}
+                academicYear={academicYear}
+                registrationFeeAmount={registrationFeeAmount}
               />
             )}
 
