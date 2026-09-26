@@ -20,7 +20,7 @@ export interface ContactFormData {
 
 export type FieldErrors = Partial<Record<keyof ContactFormData, string>>;
 
-export function useContactForm(initialFormTemplate?: any) {
+export function useContactForm(initialFormTemplate?: any, locale: string = "it") {
   const [formData, setFormData] = useState<ContactFormData>({
     nome: "",
     cognome: "",
@@ -38,6 +38,17 @@ export function useContactForm(initialFormTemplate?: any) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+
+  const isEn = locale === "en";
+  const defaultErrorMessage = isEn
+    ? "Something went wrong. Please try again later."
+    : "Si è verificato un errore. Riprova più tardi.";
+  const defaultNetworkErrorMessage = isEn
+    ? "Network connection error. Please try again later."
+    : "Errore di connessione alla rete. Riprova più tardi.";
+  const privacyRequiredMessage = isEn
+    ? "You must accept the privacy policy to proceed."
+    : "Devi accettare l'informativa sulla privacy per procedere.";
 
   // Dynamic template resolution for contact forms (White-Label Form Engine)
   useEffect(() => {
@@ -115,7 +126,7 @@ export function useContactForm(initialFormTemplate?: any) {
     if (!formData.privacy) {
       setFieldErrors((prev) => ({
         ...prev,
-        privacy: "Devi accettare l'informativa sulla privacy per procedere.",
+        privacy: privacyRequiredMessage,
       }));
       return;
     }
@@ -181,11 +192,11 @@ export function useContactForm(initialFormTemplate?: any) {
           }
           setFieldErrors(errorsMap);
         }
-        setError(data.error || "Something went wrong. Please try again later.");
+        setError(data.error || defaultErrorMessage);
       }
     } catch (err: any) {
       console.error(err);
-      setError("Network connection error. Please try again later.");
+      setError(defaultNetworkErrorMessage);
     } finally {
       setLoading(false);
     }
