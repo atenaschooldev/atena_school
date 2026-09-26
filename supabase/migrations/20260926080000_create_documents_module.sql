@@ -371,3 +371,16 @@ USING (
   recipient_email = (auth.jwt() ->> 'email')
   OR user_id = auth.uid()
 );
+
+-- ============================================================================
+-- 6. PERMISSIONS & GRANTS
+-- ============================================================================
+GRANT ALL ON TABLE public.document_categories TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE public.document_templates TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE public.documents TO postgres, service_role, authenticated, anon;
+GRANT ALL ON TABLE public.document_logs TO postgres, service_role, authenticated, anon;
+
+GRANT ALL ON SEQUENCE public.document_categories_id_seq TO postgres, service_role, authenticated, anon;
+GRANT ALL ON SEQUENCE public.document_templates_id_seq TO postgres, service_role, authenticated, anon;
+GRANT ALL ON SEQUENCE public.document_logs_id_seq TO postgres, service_role, authenticated, anon;
+
