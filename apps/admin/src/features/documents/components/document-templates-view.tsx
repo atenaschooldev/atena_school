@@ -1,35 +1,24 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense, lazy } from "react";
+import type {
+  ColumnDef,
+  SortingState,
+  ColumnFiltersState,
+  VisibilityState,
+} from "@tanstack/react-table";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  FileText,
-  Layers,
-  Sliders,
-  Sparkles,
-  Plus,
-  Search,
-  Receipt,
-  Briefcase,
-  ShieldCheck,
-  Award,
-  Copy,
-  Trash2,
-} from "lucide-react";
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import {
   DOCUMENT_CATEGORY_DICTIONARY,
   DOCUMENT_FORMAT_DICTIONARY,
   DocumentCategoryType,
+  DocumentPaperFormat,
   type DocumentTemplateRecord,
   type CreateDocumentTemplateDto,
 } from "../types";
@@ -37,12 +26,51 @@ import { useDocumentTemplates } from "../hooks/use-document-templates";
 import { DocumentEditorDrawer } from "./document-editor-drawer";
 import { CreateTemplateDialog } from "./create-template-dialog";
 import { GenerateDocumentDialog } from "./generate-document-dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
+import { DataTableToolbar, type FilterConfig } from "@/components/shared/data-table/data-table-toolbar";
+import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
+import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
+import { CellCopyableId } from "@/components/shared/cell-copyable-id";
 import { useTranslation } from "@/i18n/context";
 import { toast } from "sonner";
+import {
+  Layers,
+  FileText,
+  Briefcase,
+  Receipt,
+  ShieldCheck,
+  Award,
+  Sparkles,
+  Sliders,
+  Copy,
+  Trash2,
+  Plus,
+  RotateCcw,
+  FolderTree,
+  LayoutTemplate,
+} from "lucide-react";
 
 export function DocumentTemplatesView() {
   const { t, locale } = useTranslation();
-  const tr = (key: string, fallback: string) => t(key) || fallback;
+  const tr = (key: string, fallback: string) => {
+    const val = t(key);
+    return val && val !== key ? val : fallback;
+  };
 
   const {
     templates,
@@ -57,29 +85,54 @@ export function DocumentTemplatesView() {
     isDeleting,
   } = useDocumentTemplates();
 
-  const [search, setSearch] = useState("");
+  const [globalFilter, setGlobalFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [formatFilter, setFormatFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sorting, setSorting] = useState<SortingState>([{ id: "name", desc: false }]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState({});
+
   const [editingTemplate, setEditingTemplate] = useState<DocumentTemplateRecord | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [generatingTemplate, setGeneratingTemplate] = useState<DocumentTemplateRecord | null>(null);
+  const [deletingTemplate, setDeletingTemplate] = useState<DocumentTemplateRecord | null>(null);
 
-  const filteredTemplates = useMemo(() => {
-    return templates.filter((tpl) => {
-      if (search.trim()) {
-        const q = search.toLowerCase().trim();
-        const matchName = tpl.name.toLowerCase().includes(q);
-        const matchDesc = tpl.description?.toLowerCase().includes(q) || false;
-        if (!matchName && !matchDesc) return false;
-      }
+  const getCategoryIcon = (categoryType: DocumentCategoryType) => {
+    switch (categoryType) {
+      case DocumentCategoryType.STUDENT_CONTRACTS:
+        return FileText;
+      case DocumentCategoryType.TEACHER_CONTRACTS:
+        return Briefcase;
+      case DocumentCategoryType.FINANCIAL:
+        return Receipt;
+      case DocumentCategoryType.LEGAL_AND_PRIVACY:
+        return ShieldCheck;
+      case DocumentCategoryType.CERTIFICATES:
+        return Award;
+      default:
+        return FileText;
+    }
+  };
 
-      if (categoryFilter !== "all") {
-        if (String(tpl.category_type) !== categoryFilter) return false;
-      }
-
-      return true;
-    });
-  }, [templates, search, categoryFilter]);
+  const getCategoryBadgeColor = (categoryType: DocumentCategoryType) => {
+    switch (categoryType) {
+      case DocumentCategoryType.STUDENT_CONTRACTS:
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+      case DocumentCategoryType.TEACHER_CONTRACTS:
+        return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+      case DocumentCategoryType.FINANCIAL:
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+      case DocumentCategoryType.LEGAL_AND_PRIVACY:
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+      case DocumentCategoryType.CERTIFICATES:
+        return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20";
+      default:
+        return "bg-muted text-muted-foreground border-border";
+    }
+  };
 
   const handleOpenEditor = (tpl: DocumentTemplateRecord) => {
     setEditingTemplate(tpl);
@@ -99,16 +152,16 @@ export function DocumentTemplatesView() {
     await duplicateTemplate(tpl.id);
   };
 
-  const handleDelete = async (tpl: DocumentTemplateRecord) => {
-    if (tpl.is_system) {
+  const handleDelete = async () => {
+    if (!deletingTemplate) return;
+    if (deletingTemplate.is_system) {
       toast.error(tr("documents.categories.systemProtected", "Questo è un template di sistema fondamentale e non può essere eliminato."));
+      setDeletingTemplate(null);
       return;
     }
 
-    const confirmMsg = tr("documents.templates.deleteConfirm", `Sei sicuro di voler eliminare il modello '{name}'? L'azione è irreversibile.`).replace("{name}", tpl.name);
-    if (!window.confirm(confirmMsg)) return;
-
-    await deleteTemplate(tpl.id);
+    await deleteTemplate(deletingTemplate.id);
+    setDeletingTemplate(null);
   };
 
   const handleToggleActive = async (tpl: DocumentTemplateRecord, newActive: boolean) => {
@@ -118,211 +171,450 @@ export function DocumentTemplatesView() {
     });
   };
 
-  const getCategoryIcon = (categoryType: DocumentCategoryType) => {
-    switch (categoryType) {
-      case DocumentCategoryType.STUDENT_CONTRACTS:
-        return FileText;
-      case DocumentCategoryType.TEACHER_CONTRACTS:
-        return Briefcase;
-      case DocumentCategoryType.FINANCIAL:
-        return Receipt;
-      case DocumentCategoryType.LEGAL_AND_PRIVACY:
-        return ShieldCheck;
-      case DocumentCategoryType.CERTIFICATES:
-        return Award;
-      default:
-        return FileText;
-    }
+  const filteredData = useMemo(() => {
+    return templates.filter((tpl) => {
+      if (categoryFilter !== "all" && String(tpl.category_type) !== categoryFilter) {
+        return false;
+      }
+      if (formatFilter !== "all" && String(tpl.paper_format) !== formatFilter) {
+        return false;
+      }
+      if (statusFilter !== "all") {
+        if (statusFilter === "active" && !tpl.is_active) return false;
+        if (statusFilter === "inactive" && tpl.is_active) return false;
+      }
+      return true;
+    });
+  }, [templates, categoryFilter, formatFilter, statusFilter]);
+
+  const columns: ColumnDef<DocumentTemplateRecord>[] = useMemo(
+    () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <div className="flex items-center justify-center px-2">
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() ||
+                (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label={t("common.selectAll") || "Seleziona tutti"}
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center px-2">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label={t("common.selectRow") || "Seleziona riga"}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        size: 40,
+      },
+      {
+        accessorKey: "id",
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="ID" />
+        ),
+        cell: ({ row }) => <CellCopyableId id={row.original.id} />,
+        size: 80,
+      },
+      {
+        accessorKey: "name",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={tr("documents.templates.columnName", "Modello / Layout")}
+          />
+        ),
+        cell: ({ row }) => {
+          const Icon = getCategoryIcon(row.original.category_type);
+          const badgeColor = getCategoryBadgeColor(row.original.category_type);
+          return (
+            <div className="flex items-center gap-3">
+              <CellAvatar
+                title={row.original.name}
+                subtitle={row.original.description || (locale === "en" ? "Official template" : "Modello ufficiale")}
+                icon={Icon}
+                badgeColor={badgeColor}
+              />
+              {row.original.is_system && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 shrink-0"
+                >
+                  <Sparkles className="h-2.5 w-2.5 mr-1 text-amber-500" />
+                  {tr("documents.templates.systemBadge", "Sistema")}
+                </Badge>
+              )}
+            </div>
+          );
+        },
+        size: 280,
+      },
+      {
+        accessorKey: "category_type",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={tr("documents.templates.columnCategory", "Categoria")}
+          />
+        ),
+        cell: ({ row }) => {
+          const cat = DOCUMENT_CATEGORY_DICTIONARY[row.original.category_type];
+          const Icon = getCategoryIcon(row.original.category_type);
+          const badgeColor = getCategoryBadgeColor(row.original.category_type);
+          return (
+            <Badge
+              variant="outline"
+              className={`text-xs font-medium gap-1.5 ${badgeColor}`}
+            >
+              <Icon className="h-3 w-3" />
+              {locale === "en" ? cat?.label_en : cat?.label_it || "Generale"}
+            </Badge>
+          );
+        },
+        size: 180,
+      },
+      {
+        accessorKey: "paper_format",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={tr("documents.templates.columnFormat", "Formato Foglio")}
+          />
+        ),
+        cell: ({ row }) => {
+          const fmt = DOCUMENT_FORMAT_DICTIONARY[row.original.paper_format];
+          return (
+            <Badge
+              variant="outline"
+              className="text-xs font-mono border-border/70 bg-muted/40 text-foreground"
+            >
+              {locale === "en" ? fmt?.label_en : fmt?.label_it || "A4 Verticale"}
+            </Badge>
+          );
+        },
+        size: 140,
+      },
+      {
+        id: "blocks_count",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={tr("documents.templates.columnBlocks", "Struttura Blocchi")}
+          />
+        ),
+        cell: ({ row }) => {
+          const blocksCount = row.original.blocks_config?.blocks?.length || 0;
+          return (
+            <Badge
+              variant="outline"
+              className="text-xs font-medium gap-1.5 border-border/60 bg-muted/30"
+            >
+              <Layers className="h-3 w-3 text-primary" />
+              <span>
+                {blocksCount}{" "}
+                {locale === "en"
+                  ? blocksCount === 1 ? "block" : "blocks"
+                  : blocksCount === 1 ? "blocco" : "blocchi"}
+              </span>
+            </Badge>
+          );
+        },
+        size: 140,
+      },
+      {
+        accessorKey: "is_active",
+        header: ({ column }) => (
+          <DataTableColumnHeader
+            column={column}
+            title={tr("documents.templates.columnStatus", "Stato")}
+          />
+        ),
+        cell: ({ row }) => {
+          return (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={row.original.is_active}
+                onCheckedChange={(val) => handleToggleActive(row.original, val)}
+                disabled={isUpdating}
+                className="scale-80 cursor-pointer data-[state=checked]:bg-emerald-600"
+                aria-label={row.original.is_active ? "Attivo" : "Disattivo"}
+              />
+              <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
+                {row.original.is_active
+                  ? tr("documents.templates.active", "Attivo")
+                  : tr("documents.templates.inactive", "Disattivo")}
+              </span>
+            </div>
+          );
+        },
+        size: 120,
+      },
+      {
+        id: "actions",
+        header: () => <span className="sr-only">{tr("documents.templates.columnActions", "Azioni")}</span>,
+        cell: ({ row }) => {
+          const tpl = row.original;
+          return (
+            <div className="flex items-center justify-end gap-1.5 px-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs font-semibold px-2.5 cursor-pointer border-border/70 hover:bg-muted"
+                onClick={() => handleOpenEditor(tpl)}
+                title={tr("documents.templates.editBlocks", "Visual Builder")}
+              >
+                <Sliders className="h-3.5 w-3.5 mr-1 text-primary" />
+                <span className="hidden md:inline">{tr("documents.templates.editBlocks", "Visual Builder")}</span>
+              </Button>
+
+              <Button
+                size="sm"
+                className="h-8 text-xs font-semibold px-2.5 bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shadow-xs"
+                onClick={() => setGeneratingTemplate(tpl)}
+                title={tr("documents.templates.generate", "Genera Documento")}
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1" />
+                <span className="hidden md:inline">{tr("documents.templates.generate", "Genera")}</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={() => handleDuplicate(tpl)}
+                disabled={isDuplicating}
+                title={tr("documents.templates.duplicate", "Duplica modello")}
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+
+              {!tpl.is_system && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => setDeletingTemplate(tpl)}
+                  disabled={isDeleting}
+                  title={tr("documents.templates.delete", "Elimina")}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          );
+        },
+        size: 260,
+      },
+    ],
+    [locale, t, isDuplicating, isDeleting, isUpdating]
+  );
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: (row, columnId, filterValue) => {
+      if (!filterValue) return true;
+      const q = String(filterValue).toLowerCase().trim();
+      const tpl = row.original;
+      return (
+        tpl.name.toLowerCase().includes(q) ||
+        (tpl.description && tpl.description.toLowerCase().includes(q)) ||
+        tpl.template_type.toLowerCase().includes(q) ||
+        String(tpl.id).includes(q)
+      );
+    },
+  });
+
+  const totalTemplates = templates.length;
+  const activeTemplates = templates.filter((t) => t.is_active).length;
+  const systemTemplates = templates.filter((t) => t.is_system).length;
+  const coveredCategories = new Set(templates.map((t) => t.category_type)).size;
+
+  const categoryFilterOptions = useMemo(() => {
+    return [
+      { value: "all", label: tr("documents.filterAllCategories", "Tutte le categorie") },
+      ...Object.entries(DOCUMENT_CATEGORY_DICTIONARY).map(([id, dict]) => ({
+        value: id,
+        label: locale === "en" ? dict.label_en : dict.label_it,
+      })),
+    ];
+  }, [locale, t]);
+
+  const formatFilterOptions = useMemo(() => {
+    return [
+      { value: "all", label: locale === "en" ? "All Formats" : "Tutti i formati" },
+      ...Object.entries(DOCUMENT_FORMAT_DICTIONARY).map(([id, dict]) => ({
+        value: id,
+        label: locale === "en" ? dict.label_en : dict.label_it,
+      })),
+    ];
+  }, [locale]);
+
+  const statusFilterOptions = useMemo(() => {
+    return [
+      { value: "all", label: tr("documents.filterAllStatuses", "Tutti gli stati") },
+      { value: "active", label: tr("documents.templates.active", "Attivo") },
+      { value: "inactive", label: tr("documents.templates.inactive", "Disattivo") },
+    ];
+  }, [locale, t]);
+
+  const toolbarFilters: FilterConfig[] = [
+    {
+      value: categoryFilter,
+      onChange: setCategoryFilter,
+      placeholder: tr("documents.templates.columnCategory", "Categoria"),
+      options: categoryFilterOptions,
+      width: "w-44",
+    },
+    {
+      value: formatFilter,
+      onChange: setFormatFilter,
+      placeholder: tr("documents.templates.columnFormat", "Formato Foglio"),
+      options: formatFilterOptions,
+      width: "w-40",
+    },
+    {
+      value: statusFilter,
+      onChange: setStatusFilter,
+      placeholder: tr("documents.templates.columnStatus", "Stato"),
+      options: statusFilterOptions,
+      width: "w-32",
+    },
+  ];
+
+  const handleResetFilters = () => {
+    setGlobalFilter("");
+    setCategoryFilter("all");
+    setFormatFilter("all");
+    setStatusFilter("all");
   };
 
   return (
     <div className="space-y-6">
-      {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/70 bg-card/70 backdrop-blur-sm shadow-xs">
-        <div className="flex flex-1 items-center gap-3 max-w-md">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={tr("documents.templates.searchPlaceholder", "Cerca modelli per nome o descrizione...")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 text-xs h-9 bg-background/80"
-            />
-          </div>
-        </div>
+      {/* 1. Header Metrics Banner matching Notifications UI/UX */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="rounded-2xl border bg-card/60 shadow-xs">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{totalTemplates}</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {tr("documents.templates.statTotal", "Totale Modelli")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <Button
-            variant={categoryFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setCategoryFilter("all")}
-            className="text-xs h-8 cursor-pointer"
-          >
-            {tr("documents.filterAllCategories", "Tutti")} ({templates.length})
-          </Button>
-          {Object.entries(DOCUMENT_CATEGORY_DICTIONARY).map(([catId, dict]) => {
-            const count = templates.filter((t) => String(t.category_type) === catId).length;
-            if (count === 0) return null;
-            return (
-              <Button
-                key={catId}
-                variant={categoryFilter === catId ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCategoryFilter(catId)}
-                className="text-xs h-8 whitespace-nowrap cursor-pointer"
-              >
-                {locale === "en" ? dict.label_en : dict.label_it} ({count})
-              </Button>
-            );
-          })}
+        <Card className="rounded-2xl border bg-card/60 shadow-xs">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{activeTemplates}</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {tr("documents.templates.statActive", "Modelli Attivi")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground ml-2 shrink-0 cursor-pointer shadow-xs"
-          >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            {tr("documents.templates.newTemplate", "Nuovo Modello")}
-          </Button>
-        </div>
+        <Card className="rounded-2xl border bg-card/60 shadow-xs">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{systemTemplates}</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {tr("documents.templates.statSystem", "Modelli di Sistema")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl border bg-card/60 shadow-xs">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+              <FolderTree className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{coveredCategories}</p>
+              <p className="text-xs text-muted-foreground font-medium">
+                {tr("documents.templates.statCategories", "Categorie Coperte")}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Templates Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse h-56 bg-muted/40 rounded-xl" />
-          ))}
-        </div>
-      ) : filteredTemplates.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-border/80 bg-card/40">
-          <Layers className="h-10 w-10 text-muted-foreground/60 mb-3" />
-          <h4 className="text-sm font-semibold text-foreground">
-            {tr("documents.emptyTemplatesTitle", "Nessun modello disponibile")}
-          </h4>
-          <p className="text-xs text-muted-foreground mt-1">
-            {tr("documents.emptyTemplatesDesc", "Crea o configura i modelli di documenti nel Visual Builder.")}
-          </p>
+      {/* 2. DataTable Toolbar matching Notifications view */}
+      <DataTableToolbar
+        table={table}
+        searchQuery={globalFilter}
+        onSearchChange={setGlobalFilter}
+        searchPlaceholder={tr("documents.templates.searchPlaceholder", "Cerca modelli per nome, descrizione o codice...")}
+        filters={toolbarFilters}
+        onResetFilters={handleResetFilters}
+        actionButton={
           <Button
             size="sm"
             onClick={() => setIsCreateOpen(true)}
-            className="mt-4 text-xs h-8"
+            className="h-9 px-3.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer shrink-0"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
             {tr("documents.templates.newTemplate", "Nuovo Modello")}
           </Button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredTemplates.map((tpl) => {
-            const cat = DOCUMENT_CATEGORY_DICTIONARY[tpl.category_type];
-            const fmt = DOCUMENT_FORMAT_DICTIONARY[tpl.paper_format];
-            const blocksCount = tpl.blocks_config?.blocks?.length || 0;
-            const Icon = getCategoryIcon(tpl.category_type);
+        }
+      />
 
-            return (
-              <Card
-                key={tpl.id}
-                className="group hover:border-primary/50 hover:shadow-md transition-all duration-200 border border-border/70 bg-card/70 backdrop-blur-sm rounded-xl flex flex-col justify-between"
-              >
-                <CardHeader className="p-5 pb-3">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <Badge variant="outline" className="text-[11px] font-semibold bg-muted/50 border-border/60">
-                        {locale === "en" ? cat?.label_en : cat?.label_it || "Generale"}
-                      </Badge>
-                    </div>
+      {/* 3. AtenaDataTable with Complete State Management */}
+      <AtenaDataTable
+        table={table}
+        columnsCount={8}
+        loading={isLoading}
+        emptyTitle={tr("documents.emptyTemplatesTitle", "Nessun modello disponibile")}
+        emptyDescription={tr("documents.emptyTemplatesDesc", "Crea o configura i modelli di documenti nel Visual Builder.")}
+        emptyIcon={LayoutTemplate}
+        onResetFilters={handleResetFilters}
+        emptyAction={
+          <Button
+            size="sm"
+            onClick={() => setIsCreateOpen(true)}
+            className="text-xs h-8 cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            {tr("documents.templates.newTemplate", "Nuovo Modello")}
+          </Button>
+        }
+      />
 
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground font-mono bg-muted/60 px-2 py-0.5 rounded-md">
-                        {locale === "en" ? fmt?.label_en : fmt?.label_it || "A4 Verticale"}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDuplicate(tpl)}
-                        disabled={isDuplicating}
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                        title={tr("documents.templates.duplicate", "Duplica modello")}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      {!tpl.is_system && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(tpl)}
-                          disabled={isDeleting}
-                          className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10"
-                          title={tr("documents.templates.delete", "Elimina modello")}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <CardTitle className="text-sm font-bold leading-tight group-hover:text-primary transition-colors mt-1">
-                    {tpl.name}
-                  </CardTitle>
-                  <CardDescription className="text-xs line-clamp-2 mt-1">
-                    {tpl.description || (locale === "en" ? "No description specified" : "Nessuna descrizione specificata")}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="p-5 pt-0">
-                  <div className="flex items-center justify-between py-2 border-t border-border/40 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Layers className="h-3.5 w-3.5 text-primary" />
-                      <strong>{blocksCount}</strong> {locale === "en" ? "blocks" : "blocchi"}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium">
-                        {tpl.is_active
-                          ? tr("documents.templates.active", "Attivo")
-                          : tr("documents.templates.inactive", "Disattivo")}
-                      </span>
-                      <Switch
-                        checked={tpl.is_active}
-                        onCheckedChange={(checked) => handleToggleActive(tpl, checked)}
-                        disabled={isUpdating}
-                        className="scale-75 cursor-pointer data-[state=checked]:bg-emerald-600"
-                        aria-label="Stato modello"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleOpenEditor(tpl)}
-                      className="h-8 text-xs font-semibold cursor-pointer border-border/70 hover:bg-muted"
-                    >
-                      <Sliders className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                      {tr("documents.templates.editBlocks", "Visual Builder")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setGeneratingTemplate(tpl)}
-                      className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shadow-xs"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                      {tr("documents.templates.generate", "Genera")}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Create Template Dialog */}
+      {/* 4. Modals & Drawers */}
       <CreateTemplateDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
@@ -330,7 +622,6 @@ export function DocumentTemplatesView() {
         isLoading={isCreating}
       />
 
-      {/* Visual Document Builder Drawer */}
       <DocumentEditorDrawer
         template={editingTemplate}
         isOpen={isDrawerOpen}
@@ -349,7 +640,6 @@ export function DocumentTemplatesView() {
         }}
       />
 
-      {/* Generate Dialog */}
       {generatingTemplate && (
         <GenerateDocumentDialog
           open={!!generatingTemplate}
@@ -357,6 +647,38 @@ export function DocumentTemplatesView() {
           defaultTemplateType={generatingTemplate.template_type}
         />
       )}
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog
+        open={!!deletingTemplate}
+        onOpenChange={(open) => !open && setDeletingTemplate(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {tr("documents.templates.delete", "Elimina Modello")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {tr("documents.templates.deleteConfirm", "Sei sicuro di voler eliminare il modello '{name}'? L'azione è irreversibile.")
+                .replace("{name}", deletingTemplate?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {tr("documents.createTemplate.cancel", "Annulla")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting
+                ? tr("documents.categories.saving", "Salvataggio...")
+                : tr("documents.templates.delete", "Elimina")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
