@@ -15,7 +15,7 @@ import {
   NOTIFICATION_CHANNEL_DICTIONARY,
   NOTIFICATION_STATUS_DICTIONARY,
 } from "@atena/api-types";
-import { useNotificationLogs } from "../hooks/use-notification-templates";
+import { useNotificationLogs, useRetryNotificationLog } from "../hooks/use-notification-templates";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,7 @@ import {
   Mail,
   MessageSquare,
   RefreshCw,
+  RotateCw,
   CheckCircle2,
   AlertCircle,
   Eye,
@@ -86,6 +87,8 @@ export function NotificationLogsView() {
     status: parsedStatus,
     search: globalFilter.trim() || undefined,
   });
+
+  const retryMutation = useRetryNotificationLog();
 
   const getChannelLabel = (channel: number): string => {
     const entry = NOTIFICATION_CHANNEL_DICTIONARY[channel as keyof typeof NOTIFICATION_CHANNEL_DICTIONARY];
@@ -298,13 +301,30 @@ export function NotificationLogsView() {
         ),
         cell: ({ row }) => {
           const log = row.original;
+          const isFailed = Number(log.status) === NotificationStatus.FAILED;
+          const isRetrying = retryMutation.isPending && (retryMutation.variables === log.id);
+
           return (
             <div className="flex items-center justify-end gap-1">
+              {isFailed && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isRetrying}
+                  onClick={() => retryMutation.mutate(log.id)}
+                  className="h-8 px-2 text-xs gap-1 border-rose-500/30 text-rose-600 hover:bg-rose-500/10 cursor-pointer"
+                  title={tr("notifications.retry", "Riprova invio")}
+                >
+                  <RotateCw className={`h-3.5 w-3.5 ${isRetrying ? 'animate-spin' : ''}`} />
+                  <span className="hidden xl:inline">{tr("notifications.retry", "Riprova")}</span>
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedLog(log)}
                 className="h-8 w-8 p-0 hover:bg-muted/80 cursor-pointer"
+                title={tr("common.details", "Dettagli")}
               >
                 <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
               </Button>
@@ -312,7 +332,7 @@ export function NotificationLogsView() {
           );
         },
         enableSorting: false,
-        size: 60,
+        size: 110,
       },
     ],
     [locale, t]
@@ -624,6 +644,24 @@ export function NotificationLogsView() {
                   {JSON.stringify(selectedLog.response || selectedLog.error_message || {}, null, 2)}
                 </pre>
               </div>
+
+              {Number(selectedLog.status) === NotificationStatus.FAILED && (
+                <div className="pt-2 flex justify-end">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    disabled={retryMutation.isPending}
+                    onClick={async () => {
+                      await retryMutation.mutateAsync(selectedLog.id);
+                      setSelectedLog(null);
+                    }}
+                    className="gap-1.5 cursor-pointer"
+                  >
+                    <RotateCw className={`h-4 w-4 ${retryMutation.isPending ? 'animate-spin' : ''}`} />
+                    {tr("notifications.retry", "Riprova invio adesso")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

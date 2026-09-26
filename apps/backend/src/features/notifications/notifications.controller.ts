@@ -94,6 +94,14 @@ export class NotificationsController {
     return this.notificationsService.getLogs({ page, limit, channel, status, search });
   }
 
+  @Post('logs/:id/retry')
+  @Roles('admin', 'secretary')
+  @Audit('notifications', 'retry_log')
+  @ApiOperation({ summary: 'Повторить отправку неудачного уведомления (Retry)' })
+  async retryLog(@Param('id') id: string) {
+    return this.notificationsService.retryLog(id);
+  }
+
   @Post('templates/:id/test-send')
   @Roles('admin')
   @Audit('notifications', 'test_send')

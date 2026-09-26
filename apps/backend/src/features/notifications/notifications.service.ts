@@ -14,6 +14,7 @@ import {
   getSchoolProfile,
   renderEmailFromBlocks,
   renderTelegramFromBlocks,
+  retryNotificationLog,
 } from '@atena/core';
 import { MailService } from '../mail/mail.service';
 import { TelegramService } from '../mail/telegram.service';
@@ -480,6 +481,15 @@ export class NotificationsService {
       limit,
     };
   }
+
+  async retryLog(id: string) {
+    const res = await retryNotificationLog(this.supabase, id);
+    if (!res.success) {
+      throw new BadRequestException(res.error || 'Retry fallito');
+    }
+    return res;
+  }
 }
+
 
 

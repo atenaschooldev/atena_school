@@ -9,4 +9,5 @@ export * from './system/sentry.service';
 export * from './system/form-resolver.service';
 export * from './system/encryption';
 export * from './utils/background';
+export * from './documents/receipt.service';
 

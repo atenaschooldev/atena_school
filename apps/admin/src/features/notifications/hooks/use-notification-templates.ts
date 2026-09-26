@@ -180,3 +180,25 @@ export function useNotificationLogs(filters?: {
     refresh: refetch,
   };
 }
+
+export function useRetryNotificationLog() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async (id: string | number) => {
+      return apiFetch<{ success: boolean; messageId?: string; error?: string }>(
+        `/admin/notifications/logs/${id}/retry`,
+        { method: "POST" }
+      );
+    },
+    onSuccess: () => {
+      toast.success(t("notifications.retrySuccess") || "Notifica reinviata con successo");
+      queryClient.invalidateQueries({ queryKey: ["notification-logs"] });
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || t("notifications.retryError") || "Errore durante il reinvio");
+    },
+  });
+}
+

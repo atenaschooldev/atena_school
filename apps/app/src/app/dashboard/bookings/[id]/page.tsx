@@ -12,6 +12,7 @@ import {
   User,
   Info,
   Plus,
+  FileText,
   X
 } from "@phosphor-icons/react";
 import { format, isFuture, parseISO, isBefore, startOfDay } from "date-fns";
@@ -236,6 +237,16 @@ export default function BookingDetailPage({ params }: { params: Promise<{ id: st
                   <span className="text-sm font-bold text-foreground/75">Importo totale</span>
                   <span className="text-xl font-black text-primary">€{Number(booking.amount_paid || coursePrice).toFixed(2)}</span>
                 </div>
+
+                <a
+                  href={`/api/bookings/${booking.id}/receipt`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 w-full py-2.5 px-4 bg-muted/50 hover:bg-muted text-foreground/80 hover:text-foreground rounded-2xl text-xs font-semibold flex items-center justify-center gap-2 border border-border transition-colors cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-primary" weight="bold" />
+                  <span>Ricevuta Ufficiale (PDF / Stampa)</span>
+                </a>
               </div>
             </div>
 

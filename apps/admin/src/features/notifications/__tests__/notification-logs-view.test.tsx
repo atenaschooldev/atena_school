@@ -6,9 +6,16 @@ import { NotificationChannel, NotificationStatus } from "@atena/api-types";
 import { LanguageProvider } from "@/i18n/context";
 
 const mockUseNotificationLogs = vi.fn();
+const mockMutate = vi.fn();
 
 vi.mock("../hooks/use-notification-templates", () => ({
   useNotificationLogs: (params: any) => mockUseNotificationLogs(params),
+  useRetryNotificationLog: () => ({
+    mutate: mockMutate,
+    mutateAsync: mockMutate,
+    isPending: false,
+    variables: null,
+  }),
 }));
 
 function renderWithI18n(ui: React.ReactElement) {
@@ -74,13 +81,12 @@ describe("Admin Notifications - NotificationLogsView Component Strict Tests", ()
   it("opens modal with detailed payload and log details when eye icon is clicked", () => {
     renderWithI18n(<NotificationLogsView />);
 
-    const viewButtons = screen.getAllByRole("button", { name: "" }).filter((btn) =>
+    const viewButtons = screen.getAllByRole("button").filter((btn) =>
       btn.querySelector(".lucide-eye")
     );
 
-    if (viewButtons.length > 0) {
-      fireEvent.click(viewButtons[0]);
-      expect(screen.getByText(/delivery details|dettaglio invio notifica/i)).toBeInTheDocument();
-    }
+    expect(viewButtons.length).toBeGreaterThan(0);
+    fireEvent.click(viewButtons[0]);
+    expect(screen.getByText(/delivery details|dettaglio invio notifica/i)).toBeInTheDocument();
   });
 });

@@ -695,4 +695,120 @@ export async function processNotificationTriggers(
   }
 }
 
+/**
+ * Re-attempts sending a failed notification from notification_logs
+ */
+export async function retryNotificationLog(
+  supabase: SupabaseClient,
+  logId: string | number
+): Promise<{ success: boolean; messageId?: string | number; error?: string }> {
+  try {
+    const { data: logRecord, error: fetchErr } = await supabase
+      .from('notification_logs')
+      .select('*, template:notification_templates(*)')
+      .eq('id', logId)
+      .maybeSingle();
+
+    if (fetchErr || !logRecord) {
+      return { success: false, error: 'Record del log di notifica non trovato' };
+    }
+
+    const payload = logRecord.request?.payload || {};
+    const channel = Number(logRecord.channel);
+    const recipient = logRecord.recipient;
+    const schoolProfile = await getSchoolProfile(supabase);
+
+    if (channel === NotificationChannel.EMAIL) {
+      const resendCreds = await getResendCredentials(supabase);
+      if (!resendCreds.apiKey) {
+        return { success: false, error: 'Chiave API Resend non configurata' };
+      }
+
+      const template = logRecord.template;
+      let subject = logRecord.subject || `Notifica: ${schoolProfile.name}`;
+      let html = '';
+
+      if (template?.blocks_config?.blocks?.length) {
+        const rendered = renderEmailFromBlocks(template.blocks_config, payload, schoolProfile);
+        subject = template.subject ? compileTemplate(template.subject, payload) : rendered.subject;
+        html = rendered.html;
+      } else if (template?.body_html) {
+        subject = template.subject ? compileTemplate(template.subject, payload) : subject;
+        html = compileTemplate(template.body_html, payload);
+      } else {
+        html = `<p>${logRecord.subject || 'Notifica Atena School'}</p>`;
+      }
+
+      const sendRes = await sendEmailViaResend({
+        apiKey: resendCreds.apiKey,
+        from: resendCreds.fromEmail,
+        to: recipient,
+        subject,
+        html,
+      });
+
+      const existingResp = (typeof logRecord.response === 'object' && logRecord.response !== null) ? logRecord.response : {};
+      const retryAttempts = (existingResp.retry_count || 0) + 1;
+      const updatedResponse = {
+        ...existingResp,
+        retry_count: retryAttempts,
+        last_retried_at: new Date().toISOString(),
+        last_retry_result: sendRes,
+      };
+
+      await supabase
+        .from('notification_logs')
+        .update({
+          status: sendRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+          response: updatedResponse,
+        })
+        .eq('id', logId);
+
+      return sendRes;
+    } else if (channel === NotificationChannel.TELEGRAM) {
+      const template = logRecord.template;
+      let text = '';
+      if (template?.blocks_config?.blocks?.length) {
+        const rendered = renderTelegramFromBlocks(template.blocks_config, payload);
+        text = rendered.text;
+      } else if (template?.body_text) {
+        text = compileTemplate(template.body_text, payload);
+      } else {
+        text = logRecord.subject || 'Notifica Atena School';
+      }
+
+      const sendRes = await sendTelegramMessage({
+        supabase,
+        text,
+        chatId: recipient,
+        bookingId: logRecord.request?.bookingId,
+      });
+
+      const existingResp = (typeof logRecord.response === 'object' && logRecord.response !== null) ? logRecord.response : {};
+      const retryAttempts = (existingResp.retry_count || 0) + 1;
+      const updatedResponse = {
+        ...existingResp,
+        retry_count: retryAttempts,
+        last_retried_at: new Date().toISOString(),
+        last_retry_result: sendRes,
+      };
+
+      await supabase
+        .from('notification_logs')
+        .update({
+          status: sendRes.success ? NotificationStatus.SENT : NotificationStatus.FAILED,
+          response: updatedResponse,
+        })
+        .eq('id', logId);
+
+      return sendRes;
+    }
+
+    return { success: false, error: `Canale non supportato: ${channel}` };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Esecuzione retry fallita' };
+  }
+}
+
+
 
