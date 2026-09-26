@@ -234,10 +234,10 @@ export function DocumentsView() {
           return (
             <div className="flex flex-col gap-1">
               <Badge variant="outline" className="text-[11px] font-semibold border-border/60 bg-muted/40 w-fit">
-                {cat?.label_it || "Generale"}
+                {locale === "en" ? cat?.label_en : cat?.label_it || "Generale"}
               </Badge>
               <span className="text-[10px] text-muted-foreground font-mono">
-                {docType?.label_it || "---"}
+                {locale === "en" ? docType?.label_en : docType?.label_it || "---"}
               </span>
             </div>
           );
@@ -273,7 +273,7 @@ export function DocumentsView() {
           const fmt = DOCUMENT_FORMAT_DICTIONARY[row.original.paper_format];
           return (
             <Badge variant="secondary" className="text-[10px] font-mono bg-muted/60 text-muted-foreground">
-              {fmt?.label_it || "A4 Verticale"}
+              {locale === "en" ? fmt?.label_en : fmt?.label_it || "A4 Verticale"}
             </Badge>
           );
         },
@@ -378,17 +378,17 @@ export function DocumentsView() {
     { value: "all", label: tr("documents.filterAllCategories", "Tutte le categorie") },
     ...categories.map((c) => ({
       value: String(c.category_type),
-      label: c.name_it,
+      label: locale === "en" ? (c.name_en || c.name_it) : c.name_it,
     })),
   ];
 
   const statusOptions = [
     { value: "all", label: tr("documents.filterAllStatuses", "Tutti gli stati") },
-    { value: String(DocumentStatus.GENERATED), label: "Generato / Emesso" },
-    { value: String(DocumentStatus.SIGNED), label: "Firmato" },
-    { value: String(DocumentStatus.SENT), label: "Inviato" },
-    { value: String(DocumentStatus.DRAFT), label: "Bozza" },
-    { value: String(DocumentStatus.CANCELLED), label: "Annullato" },
+    { value: String(DocumentStatus.GENERATED), label: locale === "en" ? "Generated / Issued" : "Generato / Emesso" },
+    { value: String(DocumentStatus.SIGNED), label: locale === "en" ? "Signed" : "Firmato" },
+    { value: String(DocumentStatus.SENT), label: locale === "en" ? "Sent" : "Inviato" },
+    { value: String(DocumentStatus.DRAFT), label: locale === "en" ? "Draft" : "Bozza" },
+    { value: String(DocumentStatus.CANCELLED), label: locale === "en" ? "Cancelled" : "Annullato" },
   ];
 
   return (

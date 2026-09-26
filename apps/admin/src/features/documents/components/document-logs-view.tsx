@@ -20,9 +20,7 @@ import {
 } from "@atena/api-types";
 import type { DocumentLogRecord } from "../types";
 import { useDocumentLogs } from "../hooks/use-document-logs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -49,7 +47,6 @@ import {
   Activity,
   FileText,
   Trash2,
-  RotateCw,
 } from "lucide-react";
 
 const ACTION_ICONS: Record<DocumentLogAction, React.ReactNode> = {
@@ -64,7 +61,8 @@ const ACTION_ICONS: Record<DocumentLogAction, React.ReactNode> = {
 
 export function DocumentLogsView() {
   const { t, locale } = useTranslation();
-  const { logs, isLoading, refetch, deleteLog, clearLogs, isDeletingLog, isClearingLogs } = useDocumentLogs();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+  const { logs, isLoading, deleteLog, clearLogs, isDeletingLog, isClearingLogs } = useDocumentLogs();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState<string>("all");
@@ -85,7 +83,8 @@ export function DocumentLogsView() {
         const matchTitle = log.documents?.title?.toLowerCase().includes(q) || false;
         const matchNumber = log.documents?.document_number?.toLowerCase().includes(q) || false;
         const matchRecipient = log.documents?.recipient_name?.toLowerCase().includes(q) || false;
-        const matchAction = (DOCUMENT_LOG_ACTION_DICTIONARY[log.action as DocumentLogAction]?.label_it || "").toLowerCase().includes(q);
+        const dict = DOCUMENT_LOG_ACTION_DICTIONARY[log.action as DocumentLogAction];
+        const matchAction = (dict?.label_it || "").toLowerCase().includes(q) || (dict?.label_en || "").toLowerCase().includes(q);
         if (!matchTitle && !matchNumber && !matchRecipient && !matchAction) return false;
       }
 
@@ -98,36 +97,42 @@ export function DocumentLogsView() {
   }, [logs, searchQuery, actionFilter]);
 
   const handleDeleteLog = async (log: DocumentLogRecord) => {
-    const confirmed = window.confirm(`Sei sicuro di voler eliminare la voce di log #${log.id}?`);
-    if (!confirmed) return;
+    const confirmMsg = tr("documents.logs.deleteLog", `Elimina log #${log.id}?`);
+    if (!window.confirm(confirmMsg)) return;
     await deleteLog(log.id);
   };
 
   const handleClearAllLogs = async () => {
-    const confirmed = window.confirm("ATTENZIONE: Sei sicuro di voler cancellare TUTTE le voci del registro eventi audit? L'azione non è reversibile.");
+    const confirmed = window.confirm(
+      tr("documents.logs.clearConfirm", "Sei sicuro di voler eliminare tutti i log dei documenti? L'operazione è irreversibile.")
+    );
     if (!confirmed) return;
     await clearLogs();
   };
 
   const handleExportCsv = () => {
     if (filteredLogs.length === 0) return;
-    const headers = ["ID", "Data_Ora", "Azione", "Documento", "N_Documento", "Destinatario", "IP_Address"];
-    const rows = filteredLogs.map((l: any) => [
-      l.id,
-      `"${new Date(l.created_at).toISOString()}"`,
-      `"${DOCUMENT_LOG_ACTION_DICTIONARY[l.action as DocumentLogAction]?.label_it || l.action}"`,
-      `"${l.documents?.title || ''}"`,
-      `"${l.documents?.document_number || ''}"`,
-      `"${l.documents?.recipient_name || ''}"`,
-      `"${l.ip_address || ''}"`,
-    ]);
+    const headers = ["ID", "Timestamp", "Action", "Document_Title", "Document_Number", "Recipient", "IP_Address"];
+    const rows = filteredLogs.map((l: any) => {
+      const dict = DOCUMENT_LOG_ACTION_DICTIONARY[l.action as DocumentLogAction];
+      const actionLabel = locale === "en" ? (dict?.label_en || l.action) : (dict?.label_it || l.action);
+      return [
+        l.id,
+        `"${new Date(l.created_at).toISOString()}"`,
+        `"${actionLabel}"`,
+        `"${l.documents?.title || ''}"`,
+        `"${l.documents?.document_number || ''}"`,
+        `"${l.documents?.recipient_name || ''}"`,
+        `"${l.ip_address || ''}"`,
+      ];
+    });
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `audit_log_documenti_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `audit_log_documents_${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -138,7 +143,7 @@ export function DocumentLogsView() {
       {
         accessorKey: "id",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Log ID" />
+          <DataTableColumnHeader column={column} title={tr("documents.logs.columnLogId", "Log ID")} />
         ),
         cell: ({ row }) => <CellCopyableId id={row.original.id} />,
         size: 90,
@@ -146,7 +151,7 @@ export function DocumentLogsView() {
       {
         accessorKey: "created_at",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Data & Ora" />
+          <DataTableColumnHeader column={column} title={tr("documents.logs.columnDateTime", "Data & Ora")} />
         ),
         cell: ({ row }) => {
           const dateStr = new Date(row.original.created_at).toLocaleString(locale === "en" ? "en-US" : "it-IT", {
@@ -164,7 +169,7 @@ export function DocumentLogsView() {
       {
         accessorKey: "action",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Azione" />
+          <DataTableColumnHeader column={column} title={tr("documents.logs.columnAction", "Azione")} />
         ),
         cell: ({ row }) => {
           const action = row.original.action as DocumentLogAction;
@@ -175,7 +180,7 @@ export function DocumentLogsView() {
             <div className="flex items-center gap-2">
               <span className="p-1 rounded-md bg-muted">{icon}</span>
               <span className="text-xs font-semibold text-foreground">
-                {dict?.label_it || "Azione"}
+                {locale === "en" ? dict?.label_en : dict?.label_it || "Azione"}
               </span>
             </div>
           );
@@ -185,7 +190,7 @@ export function DocumentLogsView() {
       {
         accessorKey: "document_id",
         header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Documento" />
+          <DataTableColumnHeader column={column} title={tr("documents.logs.columnDocument", "Documento")} />
         ),
         cell: ({ row }) => {
           const log = row.original as any;
@@ -202,7 +207,7 @@ export function DocumentLogsView() {
       },
       {
         id: "recipient",
-        header: () => <span className="text-xs font-semibold text-muted-foreground">Destinatario</span>,
+        header: () => <span className="text-xs font-semibold text-muted-foreground">{tr("documents.logs.columnRecipient", "Destinatario")}</span>,
         cell: ({ row }) => {
           const log = row.original as any;
           return (
@@ -214,7 +219,7 @@ export function DocumentLogsView() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right text-xs font-semibold text-muted-foreground">Azioni</div>,
+        header: () => <div className="text-right text-xs font-semibold text-muted-foreground">{tr("documents.columnActions", "Azioni")}</div>,
         cell: ({ row }) => {
           return (
             <div className="flex justify-end items-center gap-1">
@@ -223,10 +228,10 @@ export function DocumentLogsView() {
                 size="sm"
                 onClick={() => setSelectedLog(row.original)}
                 className="h-7 text-xs font-medium text-primary hover:bg-primary/10 rounded-md cursor-pointer"
-                title="Ispeziona dettagli"
+                title={tr("documents.logs.details", "Dettagli")}
               >
                 <Eye className="h-3.5 w-3.5 mr-1" />
-                Dettagli
+                {tr("documents.logs.details", "Dettagli")}
               </Button>
               <Button
                 variant="ghost"
@@ -234,7 +239,7 @@ export function DocumentLogsView() {
                 onClick={() => handleDeleteLog(row.original)}
                 disabled={isDeletingLog}
                 className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10 rounded-md cursor-pointer"
-                title="Elimina log"
+                title={tr("documents.logs.deleteLog", "Elimina log")}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
@@ -266,10 +271,10 @@ export function DocumentLogsView() {
   });
 
   const actionOptions = [
-    { value: "all", label: "Tutte le azioni" },
+    { value: "all", label: tr("documents.logs.filterAllActions", "Tutte le azioni") },
     ...Object.entries(DOCUMENT_LOG_ACTION_DICTIONARY).map(([id, dict]) => ({
       value: id,
-      label: dict.label_it,
+      label: locale === "en" ? dict.label_en : dict.label_it,
     })),
   ];
 
@@ -280,12 +285,12 @@ export function DocumentLogsView() {
           table={table}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Cerca nell'audit log..."
+          searchPlaceholder={tr("documents.searchPlaceholder", "Cerca nell'audit log...")}
           filters={[
             {
               value: actionFilter,
               onChange: setActionFilter,
-              placeholder: "Filtra per azione",
+              placeholder: tr("documents.logs.filterAllActions", "Filtra per azione"),
               options: actionOptions,
             },
           ]}
@@ -305,7 +310,7 @@ export function DocumentLogsView() {
             className="h-8 text-xs font-medium cursor-pointer border-border/70 hover:bg-muted"
           >
             <Download className="h-3.5 w-3.5 mr-1.5" />
-            Esporta CSV
+            {tr("documents.logs.exportCsv", "Esporta CSV")}
           </Button>
 
           <Button
@@ -316,7 +321,7 @@ export function DocumentLogsView() {
             className="h-8 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/30 cursor-pointer"
           >
             <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-            Svuota Log
+            {tr("documents.logs.clearAll", "Svuota Log")}
           </Button>
         </div>
       </div>
@@ -324,8 +329,8 @@ export function DocumentLogsView() {
       <AtenaDataTable
         table={table}
         loading={isLoading}
-        emptyTitle="Nessun evento registrato"
-        emptyDescription="Tutte le generazioni, stampe e firme dei documenti verranno tracciate qui in tempo reale."
+        emptyTitle={tr("documents.emptyLogsTitle", "Nessun log registrato")}
+        emptyDescription={tr("documents.emptyLogsDesc", "Le operazioni sui documenti verranno tracciate automaticamente qui.")}
         emptyIcon={History}
         onResetFilters={() => {
           setSearchQuery("");
@@ -340,7 +345,7 @@ export function DocumentLogsView() {
             <DialogHeader className="p-5 border-b bg-muted/40">
               <DialogTitle className="text-base font-bold flex items-center gap-2">
                 <FileCode2 className="h-5 w-5 text-primary" />
-                Dettagli Evento Audit
+                {tr("documents.logs.inspectTitle", "Dettagli Log Operazione")}
               </DialogTitle>
               <DialogDescription className="text-xs">
                 Log ID: <span className="font-mono text-foreground font-semibold">{selectedLog.id}</span>
@@ -350,15 +355,17 @@ export function DocumentLogsView() {
             <div className="p-5 overflow-y-auto space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-muted/40 border">
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Timestamp:</span>
+                  <span className="text-muted-foreground block text-[11px]">{tr("documents.logs.columnDateTime", "Data & Ora")}:</span>
                   <span className="font-mono font-medium">
                     {new Date(selectedLog.created_at).toLocaleString(locale === "en" ? "en-US" : "it-IT")}
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">Azione:</span>
+                  <span className="text-muted-foreground block text-[11px]">{tr("documents.logs.columnAction", "Azione")}:</span>
                   <span className="font-semibold text-foreground">
-                    {DOCUMENT_LOG_ACTION_DICTIONARY[selectedLog.action as DocumentLogAction]?.label_it}
+                    {locale === "en"
+                      ? DOCUMENT_LOG_ACTION_DICTIONARY[selectedLog.action as DocumentLogAction]?.label_en
+                      : DOCUMENT_LOG_ACTION_DICTIONARY[selectedLog.action as DocumentLogAction]?.label_it}
                   </span>
                 </div>
                 <div>
@@ -366,7 +373,7 @@ export function DocumentLogsView() {
                   <span className="font-mono">{selectedLog.document_id}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">IP Address:</span>
+                  <span className="text-muted-foreground block text-[11px]">{tr("documents.logs.columnIp", "Indirizzo IP")}:</span>
                   <span className="font-mono">{selectedLog.ip_address || "127.0.0.1"}</span>
                 </div>
               </div>
@@ -375,7 +382,7 @@ export function DocumentLogsView() {
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="font-semibold text-foreground flex items-center gap-1.5">
                     <FileCode2 className="h-3.5 w-3.5 text-primary" />
-                    Metadati JSON Snapshot
+                    {locale === "en" ? "Metadata JSON Snapshot" : "Metadati JSON Snapshot"}
                   </span>
                   <Button
                     variant="ghost"
@@ -392,7 +399,9 @@ export function DocumentLogsView() {
                     ) : (
                       <Copy className="h-3 w-3 mr-1" />
                     )}
-                    {copiedMetadata ? "Copiato" : "Copia JSON"}
+                    {copiedMetadata
+                      ? tr("documents.logs.copied", "Copiato")
+                      : tr("documents.logs.copyJson", "Copia JSON")}
                   </Button>
                 </div>
                 <pre className="p-3 bg-slate-950 text-slate-100 rounded-lg font-mono text-[11px] overflow-x-auto max-h-60 border border-slate-800">

@@ -19,7 +19,6 @@ import {
   Sparkles,
   Plus,
   Search,
-  CheckCircle2,
   Receipt,
   Briefcase,
   ShieldCheck,
@@ -39,9 +38,12 @@ import { DocumentEditorDrawer } from "./document-editor-drawer";
 import { CreateTemplateDialog } from "./create-template-dialog";
 import { GenerateDocumentDialog } from "./generate-document-dialog";
 import { useTranslation } from "@/i18n/context";
+import { toast } from "sonner";
 
 export function DocumentTemplatesView() {
   const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const {
     templates,
     isLoading,
@@ -99,12 +101,13 @@ export function DocumentTemplatesView() {
 
   const handleDelete = async (tpl: DocumentTemplateRecord) => {
     if (tpl.is_system) {
-      alert(`Il modello "${tpl.name}" è un template di sistema fondamentale e non può essere eliminato.`);
+      toast.error(tr("documents.categories.systemProtected", "Questo è un template di sistema fondamentale e non può essere eliminato."));
       return;
     }
 
-    const confirmed = window.confirm(`Sei sicuro di voler eliminare il modello "${tpl.name}"?`);
-    if (!confirmed) return;
+    const confirmMsg = tr("documents.templates.deleteConfirm", `Sei sicuro di voler eliminare il modello '{name}'? L'azione è irreversibile.`).replace("{name}", tpl.name);
+    if (!window.confirm(confirmMsg)) return;
+
     await deleteTemplate(tpl.id);
   };
 
@@ -121,7 +124,7 @@ export function DocumentTemplatesView() {
         return FileText;
       case DocumentCategoryType.TEACHER_CONTRACTS:
         return Briefcase;
-      case DocumentCategoryType.RECEIPT_INVOICE:
+      case DocumentCategoryType.FINANCIAL:
         return Receipt;
       case DocumentCategoryType.LEGAL_AND_PRIVACY:
         return ShieldCheck;
@@ -140,7 +143,7 @@ export function DocumentTemplatesView() {
           <div className="relative w-full">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={t("common.search") || "Cerca modelli di documento..."}
+              placeholder={tr("documents.templates.searchPlaceholder", "Cerca modelli per nome o descrizione...")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 text-xs h-9 bg-background/80"
@@ -155,7 +158,7 @@ export function DocumentTemplatesView() {
             onClick={() => setCategoryFilter("all")}
             className="text-xs h-8 cursor-pointer"
           >
-            Tutti ({templates.length})
+            {tr("documents.filterAllCategories", "Tutti")} ({templates.length})
           </Button>
           {Object.entries(DOCUMENT_CATEGORY_DICTIONARY).map(([catId, dict]) => {
             const count = templates.filter((t) => String(t.category_type) === catId).length;
@@ -168,7 +171,7 @@ export function DocumentTemplatesView() {
                 onClick={() => setCategoryFilter(catId)}
                 className="text-xs h-8 whitespace-nowrap cursor-pointer"
               >
-                {dict.label_it} ({count})
+                {locale === "en" ? dict.label_en : dict.label_it} ({count})
               </Button>
             );
           })}
@@ -179,7 +182,7 @@ export function DocumentTemplatesView() {
             className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground ml-2 shrink-0 cursor-pointer shadow-xs"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Nuovo Modello
+            {tr("documents.templates.newTemplate", "Nuovo Modello")}
           </Button>
         </div>
       </div>
@@ -194,9 +197,11 @@ export function DocumentTemplatesView() {
       ) : filteredTemplates.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-dashed border-border/80 bg-card/40">
           <Layers className="h-10 w-10 text-muted-foreground/60 mb-3" />
-          <h4 className="text-sm font-semibold text-foreground">Nessun modello trovato</h4>
+          <h4 className="text-sm font-semibold text-foreground">
+            {tr("documents.emptyTemplatesTitle", "Nessun modello disponibile")}
+          </h4>
           <p className="text-xs text-muted-foreground mt-1">
-            Modifica i filtri di ricerca oppure crea un nuovo modello.
+            {tr("documents.emptyTemplatesDesc", "Crea o configura i modelli di documenti nel Visual Builder.")}
           </p>
           <Button
             size="sm"
@@ -204,7 +209,7 @@ export function DocumentTemplatesView() {
             className="mt-4 text-xs h-8"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Crea Primo Modello
+            {tr("documents.templates.newTemplate", "Nuovo Modello")}
           </Button>
         </div>
       ) : (
@@ -227,13 +232,13 @@ export function DocumentTemplatesView() {
                         <Icon className="h-4 w-4" />
                       </div>
                       <Badge variant="outline" className="text-[11px] font-semibold bg-muted/50 border-border/60">
-                        {cat?.label_it || "Generale"}
+                        {locale === "en" ? cat?.label_en : cat?.label_it || "Generale"}
                       </Badge>
                     </div>
 
                     <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted-foreground font-mono bg-muted/60 px-2 py-0.5 rounded-md">
-                        {fmt?.label_it || "A4 Verticale"}
+                        {locale === "en" ? fmt?.label_en : fmt?.label_it || "A4 Verticale"}
                       </span>
                       <Button
                         variant="ghost"
@@ -241,7 +246,7 @@ export function DocumentTemplatesView() {
                         onClick={() => handleDuplicate(tpl)}
                         disabled={isDuplicating}
                         className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                        title="Duplica modello"
+                        title={tr("documents.templates.duplicate", "Duplica modello")}
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </Button>
@@ -252,7 +257,7 @@ export function DocumentTemplatesView() {
                           onClick={() => handleDelete(tpl)}
                           disabled={isDeleting}
                           className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10"
-                          title="Elimina modello"
+                          title={tr("documents.templates.delete", "Elimina modello")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -264,7 +269,7 @@ export function DocumentTemplatesView() {
                     {tpl.name}
                   </CardTitle>
                   <CardDescription className="text-xs line-clamp-2 mt-1">
-                    {tpl.description || "Nessuna descrizione specificata"}
+                    {tpl.description || (locale === "en" ? "No description specified" : "Nessuna descrizione specificata")}
                   </CardDescription>
                 </CardHeader>
 
@@ -272,11 +277,15 @@ export function DocumentTemplatesView() {
                   <div className="flex items-center justify-between py-2 border-t border-border/40 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5 font-medium">
                       <Layers className="h-3.5 w-3.5 text-primary" />
-                      <strong>{blocksCount}</strong> blocchi
+                      <strong>{blocksCount}</strong> {locale === "en" ? "blocks" : "blocchi"}
                     </span>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium">{tpl.is_active ? "Attivo" : "Disattivo"}</span>
+                      <span className="text-[11px] font-medium">
+                        {tpl.is_active
+                          ? tr("documents.templates.active", "Attivo")
+                          : tr("documents.templates.inactive", "Disattivo")}
+                      </span>
                       <Switch
                         checked={tpl.is_active}
                         onCheckedChange={(checked) => handleToggleActive(tpl, checked)}
@@ -295,7 +304,7 @@ export function DocumentTemplatesView() {
                       className="h-8 text-xs font-semibold cursor-pointer border-border/70 hover:bg-muted"
                     >
                       <Sliders className="h-3.5 w-3.5 mr-1.5 text-primary" />
-                      Configura
+                      {tr("documents.templates.editBlocks", "Visual Builder")}
                     </Button>
                     <Button
                       size="sm"
@@ -303,7 +312,7 @@ export function DocumentTemplatesView() {
                       className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground cursor-pointer shadow-xs"
                     >
                       <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                      Genera
+                      {tr("documents.templates.generate", "Genera")}
                     </Button>
                   </div>
                 </CardContent>

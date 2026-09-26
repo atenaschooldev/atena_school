@@ -32,6 +32,7 @@ import {
   type CreateDocumentTemplateDto,
 } from "../types";
 import { Sparkles, Layers } from "lucide-react";
+import { useTranslation } from "@/i18n/context";
 
 interface CreateTemplateDialogProps {
   open: boolean;
@@ -46,6 +47,9 @@ export function CreateTemplateDialog({
   onSubmit,
   isLoading = false,
 }: CreateTemplateDialogProps) {
+  const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [categoryType, setCategoryType] = useState<DocumentCategoryType>(DocumentCategoryType.STUDENT_CONTRACTS);
@@ -71,7 +75,7 @@ export function CreateTemplateDialog({
           {
             id: 'b_header',
             type: 'doc_header',
-            title: 'Intestazione Documento',
+            title: locale === 'en' ? 'Document Header' : 'Intestazione Documento',
             is_enabled: true,
             order: 1,
             props: {
@@ -82,7 +86,7 @@ export function CreateTemplateDialog({
           {
             id: 'b_parties',
             type: 'parties_block',
-            title: 'Dati Anagrafici',
+            title: locale === 'en' ? 'Personal Information' : 'Dati Anagrafici',
             is_enabled: true,
             order: 2,
             props: {},
@@ -90,17 +94,17 @@ export function CreateTemplateDialog({
           {
             id: 'b_custom',
             type: 'custom_text',
-            title: 'Testo Documento',
+            title: locale === 'en' ? 'Document Body Text' : 'Testo Documento',
             is_enabled: true,
             order: 3,
             props: {
-              content_html: `<p>Il presente documento certifica l'iscrizione / accordo per l'allievo {{student.full_name}}.</p>`,
+              content_html: `<p>${locale === 'en' ? 'This document certifies the enrollment and terms for student {{student.full_name}}.' : "Il presente documento certifica l'iscrizione / accordo per l'allievo {{student.full_name}}."}</p>`,
             },
           },
           {
             id: 'b_signatures',
             type: 'signatures',
-            title: 'Sezione Firme',
+            title: locale === 'en' ? 'Signatures Section' : 'Sezione Firme',
             is_enabled: true,
             order: 4,
             props: {
@@ -123,18 +127,20 @@ export function CreateTemplateDialog({
         <DialogHeader className="p-5 border-b bg-muted/40">
           <DialogTitle className="text-base font-bold flex items-center gap-2">
             <Layers className="h-5 w-5 text-primary" />
-            Crea Nuovo Modello Documento
+            {tr("documents.createTemplate.title", "Crea Nuovo Modello Documento")}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Definisci la categoria, il tipo e il formato per il nuovo template. Potrai poi comporre i blocchi nel Visual Builder.
+            {tr("documents.createTemplate.description", "Definisci la categoria, il tipo e il formato per il nuovo template. Potrai poi comporre i blocchi nel Visual Builder.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Nome del Modello *</Label>
+            <Label className="text-xs font-semibold">
+              {tr("documents.createTemplate.nameLabel", "Nome del Modello *")}
+            </Label>
             <Input
-              placeholder="es. Contratto Stage Estivo 2026"
+              placeholder={tr("documents.createTemplate.namePlaceholder", "es. Contratto Stage Estivo 2026")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -143,9 +149,11 @@ export function CreateTemplateDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Descrizione</Label>
+            <Label className="text-xs font-semibold">
+              {tr("documents.createTemplate.descLabel", "Descrizione")}
+            </Label>
             <Textarea
-              placeholder="Breve descrizione dell'utilizzo di questo modello..."
+              placeholder={tr("documents.createTemplate.descPlaceholder", "Breve descrizione dell'utilizzo di questo modello...")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -155,7 +163,9 @@ export function CreateTemplateDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Categoria Documentale</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.createTemplate.categoryLabel", "Categoria Documentale")}
+              </Label>
               <Select
                 value={String(categoryType)}
                 onValueChange={(val) => setCategoryType(Number(val) as DocumentCategoryType)}
@@ -166,7 +176,7 @@ export function CreateTemplateDialog({
                 <SelectContent>
                   {Object.entries(DOCUMENT_CATEGORY_DICTIONARY).map(([id, dict]) => (
                     <SelectItem key={id} value={id} className="text-xs">
-                      {dict.label_it}
+                      {locale === "en" ? dict.label_en : dict.label_it}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -174,7 +184,9 @@ export function CreateTemplateDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Tipo Documento</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.createTemplate.typeLabel", "Tipo Documento")}
+              </Label>
               <Select
                 value={String(documentType)}
                 onValueChange={(val) => setDocumentType(Number(val) as DocumentType)}
@@ -185,7 +197,7 @@ export function CreateTemplateDialog({
                 <SelectContent>
                   {Object.entries(DOCUMENT_TYPE_DICTIONARY).map(([id, dict]) => (
                     <SelectItem key={id} value={id} className="text-xs">
-                      {dict.label_it}
+                      {locale === "en" ? dict.label_en : dict.label_it}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -195,7 +207,9 @@ export function CreateTemplateDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Destinatario Primario</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.createTemplate.recipientLabel", "Destinatario Primario")}
+              </Label>
               <Select
                 value={String(recipientType)}
                 onValueChange={(val) => setRecipientType(Number(val) as DocumentRecipientType)}
@@ -206,7 +220,7 @@ export function CreateTemplateDialog({
                 <SelectContent>
                   {Object.entries(DOCUMENT_RECIPIENT_DICTIONARY).map(([id, dict]) => (
                     <SelectItem key={id} value={id} className="text-xs">
-                      {dict.label_it}
+                      {locale === "en" ? dict.label_en : dict.label_it}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -214,7 +228,9 @@ export function CreateTemplateDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Formato Foglio</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.createTemplate.formatLabel", "Formato Foglio")}
+              </Label>
               <Select
                 value={String(paperFormat)}
                 onValueChange={(val) => setPaperFormat(Number(val) as DocumentPaperFormat)}
@@ -225,7 +241,7 @@ export function CreateTemplateDialog({
                 <SelectContent>
                   {Object.entries(DOCUMENT_FORMAT_DICTIONARY).map(([id, dict]) => (
                     <SelectItem key={id} value={id} className="text-xs">
-                      {dict.label_it}
+                      {locale === "en" ? dict.label_en : dict.label_it}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,7 +257,7 @@ export function CreateTemplateDialog({
               onClick={() => onOpenChange(false)}
               className="text-xs h-8"
             >
-              Annulla
+              {tr("documents.createTemplate.cancel", "Annulla")}
             </Button>
             <Button
               type="submit"
@@ -250,7 +266,9 @@ export function CreateTemplateDialog({
               className="text-xs h-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {isLoading ? "Creazione in corso..." : "Crea & Apri Builder"}
+              {isLoading
+                ? tr("documents.createTemplate.submitting", "Creazione in corso...")
+                : tr("documents.createTemplate.submit", "Crea & Apri Builder")}
             </Button>
           </div>
         </form>

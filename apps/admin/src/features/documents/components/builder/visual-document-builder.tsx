@@ -10,23 +10,19 @@ import {
   Trash2,
   Plus,
   Save,
-  Eye,
   GripVertical,
-  CheckCircle2,
   Layers,
   Settings,
-  Type,
-  FileText,
 } from 'lucide-react';
 import {
   DocumentPaperFormat,
-  DOCUMENT_FORMAT_DICTIONARY,
   type DocumentBlock,
   type DocumentBlockType,
   type DocumentBlocksConfig,
   type DocumentTemplateRecord,
 } from '../../types';
 import { DocumentLivePreview } from './document-live-preview';
+import { useTranslation } from '@/i18n/context';
 
 interface VisualDocumentBuilderProps {
   template: DocumentTemplateRecord;
@@ -34,20 +30,23 @@ interface VisualDocumentBuilderProps {
   isSaving?: boolean;
 }
 
-const AVAILABLE_BLOCK_TYPES: { type: DocumentBlockType; title: string; desc: string }[] = [
-  { type: 'doc_header', title: 'Intestazione Scuola', desc: 'Logo, recapiti, data e numero' },
-  { type: 'parties_block', title: 'Dati Anagrafici', desc: 'Allievo, genitore o docente' },
-  { type: 'course_table', title: 'Tabella Corso', desc: 'Corso, orari, aula e date' },
-  { type: 'payment_breakdown', title: 'Riepilogo Pagamento', desc: 'Prezzi, IVA 22% e quote' },
-  { type: 'contract_clauses', title: 'Regolamento & Festività', desc: 'Clausole e calendario 2026/2027' },
-  { type: 'minor_delegation', title: 'Allegato 2 Deleghe', desc: 'Delegati ritiro e uscita autonoma' },
-  { type: 'gdpr_privacy', title: 'Consenso Privacy GDPR', desc: 'Liberatoria dati e multimediale' },
-  { type: 'signatures', title: 'Sezione Firme', desc: 'Firme scuola e allievo/genitore' },
-  { type: 'custom_text', title: 'Testo Personalizzato', desc: 'Testo libero con variabili' },
-  { type: 'doc_footer', title: 'Piè di Pagina', desc: 'Note legali e numerazione' },
+const BLOCK_DEFINITIONS: { type: DocumentBlockType; key: string }[] = [
+  { type: 'doc_header', key: 'doc_header' },
+  { type: 'parties_block', key: 'parties_block' },
+  { type: 'course_table', key: 'course_table' },
+  { type: 'payment_breakdown', key: 'payment_breakdown' },
+  { type: 'contract_clauses', key: 'contract_clauses' },
+  { type: 'minor_delegation', key: 'minor_delegation' },
+  { type: 'gdpr_privacy', key: 'gdpr_privacy' },
+  { type: 'signatures', key: 'signatures' },
+  { type: 'custom_text', key: 'custom_text' },
+  { type: 'doc_footer', key: 'doc_footer' },
 ];
 
 export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocumentBuilderProps) {
+  const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const [config, setConfig] = useState<DocumentBlocksConfig>(() => {
     return (
       template.blocks_config || {
@@ -101,7 +100,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
       delegate_1_phone: '+39 349 9876543',
       self_exit_authorized: true,
     },
-    issue_date: new Date().toLocaleDateString('it-IT'),
+    issue_date: new Date().toLocaleDateString(locale === 'en' ? 'en-US' : 'it-IT'),
   });
 
   const blocks = config.blocks || [];
@@ -174,25 +173,35 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
               {template.name}
               {template.is_system && (
                 <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200">
-                  Sistema
+                  {tr("documents.templates.systemBadge", "Sistema")}
                 </Badge>
               )}
             </h2>
-            <p className="text-xs text-muted-foreground">{template.description || 'Configurazione blocchi e layout di stampa'}</p>
+            <p className="text-xs text-muted-foreground">
+              {template.description || tr("documents.templates.subtitle", "Configurazione blocchi e layout di stampa")}
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 mr-2">
-            <span className="text-xs text-muted-foreground font-medium">Formato:</span>
+            <span className="text-xs text-muted-foreground font-medium">
+              {tr("documents.builder.formatLabel", "Formato:")}
+            </span>
             <select
               value={config.paper_format || DocumentPaperFormat.A4_PORTRAIT}
               onChange={(e) => setConfig({ ...config, paper_format: Number(e.target.value) as DocumentPaperFormat })}
               className="h-8 text-xs rounded-md border border-input bg-background px-2.5 font-medium"
             >
-              <option value={DocumentPaperFormat.A4_PORTRAIT}>A4 Verticale (Standard)</option>
-              <option value={DocumentPaperFormat.A4_LANDSCAPE}>A4 Orizzontale (Certificati)</option>
-              <option value={DocumentPaperFormat.RECEIPT_COMPACT}>Ricevuta Compatta</option>
+              <option value={DocumentPaperFormat.A4_PORTRAIT}>
+                {tr("documents.builder.portrait", "A4 Verticale")}
+              </option>
+              <option value={DocumentPaperFormat.A4_LANDSCAPE}>
+                {tr("documents.builder.landscape", "A4 Orizzontale")}
+              </option>
+              <option value={DocumentPaperFormat.RECEIPT_COMPACT}>
+                {tr("documents.builder.compact", "Ricevuta Compatta")}
+              </option>
             </select>
           </div>
 
@@ -202,7 +211,9 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
             className="bg-blue-600 hover:bg-blue-500 text-white shadow-sm font-semibold h-9"
           >
             <Save className="h-4 w-4 mr-2" />
-            {isSaving ? 'Salvataggio...' : 'Salva Modello'}
+            {isSaving
+              ? tr("documents.builder.saving", "Salvataggio...")
+              : tr("documents.builder.saveButton", "Salva Modello")}
           </Button>
         </div>
       </div>
@@ -214,7 +225,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
           <div className="p-3.5 border-b bg-muted/40 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Layers className="h-3.5 w-3.5" />
-              Struttura Blocchi ({blocks.length})
+              {tr("documents.builder.blocksStructure", "Struttura Blocchi")} ({blocks.length})
             </span>
           </div>
 
@@ -280,21 +291,27 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
 
           {/* Add Block Selector */}
           <div className="p-3 border-t bg-card">
-            <span className="text-[11px] font-bold text-muted-foreground block mb-1.5 uppercase">Aggiungi Blocco:</span>
+            <span className="text-[11px] font-bold text-muted-foreground block mb-1.5 uppercase">
+              {tr("documents.builder.addBlock", "Aggiungi Blocco:")}
+            </span>
             <div className="grid grid-cols-2 gap-1.5 max-h-[140px] overflow-y-auto custom-scrollbar p-0.5">
-              {AVAILABLE_BLOCK_TYPES.map((item) => (
-                <Button
-                  key={item.type}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addBlock(item.type, item.title)}
-                  className="h-7 text-[11px] justify-start text-left px-2 truncate"
-                  title={item.desc}
-                >
-                  <Plus className="h-3 w-3 mr-1 text-blue-500 shrink-0" />
-                  <span className="truncate">{item.title}</span>
-                </Button>
-              ))}
+              {BLOCK_DEFINITIONS.map((item) => {
+                const title = tr(`documents.builder.blocks.${item.key}`, item.key);
+                const desc = tr(`documents.builder.blocks.${item.key}_desc`, '');
+                return (
+                  <Button
+                    key={item.type}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addBlock(item.type, title)}
+                    className="h-7 text-[11px] justify-start text-left px-2 truncate"
+                    title={desc}
+                  >
+                    <Plus className="h-3 w-3 mr-1 text-blue-500 shrink-0" />
+                    <span className="truncate">{title}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -304,7 +321,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
           <div className="p-3.5 border-b bg-muted/40 flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Settings className="h-3.5 w-3.5" />
-              Proprietà Blocco
+              {tr("documents.builder.blockProperties", "Proprietà Blocco")}
             </span>
           </div>
 
@@ -312,7 +329,9 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
             {selectedBlock ? (
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-foreground mb-1 block">Titolo Blocco</label>
+                  <label className="text-xs font-semibold text-foreground mb-1 block">
+                    {tr("documents.builder.blockTitle", "Titolo Blocco")}
+                  </label>
                   <Input
                     value={selectedBlock.title}
                     onChange={(e) => {
@@ -329,18 +348,22 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
                 {selectedBlock.type === 'doc_header' && (
                   <div className="space-y-3 pt-2 border-t">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium">Mostra Logo Scuola</span>
+                      <span className="text-xs font-medium">
+                        {tr("documents.builder.showLogo", "Mostra Logo Scuola")}
+                      </span>
                       <Switch
                         checked={selectedBlock.props.show_logo !== false}
                         onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_logo: val })}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-foreground mb-1 block">Titolo Intestazione</label>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        {tr("documents.builder.headerTitle", "Titolo Intestazione")}
+                      </label>
                       <Input
                         value={selectedBlock.props.title || ''}
                         onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
-                        placeholder="MODULO DI ISCRIZIONE E REGOLAMENTO"
+                        placeholder="MODULO DI ISCRIZIONE"
                         className="h-8 text-xs"
                       />
                     </div>
@@ -349,72 +372,28 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
 
                 {selectedBlock.type === 'custom_text' && (
                   <div className="space-y-3 pt-2 border-t">
-                    <label className="text-xs font-semibold text-foreground mb-1 block">Contenuto Testo / HTML</label>
+                    <label className="text-xs font-semibold text-foreground mb-1 block">
+                      {tr("documents.builder.customHtml", "Contenuto Testo / HTML")}
+                    </label>
                     <Textarea
                       rows={6}
-                      value={selectedBlock.props.text || ''}
-                      onChange={(e) => updateBlockProps(selectedBlock.id, { text: e.target.value })}
+                      value={selectedBlock.props.content_html || selectedBlock.props.text || ''}
+                      onChange={(e) => updateBlockProps(selectedBlock.id, { content_html: e.target.value, text: e.target.value })}
                       placeholder="Inserisci testo o tag come {{student.full_name}}, {{course.title}}..."
                       className="text-xs font-mono"
                     />
                   </div>
                 )}
 
-                {selectedBlock.type === 'parties_block' && (
-                  <div className="space-y-2 pt-2 border-t text-xs">
-                    <div className="flex items-center justify-between py-1">
-                      <span>Dati Allievo</span>
-                      <Switch
-                        checked={selectedBlock.props.show_student_details !== false}
-                        onCheckedChange={(v) => updateBlockProps(selectedBlock.id, { show_student_details: v })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span>Dati Genitore / Tutore</span>
-                      <Switch
-                        checked={selectedBlock.props.show_parent_details !== false}
-                        onCheckedChange={(v) => updateBlockProps(selectedBlock.id, { show_parent_details: v })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span>Scuola e Classe</span>
-                      <Switch
-                        checked={selectedBlock.props.show_school_grade !== false}
-                        onCheckedChange={(v) => updateBlockProps(selectedBlock.id, { show_school_grade: v })}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {selectedBlock.type === 'payment_breakdown' && (
-                  <div className="space-y-2 pt-2 border-t text-xs">
-                    <div className="flex items-center justify-between py-1">
-                      <span>Scorporo IVA 22%</span>
-                      <Switch
-                        checked={selectedBlock.props.show_vat_breakdown !== false}
-                        onCheckedChange={(v) => updateBlockProps(selectedBlock.id, { show_vat_breakdown: v })}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span>Mostra Quota Iscrizione €30</span>
-                      <Switch
-                        checked={selectedBlock.props.show_registration_fee !== false}
-                        onCheckedChange={(v) => updateBlockProps(selectedBlock.id, { show_registration_fee: v })}
-                      />
-                    </div>
-                  </div>
-                )}
-
                 <div className="p-3 bg-muted/30 rounded-lg border text-[11px] text-muted-foreground space-y-1">
-                  <div className="font-semibold text-foreground">Suggerimento Variabili:</div>
-                  <div><code>&#123;&#123;student.full_name&#125;&#125;</code> - Nome allievo</div>
-                  <div><code>&#123;&#123;course.title&#125;&#125;</code> - Nome corso</div>
-                  <div><code>&#123;&#123;payment.amount_total&#125;&#125;</code> - Totale</div>
+                  <div className="font-semibold text-foreground">
+                    {tr("documents.builder.variablesHint", "Variabili disponibili: {{student.full_name}}, {{student.tax_code}}, {{course.title}}, {{payment.amount_total}}")}
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12 text-muted-foreground text-xs">
-                Seleziona un blocco per configurarne le proprietà
+                {locale === 'en' ? 'Select a block to configure its properties' : 'Seleziona un blocco per configurarne le proprietà'}
               </div>
             )}
           </div>

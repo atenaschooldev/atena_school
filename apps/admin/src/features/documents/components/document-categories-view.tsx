@@ -31,6 +31,8 @@ import {
   type UpdateDocumentCategoryDto,
 } from "../types";
 import { CreateCategoryDialog } from "./create-category-dialog";
+import { useTranslation } from "@/i18n/context";
+import { toast } from "sonner";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   "file-text": <FileText className="h-5 w-5 text-blue-500" />,
@@ -42,6 +44,9 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export function DocumentCategoriesView() {
+  const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const {
     categories,
     isLoading,
@@ -71,21 +76,18 @@ export function DocumentCategoriesView() {
   };
 
   const handleDelete = async (cat: DocumentCategoryRecord) => {
+    const displayName = locale === "en" ? cat.name_en || cat.name_it : cat.name_it;
     if (cat.is_system) {
-      alert(`La categoria "${cat.name_it}" è una categoria di sistema fondamentale e non può essere eliminata.`);
+      toast.error(tr("documents.categories.systemProtected", "Questa è una categoria di sistema fondamentale e non può essere eliminata."));
       return;
     }
 
     const count = templates.filter((t) => t.category_type === cat.category_type).length;
-    if (count > 0) {
-      const confirmed = window.confirm(
-        `Attenzione: ci sono ${count} modelli associati a questa categoria. Sei sicuro di voler eliminare la categoria "${cat.name_it}"?`
-      );
-      if (!confirmed) return;
-    } else {
-      const confirmed = window.confirm(`Sei sicuro di voler eliminare la categoria "${cat.name_it}"?`);
-      if (!confirmed) return;
-    }
+    const confirmMessage = count > 0
+      ? tr("documents.categories.deleteConfirmCount", `Attenzione: ci sono ${count} modelli associati a questa categoria. Sei sicuro di voler eliminare la categoria '{name}'?`).replace("{count}", String(count)).replace("{name}", displayName)
+      : tr("documents.categories.deleteConfirm", `Sei sicuro di voler eliminare la categoria '{name}'?`).replace("{name}", displayName);
+
+    if (!window.confirm(confirmMessage)) return;
 
     await deleteCategory(cat.id);
   };
@@ -96,16 +98,16 @@ export function DocumentCategoriesView() {
         <div>
           <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
             <FolderTree className="h-4 w-4 text-primary" />
-            Categorie Documentali & Classificazione
+            {tr("documents.categories.title", "Categorie Documentali & Classificazione")}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Classificazione gerarchica dei documenti per studenti, docenti, amministrazione e adempimenti fiscali/legali.
+            {tr("documents.categories.subtitle", "Classificazione gerarchica dei documenti per studenti, docenti, amministrazione e adempimenti fiscali/legali.")}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs font-mono w-fit bg-primary/5 text-primary border-primary/20">
-            {categories.length} Categorie
+            {tr("documents.categories.badgeCount", `${categories.length} Categorie`).replace("{count}", String(categories.length))}
           </Badge>
           <Button
             size="sm"
@@ -116,7 +118,7 @@ export function DocumentCategoriesView() {
             className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Nuova Categoria
+            {tr("documents.categories.newCategory", "Nuova Categoria")}
           </Button>
         </div>
       </div>
@@ -124,6 +126,7 @@ export function DocumentCategoriesView() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {categories.map((cat) => {
           const dict = DOCUMENT_CATEGORY_DICTIONARY[cat.category_type];
+          const displayName = locale === "en" ? (cat.name_en || dict?.label_en || cat.name_it) : cat.name_it;
           const iconNode = ICON_MAP[cat.icon] || <FileText className="h-5 w-5 text-blue-500" />;
           const countTemplates = templates.filter((t) => t.category_type === cat.category_type).length;
 
@@ -147,7 +150,7 @@ export function DocumentCategoriesView() {
                         setIsCreateOpen(true);
                       }}
                       className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                      title="Modifica categoria"
+                      title={tr("documents.categories.editCategory", "Modifica categoria")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -158,7 +161,7 @@ export function DocumentCategoriesView() {
                         onClick={() => handleDelete(cat)}
                         disabled={isDeleting}
                         className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10"
-                        title="Elimina categoria"
+                        title={tr("documents.templates.delete", "Elimina categoria")}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -166,17 +169,17 @@ export function DocumentCategoriesView() {
                   </div>
                 </div>
                 <CardTitle className="text-sm font-bold mt-2 text-foreground">
-                  {cat.name_it}
+                  {displayName}
                 </CardTitle>
                 <CardDescription className="text-xs line-clamp-2">
-                  {cat.description || "Nessuna descrizione specificata"}
+                  {cat.description || (locale === "en" ? "No description provided" : "Nessuna descrizione specificata")}
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="p-5 pt-0 text-[11px] text-muted-foreground">
                 <div className="flex justify-between items-center pt-3 border-t border-border/40">
                   <span className="font-mono text-xs font-medium text-foreground">
-                    <strong>{countTemplates}</strong> modelli associati
+                    <strong>{countTemplates}</strong> {locale === "en" ? "templates" : "modelli associati"}
                   </span>
                   <Badge
                     variant="secondary"
@@ -186,7 +189,9 @@ export function DocumentCategoriesView() {
                         : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {cat.is_active ? "Attivo" : "Disattivo"}
+                    {cat.is_active
+                      ? tr("documents.templates.active", "Attivo")
+                      : tr("documents.templates.inactive", "Disattivo")}
                   </Badge>
                 </div>
               </CardContent>

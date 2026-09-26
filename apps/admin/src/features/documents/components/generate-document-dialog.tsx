@@ -22,22 +22,17 @@ import {
   Sparkles,
   CheckCircle2,
   RefreshCw,
-  Search,
   UserCheck,
 } from "lucide-react";
 import {
-  DocumentCategoryType,
-  DocumentPaperFormat,
-  DocumentTemplateType,
-  DocumentType,
-  type DocumentTemplateRecord,
-  type GenerateDocumentDto,
+  type DocumentTemplateType,
 } from "../types";
 import { useDocumentTemplates } from "../hooks/use-document-templates";
 import { useDocuments } from "../hooks/use-documents";
 import { useBookings } from "@/features/bookings/hooks/use-bookings";
 import { DocumentLivePreview } from "./builder/document-live-preview";
 import { apiFetch } from "@/lib/api";
+import { useTranslation } from "@/i18n/context";
 import { toast } from "sonner";
 
 interface GenerateDocumentDialogProps {
@@ -55,6 +50,9 @@ export function GenerateDocumentDialog({
   defaultStudentId,
   defaultTemplateType,
 }: GenerateDocumentDialogProps) {
+  const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const { templates } = useDocumentTemplates();
   const { generateDocument, isGenerating } = useDocuments();
   const { bookings } = useBookings();
@@ -123,7 +121,7 @@ export function GenerateDocumentDialog({
     const b = bId || bookingIdInput;
     const s = sId || studentIdInput;
     if (!b && !s) {
-      toast.info("Inserisci o seleziona una prenotazione dal database");
+      toast.info(tr("documents.generator.selectBookingLabel", "Inserisci o seleziona una prenotazione dal database"));
       return;
     }
 
@@ -144,10 +142,10 @@ export function GenerateDocumentDialog({
           payment: { ...prev.payment, ...(data.payment || {}) },
           delegates: { ...prev.delegates, ...(data.delegates || {}) },
         }));
-        toast.success("Dati caricati istantaneamente dal database!");
+        toast.success(tr("documents.generator.autofillSuccess", "Dati caricati istantaneamente dal database!"));
       }
     } catch (err: any) {
-      toast.error(`Errore nel caricamento dati da DB: ${err?.message || "Verifica l'ID"}`);
+      toast.error(`${tr("documents.generator.autofillError", "Errore nel caricamento dati da DB")}: ${err?.message || ""}`);
     } finally {
       setIsAutofilling(false);
     }
@@ -200,10 +198,10 @@ export function GenerateDocumentDialog({
             </div>
             <div>
               <DialogTitle className="text-base font-bold text-foreground">
-                Genera Documento Ufficiale
+                {tr("documents.generator.dialogTitle", "Genera Documento Ufficiale")}
               </DialogTitle>
               <p className="text-xs text-muted-foreground">
-                Compilazione automatica da database Postgres con anteprima live e snapshot immutabile
+                {tr("documents.generator.dialogSubtitle", "Compilazione automatica da database Postgres con anteprima live e snapshot immutabile")}
               </p>
             </div>
           </div>
@@ -215,7 +213,9 @@ export function GenerateDocumentDialog({
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs h-8 text-xs cursor-pointer"
             >
               <CheckCircle2 className="h-4 w-4 mr-1.5" />
-              {isGenerating ? "Generazione in corso..." : "Salva & Emetti Documento"}
+              {isGenerating
+                ? tr("documents.generator.generating", "Generazione in corso...")
+                : tr("documents.generator.generateButton", "Salva & Emetti Documento")}
             </Button>
           </div>
         </DialogHeader>
@@ -228,14 +228,14 @@ export function GenerateDocumentDialog({
             <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-3">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                1. Seleziona Modello Documento
+                {tr("documents.generator.step1", "1. Seleziona Modello Documento")}
               </Label>
               <Select
                 value={String(selectedTemplateId || "")}
                 onValueChange={(val) => setSelectedTemplateId(Number(val))}
               >
                 <SelectTrigger className="w-full h-9 text-xs bg-background">
-                  <SelectValue placeholder="Scegli modello..." />
+                  <SelectValue placeholder={locale === "en" ? "Choose template..." : "Scegli modello..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((t) => (
@@ -251,24 +251,24 @@ export function GenerateDocumentDialog({
             <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-3">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <RefreshCw className="h-3.5 w-3.5 text-primary" />
-                2. Carica Dati da Database (Only Database-First)
+                {tr("documents.generator.step2", "2. Carica Dati da Database")}
               </Label>
 
               <div className="space-y-2">
                 <span className="text-[11px] text-muted-foreground font-medium block">
-                  Seleziona Prenotazione Esistente da DB:
+                  {tr("documents.generator.selectBookingLabel", "Seleziona Prenotazione Esistente da DB:")}
                 </span>
                 <Select value={selectedBookingId} onValueChange={handleSelectBooking}>
                   <SelectTrigger className="w-full h-9 text-xs bg-background font-medium">
-                    <SelectValue placeholder="Scegli cliente/prenotazione..." />
+                    <SelectValue placeholder={locale === "en" ? "Choose client / booking..." : "Scegli cliente/prenotazione..."} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="manual" className="text-xs italic text-muted-foreground">
-                      -- Inserimento Manuale Libero --
+                      {tr("documents.generator.manualOption", "-- Inserimento Manuale Libero --")}
                     </SelectItem>
                     {bookings.slice(0, 30).map((b) => (
                       <SelectItem key={b.id} value={b.id} className="text-xs">
-                        {b.student_name || b.purchaser_name || "Cliente"} ({b.purchaser_email || b.id.slice(0, 8)})
+                        {b.student_name || b.purchaser_name || (locale === "en" ? "Client" : "Cliente")} ({b.purchaser_email || b.id.slice(0, 8)})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -277,20 +277,24 @@ export function GenerateDocumentDialog({
 
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
-                  <span className="text-[10px] text-muted-foreground font-mono">ID Prenotazione:</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {tr("documents.generator.bookingIdLabel", "ID Prenotazione:")}
+                  </span>
                   <Input
                     value={bookingIdInput}
                     onChange={(e) => setBookingIdInput(e.target.value)}
-                    placeholder="UUID prenotazione"
+                    placeholder="UUID"
                     className="h-8 text-xs font-mono"
                   />
                 </div>
                 <div>
-                  <span className="text-[10px] text-muted-foreground font-mono">ID Allievo:</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    {tr("documents.generator.studentIdLabel", "ID Allievo:")}
+                  </span>
                   <Input
                     value={studentIdInput}
                     onChange={(e) => setStudentIdInput(e.target.value)}
-                    placeholder="UUID allievo"
+                    placeholder="UUID"
                     className="h-8 text-xs font-mono"
                   />
                 </div>
@@ -303,25 +307,27 @@ export function GenerateDocumentDialog({
                 disabled={isAutofilling}
                 className="w-full text-xs font-semibold h-8 cursor-pointer border-border/70 hover:bg-muted"
               >
-                {isAutofilling ? "Caricamento in corso..." : "⚡ Ricarica Dati da DB"}
+                {isAutofilling
+                  ? tr("documents.generator.reloading", "Caricamento in corso...")
+                  : tr("documents.generator.reloadDb", "⚡ Ricarica Dati da DB")}
               </Button>
             </div>
 
             {/* 3. Live Form Fields */}
             <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-4">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                3. Campi del Documento (Modificabili in Tempo Reale)
+                {tr("documents.generator.step3", "3. Campi del Documento (Modificabili in Tempo Reale)")}
               </Label>
 
               {/* Student Fields */}
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
                   <UserCheck className="h-3.5 w-3.5 text-primary" />
-                  Dati Allievo / Intestatario:
+                  {tr("documents.generator.studentSection", "Dati Allievo / Intestatario:")}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder="Nome e Cognome"
+                    placeholder={tr("documents.generator.studentName", "Nome e Cognome Allievo")}
                     value={formData.student?.full_name || ""}
                     onChange={(e) =>
                       setFormData({
@@ -332,7 +338,7 @@ export function GenerateDocumentDialog({
                     className="h-8 text-xs"
                   />
                   <Input
-                    placeholder="Codice Fiscale"
+                    placeholder={tr("documents.generator.studentTaxCode", "Codice Fiscale Allievo")}
                     value={formData.student?.tax_code || ""}
                     onChange={(e) =>
                       setFormData({
@@ -345,7 +351,7 @@ export function GenerateDocumentDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder="Email"
+                    placeholder={tr("documents.generator.studentEmail", "Email Allievo")}
                     value={formData.student?.email || ""}
                     onChange={(e) =>
                       setFormData({
@@ -356,7 +362,7 @@ export function GenerateDocumentDialog({
                     className="h-8 text-xs"
                   />
                   <Input
-                    placeholder="Telefono"
+                    placeholder={tr("documents.generator.studentPhone", "Telefono Allievo")}
                     value={formData.student?.phone || ""}
                     onChange={(e) =>
                       setFormData({
@@ -371,10 +377,12 @@ export function GenerateDocumentDialog({
 
               {/* Parent Fields */}
               <div className="space-y-2 pt-2 border-t border-border/40">
-                <span className="text-[11px] font-bold text-foreground">Dati Genitore / Tutore (se minore):</span>
+                <span className="text-[11px] font-bold text-foreground">
+                  {tr("documents.generator.parentSection", "Dati Genitore / Tutore (se minore):")}
+                </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder="Nome Genitore"
+                    placeholder={tr("documents.generator.parentName", "Nome Genitore")}
                     value={formData.parent?.full_name || ""}
                     onChange={(e) =>
                       setFormData({
@@ -385,7 +393,7 @@ export function GenerateDocumentDialog({
                     className="h-8 text-xs"
                   />
                   <Input
-                    placeholder="Telefono Genitore"
+                    placeholder={tr("documents.generator.parentPhone", "Telefono Genitore")}
                     value={formData.parent?.phone || ""}
                     onChange={(e) =>
                       setFormData({
@@ -400,9 +408,11 @@ export function GenerateDocumentDialog({
 
               {/* Course & Payment */}
               <div className="space-y-2 pt-2 border-t border-border/40">
-                <span className="text-[11px] font-bold text-foreground">Dati Corso e Importo:</span>
+                <span className="text-[11px] font-bold text-foreground">
+                  {tr("documents.generator.courseSection", "Dati Corso e Importo:")}
+                </span>
                 <Input
-                  placeholder="Titolo del Corso"
+                  placeholder={tr("documents.generator.courseTitle", "Titolo del Corso")}
                   value={formData.course?.title || ""}
                   onChange={(e) =>
                     setFormData({
@@ -414,7 +424,7 @@ export function GenerateDocumentDialog({
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder="Orario (es. Lun-Mer 16:30)"
+                    placeholder={tr("documents.generator.courseSchedule", "Orario (es. Lun-Mer 16:30)")}
                     value={formData.course?.schedule_text || ""}
                     onChange={(e) =>
                       setFormData({
@@ -426,7 +436,7 @@ export function GenerateDocumentDialog({
                   />
                   <Input
                     type="number"
-                    placeholder="Totale € (IVA inc.)"
+                    placeholder={tr("documents.generator.totalAmount", "Totale € (IVA inc.)")}
                     value={formData.payment?.amount_total || ""}
                     onChange={(e) =>
                       setFormData({

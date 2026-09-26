@@ -28,6 +28,7 @@ import {
   type UpdateDocumentCategoryDto,
 } from "../types";
 import { FolderTree, Sparkles } from "lucide-react";
+import { useTranslation } from "@/i18n/context";
 
 interface CategoryDialogProps {
   open: boolean;
@@ -53,6 +54,8 @@ export function CreateCategoryDialog({
   onSubmit,
   isLoading = false,
 }: CategoryDialogProps) {
+  const { t, locale } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
   const isEditing = !!category;
 
   const [categoryType, setCategoryType] = useState<DocumentCategoryType>(
@@ -119,19 +122,21 @@ export function CreateCategoryDialog({
         <DialogHeader className="p-5 border-b bg-muted/40">
           <DialogTitle className="text-base font-bold flex items-center gap-2">
             <FolderTree className="h-5 w-5 text-primary" />
-            {isEditing ? "Modifica Categoria Documentale" : "Crea Nuova Categoria"}
+            {isEditing
+              ? tr("documents.categories.editCategory", "Modifica Categoria Documentale")
+              : tr("documents.categories.newCategory", "Crea Nuova Categoria")}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            {isEditing
-              ? `Aggiorna i dettagli e la classificazione per la categoria ID ${category?.id}.`
-              : "Aggiungi una nuova categoria documentale per organizzare contratti, attestati e ricevute."}
+            {tr("documents.categories.subtitle", "Classificazione gerarchica dei documenti per studenti, docenti, amministrazione e adempimenti fiscali/legali.")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
           {!isEditing && (
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Tipo Categoria di Dominio (Enum ID)</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.createTemplate.categoryLabel", "Tipo Categoria")}
+              </Label>
               <Select
                 value={String(categoryType)}
                 onValueChange={(val) => setCategoryType(Number(val) as DocumentCategoryType)}
@@ -142,7 +147,7 @@ export function CreateCategoryDialog({
                 <SelectContent>
                   {Object.entries(DOCUMENT_CATEGORY_DICTIONARY).map(([id, dict]) => (
                     <SelectItem key={id} value={id} className="text-xs">
-                      {dict.label_it} (ID: {id})
+                      {locale === "en" ? dict.label_en : dict.label_it}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -152,7 +157,9 @@ export function CreateCategoryDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Nome (Italiano) *</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.categories.nameIt", "Nome (Italiano) *")}
+              </Label>
               <Input
                 placeholder="es. Contratti Stage"
                 value={nameIt}
@@ -162,9 +169,11 @@ export function CreateCategoryDialog({
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Nome (English)</Label>
+              <Label className="text-xs font-semibold">
+                {tr("documents.categories.nameEn", "Nome (Inglese)")}
+              </Label>
               <Input
-                placeholder="es. Internship Contracts"
+                placeholder="e.g. Internship Contracts"
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
                 className="text-xs h-9"
@@ -173,7 +182,9 @@ export function CreateCategoryDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Icona Categoria</Label>
+            <Label className="text-xs font-semibold">
+              {tr("documents.categories.icon", "Icona Categoria")}
+            </Label>
             <Select value={icon} onValueChange={setIcon}>
               <SelectTrigger className="h-9 text-xs">
                 <SelectValue />
@@ -189,9 +200,11 @@ export function CreateCategoryDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Descrizione</Label>
+            <Label className="text-xs font-semibold">
+              {tr("documents.categories.description", "Descrizione")}
+            </Label>
             <Textarea
-              placeholder="Descrivi i documenti contenuti in questa categoria..."
+              placeholder="Descrizione dell'utilizzo..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
@@ -200,7 +213,9 @@ export function CreateCategoryDialog({
           </div>
 
           <div className="flex items-center justify-between py-2 border-t text-xs">
-            <Label className="text-xs font-semibold">Stato Attivo</Label>
+            <Label className="text-xs font-semibold">
+              {tr("documents.categories.isActive", "Stato Attivo")}
+            </Label>
             <Switch
               checked={isActive}
               onCheckedChange={setIsActive}
@@ -216,7 +231,7 @@ export function CreateCategoryDialog({
               onClick={() => onOpenChange(false)}
               className="text-xs h-8"
             >
-              Annulla
+              {tr("documents.categories.cancel", "Annulla")}
             </Button>
             <Button
               type="submit"
@@ -225,7 +240,9 @@ export function CreateCategoryDialog({
               className="text-xs h-8 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             >
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-              {isLoading ? "Salvataggio..." : isEditing ? "Salva Modifiche" : "Crea Categoria"}
+              {isLoading
+                ? tr("documents.categories.saving", "Salvataggio in corso...")
+                : tr("documents.categories.save", "Salva Categoria")}
             </Button>
           </div>
         </form>
