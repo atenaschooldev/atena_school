@@ -24,26 +24,42 @@ import {
   Briefcase,
   ShieldCheck,
   Award,
+  Copy,
+  Trash2,
 } from "lucide-react";
 import {
   DOCUMENT_CATEGORY_DICTIONARY,
   DOCUMENT_FORMAT_DICTIONARY,
   DocumentCategoryType,
   type DocumentTemplateRecord,
+  type CreateDocumentTemplateDto,
 } from "../types";
 import { useDocumentTemplates } from "../hooks/use-document-templates";
 import { DocumentEditorDrawer } from "./document-editor-drawer";
+import { CreateTemplateDialog } from "./create-template-dialog";
 import { GenerateDocumentDialog } from "./generate-document-dialog";
 import { useTranslation } from "@/i18n/context";
 
 export function DocumentTemplatesView() {
   const { t, locale } = useTranslation();
-  const { templates, isLoading, updateTemplate, isUpdating } = useDocumentTemplates();
+  const {
+    templates,
+    isLoading,
+    createTemplate,
+    duplicateTemplate,
+    updateTemplate,
+    deleteTemplate,
+    isCreating,
+    isDuplicating,
+    isUpdating,
+    isDeleting,
+  } = useDocumentTemplates();
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [editingTemplate, setEditingTemplate] = useState<DocumentTemplateRecord | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [generatingTemplate, setGeneratingTemplate] = useState<DocumentTemplateRecord | null>(null);
 
   const filteredTemplates = useMemo(() => {
@@ -68,6 +84,30 @@ export function DocumentTemplatesView() {
     setIsDrawerOpen(true);
   };
 
+  const handleCreateTemplate = async (dto: CreateDocumentTemplateDto) => {
+    const created = await createTemplate(dto);
+    if (created) {
+      setIsCreateOpen(false);
+      setEditingTemplate(created);
+      setIsDrawerOpen(true);
+    }
+  };
+
+  const handleDuplicate = async (tpl: DocumentTemplateRecord) => {
+    await duplicateTemplate(tpl.id);
+  };
+
+  const handleDelete = async (tpl: DocumentTemplateRecord) => {
+    if (tpl.is_system) {
+      alert(`Il modello "${tpl.name}" è un template di sistema fondamentale e non può essere eliminato.`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Sei sicuro di voler eliminare il modello "${tpl.name}"?`);
+    if (!confirmed) return;
+    await deleteTemplate(tpl.id);
+  };
+
   const handleToggleActive = async (tpl: DocumentTemplateRecord, newActive: boolean) => {
     await updateTemplate({
       id: tpl.id,
@@ -77,15 +117,15 @@ export function DocumentTemplatesView() {
 
   const getCategoryIcon = (categoryType: DocumentCategoryType) => {
     switch (categoryType) {
-      case DocumentCategoryType.STUDENT_ENROLLMENT:
+      case DocumentCategoryType.STUDENT_CONTRACTS:
         return FileText;
-      case DocumentCategoryType.TEACHER_CONTRACT:
+      case DocumentCategoryType.TEACHER_CONTRACTS:
         return Briefcase;
       case DocumentCategoryType.RECEIPT_INVOICE:
         return Receipt;
-      case DocumentCategoryType.LEGAL_REGULATION:
+      case DocumentCategoryType.LEGAL_AND_PRIVACY:
         return ShieldCheck;
-      case DocumentCategoryType.CERTIFICATE:
+      case DocumentCategoryType.CERTIFICATES:
         return Award;
       default:
         return FileText;
@@ -132,6 +172,15 @@ export function DocumentTemplatesView() {
               </Button>
             );
           })}
+
+          <Button
+            size="sm"
+            onClick={() => setIsCreateOpen(true)}
+            className="h-8 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground ml-2 shrink-0 cursor-pointer shadow-xs"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Nuovo Modello
+          </Button>
         </div>
       </div>
 
@@ -147,8 +196,16 @@ export function DocumentTemplatesView() {
           <Layers className="h-10 w-10 text-muted-foreground/60 mb-3" />
           <h4 className="text-sm font-semibold text-foreground">Nessun modello trovato</h4>
           <p className="text-xs text-muted-foreground mt-1">
-            Modifica i filtri di ricerca per visualizzare i modelli di documento disponibili.
+            Modifica i filtri di ricerca oppure crea un nuovo modello.
           </p>
+          <Button
+            size="sm"
+            onClick={() => setIsCreateOpen(true)}
+            className="mt-4 text-xs h-8"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Crea Primo Modello
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -174,10 +231,32 @@ export function DocumentTemplatesView() {
                       </Badge>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[10px] text-muted-foreground font-mono bg-muted/60 px-2 py-0.5 rounded-md">
                         {fmt?.label_it || "A4 Verticale"}
                       </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDuplicate(tpl)}
+                        disabled={isDuplicating}
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        title="Duplica modello"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      {!tpl.is_system && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(tpl)}
+                          disabled={isDeleting}
+                          className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10"
+                          title="Elimina modello"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -193,7 +272,7 @@ export function DocumentTemplatesView() {
                   <div className="flex items-center justify-between py-2 border-t border-border/40 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5 font-medium">
                       <Layers className="h-3.5 w-3.5 text-primary" />
-                      <strong>{blocksCount}</strong> blocchi configurati
+                      <strong>{blocksCount}</strong> blocchi
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -233,6 +312,14 @@ export function DocumentTemplatesView() {
           })}
         </div>
       )}
+
+      {/* Create Template Dialog */}
+      <CreateTemplateDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onSubmit={handleCreateTemplate}
+        isLoading={isCreating}
+      />
 
       {/* Visual Document Builder Drawer */}
       <DocumentEditorDrawer

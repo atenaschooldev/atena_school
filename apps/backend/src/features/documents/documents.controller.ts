@@ -37,9 +37,41 @@ export class DocumentsController {
     return this.documentsService.getCategories();
   }
 
+  @Post('categories')
+  async createCategory(@Body() body: any) {
+    return this.documentsService.createCategory(body);
+  }
+
+  @Put('categories/:id')
+  async updateCategory(@Param('id') id: string, @Body() body: any) {
+    return this.documentsService.updateCategory(Number(id), body);
+  }
+
+  @Delete('categories/:id')
+  async deleteCategory(@Param('id') id: string) {
+    await this.documentsService.deleteCategory(Number(id));
+    return { success: true };
+  }
+
   @Get('templates')
   async getTemplates() {
     return this.documentsService.getTemplates();
+  }
+
+  @Post('templates')
+  async createTemplate(@Body() body: any) {
+    return this.documentsService.createTemplate(body);
+  }
+
+  @Post('templates/:id/duplicate')
+  async duplicateTemplate(@Param('id') id: string) {
+    return this.documentsService.duplicateTemplate(Number(id));
+  }
+
+  @Delete('templates/:id')
+  async deleteTemplate(@Param('id') id: string) {
+    await this.documentsService.deleteTemplate(Number(id));
+    return { success: true };
   }
 
   @Get('templates/:id')
@@ -87,6 +119,18 @@ export class DocumentsController {
   @Get('logs')
   async getDocumentLogs(@Query('document_id') documentId?: string) {
     return this.documentsService.getDocumentLogs(documentId);
+  }
+
+  @Delete('logs/:id')
+  async deleteLog(@Param('id') id: string) {
+    await this.documentsService.deleteLog(Number(id));
+    return { success: true };
+  }
+
+  @Delete('logs')
+  async clearLogs() {
+    await this.documentsService.clearLogs();
+    return { success: true };
   }
 
   @Get(':id')

@@ -48,6 +48,8 @@ import {
   FileCode2,
   Activity,
   FileText,
+  Trash2,
+  RotateCw,
 } from "lucide-react";
 
 const ACTION_ICONS: Record<DocumentLogAction, React.ReactNode> = {
@@ -62,7 +64,7 @@ const ACTION_ICONS: Record<DocumentLogAction, React.ReactNode> = {
 
 export function DocumentLogsView() {
   const { t, locale } = useTranslation();
-  const { logs, isLoading, refetch } = useDocumentLogs();
+  const { logs, isLoading, refetch, deleteLog, clearLogs, isDeletingLog, isClearingLogs } = useDocumentLogs();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState<string>("all");
@@ -95,6 +97,42 @@ export function DocumentLogsView() {
     });
   }, [logs, searchQuery, actionFilter]);
 
+  const handleDeleteLog = async (log: DocumentLogRecord) => {
+    const confirmed = window.confirm(`Sei sicuro di voler eliminare la voce di log #${log.id}?`);
+    if (!confirmed) return;
+    await deleteLog(log.id);
+  };
+
+  const handleClearAllLogs = async () => {
+    const confirmed = window.confirm("ATTENZIONE: Sei sicuro di voler cancellare TUTTE le voci del registro eventi audit? L'azione non è reversibile.");
+    if (!confirmed) return;
+    await clearLogs();
+  };
+
+  const handleExportCsv = () => {
+    if (filteredLogs.length === 0) return;
+    const headers = ["ID", "Data_Ora", "Azione", "Documento", "N_Documento", "Destinatario", "IP_Address"];
+    const rows = filteredLogs.map((l: any) => [
+      l.id,
+      `"${new Date(l.created_at).toISOString()}"`,
+      `"${DOCUMENT_LOG_ACTION_DICTIONARY[l.action as DocumentLogAction]?.label_it || l.action}"`,
+      `"${l.documents?.title || ''}"`,
+      `"${l.documents?.document_number || ''}"`,
+      `"${l.documents?.recipient_name || ''}"`,
+      `"${l.ip_address || ''}"`,
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `audit_log_documenti_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const columns: ColumnDef<DocumentLogRecord>[] = useMemo(
     () => [
       {
@@ -103,7 +141,7 @@ export function DocumentLogsView() {
           <DataTableColumnHeader column={column} title="Log ID" />
         ),
         cell: ({ row }) => <CellCopyableId id={row.original.id} />,
-        size: 100,
+        size: 90,
       },
       {
         accessorKey: "created_at",
@@ -176,26 +214,37 @@ export function DocumentLogsView() {
       },
       {
         id: "actions",
-        header: () => <div className="text-right text-xs font-semibold text-muted-foreground">Dettagli</div>,
+        header: () => <div className="text-right text-xs font-semibold text-muted-foreground">Azioni</div>,
         cell: ({ row }) => {
           return (
-            <div className="flex justify-end">
+            <div className="flex justify-end items-center gap-1">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSelectedLog(row.original)}
                 className="h-7 text-xs font-medium text-primary hover:bg-primary/10 rounded-md cursor-pointer"
+                title="Ispeziona dettagli"
               >
                 <Eye className="h-3.5 w-3.5 mr-1" />
-                Ispeziona
+                Dettagli
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleDeleteLog(row.original)}
+                disabled={isDeletingLog}
+                className="h-7 w-7 text-rose-500/70 hover:text-rose-600 hover:bg-rose-500/10 rounded-md cursor-pointer"
+                title="Elimina log"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           );
         },
-        size: 100,
+        size: 120,
       },
     ],
-    [locale]
+    [locale, isDeletingLog]
   );
 
   const table = useReactTable({
@@ -226,25 +275,51 @@ export function DocumentLogsView() {
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar
-        table={table}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Cerca nell'audit log..."
-        filters={[
-          {
-            value: actionFilter,
-            onChange: setActionFilter,
-            placeholder: "Filtra per azione",
-            options: actionOptions,
-          },
-        ]}
-        onResetFilters={() => {
-          setSearchQuery("");
-          setActionFilter("all");
-          setSorting([{ id: "created_at", desc: true }]);
-        }}
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <DataTableToolbar
+          table={table}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Cerca nell'audit log..."
+          filters={[
+            {
+              value: actionFilter,
+              onChange: setActionFilter,
+              placeholder: "Filtra per azione",
+              options: actionOptions,
+            },
+          ]}
+          onResetFilters={() => {
+            setSearchQuery("");
+            setActionFilter("all");
+            setSorting([{ id: "created_at", desc: true }]);
+          }}
+        />
+
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={filteredLogs.length === 0}
+            className="h-8 text-xs font-medium cursor-pointer border-border/70 hover:bg-muted"
+          >
+            <Download className="h-3.5 w-3.5 mr-1.5" />
+            Esporta CSV
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearAllLogs}
+            disabled={logs.length === 0 || isClearingLogs}
+            className="h-8 text-xs font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 border-rose-500/30 cursor-pointer"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            Svuota Log
+          </Button>
+        </div>
+      </div>
 
       <AtenaDataTable
         table={table}

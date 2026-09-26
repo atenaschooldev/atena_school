@@ -394,4 +394,174 @@ export class DocumentsService {
       metadata: metadata || {},
     });
   }
+
+  // --------------------------------------------------------------------------
+  // Category CRUD
+  // --------------------------------------------------------------------------
+  static async createCategory(supabase: SupabaseClient, dto: any): Promise<DocumentCategoryRecord> {
+    const { data, error } = await supabase
+      .from('document_categories')
+      .insert({
+        category_type: dto.category_type || 1,
+        name_it: dto.name_it,
+        name_en: dto.name_en || dto.name_it,
+        name_ru: dto.name_ru || dto.name_it,
+        description: dto.description || null,
+        icon: dto.icon || 'file-text',
+        order_index: dto.order_index || 99,
+        is_active: dto.is_active !== undefined ? dto.is_active : true,
+      })
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to create category: ${error?.message}`);
+    }
+
+    return {
+      ...data,
+      category_type: parseDocumentCategoryType(data.category_type),
+    };
+  }
+
+  static async updateCategory(supabase: SupabaseClient, id: number, dto: any): Promise<DocumentCategoryRecord> {
+    const { data, error } = await supabase
+      .from('document_categories')
+      .update({
+        ...dto,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to update category: ${error?.message}`);
+    }
+
+    return {
+      ...data,
+      category_type: parseDocumentCategoryType(data.category_type),
+    };
+  }
+
+  static async deleteCategory(supabase: SupabaseClient, id: number): Promise<boolean> {
+    const { error } = await supabase.from('document_categories').delete().eq('id', id);
+    if (error) {
+      throw new Error(`Failed to delete category: ${error.message}`);
+    }
+    return true;
+  }
+
+  // --------------------------------------------------------------------------
+  // Template CRUD
+  // --------------------------------------------------------------------------
+  static async createTemplate(supabase: SupabaseClient, dto: any): Promise<DocumentTemplateRecord> {
+    const { data, error } = await supabase
+      .from('document_templates')
+      .insert({
+        template_type: dto.template_type || 1,
+        category_type: dto.category_type || 1,
+        document_type: dto.document_type || 1,
+        recipient_type: dto.recipient_type || 1,
+        paper_format: dto.paper_format || DocumentPaperFormat.A4_PORTRAIT,
+        name: dto.name,
+        description: dto.description || null,
+        blocks_config: dto.blocks_config || {
+          paper_format: dto.paper_format || DocumentPaperFormat.A4_PORTRAIT,
+          blocks: [],
+        },
+        available_variables: dto.available_variables || [],
+        header_html: dto.header_html || null,
+        footer_html: dto.footer_html || null,
+        css_styles: dto.css_styles || null,
+        is_active: dto.is_active !== undefined ? dto.is_active : true,
+      })
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to create template: ${error?.message}`);
+    }
+
+    return {
+      ...data,
+      template_type: parseDocumentTemplateType(data.template_type),
+      category_type: parseDocumentCategoryType(data.category_type),
+      document_type: parseDocumentType(data.document_type),
+      paper_format: parseDocumentPaperFormat(data.paper_format),
+    };
+  }
+
+  static async duplicateTemplate(supabase: SupabaseClient, id: number): Promise<DocumentTemplateRecord> {
+    const { data: original, error: fetchErr } = await supabase
+      .from('document_templates')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !original) {
+      throw new Error(`Original template ${id} not found`);
+    }
+
+    const { data, error } = await supabase
+      .from('document_templates')
+      .insert({
+        template_type: original.template_type,
+        category_type: original.category_type,
+        document_type: original.document_type,
+        recipient_type: original.recipient_type,
+        paper_format: original.paper_format,
+        name: `${original.name} (Copia)`,
+        description: original.description,
+        blocks_config: original.blocks_config,
+        available_variables: original.available_variables,
+        header_html: original.header_html,
+        footer_html: original.footer_html,
+        css_styles: original.css_styles,
+        is_active: true,
+      })
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to duplicate template: ${error?.message}`);
+    }
+
+    return {
+      ...data,
+      template_type: parseDocumentTemplateType(data.template_type),
+      category_type: parseDocumentCategoryType(data.category_type),
+      document_type: parseDocumentType(data.document_type),
+      paper_format: parseDocumentPaperFormat(data.paper_format),
+    };
+  }
+
+  static async deleteTemplate(supabase: SupabaseClient, id: number): Promise<boolean> {
+    const { error } = await supabase.from('document_templates').delete().eq('id', id);
+    if (error) {
+      throw new Error(`Failed to delete template: ${error.message}`);
+    }
+    return true;
+  }
+
+  // --------------------------------------------------------------------------
+  // Log CRUD
+  // --------------------------------------------------------------------------
+  static async deleteLog(supabase: SupabaseClient, id: number): Promise<boolean> {
+    const { error } = await supabase.from('document_logs').delete().eq('id', id);
+    if (error) {
+      throw new Error(`Failed to delete log: ${error.message}`);
+    }
+    return true;
+  }
+
+  static async clearLogs(supabase: SupabaseClient): Promise<boolean> {
+    const { error } = await supabase.from('document_logs').delete().neq('id', 0);
+    if (error) {
+      throw new Error(`Failed to clear logs: ${error.message}`);
+    }
+    return true;
+  }
 }
+

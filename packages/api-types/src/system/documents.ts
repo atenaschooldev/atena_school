@@ -820,3 +820,31 @@ export interface UpdateDocumentTemplateDto {
   css_styles?: string;
   is_active?: boolean;
 }
+
+export interface CreateDocumentCategoryDto {
+  category_type?: DocumentCategoryType;
+  name_it: string;
+  name_en: string;
+  name_ru?: string;
+  description?: string;
+  icon?: string;
+  order_index?: number;
+  is_active?: boolean;
+}
+
+export interface UpdateDocumentCategoryDto {
+  name_it?: string;
+  name_en?: string;
+  name_ru?: string;
+  description?: string;
+  icon?: string;
+  order_index?: number;
+  is_active?: boolean;
+}
+
+export interface CreateDocumentLogDto {
+  document_id: string;
+  action: DocumentLogAction;
+  metadata?: Record<string, any>;
+}
+

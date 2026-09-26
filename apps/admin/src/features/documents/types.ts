@@ -34,6 +34,8 @@ import {
   type GenerateDocumentDto,
   type CreateDocumentTemplateDto,
   type UpdateDocumentTemplateDto,
+  type CreateDocumentCategoryDto,
+  type UpdateDocumentCategoryDto,
 } from '@atena/api-types';
 
 export {
@@ -75,4 +77,6 @@ export type {
   GenerateDocumentDto,
   CreateDocumentTemplateDto,
   UpdateDocumentTemplateDto,
+  CreateDocumentCategoryDto,
+  UpdateDocumentCategoryDto,
 };

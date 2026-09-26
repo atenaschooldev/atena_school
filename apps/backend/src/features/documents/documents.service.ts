@@ -36,11 +36,35 @@ export class DocumentsBackendService {
     return CoreDocumentsService.getCategories(this.client);
   }
 
+  async createCategory(dto: any): Promise<DocumentCategoryRecord> {
+    return CoreDocumentsService.createCategory(this.client, dto);
+  }
+
+  async updateCategory(id: number, dto: any): Promise<DocumentCategoryRecord> {
+    return CoreDocumentsService.updateCategory(this.client, id, dto);
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    return CoreDocumentsService.deleteCategory(this.client, id);
+  }
+
   // --------------------------------------------------------------------------
   // Templates
   // --------------------------------------------------------------------------
   async getTemplates(): Promise<DocumentTemplateRecord[]> {
     return CoreDocumentsService.getTemplates(this.client);
+  }
+
+  async createTemplate(dto: any): Promise<DocumentTemplateRecord> {
+    return CoreDocumentsService.createTemplate(this.client, dto);
+  }
+
+  async duplicateTemplate(id: number): Promise<DocumentTemplateRecord> {
+    return CoreDocumentsService.duplicateTemplate(this.client, id);
+  }
+
+  async deleteTemplate(id: number): Promise<boolean> {
+    return CoreDocumentsService.deleteTemplate(this.client, id);
   }
 
   async getTemplateById(id: number): Promise<DocumentTemplateRecord> {
@@ -193,6 +217,14 @@ export class DocumentsBackendService {
     }
 
     return data || [];
+  }
+
+  async deleteLog(id: number): Promise<boolean> {
+    return CoreDocumentsService.deleteLog(this.client, id);
+  }
+
+  async clearLogs(): Promise<boolean> {
+    return CoreDocumentsService.clearLogs(this.client);
   }
 
   async deleteDocument(id: string): Promise<boolean> {
