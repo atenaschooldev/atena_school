@@ -81,6 +81,7 @@ export function renderBlockHtml(
     }
 
     case 'parties_block': {
+      const blockTitle = interpolateVariables(props.title || "DATI ANAGRAFICI DELL'ALLIEVO", data);
       const studentName = data.student?.full_name || data.student_name || '---';
       const studentTaxCode = data.student?.tax_code || data.student_tax_code || '---';
       const studentBirth = data.student?.birth_date ? `${data.student.birth_date}${data.student.birth_place ? ` a ${data.student.birth_place}` : ''}` : null;
@@ -97,7 +98,7 @@ export function renderBlockHtml(
       if (teacherName) {
         return `
           <div class="section-box">
-            <div class="section-title">DATI DEL DOCENTE / COLLABORATORE</div>
+            <div class="section-title">${interpolateVariables(props.title || 'DATI DEL DOCENTE / COLLABORATORE', data)}</div>
             <div class="grid-2">
               <div><strong>Nominativo:</strong> ${teacherName}</div>
               <div><strong>Codice Fiscale:</strong> ${teacherTaxCode || '---'}</div>
@@ -108,25 +109,31 @@ export function renderBlockHtml(
         `;
       }
 
+      const showParent = props.show_parent !== false && Boolean(parentName);
+      const showBirth = props.show_birth !== false && Boolean(studentBirth);
+      const showAddress = props.show_address !== false && Boolean(studentAddress);
+      const showSchool = props.show_school !== false && Boolean(studentSchool);
+
       return `
         <div class="section-box">
-          <div class="section-title">DATI ANAGRAFICI DELL'ALLIEVO</div>
+          <div class="section-title">${blockTitle}</div>
           <div class="grid-2">
             <div><strong>Allievo:</strong> ${studentName}</div>
             <div><strong>Codice Fiscale:</strong> ${studentTaxCode}</div>
-            ${studentBirth ? `<div><strong>Nato/a il:</strong> ${studentBirth}</div>` : ''}
-            ${studentAddress ? `<div><strong>Residenza:</strong> ${studentAddress}</div>` : ''}
-            ${studentSchool ? `<div><strong>Scuola e Classe:</strong> ${studentSchool}</div>` : ''}
+            ${showBirth ? `<div><strong>Nato/a il:</strong> ${studentBirth}</div>` : ''}
+            ${showAddress ? `<div><strong>Residenza:</strong> ${studentAddress}</div>` : ''}
+            ${showSchool ? `<div><strong>Scuola e Classe:</strong> ${studentSchool}</div>` : ''}
             <div><strong>Email:</strong> ${data.student?.email || data.student_email || '---'}</div>
             <div><strong>Telefono:</strong> ${data.student?.phone || data.student_phone || '---'}</div>
           </div>
-          ${parentName ? `
+          ${showParent ? `
             <div class="sub-divider"></div>
             <div class="section-subtitle">DATI DEL GENITORE / ESERCENTE LA RESPONSABILITÀ GENITORIALE</div>
             <div class="grid-2">
               <div><strong>Genitore:</strong> ${parentName}</div>
               <div><strong>Codice Fiscale:</strong> ${parentTaxCode || '---'}</div>
               ${parentPhone ? `<div><strong>Recapito Telefonico:</strong> ${parentPhone}</div>` : ''}
+              ${data.parent?.email ? `<div><strong>Email:</strong> ${data.parent.email}</div>` : ''}
             </div>
           ` : ''}
         </div>
@@ -134,16 +141,19 @@ export function renderBlockHtml(
     }
 
     case 'course_table': {
+      const blockTitle = interpolateVariables(props.title || 'DETTAGLI DEL CORSO ASSEGNATO', data);
       const courseTitle = data.course?.title || data.course_title || 'Corso di Lingua';
       const courseLevel = data.course?.level || data.course_level || null;
       const scheduleText = data.course?.schedule_text || data.schedule_text || 'Da concordare con la segreteria';
       const startDate = data.course?.start_date || data.start_date || '---';
       const totalLessons = data.course?.total_lessons || data.total_lessons || null;
       const classroom = data.course?.classroom || data.classroom || null;
+      const showClassroom = props.show_classroom !== false && Boolean(classroom);
+      const customNote = props.table_note ? interpolateVariables(props.table_note, data) : null;
 
       return `
         <div class="section-box">
-          <div class="section-title">DETTAGLI DEL CORSO ASSEGNATO</div>
+          <div class="section-title">${blockTitle}</div>
           <table class="data-table">
             <thead>
               <tr>
@@ -151,7 +161,7 @@ export function renderBlockHtml(
                 <th>Livello</th>
                 <th>Orario e Frequenza</th>
                 <th>Data Inizio</th>
-                ${classroom ? `<th>Aula</th>` : ''}
+                ${showClassroom ? `<th>Aula</th>` : ''}
               </tr>
             </thead>
             <tbody>
@@ -160,35 +170,37 @@ export function renderBlockHtml(
                 <td>${courseLevel || 'Standard'}</td>
                 <td>${scheduleText}</td>
                 <td>${startDate}</td>
-                ${classroom ? `<td>${classroom}</td>` : ''}
+                ${showClassroom ? `<td>${classroom}</td>` : ''}
               </tr>
             </tbody>
           </table>
-          ${totalLessons ? `<div class="table-note">Totale lezioni programmate: <strong>${totalLessons}</strong></div>` : ''}
+          ${customNote ? `<div class="table-note">${customNote}</div>` : totalLessons ? `<div class="table-note">Totale lezioni programmate: <strong>${totalLessons}</strong></div>` : ''}
         </div>
       `;
     }
 
     case 'payment_breakdown': {
+      const blockTitle = interpolateVariables(props.title || 'RIEPILOGO QUOTE E CONDIZIONI ECONOMICHE', data);
       const total = Number(data.payment?.amount_total || data.total_amount || 0);
       const courseFee = Number(data.payment?.amount_course || data.course_fee || total);
       const regFee = Number(data.payment?.registration_fee || data.registration_fee || 0);
       const method = data.payment?.payment_method_label || data.payment_method || 'Pagamento Confermato';
       const isPaid = data.payment?.is_paid !== false;
 
-      // VAT 22% breakdown
-      const netVatRate = 0.22;
-      const netAmount = total / (1 + netVatRate);
+      // VAT Rate from props or default 22%
+      const vatRateNum = Number(props.vat_rate !== undefined ? props.vat_rate : 22);
+      const netVatRate = vatRateNum > 0 ? vatRateNum / 100 : 0;
+      const netAmount = netVatRate > 0 ? total / (1 + netVatRate) : total;
       const vatAmount = total - netAmount;
 
       return `
         <div class="section-box">
-          <div class="section-title">RIEPILOGO QUOTE E CONDIZIONI ECONOMICHE</div>
+          <div class="section-title">${blockTitle}</div>
           <table class="data-table">
             <thead>
               <tr>
                 <th>Descrizione Voce</th>
-                <th class="text-right">Importo (IVA Inclusa 22%)</th>
+                <th class="text-right">Importo (IVA Inclusa ${vatRateNum}%)</th>
               </tr>
             </thead>
             <tbody>
@@ -211,17 +223,35 @@ export function renderBlockHtml(
             <div>Modalità di pagamento: <strong>${method}</strong></div>
             <div>Stato contabile: <span class="badge ${isPaid ? 'badge-success' : 'badge-warning'}">${isPaid ? 'SALDATO' : 'IN ATTESA DI SALDO'}</span></div>
           </div>
+          ${props.show_vat_breakdown !== false ? `
           <div class="vat-disclaimer">
-            * I prezzi indicati sono da intendersi comprensivi di IVA al 22% (Imponibile: €${netAmount.toFixed(2)}, IVA 22%: €${vatAmount.toFixed(2)}).
-          </div>
+            * I prezzi indicati sono da intendersi comprensivi di IVA al ${vatRateNum}% (Imponibile: €${netAmount.toFixed(2)}, IVA ${vatRateNum}%: €${vatAmount.toFixed(2)}).
+          </div>` : ''}
         </div>
       `;
     }
 
     case 'contract_clauses': {
+      const blockTitle = interpolateVariables(props.title || 'ESTRATTO REGOLAMENTO INTERNO E CALENDARIO FESTIVITÀ 2026/2027', data);
+      if (props.custom_clauses && String(props.custom_clauses).trim()) {
+        const clausesHtml = interpolateVariables(String(props.custom_clauses), data)
+          .split('\n')
+          .filter((l) => l.trim().length > 0)
+          .map((line) => `<li>${line.replace(/^[0-9]+[.)]\s*/, '')}</li>`)
+          .join('\n');
+        return `
+          <div class="section-box legal-clauses">
+            <div class="section-title">${blockTitle}</div>
+            <ol class="clauses-list">
+              ${clausesHtml}
+            </ol>
+          </div>
+        `;
+      }
+
       return `
         <div class="section-box legal-clauses">
-          <div class="section-title">ESTRATTO REGOLAMENTO INTERNO E CALENDARIO FESTIVITÀ 2026/2027</div>
+          <div class="section-title">${blockTitle}</div>
           <ol class="clauses-list">
             <li><strong>Frequenza e puntualità:</strong> L'allievo è tenuto a rispettare gli orari concordati. Le lezioni perse per cause non imputabili alla scuola non sono rimborsabili.</li>
             <li><strong>Festività e chiusure:</strong> Le lezioni seguiranno il calendario scolastico delle festività 2026/2027 (Ponte dei Defunti 02/11/2026, Immacolata 07-08/12/2026, Vacanze di Natale 23/12/2026-06/01/2027, Pasqua 25-30/03/2027, Festa della Repubblica 02/06/2027). I giorni festivi non sono soggetti a recupero se già esclusi dal piano didattico.</li>
@@ -233,6 +263,7 @@ export function renderBlockHtml(
     }
 
     case 'minor_delegation': {
+      const blockTitle = interpolateVariables(props.title || 'ALLEGATO 2 — DELEGA RITIRO MINORI E AUTORIZZAZIONE USCITA', data);
       const del1Name = data.delegates?.delegate_1_name || data.pickup_delegate_1_name || '---';
       const del1Rel = data.delegates?.delegate_1_relation || data.pickup_delegate_1_relation || '---';
       const del1Phone = data.delegates?.delegate_1_phone || data.pickup_delegate_1_phone || '---';
@@ -242,11 +273,12 @@ export function renderBlockHtml(
       const del2Phone = data.delegates?.delegate_2_phone || data.pickup_delegate_2_phone || null;
 
       const selfExit = data.delegates?.self_exit_authorized || data.self_exit_authorized_11plus || false;
+      const showSelfExit = props.show_self_exit !== false;
 
       return `
         <div class="section-box">
-          <div class="section-title">ALLEGATO 2 — DELEGA RITIRO MINORI E AUTORIZZAZIONE USCITA</div>
-          <p class="small-text">Il sottoscritto genitore / tutore legale delega le seguenti persone maggiorenni al ritiro dell'allievo al termine delle lezioni:</p>
+          <div class="section-title">${blockTitle}</div>
+          <p class="small-text">${props.disclaimer_text || "Il sottoscritto genitore / tutore legale delega le seguenti persone maggiorenni al ritiro dell'allievo al termine delle lezioni:"}</p>
           <div class="delegates-grid">
             <div class="delegate-card">
               <strong>Delegato 1:</strong> ${del1Name}<br/>
@@ -260,37 +292,44 @@ export function renderBlockHtml(
               <strong>Recapito Telefonico:</strong> ${del2Phone || '---'}
             </div>` : ''}
           </div>
+          ${showSelfExit ? `
           <div class="self-exit-box">
             <input type="checkbox" ${selfExit ? 'checked' : ''} disabled />
             <span><strong>Autorizzazione all'uscita autonoma (Allievi di età non inferiore a 11 anni - L. 172/2017):</strong> Il genitore autorizza l'allievo ad allontanarsi autonomamente dai locali della scuola al termine dell'attività formativa.</span>
-          </div>
+          </div>` : ''}
         </div>
       `;
     }
 
     case 'gdpr_privacy': {
+      const blockTitle = interpolateVariables(props.title || 'INFORMATIVA PRIVACY E CONSENSO AL TRATTAMENTO DEI DATI (REG. UE 2016/679)', data);
+      const privacyText = props.privacy_text || `I dati personali raccolti sono trattati da ${school.name} in qualità di Titolare del trattamento, esclusivamente per l'esecuzione del contratto formativo, la gestione amministrativa e le comunicazioni istituzionali.`;
+      const showPhoto = props.show_photo_consent !== false;
+
       return `
         <div class="section-box">
-          <div class="section-title">INFORMATIVA PRIVACY E CONSENSO AL TRATTAMENTO DEI DATI (REG. UE 2016/679)</div>
-          <p class="small-text">I dati personali raccolti sono trattati da ${school.name} in qualità di Titolare del trattamento, esclusivamente per l'esecuzione del contratto formativo, la gestione amministrativa e le comunicazioni istituzionali.</p>
+          <div class="section-title">${blockTitle}</div>
+          <p class="small-text">${privacyText}</p>
           <div class="consent-items">
             <div class="consent-row">
               <span class="check-box">[X]</span>
               <span><strong>Trattamento Dati Personali e Didattici:</strong> Obbligatorio per l'erogazione del servizio educativo e fatturazione.</span>
             </div>
+            ${showPhoto ? `
             <div class="consent-row">
               <span class="check-box">[X]</span>
               <span><strong>Liberatoria Foto e Video Didattici:</strong> Consenso alla pubblicazione di riprese durante attività scolastiche senza finalità lesive della dignità.</span>
-            </div>
+            </div>` : ''}
           </div>
         </div>
       `;
     }
 
     case 'signatures': {
-      const parties = props.signature_parties || ['scuola', 'cliente'];
-      const city = school.city || 'La Direzione';
+      const city = props.city_override || school.city || 'La Direzione';
       const dateStr = data.issue_date || new Date().toLocaleDateString('it-IT');
+      const schoolLabel = props.school_label || `Firma per ${school.name}`;
+      const studentLabel = props.student_label || "Firma dell'Allievo / Genitore Esercente";
 
       return `
         <div class="signatures-section">
@@ -300,11 +339,11 @@ export function renderBlockHtml(
           <div class="signatures-grid">
             <div class="signature-box">
               <div class="signature-line"></div>
-              <div class="signature-label">Firma per ${school.name}</div>
+              <div class="signature-label">${schoolLabel}</div>
             </div>
             <div class="signature-box">
               <div class="signature-line"></div>
-              <div class="signature-label">Firma dell'Allievo / Genitore Esercente</div>
+              <div class="signature-label">${studentLabel}</div>
             </div>
           </div>
         </div>
@@ -312,7 +351,7 @@ export function renderBlockHtml(
     }
 
     case 'custom_text': {
-      const text = interpolateVariables(props.text || '', data);
+      const text = interpolateVariables(props.content_html || props.text || '', data);
       return `
         <div class="section-box custom-text-block">
           ${props.title ? `<div class="section-title">${props.title}</div>` : ''}
@@ -322,10 +361,11 @@ export function renderBlockHtml(
     }
 
     case 'doc_footer': {
+      const footerNote = props.footer_note || 'Documento generato tramite la piattaforma gestionale Atena School. Copia conforme all\'originale informatico.';
       return `
         <div class="doc-footer">
           <div>${school.name} • C.F./P.IVA: ${school.vat_code || '---'} • ${school.address || ''}, ${school.city || ''}</div>
-          <div class="footer-note">Documento generato tramite la piattaforma gestionale Atena School. Copia conforme all'originale informatico.</div>
+          <div class="footer-note">${footerNote}</div>
         </div>
       `;
     }

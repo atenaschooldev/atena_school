@@ -344,7 +344,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
                   />
                 </div>
 
-                {/* Specific Block Props */}
+                {/* 1. Header Block Props */}
                 {selectedBlock.type === 'doc_header' && (
                   <div className="space-y-3 pt-2 border-t">
                     <div className="flex items-center justify-between">
@@ -370,24 +370,276 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
                   </div>
                 )}
 
+                {/* 2. Parties Block Props */}
+                {selectedBlock.type === 'parties_block' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Sezione
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="DATI ANAGRAFICI DELL'ALLIEVO"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Dati Genitore</span>
+                      <Switch
+                        checked={selectedBlock.props.show_parent !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_parent: val })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Data/Luogo Nascita</span>
+                      <Switch
+                        checked={selectedBlock.props.show_birth !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_birth: val })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Residenza</span>
+                      <Switch
+                        checked={selectedBlock.props.show_address !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_address: val })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Scuola / Classe</span>
+                      <Switch
+                        checked={selectedBlock.props.show_school !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_school: val })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Course Table Props */}
+                {selectedBlock.type === 'course_table' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Tabella
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="DETTAGLI DEL CORSO ASSEGNATO"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Colonna Aula</span>
+                      <Switch
+                        checked={selectedBlock.props.show_classroom !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_classroom: val })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Nota a piè di tabella
+                      </label>
+                      <Input
+                        value={selectedBlock.props.table_note || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { table_note: e.target.value })}
+                        placeholder="Totale lezioni programmate: {{course.total_lessons}}"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Payment Breakdown Props */}
+                {selectedBlock.type === 'payment_breakdown' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Sezione
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="RIEPILOGO QUOTE E CONDIZIONI ECONOMICHE"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Aliquota IVA (%)
+                      </label>
+                      <Input
+                        type="number"
+                        value={selectedBlock.props.vat_rate !== undefined ? selectedBlock.props.vat_rate : 22}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { vat_rate: Number(e.target.value) })}
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Nota Scorporo IVA</span>
+                      <Switch
+                        checked={selectedBlock.props.show_vat_breakdown !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_vat_breakdown: val })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. Contract Clauses Props */}
+                {selectedBlock.type === 'contract_clauses' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Regolamento
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="ESTRATTO REGOLAMENTO INTERNO"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Clausole Personalizzate (una per riga)
+                      </label>
+                      <Textarea
+                        rows={6}
+                        value={selectedBlock.props.custom_clauses || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { custom_clauses: e.target.value })}
+                        placeholder="Lascia vuoto per utilizzare le clausole e festività standard 2026/2027..."
+                        className="text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. Minor Delegation Props */}
+                {selectedBlock.type === 'minor_delegation' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Allegato
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="ALLEGATO 2 — DELEGA RITIRO MINORI"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Uscita Autonoma (L. 172/2017)</span>
+                      <Switch
+                        checked={selectedBlock.props.show_self_exit !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_self_exit: val })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 7. GDPR Privacy Props */}
+                {selectedBlock.type === 'gdpr_privacy' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Informativa
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="INFORMATIVA PRIVACY E CONSENSO (REG. UE 2016/679)"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium">Mostra Consenso Foto/Video</span>
+                      <Switch
+                        checked={selectedBlock.props.show_photo_consent !== false}
+                        onCheckedChange={(val) => updateBlockProps(selectedBlock.id, { show_photo_consent: val })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 8. Signatures Block Props */}
+                {selectedBlock.type === 'signatures' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Etichetta Firma Scuola
+                      </label>
+                      <Input
+                        value={selectedBlock.props.school_label || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { school_label: e.target.value })}
+                        placeholder="Firma per Direzione Atena School"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Etichetta Firma Cliente/Allievo
+                      </label>
+                      <Input
+                        value={selectedBlock.props.student_label || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { student_label: e.target.value })}
+                        placeholder="Firma dell'Allievo / Genitore Esercente"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 9. Custom Text Block Props */}
                 {selectedBlock.type === 'custom_text' && (
                   <div className="space-y-3 pt-2 border-t">
-                    <label className="text-xs font-semibold text-foreground mb-1 block">
-                      {tr("documents.builder.customHtml", "Contenuto Testo / HTML")}
-                    </label>
-                    <Textarea
-                      rows={6}
-                      value={selectedBlock.props.content_html || selectedBlock.props.text || ''}
-                      onChange={(e) => updateBlockProps(selectedBlock.id, { content_html: e.target.value, text: e.target.value })}
-                      placeholder="Inserisci testo o tag come {{student.full_name}}, {{course.title}}..."
-                      className="text-xs font-mono"
-                    />
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Titolo Blocco (Opzionale)
+                      </label>
+                      <Input
+                        value={selectedBlock.props.title || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { title: e.target.value })}
+                        placeholder="NOTE E DISPOSIZIONI SPECIALI"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        {tr("documents.builder.customHtml", "Contenuto Testo / HTML")}
+                      </label>
+                      <Textarea
+                        rows={6}
+                        value={selectedBlock.props.content_html || selectedBlock.props.text || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { content_html: e.target.value, text: e.target.value })}
+                        placeholder="Inserisci testo o tag come {{student.full_name}}, {{course.title}}..."
+                        className="text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 10. Doc Footer Block Props */}
+                {selectedBlock.type === 'doc_footer' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div>
+                      <label className="text-xs font-semibold text-foreground mb-1 block">
+                        Nota Piè di Pagina
+                      </label>
+                      <Textarea
+                        rows={3}
+                        value={selectedBlock.props.footer_note || ''}
+                        onChange={(e) => updateBlockProps(selectedBlock.id, { footer_note: e.target.value })}
+                        placeholder="Documento generato tramite la piattaforma gestionale Atena School..."
+                        className="text-xs"
+                      />
+                    </div>
                   </div>
                 )}
 
                 <div className="p-3 bg-muted/30 rounded-lg border text-[11px] text-muted-foreground space-y-1">
                   <div className="font-semibold text-foreground">
-                    {tr("documents.builder.variablesHint", "Variabili disponibili: {{student.full_name}}, {{student.tax_code}}, {{course.title}}, {{payment.amount_total}}")}
+                    {tr("documents.builder.variablesHint", "Variabili disponibili: {{student.full_name}}, {{student.tax_code}}, {{parent.full_name}}, {{parent.tax_code}}, {{course.title}}, {{payment.amount_total}}")}
                   </div>
                 </div>
               </div>
