@@ -19,6 +19,7 @@ import schoolProfile from "./it/schoolProfile.json";
 import notifications from "./it/notifications.json";
 import forms from "./it/forms.json";
 import activeServices from "./it/activeServices.json";
+import documents from "./it/documents.json";
 
 export const it = {
   nav,
@@ -42,4 +43,5 @@ export const it = {
   notifications,
   forms,
   activeServices,
+  documents,
 };

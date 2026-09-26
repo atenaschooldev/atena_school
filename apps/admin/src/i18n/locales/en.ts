@@ -19,6 +19,7 @@ import schoolProfile from "./en/schoolProfile.json";
 import notifications from "./en/notifications.json";
 import forms from "./en/forms.json";
 import activeServices from "./en/activeServices.json";
+import documents from "./en/documents.json";
 
 export const en = {
   nav,
@@ -42,6 +43,7 @@ export const en = {
   notifications,
   forms,
   activeServices,
+  documents,
 };
 
 export type Translations = typeof en;
