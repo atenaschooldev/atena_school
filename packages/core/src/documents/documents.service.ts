@@ -179,9 +179,14 @@ export class DocumentsService {
 
     const isChild = Boolean(bookingData?.is_for_child || formData?.is_for_child);
 
-    const totalAmount = Number(bookingData?.total_amount || paymentData?.amount || courseData?.price || 160);
-    const registrationFee = Number(bookingData?.registration_fee || 30);
-    const courseFee = totalAmount > registrationFee ? totalAmount - registrationFee : totalAmount;
+    const defaultFeeFromDb = school?.registration_fee_eur != null ? Number(school.registration_fee_eur) : 30;
+    const registrationFee =
+      bookingData?.registration_fee != null
+        ? Number(bookingData.registration_fee)
+        : defaultFeeFromDb;
+
+    const totalAmount = Number(bookingData?.total_amount || paymentData?.amount || courseData?.price || (130 + registrationFee));
+    const courseFee = totalAmount >= registrationFee ? totalAmount - registrationFee : totalAmount;
 
     return {
       school,

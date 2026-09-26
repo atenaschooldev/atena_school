@@ -125,5 +125,69 @@ describe('Documents Module Unit Tests', () => {
       expect(html).toContain('IVA INCLUSA');
       expect(html).toContain('@page {');
     });
+
+    it('should dynamically update when brand profile or registration fee changes', () => {
+      const customSchoolProfile = {
+        name: 'Atena Accademia Linguistica',
+        vat_code: 'IT99988877766',
+        city: 'Reggio Calabria',
+        address: 'Corso Garibaldi 100',
+        registration_fee_eur: 50,
+      };
+
+      const html = compileDocumentHtml({
+        blocksConfig: {
+          version: 1,
+          paper_format: DocumentPaperFormat.A4_PORTRAIT,
+          blocks: [
+            {
+              id: 'b1',
+              type: 'doc_header',
+              title: 'Header',
+              is_enabled: true,
+              order: 1,
+              props: { title: 'CONTRATTO DI ISCRIZIONE' },
+            },
+            {
+              id: 'b2',
+              type: 'payment_breakdown',
+              title: 'Payment',
+              is_enabled: true,
+              order: 2,
+              props: { vat_rate: 22 },
+            },
+            {
+              id: 'b3',
+              type: 'signatures',
+              title: 'Signatures',
+              is_enabled: true,
+              order: 3,
+              props: { school_label: 'Direzione Didattica Atena' },
+            },
+          ],
+        },
+        data: {
+          student: { full_name: 'Elena Conti', tax_code: 'CNTLNE05M41H501X' },
+          payment: {
+            amount_total: 200,
+            amount_course: 150,
+            registration_fee: 50, // Modified fee from DB setting
+            payment_method_label: 'Bonifico Bancario',
+            is_paid: true,
+          },
+        },
+        schoolProfile: customSchoolProfile,
+        documentNumber: 'CTR-2026/00099',
+      });
+
+      expect(html).toContain('Atena Accademia Linguistica');
+      expect(html).toContain('IT99988877766');
+      expect(html).toContain('Corso Garibaldi 100');
+      expect(html).toContain('€50.00');
+      expect(html).toContain('€150.00');
+      expect(html).toContain('€200.00');
+      expect(html).toContain('Direzione Didattica Atena');
+      expect(html).toContain('Reggio Calabria');
+    });
   });
 });
