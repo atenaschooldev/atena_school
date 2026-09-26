@@ -1,21 +1,30 @@
-import React, { useState, useEffect } from 'react';
+"use client";
+
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   FileText,
-  Printer,
   Sparkles,
-  Download,
   CheckCircle2,
   RefreshCw,
-} from 'lucide-react';
+  Search,
+  UserCheck,
+} from "lucide-react";
 import {
   DocumentCategoryType,
   DocumentPaperFormat,
@@ -23,12 +32,13 @@ import {
   DocumentType,
   type DocumentTemplateRecord,
   type GenerateDocumentDto,
-} from '../types';
-import { useDocumentTemplates } from '../hooks/use-document-templates';
-import { useDocuments } from '../hooks/use-documents';
-import { DocumentLivePreview } from './builder/document-live-preview';
-import { apiFetch } from '@/lib/api';
-import { toast } from 'sonner';
+} from "../types";
+import { useDocumentTemplates } from "../hooks/use-document-templates";
+import { useDocuments } from "../hooks/use-documents";
+import { useBookings } from "@/features/bookings/hooks/use-bookings";
+import { DocumentLivePreview } from "./builder/document-live-preview";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 interface GenerateDocumentDialogProps {
   open: boolean;
@@ -47,46 +57,52 @@ export function GenerateDocumentDialog({
 }: GenerateDocumentDialogProps) {
   const { templates } = useDocumentTemplates();
   const { generateDocument, isGenerating } = useDocuments();
+  const { bookings } = useBookings();
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
-  const [bookingId, setBookingId] = useState<string>(defaultBookingId || '');
-  const [studentId, setStudentId] = useState<string>(defaultStudentId || '');
+  const [selectedBookingId, setSelectedBookingId] = useState<string>(defaultBookingId || "");
+  const [bookingIdInput, setBookingIdInput] = useState<string>(defaultBookingId || "");
+  const [studentIdInput, setStudentIdInput] = useState<string>(defaultStudentId || "");
   const [isAutofilling, setIsAutofilling] = useState(false);
 
-  // Live Editable Form Data
+  // Live Reactive Form Data (pure database-first structure)
   const [formData, setFormData] = useState<Record<string, any>>({
-    title: 'Modulo di Iscrizione',
+    title: "",
     student: {
-      full_name: 'Mario Rossi',
-      tax_code: 'RSSMRA08D12H501Z',
-      email: 'mario.rossi@example.com',
-      phone: '+39 340 1234567',
-      school_grade: 'Liceo Scientifico 3B',
-      address: 'Via Roma 10, Milano',
+      full_name: "",
+      tax_code: "",
+      email: "",
+      phone: "",
+      school_grade: "",
+      address: "",
+      birth_date: "",
+      birth_place: "",
     },
     parent: {
-      full_name: 'Luigi Rossi',
-      tax_code: 'RSSLGU75C10H501K',
-      phone: '+39 349 9876543',
+      full_name: "",
+      tax_code: "",
+      phone: "",
     },
     course: {
-      title: 'Inglese B1 Ragazzi',
-      level: 'B1',
-      schedule_text: 'Martedì e Giovedì 16:30 - 18:00',
-      start_date: '06/10/2026',
+      title: "",
+      level: "",
+      schedule_text: "",
+      start_date: "",
+      total_lessons: 0,
+      classroom: "",
     },
     payment: {
-      amount_total: 160,
-      amount_course: 130,
-      registration_fee: 30,
-      payment_method_label: 'Stripe / Carta di Credito',
-      is_paid: true,
+      amount_total: 0,
+      amount_course: 0,
+      registration_fee: 0,
+      payment_method_label: "",
+      is_paid: false,
     },
     delegates: {
-      delegate_1_name: 'Luigi Rossi (Padre)',
-      delegate_1_relation: 'Padre',
-      delegate_1_phone: '+39 349 9876543',
-      self_exit_authorized: true,
+      delegate_1_name: "",
+      delegate_1_relation: "",
+      delegate_1_phone: "",
+      self_exit_authorized: false,
     },
   });
 
@@ -102,28 +118,47 @@ export function GenerateDocumentDialog({
     }
   }, [templates, defaultTemplateType, selectedTemplateId]);
 
-  // Autofill from DB if bookingId / studentId provided
-  const handleAutofill = async () => {
-    if (!bookingId && !studentId) {
-      toast.info('Inserisci un ID di prenotazione o allievo per caricare i dati da DB');
+  // Autofill function from DB
+  const executeAutofill = async (bId?: string, sId?: string) => {
+    const b = bId || bookingIdInput;
+    const s = sId || studentIdInput;
+    if (!b && !s) {
+      toast.info("Inserisci o seleziona una prenotazione dal database");
       return;
     }
 
     setIsAutofilling(true);
     try {
       const q = new URLSearchParams();
-      if (bookingId) q.set('bookingId', bookingId);
-      if (studentId) q.set('studentId', studentId);
+      if (b) q.set("bookingId", b);
+      if (s) q.set("studentId", s);
 
       const data = await apiFetch<Record<string, any>>(`/admin/documents/autofill?${q.toString()}`);
       if (data) {
-        setFormData(data);
-        toast.success('Dati caricati con successo dal database!');
+        setFormData((prev) => ({
+          ...prev,
+          ...data,
+          student: { ...prev.student, ...(data.student || {}) },
+          parent: { ...prev.parent, ...(data.parent || {}) },
+          course: { ...prev.course, ...(data.course || {}) },
+          payment: { ...prev.payment, ...(data.payment || {}) },
+          delegates: { ...prev.delegates, ...(data.delegates || {}) },
+        }));
+        toast.success("Dati caricati istantaneamente dal database!");
       }
     } catch (err: any) {
-      toast.error(`Errore nel caricamento dati: ${err?.message || 'Verifica gli ID'}`);
+      toast.error(`Errore nel caricamento dati da DB: ${err?.message || "Verifica l'ID"}`);
     } finally {
       setIsAutofilling(false);
+    }
+  };
+
+  // When picking a booking from the dropdown
+  const handleSelectBooking = async (bId: string) => {
+    setSelectedBookingId(bId);
+    setBookingIdInput(bId);
+    if (bId && bId !== "manual") {
+      await executeAutofill(bId, undefined);
     }
   };
 
@@ -133,13 +168,13 @@ export function GenerateDocumentDialog({
     if (!selectedTemplate) return;
 
     try {
-      const result = await generateDocument({
+      await generateDocument({
         template_id: selectedTemplate.id,
         template_type: selectedTemplate.template_type,
         document_type: selectedTemplate.document_type,
         category_type: selectedTemplate.category_type,
-        booking_id: bookingId || undefined,
-        student_id: studentId || undefined,
+        booking_id: bookingIdInput || undefined,
+        student_id: studentIdInput || undefined,
         title: formData.title || selectedTemplate.name,
         recipient_name: formData.student?.full_name || formData.parent?.full_name,
         recipient_email: formData.student?.email || formData.parent?.email,
@@ -160,7 +195,7 @@ export function GenerateDocumentDialog({
         {/* Header */}
         <DialogHeader className="px-6 py-3.5 border-b flex-row items-center justify-between space-y-0 bg-card shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 text-blue-600 rounded-lg">
+            <div className="p-2 bg-primary/10 text-primary rounded-lg">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -168,19 +203,19 @@ export function GenerateDocumentDialog({
                 Genera Documento Ufficiale
               </DialogTitle>
               <p className="text-xs text-muted-foreground">
-                Compilazione automatica da database con anteprima in tempo reale e salvataggio
+                Compilazione automatica da database Postgres con anteprima live e snapshot immutabile
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pr-6">
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || !selectedTemplate}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md h-8 text-xs"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs h-8 text-xs cursor-pointer"
             >
               <CheckCircle2 className="h-4 w-4 mr-1.5" />
-              {isGenerating ? 'Generazione in corso...' : 'Salva & Emetti Documento'}
+              {isGenerating ? "Generazione in corso..." : "Salva & Emetti Documento"}
             </Button>
           </div>
         </DialogHeader>
@@ -190,74 +225,104 @@ export function GenerateDocumentDialog({
           {/* Left Form Panel (5 cols) */}
           <div className="col-span-5 border-r bg-muted/20 flex flex-col h-full overflow-y-auto p-5 space-y-5 custom-scrollbar">
             {/* 1. Template Selector */}
-            <div className="p-4 bg-card rounded-xl border space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+            <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-3">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
                 1. Seleziona Modello Documento
-              </label>
-              <select
-                value={selectedTemplateId || ''}
-                onChange={(e) => setSelectedTemplateId(Number(e.target.value))}
-                className="w-full h-9 text-xs rounded-md border border-input bg-background px-3 font-semibold"
+              </Label>
+              <Select
+                value={String(selectedTemplateId || "")}
+                onValueChange={(val) => setSelectedTemplateId(Number(val))}
               >
-                {templates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-9 text-xs bg-background">
+                  <SelectValue placeholder="Scegli modello..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)} className="text-xs">
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* 2. DB Autofill Source */}
-            <div className="p-4 bg-card rounded-xl border space-y-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <RefreshCw className="h-3.5 w-3.5 text-blue-500" />
-                2. Carica Dati da Database
-              </label>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-3">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <RefreshCw className="h-3.5 w-3.5 text-primary" />
+                2. Carica Dati da Database (Only Database-First)
+              </Label>
+
+              <div className="space-y-2">
+                <span className="text-[11px] text-muted-foreground font-medium block">
+                  Seleziona Prenotazione Esistente da DB:
+                </span>
+                <Select value={selectedBookingId} onValueChange={handleSelectBooking}>
+                  <SelectTrigger className="w-full h-9 text-xs bg-background font-medium">
+                    <SelectValue placeholder="Scegli cliente/prenotazione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual" className="text-xs italic text-muted-foreground">
+                      -- Inserimento Manuale Libero --
+                    </SelectItem>
+                    {bookings.slice(0, 30).map((b) => (
+                      <SelectItem key={b.id} value={b.id} className="text-xs">
+                        {b.student_name || b.purchaser_name || "Cliente"} ({b.purchaser_email || b.id.slice(0, 8)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 <div>
-                  <span className="text-[11px] text-muted-foreground">ID Prenotazione (UUID):</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">ID Prenotazione:</span>
                   <Input
-                    value={bookingId}
-                    onChange={(e) => setBookingId(e.target.value)}
-                    placeholder="es. 83a04c10-..."
+                    value={bookingIdInput}
+                    onChange={(e) => setBookingIdInput(e.target.value)}
+                    placeholder="UUID prenotazione"
                     className="h-8 text-xs font-mono"
                   />
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted-foreground">ID Allievo (UUID):</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">ID Allievo:</span>
                   <Input
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    placeholder="es. a1b2c3d4-..."
+                    value={studentIdInput}
+                    onChange={(e) => setStudentIdInput(e.target.value)}
+                    placeholder="UUID allievo"
                     className="h-8 text-xs font-mono"
                   />
                 </div>
               </div>
+
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleAutofill}
+                onClick={() => executeAutofill()}
                 disabled={isAutofilling}
-                className="w-full text-xs font-semibold h-8"
+                className="w-full text-xs font-semibold h-8 cursor-pointer border-border/70 hover:bg-muted"
               >
-                {isAutofilling ? 'Caricamento in corso...' : '⚡ Compila Automaticamente da DB'}
+                {isAutofilling ? "Caricamento in corso..." : "⚡ Ricarica Dati da DB"}
               </Button>
             </div>
 
-            {/* 3. Live Form Fields (Realtime reactive) */}
-            <div className="p-4 bg-card rounded-xl border space-y-4">
-              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                3. Campi Personalizzati (Live WYSIWYG)
-              </label>
+            {/* 3. Live Form Fields */}
+            <div className="p-4 bg-card rounded-xl border border-border/70 shadow-xs space-y-4">
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
+                3. Campi del Documento (Modificabili in Tempo Reale)
+              </Label>
 
               {/* Student Fields */}
               <div className="space-y-2">
-                <span className="text-[11px] font-bold text-foreground">Dati Allievo:</span>
+                <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
+                  <UserCheck className="h-3.5 w-3.5 text-primary" />
+                  Dati Allievo / Intestatario:
+                </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     placeholder="Nome e Cognome"
-                    value={formData.student?.full_name || ''}
+                    value={formData.student?.full_name || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -268,7 +333,7 @@ export function GenerateDocumentDialog({
                   />
                   <Input
                     placeholder="Codice Fiscale"
-                    value={formData.student?.tax_code || ''}
+                    value={formData.student?.tax_code || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -280,19 +345,8 @@ export function GenerateDocumentDialog({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder="Scuola e Classe (es. Liceo 3B)"
-                    value={formData.student?.school_grade || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        student: { ...formData.student, school_grade: e.target.value },
-                      })
-                    }
-                    className="h-8 text-xs"
-                  />
-                  <Input
                     placeholder="Email"
-                    value={formData.student?.email || ''}
+                    value={formData.student?.email || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -301,16 +355,27 @@ export function GenerateDocumentDialog({
                     }
                     className="h-8 text-xs"
                   />
+                  <Input
+                    placeholder="Telefono"
+                    value={formData.student?.phone || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        student: { ...formData.student, phone: e.target.value },
+                      })
+                    }
+                    className="h-8 text-xs"
+                  />
                 </div>
               </div>
 
               {/* Parent Fields */}
-              <div className="space-y-2 pt-2 border-t">
-                <span className="text-[11px] font-bold text-foreground">Dati Genitore (se minore):</span>
+              <div className="space-y-2 pt-2 border-t border-border/40">
+                <span className="text-[11px] font-bold text-foreground">Dati Genitore / Tutore (se minore):</span>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     placeholder="Nome Genitore"
-                    value={formData.parent?.full_name || ''}
+                    value={formData.parent?.full_name || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -321,7 +386,7 @@ export function GenerateDocumentDialog({
                   />
                   <Input
                     placeholder="Telefono Genitore"
-                    value={formData.parent?.phone || ''}
+                    value={formData.parent?.phone || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -334,11 +399,11 @@ export function GenerateDocumentDialog({
               </div>
 
               {/* Course & Payment */}
-              <div className="space-y-2 pt-2 border-t">
+              <div className="space-y-2 pt-2 border-t border-border/40">
                 <span className="text-[11px] font-bold text-foreground">Dati Corso e Importo:</span>
                 <Input
                   placeholder="Titolo del Corso"
-                  value={formData.course?.title || ''}
+                  value={formData.course?.title || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -350,7 +415,7 @@ export function GenerateDocumentDialog({
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     placeholder="Orario (es. Lun-Mer 16:30)"
-                    value={formData.course?.schedule_text || ''}
+                    value={formData.course?.schedule_text || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -362,7 +427,7 @@ export function GenerateDocumentDialog({
                   <Input
                     type="number"
                     placeholder="Totale € (IVA inc.)"
-                    value={formData.payment?.amount_total || ''}
+                    value={formData.payment?.amount_total || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
