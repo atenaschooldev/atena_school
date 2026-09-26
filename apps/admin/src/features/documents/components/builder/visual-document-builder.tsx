@@ -64,47 +64,50 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
     return config.blocks.length > 0 ? config.blocks[0].id : null;
   });
 
-  const previewSampleData = useMemo<Record<string, any>>(() => ({
-    title: resolveI18n(template.name, previewLocale, 'Documento Ufficiale'),
-    document_number: 'MOD-2026/00014',
-    student: {
-      full_name: 'Mario Rossi',
-      tax_code: 'RSSMRA08D12H501Z',
-      birth_date: '12/04/2008',
-      birth_place: 'Milano',
-      address: 'Via Dante 14, Milano',
-      school_grade: 'Liceo Scientifico 3B',
-      email: 'mario.rossi@example.com',
-      phone: '+39 340 1234567',
-    },
-    parent: {
-      full_name: 'Luigi Rossi',
-      tax_code: 'RSSLGU75C10H501K',
-      phone: '+39 349 9876543',
-    },
-    course: {
-      title: previewLocale === 'en' ? 'English B1 Intermediate Youth' : 'Inglese B1 Intermedio Ragazzi',
-      level: 'B1',
-      schedule_text: previewLocale === 'en' ? 'Tuesday & Thursday 16:30 - 18:00' : 'Martedì e Giovedì 16:30 - 18:00',
-      start_date: '06/10/2026',
-      total_lessons: 32,
-      classroom: 'Aula Magna',
-    },
-    payment: {
-      amount_total: 160,
-      amount_course: 130,
-      registration_fee: 30,
-      payment_method_label: previewLocale === 'en' ? 'Stripe Credit Card' : 'Carta di Credito Stripe',
-      is_paid: true,
-    },
-    delegates: {
-      delegate_1_name: 'Luigi Rossi',
-      delegate_1_relation: previewLocale === 'en' ? 'Father' : 'Padre',
-      delegate_1_phone: '+39 349 9876543',
-      self_exit_authorized: true,
-    },
-    issue_date: new Date().toLocaleDateString(previewLocale === 'en' ? 'en-US' : previewLocale === 'ru' ? 'ru-RU' : 'it-IT'),
-  }), [template.name, previewLocale]);
+  const previewSampleData = useMemo<Record<string, any>>(() => {
+    const currentYear = new Date().getFullYear();
+    return {
+      title: resolveI18n(template.name, previewLocale, 'Documento Ufficiale'),
+      document_number: `MOD-${currentYear}/00014`,
+      student: {
+        full_name: 'Mario Rossi',
+        tax_code: 'RSSMRA08D12H501Z',
+        birth_date: '12/04/2008',
+        birth_place: 'Milano',
+        address: 'Via Dante 14, Milano',
+        school_grade: 'Liceo Scientifico 3B',
+        email: 'mario.rossi@example.com',
+        phone: '+39 340 1234567',
+      },
+      parent: {
+        full_name: 'Luigi Rossi',
+        tax_code: 'RSSLGU75C10H501K',
+        phone: '+39 349 9876543',
+      },
+      course: {
+        title: previewLocale === 'en' ? 'English B1 Intermediate Youth' : 'Inglese B1 Intermedio Ragazzi',
+        level: 'B1',
+        schedule_text: previewLocale === 'en' ? 'Tuesday & Thursday 16:30 - 18:00' : 'Martedì e Giovedì 16:30 - 18:00',
+        start_date: `06/10/${currentYear}`,
+        total_lessons: 32,
+        classroom: 'Aula 1',
+      },
+      payment: {
+        amount_total: 160,
+        amount_course: 130,
+        registration_fee: 30,
+        payment_method_label: previewLocale === 'en' ? 'Stripe Credit Card' : 'Carta di Credito Stripe',
+        is_paid: true,
+      },
+      delegates: {
+        delegate_1_name: 'Luigi Rossi',
+        delegate_1_relation: previewLocale === 'en' ? 'Father' : 'Padre',
+        delegate_1_phone: '+39 349 9876543',
+        self_exit_authorized: true,
+      },
+      issue_date: new Date().toLocaleDateString(previewLocale === 'en' ? 'en-US' : previewLocale === 'ru' ? 'ru-RU' : 'it-IT'),
+    };
+  }, [template.name, previewLocale]);
 
   const blocks = config.blocks || [];
 
@@ -590,7 +593,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
                       <Input
                         value={selectedBlock.props.school_label || ''}
                         onChange={(e) => updateBlockProps(selectedBlock.id, { school_label: e.target.value })}
-                        placeholder="Firma per Direzione Atena School"
+                        placeholder="Firma per Direzione / Segreteria"
                         className="h-8 text-xs"
                       />
                     </div>
@@ -648,7 +651,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
                         rows={3}
                         value={selectedBlock.props.footer_note || ''}
                         onChange={(e) => updateBlockProps(selectedBlock.id, { footer_note: e.target.value })}
-                        placeholder="Documento generato tramite la piattaforma gestionale Atena School..."
+                        placeholder="Documento generato tramite la piattaforma gestionale..."
                         className="text-xs"
                       />
                     </div>

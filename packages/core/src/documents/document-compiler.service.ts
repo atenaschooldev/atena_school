@@ -401,8 +401,8 @@ export function renderBlockHtml(
 
     case 'doc_footer': {
       const defaultFooter = locale === 'en'
-        ? 'Official document generated via Atena School Management System. Certified digital copy.'
-        : 'Documento generato tramite la piattaforma gestionale Atena School. Copia conforme all\'originale informatico.';
+        ? `Official document generated via ${school.name || 'School Management System'}. Certified digital copy.`
+        : `Documento generato tramite la piattaforma gestionale ${school.name || 'Scuola'}. Copia conforme all'originale informatico.`;
       const footerNote = resolveI18n(props.footer_note, locale) || defaultFooter;
       return `
         <div class="doc-footer">
@@ -444,7 +444,7 @@ export function compileDocumentHtml(options: CompileDocumentOptions): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${documentTitle || data.title || (locale === 'en' ? 'Atena School Document' : 'Documento Atena School')}</title>
+  <title>${documentTitle || data.title || (locale === 'en' ? `${school.name || 'Official'} Document` : `Documento ${school.name || 'Ufficiale'}`)}</title>
   <style>
     @page {
       size: ${isLandscape ? 'A4 landscape' : isCompact ? '80mm auto' : 'A4 portrait'};

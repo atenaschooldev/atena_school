@@ -31,7 +31,7 @@ export async function GET(
 
     const school = await getSchoolProfile(supabase);
 
-    let courseTitle = 'Corso Atena School';
+    let courseTitle = school.name ? `Corso ${school.name}` : 'Corso di Lingua';
     if (booking.course_id) {
       const { data: course } = await supabase
         .from('courses')
