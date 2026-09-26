@@ -1,4 +1,5 @@
 import type { SchoolProfile } from '@atena/api-types';
+import { DEFAULT_SCHOOL_PROFILE } from '../system/school-profile.service';
 
 export interface ReceiptData {
   receiptNumber: string;
@@ -23,12 +24,17 @@ export interface ReceiptData {
  * Formatted with print CSS for clean A4 printing or PDF export.
  */
 export function generateReceiptHtml(data: ReceiptData): string {
-  const schoolName = data.school.name || 'Atena School';
-  const schoolAddress = data.school.address || 'Via Roma, 1';
-  const schoolCity = data.school.city || 'Milano';
-  const schoolVat = data.school.vat_code || 'IT00000000000';
-  const schoolEmail = data.school.email || 'info@atenaschool.com';
-  const schoolPhone = data.school.phone || '';
+  const schoolProfile: SchoolProfile = {
+    ...DEFAULT_SCHOOL_PROFILE,
+    ...(data.school || {}),
+  };
+
+  const schoolName = schoolProfile.name;
+  const schoolAddress = schoolProfile.address;
+  const schoolCity = [schoolProfile.cap, schoolProfile.city].filter(Boolean).join(' ');
+  const schoolVat = schoolProfile.vat_code || schoolProfile.legal_name || '';
+  const schoolEmail = schoolProfile.email || schoolProfile.secretariat_email || '';
+  const schoolPhone = schoolProfile.phone || schoolProfile.landline || '';
 
   const regFeeFormatted = Number(data.registrationFee || 0).toFixed(2);
   const courseFeeFormatted = Number(data.courseFee || 0).toFixed(2);

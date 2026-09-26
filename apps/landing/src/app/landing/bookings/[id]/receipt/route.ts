@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateReceiptHtml, getSchoolProfile } from '@atena/core';
+import { parsePaymentMethod, PAYMENT_METHOD_DICTIONARY, PaymentMethod } from '@atena/api-types';
 
 export const runtime = 'nodejs';
 
@@ -54,16 +55,8 @@ export async function GET(
     const totalPaid = Number(booking.amount_paid || 0);
     const courseFee = Math.max(0, totalPaid - regFee);
 
-    const paymentMethodMap: Record<string | number, string> = {
-      1: 'Contanti / POS in Sede',
-      2: 'Carta di Credito (Stripe Online)',
-      3: 'Bonifico Bancario',
-      cash: 'Contanti / POS in Sede',
-      stripe: 'Carta di Credito (Stripe Online)',
-      bonifico: 'Bonifico Bancario',
-    };
-
-    const paymentMethod = paymentMethodMap[booking.payment_method] || 'Pagamento Confermato';
+    const parsedMethod = parsePaymentMethod(booking.payment_method) ?? PaymentMethod.CASH;
+    const paymentMethod = PAYMENT_METHOD_DICTIONARY[parsedMethod]?.label_it || 'Pagamento Confermato';
 
     const html = generateReceiptHtml({
       receiptNumber,
