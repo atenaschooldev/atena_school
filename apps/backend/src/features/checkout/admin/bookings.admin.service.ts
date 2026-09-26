@@ -4,7 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../../../core/prisma/prisma.service';
 import { CheckoutService } from '../public/checkout.public.service';
 import { CheckoutCoreService } from '../checkout-core.service';
-import { calculateLessonDates } from '@atena/utils';
+import { calculateLessonDates, getCurrentAcademicYear } from '@atena/utils';
 import { generateNextMembershipNumber } from '@atena/core';
 import {
   BookingPaymentStatus,
@@ -583,8 +583,11 @@ export class BookingsAdminService {
     }
 
     const profile = await this.checkoutService.getSchoolProfile();
-    const academicYear = profile?.academic_year || '2026/2027';
-    const feeAmount = profile?.registration_fee_enabled !== false ? Number(profile?.registration_fee_eur ?? 30.0) : 0.0;
+    const { academicYear: fallbackAcademicYear, expiresAt: fallbackExpiresAt } = getCurrentAcademicYear();
+    const academicYear = profile?.academic_year || fallbackAcademicYear;
+    const feeAmount = profile?.registration_fee_enabled !== false && profile?.registration_fee_eur != null
+      ? Number(profile.registration_fee_eur)
+      : 0.0;
 
     const { data: membership, error: mErr } = await this.supabaseAdmin
       .from('annual_memberships')
@@ -596,7 +599,7 @@ export class BookingsAdminService {
         academic_year: academicYear,
         status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
         paid_at: new Date().toISOString(),
-        expires_at: '2027-08-31T23:59:59.000Z',
+        expires_at: fallbackExpiresAt,
       })
       .select('*')
       .single();

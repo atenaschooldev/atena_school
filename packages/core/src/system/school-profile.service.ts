@@ -1,4 +1,5 @@
 import { AppSettingKey, SchoolProfile, DEFAULT_SCHOOL_PROFILE } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 export { DEFAULT_SCHOOL_PROFILE };
@@ -169,8 +170,8 @@ export async function updateSchoolProfile(
       secretariat_hours: updated.secretariat_hours,
       vat_code: updated.vat_code,
       registration_fee_enabled: updated.registration_fee_enabled !== false,
-      registration_fee_eur: Number(updated.registration_fee_eur ?? 30),
-      academic_year: updated.academic_year || '2026/2027',
+      registration_fee_eur: updated.registration_fee_eur != null ? Number(updated.registration_fee_eur) : (current.registration_fee_eur != null ? Number(current.registration_fee_eur) : 0),
+      academic_year: updated.academic_year || current.academic_year || getCurrentAcademicYear().academicYear,
       iban: updated.iban,
       bank_name: updated.bank_name,
       account_holder: updated.account_holder,

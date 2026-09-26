@@ -17,6 +17,7 @@ import {
   SchoolProfile,
   resolveI18n,
 } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 import { DEFAULT_SCHOOL_PROFILE } from '../system/school-profile.service';
 
 export interface CompileDocumentOptions {
@@ -254,7 +255,8 @@ export function renderBlockHtml(
     }
 
     case 'contract_clauses': {
-      const defaultTitle = locale === 'en' ? 'SCHOOL REGULATIONS & CALENDAR 2026/2027' : 'ESTRATTO REGOLAMENTO INTERNO E CALENDARIO FESTIVITÀ 2026/2027';
+      const year = data?.academic_year || getCurrentAcademicYear().academicYear;
+      const defaultTitle = locale === 'en' ? `SCHOOL REGULATIONS & CALENDAR ${year}` : `ESTRATTO REGOLAMENTO INTERNO E CALENDARIO FESTIVITÀ ${year}`;
       const blockTitle = interpolateVariables(resolveI18n(props.title, locale) || defaultTitle, data);
       const rawClauses = resolveI18n(props.custom_clauses, locale);
       if (rawClauses && String(rawClauses).trim()) {
@@ -278,7 +280,7 @@ export function renderBlockHtml(
           <div class="section-title">${blockTitle}</div>
           <ol class="clauses-list">
             <li><strong>${locale === 'en' ? 'Attendance & Punctuality:' : 'Frequenza e puntualità:'}</strong> ${locale === 'en' ? 'The student is required to follow agreed times. Missed lessons not attributable to school are non-refundable.' : "L'allievo è tenuto a rispettare gli orari concordati. Le lezioni perse per cause non imputabili alla scuola non sono rimborsabili."}</li>
-            <li><strong>${locale === 'en' ? 'Holidays & Closures:' : 'Festività e chiusure:'}</strong> ${locale === 'en' ? 'Lessons follow the school academic calendar 2026/2027.' : 'Le lezioni seguiranno il calendario scolastico delle festività 2026/2027 (Ponte dei Defunti 02/11/2026, Immacolata 07-08/12/2026, Vacanze di Natale 23/12/2026-06/01/2027, Pasqua 25-30/03/2027, Festa della Repubblica 02/06/2027).'}</li>
+            <li><strong>${locale === 'en' ? 'Holidays & Closures:' : 'Festività e chiusure:'}</strong> ${locale === 'en' ? `Lessons follow the school academic calendar ${year}.` : `Le lezioni seguiranno il calendario scolastico delle festività ${year}.`}</li>
             <li><strong>${locale === 'en' ? 'Cancellations:' : 'Disdetta lezioni individuali:'}</strong> ${locale === 'en' ? 'Individual lesson cancellations must be received at least 24 hours in advance.' : 'Eventuali disdette per corsi individuali devono pervenire alla segreteria con almeno 24 ore di anticipo.'}</li>
             <li><strong>${locale === 'en' ? 'Teaching Materials:' : 'Diritti didattici:'}</strong> ${locale === 'en' ? 'All educational materials provided are for personal learning use only.' : 'I materiali forniti dalla scuola sono riservati all\'uso personale dell\'allievo per soli scopi formativi.'}</li>
           </ol>
