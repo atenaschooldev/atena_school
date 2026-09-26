@@ -79,7 +79,7 @@ export function renderBlockHtml(
           <div class="doc-badge">
             <div class="doc-title">${title}</div>
             <div class="doc-number">N. <strong>${docNumber || data.document_number || '---'}</strong></div>
-            <div class="doc-date">Data: <strong>${data.issue_date || data.created_at_formatted || new Date().toLocaleDateString('it-IT')}</strong></div>
+            <div class="doc-date">${locale === 'en' ? 'Date' : locale === 'ru' ? 'Дата' : 'Data'}: <strong>${data.issue_date || data.created_at_formatted || new Date().toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'ru' ? 'ru-RU' : 'it-IT')}</strong></div>
           </div>
         </div>
       `;
@@ -346,15 +346,16 @@ export function renderBlockHtml(
     }
 
     case 'signatures': {
-      const city = resolveI18n(props.city_override, locale) || school.city || (locale === 'en' ? 'School Administration' : 'La Direzione');
-      const dateStr = data.issue_date || new Date().toLocaleDateString(locale === 'en' ? 'en-US' : 'it-IT');
-      const schoolLabel = resolveI18n(props.school_label, locale) || (locale === 'en' ? `Signature for ${school.name}` : `Firma per ${school.name}`);
-      const studentLabel = resolveI18n(props.student_label, locale) || (locale === 'en' ? "Student / Parent Signature" : "Firma dell'Allievo / Genitore Esercente");
+      const city = resolveI18n(props.city_override, locale) || school.city || (locale === 'en' ? 'School Administration' : locale === 'ru' ? 'Администрация' : 'La Direzione');
+      const dateLocaleStr = locale === 'en' ? 'en-US' : locale === 'ru' ? 'ru-RU' : 'it-IT';
+      const dateStr = data.issue_date || new Date().toLocaleDateString(dateLocaleStr);
+      const schoolLabel = resolveI18n(props.school_label, locale) || (locale === 'en' ? `Signature for ${school.name}` : locale === 'ru' ? `Подпись за ${school.name}` : `Firma per ${school.name}`);
+      const studentLabel = resolveI18n(props.student_label, locale) || (locale === 'en' ? "Student / Parent Signature" : locale === 'ru' ? "Подпись студента / родителя" : "Firma dell'Allievo / Genitore Esercente");
 
       return `
         <div class="signatures-section">
           <div class="signatures-meta">
-            ${locale === 'en' ? 'Place and Date' : 'Luogo e Data'}: <strong>${city}, ${dateStr}</strong>
+            ${locale === 'en' ? 'Place and Date' : locale === 'ru' ? 'Место и дата' : 'Luogo e Data'}: <strong>${city}, ${dateStr}</strong>
           </div>
           <div class="signatures-grid">
             <div class="signature-box">

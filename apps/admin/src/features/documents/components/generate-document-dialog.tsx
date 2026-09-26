@@ -149,6 +149,8 @@ export function GenerateDocumentDialog({
       const q = new URLSearchParams();
       if (b) q.set("bookingId", b);
       if (s) q.set("studentId", s);
+      const docLocale = selectedTemplate?.locale || locale || "it";
+      q.set("locale", docLocale);
 
       const data = await apiFetch<Record<string, any>>(`/admin/documents/autofill?${q.toString()}`);
       if (data) {

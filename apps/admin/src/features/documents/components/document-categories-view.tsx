@@ -539,9 +539,7 @@ export function DocumentCategoriesView() {
             <AlertDialogDescription>
               {(() => {
                 if (!deletingCategory) return "";
-                const displayName = locale === "en"
-                  ? deletingCategory.name_en || deletingCategory.name_it
-                  : deletingCategory.name_it;
+                const displayName = resolveI18n(deletingCategory.name, locale, "Categoria");
                 const count = templates.filter((t) => t.category_type === deletingCategory.category_type).length;
                 if (count > 0) {
                   return tr(

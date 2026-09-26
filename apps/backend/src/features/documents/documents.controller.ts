@@ -88,12 +88,14 @@ export class DocumentsController {
   async getAutofillData(
     @Query('bookingId') bookingId?: string,
     @Query('studentId') studentId?: string,
-    @Query('teacherId') teacherId?: string
+    @Query('teacherId') teacherId?: string,
+    @Query('locale') locale?: string
   ) {
     return this.documentsService.getAutofillData({
       bookingId,
       studentId,
       teacherId: teacherId ? Number(teacherId) : undefined,
+      locale,
     });
   }
 

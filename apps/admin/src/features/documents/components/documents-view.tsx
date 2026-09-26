@@ -23,6 +23,7 @@ import {
   DOCUMENT_STATUS_DICTIONARY,
   DOCUMENT_TYPE_DICTIONARY,
   DOCUMENT_FORMAT_DICTIONARY,
+  resolveI18n,
 } from "@atena/api-types";
 import type { DocumentRecord } from "../types";
 import { useDocuments } from "../hooks/use-documents";
@@ -378,7 +379,7 @@ export function DocumentsView() {
     { value: "all", label: tr("documents.filterAllCategories", "Tutte le categorie") },
     ...categories.map((c) => ({
       value: String(c.category_type),
-      label: locale === "en" ? (c.name_en || c.name_it) : c.name_it,
+      label: resolveI18n(c.name, locale, "Categoria"),
     })),
   ];
 

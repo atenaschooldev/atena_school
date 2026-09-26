@@ -115,9 +115,11 @@ export class DocumentsService {
       bookingId?: string;
       studentId?: string;
       teacherId?: number;
+      locale?: string;
     }
   ): Promise<Record<string, any>> {
     const school = await getSchoolProfile(supabase);
+    const dateLocale = dto.locale === 'en' ? 'en-US' : dto.locale === 'ru' ? 'ru-RU' : 'it-IT';
 
     let bookingData: any = null;
     let studentData: any = null;
@@ -261,7 +263,7 @@ export class DocumentsService {
         delegate_2_phone: formData?.pickup_delegate_2_phone,
         self_exit_authorized: Boolean(formData?.self_exit_authorized_11plus),
       },
-      issue_date: new Date().toLocaleDateString('it-IT'),
+      issue_date: new Date().toLocaleDateString(dateLocale),
     };
   }
 
@@ -292,12 +294,14 @@ export class DocumentsService {
     const catType = dto.category_type || template?.category_type || 1;
     const paperFormat = template?.paper_format || DocumentPaperFormat.A4_PORTRAIT;
     const blocksConfig = dto.blocks_config || template?.blocks_config || { version: 1, paper_format: paperFormat, blocks: [] };
+    const locale = dto.locale || (template as any)?.locale || 'it';
 
     // 2. Aggregate Data Snapshot with Safe Deep Merge
     const autofillData = await this.extractAutofillData(supabase, {
       bookingId: dto.booking_id,
       studentId: dto.student_id,
       teacherId: dto.teacher_id,
+      locale,
     });
 
     const isObj = (item: any) => item && typeof item === 'object' && !Array.isArray(item);
@@ -322,7 +326,6 @@ export class DocumentsService {
     const nextSeq = (count || 0) + 1;
     const documentNumber = formatDocumentNumber(docType, nextSeq);
 
-    const locale = dto.locale || (template as any)?.locale || 'it';
     const rawTemplateName = template?.name ? resolveI18n(template.name, locale, 'Documento Ufficiale') : 'Documento Ufficiale';
     const title = dto.title || rawTemplateName;
 

@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import type {
-  DocumentCategoryRecord,
-  CreateDocumentCategoryDto,
-  UpdateDocumentCategoryDto,
+import {
+  resolveI18n,
+  type DocumentCategoryRecord,
+  type CreateDocumentCategoryDto,
+  type UpdateDocumentCategoryDto,
 } from '../types';
 
 export function useDocumentCategories() {
@@ -36,7 +37,8 @@ export function useDocumentCategories() {
       });
     },
     onSuccess: (created) => {
-      toast.success(`Categoria "${created.name_it}" creata con successo!`);
+      const catName = resolveI18n(created.name, undefined, 'Categoria');
+      toast.success(`Categoria "${catName}" creata con successo!`);
       queryClient.invalidateQueries({ queryKey: ['admin-document-categories'] });
     },
     onError: (err: any) => {
@@ -52,7 +54,8 @@ export function useDocumentCategories() {
       });
     },
     onSuccess: (updated) => {
-      toast.success(`Categoria "${updated.name_it}" salvata con successo!`);
+      const catName = resolveI18n(updated.name, undefined, 'Categoria');
+      toast.success(`Categoria "${catName}" salvata con successo!`);
       queryClient.invalidateQueries({ queryKey: ['admin-document-categories'] });
     },
     onError: (err: any) => {

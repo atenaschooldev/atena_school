@@ -94,6 +94,7 @@ export class DocumentsBackendService {
 
     if (payload.name !== undefined) updateData.name = payload.name;
     if (payload.description !== undefined) updateData.description = payload.description;
+    if (payload.locale !== undefined) updateData.locale = payload.locale;
     if (payload.category_type !== undefined) updateData.category_type = payload.category_type;
     if (payload.document_type !== undefined) updateData.document_type = payload.document_type;
     if (payload.recipient_type !== undefined) updateData.recipient_type = payload.recipient_type;
@@ -191,7 +192,7 @@ export class DocumentsBackendService {
     return CoreDocumentsService.generateDocument(this.client, dto, userId);
   }
 
-  async getAutofillData(dto: { bookingId?: string; studentId?: string; teacherId?: number }) {
+  async getAutofillData(dto: { bookingId?: string; studentId?: string; teacherId?: number; locale?: string }) {
     return CoreDocumentsService.extractAutofillData(this.client, dto);
   }
 
