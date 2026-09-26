@@ -20,6 +20,7 @@ import {
   Users,
   Bell,
   ClipboardList,
+  FileText,
   HelpCircle,
   Plug,
   Building2,
