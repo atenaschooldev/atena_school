@@ -252,7 +252,7 @@ export async function createReservationWorkflow(
 
   const schoolProfile = await getSchoolProfile(supabase);
   const isFeeEnabled = schoolProfile?.registration_fee_enabled !== false;
-  const defaultFeeEur = isFeeEnabled && schoolProfile?.registration_fee_eur != null ? Number(schoolProfile.registration_fee_eur) : (isFeeEnabled ? 30 : 0);
+  const defaultFeeEur = isFeeEnabled && schoolProfile?.registration_fee_eur != null ? Number(schoolProfile.registration_fee_eur) : 0;
 
   for (const student of rawStudents) {
     const studentName = `${student.firstName} ${student.lastName}`.trim();

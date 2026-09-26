@@ -6,11 +6,12 @@ export interface CheckFeeParams {
   taxCode?: string;
   email?: string;
   phone?: string;
+  academicYear?: string;
 }
 
 /**
- * Checks if the student/purchaser has already paid the annual registration fee (€30)
- * for the current academic year across annual_memberships, students, or bookings.
+ * Checks if the student/purchaser has already paid the annual registration fee
+ * for the school's configured academic year across annual_memberships, students, or bookings.
  */
 export async function checkFeeStatus(
   supabase: SupabaseClient,
@@ -24,14 +25,23 @@ export async function checkFeeStatus(
     return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
   }
 
-  const { academicYear } = getCurrentAcademicYear();
+  let targetAcademicYear = params.academicYear;
+  if (!targetAcademicYear) {
+    const { data: profile } = await supabase
+      .from('school_profiles')
+      .select('academic_year')
+      .order('is_default', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    targetAcademicYear = profile?.academic_year || getCurrentAcademicYear().academicYear;
+  }
 
   // 1. Check active annual memberships by Codice Fiscale
   const { data: mem } = await supabase
     .from('annual_memberships')
     .select('id')
     .ilike('tax_code', cleanTax)
-    .eq('academic_year', academicYear)
+    .eq('academic_year', targetAcademicYear)
     .eq('status', MembershipStatus.ACTIVE)
     .maybeSingle();
 
