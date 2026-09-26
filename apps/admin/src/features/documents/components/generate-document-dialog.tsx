@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -23,8 +24,14 @@ import {
   CheckCircle2,
   RefreshCw,
   UserCheck,
+  Briefcase,
+  BookOpen,
+  Receipt,
+  Users,
+  ShieldCheck,
 } from "lucide-react";
 import {
+  DocumentCategoryType,
   type DocumentTemplateType,
 } from "../types";
 import { useDocumentTemplates } from "../hooks/use-document-templates";
@@ -51,7 +58,10 @@ export function GenerateDocumentDialog({
   defaultTemplateType,
 }: GenerateDocumentDialogProps) {
   const { t, locale } = useTranslation();
-  const tr = (key: string, fallback: string) => t(key) || fallback;
+  const tr = (key: string, fallback: string) => {
+    const val = t(key);
+    return val && val !== key ? val : fallback;
+  };
 
   const { templates } = useDocumentTemplates();
   const { generateDocument, isGenerating } = useDocuments();
@@ -71,15 +81,23 @@ export function GenerateDocumentDialog({
       tax_code: "",
       email: "",
       phone: "",
-      school_grade: "",
-      address: "",
       birth_date: "",
       birth_place: "",
+      address: "",
+      school_grade: "",
     },
     parent: {
       full_name: "",
       tax_code: "",
+      email: "",
       phone: "",
+    },
+    teacher: {
+      full_name: "",
+      tax_code: "",
+      email: "",
+      phone: "",
+      hourly_rate: 25,
     },
     course: {
       title: "",
@@ -138,6 +156,7 @@ export function GenerateDocumentDialog({
           ...data,
           student: { ...prev.student, ...(data.student || {}) },
           parent: { ...prev.parent, ...(data.parent || {}) },
+          teacher: { ...prev.teacher, ...(data.teacher || {}) },
           course: { ...prev.course, ...(data.course || {}) },
           payment: { ...prev.payment, ...(data.payment || {}) },
           delegates: { ...prev.delegates, ...(data.delegates || {}) },
@@ -161,6 +180,7 @@ export function GenerateDocumentDialog({
   };
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) || templates[0];
+  const isTeacherDoc = selectedTemplate?.category_type === DocumentCategoryType.TEACHER_CONTRACTS;
 
   const handleGenerate = async () => {
     if (!selectedTemplate) return;
@@ -174,9 +194,15 @@ export function GenerateDocumentDialog({
         booking_id: bookingIdInput || undefined,
         student_id: studentIdInput || undefined,
         title: formData.title || selectedTemplate.name,
-        recipient_name: formData.student?.full_name || formData.parent?.full_name,
-        recipient_email: formData.student?.email || formData.parent?.email,
-        recipient_tax_code: formData.student?.tax_code || formData.parent?.tax_code,
+        recipient_name: isTeacherDoc
+          ? formData.teacher?.full_name
+          : formData.student?.full_name || formData.parent?.full_name,
+        recipient_email: isTeacherDoc
+          ? formData.teacher?.email
+          : formData.student?.email || formData.parent?.email,
+        recipient_tax_code: isTeacherDoc
+          ? formData.teacher?.tax_code
+          : formData.student?.tax_code || formData.parent?.tax_code,
         custom_data: formData,
         blocks_config: selectedTemplate.blocks_config,
       });
@@ -319,110 +345,271 @@ export function GenerateDocumentDialog({
                 {tr("documents.generator.step3", "3. Campi del Documento (Modificabili in Tempo Reale)")}
               </Label>
 
-              {/* Student Fields */}
-              <div className="space-y-2">
-                <span className="text-[11px] font-bold text-foreground flex items-center gap-1">
-                  <UserCheck className="h-3.5 w-3.5 text-primary" />
-                  {tr("documents.generator.studentSection", "Dati Allievo / Intestatario:")}
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    placeholder={tr("documents.generator.studentName", "Nome e Cognome Allievo")}
-                    value={formData.student?.full_name || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        student: { ...formData.student, full_name: e.target.value },
-                      })
-                    }
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    placeholder={tr("documents.generator.studentTaxCode", "Codice Fiscale Allievo")}
-                    value={formData.student?.tax_code || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        student: { ...formData.student, tax_code: e.target.value },
-                      })
-                    }
-                    className="h-8 text-xs font-mono"
-                  />
+              {/* A. Student Fields */}
+              {!isTeacherDoc && (
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5 text-primary" />
+                    {tr("documents.generator.studentSection", "Dati Allievo / Intestatario:")}
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.studentName", "Nome e Cognome Allievo")}
+                      value={formData.student?.full_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, full_name: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.studentTaxCode", "Codice Fiscale Allievo")}
+                      value={formData.student?.tax_code || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, tax_code: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.studentEmail", "Email Allievo")}
+                      value={formData.student?.email || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, email: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.studentPhone", "Telefono Allievo")}
+                      value={formData.student?.phone || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, phone: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.studentBirthDate", "Data Nascita (12/04/2008)")}
+                      value={formData.student?.birth_date || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, birth_date: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.studentBirthPlace", "Luogo Nascita (Milano)")}
+                      value={formData.student?.birth_place || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, birth_place: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.studentAddress", "Indirizzo Residenza")}
+                      value={formData.student?.address || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, address: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.studentSchoolGrade", "Scuola e Classe")}
+                      value={formData.student?.school_grade || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          student: { ...formData.student, school_grade: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    placeholder={tr("documents.generator.studentEmail", "Email Allievo")}
-                    value={formData.student?.email || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        student: { ...formData.student, email: e.target.value },
-                      })
-                    }
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    placeholder={tr("documents.generator.studentPhone", "Telefono Allievo")}
-                    value={formData.student?.phone || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        student: { ...formData.student, phone: e.target.value },
-                      })
-                    }
-                    className="h-8 text-xs"
-                  />
-                </div>
-              </div>
+              )}
 
-              {/* Parent Fields */}
+              {/* B. Parent Fields */}
+              {!isTeacherDoc && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-amber-500" />
+                    {tr("documents.generator.parentSection", "Dati Genitore / Tutore (se minore):")}
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.parentName", "Nome e Cognome Genitore")}
+                      value={formData.parent?.full_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parent: { ...formData.parent, full_name: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.parentTaxCode", "Codice Fiscale Genitore")}
+                      value={formData.parent?.tax_code || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parent: { ...formData.parent, tax_code: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.parentEmail", "Email Genitore")}
+                      value={formData.parent?.email || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parent: { ...formData.parent, email: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.parentPhone", "Telefono Genitore")}
+                      value={formData.parent?.phone || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          parent: { ...formData.parent, phone: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* C. Teacher Fields */}
+              {isTeacherDoc && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-purple-500" />
+                    {tr("documents.generator.teacherSection", "Dati Docente / Collaboratore:")}
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.teacherName", "Nome e Cognome Docente")}
+                      value={formData.teacher?.full_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacher: { ...formData.teacher, full_name: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.teacherTaxCode", "Codice Fiscale Docente")}
+                      value={formData.teacher?.tax_code || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacher: { ...formData.teacher, tax_code: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.teacherEmail", "Email Docente")}
+                      value={formData.teacher?.email || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacher: { ...formData.teacher, email: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.teacherPhone", "Telefono Docente")}
+                      value={formData.teacher?.phone || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacher: { ...formData.teacher, phone: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      type="number"
+                      placeholder={tr("documents.generator.teacherHourlyRate", "Compenso €/h")}
+                      value={formData.teacher?.hourly_rate || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacher: { ...formData.teacher, hourly_rate: Number(e.target.value) },
+                        })
+                      }
+                      className="h-8 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* D. Course & Didactics */}
               <div className="space-y-2 pt-2 border-t border-border/40">
-                <span className="text-[11px] font-bold text-foreground">
-                  {tr("documents.generator.parentSection", "Dati Genitore / Tutore (se minore):")}
+                <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                  <BookOpen className="h-3.5 w-3.5 text-blue-500" />
+                  {tr("documents.generator.courseSection", "Dati Corso e Didattica:")}
                 </span>
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    placeholder={tr("documents.generator.parentName", "Nome Genitore")}
-                    value={formData.parent?.full_name || ""}
+                    placeholder={tr("documents.generator.courseTitle", "Titolo del Corso")}
+                    value={formData.course?.title || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        parent: { ...formData.parent, full_name: e.target.value },
+                        course: { ...formData.course, title: e.target.value },
                       })
                     }
                     className="h-8 text-xs"
                   />
                   <Input
-                    placeholder={tr("documents.generator.parentPhone", "Telefono Genitore")}
-                    value={formData.parent?.phone || ""}
+                    placeholder={tr("documents.generator.courseLevel", "Livello (es. B1, Principiante)")}
+                    value={formData.course?.level || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        parent: { ...formData.parent, phone: e.target.value },
+                        course: { ...formData.course, level: e.target.value },
                       })
                     }
                     className="h-8 text-xs"
                   />
                 </div>
-              </div>
-
-              {/* Course & Payment */}
-              <div className="space-y-2 pt-2 border-t border-border/40">
-                <span className="text-[11px] font-bold text-foreground">
-                  {tr("documents.generator.courseSection", "Dati Corso e Importo:")}
-                </span>
-                <Input
-                  placeholder={tr("documents.generator.courseTitle", "Titolo del Corso")}
-                  value={formData.course?.title || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      course: { ...formData.course, title: e.target.value },
-                    })
-                  }
-                  className="h-8 text-xs"
-                />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <Input
                     placeholder={tr("documents.generator.courseSchedule", "Orario (es. Lun-Mer 16:30)")}
                     value={formData.course?.schedule_text || ""}
@@ -435,19 +622,155 @@ export function GenerateDocumentDialog({
                     className="h-8 text-xs"
                   />
                   <Input
-                    type="number"
-                    placeholder={tr("documents.generator.totalAmount", "Totale € (IVA inc.)")}
-                    value={formData.payment?.amount_total || ""}
+                    placeholder={tr("documents.generator.courseStartDate", "Data Inizio (06/10/2026)")}
+                    value={formData.course?.start_date || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        payment: { ...formData.payment, amount_total: Number(e.target.value) },
+                        course: { ...formData.course, start_date: e.target.value },
+                      })
+                    }
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    placeholder={tr("documents.generator.courseClassroom", "Aula / Sede")}
+                    value={formData.course?.classroom || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        course: { ...formData.course, classroom: e.target.value },
+                      })
+                    }
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* E. Payment & Fees */}
+              <div className="space-y-2 pt-2 border-t border-border/40">
+                <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                  <Receipt className="h-3.5 w-3.5 text-emerald-500" />
+                  {tr("documents.generator.paymentSection", "Riepilogo Economico & Pagamenti:")}
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    type="number"
+                    placeholder={tr("documents.generator.totalAmount", "Totale € (IVA inc.)")}
+                    value={formData.payment?.amount_total || ""}
+                    onChange={(e) => {
+                      const tot = Number(e.target.value);
+                      const reg = formData.payment?.registration_fee || 0;
+                      setFormData({
+                        ...formData,
+                        payment: {
+                          ...formData.payment,
+                          amount_total: tot,
+                          amount_course: tot > reg ? tot - reg : tot,
+                        },
+                      });
+                    }}
+                    className="h-8 text-xs font-mono font-bold"
+                  />
+                  <Input
+                    type="number"
+                    placeholder={tr("documents.generator.courseAmount", "Quota Corso €")}
+                    value={formData.payment?.amount_course || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        payment: { ...formData.payment, amount_course: Number(e.target.value) },
+                      })
+                    }
+                    className="h-8 text-xs font-mono"
+                  />
+                  <Input
+                    type="number"
+                    placeholder={tr("documents.generator.regFeeAmount", "Quota Iscrizione €")}
+                    value={formData.payment?.registration_fee || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        payment: { ...formData.payment, registration_fee: Number(e.target.value) },
                       })
                     }
                     className="h-8 text-xs font-mono"
                   />
                 </div>
+                <Input
+                  placeholder={tr("documents.generator.paymentMethod", "Metodo Pagamento (Stripe, Bonifico, ecc.)")}
+                  value={formData.payment?.payment_method_label || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      payment: { ...formData.payment, payment_method_label: e.target.value },
+                    })
+                  }
+                  className="h-8 text-xs"
+                />
               </div>
+
+              {/* F. Minor Delegates & Self-Exit */}
+              {!isTeacherDoc && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-indigo-500" />
+                    {tr("documents.generator.delegatesSection", "Allegato 2 — Deleghe Ritiro & Uscita Autonoma:")}
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      placeholder={tr("documents.generator.delegate1Name", "Delegato 1 - Nome")}
+                      value={formData.delegates?.delegate_1_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          delegates: { ...formData.delegates, delegate_1_name: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.delegate1Relation", "Grado parentela (es. Nonno)")}
+                      value={formData.delegates?.delegate_1_relation || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          delegates: { ...formData.delegates, delegate_1_relation: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                    <Input
+                      placeholder={tr("documents.generator.delegate1Phone", "Telefono Delegato")}
+                      value={formData.delegates?.delegate_1_phone || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          delegates: { ...formData.delegates, delegate_1_phone: e.target.value },
+                        })
+                      }
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2 pt-1">
+                    <Checkbox
+                      id="self_exit"
+                      checked={formData.delegates?.self_exit_authorized || false}
+                      onCheckedChange={(checked) =>
+                        setFormData({
+                          ...formData,
+                          delegates: { ...formData.delegates, self_exit_authorized: Boolean(checked) },
+                        })
+                      }
+                    />
+                    <label
+                      htmlFor="self_exit"
+                      className="text-xs font-medium leading-none cursor-pointer text-muted-foreground hover:text-foreground"
+                    >
+                      {tr("documents.generator.selfExitLabel", "Autorizzazione all'uscita autonoma (minori 11+ anni)")}
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
