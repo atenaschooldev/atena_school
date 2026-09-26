@@ -428,7 +428,7 @@ export async function sendBookingNotificationTelegram(params: {
     return { success: false, error: 'Telegram BOT_TOKEN or CHAT_ID not configured' };
   }
 
-  const courseName = course?.name || course?.title_it || booking.course_name || 'Corso Atena School';
+  const courseName = course?.name || course?.title_it || booking.course_name || 'Corso di Lingua';
   const purchaserName = `${dto.firstName || booking.purchaser_name || ''} ${dto.lastName || ''}`.trim() || booking.purchaser_name || 'Cliente';
   const studentName = dto.isForChild
     ? `${dto.studentFirstName || ''} ${dto.studentLastName || ''}`.trim() || booking.student_name || purchaserName
@@ -838,7 +838,7 @@ export async function handleTelegramCallbackAction(params: {
         : i18n.reservedAtVenue;
 
     const newHtml = formatBookingTelegramHtml({
-      courseName: updatedBooking?.course_name || 'Corso Atena School',
+      courseName: updatedBooking?.course_name || 'Corso di Lingua',
       purchaserName: updatedBooking?.purchaser_name || 'Cliente',
       purchaserEmail: updatedBooking?.purchaser_email || '',
       purchaserPhone: updatedBooking?.purchaser_phone || '',

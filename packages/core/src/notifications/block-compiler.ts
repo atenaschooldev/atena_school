@@ -438,7 +438,7 @@ export function renderEmailFromBlocks(
     .filter((b) => b.is_enabled)
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-  let renderedSubject = 'Notifica Atena School';
+  let renderedSubject = `Notifica: ${school.name || 'Scuola'}`;
   let renderedBlocksHtml = '';
 
   for (const block of sortedBlocks) {

@@ -741,7 +741,7 @@ export async function retryNotificationLog(
         subject = template.subject ? compileTemplate(template.subject, payload) : subject;
         html = compileTemplate(template.body_html, payload);
       } else {
-        html = `<p>${logRecord.subject || 'Notifica Atena School'}</p>`;
+        html = `<p>${logRecord.subject || `Notifica: ${schoolProfile.name || 'Scuola'}`}</p>`;
       }
 
       const sendRes = await sendEmailViaResend({
@@ -779,7 +779,7 @@ export async function retryNotificationLog(
       } else if (template?.body_text) {
         text = compileTemplate(template.body_text, payload);
       } else {
-        text = logRecord.subject || 'Notifica Atena School';
+        text = logRecord.subject || `Notifica: ${schoolProfile.name || 'Scuola'}`;
       }
 
       const sendRes = await sendTelegramMessage({
