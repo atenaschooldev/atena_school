@@ -602,10 +602,16 @@ export function renderEmailFromBlocks(
       case 'bank_details': {
         const title = compileTemplateVariables(p.box_title || '🏦 Coordinate per Saldo tramite Bonifico Bancario:', v);
         const notes = compileTemplateVariables(p.notes_text || 'Se preferisci saldare con bonifico prima dell\'inizio delle lezioni:', v);
-        const iban = school.iban || 'IT60X0542811101000000123456';
-        const courseName = compileTemplateVariables(v.course_name || 'Kids (6-7 anni)', v);
-        const purchaser = compileTemplateVariables(v.purchaser_name || 'Petukhov Andrii', v);
-        const bookingId = compileTemplateVariables(v.booking_id || '10bde731-f620-4e16-a240-63bb08b86d70', v);
+        const iban = school.iban || '';
+        const courseName = compileTemplateVariables(v.course_name || '', v);
+        const purchaser = compileTemplateVariables(v.purchaser_name || '', v);
+        const bookingId = compileTemplateVariables(v.booking_id || '', v);
+
+        const causaleParts = ['Saldo'];
+        if (courseName) causaleParts.push(`Corso ${courseName}`);
+        if (purchaser) causaleParts.push(`- ${purchaser}`);
+        if (bookingId) causaleParts.push(`(ID: ${bookingId})`);
+        const causaleText = causaleParts.join(' ');
 
         renderedBlocksHtml += `
           <tr>
@@ -616,10 +622,10 @@ export function renderEmailFromBlocks(
                     <div style="font-size: 13px; font-weight: 800; color: #166534; margin-bottom: 6px;">${title}</div>
                     <div style="font-size: 12px; line-height: 1.6; color: #14532d;">
                       ${notes}<br>
-                      ${p.show_iban !== false ? `• <strong>IBAN:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-family: monospace; border: 1px solid #bbf7d0;">${iban}</code><br>` : ''}
+                      ${p.show_iban !== false && iban ? `• <strong>IBAN:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-family: monospace; border: 1px solid #bbf7d0;">${iban}</code><br>` : ''}
                       ${p.show_bank_name !== false && school.bank_name ? `• <strong>Banca:</strong> ${school.bank_name}<br>` : ''}
                       ${p.show_account_holder !== false && school.account_holder ? `• <strong>Intestatario:</strong> ${school.account_holder}<br>` : ''}
-                      ${p.show_causale !== false ? `• <strong>Causale:</strong> Saldo Corso ${courseName} - ${purchaser} (ID: ${bookingId})` : ''}
+                      ${p.show_causale !== false ? `• <strong>Causale:</strong> ${causaleText}` : ''}
                     </div>
                   </td>
                 </tr>

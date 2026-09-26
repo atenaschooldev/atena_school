@@ -56,8 +56,28 @@ export function generateMembershipNumber(academicYear?: string | null, sequenceN
 }
 
 /**
- * Official School Holidays Calendar for Academic Year 2026/2027
- * (As specified in Modulo di Iscrizione e Regolamento)
+ * Computes Gregorian Easter Sunday for a given year using Anonymous Gregorian Algorithm (Meeus/Jones/Butcher).
+ */
+export function computeEasterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3=March, 4=April
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+/**
+ * Official School Holidays Calendar for Academic Year
  */
 export interface SchoolHolidayPeriod {
   name: string;
@@ -66,45 +86,76 @@ export interface SchoolHolidayPeriod {
   description: string;
 }
 
-export const ATENA_HOLIDAYS_2026_2027: SchoolHolidayPeriod[] = [
-  {
-    name: "Ponte dei Defunti",
-    startDate: "2026-11-02",
-    endDate: "2026-11-02",
-    description: "Chiusura per ponte dei defunti (Lunedì)",
-  },
-  {
-    name: "Ponte dell'Immacolata",
-    startDate: "2026-12-07",
-    endDate: "2026-12-08",
-    description: "Festa dell'Immacolata Concezione",
-  },
-  {
-    name: "Vacanze di Natale",
-    startDate: "2026-12-23",
-    endDate: "2027-01-06",
-    description: "Festività natalizie ed Epifania",
-  },
-  {
-    name: "Vacanze di Pasqua",
-    startDate: "2027-03-25",
-    endDate: "2027-03-30",
-    description: "Festività pasquali",
-  },
-  {
-    name: "Festa della Repubblica",
-    startDate: "2027-06-02",
-    endDate: "2027-06-02",
-    description: "Festa Nazionale della Repubblica Italiana",
-  },
-];
+/**
+ * Dynamically computes official Italian Association / School holiday calendar for any academic year.
+ * (Ponte dei Defunti, Immacolata, Natale/Epifania, Pasqua, Liberazione, Festa del Lavoro, Repubblica).
+ */
+export function getItalianSchoolHolidaysForYear(startYear: number): SchoolHolidayPeriod[] {
+  const nextYear = startYear + 1;
 
-export function isSchoolHoliday(date: Date | string, holidays: SchoolHolidayPeriod[] = ATENA_HOLIDAYS_2026_2027): boolean {
+  // Compute Easter and related holidays (Giovedì Santo to Martedì di Pasqua)
+  const easterSunday = computeEasterSunday(nextYear);
+  const holyThursday = new Date(easterSunday.getTime() - 3 * 24 * 60 * 60 * 1000);
+  const easterTuesday = new Date(easterSunday.getTime() + 2 * 24 * 60 * 60 * 1000);
+
+  const formatIsoDate = (d: Date) => d.toISOString().split("T")[0];
+
+  return [
+    {
+      name: "Ponte dei Defunti",
+      startDate: `${startYear}-11-01`,
+      endDate: `${startYear}-11-02`,
+      description: "Chiusura per ponte dei defunti e festa di tutti i santi",
+    },
+    {
+      name: "Ponte dell'Immacolata",
+      startDate: `${startYear}-12-07`,
+      endDate: `${startYear}-12-08`,
+      description: "Festa dell'Immacolata Concezione",
+    },
+    {
+      name: "Vacanze di Natale",
+      startDate: `${startYear}-12-23`,
+      endDate: `${nextYear}-01-06`,
+      description: "Festività natalizie ed Epifania",
+    },
+    {
+      name: "Vacanze di Pasqua",
+      startDate: formatIsoDate(holyThursday),
+      endDate: formatIsoDate(easterTuesday),
+      description: "Festività pasquali",
+    },
+    {
+      name: "Festa della Liberazione",
+      startDate: `${nextYear}-04-25`,
+      endDate: `${nextYear}-04-25`,
+      description: "Anniversario della Liberazione d'Italia",
+    },
+    {
+      name: "Festa del Lavoro",
+      startDate: `${nextYear}-05-01`,
+      endDate: `${nextYear}-05-01`,
+      description: "Festa dei Lavoratori",
+    },
+    {
+      name: "Festa della Repubblica",
+      startDate: `${nextYear}-06-02`,
+      endDate: `${nextYear}-06-02`,
+      description: "Festa Nazionale della Repubblica Italiana",
+    },
+  ];
+}
+
+/** Precalculated holidays for 2026/2027 academic year for backwards compatibility */
+export const ATENA_HOLIDAYS_2026_2027: SchoolHolidayPeriod[] = getItalianSchoolHolidaysForYear(2026);
+
+export function isSchoolHoliday(date: Date | string, holidays?: SchoolHolidayPeriod[] | null): boolean {
   const d = typeof date === "string" ? new Date(date) : date;
   if (isNaN(d.getTime())) return false;
   const dateStr = d.toISOString().split("T")[0];
 
-  return holidays.some((h) => dateStr >= h.startDate && dateStr <= h.endDate);
+  const resolvedHolidays = holidays || getItalianSchoolHolidaysForYear(getCurrentAcademicYear(d).startYear);
+  return resolvedHolidays.some((h) => dateStr >= h.startDate && dateStr <= h.endDate);
 }
 
 /**
@@ -259,7 +310,9 @@ export function formatCourseScheduleText(
  * URL Checksum Salt for frontend query parameter integrity verification
  * (Protects prefilled checkout query parameters from accidental URL corruption).
  */
-export const SLOT_CHECKSUM_SALT = "atena_slot_salt_2026";
+export const SLOT_CHECKSUM_SALT =
+  (typeof process !== 'undefined' && (process.env?.SLOT_CHECKSUM_SALT || process.env?.NEXT_PUBLIC_SLOT_SALT)) ||
+  "atena_slot_salt_2026";
 /** @deprecated Alias for backwards compatibility */
 export const SLOT_SECRET_SALT = SLOT_CHECKSUM_SALT;
 

@@ -26,6 +26,8 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
+import { useTranslation } from "@/i18n/context"
+
 const loginFormSchema = z.object({
   email: z.string().email("Inserisci un indirizzo email valido"),
   password: z.string().min(6, "La password deve contenere almeno 6 caratteri"),
@@ -37,6 +39,7 @@ export function LoginForm1({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
 
@@ -54,7 +57,7 @@ export function LoginForm1({
       const res = await api.post<{ access_token: string; refresh_token?: string; user?: any }>("/admin/auth/login", values)
       if (res.access_token) {
         setAdminSession(res.access_token, res.refresh_token)
-        toast.success("Accesso effettuato con successo")
+        toast.success(t("common.saveSuccess") || "Accesso effettuato con successo")
         navigate("/dashboard")
       } else {
         toast.error("Errore di autenticazione: Token non ricevuto")
@@ -71,9 +74,9 @@ export function LoginForm1({
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">Accedi ad Atena Admin</CardTitle>
+          <CardTitle className="text-xl">Atena School Admin</CardTitle>
           <CardDescription>
-            Inserisci le tue credenziali per accedere al CRM
+            {t("nav.dashboard") || "CRM & Gestione Scuola"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -86,7 +89,7 @@ export function LoginForm1({
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>{t("users.email") || "Email"}</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
@@ -114,7 +117,7 @@ export function LoginForm1({
                     )}
                   />
                   <Button type="submit" className="w-full cursor-pointer" disabled={loading}>
-                    {loading ? "Accesso in corso..." : "Accedi"}
+                    {loading ? (t("common.loading") || "Accesso in corso...") : (t("common.confirm") || "Accedi")}
                   </Button>
                 </div>
               </div>

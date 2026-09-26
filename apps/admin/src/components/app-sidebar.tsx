@@ -44,8 +44,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { profile } = useSchoolProfile()
 
   const user = {
-    name: profile.name || "Atena School",
-    email: profile.email || "admin@atenaschool.com",
+    name: profile.name || "Atena CRM",
+    email: profile.email || profile.secretariat_email || "",
     avatar: profile.logo_url || "",
   }
 

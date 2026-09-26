@@ -6,8 +6,8 @@ import {
   BookingPaymentStatus,
   parseBookingPaymentStatus,
   parsePaymentMethod,
-  ACADEMIC_YEAR,
 } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 import { CreateReservationParams } from '../types';
 import { generateNextMembershipNumber } from '../memberships/number-generator';
 
@@ -147,12 +147,14 @@ export async function processStudentAndBookingLinks(params: {
 
       if (hasPaidMembership) {
         let existingMem: { id: string; membership_number?: string | null } | null = null;
+        const { academicYear: currentAcademicYear, expiresAt: currentExpiresAt } = getCurrentAcademicYear();
+
         if (sTaxCode) {
           const { data: mData } = await supabase
             .from('annual_memberships')
             .select('id, membership_number')
             .ilike('tax_code', sTaxCode)
-            .eq('academic_year', ACADEMIC_YEAR.CURRENT)
+            .eq('academic_year', currentAcademicYear)
             .maybeSingle();
           if (mData) existingMem = mData;
         } else if (studentId) {
@@ -160,13 +162,13 @@ export async function processStudentAndBookingLinks(params: {
             .from('annual_memberships')
             .select('id, membership_number')
             .eq('student_id', studentId)
-            .eq('academic_year', ACADEMIC_YEAR.CURRENT)
+            .eq('academic_year', currentAcademicYear)
             .maybeSingle();
           if (mData) existingMem = mData;
         }
 
         const pMethod = typeof dto.paymentMethod === 'number' ? dto.paymentMethod : parsePaymentMethod(dto.paymentMethod) || 1;
-        const nextMembershipNumber = await generateNextMembershipNumber(supabase, ACADEMIC_YEAR.CURRENT);
+        const nextMembershipNumber = await generateNextMembershipNumber(supabase, currentAcademicYear);
 
         if (existingMem) {
           await supabase
@@ -185,7 +187,7 @@ export async function processStudentAndBookingLinks(params: {
           await supabase.from('annual_memberships').upsert(
             {
               tax_code: sTaxCode,
-              academic_year: ACADEMIC_YEAR.CURRENT,
+              academic_year: currentAcademicYear,
               status: MembershipStatus.ACTIVE,
               membership_number: nextMembershipNumber,
               student_id: studentId || null,
@@ -193,7 +195,7 @@ export async function processStudentAndBookingLinks(params: {
               amount: Number(regFee || 0),
               payment_method: pMethod,
               paid_at: new Date().toISOString(),
-              expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
+              expires_at: currentExpiresAt,
             },
             { onConflict: 'tax_code,academic_year' }
           );

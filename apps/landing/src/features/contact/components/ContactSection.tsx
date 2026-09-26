@@ -55,9 +55,9 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
   } = useContactForm(initialFormTemplate);
 
   const address = formatFullSchoolAddress(school) || data?.address || "";
-  const phone = school.phone || data?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";
-  const landline = school.landline || data?.landline || DEFAULT_SCHOOL_PROFILE.landline || "0966 447052";
-  const email = school.secretariat_email || school.email || data?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
+  const phone = school.phone || data?.phone || DEFAULT_SCHOOL_PROFILE.phone || "";
+  const landline = school.landline || data?.landline || DEFAULT_SCHOOL_PROFILE.landline || "";
+  const email = school.secretariat_email || school.email || data?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "";
 
   return (
     <section id="contatti" className="relative isolate py-12 lg:py-16 px-4 bg-slate-50/70 overflow-hidden cv-auto">

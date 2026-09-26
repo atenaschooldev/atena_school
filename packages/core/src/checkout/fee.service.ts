@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ACADEMIC_YEAR, MembershipStatus, FeeStatusResponse } from '@atena/api-types';
+import { MembershipStatus, FeeStatusResponse } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
 
 export interface CheckFeeParams {
   taxCode?: string;
@@ -23,12 +24,14 @@ export async function checkFeeStatus(
     return { success: true, annualFeePaid: false, userFound: false, requiresFee: true };
   }
 
+  const { academicYear } = getCurrentAcademicYear();
+
   // 1. Check active annual memberships by Codice Fiscale
   const { data: mem } = await supabase
     .from('annual_memberships')
     .select('id')
     .ilike('tax_code', cleanTax)
-    .eq('academic_year', ACADEMIC_YEAR.CURRENT)
+    .eq('academic_year', academicYear)
     .eq('status', MembershipStatus.ACTIVE)
     .maybeSingle();
 

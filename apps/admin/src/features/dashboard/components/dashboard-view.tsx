@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { ShoppingBag, BookOpen, Calendar, CreditCard } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { useTranslation } from "@/i18n/context";
 
 interface BookingStats {
   totalCount: number;
@@ -16,6 +17,7 @@ interface PaymentsSummary {
 }
 
 export function DashboardView() {
+  const { t } = useTranslation();
   const { data: bookingStats, isLoading: loadingBookings } = useQuery<BookingStats>({
     queryKey: ["bookings-stats"],
     queryFn: () => apiFetch<BookingStats>("/admin/bookings/stats"),
@@ -30,37 +32,37 @@ export function DashboardView() {
 
   const kpis = [
     {
-      label: "Totale Ordini",
+      label: t("dashboard.totalBookings"),
       value: loadingBookings ? "..." : bookingStats?.totalCount ?? 0,
       icon: ShoppingBag,
-      trend: "Ordini a sistema",
+      trend: t("bookings.statusActive"),
     },
     {
-      label: "Ordini Saldati",
+      label: t("dashboard.recentBookings"),
       value: loadingBookings ? "..." : bookingStats?.paidCount ?? 0,
       icon: BookOpen,
-      trend: "Pagamenti completati",
+      trend: t("payments.succeeded"),
     },
     {
-      label: "In Attesa di Saldo",
+      label: t("dashboard.debtorsTitle"),
       value: loadingBookings ? "..." : bookingStats?.reservedCount ?? 0,
       icon: Calendar,
-      trend: "Da saldare in sede",
+      trend: t("payments.pending"),
     },
     {
-      label: "Incasso Cassa Oggi",
+      label: t("dashboard.totalRevenue"),
       value: loadingPayments ? "..." : `€${Number(paymentsSummary?.todayTotalCash || 0).toFixed(2)}`,
       icon: CreditCard,
-      trend: "Contanti registrati oggi",
+      trend: t("dashboard.monthlyEarnings"),
     },
   ];
 
   return (
     <main className="flex-1 overflow-auto p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Buongiorno 👋</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("dashboard.title")}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Ecco la panoramica della tua scuola oggi.
+          {t("dashboard.subtitle")}
         </p>
       </div>
 

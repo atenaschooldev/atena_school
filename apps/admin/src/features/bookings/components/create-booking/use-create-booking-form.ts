@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode } from "@atena/utils";
+import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode, getCurrentAcademicYear } from "@atena/utils";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 import type { Course } from "@/features/courses/types";
@@ -253,7 +253,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const feePerStudent = isFeeEnabled
     ? (profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30)
     : 0;
-  const academicYear = profile?.academic_year || "2026/2027";
+  const academicYear = profile?.academic_year || getCurrentAcademicYear().academicYear;
 
   const applyPromoCode = async (overrideCode?: string) => {
     const raw = typeof overrideCode === "string" ? overrideCode : promoCodeInput;

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useTranslation } from "@/i18n/context";
 import { DEFAULT_SCHOOL_PROFILE, type SchoolProfile } from "@atena/api-types";
+import { getCurrentAcademicYear } from "@atena/utils";
 
 interface RegistrationFeeSettingsCardProps {
   onSaved?: (profile: SchoolProfile) => void;
@@ -38,7 +39,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
 
   const [feeEnabled, setFeeEnabled] = useState<boolean>(true);
   const [feeAmount, setFeeAmount] = useState<number>(30);
-  const [academicYear, setAcademicYear] = useState<string>("2026/2027");
+  const [academicYear, setAcademicYear] = useState<string>(() => getCurrentAcademicYear().academicYear);
 
   useEffect(() => {
     let isMounted = true;
@@ -52,7 +53,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
         if (isMounted && res?.profile) {
           setFeeEnabled(res.profile.registration_fee_enabled !== false);
           setFeeAmount(res.profile.registration_fee_eur ?? 30);
-          setAcademicYear(res.profile.academic_year || "2026/2027");
+          setAcademicYear(res.profile.academic_year || getCurrentAcademicYear().academicYear);
         }
       } catch (err) {
         console.warn("[RegistrationFeeSettingsCard] failed to fetch profile:", err);
@@ -89,7 +90,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
       if (res?.profile) {
         setFeeEnabled(res.profile.registration_fee_enabled !== false);
         setFeeAmount(res.profile.registration_fee_eur ?? 30);
-        setAcademicYear(res.profile.academic_year || "2026/2027");
+        setAcademicYear(res.profile.academic_year || getCurrentAcademicYear().academicYear);
         queryClient.invalidateQueries({ queryKey: ["school-profile"] });
         onSaved?.(res.profile);
       }
@@ -225,7 +226,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
             </Label>
             <Input
               type="text"
-              placeholder="2026/2027"
+              placeholder={getCurrentAcademicYear().academicYear}
               disabled={loading || saving}
               value={academicYear}
               onChange={(e) => setAcademicYear(e.target.value)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { getCurrentAcademicYear } from "@atena/utils";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -63,7 +64,7 @@ export function CreateMembershipDialog({
   const [submitting, setSubmitting] = useState(false);
   const { profile } = useSchoolProfile();
   const feeAmount = profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30;
-  const academicYear = profile?.academic_year || "2026/2027";
+  const academicYear = profile?.academic_year || getCurrentAcademicYear().academicYear;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),

@@ -9,8 +9,9 @@ import {
   NotificationChannel,
   NotificationStatus,
   NotificationType,
-  ACADEMIC_YEAR,
 } from '@atena/api-types';
+import { getCurrentAcademicYear } from '@atena/utils';
+import { generateNextMembershipNumber } from '../memberships/number-generator';
 import { renderTelegramFromBlocks, getDefaultBlocksForTemplate } from './block-compiler';
 import { getTelegramCredentials, getDomainsCredentials } from '../system/integration-secrets.service';
 
@@ -695,15 +696,18 @@ export async function handleTelegramCallbackAction(params: {
 
     // Update annual_memberships
     if (studentTaxCode) {
+      const { academicYear: currentAcademicYear, expiresAt: currentExpiresAt } = getCurrentAcademicYear();
+      const nextMembershipNumber = await generateNextMembershipNumber(supabase, currentAcademicYear);
       await supabase.from('annual_memberships').upsert(
         {
           tax_code: studentTaxCode.trim().toUpperCase(),
-          academic_year: ACADEMIC_YEAR.CURRENT,
+          academic_year: currentAcademicYear,
           status: MembershipStatus.ACTIVE,
+          membership_number: nextMembershipNumber,
           student_id: studentId || null,
           payment_id: feePayment?.id || null,
           paid_at: nowIso,
-          expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
+          expires_at: currentExpiresAt,
         },
         { onConflict: 'tax_code,academic_year' }
       );
@@ -755,15 +759,18 @@ export async function handleTelegramCallbackAction(params: {
     }
     const feePayment = payments?.find((p) => p.type === PaymentType.REGISTRATION_FEE);
     if (studentTaxCode) {
+      const { academicYear: currentAcademicYear, expiresAt: currentExpiresAt } = getCurrentAcademicYear();
+      const nextMembershipNumber = await generateNextMembershipNumber(supabase, currentAcademicYear);
       await supabase.from('annual_memberships').upsert(
         {
           tax_code: studentTaxCode.trim().toUpperCase(),
-          academic_year: ACADEMIC_YEAR.CURRENT,
+          academic_year: currentAcademicYear,
           status: MembershipStatus.ACTIVE,
+          membership_number: nextMembershipNumber,
           student_id: studentId || null,
           payment_id: feePayment?.id || null,
           paid_at: nowIso,
-          expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
+          expires_at: currentExpiresAt,
         },
         { onConflict: 'tax_code,academic_year' }
       );

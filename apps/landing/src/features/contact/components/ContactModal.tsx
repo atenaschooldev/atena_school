@@ -65,9 +65,9 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
   const [error, setError] = useState<string | null>(null);
 
   const address = formatFullSchoolAddress(school) || contactData?.address || "";
-  const phone = school.phone || contactData?.phone || DEFAULT_SCHOOL_PROFILE.phone || "+39 375 605 2362";
-  const landline = school.landline || contactData?.landline || DEFAULT_SCHOOL_PROFILE.landline || "0966 447052";
-  const email = school.secretariat_email || school.email || contactData?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "info@atenaschool.com";
+  const phone = school.phone || contactData?.phone || DEFAULT_SCHOOL_PROFILE.phone || "";
+  const landline = school.landline || contactData?.landline || DEFAULT_SCHOOL_PROFILE.landline || "";
+  const email = school.secretariat_email || school.email || contactData?.email || DEFAULT_SCHOOL_PROFILE.secretariat_email || "";
 
   // Dynamic template resolution
   useEffect(() => {

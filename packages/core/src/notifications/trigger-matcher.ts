@@ -246,7 +246,7 @@ export function resolveRecipient(
   channel: number,
   customRecipient?: string | null,
   payload: Record<string, any> = {},
-  fallbackAdminEmail = 'info@atenaschool.com'
+  fallbackAdminEmail = ''
 ): string | null {
   if (customRecipient && customRecipient.trim()) {
     return customRecipient.trim();

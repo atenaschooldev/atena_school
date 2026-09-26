@@ -553,7 +553,7 @@ export async function processNotificationTriggers(
     const resendCreds = await getResendCredentials(supabase);
     const apiKey = config?.resendApiKey || resendCreds.apiKey;
     const fromEmail = config?.fromEmail || resendCreds.fromEmail;
-    const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || 'info@atenaschool.com';
+    const adminEmail = config?.adminEmail || resendCreds.adminEmail || schoolProfile.secretariat_email || schoolProfile.email || '';
 
     for (const trigger of activeTriggers) {
       let template: NotificationTemplateRecord | null = trigger.template || null;

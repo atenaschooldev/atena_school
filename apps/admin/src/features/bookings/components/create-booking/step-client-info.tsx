@@ -1,6 +1,7 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
+import { getCurrentAcademicYear } from "@atena/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,7 @@ export function StepClientInfo({
   const isForChild = form.watch("isForChild");
   const { profile } = useSchoolProfile();
   const feeAmount = profile?.registration_fee_eur != null ? Number(profile.registration_fee_eur) : 30;
-  const academicYear = profile?.academic_year || "2026/2027";
+  const academicYear = profile?.academic_year || getCurrentAcademicYear().academicYear;
 
   const handleCustomerTypeChange = (forChild: boolean) => {
     form.setValue("isForChild", forChild);

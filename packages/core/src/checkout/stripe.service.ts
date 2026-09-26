@@ -11,10 +11,9 @@ import {
   PaymentType,
   PaymentCurrency,
   PaymentProvider,
-  ACADEMIC_YEAR,
   MembershipStatus,
 } from '@atena/api-types';
-import { calculateLessonDates } from '@atena/utils';
+import { calculateLessonDates, getCurrentAcademicYear } from '@atena/utils';
 import { CreateReservationParams, VerifyPaymentParams } from '../types';
 import { createReservationWorkflow, generateAndSaveLessons } from './reservation.service';
 import { checkFeeStatus } from './fee.service';
@@ -404,6 +403,8 @@ export async function handleStripeWebhook(
         .single();
 
       if (updatedBooking) {
+        const { academicYear: currentAcademicYear, expiresAt: currentExpiresAt } = getCurrentAcademicYear();
+
         // Record payment in ledger
         const totalPaid = Number(session.amount_total || 0) / 100;
         const regFee = Number(updatedBooking.registration_fee || 0);
@@ -421,7 +422,7 @@ export async function handleStripeWebhook(
             payment_method: PaymentMethod.STRIPE,
             provider: PaymentProvider.STRIPE,
             provider_transaction_id: session.payment_intent as string || null,
-            academic_year: ACADEMIC_YEAR.CURRENT,
+            academic_year: currentAcademicYear,
           });
         }
 
@@ -437,16 +438,16 @@ export async function handleStripeWebhook(
             payment_method: PaymentMethod.STRIPE,
             provider: PaymentProvider.STRIPE,
             provider_transaction_id: (session.payment_intent as string) || null,
-            academic_year: ACADEMIC_YEAR.CURRENT,
+            academic_year: currentAcademicYear,
           }).select('id').maybeSingle();
 
           const studentTaxCode = (updatedBooking.student_tax_code || updatedBooking.purchaser_tax_code || '').trim().toUpperCase();
           if (studentTaxCode) {
-            const nextMembershipNumber = await generateNextMembershipNumber(supabase, ACADEMIC_YEAR.CURRENT);
+            const nextMembershipNumber = await generateNextMembershipNumber(supabase, currentAcademicYear);
             await supabase.from('annual_memberships').upsert(
               {
                 tax_code: studentTaxCode,
-                academic_year: ACADEMIC_YEAR.CURRENT,
+                academic_year: currentAcademicYear,
                 status: MembershipStatus.ACTIVE,
                 membership_number: nextMembershipNumber,
                 student_id: updatedBooking.student_id || null,
@@ -455,7 +456,7 @@ export async function handleStripeWebhook(
                 amount: regFee,
                 payment_method: PaymentMethod.STRIPE,
                 paid_at: new Date().toISOString(),
-                expires_at: ACADEMIC_YEAR.EXPIRY_DATE,
+                expires_at: currentExpiresAt,
               },
               { onConflict: 'tax_code,academic_year' }
             );
@@ -558,6 +559,7 @@ export async function handleStripeWebhook(
 
         // Record renewal payment in ledger
         const renewalAmount = Number(invoice.amount_paid || 0) / 100;
+        const { academicYear: currentAcademicYear } = getCurrentAcademicYear();
         await supabase.from('payments').insert({
           booking_id: booking.id,
           user_id: booking.user_id || null,
@@ -568,7 +570,7 @@ export async function handleStripeWebhook(
           type: PaymentType.COURSE_PAYMENT,
           payment_method: PaymentMethod.STRIPE,
           provider: PaymentProvider.STRIPE,
-          academic_year: ACADEMIC_YEAR.CURRENT,
+          academic_year: currentAcademicYear,
         });
 
         // Update booking subscription status and period

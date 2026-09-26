@@ -34,7 +34,7 @@ export default async function PrivacyPolicy() {
   const t = await getTranslations("privacy");
   const supabase = getSupabaseAdmin();
   const school = await getSchoolProfile(supabase);
-  const contactEmail = school.secretariat_email || school.email || "info@atenaschool.com";
+  const contactEmail = school.secretariat_email || school.email || "";
 
   // Get sections manually as next-intl handles arrays differently in v3+
   // Assuming 4 sections based on it.json/en.json

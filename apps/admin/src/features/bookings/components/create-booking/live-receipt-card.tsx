@@ -3,6 +3,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { it as dateLocale } from "date-fns/locale";
+import { getCurrentAcademicYear } from "@atena/utils";
 import {
   GraduationCap,
   Calendar,
@@ -68,7 +69,7 @@ export function LiveReceiptCard({
   amountPaid,
   registrationFee,
   feePerStudent = 30,
-  academicYear = "2026/2027",
+  academicYear = getCurrentAcademicYear().academicYear,
   appliedPromo,
   discountAmount = 0,
   totalAmount,
