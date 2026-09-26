@@ -32,12 +32,12 @@ import {
 } from 'lucide-react';
 import {
   DocumentCategoryType,
-  DocumentRecord,
   DocumentStatus,
   DocumentType,
   DOCUMENT_CATEGORY_DICTIONARY,
   DOCUMENT_STATUS_DICTIONARY,
   DOCUMENT_TYPE_DICTIONARY,
+  type DocumentRecord,
 } from '../types';
 import { useDocuments } from '../hooks/use-documents';
 import { useDocumentCategories } from '../hooks/use-document-categories';

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
-import { DocumentTemplateRecord, UpdateDocumentTemplateDto } from '../types';
+import type { DocumentTemplateRecord, UpdateDocumentTemplateDto } from '../types';
 
 export function useDocumentTemplates() {
   const queryClient = useQueryClient();

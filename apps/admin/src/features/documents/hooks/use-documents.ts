@@ -3,10 +3,10 @@ import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import {
   DocumentCategoryType,
-  DocumentRecord,
   DocumentStatus,
   DocumentType,
-  GenerateDocumentDto,
+  type DocumentRecord,
+  type GenerateDocumentDto,
 } from '../types';
 
 export function useDocuments(filters?: {

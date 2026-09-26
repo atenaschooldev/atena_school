@@ -18,9 +18,9 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import {
-  DocumentTemplateRecord,
   DOCUMENT_CATEGORY_DICTIONARY,
   DOCUMENT_FORMAT_DICTIONARY,
+  type DocumentTemplateRecord,
 } from '../types';
 import { useDocumentTemplates } from '../hooks/use-document-templates';
 import { VisualDocumentBuilder } from './builder/visual-document-builder';

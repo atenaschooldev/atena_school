@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
-import { DocumentCategoryRecord } from '../types';
+import type { DocumentCategoryRecord } from '../types';
 
 export function useDocumentCategories() {
   const {

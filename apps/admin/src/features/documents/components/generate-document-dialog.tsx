@@ -19,10 +19,10 @@ import {
 import {
   DocumentCategoryType,
   DocumentPaperFormat,
-  DocumentTemplateRecord,
   DocumentTemplateType,
   DocumentType,
-  GenerateDocumentDto,
+  type DocumentTemplateRecord,
+  type GenerateDocumentDto,
 } from '../types';
 import { useDocumentTemplates } from '../hooks/use-document-templates';
 import { useDocuments } from '../hooks/use-documents';

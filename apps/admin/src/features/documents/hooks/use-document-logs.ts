@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
-import { DocumentLogRecord } from '../types';
+import type { DocumentLogRecord } from '../types';
 
 export function useDocumentLogs(documentId?: string) {
   const endpoint = `/admin/documents/logs${documentId ? `?document_id=${documentId}` : ''}`;

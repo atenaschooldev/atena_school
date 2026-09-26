@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, Download, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react';
-import { DocumentBlocksConfig, DocumentPaperFormat } from '../../types';
+import { DocumentPaperFormat, type DocumentBlocksConfig } from '../../types';
 import { compileDocumentHtml } from '@atena/core';
 
 interface DocumentLivePreviewProps {

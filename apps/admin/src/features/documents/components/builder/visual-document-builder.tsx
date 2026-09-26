@@ -19,12 +19,12 @@ import {
   FileText,
 } from 'lucide-react';
 import {
-  DocumentBlock,
-  DocumentBlockType,
-  DocumentBlocksConfig,
   DocumentPaperFormat,
-  DocumentTemplateRecord,
   DOCUMENT_FORMAT_DICTIONARY,
+  type DocumentBlock,
+  type DocumentBlockType,
+  type DocumentBlocksConfig,
+  type DocumentTemplateRecord,
 } from '../../types';
 import { DocumentLivePreview } from './document-live-preview';
 
