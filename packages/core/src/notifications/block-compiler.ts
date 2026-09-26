@@ -9,12 +9,24 @@ import { DEFAULT_SCHOOL_PROFILE } from '../system/school-profile.service';
 
 import { getFieldValue } from './trigger-matcher';
 
+export function escapeHtml(str: string): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * Replaces {{variable_name}} with corresponding values (including dot-notation paths)
+ * Escapes HTML characters by default to prevent XSS in email bodies.
  */
 export function compileTemplateVariables(
   text: string,
-  variables: Record<string, any>
+  variables: Record<string, any>,
+  escape: boolean = true
 ): string {
   if (!text) return '';
   return text.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_match, key) => {
@@ -22,7 +34,11 @@ export function compileTemplateVariables(
     if (val === undefined || val === null) {
       return '';
     }
-    return String(val);
+    if (typeof val === 'object') {
+      return '';
+    }
+    const strVal = String(val);
+    return escape ? escapeHtml(strVal) : strVal;
   });
 }
 

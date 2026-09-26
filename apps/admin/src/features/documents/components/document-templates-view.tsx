@@ -225,7 +225,8 @@ export function DocumentTemplatesView() {
         size: 80,
       },
       {
-        accessorKey: "name",
+        id: "name",
+        accessorFn: (row) => resolveI18n(row.name, locale, "Modello"),
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}

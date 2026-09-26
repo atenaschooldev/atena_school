@@ -54,7 +54,8 @@ export class MailService implements OnModuleInit {
   ): Promise<{ success: boolean; id?: string; error?: string }> {
     const creds = await getResendCredentials();
     const apiKey = creds.apiKey || this.resendApiKey;
-    const from = creds.fromEmail || this.defaultFromEmail;
+    const rawFrom = creds.fromEmail || this.defaultFromEmail;
+    const from = rawFrom.includes('<') ? rawFrom : `Atena School <${rawFrom}>`;
     let result: { success: boolean; id?: string; error?: string } = { success: false };
 
     // 1. Resend API Dispatch (Primary if key configured)

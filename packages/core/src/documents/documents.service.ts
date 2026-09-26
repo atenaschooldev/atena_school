@@ -165,6 +165,19 @@ export class DocumentsService {
       teacherData = t;
     }
 
+    // 4. Fetch Membership if student exists
+    let membershipData: any = null;
+    if (targetStudentId) {
+      const { data: m } = await supabase
+        .from('annual_memberships')
+        .select('*')
+        .eq('student_id', targetStudentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      membershipData = m;
+    }
+
     // Extract form data from booking if present
     const formData = bookingData?.form_data || {};
 
@@ -212,6 +225,9 @@ export class DocumentsService {
         birth_place: studentData?.birth_place || formData?.student_birth_place,
         address: studentData?.address || formData?.student_address,
         school_grade: formData?.student_school_and_grade || studentData?.school_and_grade,
+        membership_number: membershipData?.membership_number || studentData?.membership_number || null,
+        membership_status: membershipData?.status,
+        is_member: membershipData?.status === 1,
       },
       parent: isChild
         ? {
@@ -340,8 +356,11 @@ export class DocumentsService {
     });
 
     // 5. Insert Document Record (Database-First with Immutable Snapshot)
+    const isChildBooking = Boolean(mergedData.parent?.full_name);
+
     const recipientName =
       dto.recipient_name ||
+      (isChildBooking ? mergedData.parent?.full_name : mergedData.student?.full_name) ||
       mergedData.student?.full_name ||
       mergedData.parent?.full_name ||
       mergedData.teacher?.full_name ||
@@ -349,12 +368,14 @@ export class DocumentsService {
 
     const recipientEmail =
       dto.recipient_email ||
+      (isChildBooking ? mergedData.parent?.email : mergedData.student?.email) ||
       mergedData.student?.email ||
       mergedData.parent?.email ||
       mergedData.teacher?.email;
 
     const recipientTaxCode =
       dto.recipient_tax_code ||
+      (isChildBooking ? mergedData.parent?.tax_code : mergedData.student?.tax_code) ||
       mergedData.student?.tax_code ||
       mergedData.parent?.tax_code ||
       mergedData.teacher?.tax_code;

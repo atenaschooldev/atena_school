@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react';
 import { DocumentPaperFormat, type DocumentBlocksConfig } from '../../types';
 import { compileDocumentHtml } from '@atena/core';
+import { useTranslation } from '@/i18n/context';
 
 interface DocumentLivePreviewProps {
   blocksConfig: DocumentBlocksConfig;
@@ -23,6 +24,9 @@ export function DocumentLivePreview({
   locale = 'it',
   className = '',
 }: DocumentLivePreviewProps) {
+  const { t } = useTranslation();
+  const tr = (key: string, fallback: string) => t(key) || fallback;
+
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [zoom, setZoom] = useState(100);
   const [compiledHtml, setCompiledHtml] = useState('');
@@ -37,7 +41,7 @@ export function DocumentLivePreview({
         const fullHtml = compileDocumentHtml({
           blocksConfig,
           data: activeData,
-          documentTitle: documentTitle || 'Anteprima Documento',
+          documentTitle: documentTitle || tr('documents.builder.previewTitle', 'Anteprima Documento'),
           documentNumber: documentNumber || 'DOC-ANTEPRIMA',
           locale,
         });
@@ -91,7 +95,7 @@ export function DocumentLivePreview({
     }, 80); // 80ms debounce: lightning fast feel without any DOM thrashing or flashing
 
     return () => clearTimeout(timer);
-  }, [blocksConfig, activeData, documentTitle, documentNumber]);
+  }, [blocksConfig, activeData, documentTitle, documentNumber, locale]);
 
   const handlePrint = () => {
     if (iframeRef.current?.contentWindow) {
@@ -151,7 +155,7 @@ export function DocumentLivePreview({
               size="icon"
               className="h-6 w-6 text-slate-400 hover:text-white"
               onClick={() => setZoom(100)}
-              title="Ripristina 100%"
+              title={tr('documents.builder.resetZoom', 'Ripristina 100%')}
             >
               <RotateCcw className="h-3 w-3" />
             </Button>
@@ -164,7 +168,7 @@ export function DocumentLivePreview({
             className="h-7 text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
           >
             <ExternalLink className="h-3.5 w-3.5 mr-1" />
-            Nuova Finestra
+            {tr('documents.builder.newWindow', 'Nuova Finestra')}
           </Button>
 
           <Button
@@ -173,7 +177,7 @@ export function DocumentLivePreview({
             className="h-7 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md"
           >
             <Printer className="h-3.5 w-3.5 mr-1" />
-            Stampa / PDF
+            {tr('documents.builder.printPdf', 'Stampa / PDF')}
           </Button>
         </div>
       </div>

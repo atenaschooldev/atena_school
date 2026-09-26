@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -64,7 +64,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
     return config.blocks.length > 0 ? config.blocks[0].id : null;
   });
 
-  const [previewSampleData] = useState<Record<string, any>>({
+  const previewSampleData = useMemo<Record<string, any>>(() => ({
     title: resolveI18n(template.name, previewLocale, 'Documento Ufficiale'),
     document_number: 'MOD-2026/00014',
     student: {
@@ -83,9 +83,9 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
       phone: '+39 349 9876543',
     },
     course: {
-      title: 'Inglese B1 Intermedio Ragazzi',
+      title: previewLocale === 'en' ? 'English B1 Intermediate Youth' : 'Inglese B1 Intermedio Ragazzi',
       level: 'B1',
-      schedule_text: 'Martedì e Giovedì 16:30 - 18:00',
+      schedule_text: previewLocale === 'en' ? 'Tuesday & Thursday 16:30 - 18:00' : 'Martedì e Giovedì 16:30 - 18:00',
       start_date: '06/10/2026',
       total_lessons: 32,
       classroom: 'Aula Magna',
@@ -94,17 +94,17 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
       amount_total: 160,
       amount_course: 130,
       registration_fee: 30,
-      payment_method_label: 'Carta di Credito Stripe',
+      payment_method_label: previewLocale === 'en' ? 'Stripe Credit Card' : 'Carta di Credito Stripe',
       is_paid: true,
     },
     delegates: {
       delegate_1_name: 'Luigi Rossi',
-      delegate_1_relation: 'Padre',
+      delegate_1_relation: previewLocale === 'en' ? 'Father' : 'Padre',
       delegate_1_phone: '+39 349 9876543',
       self_exit_authorized: true,
     },
-    issue_date: new Date().toLocaleDateString(locale === 'en' ? 'en-US' : 'it-IT'),
-  });
+    issue_date: new Date().toLocaleDateString(previewLocale === 'en' ? 'en-US' : previewLocale === 'ru' ? 'ru-RU' : 'it-IT'),
+  }), [template.name, previewLocale]);
 
   const blocks = config.blocks || [];
 

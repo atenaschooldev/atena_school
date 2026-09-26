@@ -703,13 +703,20 @@ export interface DocumentVariableInfo {
 // ----------------------------------------------------------------------------
 
 export function resolveI18n(
-  val: Record<string, string> | string | null | undefined,
+  val: Record<string, any> | string | number | null | undefined,
   locale: string = 'it',
   fallback: string = 'it'
 ): string {
-  if (!val) return '';
+  if (val === null || val === undefined) return '';
   if (typeof val === 'string') return val;
-  return val[locale] || val[fallback] || val['it'] || val['en'] || Object.values(val)[0] || '';
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    const direct = val[locale] || val[fallback] || val['it'] || val['en'];
+    if (direct !== undefined && direct !== null) return String(direct);
+    const firstVal = Object.values(val)[0];
+    if (firstVal !== undefined && firstVal !== null) return String(firstVal);
+  }
+  return '';
 }
 
 export interface DocumentCategoryRecord {

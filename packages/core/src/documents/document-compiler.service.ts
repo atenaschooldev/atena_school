@@ -29,7 +29,19 @@ export interface CompileDocumentOptions {
 }
 
 /**
- * Replaces placeholders like {{student.full_name}} with actual data values
+ * Basic HTML escaping for variable interpolation to prevent XSS
+ */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Replaces placeholders like {{student.full_name}} with actual data values safely
  */
 export function interpolateVariables(template: any, data: Record<string, any>): string {
   if (template === null || template === undefined) return '';
@@ -41,7 +53,9 @@ export function interpolateVariables(template: any, data: Record<string, any>): 
       if (val === undefined || val === null) break;
       val = val[key];
     }
-    return val !== undefined && val !== null ? String(val) : '';
+    if (val === undefined || val === null) return '';
+    if (typeof val === 'object') return '';
+    return escapeHtml(String(val));
   });
 }
 

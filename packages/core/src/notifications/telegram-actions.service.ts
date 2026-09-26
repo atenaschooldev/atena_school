@@ -58,7 +58,7 @@ export const TELEGRAM_I18N = {
     updateHeader: '⚡ <b>Aggiornamento:</b>',
     bookingId: '🆔 <b>ID Prenotazione:</b>',
     // Buttons
-    btnSettleFee: '💶 Salda Quota €30',
+    btnSettleFee: '💶 Salda Quota Iscrizione',
     btnSettleCourse: '🎓 Salda Corso',
     btnSettleAll: '✅ Salda Tutto',
     btnCancel: '❌ Annulla Iscrizione',
@@ -116,7 +116,7 @@ export const TELEGRAM_I18N = {
     updateHeader: '⚡ <b>Update:</b>',
     bookingId: '🆔 <b>Booking ID:</b>',
     // Buttons
-    btnSettleFee: '💶 Settle Fee €30',
+    btnSettleFee: '💶 Settle Membership Fee',
     btnSettleCourse: '🎓 Settle Course',
     btnSettleAll: '✅ Settle All',
     btnCancel: '❌ Cancel Booking',

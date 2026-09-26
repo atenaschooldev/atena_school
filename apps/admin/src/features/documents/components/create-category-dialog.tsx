@@ -196,7 +196,14 @@ export function CreateCategoryDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {AVAILABLE_ICONS.map((ico) => (
+                {[
+                  { value: "file-text", label: `File Text (${tr("documents.categories.contractsAndForms", "Contratti / Moduli")})` },
+                  { value: "briefcase", label: `Briefcase (${tr("documents.categories.teachersAndWork", "Docenti / Lavoro")})` },
+                  { value: "receipt", label: `Receipt (${tr("documents.categories.receiptsAndTax", "Ricevute / Fisco")})` },
+                  { value: "shield-check", label: `Shield (${tr("documents.categories.privacyGdpr", "Privacy / GDPR")})` },
+                  { value: "award", label: `Award (${tr("documents.categories.certificatesDiplomas", "Attestati / Certificati")})` },
+                  { value: "landmark", label: `Landmark (${tr("documents.categories.adminForms", "Amministrazione")})` },
+                ].map((ico) => (
                   <SelectItem key={ico.value} value={ico.value} className="text-xs">
                     {ico.label}
                   </SelectItem>

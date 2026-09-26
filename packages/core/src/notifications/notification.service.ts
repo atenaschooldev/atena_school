@@ -17,14 +17,15 @@ import {
   renderAdminBookingNotificationEmail,
   renderContactFormAdminEmail,
 } from './email-templates';
-import { renderEmailFromBlocks, getDefaultBlocksForTemplate, renderTelegramFromBlocks } from './block-compiler';
+import { renderEmailFromBlocks, getDefaultBlocksForTemplate, renderTelegramFromBlocks, escapeHtml } from './block-compiler';
 import type { SupabaseBookingRow, SupabaseCourseRow, CreateReservationParams } from '../types';
 
 import { getFieldValue } from './trigger-matcher';
 
 export function compileTemplate(
   template: string,
-  variables: Record<string, any>
+  variables: Record<string, any>,
+  escape: boolean = false
 ): string {
   if (!template) return '';
   return template.replace(/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g, (_match, key) => {
@@ -32,7 +33,11 @@ export function compileTemplate(
     if (val === undefined || val === null) {
       return '';
     }
-    return String(val);
+    if (typeof val === 'object') {
+      return '';
+    }
+    const strVal = String(val);
+    return escape ? escapeHtml(strVal) : strVal;
   });
 }
 
