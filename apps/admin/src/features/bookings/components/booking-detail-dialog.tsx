@@ -14,6 +14,7 @@ import {
   parsePaymentType,
 } from "@atena/api-types";
 import { usePayments } from "@/features/payments/hooks/use-payments";
+import { GenerateDocumentDialog } from "@/features/documents/components/generate-document-dialog";
 import { useTranslation } from "@/i18n/context";
 import {
   Dialog,
@@ -123,6 +124,7 @@ export function BookingDetailDialog({
   };
   const [deleting, setDeleting] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
+  const [isGenerateDocOpen, setIsGenerateDocOpen] = useState(false);
 
   // New Payment Form State
   const [newPaymentAmount, setNewPaymentAmount] = useState("");
@@ -716,6 +718,16 @@ export function BookingDetailDialog({
                 <span>{t("bookings.printReceipt")}</span>
               </Button>
             )}
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="font-medium text-xs cursor-pointer h-9 gap-1.5 border-border bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary"
+              onClick={() => setIsGenerateDocOpen(true)}
+            >
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              <span>{t("documents.newDocument") || "Emetti Documento"}</span>
+            </Button>
           </div>
 
           <div className="flex items-center gap-2 justify-end">
@@ -736,6 +748,16 @@ export function BookingDetailDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Generate Official Document Dialog */}
+      {isGenerateDocOpen && (
+        <GenerateDocumentDialog
+          open={isGenerateDocOpen}
+          onOpenChange={setIsGenerateDocOpen}
+          defaultBookingId={booking.id}
+          defaultStudentId={booking.student_id || undefined}
+        />
+      )}
 
       {/* Manual Payment Modal */}
       <Dialog open={addPaymentOpen} onOpenChange={setAddPaymentOpen}>
