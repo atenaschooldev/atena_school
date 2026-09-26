@@ -69,25 +69,42 @@ export function CreateTemplateDialog({
         paper_format: paperFormat,
         blocks: [
           {
-            id: 'header-1',
-            type: 'header',
-            visible: true,
+            id: 'b_header',
+            type: 'doc_header',
+            title: 'Intestazione Documento',
+            is_enabled: true,
             order: 1,
-            data: {
+            props: {
+              title: name.trim(),
               show_logo: true,
-              school_name: 'Atena School of Languages',
-              school_subtitle: 'Associazione Culturale & Didattica Linguistica',
-              tax_details: 'P.IVA / C.F. 01234567890 • Codice Destinatario: M5UXCR1',
-              show_border_bottom: true,
             },
           },
           {
-            id: 'title-1',
-            type: 'paragraph',
-            visible: true,
+            id: 'b_parties',
+            type: 'parties_block',
+            title: 'Dati Anagrafici',
+            is_enabled: true,
             order: 2,
-            data: {
-              content_html: `<h1 style="font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0;">${name.trim()}</h1>`,
+            props: {},
+          },
+          {
+            id: 'b_custom',
+            type: 'custom_text',
+            title: 'Testo Documento',
+            is_enabled: true,
+            order: 3,
+            props: {
+              content_html: `<p>Il presente documento certifica l'iscrizione / accordo per l'allievo {{student.full_name}}.</p>`,
+            },
+          },
+          {
+            id: 'b_signatures',
+            type: 'signatures',
+            title: 'Sezione Firme',
+            is_enabled: true,
+            order: 4,
+            props: {
+              signature_parties: ['amministrazione', 'allievo'],
             },
           },
         ],
