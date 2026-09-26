@@ -153,15 +153,15 @@ export function DocumentsView() {
 
   const getCategoryIcon = (categoryType: DocumentCategoryType) => {
     switch (categoryType) {
-      case DocumentCategoryType.STUDENT_ENROLLMENT:
+      case DocumentCategoryType.STUDENT_CONTRACTS:
         return FileText;
-      case DocumentCategoryType.TEACHER_CONTRACT:
+      case DocumentCategoryType.TEACHER_CONTRACTS:
         return Briefcase;
-      case DocumentCategoryType.RECEIPT_INVOICE:
+      case DocumentCategoryType.FINANCIAL:
         return Receipt;
-      case DocumentCategoryType.LEGAL_REGULATION:
+      case DocumentCategoryType.LEGAL_AND_PRIVACY:
         return ShieldCheck;
-      case DocumentCategoryType.CERTIFICATE:
+      case DocumentCategoryType.CERTIFICATES:
         return Award;
       default:
         return FileText;
@@ -307,7 +307,7 @@ export function DocumentsView() {
           else if (status === DocumentStatus.GENERATED) badgeStatus = "confermato";
           else if (status === DocumentStatus.SENT) badgeStatus = "attivo";
           else if (status === DocumentStatus.SIGNED) badgeStatus = "confermato";
-          else if (status === DocumentStatus.EXPIRED) badgeStatus = "scaduto";
+          else if (status === DocumentStatus.ARCHIVED) badgeStatus = "scaduto";
           else if (status === DocumentStatus.CANCELLED) badgeStatus = "annullato";
 
           return <StatusBadge status={badgeStatus} />;

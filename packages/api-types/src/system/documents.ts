@@ -304,11 +304,13 @@ export const DOCUMENT_TEMPLATE_DICTIONARY: Record<DocumentTemplateType, Dictiona
 };
 
 export function parseDocumentTemplateType(val: any): DocumentTemplateType {
+  if (val === null || val === undefined) return undefined as any;
   if (typeof val === 'number') {
     if (val >= 1 && val <= 7) return val as DocumentTemplateType;
     return DocumentTemplateType.MODULO_ISCRIZIONE_STANDARD;
   }
   const s = String(val || '').toLowerCase().trim();
+  if (!s) return undefined as any;
   if (s === '1' || s.includes('iscrizione') || s.includes('modulo')) return DocumentTemplateType.MODULO_ISCRIZIONE_STANDARD;
   if (s === '2' || s.includes('docente')) return DocumentTemplateType.CONTRATTO_DOCENTE_ORARIO;
   if (s === '3' || s.includes('ricevuta')) return DocumentTemplateType.RICEVUTA_PAGAMENTO_STANDARD;
@@ -791,7 +793,7 @@ export interface GenerateDocumentDto {
 }
 
 export interface CreateDocumentTemplateDto {
-  template_type: DocumentTemplateType;
+  template_type?: DocumentTemplateType;
   category_type: DocumentCategoryType;
   document_type: DocumentType;
   recipient_type: DocumentRecipientType;

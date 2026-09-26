@@ -486,7 +486,7 @@ export class DocumentsService {
     const { data, error } = await supabase
       .from('document_templates')
       .insert({
-        template_type: dto.template_type || 1,
+        template_type: dto.template_type || null,
         category_type: dto.category_type || 1,
         document_type: dto.document_type || 1,
         recipient_type: dto.recipient_type || 1,
@@ -501,6 +501,7 @@ export class DocumentsService {
         header_html: dto.header_html || null,
         footer_html: dto.footer_html || null,
         css_styles: dto.css_styles || null,
+        is_system: false,
         is_active: dto.is_active !== undefined ? dto.is_active : true,
       })
       .select('*')
@@ -512,7 +513,7 @@ export class DocumentsService {
 
     return {
       ...data,
-      template_type: parseDocumentTemplateType(data.template_type),
+      template_type: data.template_type ? parseDocumentTemplateType(data.template_type) : null,
       category_type: parseDocumentCategoryType(data.category_type),
       document_type: parseDocumentType(data.document_type),
       paper_format: parseDocumentPaperFormat(data.paper_format),
@@ -533,7 +534,7 @@ export class DocumentsService {
     const { data, error } = await supabase
       .from('document_templates')
       .insert({
-        template_type: original.template_type,
+        template_type: null,
         category_type: original.category_type,
         document_type: original.document_type,
         recipient_type: original.recipient_type,
@@ -545,6 +546,7 @@ export class DocumentsService {
         header_html: original.header_html,
         footer_html: original.footer_html,
         css_styles: original.css_styles,
+        is_system: false,
         is_active: true,
       })
       .select('*')
@@ -556,7 +558,7 @@ export class DocumentsService {
 
     return {
       ...data,
-      template_type: parseDocumentTemplateType(data.template_type),
+      template_type: data.template_type ? parseDocumentTemplateType(data.template_type) : null,
       category_type: parseDocumentCategoryType(data.category_type),
       document_type: parseDocumentType(data.document_type),
       paper_format: parseDocumentPaperFormat(data.paper_format),

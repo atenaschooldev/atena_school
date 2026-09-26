@@ -189,5 +189,13 @@ describe('Documents Module Unit Tests', () => {
       expect(html).toContain('Direzione Didattica Atena');
       expect(html).toContain('Reggio Calabria');
     });
+
+    it('should safely interpolate non-string and missing variables without throwing', () => {
+      expect(interpolateVariables(null as any, {})).toBe('');
+      expect(interpolateVariables(undefined as any, {})).toBe('');
+      expect(interpolateVariables(12345 as any, {})).toBe('12345');
+      expect(interpolateVariables('Hello {{student.missing_field}}!', {})).toBe('Hello !');
+      expect(interpolateVariables('Count: {{stats.count}}', { stats: { count: 10 } })).toBe('Count: 10');
+    });
   });
 });

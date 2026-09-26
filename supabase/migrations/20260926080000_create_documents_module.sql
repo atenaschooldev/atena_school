@@ -43,7 +43,7 @@ ON CONFLICT (category_type) DO UPDATE SET
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.document_templates (
     id BIGSERIAL PRIMARY KEY,
-    template_type SMALLINT UNIQUE NOT NULL,    -- 1=MODULO_ISCRIZIONE, 2=CONTRATTO_DOCENTE, 3=RICEVUTA, 4=ALLEGATO_DELEGA, 5=PRIVACY_GDPR, 6=ATTESTATO, 7=CERTIFICATO
+    template_type SMALLINT,                    -- 1=MODULO_ISCRIZIONE, 2=CONTRATTO_DOCENTE, 3=RICEVUTA, 4=ALLEGATO_DELEGA, 5=PRIVACY_GDPR, 6=ATTESTATO, 7=CERTIFICATO
     category_type SMALLINT NOT NULL REFERENCES public.document_categories(category_type) ON UPDATE CASCADE,
     document_type SMALLINT NOT NULL,          -- Enum DocumentType (1..8)
     recipient_type SMALLINT NOT NULL,         -- Enum DocumentRecipientType (1..5)

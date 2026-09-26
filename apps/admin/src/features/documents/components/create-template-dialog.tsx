@@ -62,7 +62,6 @@ export function CreateTemplateDialog({
     if (!name.trim()) return;
 
     await onSubmit({
-      template_type: DocumentTemplateType.CUSTOM_DOCUMENT_TEMPLATE,
       category_type: categoryType,
       document_type: documentType,
       recipient_type: recipientType,
