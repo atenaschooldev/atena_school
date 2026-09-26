@@ -8,4 +8,5 @@ export * from './system/integration-secrets.service';
 export * from './system/sentry.service';
 export * from './system/form-resolver.service';
 export * from './system/encryption';
+export * from './utils/background';
 

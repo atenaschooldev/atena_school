@@ -7,6 +7,7 @@ import { AllExceptionsFilter } from './core/filters/all-exceptions.filter';
 import fastifyHelmet from '@fastify/helmet';
 
 import { DictionaryService } from './features/dictionary/dictionary.service';
+import { BigIntInterceptor } from './core/interceptors/bigint.interceptor';
 
 // Enable automatic JSON serialization for BigInt (Prisma BIGSERIAL / int8 IDs)
 (BigInt.prototype as any).toJSON = function () {
@@ -51,6 +52,9 @@ async function bootstrap() {
 
   // Глобальный фильтр ошибок (совместимость с FastAPI для Flutter-клиента)
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Глобальный перехватчик для автоматической сериализации BigInt в Number
+  app.useGlobalInterceptors(new BigIntInterceptor());
 
   // Глобальная валидация DTO через class-validator
   app.useGlobalPipes(

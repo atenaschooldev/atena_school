@@ -24,6 +24,7 @@ import { processStudentAndBookingLinks } from './student.service';
 import { extractCleanTime, computeEndTime, computeTotalLessonsCount, getPublicCourseById } from './course.service';
 import { sendBookingNotificationEmails, EmailServiceConfig } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
+import { runBackgroundTask } from '../utils/background';
 import { getSchoolProfile } from '../system/school-profile.service';
 import type { CreateReservationParams, SupabaseCourseRow, SupabaseBookingRow } from '../types';
 
@@ -448,14 +449,16 @@ export async function createReservationWorkflow(
 
   const primaryBooking = createdBookings[0];
 
-  // Send transactional email & telegram notifications
-  sendBookingNotificationEmails({ supabase, booking: primaryBooking, course, dto, config: emailConfig }).catch((err) => {
-    console.warn('Async sendBookingNotificationEmails error:', err);
-  });
+  // Send transactional email & telegram notifications in non-blocking background task
+  runBackgroundTask(
+    () => sendBookingNotificationEmails({ supabase, booking: primaryBooking, course, dto, config: emailConfig }),
+    'BookingConfirmationEmail'
+  );
 
-  sendBookingNotificationTelegram({ supabase, booking: primaryBooking, course, dto }).catch((err) => {
-    console.warn('Async sendBookingNotificationTelegram error:', err);
-  });
+  runBackgroundTask(
+    () => sendBookingNotificationTelegram({ supabase, booking: primaryBooking, course, dto }),
+    'BookingTelegramNotification'
+  );
 
   return {
     success: true,

@@ -21,6 +21,7 @@ import { checkFeeStatus } from './fee.service';
 import { generateNextMembershipNumber } from '../memberships/number-generator';
 import { sendBookingNotificationEmails } from '../notifications/notification.service';
 import { sendBookingNotificationTelegram } from '../notifications/telegram-actions.service';
+import { runBackgroundTask } from '../utils/background';
 import { computeTotalLessonsCount, computeEndTime, extractCleanTime, getPublicCourseById } from './course.service';
 import { getStripeCredentials } from '../system/integration-secrets.service';
 
@@ -469,42 +470,49 @@ export async function handleStripeWebhook(
           }
         }
 
-        // Send confirmation email
+        // Send confirmation email in non-blocking background task
         const courseRes = updatedBooking.course_id ? await getPublicCourseById(supabase, updatedBooking.course_id) : null;
         const course = courseRes?.success ? courseRes.item : null;
-        sendBookingNotificationEmails({
-          supabase,
-          booking: updatedBooking,
-          course: course || null,
-          dto: {
-            itemId: updatedBooking.course_id,
-            firstName: updatedBooking.purchaser_name?.split(' ')[0] || '',
-            lastName: updatedBooking.purchaser_name?.split(' ').slice(1).join(' ') || '',
-            email: updatedBooking.purchaser_email || '',
-            phone: updatedBooking.purchaser_phone || undefined,
-            studentFirstName: updatedBooking.student_name?.split(' ')[0] || '',
-            studentLastName: updatedBooking.student_name?.split(' ').slice(1).join(' ') || '',
-            studentEmail: updatedBooking.student_email || undefined,
-            studentTaxCode: updatedBooking.student_tax_code || undefined,
-          },
-        }).catch((err) => console.warn('Async webhook confirmation email warning:', err));
+        
+        runBackgroundTask(
+          () => sendBookingNotificationEmails({
+            supabase,
+            booking: updatedBooking,
+            course: course || null,
+            dto: {
+              itemId: updatedBooking.course_id,
+              firstName: updatedBooking.purchaser_name?.split(' ')[0] || '',
+              lastName: updatedBooking.purchaser_name?.split(' ').slice(1).join(' ') || '',
+              email: updatedBooking.purchaser_email || '',
+              phone: updatedBooking.purchaser_phone || undefined,
+              studentFirstName: updatedBooking.student_name?.split(' ')[0] || '',
+              studentLastName: updatedBooking.student_name?.split(' ').slice(1).join(' ') || '',
+              studentEmail: updatedBooking.student_email || undefined,
+              studentTaxCode: updatedBooking.student_tax_code || undefined,
+            },
+          }),
+          'StripeWebhookBookingEmail'
+        );
 
-        sendBookingNotificationTelegram({
-          supabase,
-          booking: updatedBooking,
-          course: course || null,
-          dto: {
-            itemId: updatedBooking.course_id,
-            firstName: updatedBooking.purchaser_name?.split(' ')[0] || '',
-            lastName: updatedBooking.purchaser_name?.split(' ').slice(1).join(' ') || '',
-            email: updatedBooking.purchaser_email || '',
-            phone: updatedBooking.purchaser_phone || undefined,
-            studentFirstName: updatedBooking.student_name?.split(' ')[0] || '',
-            studentLastName: updatedBooking.student_name?.split(' ').slice(1).join(' ') || '',
-            studentEmail: updatedBooking.student_email || undefined,
-            studentTaxCode: updatedBooking.student_tax_code || undefined,
-          },
-        }).catch((err) => console.warn('Async webhook telegram notification warning:', err));
+        runBackgroundTask(
+          () => sendBookingNotificationTelegram({
+            supabase,
+            booking: updatedBooking,
+            course: course || null,
+            dto: {
+              itemId: updatedBooking.course_id,
+              firstName: updatedBooking.purchaser_name?.split(' ')[0] || '',
+              lastName: updatedBooking.purchaser_name?.split(' ').slice(1).join(' ') || '',
+              email: updatedBooking.purchaser_email || '',
+              phone: updatedBooking.purchaser_phone || undefined,
+              studentFirstName: updatedBooking.student_name?.split(' ')[0] || '',
+              studentLastName: updatedBooking.student_name?.split(' ').slice(1).join(' ') || '',
+              studentEmail: updatedBooking.student_email || undefined,
+              studentTaxCode: updatedBooking.student_tax_code || undefined,
+            },
+          }),
+          'StripeWebhookTelegramNotification'
+        );
       }
     }
   }
