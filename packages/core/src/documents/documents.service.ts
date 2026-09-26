@@ -29,6 +29,7 @@ import {
   parseDocumentStatus,
   parseDocumentTemplateType,
   parseDocumentType,
+  resolveI18n,
 } from '@atena/api-types';
 import { DEFAULT_SCHOOL_PROFILE, getSchoolProfile } from '../system/school-profile.service';
 import { compileDocumentHtml } from './document-compiler.service';
@@ -321,7 +322,9 @@ export class DocumentsService {
     const nextSeq = (count || 0) + 1;
     const documentNumber = formatDocumentNumber(docType, nextSeq);
 
-    const title = dto.title || template?.name || 'Documento Ufficiale';
+    const locale = dto.locale || (template as any)?.locale || 'it';
+    const rawTemplateName = template?.name ? resolveI18n(template.name, locale, 'Documento Ufficiale') : 'Documento Ufficiale';
+    const title = dto.title || rawTemplateName;
 
     // 4. Compile HTML
     const renderedHtml = compileDocumentHtml({
@@ -330,6 +333,7 @@ export class DocumentsService {
       schoolProfile,
       documentNumber,
       documentTitle: title,
+      locale,
     });
 
     // 5. Insert Document Record (Database-First with Immutable Snapshot)
@@ -367,6 +371,7 @@ export class DocumentsService {
         student_id: dto.student_id,
         teacher_id: dto.teacher_id,
         title,
+        locale,
         recipient_name: recipientName,
         recipient_email: recipientEmail,
         recipient_tax_code: recipientTaxCode,
@@ -390,6 +395,7 @@ export class DocumentsService {
       metadata: {
         document_number: documentNumber,
         template_name: template?.name,
+        locale,
         source: dto.source || DocumentGenerationSource.CRM_MANUAL,
       },
     });
@@ -425,14 +431,24 @@ export class DocumentsService {
   // Category CRUD
   // --------------------------------------------------------------------------
   static async createCategory(supabase: SupabaseClient, dto: any): Promise<DocumentCategoryRecord> {
+    const nameJson = typeof dto.name === 'object' && dto.name !== null
+      ? dto.name
+      : typeof dto.name_it === 'string'
+      ? { it: dto.name_it, en: dto.name_en || dto.name_it, ru: dto.name_ru || dto.name_it }
+      : { it: String(dto.name || '') };
+
+    const descJson = typeof dto.description === 'object' && dto.description !== null
+      ? dto.description
+      : typeof dto.description === 'string'
+      ? { it: dto.description }
+      : null;
+
     const { data, error } = await supabase
       .from('document_categories')
       .insert({
         category_type: dto.category_type || 1,
-        name_it: dto.name_it,
-        name_en: dto.name_en || dto.name_it,
-        name_ru: dto.name_ru || dto.name_it,
-        description: dto.description || null,
+        name: nameJson,
+        description: descJson,
         icon: dto.icon || 'file-text',
         order_index: dto.order_index || 99,
         is_active: dto.is_active !== undefined ? dto.is_active : true,
@@ -451,12 +467,18 @@ export class DocumentsService {
   }
 
   static async updateCategory(supabase: SupabaseClient, id: number, dto: any): Promise<DocumentCategoryRecord> {
+    const payload: Record<string, any> = { ...dto, updated_at: new Date().toISOString() };
+
+    if (dto.name !== undefined) {
+      payload.name = typeof dto.name === 'object' && dto.name !== null ? dto.name : { it: String(dto.name) };
+    }
+    if (dto.description !== undefined && dto.description !== null) {
+      payload.description = typeof dto.description === 'object' ? dto.description : { it: String(dto.description) };
+    }
+
     const { data, error } = await supabase
       .from('document_categories')
-      .update({
-        ...dto,
-        updated_at: new Date().toISOString(),
-      })
+      .update(payload)
       .eq('id', id)
       .select('*')
       .single();
@@ -483,6 +505,16 @@ export class DocumentsService {
   // Template CRUD
   // --------------------------------------------------------------------------
   static async createTemplate(supabase: SupabaseClient, dto: any): Promise<DocumentTemplateRecord> {
+    const nameJson = typeof dto.name === 'object' && dto.name !== null
+      ? dto.name
+      : { it: String(dto.name || '') };
+
+    const descJson = typeof dto.description === 'object' && dto.description !== null
+      ? dto.description
+      : typeof dto.description === 'string'
+      ? { it: dto.description }
+      : null;
+
     const { data, error } = await supabase
       .from('document_templates')
       .insert({
@@ -491,8 +523,9 @@ export class DocumentsService {
         document_type: dto.document_type || 1,
         recipient_type: dto.recipient_type || 1,
         paper_format: dto.paper_format || DocumentPaperFormat.A4_PORTRAIT,
-        name: dto.name,
-        description: dto.description || null,
+        name: nameJson,
+        description: descJson,
+        locale: dto.locale || 'it',
         blocks_config: dto.blocks_config || {
           paper_format: dto.paper_format || DocumentPaperFormat.A4_PORTRAIT,
           blocks: [],
@@ -531,6 +564,18 @@ export class DocumentsService {
       throw new Error(`Original template ${id} not found`);
     }
 
+    let duplicatedName: Record<string, string> | string;
+    if (typeof original.name === 'object' && original.name !== null) {
+      const obj = original.name as Record<string, string>;
+      const newObj: Record<string, string> = {};
+      for (const k of Object.keys(obj)) {
+        newObj[k] = `${obj[k]} (Copia)`;
+      }
+      duplicatedName = newObj;
+    } else {
+      duplicatedName = `${original.name || 'Template'} (Copia)`;
+    }
+
     const { data, error } = await supabase
       .from('document_templates')
       .insert({
@@ -539,8 +584,9 @@ export class DocumentsService {
         document_type: original.document_type,
         recipient_type: original.recipient_type,
         paper_format: original.paper_format,
-        name: `${original.name} (Copia)`,
+        name: duplicatedName,
         description: original.description,
+        locale: original.locale || 'it',
         blocks_config: original.blocks_config,
         available_variables: original.available_variables,
         header_html: original.header_html,

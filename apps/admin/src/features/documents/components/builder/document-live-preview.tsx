@@ -10,6 +10,7 @@ interface DocumentLivePreviewProps {
   formData?: Record<string, any>;
   documentTitle?: string;
   documentNumber?: string;
+  locale?: string;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function DocumentLivePreview({
   formData,
   documentTitle,
   documentNumber,
+  locale = 'it',
   className = '',
 }: DocumentLivePreviewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -37,6 +39,7 @@ export function DocumentLivePreview({
           data: activeData,
           documentTitle: documentTitle || 'Anteprima Documento',
           documentNumber: documentNumber || 'DOC-ANTEPRIMA',
+          locale,
         });
         setCompiledHtml(fullHtml);
 

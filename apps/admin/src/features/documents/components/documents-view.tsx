@@ -614,7 +614,10 @@ export function DocumentsView() {
                     blocks: [],
                   }
                 }
-                formData={previewingDoc.template_data?.form_data || {}}
+                data={previewingDoc.template_data || {}}
+                documentTitle={previewingDoc.title}
+                documentNumber={previewingDoc.document_number}
+                locale={previewingDoc.locale || locale || "it"}
               />
             </div>
           </DialogContent>

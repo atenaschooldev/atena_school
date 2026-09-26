@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import {
   DocumentCategoryType,
+  resolveI18n,
   type DocumentTemplateType,
 } from "../types";
 import { useDocumentTemplates } from "../hooks/use-document-templates";
@@ -185,6 +186,9 @@ export function GenerateDocumentDialog({
   const handleGenerate = async () => {
     if (!selectedTemplate) return;
 
+    const docLocale = selectedTemplate.locale || locale || "it";
+    const defaultTitle = resolveI18n(selectedTemplate.name, docLocale, "Documento Ufficiale");
+
     try {
       await generateDocument({
         template_id: selectedTemplate.id,
@@ -193,7 +197,8 @@ export function GenerateDocumentDialog({
         category_type: selectedTemplate.category_type,
         booking_id: bookingIdInput || undefined,
         student_id: studentIdInput || undefined,
-        title: formData.title || selectedTemplate.name,
+        title: formData.title || defaultTitle,
+        locale: docLocale,
         recipient_name: isTeacherDoc
           ? formData.teacher?.full_name
           : formData.student?.full_name || formData.parent?.full_name,
@@ -266,7 +271,7 @@ export function GenerateDocumentDialog({
                 <SelectContent>
                   {templates.map((t) => (
                     <SelectItem key={t.id} value={String(t.id)} className="text-xs">
-                      {t.name}
+                      {resolveI18n(t.name, locale, "Modello")}
                     </SelectItem>
                   ))}
                 </SelectContent>

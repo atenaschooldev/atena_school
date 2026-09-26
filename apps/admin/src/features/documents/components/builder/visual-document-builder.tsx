@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import {
   DocumentPaperFormat,
+  resolveI18n,
   type DocumentBlock,
   type DocumentBlockType,
   type DocumentBlocksConfig,
@@ -47,6 +48,8 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
   const { t, locale } = useTranslation();
   const tr = (key: string, fallback: string) => t(key) || fallback;
 
+  const [previewLocale, setPreviewLocale] = useState<string>(template.locale || locale || 'it');
+
   const [config, setConfig] = useState<DocumentBlocksConfig>(() => {
     return (
       template.blocks_config || {
@@ -62,7 +65,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
   });
 
   const [previewSampleData] = useState<Record<string, any>>({
-    title: template.name,
+    title: resolveI18n(template.name, previewLocale, 'Documento Ufficiale'),
     document_number: 'MOD-2026/00014',
     student: {
       full_name: 'Mario Rossi',
@@ -170,7 +173,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
           </div>
           <div>
             <h2 className="text-base font-bold text-foreground leading-tight flex items-center gap-2">
-              {template.name}
+              {resolveI18n(template.name, previewLocale, "Modello")}
               {template.is_system && (
                 <Badge variant="outline" className="text-[10px] text-blue-600 bg-blue-50 border-blue-200">
                   {tr("documents.templates.systemBadge", "Sistema")}
@@ -178,12 +181,27 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
               )}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {template.description || tr("documents.templates.subtitle", "Configurazione blocchi e layout di stampa")}
+              {resolveI18n(template.description, previewLocale, tr("documents.templates.subtitle", "Configurazione blocchi e layout di stampa"))}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 mr-1">
+            <span className="text-xs text-muted-foreground font-medium">
+              {tr("documents.builder.previewLang", "Lingua:")}
+            </span>
+            <select
+              value={previewLocale}
+              onChange={(e) => setPreviewLocale(e.target.value)}
+              className="h-8 text-xs rounded-md border border-input bg-background px-2 font-medium cursor-pointer"
+            >
+              <option value="it">🇮🇹 IT</option>
+              <option value="en">🇬🇧 EN</option>
+              <option value="ru">🇷🇺 RU</option>
+            </select>
+          </div>
+
           <div className="flex items-center gap-2 mr-2">
             <span className="text-xs text-muted-foreground font-medium">
               {tr("documents.builder.formatLabel", "Formato:")}
@@ -208,7 +226,7 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
           <Button
             onClick={() => onSave(config)}
             disabled={isSaving}
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-sm font-semibold h-9"
+            className="bg-blue-600 hover:bg-blue-500 text-white shadow-sm font-semibold h-9 cursor-pointer"
           >
             <Save className="h-4 w-4 mr-2" />
             {isSaving
@@ -656,8 +674,9 @@ export function VisualDocumentBuilder({ template, onSave, isSaving }: VisualDocu
           <DocumentLivePreview
             blocksConfig={config}
             data={previewSampleData}
-            documentTitle={template.name}
+            documentTitle={resolveI18n(template.name, previewLocale, 'Documento')}
             documentNumber="DOC-ANTEPRIMA-A4"
+            locale={previewLocale}
           />
         </div>
       </div>

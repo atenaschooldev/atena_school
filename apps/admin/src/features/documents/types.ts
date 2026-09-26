@@ -23,6 +23,7 @@ import {
   DocumentLogAction,
   DOCUMENT_LOG_ACTION_DICTIONARY,
   parseDocumentLogAction,
+  resolveI18n,
   type DocumentBlockType,
   type DocumentBlock,
   type DocumentBlocksConfig,
@@ -63,6 +64,7 @@ export {
   DocumentLogAction,
   DOCUMENT_LOG_ACTION_DICTIONARY,
   parseDocumentLogAction,
+  resolveI18n,
 };
 
 export type {

@@ -32,6 +32,7 @@ import { useDocumentCategories } from "../hooks/use-document-categories";
 import { useDocumentTemplates } from "../hooks/use-document-templates";
 import {
   DOCUMENT_CATEGORY_DICTIONARY,
+  resolveI18n,
   type DocumentCategoryRecord,
   type CreateDocumentCategoryDto,
   type UpdateDocumentCategoryDto,
@@ -187,7 +188,8 @@ export function DocumentCategoriesView() {
         size: 80,
       },
       {
-        accessorKey: "name_it",
+        id: "name",
+        accessorFn: (row) => resolveI18n(row.name, locale, ""),
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
@@ -197,14 +199,15 @@ export function DocumentCategoriesView() {
         cell: ({ row }) => {
           const cat = row.original;
           const dict = DOCUMENT_CATEGORY_DICTIONARY[cat.category_type];
-          const displayName = locale === "en" ? (cat.name_en || dict?.label_en || cat.name_it) : cat.name_it;
+          const displayName = resolveI18n(cat.name, locale, dict ? (locale === "en" ? dict.label_en : dict.label_it) : "Categoria");
+          const displayDesc = resolveI18n(cat.description, locale, (locale === "en" ? "Category classification" : "Classificazione documentale"));
           const IconComp = ICON_COMPONENTS[cat.icon] || FolderTree;
 
           return (
             <div className="flex items-center gap-3">
               <CellAvatar
                 title={displayName}
-                subtitle={cat.description || (locale === "en" ? "Category classification" : "Classificazione documentale")}
+                subtitle={displayDesc}
                 icon={IconComp}
                 badgeColor="bg-amber-500/10 text-amber-600 dark:text-amber-400"
               />
@@ -364,10 +367,11 @@ export function DocumentCategoriesView() {
       if (!filterValue) return true;
       const q = String(filterValue).toLowerCase().trim();
       const cat = row.original;
+      const nameStr = resolveI18n(cat.name, locale, "").toLowerCase();
+      const descStr = resolveI18n(cat.description, locale, "").toLowerCase();
       return (
-        cat.name_it.toLowerCase().includes(q) ||
-        (cat.name_en && cat.name_en.toLowerCase().includes(q)) ||
-        (cat.description && cat.description.toLowerCase().includes(q)) ||
+        nameStr.includes(q) ||
+        descStr.includes(q) ||
         String(cat.category_type).includes(q) ||
         String(cat.id).includes(q)
       );

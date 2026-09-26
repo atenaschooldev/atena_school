@@ -19,6 +19,7 @@ import {
   DOCUMENT_FORMAT_DICTIONARY,
   DocumentCategoryType,
   DocumentPaperFormat,
+  resolveI18n,
   type DocumentTemplateRecord,
   type CreateDocumentTemplateDto,
 } from "../types";
@@ -234,11 +235,13 @@ export function DocumentTemplatesView() {
         cell: ({ row }) => {
           const Icon = getCategoryIcon(row.original.category_type);
           const badgeColor = getCategoryBadgeColor(row.original.category_type);
+          const displayName = resolveI18n(row.original.name, locale, "Modello");
+          const displayDesc = resolveI18n(row.original.description, locale, (locale === "en" ? "Official template" : "Modello ufficiale"));
           return (
             <div className="flex items-center gap-3">
               <CellAvatar
-                title={row.original.name}
-                subtitle={row.original.description || (locale === "en" ? "Official template" : "Modello ufficiale")}
+                title={displayName}
+                subtitle={displayDesc}
                 icon={Icon}
                 badgeColor={badgeColor}
               />
@@ -439,10 +442,12 @@ export function DocumentTemplatesView() {
       if (!filterValue) return true;
       const q = String(filterValue).toLowerCase().trim();
       const tpl = row.original;
+      const nameStr = resolveI18n(tpl.name, locale, "").toLowerCase();
+      const descStr = resolveI18n(tpl.description, locale, "").toLowerCase();
       return (
-        tpl.name.toLowerCase().includes(q) ||
-        (tpl.description && tpl.description.toLowerCase().includes(q)) ||
-        tpl.template_type.toLowerCase().includes(q) ||
+        nameStr.includes(q) ||
+        descStr.includes(q) ||
+        (tpl.template_type ? String(tpl.template_type).toLowerCase().includes(q) : false) ||
         String(tpl.id).includes(q)
       );
     },

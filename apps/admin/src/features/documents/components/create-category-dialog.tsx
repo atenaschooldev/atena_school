@@ -61,20 +61,22 @@ export function CreateCategoryDialog({
   const [categoryType, setCategoryType] = useState<DocumentCategoryType>(
     category?.category_type || DocumentCategoryType.STUDENT_CONTRACTS
   );
-  const [nameIt, setNameIt] = useState(category?.name_it || "");
-  const [nameEn, setNameEn] = useState(category?.name_en || "");
-  const [nameRu, setNameRu] = useState(category?.name_ru || "");
-  const [description, setDescription] = useState(category?.description || "");
+  const [nameIt, setNameIt] = useState("");
+  const [nameEn, setNameEn] = useState("");
+  const [nameRu, setNameRu] = useState("");
+  const [description, setDescription] = useState("");
   const [icon, setIcon] = useState(category?.icon || "file-text");
   const [isActive, setIsActive] = useState(category?.is_active ?? true);
 
   useEffect(() => {
     if (category) {
       setCategoryType(category.category_type);
-      setNameIt(category.name_it);
-      setNameEn(category.name_en);
-      setNameRu(category.name_ru || "");
-      setDescription(category.description || "");
+      const nameObj = typeof category.name === 'object' && category.name !== null ? category.name : { it: String(category.name || '') };
+      setNameIt(nameObj.it || "");
+      setNameEn(nameObj.en || "");
+      setNameRu(nameObj.ru || "");
+      const descObj = typeof category.description === 'object' && category.description !== null ? (category.description.it || "") : String(category.description || "");
+      setDescription(descObj);
       setIcon(category.icon || "file-text");
       setIsActive(category.is_active);
     } else {
@@ -92,22 +94,26 @@ export function CreateCategoryDialog({
     e.preventDefault();
     if (!nameIt.trim()) return;
 
+    const namePayload: Record<string, string> = {
+      it: nameIt.trim(),
+    };
+    if (nameEn.trim()) namePayload.en = nameEn.trim();
+    if (nameRu.trim()) namePayload.ru = nameRu.trim();
+
+    const descPayload = description.trim() ? { it: description.trim() } : undefined;
+
     if (isEditing) {
       await onSubmit({
-        name_it: nameIt.trim(),
-        name_en: nameEn.trim() || nameIt.trim(),
-        name_ru: nameRu.trim() || nameIt.trim(),
-        description: description.trim() || undefined,
+        name: namePayload,
+        description: descPayload,
         icon,
         is_active: isActive,
       });
     } else {
       await onSubmit({
         category_type: categoryType,
-        name_it: nameIt.trim(),
-        name_en: nameEn.trim() || nameIt.trim(),
-        name_ru: nameRu.trim() || nameIt.trim(),
-        description: description.trim() || undefined,
+        name: namePayload,
+        description: descPayload,
         icon,
         is_active: isActive,
       });

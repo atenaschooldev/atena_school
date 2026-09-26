@@ -702,13 +702,24 @@ export interface DocumentVariableInfo {
 // 10. Database Entities & DTOs
 // ----------------------------------------------------------------------------
 
+export function resolveI18n(
+  val: Record<string, string> | string | null | undefined,
+  locale: string = 'it',
+  fallback: string = 'it'
+): string {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  return val[locale] || val[fallback] || val['it'] || val['en'] || Object.values(val)[0] || '';
+}
+
 export interface DocumentCategoryRecord {
   id: number;
   category_type: DocumentCategoryType;
-  name_it: string;
-  name_en: string;
-  name_ru: string;
-  description?: string | null;
+  name: Record<string, string> | string;
+  name_it?: string;
+  name_en?: string;
+  name_ru?: string;
+  description?: Record<string, string> | string | null;
   icon: string;
   order_index: number;
   is_active: boolean;
@@ -719,13 +730,14 @@ export interface DocumentCategoryRecord {
 
 export interface DocumentTemplateRecord {
   id: number;
-  template_type: DocumentTemplateType;
+  template_type?: DocumentTemplateType | null;
   category_type: DocumentCategoryType;
   document_type: DocumentType;
   recipient_type: DocumentRecipientType;
   paper_format: DocumentPaperFormat;
-  name: string;
-  description?: string | null;
+  name: Record<string, string> | string;
+  description?: Record<string, string> | string | null;
+  locale?: string;
   blocks_config: DocumentBlocksConfig;
   available_variables: DocumentVariableInfo[];
   header_html?: string | null;
@@ -745,6 +757,7 @@ export interface DocumentRecord {
   status: DocumentStatus;
   source: DocumentGenerationSource;
   paper_format: DocumentPaperFormat;
+  locale?: string;
   template_id?: number | null;
   template_type?: DocumentTemplateType | null;
   booking_id?: string | null;
@@ -784,6 +797,7 @@ export interface GenerateDocumentDto {
   student_id?: string;
   teacher_id?: number;
   title?: string;
+  locale?: string;
   recipient_name?: string;
   recipient_email?: string;
   recipient_tax_code?: string;
@@ -798,8 +812,9 @@ export interface CreateDocumentTemplateDto {
   document_type: DocumentType;
   recipient_type: DocumentRecipientType;
   paper_format?: DocumentPaperFormat;
-  name: string;
-  description?: string;
+  name: Record<string, string> | string;
+  description?: Record<string, string> | string;
+  locale?: string;
   blocks_config: DocumentBlocksConfig;
   available_variables?: DocumentVariableInfo[];
   header_html?: string;
@@ -809,8 +824,9 @@ export interface CreateDocumentTemplateDto {
 }
 
 export interface UpdateDocumentTemplateDto {
-  name?: string;
-  description?: string;
+  name?: Record<string, string> | string;
+  description?: Record<string, string> | string;
+  locale?: string;
   category_type?: DocumentCategoryType;
   document_type?: DocumentType;
   recipient_type?: DocumentRecipientType;
@@ -825,20 +841,22 @@ export interface UpdateDocumentTemplateDto {
 
 export interface CreateDocumentCategoryDto {
   category_type?: DocumentCategoryType;
-  name_it: string;
-  name_en: string;
+  name: Record<string, string> | string;
+  name_it?: string;
+  name_en?: string;
   name_ru?: string;
-  description?: string;
+  description?: Record<string, string> | string;
   icon?: string;
   order_index?: number;
   is_active?: boolean;
 }
 
 export interface UpdateDocumentCategoryDto {
+  name?: Record<string, string> | string;
   name_it?: string;
   name_en?: string;
   name_ru?: string;
-  description?: string;
+  description?: Record<string, string> | string;
   icon?: string;
   order_index?: number;
   is_active?: boolean;
