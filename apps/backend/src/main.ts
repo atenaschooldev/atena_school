@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ConsoleLogger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './core/filters/all-exceptions.filter';
 import fastifyHelmet from '@fastify/helmet';
@@ -14,11 +14,24 @@ import { BigIntInterceptor } from './core/interceptors/bigint.interceptor';
   return Number(this);
 };
 
+class CleanNestLogger extends ConsoleLogger {
+  log(message: any, context?: string) {
+    // Filter out internal NestJS 300+ line dependency initialization spam
+    if (context === 'InstanceLoader' || context === 'RoutesResolver' || context === 'RouterExplorer') {
+      return;
+    }
+    super.log(message, context);
+  }
+}
+
 async function bootstrap() {
   // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB) и подписью rawBody для Stripe
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ bodyLimit: 10485760, rawBody: true } as any),
+    {
+      logger: new CleanNestLogger(),
+    },
   );
 
   // Безопасность (Helmet) - отключаем CSP, чтобы Swagger UI корректно отображался
@@ -316,14 +329,22 @@ async function bootstrap() {
 
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
-  console.log(`\n============================================================`);
-  console.log(`⚙️  Backend API:          http://localhost:${port}/v1`);
-  console.log(`📚 Swagger Hub (All):     http://localhost:${port}/docs`);
-  console.log(`🌐 Landing API Docs:      http://localhost:${port}/docs/landing`);
-  console.log(`🎓 Portal (LK) Docs:      http://localhost:${port}/docs/portal`);
-  console.log(`⚙️  CRM Admin Docs:        http://localhost:${port}/docs/admin`);
-  console.log(`📖 Data Dictionary (UI):  http://localhost:${port}/docs/dictionary`);
-  console.log(`============================================================\n`);
+
+  const isProdDb = process.env.SUPABASE_URL?.includes('jnfbfihzpplyersbhkch');
+  const envBadge = isProdDb ? '🟢 PROD (jnfbfihz)' : '🟡 DEV (hcxpfzsm)';
+
+  console.log(`
+\x1b[36m╔════════════════════════════════════════════════════════════════════════╗\x1b[0m
+\x1b[36m║\x1b[0m  \x1b[1m\x1b[32m🚀 ATENA SCHOOL BACKEND (NestJS / Fastify)\x1b[0m — [${envBadge}]
+\x1b[36m╠════════════════════════════════════════════════════════════════════════╣\x1b[0m
+\x1b[36m║\x1b[0m  ⚙️  \x1b[1mREST API:\x1b[0m          \x1b[34mhttp://localhost:${port}/v1\x1b[0m
+\x1b[36m║\x1b[0m  📚 \x1b[1mSwagger Hub:\x1b[0m       \x1b[34mhttp://localhost:${port}/docs\x1b[0m
+\x1b[36m║\x1b[0m  🌐 \x1b[1mLanding Docs:\x1b[0m      \x1b[34mhttp://localhost:${port}/docs/landing\x1b[0m
+\x1b[36m║\x1b[0m  🎓 \x1b[1mPortal (LK) Docs:\x1b[0m  \x1b[34mhttp://localhost:${port}/docs/portal\x1b[0m
+\x1b[36m║\x1b[0m  🏢 \x1b[1mCRM Admin Docs:\x1b[0m    \x1b[34mhttp://localhost:${port}/docs/admin\x1b[0m
+\x1b[36m║\x1b[0m  📖 \x1b[1mData Dictionary:\x1b[0m   \x1b[34mhttp://localhost:${port}/docs/dictionary\x1b[0m
+\x1b[36m╚════════════════════════════════════════════════════════════════════════╝\x1b[0m
+`);
 }
 bootstrap();
 
