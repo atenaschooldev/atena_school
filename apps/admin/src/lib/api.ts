@@ -147,22 +147,32 @@ export async function apiFetch<T>(
   if (!res.ok) {
     const text = await res.text();
     let errorMessage = `Errore server (${res.status})`;
+    let parsedBody: any = null;
     try {
-      const parsed = JSON.parse(text);
-      if (parsed) {
-        if (Array.isArray(parsed.message)) {
-          errorMessage = parsed.message.join(", ");
-        } else if (typeof parsed.detail === "string") {
-          errorMessage = parsed.detail;
-        } else if (typeof parsed.message === "string") {
-          errorMessage = parsed.message;
-        } else if (parsed.error && typeof parsed.error === "string") {
-          errorMessage = parsed.error;
+      parsedBody = JSON.parse(text);
+      if (parsedBody) {
+        if (Array.isArray(parsedBody.message)) {
+          errorMessage = parsedBody.message.join(", ");
+        } else if (typeof parsedBody.detail === "string") {
+          errorMessage = parsedBody.detail;
+        } else if (typeof parsedBody.message === "string") {
+          errorMessage = parsedBody.message;
+        } else if (parsedBody.error && typeof parsedBody.error === "string") {
+          errorMessage = parsedBody.error;
         }
       }
     } catch {
       if (text) errorMessage = text;
     }
+
+    console.error(`🚨 [API Error ${res.status}] ${options?.method || "GET"} ${normalizedPath}:`, {
+      status: res.status,
+      statusText: res.statusText,
+      errorMessage,
+      serverResponseBody: parsedBody || text,
+      requestPayload: options?.body ? (() => { try { return JSON.parse(options.body as string); } catch { return options.body; } })() : undefined,
+    });
+
     throw new Error(errorMessage);
   }
 

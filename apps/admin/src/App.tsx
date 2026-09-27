@@ -4,13 +4,14 @@ import { SidebarConfigProvider } from '@/contexts/sidebar-context'
 import { AppRouter } from '@/components/router/app-router'
 import { useEffect, useState } from 'react'
 import { initGTM } from '@/utils/analytics'
-import { QueryClient } from '@tanstack/react-query'
+import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 
 import { LanguageProvider } from '@/i18n/context'
 import { ThemeCustomizerProvider } from '@/contexts/theme-customizer-context'
 import { DiagnosticLoggerWidget } from '@/components/shared/diagnostic-logger-widget'
+import { diagnosticLogger } from '@/utils/diagnostic-logger'
 
 // Get basename from environment (for deployment) or use empty string for development
 const basename = import.meta.env.VITE_BASENAME || ''
@@ -25,6 +26,20 @@ const persister = typeof window !== 'undefined'
 
 function App() {
   const [queryClient] = useState(() => new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        const key = Array.isArray(query.queryKey) ? query.queryKey.map(String).join(", ") : String(query.queryKey);
+        console.error(`⚠️ [Query Error] Key: [${key}]:`, error);
+        diagnosticLogger.logError(`Query Error: ${key}`, error);
+      },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error, _variables, _context, mutation) => {
+        const mutationKey = mutation.options.mutationKey ? (mutation.options.mutationKey as string[]).join(", ") : "Mutation";
+        console.error(`🚨 [Mutation Error] [${mutationKey}]:`, error);
+        diagnosticLogger.logError(`Mutation Error: ${mutationKey}`, error);
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes stale time

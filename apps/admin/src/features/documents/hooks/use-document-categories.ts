@@ -84,14 +84,23 @@ export function useDocumentCategories() {
     refetch,
     createCategory: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    updateCategory: (idOrObj: string | { id: string; name?: string; description?: string }, maybePayload?: { name?: string; description?: string }) => {
-      if (typeof idOrObj === "string") {
-        return updateMutation.mutateAsync({ id: idOrObj, ...maybePayload });
+    updateCategory: (
+      idOrObj: string | number | { id: string | number; data?: UpdateDocumentCategoryDto; name?: string; description?: string },
+      maybePayload?: UpdateDocumentCategoryDto | { name?: string; description?: string }
+    ) => {
+      let id: number;
+      let data: UpdateDocumentCategoryDto;
+      if (typeof idOrObj === "string" || typeof idOrObj === "number") {
+        id = Number(idOrObj);
+        data = (maybePayload as UpdateDocumentCategoryDto) || {};
+      } else {
+        id = Number(idOrObj.id);
+        data = idOrObj.data || { name: (idOrObj as any).name, description: (idOrObj as any).description };
       }
-      return updateMutation.mutateAsync(idOrObj);
+      return updateMutation.mutateAsync({ id, data });
     },
     isUpdating: updateMutation.isPending,
-    deleteCategory: deleteMutation.mutateAsync,
+    deleteCategory: (id: string | number) => deleteMutation.mutateAsync(Number(id)),
     isDeleting: deleteMutation.isPending,
   };
 }
