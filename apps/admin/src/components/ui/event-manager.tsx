@@ -1,6 +1,4 @@
-"use client"
-
-import { useState, useCallback, useMemo } from "react"
+import React, { useState, useCallback, useMemo, Fragment } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -611,7 +609,7 @@ function WeekView({ currentDate, events, onEventClick, onDragStart, onDragEnd, o
       </div>
       <div className="grid grid-cols-7">
         {hours.map((hour) => (
-          <React.Fragment key={`hour-row-${hour}`}>
+          <Fragment key={`hour-row-${hour}`}>
             <div className="border-b border-r p-1 text-[10px] text-muted-foreground sm:p-2 sm:text-xs font-mono">
               {hour.toString().padStart(2, "0")}:00
             </div>
@@ -630,7 +628,7 @@ function WeekView({ currentDate, events, onEventClick, onDragStart, onDragEnd, o
                 </div>
               )
             })}
-          </React.Fragment>
+          </Fragment>
         ))}
       </div>
     </Card>
