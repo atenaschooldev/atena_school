@@ -5,6 +5,7 @@ import { Navigate } from 'react-router-dom'
 const Landing = lazy(() => import('@/app/landing/page'))
 const Dashboard = lazy(() => import('@/app/dashboard/page'))
 const Users = lazy(() => import('@/app/users/page'))
+const Studenti = lazy(() => import('@/app/studenti/page'))
 const Corsi = lazy(() => import('@/app/corsi/page'))
 const Gruppi = lazy(() => import('@/app/gruppi/page'))
 const Prenotazioni = lazy(() => import('@/app/prenotazioni/page'))
@@ -113,6 +114,10 @@ export const routes: RouteConfig[] = [
   {
     path: "/orari",
     element: <Orari />
+  },
+  {
+    path: "/studenti",
+    element: <Studenti />
   },
   {
     path: "/users",

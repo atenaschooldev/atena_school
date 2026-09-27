@@ -123,4 +123,38 @@ export class StudentsService {
       data: updateData,
     });
   }
+
+  async create(dto: any) {
+    const fullName = (dto.fullName || `${dto.firstName || ''} ${dto.lastName || ''}`).trim();
+    const parts = fullName.split(' ');
+    const firstName = dto.firstName || parts[0] || 'Studente';
+    const lastName = dto.lastName || parts.slice(1).join(' ') || '';
+
+    return this.prisma.students.create({
+      data: {
+        full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
+        email: dto.email || null,
+        phone: dto.phone || null,
+        tax_code: dto.taxCode || null,
+        birth_date: dto.birthDate ? new Date(dto.birthDate) : null,
+        birth_place: dto.birthPlace || null,
+        language_level: dto.languageLevel ? parseLanguageLevel(dto.languageLevel) : LanguageLevel.A1,
+        status: dto.status ? parseStudentStatus(dto.status) : StudentStatus.ACTIVE,
+        annual_fee_paid: dto.annualFeePaid ?? false,
+        annual_fee_paid_at: dto.annualFeePaid ? new Date() : null,
+        parent_id: dto.parentId || null,
+        registration_date: new Date(),
+      },
+    });
+  }
+
+  async delete(id: string) {
+    await this.findOne(id);
+    await this.prisma.students.delete({
+      where: { id },
+    });
+    return { success: true, id };
+  }
 }

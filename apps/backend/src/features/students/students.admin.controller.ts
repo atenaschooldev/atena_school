@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
@@ -6,7 +6,7 @@ import { Roles } from '../../core/decorators/roles.decorator';
 import { Audit } from '../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../core/interceptors/audit.interceptor';
 import { StudentsService } from './students.admin.service';
-import { UpdateStudentRequestDto } from './dto/student.dto';
+import { CreateStudentRequestDto, UpdateStudentRequestDto } from './dto/student.dto';
 import { StudentStatus, LanguageLevel } from '@atena/api-types';
 
 @ApiTags('Admin — Students')
@@ -44,11 +44,27 @@ export class StudentsController {
     return this.studentsService.findOne(id);
   }
 
+  @Post()
+  @Roles('admin')
+  @Audit('students', 'create')
+  @ApiOperation({ summary: 'Создать нового студента в реестре' })
+  async create(@Body() dto: CreateStudentRequestDto) {
+    return this.studentsService.create(dto);
+  }
+
   @Patch(':id')
   @Roles('admin')
   @Audit('students', 'update')
   @ApiOperation({ summary: 'Обновить данные карточки студента' })
   async update(@Param('id') id: string, @Body() dto: UpdateStudentRequestDto) {
     return this.studentsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @Audit('students', 'delete')
+  @ApiOperation({ summary: 'Удалить студента из реестра' })
+  async delete(@Param('id') id: string) {
+    return this.studentsService.delete(id);
   }
 }

@@ -20,6 +20,7 @@ import notifications from "./en/notifications.json";
 import forms from "./en/forms.json";
 import activeServices from "./en/activeServices.json";
 import documents from "./en/documents.json";
+import students from "./en/students.json";
 
 export const en = {
   nav,
@@ -38,6 +39,7 @@ export const en = {
   teachers,
   schedule,
   users,
+  students,
   settings,
   schoolProfile,
   notifications,

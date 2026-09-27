@@ -1,0 +1,7 @@
+export * from "./types";
+export * from "./hooks/use-students";
+export * from "./components/students-view";
+export * from "./components/students-metrics";
+export * from "./components/students-table-columns";
+export * from "./components/create-student-dialog";
+export * from "./components/student-detail-dialog";

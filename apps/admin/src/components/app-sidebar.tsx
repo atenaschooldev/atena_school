@@ -9,6 +9,7 @@ import {
   Settings,
   CreditCard,
   Users,
+  UserCheck,
   BadgeCheck,
   GraduationCap,
   CheckCircle2,
@@ -104,14 +105,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           icon: CheckCircle2,
         },
         {
-          title: t("nav.annualMemberships"),
-          url: "/iscrizioni",
-          icon: BadgeCheck,
+          title: t("nav.students") || "Studenti",
+          url: "/studenti",
+          icon: UserCheck,
         },
         {
           title: t("nav.teachers"),
           url: "/insegnanti",
           icon: GraduationCap,
+        },
+        {
+          title: t("nav.annualMemberships"),
+          url: "/iscrizioni",
+          icon: BadgeCheck,
         },
         {
           title: t("nav.promotions") || "Codici Promo",

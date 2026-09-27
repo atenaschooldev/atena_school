@@ -1,6 +1,6 @@
 {
-  "title": "Students & User Accounts",
-  "subtitle": "Manage all registered students, parents, and administrative users.",
+  "title": "Users & Access",
+  "subtitle": "Manage system accounts, staff roles (Admin, Staff, Teachers), and authentication credentials.",
   "newUser": "New User",
   "editUser": "Edit User",
   "deleteUser": "Delete User",

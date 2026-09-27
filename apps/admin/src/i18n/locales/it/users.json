@@ -1,6 +1,6 @@
 {
-  "title": "Utenti & Studenti",
-  "subtitle": "Gestisci account registrati, studenti, genitori e personale amministrativo.",
+  "title": "Utenti & Accessi",
+  "subtitle": "Gestisci gli account di sistema, ruoli (Admin, Staff, Docenti) e credenziali di accesso.",
   "newUser": "Nuovo Utente",
   "editUser": "Modifica Utente",
   "deleteUser": "Elimina Utente",
