@@ -70,6 +70,14 @@ export function LoginForm1({
     }
   }
 
+  const onInvalid = (errors: any) => {
+    console.warn("Login form validation errors:", errors)
+    const firstError = Object.values(errors)[0] as any
+    if (firstError?.message) {
+      toast.error(firstError.message)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -81,7 +89,7 @@ export function LoginForm1({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
               <div className="grid gap-6">
                 <div className="grid gap-4">
                   <FormField
