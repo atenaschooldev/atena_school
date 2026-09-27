@@ -73,17 +73,22 @@ export class FormsService {
     }
   }
 
-  private resolveFormId(id: string): string {
-    // Legacy slug aliases — kept for backward compatibility with old API calls
-    if (id === 'default-booking-form') return '00000000-0000-0000-0000-000000000001';
-    if (id === 'default-contact-form') return '00000000-0000-0000-0000-000000000002';
-    return id;
+  private resolveFormId(id: string | number): number | string {
+    const str = String(id).trim();
+    if (str === 'default-booking-form' || str === '00000000-0000-0000-0000-000000000001' || str === '1') {
+      return 1;
+    }
+    if (str === 'default-contact-form' || str === '00000000-0000-0000-0000-000000000002' || str === '2') {
+      return 2;
+    }
+    const num = Number(str);
+    return !isNaN(num) && Number.isInteger(num) ? num : str;
   }
 
   /**
    * Получить форму по ID
    */
-  async getFormById(id: string): Promise<FormTemplate> {
+  async getFormById(id: string | number): Promise<FormTemplate> {
     const targetId = this.resolveFormId(id);
 
     const { data, error } = await this.supabase
@@ -93,11 +98,11 @@ export class FormsService {
       .single();
 
     if (error || !data) {
-      // Fallback to built-in templates only for the two system UUIDs (offline resilience)
-      if (targetId === '00000000-0000-0000-0000-000000000001') {
+      // Fallback to built-in templates only for the two system IDs (offline resilience)
+      if (targetId === 1 || targetId === '1') {
         return DEFAULT_BOOKING_FORM_TEMPLATE;
       }
-      if (targetId === '00000000-0000-0000-0000-000000000002') {
+      if (targetId === 2 || targetId === '2') {
         return DEFAULT_CONTACT_FORM_TEMPLATE;
       }
       throw new NotFoundException(`Modulo con ID "${id}" non trovato.`);

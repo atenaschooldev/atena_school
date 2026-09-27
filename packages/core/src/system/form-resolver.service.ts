@@ -6,8 +6,8 @@ import {
   ResolveFormQuery,
 } from '@atena/api-types';
 
-export const SYSTEM_BOOKING_FORM_ID = '00000000-0000-0000-0000-000000000001';
-export const SYSTEM_CONTACT_FORM_ID = '00000000-0000-0000-0000-000000000002';
+export const SYSTEM_BOOKING_FORM_ID = '1';
+export const SYSTEM_CONTACT_FORM_ID = '2';
 
 /**
  * Стандартный дефолтный шаблон формы бронирования курса
