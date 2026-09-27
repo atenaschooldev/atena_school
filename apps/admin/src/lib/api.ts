@@ -89,6 +89,7 @@ export async function apiFetch<T>(
   options?: RequestInit & { timeoutMs?: number; _isRetry?: boolean }
 ): Promise<T> {
   let token = getAdminToken();
+  const timeoutMs = options?.timeoutMs || DEFAULT_TIMEOUT_MS;
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   if (normalizedPath.includes("/undefined") || normalizedPath.includes("/null")) {
     console.error(`[apiFetch] Aborted request to invalid endpoint with undefined param: ${normalizedPath}`);
