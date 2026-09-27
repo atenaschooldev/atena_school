@@ -63,8 +63,13 @@ export function CreateGroupDialog({
       if (found.insegnanteId) {
         setTeacherId(found.insegnanteId);
       }
-      if (found.scheduleDays && found.scheduleDays.length > 0) {
-        setSelectedDays(found.scheduleDays.map((d: any) => Number(d)));
+      if (found.scheduleDays && Array.isArray(found.scheduleDays)) {
+        const clean = found.scheduleDays
+          .map((d: any) => Number(d))
+          .filter((d: number) => !isNaN(d) && d >= 0 && d <= 7);
+        if (clean.length > 0) {
+          setSelectedDays(clean);
+        }
       }
       if (found.startTime) {
         setStartTime(found.startTime);
@@ -85,7 +90,12 @@ export function CreateGroupDialog({
       toast.error(t("groups.selectCourse"));
       return;
     }
-    if (selectedDays.length === 0) {
+
+    const cleanDays = selectedDays
+      .map((d) => Number(d))
+      .filter((d) => !isNaN(d) && d >= 0 && d <= 7);
+
+    if (cleanDays.length === 0) {
       toast.error(t("groups.classDays"));
       return;
     }
@@ -100,7 +110,7 @@ export function CreateGroupDialog({
         maxStudents: Number(maxStudents) || 8,
         status: Number(status) || GroupStatus.RECRUITING,
         startDate: startDate || undefined,
-        scheduleDays: selectedDays,
+        scheduleDays: cleanDays,
         startTime,
         endTime: endTime || undefined,
         notes: notes || undefined,

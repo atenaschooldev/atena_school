@@ -104,6 +104,10 @@ export class GroupsService {
       if (!teacher) throw new NotFoundException(`Teacher with ID ${dto.teacherId} not found`);
     }
 
+    const cleanScheduleDays = (dto.scheduleDays || [])
+      .map((d: any) => Number(d))
+      .filter((d: number) => !isNaN(d) && d >= 0 && d <= 7);
+
     const group = await this.prisma.group.create({
       data: {
         name: dto.name,
@@ -114,7 +118,7 @@ export class GroupsService {
         status: dto.status || GroupStatus.RECRUITING,
         startDate: dto.startDate ? new Date(dto.startDate) : null,
         endDate: dto.endDate ? new Date(dto.endDate) : null,
-        scheduleDays: dto.scheduleDays || [],
+        scheduleDays: cleanScheduleDays,
         startTime: dto.startTime,
         endTime: dto.endTime || null,
         notes: dto.notes || null,
@@ -122,12 +126,12 @@ export class GroupsService {
     });
 
     // Auto-generate initial lessons if requested and startDate is provided
-    if (dto.generateLessons !== false && dto.startDate && dto.scheduleDays?.length > 0) {
+    if (dto.generateLessons !== false && dto.startDate && cleanScheduleDays.length > 0) {
       await this.generateLessonsForGroup(group.id.toString(), {
         startDate: dto.startDate,
         startTime: dto.startTime,
         endTime: dto.endTime,
-        scheduleDays: dto.scheduleDays,
+        scheduleDays: cleanScheduleDays,
         courseCategory: course.category,
         totalLessons: course.settings?.totalLessons || 8,
         lessonDuration: course.settings?.lessonDurationMinutes || 60,
@@ -144,6 +148,12 @@ export class GroupsService {
     const existing = await this.prisma.group.findUnique({ where: { id: bigId } });
     if (!existing) throw new NotFoundException(`Group with ID ${id} not found`);
 
+    const cleanScheduleDays = dto.scheduleDays !== undefined
+      ? (dto.scheduleDays || [])
+          .map((d: any) => Number(d))
+          .filter((d: number) => !isNaN(d) && d >= 0 && d <= 7)
+      : existing.scheduleDays;
+
     const updated = await this.prisma.group.update({
       where: { id: bigId },
       data: {
@@ -155,7 +165,7 @@ export class GroupsService {
         status: dto.status !== undefined ? dto.status : existing.status,
         startDate: dto.startDate !== undefined ? (dto.startDate ? new Date(dto.startDate) : null) : existing.startDate,
         endDate: dto.endDate !== undefined ? (dto.endDate ? new Date(dto.endDate) : null) : existing.endDate,
-        scheduleDays: dto.scheduleDays !== undefined ? dto.scheduleDays : existing.scheduleDays,
+        scheduleDays: cleanScheduleDays,
         startTime: dto.startTime !== undefined ? dto.startTime : existing.startTime,
         endTime: dto.endTime !== undefined ? dto.endTime : existing.endTime,
         notes: dto.notes !== undefined ? dto.notes : existing.notes,
