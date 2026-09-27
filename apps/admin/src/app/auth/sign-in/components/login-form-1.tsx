@@ -54,7 +54,12 @@ export function LoginForm1({
   async function onSubmit(values: LoginFormValues) {
     try {
       setLoading(true)
-      const res = await api.post<{ access_token: string; refresh_token?: string; user?: any }>("/admin/auth/login", values)
+      const sanitizedValues = {
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+      }
+      console.log("[LoginForm] Submitting login request...", { email: sanitizedValues.email })
+      const res = await api.post<{ access_token: string; refresh_token?: string; user?: any }>("/admin/auth/login", sanitizedValues)
       if (res.access_token) {
         setAdminSession(res.access_token, res.refresh_token)
         toast.success(t("common.saveSuccess") || "Accesso effettuato con successo")
@@ -63,7 +68,7 @@ export function LoginForm1({
         toast.error("Errore di autenticazione: Token non ricevuto")
       }
     } catch (err: any) {
-      console.error("Login error:", err)
+      console.error("[LoginForm] Login error:", err)
       toast.error(err?.message || "Credenziali non valide. Riprova.")
     } finally {
       setLoading(false)
@@ -71,10 +76,12 @@ export function LoginForm1({
   }
 
   const onInvalid = (errors: any) => {
-    console.warn("Login form validation errors:", errors)
+    console.warn("[LoginForm] Form validation errors:", errors)
     const firstError = Object.values(errors)[0] as any
     if (firstError?.message) {
       toast.error(firstError.message)
+    } else {
+      toast.error("Compila tutti i campi obbligatori")
     }
   }
 
@@ -89,7 +96,7 @@ export function LoginForm1({
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
+            <form noValidate onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
               <div className="grid gap-6">
                 <div className="grid gap-4">
                   <FormField
