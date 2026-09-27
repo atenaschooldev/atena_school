@@ -39,12 +39,21 @@ export class MembershipsService {
 
       return {
         ...m,
+        amount: m.amount != null ? Number(m.amount.toString()) : 30,
+        paymentMethod: m.paymentMethod != null ? Number(m.paymentMethod) : 1,
+        payment_method: m.paymentMethod != null ? Number(m.paymentMethod) : 1,
         studentName,
         student_name: studentName,
         studentEmail,
         student_email: studentEmail,
         studentTaxCode,
         student_tax_code: studentTaxCode,
+        paidAt: m.paidAt ? (m.paidAt instanceof Date ? m.paidAt.toISOString() : m.paidAt) : null,
+        paid_at: m.paidAt ? (m.paidAt instanceof Date ? m.paidAt.toISOString() : m.paidAt) : null,
+        expiresAt: m.expiresAt ? (m.expiresAt instanceof Date ? m.expiresAt.toISOString() : m.expiresAt) : null,
+        expires_at: m.expiresAt ? (m.expiresAt instanceof Date ? m.expiresAt.toISOString() : m.expiresAt) : null,
+        createdAt: m.createdAt ? (m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt) : null,
+        created_at: m.createdAt ? (m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt) : null,
       };
     });
   }
