@@ -4,6 +4,7 @@ import { Printer, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react'
 import { DocumentPaperFormat, type DocumentBlocksConfig } from '../../types';
 import { compileDocumentHtml } from '@atena/core';
 import { useTranslation } from '@/i18n/context';
+import { morphDom } from '@/utils/morph-dom';
 
 interface DocumentLivePreviewProps {
   blocksConfig: DocumentBlocksConfig;
@@ -81,11 +82,11 @@ export function DocumentLivePreview({
             doc.head.appendChild(newStyle.cloneNode(true));
           }
 
-          // Update body content seamlessly
-          doc.body.innerHTML = newDoc.body.innerHTML;
+          // In-place surgical DOM morphing: mutates only changed text nodes and block elements without resetting DOM or reloading images
+          morphDom(doc.body, newDoc.body);
 
           // Restore scroll position
-          if (iframe.contentWindow) {
+          if (iframe.contentWindow && (scrollY > 0 || scrollX > 0)) {
             iframe.contentWindow.scrollTo(scrollX, scrollY);
           }
         }

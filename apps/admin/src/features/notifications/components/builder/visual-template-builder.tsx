@@ -32,6 +32,62 @@ import {
   DEFAULT_SCHOOL_PROFILE,
 } from "@atena/core";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
+import { morphDom } from "@/utils/morph-dom";
+
+function EmailLivePreviewIframe({ html }: { html: string }) {
+  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const isInitializedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const iframe = iframeRef.current;
+      if (!iframe) return;
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) return;
+
+      if (!isInitializedRef.current || !doc.body || !doc.head) {
+        doc.open();
+        doc.write(html);
+        doc.close();
+        isInitializedRef.current = true;
+      } else {
+        const scrollY = iframe.contentWindow?.scrollY ?? 0;
+        const scrollX = iframe.contentWindow?.scrollX ?? 0;
+
+        const parser = new DOMParser();
+        const newDoc = parser.parseFromString(html, 'text/html');
+
+        const oldStyle = doc.querySelector('style');
+        const newStyle = newDoc.querySelector('style');
+        if (newStyle && oldStyle) {
+          if (oldStyle.textContent !== newStyle.textContent) {
+            oldStyle.textContent = newStyle.textContent;
+          }
+        } else if (newStyle && !oldStyle) {
+          doc.head.appendChild(newStyle.cloneNode(true));
+        }
+
+        morphDom(doc.body, newDoc.body);
+
+        if (iframe.contentWindow && (scrollY > 0 || scrollX > 0)) {
+          iframe.contentWindow.scrollTo(scrollX, scrollY);
+        }
+      }
+    }, 80);
+
+    return () => clearTimeout(timer);
+  }, [html]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      title="Email Live Preview"
+      className="w-full h-full border-0 absolute inset-0 bg-[#f8fafc]"
+    />
+  );
+}
+
 const SAMPLE_PREVIEW_DATA: Record<string, string> = {
   student_name: "Viktoria Petukhova",
   purchaser_name: "Petukhov Andrii",
@@ -1311,12 +1367,7 @@ function VisualTemplateBuilderContent({
 
                   {/* Iframe View */}
                   <div className="flex-1 w-full h-full bg-[#f8fafc] overflow-hidden relative">
-                    <iframe
-                      srcDoc={liveRendered.html}
-                      title="Email Live Preview"
-                      className="w-full h-full border-0 absolute inset-0"
-                      sandbox="allow-same-origin"
-                    />
+                    <EmailLivePreviewIframe html={liveRendered.html} />
                   </div>
                 </>
               ) : (
