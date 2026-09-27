@@ -122,7 +122,7 @@ export function getMembershipsTableColumns({
         <DataTableColumnHeader column={column} title="ID" />
       ),
       cell: ({ row }) => <CellCopyableId id={row.original.id} />,
-      size: 110,
+      size: 90,
     },
     {
       accessorKey: "studentName",
@@ -155,6 +155,7 @@ export function getMembershipsTableColumns({
           />
         );
       },
+      size: 220,
     },
     {
       accessorKey: "membershipNumber",
@@ -176,6 +177,7 @@ export function getMembershipsTableColumns({
           </Badge>
         );
       },
+      size: 140,
     },
     {
       accessorKey: "academicYear",
@@ -190,22 +192,26 @@ export function getMembershipsTableColumns({
           {row.original.academicYear || "—"}
         </Badge>
       ),
+      size: 130,
     },
     {
       accessorKey: "amount",
       header: ({ column }) => (
-        <div className="flex justify-end w-full">
-          <DataTableColumnHeader column={column} title={t("common.amount")} />
-        </div>
+        <DataTableColumnHeader
+          column={column}
+          title={t("common.amount")}
+          className="justify-end text-right pr-2"
+        />
       ),
       cell: ({ row }) => {
         const amt = row.original.amount != null ? Number(row.original.amount) : 30;
         return (
-          <div className="text-right font-medium">
+          <div className="text-right font-medium pr-2">
             <CellCurrency amount={amt} />
           </div>
         );
       },
+      size: 110,
     },
     {
       accessorKey: "paymentMethod",
@@ -216,6 +222,7 @@ export function getMembershipsTableColumns({
         const method = row.original.paymentMethod ?? (row.original as any).payment_method;
         return <PaymentMethodBadge method={method} />;
       },
+      size: 160,
     },
     {
       accessorKey: "status",
@@ -225,6 +232,7 @@ export function getMembershipsTableColumns({
       cell: ({ row }) => (
         <MembershipStatusBadge status={row.original.status} t={t} />
       ),
+      size: 150,
     },
     {
       accessorKey: "expiresAt",
@@ -235,6 +243,7 @@ export function getMembershipsTableColumns({
         const exp = row.original.expiresAt || (row.original as any).expires_at;
         return <CellFormattedDate dateValue={exp} />;
       },
+      size: 170,
     },
     {
       accessorKey: "createdAt",
@@ -246,11 +255,12 @@ export function getMembershipsTableColumns({
           dateValue={row.original.createdAt || (row.original as any).created_at}
         />
       ),
+      size: 160,
     },
     {
       id: "actions",
       header: () => (
-        <div className="text-right text-xs font-medium text-muted-foreground">
+        <div className="text-right text-xs font-medium text-muted-foreground pr-2">
           {t("common.actions")}
         </div>
       ),
@@ -261,7 +271,7 @@ export function getMembershipsTableColumns({
           String(m.status ?? "").toLowerCase() === "revoked" ||
           Number(m.status) === MembershipStatus.REVOKED;
         return (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-end pr-1">
             <Button
               variant="ghost"
               size="sm"
@@ -286,6 +296,7 @@ export function getMembershipsTableColumns({
           </div>
         );
       },
+      size: 100,
     },
   ];
 }
