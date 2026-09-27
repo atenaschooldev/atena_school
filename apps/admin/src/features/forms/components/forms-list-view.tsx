@@ -207,12 +207,17 @@ export function FormsListView() {
   };
 
   const handleSave = async (data: any) => {
-    if (editingForm === "new") {
-      await createForm(data);
-    } else if (editingForm && typeof editingForm === "object") {
-      await updateForm(editingForm.id, data);
+    try {
+      const targetId = (editingForm && typeof editingForm === "object" && editingForm.id) ? editingForm.id : (data.id || null);
+      if (!targetId || editingForm === "new") {
+        await createForm(data);
+      } else {
+        await updateForm(targetId, data);
+      }
+      setEditingForm(null);
+    } catch (e: any) {
+      console.error("Error saving form:", e);
     }
-    setEditingForm(null);
   };
 
   const columns: ColumnDef<FormTemplate>[] = useMemo(() => {
