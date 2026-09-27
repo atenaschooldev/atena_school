@@ -60,6 +60,11 @@ export function AtenaDataTable<TData>({
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
+                    style={{
+                      width: header.column.columnDef.size
+                        ? `${header.column.columnDef.size}px`
+                        : undefined,
+                    }}
                     className="h-10 text-xs font-semibold text-muted-foreground px-4"
                   >
                     {header.isPlaceholder
@@ -91,7 +96,15 @@ export function AtenaDataTable<TData>({
                   )}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="px-4 py-3">
+                    <TableCell
+                      key={cell.id}
+                      style={{
+                        width: cell.column.columnDef.size
+                          ? `${cell.column.columnDef.size}px`
+                          : undefined,
+                      }}
+                      className="px-4 py-3"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
