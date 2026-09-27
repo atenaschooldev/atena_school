@@ -604,7 +604,7 @@ export function FormFieldsView() {
       {/* ── Create / Edit Modal Dialog ── */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto">
-          <form onSubmit={handleSave}>
+          <form noValidate onSubmit={handleSave}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -641,7 +641,6 @@ export function FormFieldsView() {
                   }
                   placeholder="es. fiscal_number, passport_no"
                   disabled={!!editingField}
-                  required
                   className="mt-1 font-mono text-xs"
                 />
                 {editingField?.is_system && (
@@ -726,21 +725,18 @@ export function FormFieldsView() {
                     value={formData.label_it}
                     onChange={(e) => setFormData({ ...formData, label_it: e.target.value })}
                     placeholder="es. Livello Linguistico"
-                    required
                     className="mt-1 text-xs"
                   />
                 </div>
                 <div>
                   <Label htmlFor="label_en" className="text-xs font-semibold">
                     {locale === "en" ? "English Label" : "Etichetta (Inglese)"}
-                    <span className="text-destructive ml-1">*</span>
                   </Label>
                   <Input
                     id="label_en"
                     value={formData.label_en}
                     onChange={(e) => setFormData({ ...formData, label_en: e.target.value })}
-                    placeholder="e.g. Language Level"
-                    required
+                    placeholder="e.g. Language Level (optional, defaults to Italian)"
                     className="mt-1 text-xs"
                   />
                 </div>

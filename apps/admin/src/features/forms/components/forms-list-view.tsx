@@ -209,7 +209,7 @@ export function FormsListView() {
   const handleSave = async (data: any) => {
     try {
       if (!data?.title?.trim()) {
-        alert(locale === "en" ? "Please enter a title for the form." : "Inserisci il titolo del modulo.");
+        toast.error(locale === "en" ? "Please enter a title for the form." : "Inserisci il titolo del modulo.");
         return;
       }
       const rawId = (editingForm && typeof editingForm === "object") ? editingForm.id : data?.id;
@@ -226,6 +226,8 @@ export function FormsListView() {
         fields_config: Array.isArray(data.fields_config) ? data.fields_config : [],
       };
 
+      console.log("[FormsListView] Saving form payload:", { isValidId, rawId, payload });
+
       if (!isValidId || editingForm === "new") {
         await createForm(payload);
       } else {
@@ -234,6 +236,7 @@ export function FormsListView() {
       setEditingForm(null);
     } catch (e: any) {
       console.error("[FormsListView] Error saving form:", e);
+      toast.error(e?.message || "Errore durante il salvataggio del modulo");
     }
   };
 
