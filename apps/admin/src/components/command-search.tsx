@@ -60,18 +60,27 @@ Command.displayName = CommandPrimitive.displayName
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3.5" cmdk-input-wrapper="">
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { isSearching?: boolean }
+>(({ className, isSearching, ...props }, ref) => (
+  <div className="flex items-center border-b px-3.5 relative" cmdk-input-wrapper="">
     <Search className="mr-2.5 h-4 w-4 shrink-0 text-muted-foreground" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground pr-12 disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
     />
+    <div className="absolute right-3.5 top-3.5 flex items-center gap-1.5 pointer-events-none">
+      {isSearching ? (
+        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+      ) : (
+        <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground/80 border border-border/80 rounded bg-muted/60 select-none">
+          ESC
+        </kbd>
+      )}
+    </div>
   </div>
 ))
 CommandInput.displayName = CommandPrimitive.Input.displayName
@@ -528,30 +537,27 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl border border-border sm:max-w-[640px]">
+      <DialogContent
+        showCloseButton={false}
+        className="overflow-hidden p-0 shadow-2xl border border-border/80 sm:max-w-[640px] bg-popover"
+      >
         <DialogTitle className="sr-only">Spotlight Search</DialogTitle>
         <Command
           ref={commandRef}
           shouldFilter={liveResults.length === 0}
           className="transition-transform duration-100 ease-out"
         >
-          <div className="relative">
-            <CommandInput
-              value={query}
-              onValueChange={setQuery}
-              placeholder={
-                isEn
-                  ? "Search anything: Stripe ID, Student name, CF, Phone, Course, Group..."
-                  : "Cerca di tutto: Stripe ID (pi_...), Nome studente, CF, Telefono, Corso, Gruppo..."
-              }
-              autoFocus
-            />
-            {isSearching && (
-              <div className="absolute right-4 top-3.5">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-              </div>
-            )}
-          </div>
+          <CommandInput
+            value={query}
+            onValueChange={setQuery}
+            isSearching={isSearching}
+            placeholder={
+              isEn
+                ? "Search anything: Stripe ID, Student name, CF, Phone, Course, Group..."
+                : "Cerca studenti, gruppi, corsi, Stripe ID (pi_...), CF, telefono..."
+            }
+            autoFocus
+          />
           <CommandList>
             <CommandEmpty>
               {isEn ? "No matching results found." : "Nessun risultato trovato."}
@@ -569,7 +575,7 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                       key={`${item.type}-${item.id}`}
                       value={`${item.title} ${item.subtitle || ""} ${item.id} ${item.matchedValue || ""}`}
                       onSelect={() => handleSelect(item.url)}
-                      className="group"
+                      className="group py-2.5 px-3 rounded-xl"
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         <div className="p-2 rounded-lg bg-primary/10 text-primary group-aria-selected:bg-primary group-aria-selected:text-primary-foreground transition-colors shrink-0">
@@ -596,11 +602,8 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="text-[10px] font-mono text-muted-foreground opacity-0 group-aria-selected:opacity-100 transition-opacity hidden sm:inline">
-                          Visualizza
-                        </span>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-aria-selected:opacity-100 transition-opacity" />
+                      <div className="flex items-center gap-1 shrink-0 ml-2">
+                        <ArrowRight className="h-4 w-4 text-muted-foreground group-aria-selected:text-foreground transition-colors" />
                       </div>
                     </CommandItem>
                   )
