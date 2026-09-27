@@ -27,6 +27,7 @@ import { NotificationsModule } from './features/notifications/notifications.modu
 import { IntegrationsModule } from './features/integrations/integrations.module';
 import { FormsModule } from './features/forms/forms.module';
 import { DocumentsModule } from './features/documents/documents.module';
+import { SearchModule } from './features/search/search.module';
 
 import { APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import { ApiLoggingInterceptor } from './core/interceptors/api-logging.interceptor';
@@ -40,6 +41,7 @@ const businessModules = [
   IntegrationsModule,
   FormsModule,
   DocumentsModule,
+  SearchModule,
   ActiveServicesModule,
   AuthModule,
   CoursesModule,

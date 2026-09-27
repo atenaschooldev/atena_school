@@ -40,6 +40,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/i18n/context"
+import { apiFetch } from "@/lib/api"
+import { Loader2 } from "lucide-react"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -80,7 +82,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[380px] overflow-y-auto overflow-x-hidden p-2", className)}
+    className={cn("max-h-[420px] overflow-y-auto overflow-x-hidden p-2", className)}
     {...props}
   />
 ))
@@ -138,6 +140,30 @@ interface SearchItem {
   badge?: string
 }
 
+interface ServerSearchResult {
+  id: string
+  type: string
+  title: string
+  subtitle?: string
+  url: string
+  badge?: string
+  matchedField?: string
+  matchedValue?: string
+}
+
+const TYPE_ICONS: Record<string, LucideIcon> = {
+  payment: Receipt,
+  student: UserCheck,
+  booking: CreditCard,
+  group: Layers,
+  course: BookOpen,
+  teacher: GraduationCap,
+  user: Users,
+  document: FileText,
+  membership: BadgeCheck,
+  promo: Tag,
+}
+
 interface CommandSearchProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -148,12 +174,50 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
   const navigate = useNavigate()
   const commandRef = React.useRef<HTMLDivElement>(null)
 
+  const [query, setQuery] = React.useState("")
+  const [liveResults, setLiveResults] = React.useState<ServerSearchResult[]>([])
+  const [isSearching, setIsSearching] = React.useState(false)
+
   const tr = (key: string, fallback: string) => {
     const val = t(key)
     return val && val !== key ? val : fallback
   }
 
   const isEn = locale === "en"
+
+  // Debounced search on server
+  React.useEffect(() => {
+    const trimmed = query.trim()
+    if (!open || trimmed.length < 2) {
+      setLiveResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    const timer = setTimeout(() => {
+      apiFetch<ServerSearchResult[]>(`/admin/search?q=${encodeURIComponent(trimmed)}`)
+        .then((res) => {
+          setLiveResults(Array.isArray(res) ? res : [])
+        })
+        .catch(() => {
+          setLiveResults([])
+        })
+        .finally(() => {
+          setIsSearching(false)
+        })
+    }, 200)
+
+    return () => clearTimeout(timer)
+  }, [query, open])
+
+  // Reset query on close
+  React.useEffect(() => {
+    if (!open) {
+      setQuery("")
+      setLiveResults([])
+    }
+  }, [open])
 
   const searchItems: SearchItem[] = [
     // 0. Quick Actions / Azioni Rapide
@@ -468,20 +532,83 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
         <DialogTitle className="sr-only">Spotlight Search</DialogTitle>
         <Command
           ref={commandRef}
+          shouldFilter={liveResults.length === 0}
           className="transition-transform duration-100 ease-out"
         >
-          <CommandInput
-            placeholder={
-              isEn
-                ? "Search pages, settings, courses, bookings, or type a keyword..."
-                : "Cerca pagine, impostazioni, corsi, pagamenti o scrivi una parola chiave..."
-            }
-            autoFocus
-          />
+          <div className="relative">
+            <CommandInput
+              value={query}
+              onValueChange={setQuery}
+              placeholder={
+                isEn
+                  ? "Search anything: Stripe ID, Student name, CF, Phone, Course, Group..."
+                  : "Cerca di tutto: Stripe ID (pi_...), Nome studente, CF, Telefono, Corso, Gruppo..."
+              }
+              autoFocus
+            />
+            {isSearching && (
+              <div className="absolute right-4 top-3.5">
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </div>
           <CommandList>
             <CommandEmpty>
-              {isEn ? "No matching pages found." : "Nessuna pagina trovata."}
+              {isEn ? "No matching results found." : "Nessun risultato trovato."}
             </CommandEmpty>
+
+            {/* Live Database Search Results */}
+            {liveResults.length > 0 && (
+              <CommandGroup
+                heading={isEn ? "⚡ Live Database Matches" : "⚡ Risultati Database in Tempo Reale"}
+              >
+                {liveResults.map((item) => {
+                  const Icon = TYPE_ICONS[item.type] || Search
+                  return (
+                    <CommandItem
+                      key={`${item.type}-${item.id}`}
+                      value={`${item.title} ${item.subtitle || ""} ${item.id} ${item.matchedValue || ""}`}
+                      onSelect={() => handleSelect(item.url)}
+                      className="group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-aria-selected:bg-primary group-aria-selected:text-primary-foreground transition-colors shrink-0">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-xs text-foreground truncate">
+                              {item.title}
+                            </span>
+                            {item.badge && (
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] px-1.5 py-0 font-mono border-primary/30 text-primary bg-primary/5"
+                              >
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </div>
+                          {item.subtitle && (
+                            <span className="text-[11px] text-muted-foreground truncate">
+                              {item.subtitle}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <span className="text-[10px] font-mono text-muted-foreground opacity-0 group-aria-selected:opacity-100 transition-opacity hidden sm:inline">
+                          Visualizza
+                        </span>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-aria-selected:opacity-100 transition-opacity" />
+                      </div>
+                    </CommandItem>
+                  )
+                })}
+              </CommandGroup>
+            )}
+
+            {/* Static Navigation and Actions */}
             {Object.entries(groupedItems).map(([group, items]) => (
               <CommandGroup key={group} heading={group}>
                 {items.map((item) => {
@@ -552,3 +679,4 @@ export function SearchTrigger({ onClick }: { onClick: () => void }) {
     </button>
   )
 }
+

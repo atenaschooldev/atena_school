@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "react-router-dom";
 import type { Table as TanstackTable, Row } from "@tanstack/react-table";
 import { flexRender } from "@tanstack/react-table";
 import {
@@ -29,6 +30,7 @@ export interface AtenaDataTableProps<TData> {
   bulkActions?: (table: TanstackTable<TData>) => React.ReactNode;
   showPagination?: boolean;
   onRowClick?: (row: Row<TData>) => void;
+  highlightId?: string | null;
   className?: string;
 }
 
@@ -44,11 +46,41 @@ export function AtenaDataTable<TData>({
   bulkActions,
   showPagination = true,
   onRowClick,
+  highlightId: propHighlightId,
   className,
 }: AtenaDataTableProps<TData>) {
+  const [searchParams] = useSearchParams();
+  const highlightParam = searchParams.get("highlight");
+  const targetHighlight = propHighlightId || highlightParam;
+
+  const [activeHighlight, setActiveHighlight] = React.useState<string | null>(
+    targetHighlight
+  );
+  const highlightedRowRef = React.useRef<HTMLTableRowElement | null>(null);
+
+  React.useEffect(() => {
+    if (targetHighlight) {
+      setActiveHighlight(targetHighlight);
+      // Auto-fade after 5 seconds
+      const timer = setTimeout(() => {
+        setActiveHighlight(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [targetHighlight]);
+
   const visibleColumnsCount =
     columnsCount || table.getVisibleLeafColumns().length || 6;
   const rows = table.getRowModel().rows;
+
+  React.useEffect(() => {
+    if (activeHighlight && highlightedRowRef.current) {
+      highlightedRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [activeHighlight, rows]);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -85,34 +117,50 @@ export function AtenaDataTable<TData>({
                 rowCount={6}
               />
             ) : rows?.length ? (
-              rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  onClick={() => onRowClick && onRowClick(row)}
-                  className={cn(
-                    "hover:bg-muted/40 transition-colors duration-150 border-b border-border/40",
-                    onRowClick && "cursor-pointer"
-                  )}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      style={{
-                        width: cell.column.columnDef.size
-                          ? `${cell.column.columnDef.size}px`
-                          : undefined,
-                      }}
-                      className="px-4 py-3"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              rows.map((row) => {
+                const item = row.original as any;
+                const isHighlighted =
+                  activeHighlight &&
+                  (String(item?.id) === activeHighlight ||
+                    item?.providerTransactionId === activeHighlight ||
+                    item?.sessionId === activeHighlight ||
+                    item?.tax_code === activeHighlight ||
+                    item?.taxCode === activeHighlight ||
+                    item?.studentTaxCode === activeHighlight ||
+                    item?.purchaserTaxCode === activeHighlight);
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    ref={isHighlighted ? (el) => (highlightedRowRef.current = el) : undefined}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => onRowClick && onRowClick(row)}
+                    className={cn(
+                      "hover:bg-muted/40 transition-all duration-300 border-b border-border/40",
+                      isHighlighted &&
+                        "bg-primary/15 ring-2 ring-primary/60 border-primary/50 font-medium animate-pulse",
+                      onRowClick && "cursor-pointer"
+                    )}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{
+                          width: cell.column.columnDef.size
+                            ? `${cell.column.columnDef.size}px`
+                            : undefined,
+                        }}
+                        className="px-4 py-3"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow className="hover:bg-transparent">
                 <TableCell
@@ -143,3 +191,4 @@ export function AtenaDataTable<TData>({
     </div>
   );
 }
+
