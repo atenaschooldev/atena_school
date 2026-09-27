@@ -14,6 +14,7 @@ import {
   parseFormType,
 } from "../types";
 import { useFormFields } from "../hooks/use-form-fields";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -399,13 +400,20 @@ export function VisualFormBuilder({
           <Button
             type="button"
             size="sm"
-            onClick={() => {
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (!formData.title?.trim()) {
-                alert(locale === "en" ? "Please enter a form title." : "Inserisci il titolo del modulo prima di salvare.");
+                toast.error(locale === "en" ? "Please enter a form title." : "Inserisci il titolo del modulo prima di salvare.");
                 return;
               }
               console.log("[VisualFormBuilder] Saving form template:", formData);
-              onSave(formData);
+              try {
+                await onSave(formData);
+              } catch (err: any) {
+                console.error("[VisualFormBuilder] Error in onSave:", err);
+                toast.error(err?.message || "Errore salvataggio modulo");
+              }
             }}
             disabled={isSaving}
             className="font-semibold text-xs shadow-xs gap-1.5 cursor-pointer h-7"
