@@ -90,6 +90,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
   <div class="container">
     <div class="header">
       <div>
+        ${schoolProfile.logo_url ? `<img src="${schoolProfile.logo_url}" alt="${schoolName}" style="max-height: 44px; max-width: 160px; object-fit: contain; margin-bottom: 8px; display: block;" />` : ''}
         <h1 class="school-title">${schoolName}</h1>
         <div class="school-meta">
           ${schoolAddress}, ${schoolCity}<br>

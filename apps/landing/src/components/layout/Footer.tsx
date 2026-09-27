@@ -39,10 +39,11 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             <div className="flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0 shadow-sm">
                 <Image
-                  src={logo}
+                  src={school.logo_url || logo}
                   alt={school.name}
                   width={36}
                   height={36}
+                  unoptimized={Boolean(school.logo_url?.startsWith('data:') || school.logo_url?.startsWith('http'))}
                   className="object-contain"
                 />
               </div>
