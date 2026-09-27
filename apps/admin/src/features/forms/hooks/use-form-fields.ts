@@ -49,6 +49,7 @@ export function useFormFields(filter?: { target?: string; is_system?: boolean })
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: UpdateFormFieldDto }) => {
+      if (!id || id === "undefined") throw new Error("ID del campo mancante");
       return apiFetch<FormFieldItem>(`/admin/forms/fields/${id}`, {
         method: "PUT",
         body: JSON.stringify(payload),
@@ -65,6 +66,7 @@ export function useFormFields(filter?: { target?: string; is_system?: boolean })
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!id || id === "undefined") throw new Error("ID del campo mancante");
       return apiFetch<{ success: boolean; id: string }>(`/admin/forms/fields/${id}`, {
         method: "DELETE",
       });

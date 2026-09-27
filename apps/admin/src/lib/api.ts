@@ -87,8 +87,24 @@ export async function apiFetch<T>(
 ): Promise<T> {
   let token = getAdminToken();
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const timeoutMs = options?.timeoutMs || DEFAULT_TIMEOUT_MS;
-  
+  if (normalizedPath.includes("/undefined") || normalizedPath.includes("/null")) {
+    console.error(`[apiFetch] Aborted request to invalid endpoint with undefined param: ${normalizedPath}`);
+    throw new Error(`Endpoint non valido: ${normalizedPath}`);
+  }
+
+  const reqHeaders: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...((options?.headers as Record<string, string>) || {}),
+  };
+
+  // Fastify throws 500 error if "Content-Type: application/json" is provided without a body.
+  // Only set application/json if a body is explicitly present and no Content-Type was specified.
+  if (options?.body !== undefined && options?.body !== null) {
+    if (!reqHeaders["Content-Type"]) {
+      reqHeaders["Content-Type"] = "application/json";
+    }
+  }
+
   let res: Response;
   try {
     const controller = new AbortController();
@@ -97,11 +113,7 @@ export async function apiFetch<T>(
     res = await fetch(`${BACKEND_URL}${normalizedPath}`, {
       ...options,
       signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options?.headers,
-      },
+      headers: reqHeaders,
     });
     clearTimeout(timeoutId);
   } catch (netErr: any) {

@@ -67,6 +67,7 @@ export function useForms(filters?: {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: UpdateFormTemplateDto }) => {
+      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<FormTemplate>(`/admin/forms/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -83,6 +84,7 @@ export function useForms(filters?: {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<{ success: boolean; id: string }>(`/admin/forms/${id}`, {
         method: "DELETE",
       });
@@ -98,6 +100,7 @@ export function useForms(filters?: {
 
   const setDefaultMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<FormTemplate>(`/admin/forms/${id}/set-default`, {
         method: "POST",
       });
@@ -113,6 +116,7 @@ export function useForms(filters?: {
 
   const duplicateMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<FormTemplate>(`/admin/forms/${id}/duplicate`, {
         method: "POST",
       });
