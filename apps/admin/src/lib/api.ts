@@ -1,8 +1,7 @@
-const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
-// If opened on 127.0.0.1 or localhost, ensure connection aligns with browser hostname
-export const BACKEND_URL = typeof window !== "undefined" && window.location.hostname === "127.0.0.1" && rawBackendUrl.includes("localhost")
-  ? rawBackendUrl.replace("localhost", "127.0.0.1")
-  : rawBackendUrl;
+// In Vite dev server, route through proxy (empty string) to prevent any browser CORS/IPv6 issues
+export const BACKEND_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_BACKEND_URL && !import.meta.env.VITE_BACKEND_URL.includes("4000") ? import.meta.env.VITE_BACKEND_URL : "")
+  : (import.meta.env.VITE_BACKEND_URL || "");
 
 const DEFAULT_TIMEOUT_MS = 45000; // 45 seconds (increased from 10s to prevent premature aborts)
 
@@ -121,10 +120,11 @@ export async function apiFetch<T>(
     });
     clearTimeout(timeoutId);
   } catch (netErr: any) {
+    console.error(`[apiFetch Network Error] Failed to fetch ${BACKEND_URL || ''}${normalizedPath}:`, netErr);
     if (netErr?.name === 'AbortError') {
-      throw new Error(`Timeout di connessione (${timeoutMs / 1000}s) con il server (${BACKEND_URL}).`);
+      throw new Error(`Timeout di connessione (${timeoutMs / 1000}s) con il server (${BACKEND_URL || 'localhost:4000'}).`);
     }
-    throw new Error(`Impossibile connettersi al server (${BACKEND_URL}). Verifica la connessione di rete.`);
+    throw new Error(`Impossibile connettersi al server (${BACKEND_URL || 'localhost:4000'}). Verifica la connessione di rete.`);
   }
 
   // Handle 401 (Unauthorized) with automatic silent refresh
