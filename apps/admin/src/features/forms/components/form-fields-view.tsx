@@ -186,18 +186,21 @@ export function FormFieldsView() {
     }
   };
 
+  // Only show and manage Custom fields in this catalog
+  const customFields = useMemo(() => fields.filter((f) => !f.is_system), [fields]);
+
   // Top Metrics computation (identical styling to CoursesMetrics)
   const metricsData = useMemo(() => {
-    const total = fields.length;
-    const purchaserCount = fields.filter((f) => f.target === FormFieldTarget.PURCHASER).length;
-    const studentCount = fields.filter((f) => f.target === FormFieldTarget.STUDENT).length;
-    const bookingContactCount = fields.filter((f) => f.target === FormFieldTarget.BOOKING || f.target === FormFieldTarget.CONTACT).length;
+    const total = customFields.length;
+    const purchaserCount = customFields.filter((f) => f.target === FormFieldTarget.PURCHASER).length;
+    const studentCount = customFields.filter((f) => f.target === FormFieldTarget.STUDENT).length;
+    const bookingContactCount = customFields.filter((f) => f.target === FormFieldTarget.BOOKING || f.target === FormFieldTarget.CONTACT).length;
 
     return [
       {
-        title: locale === "en" ? "Total Fields" : "Campi Totali",
+        title: locale === "en" ? "Custom Fields" : "Campi Personalizzati",
         value: total,
-        description: locale === "en" ? "Registered in database catalog" : "Registrati nel catalogo di sistema",
+        description: locale === "en" ? "Active custom fields in database" : "Campi personalizzati nel database",
         icon: Layers,
       },
       {
@@ -219,7 +222,7 @@ export function FormFieldsView() {
         icon: Calendar,
       },
     ];
-  }, [fields, locale]);
+  }, [customFields, locale]);
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -305,12 +308,10 @@ export function FormFieldsView() {
     }
   };
 
-  // Filtered data
+  // Filtered data (only custom fields)
   const filteredData = useMemo(() => {
-    return fields.filter((f) => {
+    return customFields.filter((f) => {
       if (targetFilter !== "all" && f.target !== targetFilter) return false;
-      if (systemFilter === "system" && !f.is_system) return false;
-      if (systemFilter === "custom" && f.is_system) return false;
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -321,7 +322,7 @@ export function FormFieldsView() {
       }
       return true;
     });
-  }, [fields, targetFilter, systemFilter, searchQuery]);
+  }, [customFields, targetFilter, searchQuery]);
 
   // Columns definition (matching exact Courses & Settings table pattern)
   const columns = useMemo<ColumnDef<FormFieldItem>[]>(
@@ -660,25 +661,29 @@ export function FormFieldsView() {
                     {locale === "en" ? "Target Entity" : "Destinazione Dato"}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
-                  <select
+                  <Select
+                    modal={false}
                     value={formData.target}
-                    onChange={(e) => setFormData({ ...formData, target: e.target.value as FormFieldTarget })}
-                    disabled={editingField?.is_system}
-                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer h-9 mt-1 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    onValueChange={(val: FormFieldTarget) => setFormData({ ...formData, target: val })}
                   >
-                    <option value={FormFieldTarget.PURCHASER}>
-                      {locale === "en" ? "Purchaser / Parent (Billing)" : "Acquirente / Genitore (Pagatore)"}
-                    </option>
-                    <option value={FormFieldTarget.STUDENT}>
-                      {locale === "en" ? "Student / Child (Participant)" : "Studente / Figlio (Partecipante)"}
-                    </option>
-                    <option value={FormFieldTarget.BOOKING}>
-                      {locale === "en" ? "Booking / Course Notes" : "Iscrizione / Corso (Note & Extra)"}
-                    </option>
-                    <option value={FormFieldTarget.CONTACT}>
-                      {locale === "en" ? "Contact Form (Website Lead)" : "Modulo Contatto (Richieste Sito)"}
-                    </option>
-                  </select>
+                    <SelectTrigger className="mt-1 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="z-[99999]">
+                      <SelectItem value={FormFieldTarget.PURCHASER}>
+                        {locale === "en" ? "Purchaser / Parent (Billing)" : "Acquirente / Genitore (Pagatore)"}
+                      </SelectItem>
+                      <SelectItem value={FormFieldTarget.STUDENT}>
+                        {locale === "en" ? "Student / Child (Participant)" : "Studente / Figlio (Partecipante)"}
+                      </SelectItem>
+                      <SelectItem value={FormFieldTarget.BOOKING}>
+                        {locale === "en" ? "Booking / Course Notes" : "Iscrizione / Corso (Note & Extra)"}
+                      </SelectItem>
+                      <SelectItem value={FormFieldTarget.CONTACT}>
+                        {locale === "en" ? "Contact Form (Website Lead)" : "Modulo Contatto (Richieste Sito)"}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -686,22 +691,26 @@ export function FormFieldsView() {
                     {locale === "en" ? "Field Type" : "Tipo di Input"}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
-                  <select
+                  <Select
+                    modal={false}
                     value={formData.field_type}
-                    onChange={(e) => setFormData({ ...formData, field_type: e.target.value as FormFieldType })}
-                    disabled={editingField?.is_system}
-                    className="w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-xs font-medium text-foreground cursor-pointer h-9 mt-1 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    onValueChange={(val: FormFieldType) => setFormData({ ...formData, field_type: val })}
                   >
-                    <option value={FormFieldType.TEXT}>{locale === "en" ? "Text input" : "Campo di testo"}</option>
-                    <option value={FormFieldType.EMAIL}>{locale === "en" ? "Email address" : "Indirizzo Email"}</option>
-                    <option value={FormFieldType.PHONE}>{locale === "en" ? "Phone number" : "Numero di Telefono"}</option>
-                    <option value={FormFieldType.NUMBER}>{locale === "en" ? "Number" : "Numero"}</option>
-                    <option value={FormFieldType.DATE}>{locale === "en" ? "Date picker" : "Data"}</option>
-                    <option value={FormFieldType.TEXTAREA}>{locale === "en" ? "Long text (Textarea)" : "Testo lungo (Area di testo)"}</option>
-                    <option value={FormFieldType.SELECT}>{locale === "en" ? "Dropdown select" : "Menu a tendina (Select)"}</option>
-                    <option value={FormFieldType.RADIO}>{locale === "en" ? "Radio options" : "Scelta singola (Radio)"}</option>
-                    <option value={FormFieldType.CHECKBOX}>{locale === "en" ? "Checkbox toggle" : "Casella di controllo (Checkbox)"}</option>
-                  </select>
+                    <SelectTrigger className="mt-1 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent position="popper" className="z-[99999]">
+                      <SelectItem value={FormFieldType.TEXT}>{locale === "en" ? "Text input" : "Campo di testo"}</SelectItem>
+                      <SelectItem value={FormFieldType.EMAIL}>{locale === "en" ? "Email address" : "Indirizzo Email"}</SelectItem>
+                      <SelectItem value={FormFieldType.PHONE}>{locale === "en" ? "Phone number" : "Numero di Telefono"}</SelectItem>
+                      <SelectItem value={FormFieldType.NUMBER}>{locale === "en" ? "Number" : "Numero"}</SelectItem>
+                      <SelectItem value={FormFieldType.DATE}>{locale === "en" ? "Date picker" : "Data"}</SelectItem>
+                      <SelectItem value={FormFieldType.TEXTAREA}>{locale === "en" ? "Long text (Textarea)" : "Testo lungo (Area di testo)"}</SelectItem>
+                      <SelectItem value={FormFieldType.SELECT}>{locale === "en" ? "Dropdown select" : "Menu a tendina (Select)"}</SelectItem>
+                      <SelectItem value={FormFieldType.RADIO}>{locale === "en" ? "Radio options" : "Scelta singola (Radio)"}</SelectItem>
+                      <SelectItem value={FormFieldType.CHECKBOX}>{locale === "en" ? "Checkbox toggle" : "Casella di controllo (Checkbox)"}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
