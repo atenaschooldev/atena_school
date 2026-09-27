@@ -206,7 +206,7 @@ export function DocumentLivePreview({
       </div>
 
       {/* Sheet Canvas with Scale: Single Unified Scrollbar, Theme-Aware Neutral Drafting Desk */}
-      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center items-start bg-muted/25 dark:bg-zinc-950/60 custom-scrollbar">
+      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center items-start bg-slate-200/60 dark:bg-zinc-950/80 custom-scrollbar">
         <div
           style={{
             transform: `scale(${zoom / 100})`,
@@ -214,12 +214,12 @@ export function DocumentLivePreview({
             transition: 'transform 0.15s ease-out',
             width: isLandscape ? '1120px' : '820px',
           }}
-          className="shadow-xl shadow-black/10 dark:shadow-black/50 rounded-sm overflow-hidden border border-border/80 bg-white ring-1 ring-black/5 dark:ring-white/10 shrink-0 mb-8"
+          className="shadow-[0_10px_35px_rgba(0,0,0,0.12)] dark:shadow-[0_10px_35px_rgba(0,0,0,0.6)] rounded-none overflow-hidden border border-slate-300/80 dark:border-zinc-800 bg-white ring-1 ring-black/5 dark:ring-white/10 shrink-0 my-4"
         >
           <iframe
             ref={iframeRef}
             title="Anteprima Documento A4"
-            className="border-0 bg-white block w-full"
+            className="border-0 bg-white block w-full rounded-none"
             style={{
               width: '100%',
               minHeight: isLandscape ? '790px' : '1160px',

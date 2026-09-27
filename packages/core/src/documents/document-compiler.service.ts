@@ -451,26 +451,28 @@ export function compileDocumentHtml(options: CompileDocumentOptions): string {
   <style>
     @page {
       size: ${isLandscape ? 'A4 landscape' : isCompact ? '80mm auto' : 'A4 portrait'};
-      margin: ${isCompact ? '5mm' : '12mm 15mm'};
+      margin: ${isCompact ? '5mm' : '15mm 18mm'};
     }
     *, *:before, *:after { box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       color: #0f172a;
-      background: #f8fafc;
+      background: #ffffff;
       margin: 0;
-      padding: 24px;
+      padding: 0;
       font-size: 13px;
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
     .document-page {
-      max-width: ${isLandscape ? '1050px' : isCompact ? '380px' : '820px'};
-      margin: 0 auto;
+      width: 100%;
+      min-height: 100%;
       background: #ffffff;
-      padding: ${isCompact ? '16px' : '36px 40px'};
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      padding: ${isCompact ? '16px' : '44px 48px'};
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
     }
     
     /* Header */
@@ -480,7 +482,7 @@ export function compileDocumentHtml(options: CompileDocumentOptions): string {
       align-items: flex-start;
       border-bottom: 2px solid #0f172a;
       padding-bottom: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
     .school-name {
       font-size: 20px;
@@ -676,6 +678,7 @@ export function compileDocumentHtml(options: CompileDocumentOptions): string {
       display: flex;
       justify-content: space-between;
       gap: 40px;
+      margin-bottom: 24px;
     }
     .signature-box {
       flex: 1;
@@ -683,20 +686,21 @@ export function compileDocumentHtml(options: CompileDocumentOptions): string {
     }
     .signature-line {
       border-bottom: 1px solid #94a3b8;
-      height: 40px;
-      margin-bottom: 6px;
+      height: 44px;
+      margin-bottom: 8px;
     }
     .signature-label {
       font-size: 11px;
       font-weight: 600;
-      color: #64748b;
+      color: #475569;
     }
 
     /* Footer */
     .doc-footer {
       border-top: 1px solid #e2e8f0;
-      padding-top: 12px;
-      margin-top: 24px;
+      padding-top: 14px;
+      margin-top: auto;
+      padding-bottom: 4px;
       font-size: 10px;
       color: #94a3b8;
       display: flex;
