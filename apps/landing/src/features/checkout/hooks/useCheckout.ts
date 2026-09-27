@@ -10,7 +10,7 @@ import {
   decodeScheduleSlot,
   verifySlotSignature,
   sanitizeTaxCode,
-  extractBirthDateFromTaxCode,
+  parseTaxCode,
   getCurrentAcademicYear,
   ANNUAL_REGISTRATION_FEE_EUR,
 } from "@atena/utils";
@@ -626,14 +626,14 @@ export function useCheckout(
       }
       updated[index] = { ...updated[index], [field]: finalVal };
 
-      // Auto-extract and sync birthDate whenever taxCode reaches 16 characters
-      if (field === "taxCode" && finalVal.length === 16) {
-        const extractedBirth = extractBirthDateFromTaxCode(finalVal);
-        if (extractedBirth) {
-          updated[index].birthDate = extractedBirth;
+      // Auto-extract and sync birthDate whenever taxCode is entered
+      if (field === "taxCode") {
+        const parsed = parseTaxCode(finalVal);
+        if (parsed.birthDate) {
+          updated[index].birthDate = parsed.birthDate;
           formMethods.clearErrors(`students.${index}.birthDate` as FieldPath<CheckoutFormValues>);
           if (index === 0) {
-            formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: true, shouldDirty: true });
+            formMethods.setValue("studentBirthDate", parsed.birthDate, { shouldValidate: true, shouldDirty: true });
             formMethods.clearErrors("studentBirthDate");
           }
         }
@@ -740,13 +740,11 @@ export function useCheckout(
 
     const targetTaxCode = sanitizeTaxCode(watchedTaxCode || watchedPurchaserTaxCode);
 
-    // Auto-extract and sync birthDate whenever taxCode reaches 16 characters
-    if (targetTaxCode.length === 16) {
-      const extractedBirth = extractBirthDateFromTaxCode(targetTaxCode);
-      if (extractedBirth) {
-        formMethods.setValue("studentBirthDate", extractedBirth, { shouldValidate: true, shouldDirty: true });
-        formMethods.clearErrors("studentBirthDate");
-      }
+    // Auto-extract and sync birthDate whenever taxCode is entered
+    const parsed = parseTaxCode(targetTaxCode);
+    if (parsed.birthDate) {
+      formMethods.setValue("studentBirthDate", parsed.birthDate, { shouldValidate: true, shouldDirty: true });
+      formMethods.clearErrors("studentBirthDate");
     }
 
 

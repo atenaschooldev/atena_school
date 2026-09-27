@@ -693,3 +693,36 @@ export function extractBirthDateFromTaxCode(cf?: string | null): string | null {
   return isoDate;
 }
 
+export interface ParsedTaxCode {
+  clean: string;
+  isComplete: boolean;
+  birthDate: string | null;
+  gender: "M" | "F" | null;
+}
+
+/**
+ * Parses and extracts all metadata from an Italian Tax Code (Codice Fiscale).
+ * Returns normalized string, completion flag, birth date (YYYY-MM-DD), and gender.
+ */
+export function parseTaxCode(input?: string | null): ParsedTaxCode {
+  const clean = sanitizeTaxCode(input).slice(0, 16);
+  const isComplete = clean.length === 16;
+  const birthDate = isComplete ? extractBirthDateFromTaxCode(clean) : null;
+
+  let gender: "M" | "F" | null = null;
+  if (clean.length >= 11) {
+    const dayStr = clean.slice(9, 11);
+    if (/^\d{2}$/.test(dayStr)) {
+      const rawDay = parseInt(dayStr, 10);
+      if (rawDay > 40 && rawDay <= 71) gender = "F";
+      else if (rawDay >= 1 && rawDay <= 31) gender = "M";
+    }
+  }
+
+  return {
+    clean,
+    isComplete,
+    birthDate,
+    gender,
+  };
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode, getCurrentAcademicYear } from "@atena/utils";
+import { calculateLessonDates, formatCourseScheduleText, sanitizeTaxCode, parseTaxCode, getCurrentAcademicYear } from "@atena/utils";
 import { useCourses } from "@/features/courses/hooks/use-courses";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 import type { Course } from "@/features/courses/types";
@@ -133,6 +133,15 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     }
   }, [isForChild, purchaserFirstName, purchaserLastName, purchaserEmail, purchaserPhone, purchaserTaxCode, form]);
 
+  // Auto-extract birthDate when adult purchaser taxCode reaches 16 characters
+  useEffect(() => {
+    if (isForChild) return;
+    const parsed = parseTaxCode(purchaserTaxCode);
+    if (parsed.birthDate && !form.getValues("studentBirthDate")) {
+      form.setValue("studentBirthDate", parsed.birthDate, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [purchaserTaxCode, isForChild, form]);
+
   // Manage students array
   const addStudent = () => {
     if (studentsList.length >= 10) return;
@@ -161,6 +170,18 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     const next = [...studentsList];
     const sanitizedVal = field === "taxCode" ? sanitizeTaxCode(value).slice(0, 16) : value;
     next[index] = { ...next[index], [field]: sanitizedVal };
+
+    // Auto-extract birthDate from Codice Fiscale via parseTaxCode
+    if (field === "taxCode") {
+      const parsed = parseTaxCode(sanitizedVal);
+      if (parsed.birthDate) {
+        next[index].birthDate = parsed.birthDate;
+        if (index === 0) {
+          form.setValue("studentBirthDate", parsed.birthDate, { shouldValidate: true, shouldDirty: true });
+        }
+      }
+    }
+
     setStudentsList(next);
     form.setValue("students", next);
 

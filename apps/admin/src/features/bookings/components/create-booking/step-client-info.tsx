@@ -1,7 +1,7 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import { getCurrentAcademicYear } from "@atena/utils";
+import { getCurrentAcademicYear, sanitizeTaxCode, parseTaxCode } from "@atena/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,6 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { sanitizeTaxCode } from "@atena/utils";
 import type { CreateBookingValues, ClientItem, StudentItem, SavedStudentItem } from "./types";
 import { useSchoolProfile } from "@/hooks/use-school-profile";
 
@@ -356,7 +355,13 @@ export function StepClientInfo({
                       maxLength={16}
                       className="uppercase font-mono tracking-wider"
                       {...field}
-                      onChange={(e) => field.onChange(sanitizeTaxCode(e.target.value).slice(0, 16))}
+                      onChange={(e) => {
+                        const parsed = parseTaxCode(e.target.value);
+                        field.onChange(parsed.clean);
+                        if (!isForChild && parsed.birthDate) {
+                          form.setValue("studentBirthDate", parsed.birthDate, { shouldValidate: true, shouldDirty: true });
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage className="text-[10px]" />
