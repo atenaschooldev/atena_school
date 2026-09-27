@@ -146,7 +146,9 @@ export function UserFormDialog({ onAddUser }: UserFormDialogProps) {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="admin" className="cursor-pointer">{t("roles.admin")}</SelectItem>
+                      <SelectItem value="secretary" className="cursor-pointer">{t("roles.secretary")}</SelectItem>
                       <SelectItem value="teacher" className="cursor-pointer">{t("roles.teacher")}</SelectItem>
+                      <SelectItem value="parent" className="cursor-pointer">{t("roles.parent")}</SelectItem>
                       <SelectItem value="student" className="cursor-pointer">{t("roles.student")}</SelectItem>
                     </SelectContent>
                   </Select>

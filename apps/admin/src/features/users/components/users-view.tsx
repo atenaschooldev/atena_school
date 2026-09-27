@@ -36,9 +36,17 @@ export function UsersView() {
     return users.filter((u) => {
       const q = searchQuery.toLowerCase().trim();
       if (q) {
-        const name = (u.name || "").toLowerCase();
-        const email = (u.email || "").toLowerCase();
-        if (!name.includes(q) && !email.includes(q)) return false;
+        const name = (
+          u.fullName ||
+          (u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : '') ||
+          u.firstName ||
+          u.name ||
+          ''
+        ).toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        const phone = (u.phone || '').toLowerCase();
+        const taxCode = (u.taxCode || '').toLowerCase();
+        if (!name.includes(q) && !email.includes(q) && !phone.includes(q) && !taxCode.includes(q)) return false;
       }
       return true;
     });
@@ -77,7 +85,9 @@ export function UsersView() {
   const roleOptions = [
     { value: "all", label: t("users.allRoles") },
     { value: "admin", label: t("roles.admin") },
+    { value: "secretary", label: t("roles.secretary") },
     { value: "teacher", label: t("roles.teacher") },
+    { value: "parent", label: t("roles.parent") },
     { value: "student", label: t("roles.student") },
   ];
 
