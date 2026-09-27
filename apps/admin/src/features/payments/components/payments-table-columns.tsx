@@ -90,16 +90,11 @@ export function getPaymentsTableColumns({
             title={purchaserName}
             subtitle={
               isDifferentStudent ? (
-                <div className="flex flex-col gap-1 mt-0.5">
-                  <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md w-fit">
-                    <Baby className="w-2.5 h-2.5 text-primary" />
-                    <span>{studentName}</span>
-                  </span>
-                  {purchaserEmail && <span className="text-[10px] text-muted-foreground">{purchaserEmail}</span>}
-                </div>
-              ) : (
-                purchaserEmail
-              )
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary">
+                  <Baby className="w-3 h-3 text-primary shrink-0" />
+                  <span>{studentName}</span>
+                </span>
+              ) : undefined
             }
             icon={Receipt}
             badgeColor="bg-primary/10 text-primary"
