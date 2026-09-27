@@ -102,6 +102,7 @@ export class PaymentsService {
 
         return {
           ...p,
+          amount: p.amount != null ? Number(p.amount.toString()) : 0,
           purchaserName,
           purchaser_name: purchaserName,
           purchaserEmail,

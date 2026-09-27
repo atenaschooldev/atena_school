@@ -10,7 +10,7 @@ export interface CellCurrencyProps {
 export function CellCurrency({ amount = 0, className }: CellCurrencyProps) {
   return (
     <span className={`font-bold text-sm text-foreground font-mono ${className || ""}`}>
-      {formatCurrency(Number(amount || 0))}
+      {formatCurrency(amount)}
     </span>
   );
 }

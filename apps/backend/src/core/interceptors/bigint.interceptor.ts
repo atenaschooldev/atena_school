@@ -12,6 +12,9 @@ export function serializeBigInt<T>(obj: T): T {
   if (typeof obj === 'bigint') {
     return Number(obj) as any;
   }
+  if (typeof obj === 'object' && ('d' in (obj as any) && 'e' in (obj as any) && 's' in (obj as any))) {
+    return Number((obj as any).toString()) as any;
+  }
   if (Array.isArray(obj)) {
     return obj.map((item) => serializeBigInt(item)) as any;
   }

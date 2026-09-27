@@ -161,8 +161,21 @@ export function isSchoolHoliday(date: Date | string, holidays?: SchoolHolidayPer
 /**
  * Format currency amount to EUR (e.g. €152.00)
  */
-export function formatCurrency(amount: number | string): string {
-  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+export function formatCurrency(amount: any): string {
+  if (amount === null || amount === undefined) return "€0.00";
+  let num: number;
+  if (typeof amount === "number") {
+    num = amount;
+  } else if (typeof amount === "string") {
+    num = parseFloat(amount);
+  } else if (typeof amount === "object") {
+    if (typeof amount.toNumber === "function") num = amount.toNumber();
+    else if (typeof amount.toString === "function") num = parseFloat(amount.toString());
+    else if ("d" in amount) num = Number(amount);
+    else num = 0;
+  } else {
+    num = Number(amount);
+  }
   if (isNaN(num)) return "€0.00";
   return new Intl.NumberFormat("it-IT", {
     style: "currency",
