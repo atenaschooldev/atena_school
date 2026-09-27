@@ -327,8 +327,13 @@ async function bootstrap() {
   fastify.get('/dictionary', sendDictionary);
   fastify.get('/dictionary/*', sendDictionary);
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port, '0.0.0.0');
+  const port = Number(process.env.PORT) || 4000;
+  try {
+    // Bind to dual-stack IPv6 (::) so macOS Chrome connects to both localhost (::1) and 127.0.0.1
+    await app.listen(port, '::');
+  } catch {
+    await app.listen(port, '0.0.0.0');
+  }
 
   const isProdDb = process.env.SUPABASE_URL?.includes('jnfbfihzpplyersbhkch');
   const envBadge = isProdDb ? '🟢 PROD (jnfbfihz)' : '🟡 DEV (hcxpfzsm)';

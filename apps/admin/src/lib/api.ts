@@ -1,4 +1,8 @@
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+const rawBackendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+// If opened on 127.0.0.1 or localhost, ensure connection aligns with browser hostname
+export const BACKEND_URL = typeof window !== "undefined" && window.location.hostname === "127.0.0.1" && rawBackendUrl.includes("localhost")
+  ? rawBackendUrl.replace("localhost", "127.0.0.1")
+  : rawBackendUrl;
 
 const DEFAULT_TIMEOUT_MS = 45000; // 45 seconds (increased from 10s to prevent premature aborts)
 
