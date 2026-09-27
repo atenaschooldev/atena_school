@@ -28,10 +28,10 @@ export class HealthController {
     }
 
     const [resend, tg, stripe, sentry] = await Promise.all([
-      getResendCredentials().then((c) => Boolean(c.apiKey)).catch(() => false),
-      getTelegramCredentials().then((c) => Boolean(c.botToken && c.chatId)).catch(() => false),
-      getStripeCredentials().then((c) => Boolean(c.secretKey)).catch(() => false),
-      getSentryCredentials().then((c) => Boolean(c.dsn)).catch(() => false),
+      getResendCredentials().then((c: any) => Boolean(c.apiKey)).catch(() => false),
+      getTelegramCredentials().then((c: any) => Boolean(c.botToken && c.chatId)).catch(() => false),
+      getStripeCredentials().then((c: any) => Boolean(c.secretKey)).catch(() => false),
+      getSentryCredentials().then((c: any) => Boolean(c.dsn)).catch(() => false),
     ]);
 
     const isHealthy = dbStatus === 'connected';
