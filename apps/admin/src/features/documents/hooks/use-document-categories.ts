@@ -84,7 +84,12 @@ export function useDocumentCategories() {
     refetch,
     createCategory: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    updateCategory: updateMutation.mutateAsync,
+    updateCategory: (idOrObj: string | { id: string; name?: string; description?: string }, maybePayload?: { name?: string; description?: string }) => {
+      if (typeof idOrObj === "string") {
+        return updateMutation.mutateAsync({ id: idOrObj, ...maybePayload });
+      }
+      return updateMutation.mutateAsync(idOrObj);
+    },
     isUpdating: updateMutation.isPending,
     deleteCategory: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,

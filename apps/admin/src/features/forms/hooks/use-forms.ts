@@ -136,7 +136,12 @@ export function useForms(filters?: {
     refetch,
     createForm: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    updateForm: updateMutation.mutateAsync,
+    updateForm: (idOrObj: string | { id: string; payload: UpdateFormTemplateDto }, maybePayload?: UpdateFormTemplateDto) => {
+      if (typeof idOrObj === "string") {
+        return updateMutation.mutateAsync({ id: idOrObj, payload: maybePayload! });
+      }
+      return updateMutation.mutateAsync(idOrObj);
+    },
     isUpdating: updateMutation.isPending,
     deleteForm: deleteMutation.mutateAsync,
     isDeleting: deleteMutation.isPending,
