@@ -41,6 +41,9 @@ export function generateReceiptHtml(data: ReceiptData): string {
   const totalFormatted = Number(data.totalAmount || 0).toFixed(2);
 
   const isMinor = data.studentName && data.studentName !== data.purchaserName;
+  const logoSrc = schoolProfile.logo_url?.startsWith('/') && !schoolProfile.logo_url.startsWith('//')
+    ? `${schoolProfile.site_url || 'https://atenaschool.com'}${schoolProfile.logo_url}`
+    : (schoolProfile.logo_url || '');
 
   return `<!DOCTYPE html>
 <html lang="it">
@@ -90,7 +93,7 @@ export function generateReceiptHtml(data: ReceiptData): string {
   <div class="container">
     <div class="header">
       <div>
-        ${schoolProfile.logo_url ? `<img src="${schoolProfile.logo_url}" alt="${schoolName}" style="max-height: 44px; max-width: 160px; object-fit: contain; margin-bottom: 8px; display: block;" />` : ''}
+        ${logoSrc ? `<img src="${logoSrc}" alt="${schoolName}" onerror="this.style.display='none'" style="max-height: 44px; max-width: 160px; object-fit: contain; margin-bottom: 8px; display: block;" />` : ''}
         <h1 class="school-title">${schoolName}</h1>
         <div class="school-meta">
           ${schoolAddress}, ${schoolCity}<br>

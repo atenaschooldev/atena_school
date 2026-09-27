@@ -259,6 +259,11 @@ export function SchoolProfileCard() {
   };
 
   const watchedLogo = form.watch("logo_url");
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [watchedLogo]);
 
   return (
     <Card className="border-2 border-primary/20 shadow-sm overflow-hidden">
@@ -417,14 +422,12 @@ export function SchoolProfileCard() {
                         <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl") || "Logo della Scuola"}</FormLabel>
                         <div className="flex items-center gap-3 p-2.5 bg-muted/20 border border-border/80 rounded-xl">
                           <div className="w-12 h-12 rounded-lg border border-primary/20 bg-background flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                            {watchedLogo ? (
+                            {watchedLogo && !imgError ? (
                               <img
                                 src={watchedLogo}
                                 alt="Logo"
                                 className="w-full h-full object-contain p-1"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = 'none';
-                                }}
+                                onError={() => setImgError(true)}
                               />
                             ) : (
                               <ImageIcon className="h-5 w-5 text-muted-foreground/60" />

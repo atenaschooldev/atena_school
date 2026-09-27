@@ -80,10 +80,13 @@ export function renderBlockHtml(
       const rawTitle = resolveI18n(props.title, locale) || data.title || (locale === 'en' ? 'OFFICIAL DOCUMENT' : 'DOCUMENTO UFFICIALE');
       const title = interpolateVariables(rawTitle, data);
       const showLogo = props.show_logo !== false;
+      const logoSrc = school.logo_url?.startsWith('/') && !school.logo_url.startsWith('//')
+        ? `${school.site_url || 'https://atenaschool.com'}${school.logo_url}`
+        : (school.logo_url || '');
       return `
         <div class="doc-header ${props.header_style || 'classic'}">
           <div class="school-info">
-            ${showLogo && school.logo_url ? `<img src="${school.logo_url}" alt="${school.name}" class="school-logo" />` : ''}
+            ${showLogo && logoSrc ? `<img src="${logoSrc}" alt="${school.name}" class="school-logo" onerror="this.style.display='none'" />` : ''}
             <h1 class="school-name">${school.name}</h1>
             <div class="school-details">
               ${school.address ? `${school.address}, ` : ''}${school.cap ? `${school.cap} ` : ''}${school.city || ''}<br/>

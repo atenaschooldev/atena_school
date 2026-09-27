@@ -42,6 +42,11 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { t } = useTranslation()
   const { profile } = useSchoolProfile()
+  const [sidebarLogoError, setSidebarLogoError] = React.useState(false)
+
+  React.useEffect(() => {
+    setSidebarLogoError(false)
+  }, [profile.logo_url])
 
   const user = {
     name: profile.name || "Atena CRM",
@@ -175,14 +180,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground overflow-hidden">
-                  {profile.logo_url ? (
+                  {profile.logo_url && !sidebarLogoError ? (
                     <img
                       src={profile.logo_url}
                       alt={profile.name}
                       className="size-6 object-contain"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
+                      onError={() => setSidebarLogoError(true)}
                     />
                   ) : (
                     <Logo size={24} className="text-current" />

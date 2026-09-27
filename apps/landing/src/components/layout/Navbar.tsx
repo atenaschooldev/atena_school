@@ -20,6 +20,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
+  const resolvedLogo = (!school.logo_url || school.logo_url === "/assets/logo.webp") ? logo : school.logo_url;
   const [open, setOpen] = useState(false);
   const mounted = useMounted();
   const t = useTranslations("nav");
@@ -175,11 +176,11 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
             >
               <div className="bg-white p-0.5 rounded-full shadow-sm border border-gray-100 flex items-center justify-center shrink-0 w-9 h-9 md:w-12 md:h-12">
                 <Image
-                  src={school.logo_url || logo}
+                  src={resolvedLogo}
                   alt={school.name}
                   width={48}
                   height={48}
-                  unoptimized={Boolean(school.logo_url?.startsWith('data:') || school.logo_url?.startsWith('http'))}
+                  unoptimized={typeof resolvedLogo === 'string' && (resolvedLogo.startsWith('data:') || resolvedLogo.startsWith('http'))}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -359,11 +360,11 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
               {/* Logo / Brand */}
               <Link href="/" className="flex items-center gap-2" onClick={(e) => handleLinkClick(e, "/")}>
                 <Image
-                  src={school.logo_url || logo}
+                  src={resolvedLogo}
                   alt={school.name}
                   width={40}
                   height={40}
-                  unoptimized={Boolean(school.logo_url?.startsWith('data:') || school.logo_url?.startsWith('http'))}
+                  unoptimized={typeof resolvedLogo === 'string' && (resolvedLogo.startsWith('data:') || resolvedLogo.startsWith('http'))}
                   className="object-contain"
                 />
                 <div className="flex flex-col items-start leading-tight">

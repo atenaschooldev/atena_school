@@ -23,6 +23,8 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
     return null;
   }
 
+  const resolvedLogo = (!school.logo_url || school.logo_url === "/assets/logo.webp") ? logo : school.logo_url;
+
   return (
     <footer className="w-full bg-[#043569] text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10 cv-auto">
       {/* Centered Content Container */}
@@ -39,11 +41,11 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             <div className="flex items-center gap-3">
               <div className="bg-white p-1.5 rounded-xl inline-flex items-center justify-center shrink-0 shadow-sm">
                 <Image
-                  src={school.logo_url || logo}
+                  src={resolvedLogo}
                   alt={school.name}
                   width={36}
                   height={36}
-                  unoptimized={Boolean(school.logo_url?.startsWith('data:') || school.logo_url?.startsWith('http'))}
+                  unoptimized={typeof resolvedLogo === 'string' && (resolvedLogo.startsWith('data:') || resolvedLogo.startsWith('http'))}
                   className="object-contain"
                 />
               </div>
