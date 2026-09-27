@@ -173,6 +173,7 @@ export function VisualFormBuilder({
   const [editLabel, setEditLabel] = useState("");
   const [editPlaceholder, setEditPlaceholder] = useState("");
   const [editHelpText, setEditHelpText] = useState("");
+  const [editTarget, setEditTarget] = useState<FormFieldTarget>(FormFieldTarget.PURCHASER);
   const [editRequired, setEditRequired] = useState(false);
   const [editEnabled, setEditEnabled] = useState(true);
 
@@ -289,6 +290,7 @@ export function VisualFormBuilder({
     setEditLabel(f.label);
     setEditPlaceholder(f.placeholder || "");
     setEditHelpText(f.help_text || "");
+    setEditTarget(f.target || FormFieldTarget.PURCHASER);
     setEditRequired(f.is_required);
     setEditEnabled(f.is_enabled);
     setEditModalOpen(true);
@@ -306,6 +308,7 @@ export function VisualFormBuilder({
               label: editLabel.trim(),
               placeholder: editPlaceholder.trim() || undefined,
               help_text: editHelpText.trim() || undefined,
+              target: editTarget,
               is_required: editRequired,
               is_enabled: editEnabled,
             }
@@ -1451,10 +1454,38 @@ export function VisualFormBuilder({
               <div className="p-2.5 rounded-md bg-muted/40 border space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold text-muted-foreground uppercase">{getFieldTypeLabel(editingField.field_type)}</span>
-                  <Badge variant="secondary" className="text-[9px]">{getFieldTargetLabel(editingField.target)}</Badge>
+                  {editingField.is_system ? (
+                    <Badge variant="secondary" className="text-[9px]">{getFieldTargetLabel(editingField.target)}</Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[9px] border-primary/40 text-primary">Custom</Badge>
+                  )}
                 </div>
                 <code className="text-xs font-mono font-semibold text-foreground">{`{{${editingField.key}}}`}</code>
               </div>
+
+              {!editingField.is_system && (
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-medium">{locale === "en" ? "Target Entity" : "Destinazione Dato (Entità)"}</Label>
+                  <select
+                    value={editTarget}
+                    onChange={(e) => setEditTarget(e.target.value as FormFieldTarget)}
+                    className="w-full bg-background border border-border rounded-md px-2 py-1 text-xs font-medium text-foreground cursor-pointer h-8"
+                  >
+                    <option value={FormFieldTarget.PURCHASER}>
+                      {locale === "en" ? "Purchaser / Parent (Billing)" : "Acquirente / Genitore (Pagatore)"}
+                    </option>
+                    <option value={FormFieldTarget.STUDENT}>
+                      {locale === "en" ? "Student / Child (Participant)" : "Studente / Figlio (Partecipante)"}
+                    </option>
+                    <option value={FormFieldTarget.BOOKING}>
+                      {locale === "en" ? "Booking / Course Notes" : "Iscrizione / Corso (Note & Extra)"}
+                    </option>
+                    <option value={FormFieldTarget.CONTACT}>
+                      {locale === "en" ? "Contact Form (Website Lead)" : "Modulo Contatto (Richieste Sito)"}
+                    </option>
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-medium">{t("forms.builderDialogLabelLabel")} *</Label>
