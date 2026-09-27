@@ -27,17 +27,17 @@ export function CreateGroupDialog({
   onSubmit,
 }: CreateGroupDialogProps) {
   const { t } = useTranslation();
-  const { allCourses = [] } = useCourses();
+  const { coursesList: allCourses = [] } = useCourses();
   const { teachers = [] } = useTeachers();
 
   const [name, setName] = useState("");
   const [courseId, setCourseId] = useState("");
   const [teacherId, setTeacherId] = useState("");
-  const [room, setRoom] = useState("Aula 1");
+  const [room, setRoom] = useState("");
   const [maxStudents, setMaxStudents] = useState(8);
   const [status, setStatus] = useState<number>(GroupStatus.RECRUITING);
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
-  const [selectedDays, setSelectedDays] = useState<number[]>([Weekday.TUESDAY, Weekday.THURSDAY]);
+  const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState("18:00");
   const [endTime, setEndTime] = useState("19:30");
   const [notes, setNotes] = useState("");
@@ -55,8 +55,23 @@ export function CreateGroupDialog({
   const handleCourseChange = (selectedCourseId: string) => {
     setCourseId(selectedCourseId);
     const found = allCourses.find((c) => c.id === selectedCourseId);
-    if (found && !name) {
-      setName(`${found.title} - ${startTime}`);
+    if (found) {
+      const courseTitle = found.nome || (found as any).name || (found as any).title || "";
+      if (!name) {
+        setName(`${courseTitle} - ${found.startTime || startTime}`);
+      }
+      if (found.insegnanteId) {
+        setTeacherId(found.insegnanteId);
+      }
+      if (found.scheduleDays && found.scheduleDays.length > 0) {
+        setSelectedDays(found.scheduleDays.map((d: any) => Number(d)));
+      }
+      if (found.startTime) {
+        setStartTime(found.startTime);
+      }
+      if (found.endTime) {
+        setEndTime(found.endTime);
+      }
     }
   };
 
@@ -134,7 +149,7 @@ export function CreateGroupDialog({
               <SelectContent>
                 {allCourses.map((c) => (
                   <SelectItem key={c.id} value={c.id} className="cursor-pointer">
-                    {c.title}
+                    {c.nome || (c as any).name || (c as any).title}
                   </SelectItem>
                 ))}
               </SelectContent>

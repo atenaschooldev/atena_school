@@ -340,14 +340,19 @@ export class BookingsAdminService {
     const booking = await this.prisma.booking.findUnique({ where: { id: bookingId } });
     if (!booking) throw new NotFoundException(`Booking ${bookingId} not found`);
 
+    const where: any = booking.groupId
+      ? { OR: [{ bookingId }, { groupId: booking.groupId }] }
+      : { bookingId };
+
     const lessons = await this.prisma.lesson.findMany({
-      where: { bookingId },
+      where,
       orderBy: { startsAt: 'asc' },
     });
 
     return lessons.map((l) => ({
       id: l.id ? l.id.toString() : '',
       booking_id: l.bookingId,
+      group_id: l.groupId ? l.groupId.toString() : null,
       starts_at: l.startsAt,
       ends_at: l.endsAt,
       status: l.status,
@@ -363,7 +368,9 @@ export class BookingsAdminService {
 
     const bigLessonId = BigInt(lessonId);
     const lesson = await this.prisma.lesson.findUnique({ where: { id: bigLessonId } });
-    if (!lesson || lesson.bookingId !== bookingId) throw new NotFoundException(`Lesson ${lessonId} not found`);
+    if (!lesson || (lesson.bookingId !== bookingId && (!booking.groupId || lesson.groupId !== booking.groupId))) {
+      throw new NotFoundException(`Lesson ${lessonId} not found`);
+    }
 
     await this.prisma.lesson.update({
       where: { id: bigLessonId },

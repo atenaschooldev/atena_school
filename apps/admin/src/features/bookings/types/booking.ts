@@ -45,6 +45,15 @@ export interface BookingOrder {
   total_lessons_count?: number | null;
   subscription_starts_at?: string | null;
   subscription_ends_at?: string | null;
+  group_id?: string | null;
+  group?: {
+    id: string;
+    name: string;
+    room?: string | null;
+    schedule_days?: number[];
+    start_time?: string | null;
+    end_time?: string | null;
+  } | null;
   created_at: string;
 }
 

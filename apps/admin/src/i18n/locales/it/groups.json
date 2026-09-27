@@ -3,7 +3,7 @@
   "subtitle": "Gestisci la composizione delle classi, capienza dei gruppi e orari condivisi.",
   "newGroup": "Nuovo Gruppo",
   "editGroup": "Modifica Gruppo",
-  "groupName": "Gruppo / Corso",
+  "groupName": "Nome Gruppo",
   "defaultGroupCourse": "Corso di Gruppo",
   "teacher": "Docente",
   "unassigned": "Non assegnato",

@@ -3,7 +3,7 @@
   "subtitle": "Manage class composition, group capacities, and shared timetables.",
   "newGroup": "New Group",
   "editGroup": "Edit Group",
-  "groupName": "Group / Course",
+  "groupName": "Group Name",
   "defaultGroupCourse": "Group Course",
   "teacher": "Teacher",
   "unassigned": "Unassigned",

@@ -162,7 +162,7 @@ export function GroupDetailDialog({
             <span className="text-muted-foreground flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" /> {t("groups.classroom")}
             </span>
-            <p className="font-semibold text-foreground truncate">{group.room || "Aula 1"}</p>
+            <p className="font-semibold text-foreground truncate">{group.room || "-"}</p>
           </div>
         </div>
 

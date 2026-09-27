@@ -341,11 +341,14 @@ export class PortalService {
     const bdate = booking.start_date || booking.booking_date || new Date().toISOString();
 
     // ── Read real lessons from DB (source of truth) ──────────────────────────
-    const { data: dbLessons } = await this.supabaseAdmin
-      .from('lessons')
-      .select('*')
-      .eq('booking_id', bookingId)
-      .order('starts_at', { ascending: true });
+    let query = this.supabaseAdmin.from('lessons').select('*');
+    if (booking.group_id) {
+      query = query.or(`booking_id.eq.${bookingId},group_id.eq.${booking.group_id}`);
+    } else {
+      query = query.eq('booking_id', bookingId);
+    }
+
+    const { data: dbLessons } = await query.order('starts_at', { ascending: true });
 
     let lessons: any[];
 

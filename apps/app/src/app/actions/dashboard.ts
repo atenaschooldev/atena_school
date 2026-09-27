@@ -320,11 +320,14 @@ export async function getBookingLessonsAction(bookingId: string) {
       course = cData;
     }
 
-    const { data: lessons, error: lErr } = await supabaseAdmin
-      .from("lessons")
-      .select("*")
-      .eq("booking_id", bookingId)
-      .order("starts_at", { ascending: true });
+    let lessonsQuery = supabaseAdmin.from("lessons").select("*");
+    if (booking.group_id) {
+      lessonsQuery = lessonsQuery.or(`booking_id.eq.${bookingId},group_id.eq.${booking.group_id}`);
+    } else {
+      lessonsQuery = lessonsQuery.eq("booking_id", bookingId);
+    }
+
+    const { data: lessons, error: lErr } = await lessonsQuery.order("starts_at", { ascending: true });
 
     if (lErr) throw lErr;
 

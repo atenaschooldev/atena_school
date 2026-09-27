@@ -183,7 +183,7 @@ export class AttendanceService {
     }
 
     const bookingId = dto.bookingId || lesson.bookingId;
-    const studentId = dto.studentId || (lesson.booking as any)?.student_id || (lesson.booking as any)?.studentId;
+    const studentId = dto.studentId || lesson.studentId || (lesson.booking as any)?.student_id || (lesson.booking as any)?.studentId;
     const numericStatus = parseLessonAttendance(dto.status);
 
     // Create or update attendance record
