@@ -77,21 +77,46 @@ export class StudentsService {
   async findOne(id: string) {
     const student = await this.prisma.students.findUnique({
       where: { id },
+      include: {
+        groupMembers: {
+          include: {
+            group: {
+              include: {
+                course: { select: { id: true, name: true } },
+                teacher: { select: { id: true, fullName: true } },
+              },
+            },
+          },
+        },
+      },
     });
     if (!student) throw new NotFoundException(`Student ${id} not found`);
 
-    const bookings = await this.prisma.booking.findMany({
-      where: {
-        OR: [
-          { studentTaxCode: student.tax_code || undefined },
-          { purchaserTaxCode: student.tax_code || undefined },
-        ],
-      },
-    }).catch(() => []);
+    const bookingsWhere: any[] = [];
+    if (student.tax_code) {
+      bookingsWhere.push({ studentTaxCode: { equals: student.tax_code, mode: 'insensitive' } });
+      bookingsWhere.push({ purchaserTaxCode: { equals: student.tax_code, mode: 'insensitive' } });
+    }
+    if (student.email) {
+      bookingsWhere.push({ studentEmail: { equals: student.email, mode: 'insensitive' } });
+    }
 
-    const memberships = await this.prisma.$queryRawUnsafe<any[]>(
-      `SELECT * FROM annual_memberships WHERE student_id = '${id}'::uuid OR LOWER(tax_code) = LOWER('${student.tax_code || ''}')`
-    ).catch(() => []);
+    const bookings = bookingsWhere.length > 0
+      ? await this.prisma.booking.findMany({
+          where: { OR: bookingsWhere },
+          orderBy: { createdAt: 'desc' },
+        }).catch(() => [])
+      : [];
+
+    const membershipsWhere: any[] = [{ studentId: id }];
+    if (student.tax_code) {
+      membershipsWhere.push({ taxCode: { equals: student.tax_code, mode: 'insensitive' } });
+    }
+
+    const memberships = await this.prisma.annualMembership.findMany({
+      where: { OR: membershipsWhere },
+      orderBy: { createdAt: 'desc' },
+    }).catch(() => []);
 
     return {
       ...student,

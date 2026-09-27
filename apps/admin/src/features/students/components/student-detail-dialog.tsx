@@ -328,12 +328,16 @@ export function StudentDetailDialog({
               </div>
             </div>
 
-            {/* Tabs for Bookings and Memberships */}
+            {/* Tabs for Bookings, Groups and Memberships */}
             <Tabs defaultValue="courses" className="pt-2">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="courses" className="text-xs">
                   <BookOpen className="w-3.5 h-3.5 mr-1.5" />
                   {t("students.enrolledCourses")} ({student.bookings?.length || 0})
+                </TabsTrigger>
+                <TabsTrigger value="groups" className="text-xs">
+                  <User className="w-3.5 h-3.5 mr-1.5" />
+                  {t("groups.title")} ({(student as any).groupMembers?.length || 0})
                 </TabsTrigger>
                 <TabsTrigger value="memberships" className="text-xs">
                   <Award className="w-3.5 h-3.5 mr-1.5" />
@@ -364,6 +368,33 @@ export function StudentDetailDialog({
                 ) : (
                   <div className="py-6 text-center text-muted-foreground text-xs">
                     {t("students.noCoursesFound")}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="groups" className="space-y-2 pt-3">
+                {(student as any).groupMembers && (student as any).groupMembers.length > 0 ? (
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {(student as any).groupMembers.map((gm: any) => (
+                      <div
+                        key={gm.id}
+                        className="p-3 bg-card border border-border/60 rounded-xl flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <p className="font-semibold text-foreground">{gm.group?.name || "Gruppo"}</p>
+                          <p className="text-muted-foreground text-[11px]">
+                            {gm.group?.course?.name || ""} {gm.group?.teacher?.fullName ? `• Docente: ${gm.group.teacher.fullName}` : ""}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10 text-[10px]">
+                          {gm.group?.room || "Aula"}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center text-muted-foreground text-xs">
+                    {t("groups.noGroupsFound")}
                   </div>
                 )}
               </TabsContent>
