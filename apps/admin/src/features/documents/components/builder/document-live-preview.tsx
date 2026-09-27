@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Printer, ZoomIn, ZoomOut, RotateCcw, ExternalLink } from 'lucide-react';
+import { Printer, ZoomIn, ZoomOut, RotateCcw, ExternalLink, FileText, Maximize2 } from 'lucide-react';
 import { DocumentPaperFormat, type DocumentBlocksConfig } from '../../types';
 import { compileDocumentHtml } from '@atena/core';
 import { useTranslation } from '@/i18n/context';
@@ -34,8 +34,25 @@ export function DocumentLivePreview({
   const isInitializedRef = useRef(false);
 
   const activeData = data || formData || {};
+  const isLandscape = blocksConfig?.paper_format === DocumentPaperFormat.A4_LANDSCAPE;
 
-  // Debounced smooth live update without tearing down the iframe window/DOM
+  const adjustIframeDimensions = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!doc || !doc.body) return;
+
+    // Remove internal scrollbars inside the iframe document
+    doc.documentElement.style.overflow = 'hidden';
+    doc.body.style.overflow = 'hidden';
+
+    // Standard A4 minimum height (790px for landscape, 1160px for portrait)
+    const minHeight = isLandscape ? 790 : 1160;
+    const contentHeight = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, minHeight);
+    iframe.style.height = `${contentHeight}px`;
+  }, [isLandscape]);
+
+  // Debounced smooth live update with DOM morphing and zero double-scrollbars
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -82,7 +99,7 @@ export function DocumentLivePreview({
             doc.head.appendChild(newStyle.cloneNode(true));
           }
 
-          // In-place surgical DOM morphing: mutates only changed text nodes and block elements without resetting DOM or reloading images
+          // In-place surgical DOM morphing: mutates only changed text nodes and block elements
           morphDom(doc.body, newDoc.body);
 
           // Restore scroll position
@@ -90,13 +107,17 @@ export function DocumentLivePreview({
             iframe.contentWindow.scrollTo(scrollX, scrollY);
           }
         }
+
+        // Adjust dimensions so exactly ONE scrollbar exists on the outer canvas
+        adjustIframeDimensions();
+        requestAnimationFrame(adjustIframeDimensions);
       } catch (err) {
         console.error('Error compiling document preview:', err);
       }
-    }, 80); // 80ms debounce: lightning fast feel without any DOM thrashing or flashing
+    }, 80);
 
     return () => clearTimeout(timer);
-  }, [blocksConfig, activeData, documentTitle, documentNumber, locale]);
+  }, [blocksConfig, activeData, documentTitle, documentNumber, locale, adjustIframeDimensions]);
 
   const handlePrint = () => {
     if (iframeRef.current?.contentWindow) {
@@ -114,38 +135,39 @@ export function DocumentLivePreview({
     }
   };
 
-  const isLandscape = blocksConfig?.paper_format === DocumentPaperFormat.A4_LANDSCAPE;
-
   return (
-    <div className={`flex flex-col h-full bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl ${className}`}>
-      {/* Control Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-950/80 border-b border-slate-800 text-slate-200 text-xs shrink-0">
+    <div className={`flex flex-col h-full bg-card text-card-foreground border border-border/80 rounded-xl overflow-hidden shadow-sm ${className}`}>
+      {/* Control Toolbar: fully integrated with active CRM Theme & Color presets */}
+      <div className="flex items-center justify-between px-3.5 py-2 bg-muted/40 border-b border-border text-foreground text-xs shrink-0 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 uppercase tracking-wider">
+          <div className="p-1 rounded-md bg-primary/10 text-primary">
+            <FileText className="h-3.5 w-3.5" />
+          </div>
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
             {isLandscape ? 'A4 Landscape' : 'A4 Portrait'}
           </span>
-          <span className="text-slate-400 font-mono text-[11px] truncate max-w-[200px]">
-            {documentNumber || 'DOC-2026/XXXXX'}
+          <span className="text-muted-foreground font-mono text-[11px] truncate max-w-[200px]">
+            {documentNumber || 'DOC-ANTEPRIMA'}
           </span>
         </div>
 
         {/* Zoom & Action Buttons */}
         <div className="flex items-center gap-1.5">
-          <div className="flex items-center bg-slate-800/80 rounded-lg p-0.5 border border-slate-700/60 mr-2">
+          <div className="flex items-center bg-background rounded-lg p-0.5 border border-border shadow-xs mr-1">
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-300 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={() => setZoom((z) => Math.max(50, z - 10))}
               title="Zoom out"
             >
               <ZoomOut className="h-3.5 w-3.5" />
             </Button>
-            <span className="px-2 text-[11px] font-mono text-slate-300 select-none">{zoom}%</span>
+            <span className="px-2 text-[11px] font-mono font-medium text-foreground select-none">{zoom}%</span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-300 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={() => setZoom((z) => Math.min(150, z + 10))}
               title="Zoom in"
             >
@@ -154,7 +176,7 @@ export function DocumentLivePreview({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 text-slate-400 hover:text-white"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground cursor-pointer"
               onClick={() => setZoom(100)}
               title={tr('documents.builder.resetZoom', 'Ripristina 100%')}
             >
@@ -166,7 +188,7 @@ export function DocumentLivePreview({
             variant="outline"
             size="sm"
             onClick={handleOpenNewWindow}
-            className="h-7 text-xs bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
+            className="h-7 text-xs bg-background hover:bg-muted cursor-pointer"
           >
             <ExternalLink className="h-3.5 w-3.5 mr-1" />
             {tr('documents.builder.newWindow', 'Nuova Finestra')}
@@ -175,7 +197,7 @@ export function DocumentLivePreview({
           <Button
             size="sm"
             onClick={handlePrint}
-            className="h-7 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-md"
+            className="h-7 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs cursor-pointer"
           >
             <Printer className="h-3.5 w-3.5 mr-1" />
             {tr('documents.builder.printPdf', 'Stampa / PDF')}
@@ -183,23 +205,25 @@ export function DocumentLivePreview({
         </div>
       </div>
 
-      {/* Sheet Canvas with Scale */}
-      <div className="flex-1 overflow-auto p-6 flex justify-center items-start bg-slate-950/60 custom-scrollbar">
+      {/* Sheet Canvas with Scale: Single Unified Scrollbar, Theme-Aware Neutral Drafting Desk */}
+      <div className="flex-1 overflow-auto p-4 sm:p-8 flex justify-center items-start bg-muted/25 dark:bg-zinc-950/60 custom-scrollbar">
         <div
           style={{
             transform: `scale(${zoom / 100})`,
             transformOrigin: 'top center',
             transition: 'transform 0.15s ease-out',
+            width: isLandscape ? '1120px' : '820px',
           }}
-          className="shadow-2xl rounded-sm overflow-hidden border border-slate-700/50 bg-white"
+          className="shadow-xl shadow-black/10 dark:shadow-black/50 rounded-sm overflow-hidden border border-border/80 bg-white ring-1 ring-black/5 dark:ring-white/10 shrink-0 mb-8"
         >
           <iframe
             ref={iframeRef}
             title="Anteprima Documento A4"
-            className="border-0 bg-white block"
+            className="border-0 bg-white block w-full"
             style={{
-              width: isLandscape ? '1120px' : '860px',
-              height: isLandscape ? '790px' : '1180px',
+              width: '100%',
+              minHeight: isLandscape ? '790px' : '1160px',
+              overflow: 'hidden',
             }}
           />
         </div>
