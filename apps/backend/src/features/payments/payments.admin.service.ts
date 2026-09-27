@@ -73,17 +73,32 @@ export class PaymentsService {
           if (standalone) mId = standalone.id;
         }
 
+        const pBooking = (p as any).booking;
+        const pStudent = (p as any).student;
+
         const purchaserName =
-          (p as any).booking?.purchaserName ||
-          (p as any).student?.full_name ||
-          ((p as any).student?.first_name && (p as any).student?.last_name ? `${(p as any).student.first_name} ${(p as any).student.last_name}` : null) ||
-          (p as any).student?.first_name ||
+          pBooking?.purchaserName ||
+          pStudent?.full_name ||
+          (pStudent?.first_name && pStudent?.last_name ? `${pStudent.first_name} ${pStudent.last_name}` : null) ||
+          pStudent?.first_name ||
           'Cliente';
 
         const purchaserEmail =
-          (p as any).booking?.purchaserEmail ||
-          (p as any).student?.email ||
+          pBooking?.purchaserEmail ||
+          pStudent?.email ||
           '';
+
+        const studentName =
+          pBooking?.studentName ||
+          pStudent?.full_name ||
+          (pStudent?.first_name && pStudent?.last_name ? `${pStudent.first_name} ${pStudent.last_name}` : null) ||
+          pStudent?.first_name ||
+          null;
+
+        const studentEmail =
+          pBooking?.studentEmail ||
+          pStudent?.email ||
+          null;
 
         return {
           ...p,
@@ -91,8 +106,16 @@ export class PaymentsService {
           purchaser_name: purchaserName,
           purchaserEmail,
           purchaser_email: purchaserEmail,
+          studentName,
+          student_name: studentName,
+          studentEmail,
+          student_email: studentEmail,
           membershipId: mId,
           membership_id: mId,
+          createdAt: p.createdAt ? (p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt) : null,
+          created_at: p.createdAt ? (p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt) : null,
+          paidAt: p.paidAt ? (p.paidAt instanceof Date ? p.paidAt.toISOString() : p.paidAt) : null,
+          paid_at: p.paidAt ? (p.paidAt instanceof Date ? p.paidAt.toISOString() : p.paidAt) : null,
         };
       });
 

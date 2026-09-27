@@ -80,13 +80,26 @@ export function getPaymentsTableColumns({
       ),
       cell: ({ row }) => {
         const p = row.original;
-        const name = p.purchaser_name || p.purchaserName || p.student_name || t("common.purchaser");
-        const email = p.purchaser_email || p.purchaserEmail || p.student_email || "";
+        const purchaserName = p.purchaser_name || p.purchaserName || p.student_name || t("common.purchaser");
+        const purchaserEmail = p.purchaser_email || p.purchaserEmail || p.student_email || "";
+        const studentName = p.student_name || p.studentName || p.student?.full_name || (p.student?.first_name && p.student?.last_name ? `${p.student.first_name} ${p.student.last_name}` : p.student?.first_name);
+        const isDifferentStudent = studentName && purchaserName && studentName.toLowerCase().trim() !== purchaserName.toLowerCase().trim();
 
         return (
           <CellAvatar
-            title={name}
-            subtitle={email}
+            title={purchaserName}
+            subtitle={
+              isDifferentStudent ? (
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-semibold text-primary">
+                    Studente: {studentName}
+                  </span>
+                  {purchaserEmail && <span className="text-[10px] text-muted-foreground">{purchaserEmail}</span>}
+                </div>
+              ) : (
+                purchaserEmail
+              )
+            }
             icon={Receipt}
             badgeColor="bg-emerald-500/10 text-emerald-600"
           />
@@ -138,7 +151,7 @@ export function getPaymentsTableColumns({
     {
       accessorKey: "payment_method",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t("payments.filterMethod")} />
+        <DataTableColumnHeader column={column} title={t("payments.paymentMethod")} />
       ),
       cell: ({ row }) => <PaymentMethodBadge method={row.original.payment_method ?? row.original.paymentMethod} />,
     },
@@ -220,7 +233,16 @@ export function getPaymentsTableColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={t("common.date")} />
       ),
-      cell: ({ row }) => <CellFormattedDate dateValue={row.original.created_at || row.original.paid_at} />,
+      cell: ({ row }) => (
+        <CellFormattedDate
+          dateValue={
+            row.original.createdAt ||
+            row.original.created_at ||
+            row.original.paidAt ||
+            row.original.paid_at
+          }
+        />
+      ),
     },
     {
       id: "actions",
