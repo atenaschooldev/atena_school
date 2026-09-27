@@ -225,7 +225,7 @@ export function CheckoutOrderSummary({
             <span className="font-bold text-slate-800">{totalCoursePrice.toFixed(2)}€</span>
           </div>
 
-          {hasAnyFeeDue && includeRegistrationFee !== false && (
+          {hasAnyFeeDue && (
             <div className="flex items-center justify-between text-xs py-0.5">
               <span className="text-slate-600 font-medium">
                 Quota iscrizione annuale {unpaidFeesCount > 1 ? `(${unpaidFeesCount}x ${registrationFeeAmount.toFixed(0)}€)` : ""}

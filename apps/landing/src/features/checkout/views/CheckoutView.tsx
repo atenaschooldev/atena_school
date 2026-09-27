@@ -133,7 +133,7 @@ export function CheckoutView({
     ? Object.values(studentFeeStatuses).some((status) => status === FeeCheckStatus.CHECKING)
     : feeCheckStatus === FeeCheckStatus.CHECKING;
 
-  const totalRegistrationFees = (hasAnyFeeDue && includeRegistrationFee !== false && !appliedPromo?.waiveRegistrationFee)
+  const totalRegistrationFees = (hasAnyFeeDue && !appliedPromo?.waiveRegistrationFee)
     ? unpaidFeesCount * (registrationFeeAmount ?? ANNUAL_REGISTRATION_FEE_EUR)
     : 0;
 
