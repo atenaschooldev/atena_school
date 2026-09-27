@@ -18,6 +18,9 @@ import {
   Tag,
   Calendar,
   Users,
+  UserCheck,
+  CheckSquare,
+  PlusCircle,
   Bell,
   ClipboardList,
   FileText,
@@ -153,6 +156,44 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
   const isEn = locale === "en"
 
   const searchItems: SearchItem[] = [
+    // 0. Quick Actions / Azioni Rapide
+    {
+      title: isEn ? "➕ New Student" : "➕ Nuovo Studente",
+      subtitle: isEn ? "Add a new student to academic registry" : "Registra un nuovo allievo nel registro didattico",
+      keywords: "nuovo studente new student aggiungi iscrivi anagrafica create",
+      url: "/studenti",
+      group: isEn ? "⚡ Quick Actions" : "⚡ Azioni Rapide",
+      icon: UserCheck,
+      badge: isEn ? "Action" : "Azione",
+    },
+    {
+      title: isEn ? "➕ New Class Group" : "➕ Nuovo Gruppo Classe",
+      subtitle: isEn ? "Create and schedule a new cohort" : "Crea una nuova classe e genera il calendario lezioni",
+      keywords: "nuovo gruppo new group crea classe create schedule",
+      url: "/gruppi",
+      group: isEn ? "⚡ Quick Actions" : "⚡ Azioni Rapide",
+      icon: Layers,
+      badge: isEn ? "Action" : "Azione",
+    },
+    {
+      title: isEn ? "➕ New Booking / Order" : "➕ Nuova Prenotazione",
+      subtitle: isEn ? "Register manual or assisted checkout booking" : "Inserisci una prenotazione corso manuale",
+      keywords: "nuova prenotazione new booking ordini iscrizione manuale",
+      url: "/prenotazioni",
+      group: isEn ? "⚡ Quick Actions" : "⚡ Azioni Rapide",
+      icon: CreditCard,
+      badge: isEn ? "Action" : "Azione",
+    },
+    {
+      title: isEn ? "➕ Generate Document" : "➕ Genera Documento",
+      subtitle: isEn ? "Generate contract, receipt or registration form" : "Genera contratti, ricevute fiscali o moduli",
+      keywords: "genera documento contratto ricevuta attestato pdf print",
+      url: "/documenti",
+      group: isEn ? "⚡ Quick Actions" : "⚡ Azioni Rapide",
+      icon: FileText,
+      badge: isEn ? "Action" : "Azione",
+    },
+
     // 1. Overview / Panoramica
     {
       title: tr("nav.dashboard", isEn ? "Dashboard" : "Dashboard Panoramica"),
@@ -256,10 +297,10 @@ export function CommandSearch({ open, onOpenChange }: CommandSearchProps) {
     {
       title: tr("nav.students", isEn ? "Students" : "Studenti"),
       subtitle: isEn ? "Students registry, tax codes, language levels, and annual fees" : "Registro anagrafico studenti, codici fiscali, livelli e quote annuali",
-      keywords: "studenti students anagrafica registro codici fiscali livelli quote",
+      keywords: "studenti students anagrafica registro codici fiscali livelli quote alunni allievi",
       url: "/studenti",
       group: tr("nav.schoolManagement", isEn ? "School Management" : "Gestione Didattica & Scuola"),
-      icon: Users,
+      icon: UserCheck,
     },
     {
       title: tr("nav.users", isEn ? "Users & Access" : "Utenti & Accessi"),
