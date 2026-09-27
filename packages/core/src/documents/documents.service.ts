@@ -380,6 +380,22 @@ export class DocumentsService {
       mergedData.parent?.tax_code ||
       mergedData.teacher?.tax_code;
 
+    let validCreatedBy: string | null = null;
+    if (createdByUserId) {
+      try {
+        const { data: u } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', createdByUserId)
+          .maybeSingle();
+        if (u?.id) {
+          validCreatedBy = u.id;
+        }
+      } catch {
+        validCreatedBy = null;
+      }
+    }
+
     const { data: newDoc, error } = await supabase
       .from('documents')
       .insert({
@@ -401,7 +417,7 @@ export class DocumentsService {
         recipient_tax_code: recipientTaxCode,
         template_data: mergedData,
         rendered_html: renderedHtml,
-        created_by: createdByUserId,
+        created_by: validCreatedBy,
       })
       .select('*')
       .single();
