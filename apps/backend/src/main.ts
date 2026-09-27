@@ -334,16 +334,16 @@ async function bootstrap() {
   const envBadge = isProdDb ? '🟢 PROD (jnfbfihz)' : '🟡 DEV (hcxpfzsm)';
 
   console.log(`
-\x1b[36m╔════════════════════════════════════════════════════════════════════════╗\x1b[0m
-\x1b[36m║\x1b[0m  \x1b[1m\x1b[32m🚀 ATENA SCHOOL BACKEND (NestJS / Fastify)\x1b[0m — [${envBadge}]
-\x1b[36m╠════════════════════════════════════════════════════════════════════════╣\x1b[0m
-\x1b[36m║\x1b[0m  ⚙️  \x1b[1mREST API:\x1b[0m          \x1b[34mhttp://localhost:${port}/v1\x1b[0m
-\x1b[36m║\x1b[0m  📚 \x1b[1mSwagger Hub:\x1b[0m       \x1b[34mhttp://localhost:${port}/docs\x1b[0m
-\x1b[36m║\x1b[0m  🌐 \x1b[1mLanding Docs:\x1b[0m      \x1b[34mhttp://localhost:${port}/docs/landing\x1b[0m
-\x1b[36m║\x1b[0m  🎓 \x1b[1mPortal (LK) Docs:\x1b[0m  \x1b[34mhttp://localhost:${port}/docs/portal\x1b[0m
-\x1b[36m║\x1b[0m  🏢 \x1b[1mCRM Admin Docs:\x1b[0m    \x1b[34mhttp://localhost:${port}/docs/admin\x1b[0m
-\x1b[36m║\x1b[0m  📖 \x1b[1mData Dictionary:\x1b[0m   \x1b[34mhttp://localhost:${port}/docs/dictionary\x1b[0m
-\x1b[36m╚════════════════════════════════════════════════════════════════════════╝\x1b[0m
+\x1b[36m╔════════════════════════════════════════════════════════════════════════════╗\x1b[0m
+\x1b[36m║\x1b[0m  \x1b[1m\x1b[32m🚀 ATENA SCHOOL ECOSYSTEM\x1b[0m — [${envBadge}]
+\x1b[36m╠════════════════════════════════════════════════════════════════════════════╣\x1b[0m
+\x1b[36m║\x1b[0m  🌐 \x1b[1mLanding & Checkout:\x1b[0m    \x1b[34mhttp://localhost:3000\x1b[0m                  \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  🏢 \x1b[1mAdmin CRM (Панель):\x1b[0m    \x1b[35mhttp://localhost:3001\x1b[0m                  \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  🎓 \x1b[1mStudent LK (Кабинет):\x1b[0m  \x1b[33mhttp://localhost:3002\x1b[0m                  \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  ⚙️  \x1b[1mBackend REST API:\x1b[0m      \x1b[32mhttp://localhost:${port}/v1\x1b[0m               \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  📚 \x1b[1mSwagger Hub (Docs):\x1b[0m    \x1b[34mhttp://localhost:${port}/docs\x1b[0m             \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  📖 \x1b[1mData Dictionary:\x1b[0m       \x1b[34mhttp://localhost:${port}/docs/dictionary\x1b[0m  \x1b[36m║\x1b[0m
+\x1b[36m╚════════════════════════════════════════════════════════════════════════════╝\x1b[0m
 `);
 }
 bootstrap();
