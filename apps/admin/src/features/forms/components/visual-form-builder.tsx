@@ -399,12 +399,19 @@ export function VisualFormBuilder({
           <Button
             type="button"
             size="sm"
-            onClick={() => onSave(formData)}
-            disabled={isSaving || !formData.title.trim()}
+            onClick={() => {
+              if (!formData.title?.trim()) {
+                alert(locale === "en" ? "Please enter a form title." : "Inserisci il titolo del modulo prima di salvare.");
+                return;
+              }
+              console.log("[VisualFormBuilder] Saving form template:", formData);
+              onSave(formData);
+            }}
+            disabled={isSaving}
             className="font-semibold text-xs shadow-xs gap-1.5 cursor-pointer h-7"
           >
             <Save className="w-3.5 h-3.5" />
-            {isSaving ? t("forms.builderSaving") : t("forms.builderSaveBtn")}
+            {isSaving ? (t("forms.builderSaving") || "Salvataggio...") : (t("forms.builderSaveBtn") || "Salva Modulo")}
           </Button>
         </div>
       </div>

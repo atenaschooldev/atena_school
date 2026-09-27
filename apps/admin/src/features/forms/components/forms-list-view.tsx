@@ -208,16 +208,32 @@ export function FormsListView() {
 
   const handleSave = async (data: any) => {
     try {
+      if (!data?.title?.trim()) {
+        alert(locale === "en" ? "Please enter a title for the form." : "Inserisci il titolo del modulo.");
+        return;
+      }
       const rawId = (editingForm && typeof editingForm === "object") ? editingForm.id : data?.id;
       const isValidId = Boolean(rawId && rawId !== "new" && rawId !== "draft" && rawId !== "undefined");
+      
+      const payload = {
+        title: data.title.trim(),
+        description: data.description ? data.description.trim() : null,
+        form_type: data.form_type,
+        is_default: Boolean(data.is_default),
+        is_active: Boolean(data.is_active),
+        category_slug: data.category_slug || null,
+        course_id: data.course_id || null,
+        fields_config: Array.isArray(data.fields_config) ? data.fields_config : [],
+      };
+
       if (!isValidId || editingForm === "new") {
-        await createForm(data);
+        await createForm(payload);
       } else {
-        await updateForm(rawId, data);
+        await updateForm(rawId, payload);
       }
       setEditingForm(null);
     } catch (e: any) {
-      console.error("Error saving form:", e);
+      console.error("[FormsListView] Error saving form:", e);
     }
   };
 

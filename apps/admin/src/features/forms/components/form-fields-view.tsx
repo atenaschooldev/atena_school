@@ -260,36 +260,49 @@ export function FormFieldsView() {
   // Save (Create or Update)
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.label_it.trim() || !formData.label_en.trim()) return;
-
-    if (editingField) {
-      await updateField(editingField.id, {
-        label_it: formData.label_it,
-        label_en: formData.label_en,
-        placeholder_it: formData.placeholder_it,
-        placeholder_en: formData.placeholder_en,
-        field_type: formData.field_type,
-        target: formData.target,
-        is_required_default: formData.is_required_default,
-        sort_order: Number(formData.sort_order) || 0,
-        options: formData.options,
-      });
-    } else {
-      if (!formData.key.trim()) return;
-      await createField({
-        key: formData.key,
-        label_it: formData.label_it,
-        label_en: formData.label_en,
-        placeholder_it: formData.placeholder_it,
-        placeholder_en: formData.placeholder_en,
-        field_type: formData.field_type,
-        target: formData.target,
-        is_required_default: formData.is_required_default,
-        sort_order: Number(formData.sort_order) || 0,
-        options: formData.options,
-      });
+    const labelIt = formData.label_it.trim();
+    if (!labelIt) {
+      toast.error(locale === "en" ? "Please enter an Italian label" : "Inserisci l'etichetta in italiano per il campo");
+      return;
     }
-    setIsModalOpen(false);
+    const labelEn = formData.label_en.trim() || labelIt;
+    let fieldKey = formData.key.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    if (!fieldKey) {
+      fieldKey = labelIt.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+    }
+
+    try {
+      if (editingField) {
+        await updateField(editingField.id, {
+          label_it: labelIt,
+          label_en: labelEn,
+          placeholder_it: formData.placeholder_it.trim() || undefined,
+          placeholder_en: formData.placeholder_en.trim() || undefined,
+          field_type: formData.field_type,
+          target: formData.target,
+          is_required_default: formData.is_required_default,
+          sort_order: Number(formData.sort_order) || 0,
+          options: formData.options,
+        });
+      } else {
+        await createField({
+          key: fieldKey,
+          label_it: labelIt,
+          label_en: labelEn,
+          placeholder_it: formData.placeholder_it.trim() || undefined,
+          placeholder_en: formData.placeholder_en.trim() || undefined,
+          field_type: formData.field_type,
+          target: formData.target,
+          is_required_default: formData.is_required_default,
+          sort_order: Number(formData.sort_order) || 0,
+          options: formData.options,
+        });
+      }
+      setIsModalOpen(false);
+    } catch (err: any) {
+      console.error("[FormFieldsView] Error saving field:", err);
+      toast.error(err?.message || "Errore durante il salvataggio del campo");
+    }
   };
 
   // Filtered data
