@@ -6,6 +6,7 @@
   "academicYear": "Academic Year",
   "activeMembers": "Active Members",
   "membershipFee": "Membership Fee",
+  "paymentMethod": "Payment Method",
   "paidDate": "Paid Date",
   "expiresAt": "Expires At",
   "addMembership": "Register Member",

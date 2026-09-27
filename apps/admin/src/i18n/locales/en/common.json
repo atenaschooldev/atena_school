@@ -58,6 +58,8 @@
   "stripe": "Stripe Online",
   "pos": "POS Terminal",
   "transfer": "Bank Transfer",
+  "method": "Payment Method",
+  "paymentMethod": "Payment Method",
   "export": "Export CSV",
   "import": "Import",
   "refresh": "Refresh",

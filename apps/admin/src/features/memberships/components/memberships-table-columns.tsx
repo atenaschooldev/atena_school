@@ -210,7 +210,7 @@ export function getMembershipsTableColumns({
     {
       accessorKey: "paymentMethod",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t("common.method")} />
+        <DataTableColumnHeader column={column} title={t("memberships.paymentMethod")} />
       ),
       cell: ({ row }) => {
         const method = row.original.paymentMethod ?? (row.original as any).payment_method;

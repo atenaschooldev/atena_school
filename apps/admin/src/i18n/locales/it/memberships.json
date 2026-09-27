@@ -6,6 +6,7 @@
   "academicYear": "Anno Accademico",
   "activeMembers": "Soci Attivi",
   "membershipFee": "Quota Iscrizione",
+  "paymentMethod": "Metodo di Pagamento",
   "paidDate": "Data Pagamento",
   "expiresAt": "Scadenza",
   "addMembership": "Registra Socio",

@@ -58,6 +58,8 @@
   "stripe": "Stripe Online",
   "pos": "Terminale POS",
   "transfer": "Bonifico Bancario",
+  "method": "Metodo di Pagamento",
+  "paymentMethod": "Metodo di Pagamento",
   "export": "Esporta CSV",
   "import": "Importa",
   "refresh": "Aggiorna",
