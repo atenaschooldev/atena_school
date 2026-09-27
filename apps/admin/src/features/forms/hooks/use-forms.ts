@@ -66,8 +66,14 @@ export function useForms(filters?: {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, payload }: { id: string; payload: UpdateFormTemplateDto }) => {
-      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
+    mutationFn: async (vars: any) => {
+      const id = vars?.id || vars?.payload?.id;
+      const payload = vars?.payload !== undefined ? vars.payload : vars;
+
+      if (!id || id === "undefined" || id === "draft" || id === "new") {
+        throw new Error("ID del modulo mancante");
+      }
+
       return apiFetch<FormTemplate>(`/admin/forms/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),

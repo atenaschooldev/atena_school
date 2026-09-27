@@ -208,11 +208,12 @@ export function FormsListView() {
 
   const handleSave = async (data: any) => {
     try {
-      const targetId = (editingForm && typeof editingForm === "object" && editingForm.id) ? editingForm.id : (data.id || null);
-      if (!targetId || editingForm === "new") {
+      const rawId = (editingForm && typeof editingForm === "object") ? editingForm.id : data?.id;
+      const isValidId = Boolean(rawId && rawId !== "new" && rawId !== "draft" && rawId !== "undefined");
+      if (!isValidId || editingForm === "new") {
         await createForm(data);
       } else {
-        await updateForm(targetId, data);
+        await updateForm(rawId, data);
       }
       setEditingForm(null);
     } catch (e: any) {
