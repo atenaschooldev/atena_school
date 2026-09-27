@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2, Receipt } from "lucide-react";
+import { Eye, Pencil, Trash2, Receipt, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -90,9 +90,10 @@ export function getPaymentsTableColumns({
             title={purchaserName}
             subtitle={
               isDifferentStudent ? (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-semibold text-primary">
-                    Studente: {studentName}
+                <div className="flex flex-col gap-1 mt-0.5">
+                  <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-md w-fit">
+                    <Baby className="w-2.5 h-2.5 text-primary" />
+                    <span>{studentName}</span>
                   </span>
                   {purchaserEmail && <span className="text-[10px] text-muted-foreground">{purchaserEmail}</span>}
                 </div>
@@ -101,7 +102,7 @@ export function getPaymentsTableColumns({
               )
             }
             icon={Receipt}
-            badgeColor="bg-emerald-500/10 text-emerald-600"
+            badgeColor="bg-primary/10 text-primary"
           />
         );
       },
@@ -114,37 +115,55 @@ export function getPaymentsTableColumns({
       cell: ({ row }) => {
         const type = Number(row.original.type);
         const desc = row.original.description;
+
         if (type === PaymentType.REGISTRATION_FEE) {
           return (
-            <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-emerald-500/30">
+            <Badge variant="outline" className="text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/30 font-semibold text-[11px] gap-1">
               {t("payments.typeMembership")}
             </Badge>
           );
         }
         if (type === PaymentType.SINGLE_LESSON) {
           return (
-            <Badge variant="outline" className="text-purple-600 bg-purple-500/10 border-purple-500/30">
+            <Badge variant="outline" className="text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/30 font-semibold text-[11px]">
               {t("courses.individual")}
             </Badge>
           );
         }
-        let label = t("payments.typeTuition");
         if (type === PaymentType.COURSE_PAYMENT) {
-          label = t("payments.typeTuition");
-        } else if (type === PaymentType.DEPOSIT) {
-          label = t("payments.typeDeposit");
-        } else if (type === PaymentType.INSTALLMENT) {
-          label = t("payments.typeInstallment");
-        } else if (type === PaymentType.REFUND) {
-          label = t("payments.typeRefund");
-        } else if (desc) {
-          label = desc;
+          return (
+            <Badge variant="outline" className="text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/30 font-semibold text-[11px]">
+              {t("payments.typeTuition")}
+            </Badge>
+          );
+        }
+        if (type === PaymentType.DEPOSIT) {
+          return (
+            <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/30 font-semibold text-[11px]">
+              {t("payments.typeDeposit")}
+            </Badge>
+          );
+        }
+        if (type === PaymentType.INSTALLMENT) {
+          return (
+            <Badge variant="outline" className="text-cyan-600 dark:text-cyan-400 bg-cyan-500/10 border-cyan-500/30 font-semibold text-[11px]">
+              {t("payments.typeInstallment")}
+            </Badge>
+          );
+        }
+        if (type === PaymentType.REFUND) {
+          return (
+            <Badge variant="outline" className="text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/30 font-semibold text-[11px]">
+              {t("payments.typeRefund")}
+            </Badge>
+          );
         }
 
+        const label = desc || t("payments.typeTuition");
         return (
-          <div className="flex flex-col text-xs">
-            <span className="font-medium text-foreground">{label}</span>
-          </div>
+          <Badge variant="outline" className="text-slate-700 dark:text-slate-300 bg-slate-500/10 border-slate-500/20 font-semibold text-[11px]">
+            {label}
+          </Badge>
         );
       },
     },
@@ -224,9 +243,13 @@ export function getPaymentsTableColumns({
     {
       accessorKey: "amount",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title={t("common.amount")} />
+        <DataTableColumnHeader column={column} title={t("common.amount")} className="justify-end text-right" />
       ),
-      cell: ({ row }) => <CellCurrency amount={Number(row.original.amount || 0)} />,
+      cell: ({ row }) => (
+        <div className="text-right pr-2">
+          <CellCurrency amount={row.original.amount} />
+        </div>
+      ),
     },
     {
       accessorKey: "created_at",
