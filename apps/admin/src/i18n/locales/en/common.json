@@ -60,6 +60,8 @@
   "transfer": "Bank Transfer",
   "method": "Payment Method",
   "paymentMethod": "Payment Method",
+  "billingScheme": "Billing Scheme",
+  "parent": "Parent",
   "export": "Export CSV",
   "import": "Import",
   "refresh": "Refresh",

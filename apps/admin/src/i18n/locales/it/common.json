@@ -60,6 +60,8 @@
   "transfer": "Bonifico Bancario",
   "method": "Metodo di Pagamento",
   "paymentMethod": "Metodo di Pagamento",
+  "billingScheme": "Piano di Pagamento",
+  "parent": "Genitore",
   "export": "Esporta CSV",
   "import": "Importa",
   "refresh": "Aggiorna",
