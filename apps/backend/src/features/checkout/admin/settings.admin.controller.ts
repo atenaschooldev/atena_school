@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, HttpCode, HttpStatus, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, HttpCode, HttpStatus, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { CheckoutService } from '../public/checkout.public.service';
 import { AuthGuard } from '../../../core/guards/auth.guard';
@@ -73,6 +73,18 @@ export class SettingsAdminController {
     const profile = await this.checkoutService.updateSchoolProfile(body);
     revalidateLanding({ tag: 'school-profile' }).catch(() => {});
     return { success: true, profile };
+  }
+
+  @Post('school-profile/logo')
+  @HttpCode(HttpStatus.OK)
+  @Roles('admin', 'superadmin', 'director')
+  @ApiOperation({
+    summary: 'Загрузить логотип школы в Supabase Storage',
+    description: 'Принимает Base64 Data URL, загружает файл в бакет brand-assets и возвращает постоянный публичный CDN URL',
+  })
+  async uploadSchoolLogo(@Body() body: { dataUrl: string; fileName?: string }) {
+    const result = await this.checkoutService.uploadLogoAsset(body.dataUrl, body.fileName);
+    return { success: true, url: result.url };
   }
 
   @Get('analytics')

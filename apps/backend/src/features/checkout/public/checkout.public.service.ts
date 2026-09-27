@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type Stripe from 'stripe';
@@ -130,6 +130,50 @@ export class CheckoutService {
 
   async updateSchoolProfile(profile: Partial<SchoolProfile>) {
     return updateSchoolProfileCore(this.supabaseAdmin, profile);
+  }
+
+  async uploadLogoAsset(dataUrl: string, fileName?: string): Promise<{ url: string }> {
+    if (!dataUrl || !dataUrl.startsWith('data:')) {
+      throw new BadRequestException('Formato dataUrl non valido');
+    }
+
+    const matches = dataUrl.match(/^data:([A-Za-z0-9-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length < 3) {
+      throw new BadRequestException('Base64 malformato');
+    }
+
+    const mimeType = matches[1];
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    if (buffer.length > 5 * 1024 * 1024) {
+      throw new BadRequestException('Dimensione del file supera il limite massimo di 5MB');
+    }
+
+    let ext = 'png';
+    if (mimeType.includes('webp')) ext = 'webp';
+    else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+    else if (mimeType.includes('svg')) ext = 'svg';
+    else if (mimeType.includes('png')) ext = 'png';
+
+    const filename = `logo-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await this.supabaseAdmin.storage
+      .from('brand-assets')
+      .upload(filename, buffer, {
+        contentType: mimeType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw new BadRequestException(`Errore caricamento storage: ${uploadError.message}`);
+    }
+
+    const { data: publicUrlData } = this.supabaseAdmin.storage
+      .from('brand-assets')
+      .getPublicUrl(filename);
+
+    return { url: publicUrlData.publicUrl };
   }
 
   async getAnalyticsSettings() {

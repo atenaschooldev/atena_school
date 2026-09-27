@@ -225,6 +225,7 @@ export function SchoolProfileCard() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [showCustomUrl, setShowCustomUrl] = useState(false);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -242,11 +243,26 @@ export function SchoolProfileCard() {
 
     setIsUploadingLogo(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const dataUrl = event.target?.result as string;
       if (dataUrl) {
-        form.setValue('logo_url', dataUrl, { shouldDirty: true, shouldValidate: true });
-        toast.success(t('schoolProfile.logoLoaded') || 'Logo caricato con successo!');
+        try {
+          const res = await api.post<{ success: boolean; url: string }>(
+            '/admin/settings/school-profile/logo',
+            { dataUrl, fileName: file.name }
+          );
+          if (res?.url) {
+            form.setValue('logo_url', res.url, { shouldDirty: true, shouldValidate: true });
+            toast.success(t('schoolProfile.logoLoaded') || 'Logo salvato nello Storage CDN con successo!');
+          } else {
+            form.setValue('logo_url', dataUrl, { shouldDirty: true, shouldValidate: true });
+            toast.success(t('schoolProfile.logoLoaded') || 'Logo caricato con successo!');
+          }
+        } catch (err) {
+          console.warn('[Storage Upload Fallback]', err);
+          form.setValue('logo_url', dataUrl, { shouldDirty: true, shouldValidate: true });
+          toast.success(t('schoolProfile.logoLoaded') || 'Logo caricato con successo!');
+        }
       }
       setIsUploadingLogo(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -419,66 +435,89 @@ export function SchoolProfileCard() {
                     name="logo_url"
                     render={({ field }) => (
                       <FormItem className="md:col-span-1">
-                        <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl") || "Logo della Scuola"}</FormLabel>
-                        <div className="flex items-center gap-3 p-2.5 bg-muted/20 border border-border/80 rounded-xl">
-                          <div className="w-12 h-12 rounded-lg border border-primary/20 bg-background flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
-                            {watchedLogo && !imgError ? (
-                              <img
-                                src={watchedLogo}
-                                alt="Logo"
-                                className="w-full h-full object-contain p-1"
-                                onError={() => setImgError(true)}
-                              />
-                            ) : (
-                              <ImageIcon className="h-5 w-5 text-muted-foreground/60" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0 space-y-1.5">
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileSelect}
-                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                className="hidden"
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploadingLogo || isLoading || isUpdating}
-                                className="h-7 px-2.5 text-[11px] cursor-pointer bg-background hover:bg-muted"
-                              >
-                                {isUploadingLogo ? (
-                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <Upload className="h-3 w-3 mr-1 text-primary" />
-                                )}
-                                {t("schoolProfile.uploadLogo") || "Carica da File"}
-                              </Button>
-
-                              {watchedLogo && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => form.setValue("logo_url", "", { shouldDirty: true })}
-                                  className="h-7 px-2 text-[11px] text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-                                >
-                                  <X className="h-3 w-3 mr-1" />
-                                  {t("common.remove") || "Rimuovi"}
-                                </Button>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl") || "Logo della Scuola"}</FormLabel>
+                          <button
+                            type="button"
+                            onClick={() => setShowCustomUrl(!showCustomUrl)}
+                            className="text-[10px] text-muted-foreground hover:text-primary underline cursor-pointer"
+                          >
+                            {showCustomUrl
+                              ? (t("schoolProfile.customUrlHide") || "Nascondi URL manuale")
+                              : (t("schoolProfile.customUrlToggle") || "Modifica URL manuale")}
+                          </button>
+                        </div>
+                        <div className="p-3 bg-muted/20 border border-border/80 rounded-xl space-y-2.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg border border-primary/20 bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                              {watchedLogo && !imgError ? (
+                                <img
+                                  src={watchedLogo}
+                                  alt="Logo"
+                                  className="w-full h-full object-contain p-1"
+                                  onError={() => setImgError(true)}
+                                />
+                              ) : (
+                                <ImageIcon className="h-5 w-5 text-muted-foreground/60" />
                               )}
                             </div>
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="file"
+                                  ref={fileInputRef}
+                                  onChange={handleFileSelect}
+                                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                  className="hidden"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  disabled={isUploadingLogo || isLoading || isUpdating}
+                                  className="h-7 px-2.5 text-[11px] cursor-pointer bg-background hover:bg-muted"
+                                >
+                                  {isUploadingLogo ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-3 w-3 mr-1 text-primary" />
+                                  )}
+                                  {watchedLogo ? (t("common.edit") || "Sostituisci") : (t("schoolProfile.uploadLogo") || "Carica da File")}
+                                </Button>
+
+                                {watchedLogo && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => form.setValue("logo_url", "", { shouldDirty: true })}
+                                    className="h-7 px-2 text-[11px] text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                  >
+                                    <X className="h-3 w-3 mr-1" />
+                                    {t("common.remove") || "Rimuovi"}
+                                  </Button>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                {watchedLogo?.startsWith('http')
+                                  ? 'Caricato su Supabase CDN'
+                                  : watchedLogo?.startsWith('data:')
+                                  ? 'File locale pronto al salvataggio'
+                                  : (t("schoolProfile.logoSpecsHint") || "PNG, SVG, WebP • max 5MB")}
+                              </p>
+                            </div>
+                          </div>
+
+                          {showCustomUrl && (
                             <FormControl>
                               <Input
-                                placeholder="Oppure URL: /assets/logo.webp o https://..."
-                                className="h-7 text-[11px] font-mono"
+                                placeholder="https://... o /assets/logo.webp"
+                                className="h-7 text-[11px] font-mono bg-background"
                                 {...field}
                               />
                             </FormControl>
-                          </div>
+                          )}
                         </div>
                         <FormMessage />
                       </FormItem>
