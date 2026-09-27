@@ -52,7 +52,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const formattedMessage = Array.isArray(message) ? message.join(', ') : String(message);
     const typeUri = `https://httpstatuses.com/${status}`;
 
-    console.error(`[${request.method}] ${request.url} [${status} ${title}] - Detail:`, formattedMessage);
+    const statusBadge = status >= 500
+      ? `\x1b[41m\x1b[37m\x1b[1m ${status} ${title} \x1b[0m`
+      : `\x1b[43m\x1b[30m\x1b[1m ${status} ${title} \x1b[0m`;
+
+    const bodyPreview = request.body ? JSON.stringify(request.body) : 'none';
+    const cleanBody = bodyPreview.length > 200 ? `${bodyPreview.substring(0, 200)}...` : bodyPreview;
+
+    console.error(`
+\x1b[31m┌──────────────────────────────────────────────────────────────────────┐\x1b[0m
+\x1b[31m│ ❌ API ERROR:\x1b[0m \x1b[1m[${request.method}] ${request.url}\x1b[0m
+\x1b[31m├──────────────────────────────────────────────────────────────────────┤\x1b[0m
+  Status:  ${statusBadge}
+  Detail:  \x1b[1m${formattedMessage}\x1b[0m
+  Params:  ${invalidParams ? JSON.stringify(invalidParams) : 'none'}
+  Payload: ${cleanBody}
+\x1b[31m└──────────────────────────────────────────────────────────────────────┘\x1b[0m
+`);
 
     // Forward unhandled server crashes & 500 errors to Sentry
     if (status >= 500) {
