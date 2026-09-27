@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,6 +27,8 @@ import {
   RotateCcw,
   Loader2,
   Image as ImageIcon,
+  Upload,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/context";
@@ -221,6 +223,41 @@ export function SchoolProfileCard() {
     toast.info(t("schoolProfile.resetConfirmDesc"));
   };
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('schoolProfile.invalidImage') || 'Seleziona un file immagine valido (PNG, JPG, SVG, WebP)');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t('schoolProfile.imageTooLarge') || 'L\'immagine non può superare 5MB');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        form.setValue('logo_url', dataUrl, { shouldDirty: true, shouldValidate: true });
+        toast.success(t('schoolProfile.logoLoaded') || 'Logo caricato con successo!');
+      }
+      setIsUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.onerror = () => {
+      toast.error('Errore durante la lettura del file');
+      setIsUploadingLogo(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const watchedLogo = form.watch("logo_url");
 
   return (
@@ -376,10 +413,10 @@ export function SchoolProfileCard() {
                     control={form.control}
                     name="logo_url"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl")}</FormLabel>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg border border-border/80 bg-muted/40 flex items-center justify-center shrink-0 overflow-hidden">
+                      <FormItem className="md:col-span-1">
+                        <FormLabel className="text-xs font-bold">{t("schoolProfile.logoUrl") || "Logo della Scuola"}</FormLabel>
+                        <div className="flex items-center gap-3 p-2.5 bg-muted/20 border border-border/80 rounded-xl">
+                          <div className="w-12 h-12 rounded-lg border border-primary/20 bg-background flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
                             {watchedLogo ? (
                               <img
                                 src={watchedLogo}
@@ -393,9 +430,52 @@ export function SchoolProfileCard() {
                               <ImageIcon className="h-5 w-5 text-muted-foreground/60" />
                             )}
                           </div>
-                          <FormControl>
-                            <Input placeholder="/assets/logo.webp" {...field} />
-                          </FormControl>
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileSelect}
+                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                className="hidden"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploadingLogo || isLoading || isUpdating}
+                                className="h-7 px-2.5 text-[11px] cursor-pointer bg-background hover:bg-muted"
+                              >
+                                {isUploadingLogo ? (
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <Upload className="h-3 w-3 mr-1 text-primary" />
+                                )}
+                                {t("schoolProfile.uploadLogo") || "Carica da File"}
+                              </Button>
+
+                              {watchedLogo && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => form.setValue("logo_url", "", { shouldDirty: true })}
+                                  className="h-7 px-2 text-[11px] text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  {t("common.remove") || "Rimuovi"}
+                                </Button>
+                              )}
+                            </div>
+                            <FormControl>
+                              <Input
+                                placeholder="Oppure URL: /assets/logo.webp o https://..."
+                                className="h-7 text-[11px] font-mono"
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -405,11 +485,14 @@ export function SchoolProfileCard() {
                     control={form.control}
                     name="website"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="md:col-span-1">
                         <FormLabel className="text-xs font-bold">{t("schoolProfile.website")}</FormLabel>
                         <FormControl>
                           <Input placeholder="https://atenaschool.com" {...field} />
                         </FormControl>
+                        <FormDescription className="text-[11px]">
+                          Sito web ufficiale collegato alla scuola
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
