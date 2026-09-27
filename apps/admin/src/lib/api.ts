@@ -151,6 +151,8 @@ export async function apiFetch<T>(
       if (parsed) {
         if (Array.isArray(parsed.message)) {
           errorMessage = parsed.message.join(", ");
+        } else if (typeof parsed.detail === "string") {
+          errorMessage = parsed.detail;
         } else if (typeof parsed.message === "string") {
           errorMessage = parsed.message;
         } else if (parsed.error && typeof parsed.error === "string") {

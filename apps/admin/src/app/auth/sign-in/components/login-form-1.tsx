@@ -30,7 +30,7 @@ import { useTranslation } from "@/i18n/context"
 
 const loginFormSchema = z.object({
   email: z.string().email("Inserisci un indirizzo email valido"),
-  password: z.string().min(6, "La password deve contenere almeno 6 caratteri"),
+  password: z.string().min(1, "Inserisci la password"),
 })
 
 type LoginFormValues = z.infer<typeof loginFormSchema>
