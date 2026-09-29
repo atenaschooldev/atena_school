@@ -591,10 +591,12 @@ export class BookingsAdminService {
 
     const profile = await this.checkoutService.getSchoolProfile();
     const { academicYear: fallbackAcademicYear, expiresAt: fallbackExpiresAt } = getCurrentAcademicYear();
-    const academicYear = profile?.academic_year || fallbackAcademicYear;
-    const feeAmount = profile?.registration_fee_enabled !== false && profile?.registration_fee_eur != null
+    const academicYear = (dto as any).academicYear || profile?.academic_year || fallbackAcademicYear;
+    const feeAmount = (dto as any).amount != null
+      ? Number((dto as any).amount)
+      : profile?.registration_fee_eur != null
       ? Number(profile.registration_fee_eur)
-      : 0.0;
+      : 30.0;
 
     const { data: membership, error: mErr } = await this.supabaseAdmin
       .from('annual_memberships')
@@ -605,7 +607,7 @@ export class BookingsAdminService {
         phone: dto.phone || null,
         academic_year: academicYear,
         status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
-        paid_at: new Date().toISOString(),
+        paid_at: isPaid ? new Date().toISOString() : null,
         expires_at: fallbackExpiresAt,
       })
       .select('*')
