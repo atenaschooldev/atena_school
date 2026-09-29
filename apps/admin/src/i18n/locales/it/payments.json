@@ -49,5 +49,15 @@
   "confirmAndPrint": "Conferma Incasso",
   "emptyState": {
     "title": "Nessun pagamento trovato"
-  }
+  },
+  "studentOrPurchaser": "Studente / Acquirente",
+  "clientSearchHint": "Digita nome, cognome, email o CF e premi Invio per cercare un cliente esistente.",
+  "changeClient": "Cambia",
+  "paymentItems": "Voci da Incassare",
+  "courseTuitionDesc": "Saldo o acconto per il corso di studio",
+  "registrationFeeDesc": "Validità 365 giorni • Tesseramento annuale",
+  "cashDesk": "Cassa in sede",
+  "posPhysical": "POS Fisico",
+  "bankTransferSub": "Conto scuola",
+  "notesPlaceholder": "Es. Pagamento ricevuto al desk, rif. ricevuta cartacea #..."
 }

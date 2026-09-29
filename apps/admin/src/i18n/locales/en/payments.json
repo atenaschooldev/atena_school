@@ -49,5 +49,15 @@
   "confirmAndPrint": "Confirm & Record Payment",
   "emptyState": {
     "title": "No payments found"
-  }
+  },
+  "studentOrPurchaser": "Student / Purchaser",
+  "clientSearchHint": "Type name, email, or tax code and press Enter to search existing clients.",
+  "changeClient": "Change",
+  "paymentItems": "Payment Items",
+  "courseTuitionDesc": "Tuition balance or deposit for the course",
+  "registrationFeeDesc": "Valid 365 days • Annual membership fee",
+  "cashDesk": "In-school cash desk",
+  "posPhysical": "Physical POS",
+  "bankTransferSub": "School bank account",
+  "notesPlaceholder": "E.g. Paid at reception desk, paper receipt #..."
 }
