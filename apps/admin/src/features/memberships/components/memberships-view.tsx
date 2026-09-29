@@ -9,7 +9,7 @@ import { RegistrationFeeSettingsDialog } from "./registration-fee-settings-dialo
 import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Button } from "@/components/ui/button";
-import { Plus, Sliders } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
 import {
   type SortingState,
@@ -120,8 +120,8 @@ export function MembershipsView() {
                 onClick={() => setSettingsDialogOpen(true)}
                 className="h-8 text-xs font-medium gap-1.5 cursor-pointer rounded-lg shadow-2xs"
               >
-                <Sliders className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{t("memberships.tabSettings") || "Configura Quota"}</span>
+                <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{t("memberships.tabSettings") || "Impostazioni Quota"}</span>
               </Button>
 
               <Button
