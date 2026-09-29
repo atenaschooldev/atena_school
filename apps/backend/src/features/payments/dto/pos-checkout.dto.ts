@@ -69,6 +69,14 @@ export class PosCheckoutDto {
   @IsString()
   purchaserTaxCode?: string;
 
+  @ApiPropertyOptional({
+    description: 'Codice Fiscale студента (для привязки ежегодного взноса)',
+    example: 'RSSMRA80A01H501T',
+  })
+  @IsOptional()
+  @IsString()
+  studentTaxCode?: string;
+
   @ApiProperty({
     enum: PaymentMethod,
     description: 'Способ оплаты (1=STRIPE, 2=CASH, 3=POS, 4=BANK_TRANSFER)',

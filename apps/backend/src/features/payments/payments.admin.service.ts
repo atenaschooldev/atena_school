@@ -452,6 +452,7 @@ export class PaymentsService {
     purchaserName?: string;
     purchaserEmail?: string;
     purchaserTaxCode?: string;
+    studentTaxCode?: string;
     paymentMethod: number | string;
     items: Array<{ type: number | string; amount: number; description?: string }>;
     notes?: string;
@@ -473,21 +474,45 @@ export class PaymentsService {
       });
       createdPayments.push(payment);
 
-      if ((itemType === PaymentType.REGISTRATION_FEE || Number(item.amount) === 30) && (dto.purchaserTaxCode || dto.studentId)) {
+      if (
+        (itemType === PaymentType.REGISTRATION_FEE || Number(item.amount) === 30) &&
+        (dto.studentTaxCode || dto.purchaserTaxCode || dto.studentId || dto.bookingId)
+      ) {
         const { academicYear, expiresAt } = getCurrentAcademicYear();
 
         try {
-          const taxCode = dto.purchaserTaxCode || (dto.studentId ? (await this.prisma.students.findUnique({ where: { id: dto.studentId } }))?.tax_code : null);
-          if (taxCode) {
+          let targetTaxCode: string | null | undefined = dto.studentTaxCode || dto.purchaserTaxCode;
+          let targetStudentId: string | null | undefined = dto.studentId;
+
+          if ((!targetTaxCode || !targetStudentId) && dto.bookingId) {
+            const b = await this.prisma.booking.findUnique({ where: { id: dto.bookingId } });
+            if (b) {
+              if (!targetTaxCode) targetTaxCode = b.studentTaxCode || b.purchaserTaxCode;
+              if (!targetStudentId) targetStudentId = b.studentId ?? undefined;
+            }
+          }
+
+          if (!targetTaxCode && targetStudentId) {
+            const s = await this.prisma.students.findUnique({ where: { id: targetStudentId } });
+            if (s?.tax_code) targetTaxCode = s.tax_code;
+          }
+
+          if (targetTaxCode) {
             await this.prisma.$executeRawUnsafe(
               `INSERT INTO annual_memberships (id, tax_code, student_id, user_id, status, academic_year, paid_at, expires_at)
                VALUES (gen_random_uuid(), $1, $2::uuid, $3::uuid, ${MembershipStatus.ACTIVE}, '${academicYear}', NOW(), $4::timestamptz)
                ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id)`,
-              taxCode,
-              dto.studentId || null,
+              targetTaxCode,
+              targetStudentId || null,
               payment.userId || null,
               expiresAt,
             ).catch((e) => console.error("Error inserting annual_membership:", e));
+          }
+
+          if (targetStudentId) {
+            await this.prisma.$executeRawUnsafe(
+              `UPDATE students SET annual_fee_paid = true, annual_fee_paid_at = NOW() WHERE id = '${targetStudentId}'::uuid`
+            ).catch(() => null);
           }
         } catch (err) {
           console.error("Error in membership insertion logic:", err);

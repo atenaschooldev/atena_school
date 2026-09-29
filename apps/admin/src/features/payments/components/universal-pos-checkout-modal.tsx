@@ -71,9 +71,12 @@ export function UniversalPosCheckoutModal({
   const [searching, setSearching] = useState(false);
   const [selectedClient, setSelectedClient] = useState<{
     bookingId?: string;
+    studentId?: string;
     name: string;
     email: string;
     taxCode?: string;
+    studentTaxCode?: string;
+    purchaserTaxCode?: string;
     phone?: string;
     courseName?: string;
     outstandingEstimate?: number;
@@ -134,9 +137,12 @@ export function UniversalPosCheckoutModal({
         const outstanding = Number(res.outstandingEstimate ?? res.totalPrice ?? 0);
         setSelectedClient({
           bookingId: res.bookingId || res.id,
+          studentId: res.studentId || res.student_id,
           name: res.studentName || res.purchaserName || "Cliente",
           email: res.studentEmail || res.purchaserEmail || "",
           taxCode: res.studentTaxCode || res.purchaserTaxCode || "",
+          studentTaxCode: res.studentTaxCode,
+          purchaserTaxCode: res.purchaserTaxCode,
           phone: res.studentPhone || res.purchaserPhone || "",
           courseName: res.courseName || res.course_name,
           outstandingEstimate: outstanding,
@@ -192,9 +198,11 @@ export function UniversalPosCheckoutModal({
 
       await api.post("/admin/payments/pos-checkout", {
         bookingId: selectedClient?.bookingId,
+        studentId: selectedClient?.studentId,
         purchaserName: selectedClient?.name || searchQuery,
         purchaserEmail: selectedClient?.email,
-        purchaserTaxCode: selectedClient?.taxCode,
+        purchaserTaxCode: selectedClient?.purchaserTaxCode || selectedClient?.taxCode,
+        studentTaxCode: selectedClient?.studentTaxCode || selectedClient?.taxCode,
         paymentMethod: Number(paymentMethod),
         items,
         notes,
