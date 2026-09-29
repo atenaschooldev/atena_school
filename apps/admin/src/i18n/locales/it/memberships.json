@@ -60,5 +60,26 @@
     "success": "Quota associativa registrata con successo",
     "error": "Errore durante la registrazione della quota"
   },
-  "allAcademicYears": "Tutti gli anni"
+  "allAcademicYears": "Tutti gli anni",
+  "settings": {
+    "title": "Quota Associativa & Iscrizione Annuale",
+    "description": "Configurazione della quota annuale per studente, anno accademico e verifica del Codice Fiscale.",
+    "statusActive": "Attiva: €{amount} / studente ({year})",
+    "statusDisabled": "Disattivata (Esente per tutti)",
+    "toggleTitle": "Abilita Quota Associativa Obbligatoria",
+    "toggleDesc": "Quando attiva, il sistema verifica se lo studente ha già pagato la quota per l'anno accademico in corso. Se non è attiva, i corsi possono essere acquistati senza il sovrapprezzo della quota associativa.",
+    "feeAmount": "Importo Quota di Iscrizione (€)",
+    "feeAmountHint": "Importo applicato una sola volta ogni 12 mesi per ciascun Codice Fiscale registrato.",
+    "presets": "Preimpostati",
+    "academicYear": "Anno Accademico di Riferimento",
+    "academicYearHint": "Utilizzato per le ricevute, comunicazioni formali e validità temporale del tesseramento.",
+    "currentYear": "Corrente",
+    "nextYear": "Successivo",
+    "legalNoticeTitle": "Normativa Fiscale & Regole Business Italia",
+    "legalNoticeDesc": "La quota associativa annuale è esente IVA (Art. 148 TUIR / DPR 633/72). In caso di iscrizione da parte di un genitore, la verifica del pagamento avviene sul Codice Fiscale del minore (studente), mentre la ricevuta e il pagamento sono intestati al genitore (acquirente).",
+    "save": "Salva Impostazioni Quota",
+    "saving": "Salvataggio in corso...",
+    "saveSuccess": "Impostazioni Quota Associativa salvate con successo!",
+    "saveError": "Errore durante il salvataggio della quota associativa"
+  }
 }

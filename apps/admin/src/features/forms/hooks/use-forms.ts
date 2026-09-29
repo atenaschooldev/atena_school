@@ -67,13 +67,14 @@ export function useForms(filters?: {
 
   const updateMutation = useMutation({
     mutationFn: async (vars: any) => {
-      const id = vars?.id || vars?.payload?.id;
+      const id = vars?.id !== undefined ? String(vars.id) : (vars?.payload?.id !== undefined ? String(vars.payload.id) : (typeof vars === "string" || typeof vars === "number" ? String(vars) : ""));
       const payload = vars?.payload !== undefined ? vars.payload : vars;
 
-      if (!id || id === "undefined" || id === "draft" || id === "new") {
+      if (!id || id === "undefined" || id === "draft" || id === "new" || id === "null") {
         throw new Error("ID del modulo mancante");
       }
 
+      console.log(`[useForms] PATCH /admin/forms/${id} payload:`, payload);
       return apiFetch<FormTemplate>(`/admin/forms/${id}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
@@ -89,8 +90,8 @@ export function useForms(filters?: {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
+    mutationFn: async (id: string | number) => {
+      if (id === undefined || id === null || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<{ success: boolean; id: string }>(`/admin/forms/${id}`, {
         method: "DELETE",
       });
@@ -105,8 +106,8 @@ export function useForms(filters?: {
   });
 
   const setDefaultMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
+    mutationFn: async (id: string | number) => {
+      if (id === undefined || id === null || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<FormTemplate>(`/admin/forms/${id}/set-default`, {
         method: "POST",
       });
@@ -121,8 +122,8 @@ export function useForms(filters?: {
   });
 
   const duplicateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      if (!id || id === "undefined") throw new Error("ID del modulo mancante");
+    mutationFn: async (id: string | number) => {
+      if (id === undefined || id === null || id === "undefined") throw new Error("ID del modulo mancante");
       return apiFetch<FormTemplate>(`/admin/forms/${id}/duplicate`, {
         method: "POST",
       });
@@ -142,9 +143,9 @@ export function useForms(filters?: {
     refetch,
     createForm: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    updateForm: (idOrObj: string | { id: string; payload: UpdateFormTemplateDto }, maybePayload?: UpdateFormTemplateDto) => {
-      if (typeof idOrObj === "string") {
-        return updateMutation.mutateAsync({ id: idOrObj, payload: maybePayload! });
+    updateForm: (idOrObj: string | number | { id: string | number; payload: UpdateFormTemplateDto }, maybePayload?: UpdateFormTemplateDto) => {
+      if (typeof idOrObj === "string" || typeof idOrObj === "number") {
+        return updateMutation.mutateAsync({ id: String(idOrObj), payload: maybePayload! });
       }
       return updateMutation.mutateAsync(idOrObj);
     },

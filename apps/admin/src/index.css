@@ -187,3 +187,8 @@ input[type="datetime-local"] {
   box-sizing: border-box;
 }
 
+/* Ensure clicks and mouse interactions never get permanently blocked */
+body {
+  pointer-events: auto !important;
+}
+

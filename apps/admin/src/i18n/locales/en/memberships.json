@@ -60,5 +60,26 @@
     "success": "Membership registered successfully",
     "error": "Error registering membership"
   },
-  "allAcademicYears": "All academic years"
+  "allAcademicYears": "All academic years",
+  "settings": {
+    "title": "Annual Membership & Registration Fee",
+    "description": "Configuration of annual fee per student, academic year, and Codice Fiscale verification.",
+    "statusActive": "Active: €{amount} / student ({year})",
+    "statusDisabled": "Disabled (Exempt for all)",
+    "toggleTitle": "Enable Mandatory Annual Registration Fee",
+    "toggleDesc": "When active, the checkout system checks whether the student has already paid the fee for the current academic year. If inactive, courses can be booked without the registration fee surcharge.",
+    "feeAmount": "Registration Fee Amount (€)",
+    "feeAmountHint": "Amount charged once every 12 months for each registered Codice Fiscale.",
+    "presets": "Presets",
+    "academicYear": "Reference Academic Year",
+    "academicYearHint": "Used for formal receipts, communication, and membership validity period.",
+    "currentYear": "Current",
+    "nextYear": "Next",
+    "legalNoticeTitle": "Italian Fiscal & Business Rules",
+    "legalNoticeDesc": "Annual registration fee is VAT-exempt (Art. 148 TUIR / DPR 633/72). When a parent books for a child, payment status verification is strictly based on the child's Codice Fiscale, while receipts and billing are issued to the parent (payer).",
+    "save": "Save Fee Settings",
+    "saving": "Saving...",
+    "saveSuccess": "Membership fee settings saved successfully!",
+    "saveError": "Error saving membership fee settings"
+  }
 }
