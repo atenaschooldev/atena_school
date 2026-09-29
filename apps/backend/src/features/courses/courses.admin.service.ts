@@ -166,16 +166,10 @@ export class CoursesService {
       orderBy: { name: 'asc' },
     });
     return list.map((s) => ({
-      id: s.id,
+      id: s.id.toString(),
       name: s.name,
       deliveryMode: s.deliveryMode,
       delivery_mode: s.deliveryMode,
-      scheduleDays: s.scheduleDays,
-      schedule_days: s.scheduleDays,
-      startTime: s.startTime,
-      start_time: s.startTime,
-      endTime: s.endTime,
-      end_time: s.endTime,
       lessonDurationMinutes: s.lessonDurationMinutes,
       lesson_duration_minutes: s.lessonDurationMinutes,
       lessonsPerWeek: s.lessonsPerWeek,
@@ -184,10 +178,6 @@ export class CoursesService {
       total_lessons: s.totalLessons,
       totalHours: s.totalHours ? Number(s.totalHours) : null,
       total_hours: s.totalHours ? Number(s.totalHours) : null,
-      minStudents: s.minStudents,
-      min_students: s.minStudents,
-      maxStudents: s.maxStudents,
-      max_students: s.maxStudents,
       coursesCount: s._count?.courses ?? 0,
       courses_count: s._count?.courses ?? 0,
       createdAt: s.createdAt,
@@ -536,23 +526,15 @@ export class CoursesService {
 
   async createSettings(dto: any) {
     const deliveryMode = dto.deliveryMode ?? dto.delivery_mode ?? 1;
-    const scheduleDays = dto.scheduleDays ? mapDaysToDb(dto.scheduleDays) : (dto.schedule_days ? mapDaysToDb(dto.schedule_days) : []);
-    const rawMax = dto.maxStudents ?? dto.max_students;
-    const parsedMax = rawMax !== undefined && rawMax !== null && rawMax !== '' && Number(rawMax) > 0 ? Number(rawMax) : null;
 
     const created = await this.prisma.courseSettings.create({
       data: {
         name: dto.name || 'Configurazione Corso',
         deliveryMode: Number(deliveryMode),
-        scheduleDays,
-        startTime: dto.startTime ?? dto.start_time ?? null,
-        endTime: dto.endTime ?? dto.end_time ?? null,
         lessonDurationMinutes: dto.lessonDurationMinutes != null ? Number(dto.lessonDurationMinutes) : (dto.lesson_duration_minutes != null ? Number(dto.lesson_duration_minutes) : null),
         lessonsPerWeek: dto.lessonsPerWeek != null ? Number(dto.lessonsPerWeek) : (dto.lessons_per_week != null ? Number(dto.lessons_per_week) : null),
         totalLessons: dto.totalLessons != null ? Number(dto.totalLessons) : (dto.total_lessons != null ? Number(dto.total_lessons) : null),
         totalHours: dto.totalHours != null ? Number(dto.totalHours) : (dto.total_hours != null ? Number(dto.total_hours) : null),
-        minStudents: dto.minStudents != null ? Number(dto.minStudents) : (dto.min_students != null ? Number(dto.min_students) : 1),
-        maxStudents: parsedMax,
       },
       include: {
         _count: {
@@ -565,12 +547,6 @@ export class CoursesService {
       name: created.name,
       deliveryMode: created.deliveryMode,
       delivery_mode: created.deliveryMode,
-      scheduleDays: created.scheduleDays,
-      schedule_days: created.scheduleDays,
-      startTime: created.startTime,
-      start_time: created.startTime,
-      endTime: created.endTime,
-      end_time: created.endTime,
       lessonDurationMinutes: created.lessonDurationMinutes,
       lesson_duration_minutes: created.lessonDurationMinutes,
       lessonsPerWeek: created.lessonsPerWeek,
@@ -579,10 +555,6 @@ export class CoursesService {
       total_lessons: created.totalLessons,
       totalHours: created.totalHours ? Number(created.totalHours) : null,
       total_hours: created.totalHours ? Number(created.totalHours) : null,
-      minStudents: created.minStudents,
-      min_students: created.minStudents,
-      maxStudents: created.maxStudents,
-      max_students: created.maxStudents,
       coursesCount: created._count?.courses ?? 0,
       courses_count: created._count?.courses ?? 0,
       createdAt: created.createdAt,
@@ -598,15 +570,6 @@ export class CoursesService {
     if (dto.name !== undefined) updateData.name = dto.name;
     if (dto.deliveryMode !== undefined || dto.delivery_mode !== undefined) {
       updateData.deliveryMode = Number(dto.deliveryMode ?? dto.delivery_mode);
-    }
-    if (dto.scheduleDays !== undefined || dto.schedule_days !== undefined) {
-      updateData.scheduleDays = mapDaysToDb(dto.scheduleDays ?? dto.schedule_days ?? []);
-    }
-    if (dto.startTime !== undefined || dto.start_time !== undefined) {
-      updateData.startTime = dto.startTime ?? dto.start_time;
-    }
-    if (dto.endTime !== undefined || dto.end_time !== undefined) {
-      updateData.endTime = dto.endTime ?? dto.end_time;
     }
     if (dto.lessonDurationMinutes !== undefined || dto.lesson_duration_minutes !== undefined) {
       const val = dto.lessonDurationMinutes ?? dto.lesson_duration_minutes;
@@ -624,14 +587,6 @@ export class CoursesService {
       const val = dto.totalHours ?? dto.total_hours;
       updateData.totalHours = val != null ? Number(val) : null;
     }
-    if (dto.minStudents !== undefined || dto.min_students !== undefined) {
-      const val = dto.minStudents ?? dto.min_students;
-      updateData.minStudents = val != null ? Number(val) : null;
-    }
-    if (dto.maxStudents !== undefined || dto.max_students !== undefined) {
-      const rawMax = dto.maxStudents ?? dto.max_students;
-      updateData.maxStudents = rawMax !== undefined && rawMax !== null && rawMax !== '' && Number(rawMax) > 0 ? Number(rawMax) : null;
-    }
 
     const updated = await this.prisma.courseSettings.update({
       where: { id: bigId },
@@ -648,12 +603,6 @@ export class CoursesService {
       name: updated.name,
       deliveryMode: updated.deliveryMode,
       delivery_mode: updated.deliveryMode,
-      scheduleDays: updated.scheduleDays,
-      schedule_days: updated.scheduleDays,
-      startTime: updated.startTime,
-      start_time: updated.startTime,
-      endTime: updated.endTime,
-      end_time: updated.endTime,
       lessonDurationMinutes: updated.lessonDurationMinutes,
       lesson_duration_minutes: updated.lessonDurationMinutes,
       lessonsPerWeek: updated.lessonsPerWeek,
@@ -662,10 +611,6 @@ export class CoursesService {
       total_lessons: updated.totalLessons,
       totalHours: updated.totalHours ? Number(updated.totalHours) : null,
       total_hours: updated.totalHours ? Number(updated.totalHours) : null,
-      minStudents: updated.minStudents,
-      min_students: updated.minStudents,
-      maxStudents: updated.maxStudents,
-      max_students: updated.maxStudents,
       coursesCount: updated._count?.courses ?? 0,
       courses_count: updated._count?.courses ?? 0,
       createdAt: updated.createdAt,

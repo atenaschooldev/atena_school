@@ -156,21 +156,16 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     const preset = settingsPresets.find((p) => p.id === presetId);
     if (!preset) return;
     const mode = Number(preset.deliveryMode || preset.delivery_mode || 1);
-    const dayIndices: number[] = Array.isArray(preset.scheduleDays || preset.schedule_days) ? (preset.scheduleDays || preset.schedule_days) : [];
-    const mappedDays = dayIndices.map((d: number) => DAYS_OF_WEEK[d - 1]?.key || String(d));
     setForm((f) => ({
       ...f,
       settingsId: preset.id,
       deliveryMode: mode,
       courseFormat: mode === 4 ? "certification" : (mode === 2 ? "private" : "group"),
       scheduleType: mode === 1 ? "fixed" : "flexible",
-      scheduleDays: mappedDays.length > 0 ? mappedDays : f.scheduleDays,
-      startTime: preset.startTime || preset.start_time || "",
-      endTime: preset.endTime || preset.end_time || "",
-      lessonDurationMinutes: preset.lessonDurationMinutes ?? preset.lesson_duration_minutes ?? null,
-      lessonsPerWeek: preset.lessonsPerWeek ?? preset.lessons_per_week ?? null,
-      totalLessons: preset.totalLessons ?? preset.total_lessons ?? null,
-      totalHours: preset.totalHours ?? preset.total_hours ?? null,
+      lessonDurationMinutes: preset.lessonDurationMinutes ?? preset.lesson_duration_minutes ?? f.lessonDurationMinutes,
+      lessonsPerWeek: preset.lessonsPerWeek ?? preset.lessons_per_week ?? f.lessonsPerWeek,
+      totalLessons: preset.totalLessons ?? preset.total_lessons ?? f.totalLessons,
+      totalHours: preset.totalHours ?? preset.total_hours ?? f.totalHours,
     }));
   };
 

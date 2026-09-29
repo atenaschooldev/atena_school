@@ -654,15 +654,10 @@ model CourseCategory {
 
 model CourseSettings {
   deliveryMode          Int      @default(1) @map("delivery_mode") @db.SmallInt
-  scheduleDays          Int[]    @default([]) @map("schedule_days")
-  startTime             String?  @map("start_time") @db.VarChar(8)
-  endTime               String?  @map("end_time") @db.VarChar(8)
   lessonDurationMinutes Int?     @map("lesson_duration_minutes")
   lessonsPerWeek        Int?     @map("lessons_per_week")
   totalLessons          Int?     @map("total_lessons")
   totalHours            Decimal? @map("total_hours") @db.Decimal(5, 2)
-  minStudents           Int?     @default(1) @map("min_students")
-  maxStudents           Int?     @default(8) @map("max_students")
   createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   name                  String   @default("Configurazione Corso") @db.VarChar(255)

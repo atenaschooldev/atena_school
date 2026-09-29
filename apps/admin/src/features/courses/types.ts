@@ -290,12 +290,6 @@ export interface CourseSettingsRecord {
   name: string;
   deliveryMode: number;
   delivery_mode?: number;
-  scheduleDays: any[];
-  schedule_days?: any[];
-  startTime?: string | null;
-  start_time?: string | null;
-  endTime?: string | null;
-  end_time?: string | null;
   lessonDurationMinutes?: number | null;
   lesson_duration_minutes?: number | null;
   lessonsPerWeek?: number | null;
@@ -304,10 +298,6 @@ export interface CourseSettingsRecord {
   total_lessons?: number | null;
   totalHours?: number | null;
   total_hours?: number | null;
-  minStudents?: number | null;
-  min_students?: number | null;
-  maxStudents?: number | null;
-  max_students?: number | null;
   coursesCount?: number;
   courses_count?: number;
   createdAt?: string | Date;
@@ -318,12 +308,6 @@ export interface CreateCourseSettingsDto {
   name: string;
   deliveryMode?: number;
   delivery_mode?: number;
-  scheduleDays?: any[];
-  schedule_days?: any[];
-  startTime?: string;
-  start_time?: string;
-  endTime?: string;
-  end_time?: string;
   lessonDurationMinutes?: number;
   lesson_duration_minutes?: number;
   lessonsPerWeek?: number;
@@ -332,10 +316,6 @@ export interface CreateCourseSettingsDto {
   total_lessons?: number;
   totalHours?: number;
   total_hours?: number;
-  minStudents?: number;
-  min_students?: number;
-  maxStudents?: number;
-  max_students?: number;
 }
 
 export type UpdateCourseSettingsDto = Partial<CreateCourseSettingsDto>;
