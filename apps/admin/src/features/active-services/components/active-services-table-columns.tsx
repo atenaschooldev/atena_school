@@ -37,11 +37,9 @@ export function getActiveServicesTableColumns({
       ),
       cell: ({ row }) => {
         const item = row.original;
-        const sub = [item.course_category, item.course_format].filter(Boolean).join(" • ");
         return (
           <CellAvatar
             title={item.course_name}
-            subtitle={sub}
             icon={BookOpen}
             badgeColor="bg-primary/10 text-primary"
           />
