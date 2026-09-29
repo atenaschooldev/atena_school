@@ -64,9 +64,22 @@ export function CreateGroupDialog({
         setTeacherId(found.insegnanteId);
       }
       if (found.scheduleDays && Array.isArray(found.scheduleDays)) {
+        const dayMap: Record<string, number> = {
+          "lunedì": 1, "lunedi": 1, "lun": 1, "mon": 1, "1": 1,
+          "martedì": 2, "martedi": 2, "mar": 2, "tue": 2, "2": 2,
+          "mercoledì": 3, "mercoledi": 3, "mer": 3, "wed": 3, "3": 3,
+          "giovedì": 4, "giovedi": 4, "gio": 4, "thu": 4, "4": 4,
+          "venerdì": 5, "venerdi": 5, "ven": 5, "fri": 5, "5": 5,
+          "sabato": 6, "sab": 6, "sat": 6, "6": 6,
+          "domenica": 7, "dom": 7, "sun": 7, "7": 7,
+        };
         const clean = found.scheduleDays
-          .map((d: any) => Number(d))
-          .filter((d: number) => !isNaN(d) && d >= 0 && d <= 7);
+          .map((d: any) => {
+            if (typeof d === "number") return d;
+            const str = String(d).toLowerCase().trim();
+            return dayMap[str] || parseInt(str, 10) || 0;
+          })
+          .filter((d: number) => !isNaN(d) && d >= 1 && d <= 7);
         if (clean.length > 0) {
           setSelectedDays(clean);
         }
