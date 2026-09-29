@@ -5,11 +5,11 @@ import { useMemberships } from "../hooks/use-memberships";
 import { MembershipsMetrics } from "./memberships-metrics";
 import { getMembershipsTableColumns } from "./memberships-table-columns";
 import { CreateMembershipDialog } from "./create-membership-dialog";
-import { RegistrationFeeSettingsCard } from "@/components/shared/registration-fee-settings-card";
+import { RegistrationFeeSettingsDialog } from "./registration-fee-settings-dialog";
 import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Button } from "@/components/ui/button";
-import { Plus, BadgeCheck, Sliders } from "lucide-react";
+import { Plus, Sliders } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
 import {
   type SortingState,
@@ -24,8 +24,8 @@ import {
 
 export function MembershipsView() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<"registry" | "settings">("registry");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [academicYearFilter, setAcademicYearFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -98,85 +98,68 @@ export function MembershipsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ── Sub-Navigation Tabs ── */}
-      <div className="px-4 lg:px-6 flex items-center justify-between border-b pb-3 flex-wrap gap-3">
-        <div className="flex rounded-xl bg-muted/50 p-1 border border-border/60 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setActiveTab("registry")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === "registry"
-                ? "bg-background shadow-xs text-foreground font-bold"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <BadgeCheck className="h-4 w-4 text-emerald-500" />
-            {t("memberships.tabRegistry") || "Registro Soci & Tessere"} ({memberships.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("settings")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === "settings"
-                ? "bg-background shadow-xs text-foreground font-bold"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Sliders className="h-4 w-4 text-primary" />
-            {t("memberships.tabSettings") || "Configurazione Quota"}
-          </button>
-        </div>
+      <MembershipsMetrics stats={stats} />
+
+      <div className="@container/main px-4 lg:px-6 space-y-4">
+        <DataTableToolbar
+          table={table}
+          searchKey="studentName"
+          searchPlaceholder={t("memberships.searchMember") || "Cerca per nome studente, CF o email..."}
+          searchValue={searchQuery}
+          onSearchChange={handleSearchChange}
+          filterKey="status"
+          filterTitle={t("memberships.cardStatus") || "Stato Tessera"}
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterOptions={statusOptions}
+          actionButton={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSettingsDialogOpen(true)}
+                className="h-8 text-xs font-medium gap-1.5 cursor-pointer rounded-lg shadow-2xs"
+              >
+                <Sliders className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{t("memberships.tabSettings") || "Configura Quota"}</span>
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={() => setCreateDialogOpen(true)}
+                className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-2xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{t("memberships.addMembership") || "Registra Socio"}</span>
+              </Button>
+            </div>
+          }
+        />
+
+        <AtenaDataTable
+          table={table}
+          columns={columns}
+          loading={loading}
+          emptyMessage={t("memberships.emptyState.title") || "Nessun socio trovato"}
+        />
       </div>
 
-      {activeTab === "settings" ? (
-        <div className="@container/main px-4 lg:px-6">
-          <RegistrationFeeSettingsCard />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-6">
-          <MembershipsMetrics stats={stats} />
+      <CreateMembershipDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => {
+          refresh();
+        }}
+      />
 
-          <div className="@container/main px-4 lg:px-6 space-y-4">
-            <DataTableToolbar
-              table={table}
-              searchKey="studentName"
-              searchPlaceholder={t("memberships.searchMember") || "Cerca per nome studente, CF o email..."}
-              searchValue={searchQuery}
-              onSearchChange={handleSearchChange}
-              filterKey="status"
-              filterTitle={t("memberships.cardStatus") || "Stato Tessera"}
-              filterValue={statusFilter}
-              onFilterChange={setStatusFilter}
-              filterOptions={statusOptions}
-              actionButton={
-                <Button
-                  size="sm"
-                  onClick={() => setCreateDialogOpen(true)}
-                  className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>{t("memberships.addMembership") || "Registra Socio"}</span>
-                </Button>
-              }
-            />
-
-            <AtenaDataTable
-              table={table}
-              columns={columns}
-              loading={loading}
-              emptyMessage={t("memberships.emptyState.title") || "Nessun socio trovato"}
-            />
-          </div>
-
-          <CreateMembershipDialog
-            open={createDialogOpen}
-            onOpenChange={setCreateDialogOpen}
-            onSuccess={() => {
-              refresh();
-            }}
-          />
-        </div>
-      )}
+      <RegistrationFeeSettingsDialog
+        open={settingsDialogOpen}
+        onOpenChange={setSettingsDialogOpen}
+        onSaved={() => {
+          refresh();
+        }}
+      />
     </div>
   );
 }
+
