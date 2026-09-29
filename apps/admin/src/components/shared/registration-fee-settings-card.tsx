@@ -16,9 +16,7 @@ import {
   XCircle,
   Euro,
   Calendar,
-  Info,
   Save,
-  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
@@ -330,20 +328,7 @@ export function RegistrationFeeSettingsCard({ onSaved, className }: Registration
             </div>
           </div>
 
-          {/* 3. Italian Legal Notice Callout */}
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/15 text-foreground flex items-start gap-3">
-            <Info className="w-4.5 h-4.5 text-primary shrink-0 mt-0.5" />
-            <div className="text-xs leading-relaxed space-y-1">
-              <div className="font-bold text-foreground">
-                {t("memberships.settings.legalNoticeTitle") || "Normativa Fiscale & Regole Business Italia"}
-              </div>
-              <p className="text-muted-foreground">
-                {t("memberships.settings.legalNoticeDesc") || "La quota associativa annuale è esente IVA (Art. 148 TUIR / DPR 633/72). In caso di iscrizione da parte di un genitore, la verifica del pagamento avviene sul Codice Fiscale del minore (studente), mentre la ricevuta e il pagamento sono intestati al genitore (acquirente)."}
-              </p>
-            </div>
-          </div>
-
-          {/* 4. Action Save Footer */}
+          {/* 3. Action Save Footer */}
           <div className="flex items-center justify-between pt-2 border-t border-border/60">
             <div>
               {hasUnsavedChanges && (
