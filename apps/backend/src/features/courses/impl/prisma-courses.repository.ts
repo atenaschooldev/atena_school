@@ -136,6 +136,14 @@ export class PrismaCoursesRepository implements CoursesRepository {
         teacherId: toBigInt(data.teacherId) || null,
         sortOrder: data.sortOrder ?? 0,
         slug: data.slug || slugify(data.name || 'course'),
+        deliveryMode: data.courseFormat === CourseFormat.CERTIFICATION || Number(data.courseFormat) === 4 ? 4 : (Number(data.scheduleType) === 2 || Number(data.courseFormat) === 2 ? 2 : 1),
+        scheduleDays: Array.isArray(data.scheduleDays) ? data.scheduleDays : [],
+        startTime: data.startTime ?? null,
+        endTime: data.endTime ?? null,
+        lessonDurationMinutes: data.lessonDurationMinutes ?? null,
+        lessonsPerWeek: data.lessonsPerWeek ?? null,
+        totalLessons: data.totalLessons ?? null,
+        totalHours: data.totalHours != null ? new Prisma.Decimal(data.totalHours) : null,
       },
       include: {
         courseCategory: true,
@@ -162,6 +170,14 @@ export class PrismaCoursesRepository implements CoursesRepository {
     if (data.teacherId !== undefined) updateData.teacherId = toBigInt(data.teacherId) || null;
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder;
     if (data.slug !== undefined) updateData.slug = data.slug;
+    if (data.deliveryMode !== undefined && data.deliveryMode !== null) updateData.deliveryMode = Number(data.deliveryMode);
+    if (data.scheduleDays !== undefined) updateData.scheduleDays = Array.isArray(data.scheduleDays) ? data.scheduleDays : [];
+    if (data.startTime !== undefined) updateData.startTime = data.startTime;
+    if (data.endTime !== undefined) updateData.endTime = data.endTime;
+    if (data.lessonDurationMinutes !== undefined) updateData.lessonDurationMinutes = data.lessonDurationMinutes;
+    if (data.lessonsPerWeek !== undefined) updateData.lessonsPerWeek = data.lessonsPerWeek;
+    if (data.totalLessons !== undefined) updateData.totalLessons = data.totalLessons;
+    if (data.totalHours !== undefined) updateData.totalHours = data.totalHours != null ? new Prisma.Decimal(data.totalHours) : null;
 
     const c = await this.prisma.course.update({
       where: { id: bigId },
@@ -233,7 +249,14 @@ export class PrismaCoursesRepository implements CoursesRepository {
         }
       : null;
 
-    const deliveryMode = settings?.delivery_mode ?? 1;
+    const deliveryMode = c.deliveryMode ?? settings?.delivery_mode ?? 1;
+    const scheduleDays = (c.scheduleDays && c.scheduleDays.length > 0) ? c.scheduleDays : (settings?.schedule_days || []);
+    const startTime = c.startTime ?? settings?.start_time ?? null;
+    const endTime = c.endTime ?? settings?.end_time ?? null;
+    const lessonDurationMinutes = c.lessonDurationMinutes ?? settings?.lesson_duration_minutes ?? null;
+    const lessonsPerWeek = c.lessonsPerWeek ?? settings?.lessons_per_week ?? null;
+    const totalLessons = c.totalLessons ?? settings?.total_lessons ?? null;
+    const totalHours = c.totalHours != null ? Number(c.totalHours) : (settings?.total_hours != null ? Number(settings.total_hours) : null);
 
     return {
       id: c.id ? c.id.toString() : '',
@@ -251,15 +274,15 @@ export class PrismaCoursesRepository implements CoursesRepository {
       photoUrl: c.photoUrl,
       description: c.description,
       teacherId,
-      lessonsPerWeek: settings?.lessons_per_week ?? null,
+      lessonsPerWeek,
       sortOrder: c.sortOrder,
       scheduleType: deliveryMode === 2 ? CourseScheduleType.FLEXIBLE : CourseScheduleType.FIXED,
-      totalLessons: settings?.total_lessons ?? null,
-      scheduleDays: settings?.schedule_days ?? [],
-      startTime: settings?.start_time ?? null,
-      endTime: settings?.end_time ?? null,
-      lessonDurationMinutes: settings?.lesson_duration_minutes ?? null,
-      totalHours: settings?.total_hours ?? null,
+      totalLessons,
+      scheduleDays,
+      startTime,
+      endTime,
+      lessonDurationMinutes,
+      totalHours,
       courseFormat: deliveryMode === 4 ? CourseFormat.CERTIFICATION : (deliveryMode === 2 ? CourseFormat.INDIVIDUAL : CourseFormat.GROUP),
       billingType: c.billingType,
       subscriptionPrice: c.subscriptionPrice ? Number(c.subscriptionPrice) : null,

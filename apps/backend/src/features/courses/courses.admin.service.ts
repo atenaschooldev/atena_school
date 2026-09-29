@@ -248,30 +248,6 @@ export class CoursesService {
       Number(rawSchedule) === CourseScheduleType.FLEXIBLE || Number(rawSchedule) === 2 ? 2 : 1
     );
 
-    // If no preset chosen, create a dedicated course_settings record
-    if (!settingsId) {
-      try {
-        const createdSettings = await this.prisma.courseSettings.create({
-          data: {
-            name: `${courseName} (Config)`,
-            deliveryMode: Number(deliveryMode),
-            scheduleDays: dto.scheduleDays ? mapDaysToDb(dto.scheduleDays) : (dto.schedule_days ? mapDaysToDb(dto.schedule_days) : []),
-            startTime: dto.startTime ?? dto.start_time ?? null,
-            endTime: dto.endTime ?? dto.end_time ?? null,
-            lessonDurationMinutes: dto.lessonDurationMinutes != null ? Number(dto.lessonDurationMinutes) : (dto.lesson_duration_minutes != null ? Number(dto.lesson_duration_minutes) : null),
-            lessonsPerWeek: dto.lessonsPerWeek != null ? Number(dto.lessonsPerWeek) : (dto.lessons_per_week != null ? Number(dto.lessons_per_week) : null),
-            totalLessons: dto.totalLessons != null ? Number(dto.totalLessons) : (dto.total_lessons != null ? Number(dto.total_lessons) : null),
-            totalHours: dto.totalHours != null ? Number(dto.totalHours) : (dto.total_hours != null ? Number(dto.total_hours) : null),
-            minStudents: dto.minStudents != null ? Number(dto.minStudents) : 1,
-            maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : 8,
-          },
-        });
-        settingsId = createdSettings.id.toString();
-      } catch (csErr) {
-        console.warn('Error creating courseSettings on create:', csErr);
-      }
-    }
-
     const c = await this.coursesRepository.create({
       name: courseName,
       category: rawCategory != null ? parseCourseCategory(rawCategory) : CourseCategory.LANGUAGES,
@@ -284,14 +260,14 @@ export class CoursesService {
       photoUrl: dto.photoUrl ?? dto.photo_url ?? dto.foto ?? null,
       lessonsPerWeek: dto.lessonsPerWeek != null ? Number(dto.lessonsPerWeek) : (dto.lessons_per_week != null ? Number(dto.lessons_per_week) : null),
       sortOrder: dto.sortOrder != null ? Number(dto.sortOrder) : (dto.sort_order != null ? Number(dto.sort_order) : null),
-      scheduleType: rawSchedule != null ? parseCourseScheduleType(rawSchedule) : CourseScheduleType.FIXED,
+      scheduleType: rawSchedule != null ? parseCourseScheduleType(rawSchedule) : (deliveryMode === 2 ? CourseScheduleType.FLEXIBLE : CourseScheduleType.FIXED),
       totalLessons: dto.totalLessons != null ? Number(dto.totalLessons) : (dto.total_lessons != null ? Number(dto.total_lessons) : null),
       scheduleDays: dto.scheduleDays ? mapDaysToDb(dto.scheduleDays) : (dto.schedule_days ? mapDaysToDb(dto.schedule_days) : []),
       startTime: dto.startTime ?? dto.start_time ?? null,
       endTime: dto.endTime ?? dto.end_time ?? null,
       lessonDurationMinutes: dto.lessonDurationMinutes != null ? Number(dto.lessonDurationMinutes) : (dto.lesson_duration_minutes != null ? Number(dto.lesson_duration_minutes) : null),
       totalHours: dto.totalHours != null ? Number(dto.totalHours) : (dto.total_hours != null ? Number(dto.total_hours) : null),
-      courseFormat: rawFormat != null ? parseCourseFormat(rawFormat) : CourseFormat.GROUP,
+      courseFormat: rawFormat != null ? parseCourseFormat(rawFormat) : (deliveryMode === 4 ? CourseFormat.CERTIFICATION : (deliveryMode === 2 ? CourseFormat.INDIVIDUAL : CourseFormat.GROUP)),
       slug: autoSlug,
     });
 
@@ -382,58 +358,11 @@ export class CoursesService {
       }
     }
 
-    // Handle course_settings update
-    const targetSettingsId = updateData.settingsId ?? existing?.settingsId;
     const deliveryMode = dto.deliveryMode ?? dto.delivery_mode ?? (
       Number(updateData.courseFormat ?? dto.courseFormat ?? existing?.courseFormat) === CourseFormat.CERTIFICATION || Number(updateData.courseFormat ?? dto.courseFormat ?? existing?.courseFormat) === 4 ? 4 :
       Number(updateData.scheduleType ?? dto.scheduleType ?? existing?.scheduleType) === CourseScheduleType.FLEXIBLE || Number(updateData.scheduleType ?? dto.scheduleType ?? existing?.scheduleType) === 2 ? 2 : 1
     );
-
-    if (targetSettingsId) {
-      const bigSettingsId = toBigInt(targetSettingsId);
-      if (bigSettingsId !== undefined) {
-        try {
-          await this.prisma.courseSettings.update({
-            where: { id: bigSettingsId },
-            data: {
-              deliveryMode: Number(deliveryMode),
-              scheduleDays: (updateData.scheduleDays !== undefined && updateData.scheduleDays !== null) ? updateData.scheduleDays : undefined,
-              startTime: updateData.startTime !== undefined ? updateData.startTime : undefined,
-              endTime: updateData.endTime !== undefined ? updateData.endTime : undefined,
-              lessonDurationMinutes: updateData.lessonDurationMinutes !== undefined ? updateData.lessonDurationMinutes : undefined,
-              lessonsPerWeek: updateData.lessonsPerWeek !== undefined ? updateData.lessonsPerWeek : undefined,
-              totalLessons: updateData.totalLessons !== undefined ? updateData.totalLessons : undefined,
-              totalHours: updateData.totalHours !== undefined ? updateData.totalHours : undefined,
-              minStudents: dto.minStudents != null ? Number(dto.minStudents) : undefined,
-              maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : undefined,
-            },
-          });
-        } catch (csErr) {
-          console.warn('Error saving courseSettings on update:', csErr);
-        }
-      }
-    } else {
-      try {
-        const createdSettings = await this.prisma.courseSettings.create({
-          data: {
-            name: `${updateData.name || existing?.name || 'Corso'} (Config)`,
-            deliveryMode: Number(deliveryMode),
-            scheduleDays: (updateData.scheduleDays !== undefined && updateData.scheduleDays !== null) ? updateData.scheduleDays : [],
-            startTime: updateData.startTime ?? null,
-            endTime: updateData.endTime ?? null,
-            lessonDurationMinutes: updateData.lessonDurationMinutes ?? null,
-            lessonsPerWeek: updateData.lessonsPerWeek ?? null,
-            totalLessons: updateData.totalLessons ?? null,
-            totalHours: updateData.totalHours ?? null,
-            minStudents: dto.minStudents != null ? Number(dto.minStudents) : 1,
-            maxStudents: dto.maxStudents != null ? Number(dto.maxStudents) : 8,
-          },
-        });
-        updateData.settingsId = createdSettings.id.toString();
-      } catch (csErr) {
-        console.warn('Error creating courseSettings on update:', csErr);
-      }
-    }
+    updateData.deliveryMode = Number(deliveryMode);
 
     const c = await this.coursesRepository.update(id, updateData);
     const bigCourseId = BigInt(c.id);

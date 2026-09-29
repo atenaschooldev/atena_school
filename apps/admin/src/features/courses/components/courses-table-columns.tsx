@@ -71,10 +71,12 @@ export function getCoursesTableColumns({
       ),
       cell: ({ row }) => {
         const c = row.original;
+        const teacherStr = c.teacherName ? ` • ${c.teacherName}` : "";
+        const catStr = c.categoria ? formatCategoryLabel(c.categoria, t) : "";
         return (
           <CellAvatar
             title={c.nome}
-            subtitle={c.categoria ? formatCategoryLabel(c.categoria, t) : undefined}
+            subtitle={`${catStr}${teacherStr}`}
             imageUrl={c.foto}
             fallbackText={c.nome ? c.nome.slice(0, 2) : "CO"}
           />
@@ -86,10 +88,18 @@ export function getCoursesTableColumns({
       header: t("courses.format"),
       cell: ({ row }) => {
         const label = formatCourseFormatLabel(row.original.courseFormat, t);
+        const presetName = row.original.settings?.name;
         return (
-          <Badge variant="outline" className="text-xs font-medium">
-            {label}
-          </Badge>
+          <div className="flex flex-col gap-0.5">
+            <Badge variant="outline" className="text-xs font-medium w-fit">
+              {label}
+            </Badge>
+            {presetName && (
+              <span className="text-[11px] text-muted-foreground line-clamp-1 max-w-[160px]" title={presetName}>
+                {presetName}
+              </span>
+            )}
+          </div>
         );
       },
     },

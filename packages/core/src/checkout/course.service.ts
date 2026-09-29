@@ -65,17 +65,24 @@ function sanitizePublicCourse(
   } = c as any;
 
   const st = settings || c.settings;
-  const deliveryMode = Number(st?.delivery_mode ?? st?.deliveryMode ?? 1);
+  const deliveryMode = Number((c as any).delivery_mode ?? st?.delivery_mode ?? st?.deliveryMode ?? 1);
+  const scheduleDays = ((c as any).schedule_days && (c as any).schedule_days.length > 0) ? (c as any).schedule_days : (st?.schedule_days ?? st?.scheduleDays ?? []);
+  const startTime = (c as any).start_time ?? st?.start_time ?? st?.startTime ?? null;
+  const endTime = (c as any).end_time ?? st?.end_time ?? st?.endTime ?? null;
+  const lessonDurationMinutes = (c as any).lesson_duration_minutes ?? st?.lesson_duration_minutes ?? st?.lessonDurationMinutes ?? null;
+  const lessonsPerWeek = (c as any).lessons_per_week ?? st?.lessons_per_week ?? st?.lessonsPerWeek ?? null;
+  const totalLessons = (c as any).total_lessons ?? st?.total_lessons ?? st?.totalLessons ?? null;
+  const totalHours = (c as any).total_hours != null ? Number((c as any).total_hours) : (st?.total_hours != null ? Number(st.total_hours) : (st?.totalHours != null ? Number(st.totalHours) : null));
 
   return {
     ...rest,
-    schedule_days: st?.schedule_days ?? st?.scheduleDays ?? [],
-    start_time: st?.start_time ?? st?.startTime ?? null,
-    end_time: st?.end_time ?? st?.endTime ?? null,
-    lesson_duration_minutes: st?.lesson_duration_minutes ?? st?.lessonDurationMinutes ?? null,
-    lessons_per_week: st?.lessons_per_week ?? st?.lessonsPerWeek ?? null,
-    total_lessons: st?.total_lessons ?? st?.totalLessons ?? null,
-    total_hours: st?.total_hours != null ? Number(st.total_hours) : (st?.totalHours != null ? Number(st.totalHours) : null),
+    schedule_days: scheduleDays,
+    start_time: startTime,
+    end_time: endTime,
+    lesson_duration_minutes: lessonDurationMinutes,
+    lessons_per_week: lessonsPerWeek,
+    total_lessons: totalLessons,
+    total_hours: totalHours,
     schedule_type: deliveryMode === 2 ? CourseScheduleType.FLEXIBLE : CourseScheduleType.FIXED,
     course_format: deliveryMode === 4 ? 4 : (deliveryMode === 2 ? 2 : 1),
     delivery_mode: deliveryMode,
