@@ -96,24 +96,44 @@ function formatScheduleText(
   return `${dayNames} ${startTime}`;
 }
 
-interface BookingDetailDialogProps {
+export interface BookingDetailDialogProps {
   booking: Booking | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onOpenChange?: (open: boolean) => void;
   onUpdateStatus?: (id: string, paymentStatus: number | string, scheduleStatus?: number | string) => void;
+  onStatusChange?: (id: string, paymentStatus: number | string, scheduleStatus?: number | string) => void;
   onDelete?: (id: string) => Promise<boolean>;
 }
 
 export function BookingDetailDialog({
   booking,
+  open,
   isOpen,
   onClose,
+  onOpenChange,
   onUpdateStatus,
+  onStatusChange,
   onDelete,
 }: BookingDetailDialogProps) {
   const { t, locale } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const isDialogOpen = open !== undefined ? open : (isOpen !== undefined ? isOpen : !!booking);
+
+  const handleDialogClose = (val: boolean) => {
+    if (!val) {
+      onOpenChange?.(false);
+      onClose?.();
+    }
+  };
+
+  const handleStatusUpdate = (id: string, paymentStatus: number | string, scheduleStatus?: number | string) => {
+    onUpdateStatus?.(id, paymentStatus, scheduleStatus);
+    onStatusChange?.(id, paymentStatus, scheduleStatus);
+  };
 
   const handleCopy = (text: string, label: string) => {
     if (!text) return;
@@ -167,13 +187,11 @@ export function BookingDetailDialog({
     setNewPaymentNotes("");
     setAddPaymentOpen(false);
     refreshPayments();
-    if (onUpdateStatus) {
-      onUpdateStatus(booking.id, BookingPaymentStatus.PAID);
-    }
+    handleStatusUpdate(booking.id, BookingPaymentStatus.PAID);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-3xl max-w-3xl p-0 gap-0 overflow-hidden">
         {/* Header Bar */}
         <div className="p-6 pb-4 border-b bg-muted/20 space-y-3">
