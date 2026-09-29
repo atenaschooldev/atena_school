@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2, Receipt, Baby } from "lucide-react";
+import { Eye, Pencil, Trash2, Receipt, Baby, ChevronDown, CheckCircle2, Clock, XCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +12,11 @@ import { CellCurrency } from "@/components/shared/cell-currency";
 import { DataTableColumnHeader } from "@/components/shared/data-table/data-table-column-header";
 import { CellAvatar } from "@/components/shared/data-table/cells/cell-avatar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   PaymentType,
   PaymentRecordStatus,
@@ -177,61 +177,91 @@ export function getPaymentsTableColumns({
       cell: ({ row }) => {
         const payment = row.original;
         const statusNum = Number(payment.status);
-        const currentVal = String(statusNum);
 
-        const renderBadge = (st: number) => {
+        const getStatusConfig = (st: number) => {
           if (st === PaymentRecordStatus.SUCCEEDED) {
-            return (
-              <Badge variant="secondary" className="text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/20 font-semibold gap-1.5 border border-emerald-500/30">
-                {t("common.paid")}
-              </Badge>
-            );
+            return {
+              label: t("common.paid"),
+              icon: CheckCircle2,
+              className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20",
+            };
           }
           if (st === PaymentRecordStatus.FAILED) {
-            return (
-              <Badge variant="secondary" className="text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/20 font-semibold gap-1.5 border border-rose-500/30">
-                {t("common.failed")}
-              </Badge>
-            );
+            return {
+              label: t("common.failed"),
+              icon: XCircle,
+              className: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20",
+            };
           }
           if (st === PaymentRecordStatus.REFUNDED) {
-            return (
-              <Badge variant="secondary" className="text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800 font-semibold gap-1.5 border border-slate-300">
-                {t("common.refunded")}
-              </Badge>
-            );
+            return {
+              label: t("common.refunded"),
+              icon: RefreshCw,
+              className: "bg-muted text-muted-foreground border-border hover:bg-muted/80",
+            };
           }
-          return (
-            <Badge variant="outline" className="text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/20 font-semibold gap-1.5 border border-amber-500/30">
-              {t("common.pending")}
-            </Badge>
-          );
+          return {
+            label: t("common.pending"),
+            icon: Clock,
+            className: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20",
+          };
         };
 
+        const config = getStatusConfig(statusNum);
+        const Icon = config.icon;
+
         if (!onStatusChange) {
-          return renderBadge(statusNum);
+          return (
+            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1 px-2.5 rounded-full border shadow-2xs ${config.className}`}>
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span>{config.label}</span>
+            </span>
+          );
         }
 
         return (
-          <Select value={currentVal} onValueChange={(val) => onStatusChange(payment.id, Number(val))}>
-            <SelectTrigger className="h-8 w-auto border-0 p-0 shadow-none bg-transparent hover:opacity-80 focus:ring-0 cursor-pointer">
-              {renderBadge(statusNum)}
-            </SelectTrigger>
-            <SelectContent side="bottom" align="start">
-              <SelectItem value={String(PaymentRecordStatus.SUCCEEDED)} className="text-xs cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400">
-                {t("common.paid")}
-              </SelectItem>
-              <SelectItem value={String(PaymentRecordStatus.PENDING)} className="text-xs cursor-pointer font-semibold text-amber-600 dark:text-amber-400">
-                {t("common.pending")}
-              </SelectItem>
-              <SelectItem value={String(PaymentRecordStatus.FAILED)} className="text-xs cursor-pointer font-semibold text-rose-600 dark:text-rose-400">
-                {t("common.failed")}
-              </SelectItem>
-              <SelectItem value={String(PaymentRecordStatus.REFUNDED)} className="text-xs cursor-pointer font-semibold text-slate-600 dark:text-slate-400">
-                {t("common.refunded")}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1 px-2.5 rounded-full border transition-all cursor-pointer shadow-2xs hover:shadow-xs focus:outline-none focus:ring-2 focus:ring-primary/20 ${config.className}`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{config.label}</span>
+                <ChevronDown className="w-3 h-3 opacity-60 ml-0.5 shrink-0" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-36">
+              <DropdownMenuItem
+                onClick={() => onStatusChange(payment.id, PaymentRecordStatus.SUCCEEDED)}
+                className="text-xs font-medium cursor-pointer text-emerald-600 dark:text-emerald-400 gap-2"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>{t("common.paid")}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onStatusChange(payment.id, PaymentRecordStatus.PENDING)}
+                className="text-xs font-medium cursor-pointer text-amber-600 dark:text-amber-400 gap-2"
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>{t("common.pending")}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onStatusChange(payment.id, PaymentRecordStatus.FAILED)}
+                className="text-xs font-medium cursor-pointer text-rose-600 dark:text-rose-400 gap-2"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>{t("common.failed")}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onStatusChange(payment.id, PaymentRecordStatus.REFUNDED)}
+                className="text-xs font-medium cursor-pointer text-muted-foreground gap-2"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{t("common.refunded")}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         );
       },
     },
