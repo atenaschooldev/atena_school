@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useActiveServices } from "../hooks/use-active-services";
 import { ActiveServicesMetrics } from "./active-services-metrics";
 import { getActiveServicesTableColumns } from "./active-services-table-columns";
@@ -51,19 +51,58 @@ export function ActiveServicesView() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
-  const handleOpenDetail = async (item: ActiveServiceItem) => {
+  const handleOpenDetail = useCallback(async (item: ActiveServiceItem) => {
+    const bookingId = item.booking_id || (item as any).id;
+    if (!bookingId) {
+      return;
+    }
+
+    // 1. Instantly open dialog with available row data so UI responds immediately
+    const fallbackBooking: Booking = {
+      id: bookingId,
+      course_id: item.course_id,
+      course_name: item.course_name,
+      purchaser_name: item.purchaser_name || item.student_name,
+      purchaser_email: item.purchaser_email || item.student_email || "",
+      purchaser_phone: item.purchaser_phone,
+      purchaser_tax_code: item.purchaser_tax_code,
+      student_name: item.student_name,
+      student_email: item.student_email,
+      student_phone: item.student_phone,
+      student_tax_code: item.student_tax_code,
+      student_birth_date: item.student_birth_date,
+      amount_paid: Number(item.amount_paid || 0),
+      registration_fee: Number(item.registration_fee || 0),
+      payment_status: item.payment_status ?? 3,
+      payment_method: item.payment_method ?? 1,
+      billing_scheme: item.billing_scheme ?? 1,
+      scheduling_status: item.scheduling_status ?? 1,
+      booking_status: item.booking_status ?? 1,
+      schedule_days: item.schedule_days,
+      start_time: item.start_time,
+      end_time: item.end_time,
+      start_date: item.start_date,
+      total_lessons_count: item.total_lessons_count,
+      subscription_starts_at: item.subscription_starts_at,
+      subscription_ends_at: item.subscription_ends_at,
+      created_at: (item as any).created_at || new Date().toISOString(),
+    };
+
+    setSelectedBooking(fallbackBooking);
+
+    // 2. Fetch full backend booking with financial summary in background
     try {
       setLoadingDetail(true);
-      const bookingData = await apiFetch<Booking>(`/admin/bookings/${item.booking_id}`);
+      const bookingData = await apiFetch<Booking>(`/admin/bookings/${bookingId}`);
       if (bookingData) {
         setSelectedBooking(bookingData);
       }
     } catch (e) {
-      console.error("Failed to load booking details:", e);
+      console.warn("Using fallback booking data as backend details fetch returned:", e);
     } finally {
       setLoadingDetail(false);
     }
-  };
+  }, []);
 
   const columns = useMemo(
     () =>
@@ -71,7 +110,7 @@ export function ActiveServicesView() {
         onViewDetail: handleOpenDetail,
         t,
       }),
-    [t]
+    [handleOpenDetail, t]
   );
 
   const table = useReactTable({
