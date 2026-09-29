@@ -443,6 +443,32 @@ export class PaymentsService {
       }
     }
 
+    if (existing.type === PaymentType.REGISTRATION_FEE || Number(existing.amount) === 30) {
+      try {
+        const sId = existing.studentId;
+        const noteMatch = (existing.notes || '').match(/\[membership_id:(.+?)\]/);
+        const memId = noteMatch ? noteMatch[1] : null;
+
+        if (memId) {
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING}, payment_id = NULL, paid_at = NULL WHERE id = '${memId}'::uuid`
+          ).catch(() => null);
+        } else if (sId) {
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE annual_memberships SET status = ${MembershipStatus.PENDING}, payment_id = NULL, paid_at = NULL WHERE student_id = '${sId}'::uuid`
+          ).catch(() => null);
+        }
+
+        if (sId) {
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE students SET annual_fee_paid = false WHERE id = '${sId}'::uuid`
+          ).catch(() => null);
+        }
+      } catch (err) {
+        console.warn('Error resetting annual membership on payment delete:', err);
+      }
+    }
+
     return { success: true };
   }
 
