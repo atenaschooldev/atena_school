@@ -4,10 +4,22 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import type { CourseFormValues } from "../types";
 import type { Teacher } from "@/features/teachers";
-import { X, FileText, ExternalLink } from "lucide-react";
+import {
+  X,
+  FileText,
+  ExternalLink,
+  Clock,
+  Users,
+  Award,
+  BookOpen,
+  Calendar,
+  Sparkles,
+  Check,
+  DollarSign,
+  Image as ImageIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { COURSE_CATEGORIES, COURSE_FORMAT_OPTIONS } from "../utils";
 import { useTranslation } from "@/i18n/context";
 import { api } from "@/lib/api";
 
@@ -29,11 +40,17 @@ export interface CourseFormProps {
 }
 
 function slugify(str: string): string {
-  return str.toLowerCase().trim()
-    .replace(/[àáâã]/g, "a").replace(/[èéêë]/g, "e")
-    .replace(/[ìíîï]/g, "i").replace(/[òóôõ]/g, "o")
-    .replace(/[ùúûü]/g, "u").replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-").replace(/-+/g, "-");
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[àáâã]/g, "a")
+    .replace(/[èéêë]/g, "e")
+    .replace(/[ìíîï]/g, "i")
+    .replace(/[òóôõ]/g, "o")
+    .replace(/[ùúûü]/g, "u")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
 
 function calcEndTime(startTime: string, durationMin: number): string {
@@ -50,27 +67,28 @@ export interface CourseCategoryOption {
 }
 
 export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: CourseFormProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [form, setForm] = useState<CourseFormValues>(initialValues);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [categories, setCategories] = useState<CourseCategoryOption[]>([]);
+  const [settingsPresets, setSettingsPresets] = useState<any[]>([]);
   const [slugManual, setSlugManual] = useState(!!initialValues.slug);
 
   const STATUS_OPTIONS = [
-    { value: "attivo", label: t("common.active") },
-    { value: "in-programmazione", label: t("courses.inPlanning") },
-    { value: "concluso", label: t("common.completed") },
-    { value: "archiviato", label: t("groups.archived") },
+    { value: "attivo", label: t("common.active") || "Attivo" },
+    { value: "in-programmazione", label: t("courses.inPlanning") || "In Programmazione" },
+    { value: "concluso", label: t("common.completed") || "Concluso" },
+    { value: "archiviato", label: t("groups.archived") || "Archiviato" },
   ];
 
   const DAYS_OF_WEEK = [
-    { key: "Lunedì", label: t("weekdays.monday") },
-    { key: "Martedì", label: t("weekdays.tuesday") },
-    { key: "Mercoledì", label: t("weekdays.wednesday") },
-    { key: "Giovedì", label: t("weekdays.thursday") },
-    { key: "Venerdì", label: t("weekdays.friday") },
-    { key: "Sabato", label: t("weekdays.saturday") },
-    { key: "Domenica", label: t("weekdays.sunday") },
+    { key: "Lunedì", label: locale === "en" ? "Mon" : "Lun", full: t("weekdays.monday") || "Lunedì" },
+    { key: "Martedì", label: locale === "en" ? "Tue" : "Mar", full: t("weekdays.tuesday") || "Martedì" },
+    { key: "Mercoledì", label: locale === "en" ? "Wed" : "Mer", full: t("weekdays.wednesday") || "Mercoledì" },
+    { key: "Giovedì", label: locale === "en" ? "Thu" : "Gio", full: t("weekdays.thursday") || "Giovedì" },
+    { key: "Venerdì", label: locale === "en" ? "Fri" : "Ven", full: t("weekdays.friday") || "Venerdì" },
+    { key: "Sabato", label: locale === "en" ? "Sat" : "Sab", full: t("weekdays.saturday") || "Sabato" },
+    { key: "Domenica", label: locale === "en" ? "Sun" : "Dom", full: t("weekdays.sunday") || "Domenica" },
   ];
 
   useEffect(() => {
@@ -98,8 +116,6 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
       })
       .catch(() => {});
   }, []);
-
-  const [settingsPresets, setSettingsPresets] = useState<any[]>([]);
 
   useEffect(() => {
     if (!slugManual && form.nome) {
@@ -220,110 +236,184 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
     }
   };
 
-  // ─── Styles ───────────────────────────────────────────────────────────────
-  const L = "text-xs font-bold text-foreground uppercase tracking-wider block mb-1.5";
-  const readOnly = "h-9 rounded-xl border border-input bg-muted/50 px-3 flex items-center text-xs font-medium text-foreground";
+  const selectedDaysLimit = form.lessonsPerWeek;
+  const selectedDaysCount = form.scheduleDays.length;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4 pb-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      
+      {/* ── Section 1: Informazioni Generali ── */}
+      <div className="space-y-3.5">
+        <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+          <BookOpen className="h-4 w-4 text-primary" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            {t("courses.sectionGeneral") || "Informazioni Generali"}
+          </h3>
+        </div>
 
-        {/* ── Photo ── */}
-        <div className="col-span-2 flex items-center gap-4 bg-muted/40 rounded-2xl p-3.5 border border-border/60">
-          <div className="relative shrink-0 h-14 w-20 rounded-xl overflow-hidden border border-border bg-card flex items-center justify-center">
+        {/* Photo URL preview */}
+        <div className="flex items-center gap-3.5 bg-muted/30 dark:bg-muted/20 rounded-xl p-3 border border-border/60">
+          <div className="relative shrink-0 h-13 w-18 rounded-lg overflow-hidden border border-border bg-muted/50 flex items-center justify-center">
             {form.foto ? (
               <>
-                <img src={form.foto} alt="" className="h-full w-full object-cover"
-                  onError={(e) => (e.currentTarget.style.display = "none")} />
-                <button type="button" onClick={() => setForm({ ...form, foto: "" })}
-                  className="absolute top-1 right-1 h-5 w-5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer z-10">
+                <img
+                  src={form.foto}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, foto: "" })}
+                  className="absolute top-1 right-1 h-4.5 w-4.5 bg-rose-600 text-white rounded-full flex items-center justify-center cursor-pointer z-10 shadow-xs hover:bg-rose-700 transition-colors"
+                >
                   <X className="h-3 w-3 stroke-[2.5]" />
                 </button>
               </>
             ) : (
-              <span className="text-[11px] font-semibold text-muted-foreground">{t("common.noData")}</span>
+              <ImageIcon className="h-5 w-5 text-muted-foreground/60" />
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <Label className={L}>{t("teachers.photoUrl")}</Label>
-            <Input placeholder="URL (https://...)" value={form.foto || ""}
+          <div className="flex-1 min-w-0 space-y-1">
+            <Label htmlFor="course-photo" className="text-xs font-semibold text-foreground">
+              {t("courses.photoUrlLabel") || "URL Immagine di Copertina"}
+            </Label>
+            <Input
+              id="course-photo"
+              placeholder="https://.../photo.jpg"
+              value={form.foto || ""}
               onChange={(e) => setForm({ ...form, foto: e.target.value })}
-              className="h-9 text-xs rounded-xl" />
+              className="h-8 text-xs rounded-lg"
+            />
           </div>
         </div>
 
-        {/* ── Nome + Slug ── */}
-        <div>
-          <Label className={L}>{t("courses.courseName")} *</Label>
-          <Input placeholder="Es. B2 First, General English..." value={form.nome} required
-            onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            className="h-9 text-xs rounded-xl" />
-        </div>
-        <div>
-          <Label className={L}>Slug (URL)</Label>
-          <Input placeholder="b2-first" value={form.slug}
-            onChange={(e) => { setSlugManual(true); setForm({ ...form, slug: e.target.value }); }}
-            className="h-9 text-xs rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1.5">
+            <Label htmlFor="course-name" className="text-xs font-semibold text-foreground">
+              {t("courses.courseName") || "Nome Corso"} *
+            </Label>
+            <Input
+              id="course-name"
+              placeholder="Es. B2 First, General English..."
+              value={form.nome}
+              required
+              onChange={(e) => setForm({ ...form, nome: e.target.value })}
+              className="h-9 text-xs rounded-xl"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="course-slug" className="text-xs font-semibold text-foreground">
+              Slug URL
+            </Label>
+            <Input
+              id="course-slug"
+              placeholder="b2-first"
+              value={form.slug}
+              onChange={(e) => {
+                setSlugManual(true);
+                setForm({ ...form, slug: e.target.value });
+              }}
+              className="h-9 text-xs font-mono rounded-xl"
+            />
+          </div>
         </div>
 
-        {/* ── Categoria + Modalità di Erogazione ── */}
-        <div>
-          <Label className={L}>{t("courses.allCategories")}</Label>
-          <Select
-            value={form.categoryId || form.categoria || "languages"}
-            onValueChange={handleCategoryChange}
-          >
-            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder={t("courses.allCategories")} />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.length > 0 ? (
-                categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id} className="cursor-pointer">
-                    {c.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <>
-                  <SelectItem value="languages" className="cursor-pointer">{t("courses.categories.languages")}</SelectItem>
-                  <SelectItem value="academic" className="cursor-pointer">{t("courses.categories.academic")}</SelectItem>
-                  <SelectItem value="Certipass" className="cursor-pointer">{t("courses.categories.certipass")}</SelectItem>
-                  <SelectItem value="other" className="cursor-pointer">{t("courses.categories.general")}</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className={L}>Modalità di Erogazione (Settings) *</Label>
-          <Select
-            value={String(currentDeliveryMode)}
-            onValueChange={(val) => setDeliveryMode(Number(val))}
-          >
-            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder="Seleziona modalità..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1" className="cursor-pointer">📅 Orario Fisso (Corsi di Gruppo)</SelectItem>
-              <SelectItem value="2" className="cursor-pointer">🤝 Flessibile / Pacchetti di Lezioni</SelectItem>
-              <SelectItem value="4" className="cursor-pointer">🎓 Certificazione (EIPASS / Monte Ore)</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1.5">
+            <Label htmlFor="course-category" className="text-xs font-semibold text-foreground">
+              {t("courses.categoryLabel") || "Categoria"} *
+            </Label>
+            <Select
+              value={form.categoryId || form.categoria || "languages"}
+              onValueChange={handleCategoryChange}
+            >
+              <SelectTrigger id="course-category" className="h-9 text-xs rounded-xl cursor-pointer">
+                <SelectValue placeholder={t("courses.categoryLabel") || "Seleziona categoria..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.length > 0 ? (
+                  categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="cursor-pointer">
+                      {c.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <>
+                    <SelectItem value="languages" className="cursor-pointer">{t("courses.categories.languages") || "Corsi di Lingua"}</SelectItem>
+                    <SelectItem value="academic" className="cursor-pointer">{t("courses.categories.academic") || "Recupero Scolastico"}</SelectItem>
+                    <SelectItem value="certipass" className="cursor-pointer">{t("courses.categories.certipass") || "Certificazioni EIPASS"}</SelectItem>
+                    <SelectItem value="other" className="cursor-pointer">{t("courses.categories.general") || "Generale / Altro"}</SelectItem>
+                  </>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="course-status" className="text-xs font-semibold text-foreground">
+              {t("common.status") || "Stato"}
+            </Label>
+            <Select value={form.stato} onValueChange={(v) => setForm({ ...form, stato: v as any })}>
+              <SelectTrigger id="course-status" className="h-9 text-xs rounded-xl cursor-pointer">
+                <SelectValue placeholder={t("common.status") || "Stato"} />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map(({ value, label }) => (
+                  <SelectItem key={value} value={value} className="cursor-pointer">{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* ── Preset Configurazione (Template) ── */}
+        <div className="space-y-1.5">
+          <Label htmlFor="course-desc" className="text-xs font-semibold text-foreground">
+            {t("promotions.description") || "Descrizione"}
+          </Label>
+          <Textarea
+            id="course-desc"
+            placeholder="Breve panoramica del corso, obiettivi formativi e destinatari..."
+            value={form.descrizione}
+            onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
+            className="min-h-[70px] rounded-xl text-xs"
+          />
+        </div>
+      </div>
+
+      {/* ── Section 2: Formato Didattico & Prezzo ── */}
+      <div className="space-y-3.5 pt-2">
+        <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+          <Award className="h-4 w-4 text-amber-500" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            {t("courses.sectionFormat") || "Formato Didattico & Prezzo"}
+          </h3>
+        </div>
+
+        {/* Preset / Template Selector */}
         {settingsPresets.length > 0 && (
-          <div className="col-span-2 bg-blue-50/30 p-3 rounded-xl border border-blue-200/60">
-            <Label className={L}>Preset / Template Configurazione</Label>
+          <div className="bg-muted/30 dark:bg-muted/20 p-3 rounded-xl border border-border/60 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="course-preset" className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                {t("courses.presetNameLabel") || "Preset / Template Formato"}
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                (Compila automaticamente i valori predefiniti)
+              </span>
+            </div>
             <Select
               value={form.settingsId || "custom"}
               onValueChange={handlePresetChange}
             >
-              <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer bg-white">
-                <SelectValue placeholder="— Configurazione personalizzata —" />
+              <SelectTrigger id="course-preset" className="h-9 text-xs rounded-xl cursor-pointer bg-background">
+                <SelectValue placeholder={t("courses.customPreset") || "— Configurazione personalizzata —"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="custom" className="cursor-pointer">— Personalizzata / Nuovo preset per questo corso —</SelectItem>
+                <SelectItem value="custom" className="cursor-pointer">
+                  — {t("courses.customPreset") || "Configurazione personalizzata"} —
+                </SelectItem>
                 {settingsPresets.map((p) => (
                   <SelectItem key={p.id} value={p.id} className="cursor-pointer">
                     {p.name}
@@ -334,210 +424,335 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
           </div>
         )}
 
-        {/* ── Stato + Prezzo ── */}
-        <div>
-          <Label className={L}>{t("common.status")}</Label>
-          <Select value={form.stato} onValueChange={(v) => setForm({ ...form, stato: v as any })}>
-            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder={t("common.status")} />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map(({ value, label }) => (
-                <SelectItem key={value} value={value} className="cursor-pointer">{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1.5">
+            <Label htmlFor="delivery-mode" className="text-xs font-semibold text-foreground">
+              {t("courses.deliveryModeLabel") || "Modalità di Erogazione"} *
+            </Label>
+            <Select
+              value={String(currentDeliveryMode)}
+              onValueChange={(val) => setDeliveryMode(Number(val))}
+            >
+              <SelectTrigger id="delivery-mode" className="h-9 text-xs rounded-xl cursor-pointer">
+                <SelectValue placeholder="Seleziona modalità..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1" className="cursor-pointer">
+                  📅 {t("courses.deliveryModeFixed") || "1 — Orario Fisso di Gruppo"}
+                </SelectItem>
+                <SelectItem value="2" className="cursor-pointer">
+                  🤝 {t("courses.deliveryModeFlexible") || "2 — Flessibile / Individuale"}
+                </SelectItem>
+                <SelectItem value="4" className="cursor-pointer">
+                  🎓 {t("courses.deliveryModeCertification") || "4 — Certificazione / Monte Ore"}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="course-price" className="text-xs font-semibold text-foreground">
+              {t("courses.price") || "Prezzo (€)"} *
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">€</span>
+              <Input
+                id="course-price"
+                type="number"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+                value={form.prezzo !== undefined && form.prezzo !== null ? form.prezzo.toString() : ""}
+                onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
+                className="h-9 text-xs pl-7 rounded-xl font-mono"
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <Label className={L}>{t("courses.price")} *</Label>
-          <Input type="number" placeholder="0.00" step="0.01" min="0" required
-            value={form.prezzo?.toString() ?? ""}
-            onChange={(e) => setForm({ ...form, prezzo: parseFloat(e.target.value) || 0 })}
-            className="h-9 text-xs rounded-xl" />
+      </div>
+
+      {/* ── Section 3: Docenti Assegnati ── */}
+      <div className="space-y-3.5 pt-2">
+        <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+          <Users className="h-4 w-4 text-sky-500" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            {t("courses.sectionTeachers") || "Docenti Assegnati"}
+          </h3>
         </div>
 
-        {/* ── Docente Principale (PRIMARY) ── */}
-        <div>
-          <Label className={L}>Docente Principale (Lead)</Label>
-          <Select
-            value={primaryTeacherId}
-            onValueChange={handlePrimaryTeacherChange}
-          >
-            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder={`— ${t("groups.unassigned")} —`} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none" className="cursor-pointer">— {t("groups.unassigned")} —</SelectItem>
-              {teachers.length > 0
-                ? teachers.map((teacher) => (
-                    <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">
-                      {teacher.fullName}
-                    </SelectItem>
-                  ))
-                : <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* ── Docente di Supporto (ASSISTANT) ── */}
-        <div>
-          <Label className={L}>Docente Assistente / Supporto</Label>
-          <Select
-            value={assistantTeacherId}
-            onValueChange={handleAssistantTeacherChange}
-          >
-            <SelectTrigger className="h-9 text-xs rounded-xl cursor-pointer">
-              <SelectValue placeholder="— Nessun assistente —" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none" className="cursor-pointer">— Nessun assistente —</SelectItem>
-              {teachers.length > 0
-                ? teachers
-                    .filter((t) => t.id !== primaryTeacherId)
-                    .map((teacher) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-1.5">
+            <Label htmlFor="primary-teacher" className="text-xs font-semibold text-foreground">
+              {t("courses.primaryTeacher") || "Docente Principale (Lead)"}
+            </Label>
+            <Select
+              value={primaryTeacherId}
+              onValueChange={handlePrimaryTeacherChange}
+            >
+              <SelectTrigger id="primary-teacher" className="h-9 text-xs rounded-xl cursor-pointer">
+                <SelectValue placeholder={`— ${t("groups.unassigned") || "Non assegnato"} —`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none" className="cursor-pointer">
+                  — {t("groups.unassigned") || "Non assegnato"} —
+                </SelectItem>
+                {teachers.length > 0
+                  ? teachers.map((teacher) => (
                       <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">
                         {teacher.fullName}
                       </SelectItem>
                     ))
-                : <SelectItem value="loading" disabled>{t("common.loading")}</SelectItem>}
-            </SelectContent>
-          </Select>
+                  : <SelectItem value="loading" disabled>{t("common.loading") || "Caricamento..."}</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="assistant-teacher" className="text-xs font-semibold text-foreground">
+              {t("courses.assistantTeacher") || "Docente Assistente / Supporto"}
+            </Label>
+            <Select
+              value={assistantTeacherId}
+              onValueChange={handleAssistantTeacherChange}
+            >
+              <SelectTrigger id="assistant-teacher" className="h-9 text-xs rounded-xl cursor-pointer">
+                <SelectValue placeholder={`— ${t("courses.noAssistant") || "Nessun assistente"} —`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none" className="cursor-pointer">
+                  — {t("courses.noAssistant") || "Nessun assistente"} —
+                </SelectItem>
+                {teachers.length > 0
+                  ? teachers
+                      .filter((t) => t.id !== primaryTeacherId)
+                      .map((teacher) => (
+                        <SelectItem key={teacher.id} value={teacher.id} className="cursor-pointer">
+                          {teacher.fullName}
+                        </SelectItem>
+                      ))
+                  : <SelectItem value="loading" disabled>{t("common.loading") || "Caricamento..."}</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Section 4: Programmazione Didattica & Orari ── */}
+      <div className="space-y-3.5 pt-2">
+        <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+          <Calendar className="h-4 w-4 text-emerald-500" />
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            {t("courses.sectionSchedule") || "Programmazione Didattica & Orari"}
+          </h3>
         </div>
 
-        {/* ══ 1. ORARIO FISSO (FIXED SCHEDULE) ════════════════════════════════ */}
+        {/* 1. Gruppo a orario fisso */}
         {isFixed && (
-          <>
-            <div>
-              <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
-              <Input type="number" placeholder="75" min="15" step="5"
-                value={form.lessonDurationMinutes?.toString() ?? ""}
-                onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
-                className="h-9 text-xs rounded-xl" />
-            </div>
-            <div>
-              <Label className={L}>{t("courses.lessonsCount")} / settimana</Label>
-              <Input type="number" placeholder="2" min="1"
-                value={form.lessonsPerWeek?.toString() ?? ""}
-                onChange={(e) => setForm({ ...form, lessonsPerWeek: parseInt(e.target.value) || null })}
-                className="h-9 text-xs rounded-xl" />
+          <div className="space-y-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
+                <Label htmlFor="fixed-duration" className="text-xs font-semibold text-foreground">
+                  {t("courses.lessonDurationLabel") || "Durata Singola Lezione (min)"}
+                </Label>
+                <Input
+                  id="fixed-duration"
+                  type="number"
+                  placeholder="75"
+                  min="15"
+                  step="5"
+                  value={form.lessonDurationMinutes?.toString() ?? ""}
+                  onChange={(e) => updateDuration(parseInt(e.target.value, 10) || null)}
+                  className="h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="fixed-lessons-week" className="text-xs font-semibold text-foreground">
+                  {t("courses.lessonsPerWeekLabel") || "Frequenza (Lezioni / Settimana)"}
+                </Label>
+                <Input
+                  id="fixed-lessons-week"
+                  type="number"
+                  placeholder="2"
+                  min="1"
+                  value={form.lessonsPerWeek?.toString() ?? ""}
+                  onChange={(e) => setForm({ ...form, lessonsPerWeek: parseInt(e.target.value, 10) || null })}
+                  className="h-9 text-xs rounded-xl"
+                />
+              </div>
             </div>
 
-            <div className="col-span-2 bg-muted/40 p-3.5 rounded-2xl border border-border/60 space-y-2">
+            {/* Weekday pills */}
+            <div className="bg-muted/30 dark:bg-muted/20 p-3 rounded-xl border border-border/60 space-y-2">
               <div className="flex items-center justify-between">
-                <Label className={L}>{t("courses.scheduleDays")}</Label>
-                {form.lessonsPerWeek && (
-                  <span className="text-xs text-muted-foreground">
-                    {form.scheduleDays.length}/{form.lessonsPerWeek} selezionati
+                <Label className="text-xs font-semibold text-foreground">
+                  {t("courses.scheduleDays") || "Giorni Settimanali di Lezione"}
+                </Label>
+                {selectedDaysLimit && (
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {selectedDaysCount} / {selectedDaysLimit} {locale === "en" ? "selected" : "selezionati"}
                   </span>
                 )}
               </div>
-              <div className="flex gap-4 flex-wrap pt-1">
-                {DAYS_OF_WEEK.map(({ key, label }) => {
+
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {DAYS_OF_WEEK.map(({ key, label, full }) => {
                   const isSelected = form.scheduleDays.includes(key);
-                  const limitReached = !!form.lessonsPerWeek && form.scheduleDays.length >= form.lessonsPerWeek;
+                  const limitReached = !!selectedDaysLimit && selectedDaysCount >= selectedDaysLimit;
                   const isDisabled = !isSelected && limitReached;
                   return (
-                    <label key={key}
-                      className={`flex items-center gap-2 select-none text-xs font-medium ${isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
-                      <Checkbox checked={isSelected} disabled={isDisabled} onCheckedChange={() => toggleDay(key)} />
-                      <span>{label}</span>
-                    </label>
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => toggleDay(key)}
+                      title={full}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary shadow-2xs"
+                          : isDisabled
+                          ? "opacity-40 cursor-not-allowed bg-muted/30 text-muted-foreground border-border/40"
+                          : "bg-background text-muted-foreground border-border/60 hover:text-foreground hover:border-border"
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                      {label}
+                    </button>
                   );
                 })}
               </div>
             </div>
-            <div>
-              <Label className={L}>{t("courses.startTime")}</Label>
-              <Input type="time" value={form.startTime || ""}
-                onChange={(e) => updateStartTime(e.target.value)}
-                className="h-9 text-xs rounded-xl" />
-            </div>
-            <div>
-              <Label className={L}>
-                {t("courses.endTime")} (Calcolato)
-              </Label>
-              <div className={readOnly}>
-                {form.endTime || <span className="text-muted-foreground">—</span>}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
+                <Label htmlFor="fixed-start-time" className="text-xs font-semibold text-foreground">
+                  {t("courses.startTimeLabel") || "Orario di Inizio"}
+                </Label>
+                <Input
+                  id="fixed-start-time"
+                  type="time"
+                  value={form.startTime || ""}
+                  onChange={(e) => updateStartTime(e.target.value)}
+                  className="h-9 text-xs rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-foreground">
+                  {t("courses.endTimeLabel") || "Orario di Fine"} ({t("courses.calculated") || "Calcolato"})
+                </Label>
+                <div className="h-9 rounded-xl border border-input bg-muted/40 dark:bg-muted/20 px-3 flex items-center text-xs font-semibold text-foreground font-mono">
+                  {form.endTime ? (
+                    form.endTime
+                  ) : (
+                    <span className="text-muted-foreground font-normal font-sans text-xs">—</span>
+                  )}
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
-        {/* ══ 2. FLESSIBILE / PACCHETTO ═════════════════════════════════════ */}
+        {/* 2. Flessibile / Pacchetto individuale */}
         {isFlexible && (
-          <>
-            <div>
-              <Label className={L}>{t("courses.duration")} ({t("courses.minutes")})</Label>
-              <Input type="number" placeholder="60" min="15" step="5"
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <Label htmlFor="flex-duration" className="text-xs font-semibold text-foreground">
+                {t("courses.lessonDurationLabel") || "Durata Singola Lezione (min)"}
+              </Label>
+              <Input
+                id="flex-duration"
+                type="number"
+                placeholder="60"
+                min="15"
+                step="5"
                 value={form.lessonDurationMinutes?.toString() ?? ""}
-                onChange={(e) => updateDuration(parseInt(e.target.value) || null)}
-                className="h-9 text-xs rounded-xl" />
+                onChange={(e) => updateDuration(parseInt(e.target.value, 10) || null)}
+                className="h-9 text-xs rounded-xl"
+              />
             </div>
-            <div>
-              <Label className={L}>Numero Totale Lezioni (Pacchetto)</Label>
-              <Input type="number" placeholder="10" min="1"
+
+            <div className="space-y-1.5">
+              <Label htmlFor="flex-total-lessons" className="text-xs font-semibold text-foreground">
+                {t("courses.totalLessonsLabel") || "Numero Totale Lezioni (Pacchetto)"}
+              </Label>
+              <Input
+                id="flex-total-lessons"
+                type="number"
+                placeholder="10"
+                min="1"
                 value={form.totalLessons?.toString() ?? ""}
-                onChange={(e) => setForm({ ...form, totalLessons: parseInt(e.target.value) || null })}
-                className="h-9 text-xs rounded-xl" />
+                onChange={(e) => setForm({ ...form, totalLessons: parseInt(e.target.value, 10) || null })}
+                className="h-9 text-xs rounded-xl"
+              />
             </div>
-          </>
+          </div>
         )}
 
-        {/* ══ 4. CERTIFICAZIONE (EIPASS) ════════════════════════════════════ */}
+        {/* 4. Certificazione / Monte ore */}
         {isCertification && (
-          <div className="col-span-2">
-            <Label className={L}>Monte Ore Complessivo ({t("courses.totalLessonsEst")})</Label>
-            <Input type="number" placeholder="30" min="0" step="0.5"
+          <div className="space-y-1.5">
+            <Label htmlFor="cert-total-hours" className="text-xs font-semibold text-foreground">
+              {t("courses.totalHoursLabel") || "Monte Ore Complessivo"}
+            </Label>
+            <Input
+              id="cert-total-hours"
+              type="number"
+              placeholder="30"
+              min="0"
+              step="0.5"
               value={form.totalHours?.toString() ?? ""}
               onChange={(e) => setForm({ ...form, totalHours: parseFloat(e.target.value) || null })}
-              className="h-9 text-xs rounded-xl" />
+              className="h-9 text-xs rounded-xl font-mono"
+            />
           </div>
         )}
-
-        {/* ── Modulo di Iscrizione & Form Engine ── */}
-        <div className="col-span-2 bg-gradient-to-r from-blue-50/70 to-indigo-50/50 rounded-2xl p-4 border border-blue-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-[#043569] text-[#FAA904] rounded-xl shadow-xs shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                Modulo di Iscrizione & Form Engine
-                <span className="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  Database-First
-                </span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Personalizza le domande e i campi richiesti al corsista durante il checkout di questo corso.
-              </p>
-            </div>
-          </div>
-          <a
-            href={`/moduli?courseId=${form.slug || (initialValues as any).id || ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-2 bg-white hover:bg-slate-50 text-[#043569] border border-blue-200 rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-[#FAA904]" />
-            Personalizza Modulo
-          </a>
-        </div>
-
-        {/* ── Descrizione ── */}
-        <div className="col-span-2">
-          <Label className={L}>{t("promotions.description")}</Label>
-          <Textarea placeholder="..."
-            value={form.descrizione}
-            onChange={(e) => setForm({ ...form, descrizione: e.target.value })}
-            className="min-h-[80px] rounded-xl text-xs" />
-        </div>
       </div>
 
+      {/* ── Section 5: Modulo di Iscrizione & Form Engine ── */}
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-3.5 border border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-1">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="p-2 bg-primary text-primary-foreground rounded-xl shadow-2xs shrink-0">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              {t("courses.formEngineTitle") || "Modulo di Iscrizione & Form Engine"}
+              <span className="bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
+                Database-First
+              </span>
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+              {t("courses.formEngineDesc") || "Personalizza le domande e i campi richiesti al corsista durante il checkout."}
+            </p>
+          </div>
+        </div>
+        <a
+          href={`/moduli?courseId=${form.slug || (initialValues as any).id || ""}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-3 py-1.5 bg-background hover:bg-muted text-foreground border border-border rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+        >
+          <ExternalLink className="w-3.5 h-3.5 text-primary" />
+          {t("courses.formEngineBtn") || "Personalizza Modulo"}
+        </a>
+      </div>
+
+      {/* ── Dialog Footer Buttons ── */}
       <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
-        <Button type="button" variant="ghost" onClick={onCancel} className="font-semibold cursor-pointer">
-          {t("common.cancel")}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="font-medium cursor-pointer text-xs h-9 px-4 rounded-xl"
+        >
+          {t("common.cancel") || "Annulla"}
         </Button>
-        <Button type="submit" className="font-semibold rounded-xl cursor-pointer">
+        <Button
+          type="submit"
+          className="font-bold rounded-xl cursor-pointer text-xs h-9 px-5 shadow-xs"
+        >
           {submitLabel}
         </Button>
       </div>

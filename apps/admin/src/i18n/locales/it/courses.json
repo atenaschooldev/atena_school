@@ -139,6 +139,21 @@
     "general": "Generale / Altro",
     "all": "Tutte le categorie"
   },
+  "categoryLabel": "Categoria",
+  "primaryTeacher": "Docente Principale",
+  "assistantTeacher": "Docente Assistente",
+  "noAssistant": "Nessun assistente",
+  "calculated": "Calcolato",
+  "customPreset": "Configurazione personalizzata",
+  "selectedDaysCount": "{selected}/{limit} selezionati",
+  "sectionGeneral": "Informazioni Generali",
+  "sectionSchedule": "Programmazione Didattica & Orari",
+  "sectionTeachers": "Docenti Assegnati",
+  "sectionFormat": "Formato & Prezzo",
+  "formEngineTitle": "Modulo di Iscrizione & Form Engine",
+  "formEngineDesc": "Personalizza le domande e i campi richiesti al corsista durante il checkout.",
+  "formEngineBtn": "Personalizza Modulo",
+  "photoUrlLabel": "URL Immagine di Copertina",
   "registrationFee": "Quota Iscrizione (€30)",
   "emptyState": {
     "title": "Nessun corso trovato"

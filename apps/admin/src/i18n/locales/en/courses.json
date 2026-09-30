@@ -139,6 +139,21 @@
     "general": "General / Other",
     "all": "All Categories"
   },
+  "categoryLabel": "Category",
+  "primaryTeacher": "Lead Teacher",
+  "assistantTeacher": "Assistant Teacher",
+  "noAssistant": "No assistant",
+  "calculated": "Calculated",
+  "customPreset": "Custom configuration",
+  "selectedDaysCount": "{selected}/{limit} selected",
+  "sectionGeneral": "General Information",
+  "sectionSchedule": "Schedule & Class Days",
+  "sectionTeachers": "Assigned Teachers",
+  "sectionFormat": "Format & Pricing",
+  "formEngineTitle": "Enrollment Form & Form Engine",
+  "formEngineDesc": "Customize checkout questions and custom fields for this course.",
+  "formEngineBtn": "Customize Form",
+  "photoUrlLabel": "Cover Photo URL",
   "registrationFee": "Registration Fee (€30)",
   "emptyState": {
     "title": "No courses found"
