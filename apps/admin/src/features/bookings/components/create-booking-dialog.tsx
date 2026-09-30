@@ -75,6 +75,7 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
     setPromoCodeInput,
     appliedPromo,
     isApplyingPromo,
+    hasActivePromos,
     applyPromoCode,
     removePromoCode,
     discountAmount,
@@ -274,6 +275,7 @@ export function CreateBookingDialog({ onCreateBooking }: CreateBookingDialogProp
                     setPromoCodeInput={setPromoCodeInput}
                     appliedPromo={appliedPromo}
                     isApplyingPromo={isApplyingPromo}
+                    hasActivePromos={hasActivePromos}
                     applyPromoCode={applyPromoCode}
                     removePromoCode={removePromoCode}
                   />

@@ -37,6 +37,7 @@ interface StepPaymentSummaryProps {
   setPromoCodeInput?: (val: string) => void;
   appliedPromo?: AppliedPromo | null;
   isApplyingPromo?: boolean;
+  hasActivePromos?: boolean;
   applyPromoCode?: (code?: string) => Promise<void>;
   removePromoCode?: () => void;
 }
@@ -50,6 +51,7 @@ export function StepPaymentSummary({
   setPromoCodeInput,
   appliedPromo,
   isApplyingPromo = false,
+  hasActivePromos = false,
   applyPromoCode,
   removePromoCode,
 }: StepPaymentSummaryProps) {
@@ -105,73 +107,75 @@ export function StepPaymentSummary({
 
   return (
     <div className="space-y-5">
-      {/* 0. Promo Code / Convenzione */}
-      <div className="p-3.5 bg-muted/20 rounded-xl border border-border/60 space-y-2.5">
-        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
-          <span className="flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-primary" />
-            Codice Promozionale / Convenzione
-          </span>
-          {appliedPromo && (
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> Applicato ({appliedPromo.code})
+      {/* 0. Promo Code / Convenzione - Visible only when promo codes are active or applied */}
+      {(hasActivePromos || appliedPromo) && (
+        <div className="p-3.5 bg-muted/20 rounded-xl border border-border/60 space-y-2.5">
+          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+            <span className="flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-primary" />
+              Codice Promozionale / Convenzione
             </span>
-          )}
-        </label>
+            {appliedPromo && (
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Applicato ({appliedPromo.code})
+              </span>
+            )}
+          </label>
 
-        {!appliedPromo ? (
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Input
-                startIcon={<Tag className="w-3.5 h-3.5" />}
-                placeholder="es. ESTATE2026, CONVENZIONE10"
-                value={promoCodeInput}
-                onChange={(e) => setPromoCodeInput?.(e.target.value.toUpperCase())}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    applyPromoCode?.();
-                  }
-                }}
-                className="uppercase font-mono tracking-wider text-xs"
-              />
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isApplyingPromo || !promoCodeInput.trim()}
-              onClick={() => applyPromoCode?.()}
-              className="h-9 px-3.5 text-xs font-semibold cursor-pointer shrink-0 rounded-xl"
-            >
-              {isApplyingPromo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-center justify-between p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs">
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-emerald-600" />
-              <div>
-                <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
-                  {appliedPromo.code}
-                </span>
-                <span className="text-muted-foreground ml-2 text-[11px]">
-                  ({appliedPromo.discountType === 1 ? `-${appliedPromo.discountValue}%` : `-€${Number(appliedPromo.discountValue).toFixed(2)}`}
-                  {appliedPromo.waiveRegistrationFee ? " + Quota iscrizione azzerata" : ""})
-                </span>
+          {!appliedPromo ? (
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  startIcon={<Tag className="w-3.5 h-3.5" />}
+                  placeholder="es. ESTATE2026, CONVENZIONE10"
+                  value={promoCodeInput}
+                  onChange={(e) => setPromoCodeInput?.(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyPromoCode?.();
+                    }
+                  }}
+                  className="uppercase font-mono tracking-wider text-xs"
+                />
               </div>
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={isApplyingPromo || !promoCodeInput.trim()}
+                onClick={() => applyPromoCode?.()}
+                className="h-9 px-3.5 text-xs font-semibold cursor-pointer shrink-0 rounded-xl"
+              >
+                {isApplyingPromo ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={removePromoCode}
-              className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive cursor-pointer"
-            >
-              <X className="w-3.5 h-3.5 mr-1" /> Rimuovi
-            </Button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex items-center justify-between p-2.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-emerald-600" />
+                <div>
+                  <span className="font-bold font-mono text-emerald-700 dark:text-emerald-400">
+                    {appliedPromo.code}
+                  </span>
+                  <span className="text-muted-foreground ml-2 text-[11px]">
+                    ({appliedPromo.discountType === 1 ? `-${appliedPromo.discountValue}%` : `-€${Number(appliedPromo.discountValue).toFixed(2)}`}
+                    {appliedPromo.waiveRegistrationFee ? " + Quota iscrizione azzerata" : ""})
+                  </span>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={removePromoCode}
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5 mr-1" /> Rimuovi
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 1. Payment Method Selection Cards */}
       <div className="space-y-2.5">

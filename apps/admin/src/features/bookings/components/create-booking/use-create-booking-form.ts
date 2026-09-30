@@ -45,6 +45,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
   const [promoCodeInput, setPromoCodeInput] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [hasActivePromos, setHasActivePromos] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchingClient, setIsSearchingClient] = useState(false);
@@ -68,6 +69,15 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         })
         .catch((err) => console.error("Failed to load clients list:", err))
         .finally(() => setIsLoadingClients(false));
+
+      api
+        .get<Array<any>>("/admin/promo-codes")
+        .then((res) => {
+          if (Array.isArray(res)) {
+            setHasActivePromos(res.some((p) => p.is_active));
+          }
+        })
+        .catch((err) => console.error("Failed to check active promo codes:", err));
     }
   }, [open]);
 
@@ -675,6 +685,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
     setPromoCodeInput,
     appliedPromo,
     isApplyingPromo,
+    hasActivePromos,
     applyPromoCode,
     removePromoCode,
     discountAmount,

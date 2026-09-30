@@ -137,6 +137,7 @@ export function useCheckout(
     description?: string;
   } | null>(null);
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [hasActivePromos, setHasActivePromos] = useState(false);
 
   const formMethods = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema as never),
@@ -413,6 +414,18 @@ export function useCheckout(
         }
 
         const supabase = createClient();
+
+        // Check if any promo codes are actively enabled in the system
+        try {
+          const { count: activePromosCount } = await supabase
+            .from('promo_codes')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_active', true);
+          setHasActivePromos(Boolean(activePromosCount && activePromosCount > 0));
+        } catch {
+          setHasActivePromos(false);
+        }
+
         const { data: { user: currentUser } } = await supabase.auth.getUser();
 
         if (currentUser) {
@@ -964,6 +977,7 @@ export function useCheckout(
     applyingPromo,
     applyPromoCode,
     removePromoCode,
+    hasActivePromos,
     user,
     savedProfileSource,
     availableSavedStudents,

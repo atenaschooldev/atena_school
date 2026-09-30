@@ -28,6 +28,7 @@ interface CheckoutMobileSummaryProps {
   applyingPromo?: boolean;
   applyPromoCode?: () => void;
   removePromoCode?: () => void;
+  hasActivePromos?: boolean;
   discountAmount?: number;
 }
 
@@ -46,6 +47,7 @@ export function CheckoutMobileSummary({
   applyingPromo = false,
   applyPromoCode,
   removePromoCode,
+  hasActivePromos = false,
   discountAmount = 0,
 }: CheckoutMobileSummaryProps) {
   return (
@@ -103,8 +105,8 @@ export function CheckoutMobileSummary({
         </div>
       )}
 
-      {/* Promo Code Input on Mobile */}
-      {setPromoCodeInput && applyPromoCode && removePromoCode && (
+      {/* Promo Code Input on Mobile - Only visible if active promos exist */}
+      {(hasActivePromos || appliedPromo) && setPromoCodeInput && applyPromoCode && removePromoCode && (
         <div className="pt-2 border-t border-slate-100 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">

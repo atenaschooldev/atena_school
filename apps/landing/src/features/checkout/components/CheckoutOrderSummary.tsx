@@ -54,6 +54,7 @@ interface CheckoutOrderSummaryProps {
   applyingPromo: boolean;
   applyPromoCode: () => void;
   removePromoCode: () => void;
+  hasActivePromos?: boolean;
   discountAmount?: number;
   registrationFeeAmount?: number;
 }
@@ -86,6 +87,7 @@ export function CheckoutOrderSummary({
   applyingPromo,
   applyPromoCode,
   removePromoCode,
+  hasActivePromos = false,
   discountAmount = 0,
   registrationFeeAmount = 30,
 }: CheckoutOrderSummaryProps) {
@@ -157,63 +159,65 @@ export function CheckoutOrderSummary({
           </div>
         )}
 
-        {/* Promo Code Input Section */}
-        <div className="pt-2 border-t border-slate-100 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
-              Codice Promozionale
-            </span>
-          </div>
+        {/* Promo Code Input Section - Only visible if active promos exist in school system */}
+        {(hasActivePromos || appliedPromo) && (
+          <div className="pt-2 border-t border-slate-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                Codice Promozionale
+              </span>
+            </div>
 
-          {appliedPromo ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" weight="fill" />
-                <div>
-                  <span className="font-black text-emerald-900 tracking-wider block font-mono">
-                    {appliedPromo.code}
-                  </span>
-                  <span className="text-[10px] text-emerald-700 font-medium">
-                    {appliedPromo.description || `Sconto applicato`}
-                  </span>
+            {appliedPromo ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" weight="fill" />
+                  <div>
+                    <span className="font-black text-emerald-900 tracking-wider block font-mono">
+                      {appliedPromo.code}
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-medium">
+                      {appliedPromo.description || `Sconto applicato`}
+                    </span>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={removePromoCode}
+                  className="text-slate-400 hover:text-red-600 p-1 rounded-md hover:bg-white/80 transition-colors"
+                  title="Rimuovi promo"
+                >
+                  <X className="w-4 h-4" weight="bold" />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={removePromoCode}
-                className="text-slate-400 hover:text-red-600 p-1 rounded-md hover:bg-white/80 transition-colors"
-                title="Rimuovi promo"
-              >
-                <X className="w-4 h-4" weight="bold" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={promoCodeInput}
-                onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    applyPromoCode();
-                  }
-                }}
-                placeholder="es. FAMIGLIA10"
-                className="flex-1 min-w-0 px-3 py-2 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
-              />
-              <button
-                type="button"
-                onClick={() => applyPromoCode()}
-                disabled={applyingPromo || !promoCodeInput.trim()}
-                className="px-3 py-2 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
-              >
-                {applyingPromo ? <Spinner className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
-              </button>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoCodeInput}
+                  onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyPromoCode();
+                    }
+                  }}
+                  placeholder="es. FAMIGLIA10"
+                  className="flex-1 min-w-0 px-3 py-2 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
+                />
+                <button
+                  type="button"
+                  onClick={() => applyPromoCode()}
+                  disabled={applyingPromo || !promoCodeInput.trim()}
+                  className="px-3 py-2 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
+                >
+                  {applyingPromo ? <Spinner className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Price Breakdown */}
         <div className="space-y-2 text-xs pt-2 border-t border-slate-100">

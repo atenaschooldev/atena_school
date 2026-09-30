@@ -74,6 +74,7 @@ export function CheckoutView({
     applyingPromo,
     applyPromoCode,
     removePromoCode,
+    hasActivePromos,
     user,
     savedProfileSource,
     availableSavedStudents,
@@ -187,6 +188,7 @@ export function CheckoutView({
           applyingPromo={applyingPromo}
           applyPromoCode={applyPromoCode}
           removePromoCode={removePromoCode}
+          hasActivePromos={hasActivePromos}
           discountAmount={discountAmount}
         />
 
@@ -302,6 +304,7 @@ export function CheckoutView({
             applyingPromo={applyingPromo}
             applyPromoCode={applyPromoCode}
             removePromoCode={removePromoCode}
+            hasActivePromos={hasActivePromos}
             discountAmount={discountAmount}
           />
 
