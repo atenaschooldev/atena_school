@@ -5,10 +5,8 @@ import { SalesChart } from "./components/sales-chart"
 import { RecentTransactions } from "./components/recent-transactions"
 import { TopProducts } from "./components/top-products"
 import { TodayLessons } from "./components/today-lessons"
-import { CustomerInsights } from "./components/customer-insights"
 import { QuickActions } from "./components/quick-actions"
 import { RevenueBreakdown } from "./components/revenue-breakdown"
-
 import { useTranslation } from "@/i18n/context"
 
 export default function DashboardPage() {
@@ -29,28 +27,27 @@ export default function DashboardPage() {
 
         {/* Main Dashboard Grid */}
         <div className="@container/main space-y-6">
-          {/* Top Row - Key Metrics */}
+          {/* Top Row - Key Operational KPI Metrics */}
           <MetricsOverview />
 
-          {/* Action Required Alert Section */}
+          {/* Action Required: Debtors & Unpaid Balances with Direct Settlement */}
           <DebtorsAndRenewals />
 
-          {/* Second Row - Financial Charts */}
+          {/* Second Row - Financial Charts (Revenue Timeline & Payment Method Breakdown) */}
           <div className="grid gap-6 grid-cols-1 @5xl:grid-cols-2">
             <SalesChart />
             <RevenueBreakdown />
           </div>
 
-          {/* Third Row - Today's Live Operations */}
+          {/* Third Row - Today's Live Schedule & Active Courses */}
           <div className="grid gap-6 grid-cols-1 @5xl:grid-cols-2">
             <TodayLessons />
             <TopProducts />
           </div>
 
-          {/* Fourth Row - Transactions & Demographics */}
-          <div className="grid gap-6 grid-cols-1 @5xl:grid-cols-2">
+          {/* Fourth Row - Real Live Transactions History */}
+          <div className="grid gap-6 grid-cols-1">
             <RecentTransactions />
-            <CustomerInsights />
           </div>
         </div>
       </div>

@@ -43,6 +43,24 @@ export class ReportsService {
       byMethod[method] = (byMethod[method] || 0) + Number(p.amount);
     });
 
+    // Generate monthly timeline for charts
+    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+    const currentYear = new Date().getFullYear();
+    const monthlyTrend = months.map((mName, idx) => {
+      const monthNum = idx + 1;
+      const monthPayments = payments.filter((p) => {
+        const d = new Date(p.createdAt);
+        return d.getFullYear() === currentYear && d.getMonth() + 1 === monthNum;
+      });
+      const sales = monthPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      return {
+        month: mName,
+        monthIndex: idx,
+        sales,
+        count: monthPayments.length,
+      };
+    });
+
     return {
       period: {
         startDate: startDate.toISOString(),
@@ -55,6 +73,7 @@ export class ReportsService {
         transactionCount: payments.length,
       },
       byMethod,
+      monthlyTrend,
       recentTransactions: payments.slice(0, 20),
     };
   }

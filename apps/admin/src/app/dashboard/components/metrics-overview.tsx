@@ -1,101 +1,131 @@
 "use client"
 
 import { 
-  DollarSign, 
+  Euro, 
   Users, 
-  ShoppingCart, 
-  BarChart3 
+  Calendar, 
+  AlertCircle,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
 } from "lucide-react"
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { formatCurrency } from "@atena/utils"
-
 import { useTranslation } from "@/i18n/context"
 
 export function MetricsOverview() {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
+
+  // 1. Revenue Report
   const { data: revenueData } = useQuery({
     queryKey: ["reports", "revenue"],
     queryFn: () => api.get<any>("/admin/reports/revenue"),
   })
 
+  // 2. Students Data
   const { data: studentsData } = useQuery({
     queryKey: ["students", "list"],
     queryFn: () => api.get<any>("/admin/students"),
   })
 
-  const { data: attendanceData } = useQuery({
-    queryKey: ["reports", "attendance-summary"],
-    queryFn: () => api.get<any>("/admin/reports/attendance-summary"),
+  // 3. Debtors / Pending balances
+  const { data: debtorsData } = useQuery({
+    queryKey: ["reports", "debtors"],
+    queryFn: () => api.get<any>("/admin/reports/debtors"),
+  })
+
+  // 4. Schedules / Today Lessons
+  const { data: schedulesData } = useQuery({
+    queryKey: ["schedules", "list"],
+    queryFn: () => api.get<any[]>("/admin/schedules"),
   })
 
   const realRevenue = revenueData?.summary?.totalRevenue ?? 0
   const realCourseRev = revenueData?.summary?.coursePaymentsRevenue ?? 0
   const realFeeRev = revenueData?.summary?.membershipFeesRevenue ?? 0
+
   const realStudentsCount = Array.isArray(studentsData?.items) 
     ? studentsData.items.length 
     : (Array.isArray(studentsData) ? studentsData.length : (studentsData?.total ?? 0))
-  const realTransactionsCount = revenueData?.summary?.transactionCount ?? 0
-  const realAttendanceRate = attendanceData?.summary?.attendanceRatePercentage ?? 0
+
+  const debtorsList = Array.isArray(debtorsData?.debtors) ? debtorsData.debtors : []
+  const totalOutstanding = debtorsData?.totalOutstandingEstimate ?? 0
+
+  const schedulesList = Array.isArray(schedulesData) ? schedulesData : []
+  // Count schedules running today (matching day of week or current date)
+  const currentDayOfWeek = new Date().getDay()
+  const todayLessonsCount = schedulesList.filter((s: any) => {
+    if (s.dayOfWeek !== undefined) return s.dayOfWeek === currentDayOfWeek
+    if (s.startDate) {
+      const d = new Date(s.startDate)
+      return d.toDateString() === new Date().toDateString()
+    }
+    return true
+  }).length || schedulesList.length
 
   const metrics = [
     {
-      title: t("dashboard.totalRevenue"),
+      title: locale === "en" ? "Total Revenue" : "Incasso Registrato",
       value: formatCurrency(realRevenue),
-      description: t("payments.totalIncome"),
-      icon: DollarSign,
-      footer: `${t("payments.courseTuitions")}: ${formatCurrency(realCourseRev)}`,
-      subfooter: `${t("payments.membershipFees")}: ${formatCurrency(realFeeRev)}`,
+      subtitle: `${locale === "en" ? "Courses" : "Corsi"}: ${formatCurrency(realCourseRev)} • ${locale === "en" ? "Fees" : "Quote €30"}: ${formatCurrency(realFeeRev)}`,
+      icon: Euro,
+      color: "text-emerald-600 dark:text-emerald-400",
+      bg: "bg-emerald-500/10",
+      border: "hover:border-emerald-500/30",
     },
     {
-      title: t("dashboard.activeStudents"),
-      value: realStudentsCount.toLocaleString(),
-      description: t("users.studentProfile"),
+      title: locale === "en" ? "Today's Lessons" : "Lezioni di Oggi",
+      value: `${todayLessonsCount} ${locale === "en" ? "lessons" : "lezioni"}`,
+      subtitle: locale === "en" ? "Scheduled in classrooms & online" : "Programmate in sede e online",
+      icon: Calendar,
+      color: "text-blue-600 dark:text-blue-400",
+      bg: "bg-blue-500/10",
+      border: "hover:border-blue-500/30",
+    },
+    {
+      title: locale === "en" ? "Pending Payments" : "Da Saldare / In Sospeso",
+      value: formatCurrency(totalOutstanding),
+      subtitle: `${debtorsList.length} ${locale === "en" ? "unpaid bookings" : "iscrizioni in attesa"}`,
+      icon: AlertCircle,
+      color: totalOutstanding > 0 ? "text-rose-600 dark:text-rose-400" : "text-amber-600 dark:text-amber-400",
+      bg: totalOutstanding > 0 ? "bg-rose-500/10" : "bg-amber-500/10",
+      border: totalOutstanding > 0 ? "border-rose-500/30 hover:border-rose-500/50" : "hover:border-amber-500/30",
+    },
+    {
+      title: locale === "en" ? "Active Students" : "Studenti Iscritti",
+      value: `${realStudentsCount} ${locale === "en" ? "students" : "allievi"}`,
+      subtitle: locale === "en" ? "Registered in courses & groups" : "Anagrafiche attive nel gestionale",
       icon: Users,
-      footer: t("users.title"),
-      subfooter: "Atena CRM",
-    },
-    {
-      title: t("dashboard.totalBookings"),
-      value: realTransactionsCount.toLocaleString(),
-      description: t("bookings.title"),
-      icon: ShoppingCart,
-      footer: t("payments.title"),
-      subfooter: "Stripe / Cash / POS",
-    },
-    {
-      title: t("attendance.title"),
-      value: `${realAttendanceRate}%`,
-      description: t("attendance.subtitle"),
-      icon: BarChart3,
-      footer: `${t("attendance.todayLessons")}: ${attendanceData?.summary?.totalLessons ?? 0}`,
-      subfooter: `${t("attendance.present")}: ${attendanceData?.summary?.presentCount ?? 0}`,
+      color: "text-purple-600 dark:text-purple-400",
+      bg: "bg-purple-500/10",
+      border: "hover:border-purple-500/30",
     },
   ]
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 @5xl:grid-cols-4">
       {metrics.map((metric) => {
+        const Icon = metric.icon
         return (
-          <Card key={metric.title} className="border bg-card shadow-xs">
-            <CardHeader className="pb-2">
-              <CardDescription className="font-medium text-xs text-muted-foreground flex items-center justify-between">
-                <span>{metric.title}</span>
-                <metric.icon className="h-4 w-4 text-primary" />
-              </CardDescription>
-              <CardTitle className="text-2xl font-bold tabular-nums">
-                {metric.value}
-              </CardTitle>
-            </CardHeader>
-            <CardFooter className="flex-col items-start gap-1 text-xs pt-0">
-              <div className="font-medium text-foreground">
-                {metric.footer}
+          <Card key={metric.title} className={`border bg-card/80 backdrop-blur-xs shadow-xs transition-all ${metric.border}`}>
+            <CardContent className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground">{metric.title}</span>
+                <div className={`p-2 rounded-lg ${metric.bg} ${metric.color}`}>
+                  <Icon className="size-4" />
+                </div>
               </div>
-              <div className="text-muted-foreground">
-                {metric.subfooter}
+              <div>
+                <div className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
+                  {metric.value}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1 truncate">
+                  {metric.subtitle}
+                </div>
               </div>
-            </CardFooter>
+            </CardContent>
           </Card>
         )
       })}

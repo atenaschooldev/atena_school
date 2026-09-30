@@ -1,203 +1,127 @@
 "use client"
 
 import * as React from "react"
-import { Label, Pie, PieChart, Sector } from "recharts"
-import type { PieSectorDataItem } from "recharts/types/polar/Pie"
+import { Pie, PieChart, ResponsiveContainer, Cell, Tooltip } from "recharts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartStyle, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+import { useQuery } from "@tanstack/react-query"
+import { api } from "@/lib/api"
+import { formatCurrency } from "@atena/utils"
+import { useTranslation } from "@/i18n/context"
+import { CreditCard, Wallet, FileX, PieChart as PieChartIcon } from "lucide-react"
 
-const revenueData = [
-  { category: "subscriptions", value: 45, amount: 24500, fill: "var(--color-subscriptions)" },
-  { category: "sales", value: 30, amount: 16300, fill: "var(--color-sales)" },
-  { category: "services", value: 15, amount: 8150, fill: "var(--color-services)" },
-  { category: "partnerships", value: 10, amount: 5430, fill: "var(--color-partnerships)" },
-]
-
-const chartConfig = {
-  revenue: {
-    label: "Revenue",
-  },
-  amount: {
-    label: "Amount",
-  },
-  subscriptions: {
-    label: "Subscriptions",
-    color: "var(--chart-1)",
-  },
-  sales: {
-    label: "One-time Sales",
-    color: "var(--chart-2)",
-  },
-  services: {
-    label: "Services",
-    color: "var(--chart-3)",
-  },
-  partnerships: {
-    label: "Partnerships",
-    color: "var(--chart-4)",
-  },
+const METHOD_LABELS: Record<string, { label: string; color: string }> = {
+  stripe: { label: "Stripe (Online)", color: "#6366f1" },
+  card: { label: "Carta (Online)", color: "#6366f1" },
+  pos: { label: "POS Fisico", color: "#3b82f6" },
+  cash: { label: "Contanti", color: "#10b981" },
+  contanti: { label: "Contanti", color: "#10b981" },
+  bank_transfer: { label: "Bonifico Bancario", color: "#f59e0b" },
+  bonifico: { label: "Bonifico Bancario", color: "#f59e0b" },
 }
 
 export function RevenueBreakdown() {
-  const id = "revenue-breakdown"
-  const [activeCategory, setActiveCategory] = React.useState("sales")
+  const { t } = useTranslation()
+  const { data: revenueData, isLoading } = useQuery({
+    queryKey: ["reports", "revenue"],
+    queryFn: () => api.get<any>("/admin/reports/revenue"),
+  })
 
-  const activeIndex = React.useMemo(
-    () => revenueData.findIndex((item) => item.category === activeCategory),
-    [activeCategory]
-  )
+  const byMethod = revenueData?.byMethod || {}
+  const totalRevenue = revenueData?.summary?.totalRevenue ?? 0
+  const courseRevenue = revenueData?.summary?.coursePaymentsRevenue ?? 0
+  const membershipRevenue = revenueData?.summary?.membershipFeesRevenue ?? 0
 
-  const categories = React.useMemo(() => revenueData.map((item) => item.category), [])
+  const chartData = React.useMemo(() => {
+    const entries = Object.entries(byMethod)
+    if (!entries.length) return []
+    return entries.map(([key, value]) => {
+      const normalizedKey = key.toLowerCase()
+      const meta = METHOD_LABELS[normalizedKey] || {
+        label: key.toUpperCase(),
+        color: "#8b5cf6",
+      }
+      return {
+        name: meta.label,
+        value: Number(value),
+        color: meta.color,
+      }
+    }).filter(d => d.value > 0)
+  }, [byMethod])
 
   return (
-    <Card data-chart={id} className="flex flex-col cursor-pointer">
-      <ChartStyle id={id} config={chartConfig} />
-      <CardHeader className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-2">
+    <Card className="flex flex-col">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle>Revenue Breakdown</CardTitle>
-          <CardDescription>Revenue distribution by source</CardDescription>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Select value={activeCategory} onValueChange={setActiveCategory}>
-            <SelectTrigger
-              className="w-[175px] rounded-lg cursor-pointer"
-              aria-label="Select a category"
-            >
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent align="end" className="rounded-lg">
-              {categories.map((key) => {
-                const config = chartConfig[key as keyof typeof chartConfig]
-
-                if (!config) {
-                  return null
-                }
-
-                return (
-                  <SelectItem
-                    key={key}
-                    value={key}
-                    className="rounded-md [&_span]:flex cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="flex h-3 w-3 shrink-0 "
-                        style={{
-                          backgroundColor: `var(--color-${key})`,
-                        }}
-                      />
-                      {config?.label}
-                    </div>
-                  </SelectItem>
-                )
-              })}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" className="cursor-pointer">
-            Export
-          </Button>
+          <CardTitle className="flex items-center gap-2">
+            <PieChartIcon className="w-5 h-5 text-primary" />
+            {t("dashboard.revenueBreakdownTitle")}
+          </CardTitle>
+          <CardDescription>{t("dashboard.revenueBreakdownSubtitle")}</CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 justify-center">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          <div className="flex justify-center">
-            <ChartContainer
-              id={id}
-              config={chartConfig}
-              className="mx-auto aspect-square w-full max-w-[300px]"
-            >
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
-                />
-                <Pie
-                  data={revenueData}
-                  dataKey="amount"
-                  nameKey="category"
-                  innerRadius={60}
-                  strokeWidth={5}
-                  activeShape={({
-                    outerRadius = 0,
-                    ...props
-                  }: PieSectorDataItem) => (
-                    <g>
-                      <Sector {...props} outerRadius={outerRadius + 10} />
-                      <Sector
-                        {...props}
-                        outerRadius={outerRadius + 25}
-                        innerRadius={outerRadius + 12}
-                      />
-                    </g>
-                  )}
-                >
-                  <Label
-                    content={({ viewBox }) => {
-                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                        return (
-                          <text
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                          >
-                            <tspan
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              className="fill-foreground text-3xl font-bold"
-                            >
-                              ${((revenueData[activeIndex]?.amount ?? 0) / 1000).toFixed(0)}K
-                            </tspan>
-                            <tspan
-                              x={viewBox.cx}
-                              y={(viewBox.cy || 0) + 24}
-                              className="fill-muted-foreground"
-                            >
-                              Revenue
-                            </tspan>
-                          </text>
-                        )
-                      }
-                    }}
+      <CardContent className="flex-1 flex flex-col justify-between pt-4">
+        {isLoading ? (
+          <div className="h-[280px] flex items-center justify-center text-sm text-muted-foreground">
+            {t("common.loading")}
+          </div>
+        ) : chartData.length === 0 ? (
+          <div className="h-[280px] border border-dashed rounded-xl flex flex-col items-center justify-center space-y-2 bg-card/40">
+            <FileX className="w-8 h-8 text-muted-foreground" />
+            <p className="font-semibold text-sm">{t("common.noData")}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div className="h-[220px] w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip
+                    formatter={(val: any) => formatCurrency(Number(val) || 0)}
+                    contentStyle={{ backgroundColor: "var(--popover)", borderColor: "var(--border)", borderRadius: "8px", color: "var(--popover-foreground)" }}
                   />
-                </Pie>
-              </PieChart>
-            </ChartContainer>
-          </div>
+                  <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={3}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="flex flex-col justify-center space-y-4">
-            {revenueData.map((item, index) => {
-              const config = chartConfig[item.category as keyof typeof chartConfig]
-              const isActive = index === activeIndex
+            <div className="space-y-3">
+              <div className="space-y-2">
+                {chartData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="font-medium text-muted-foreground">{item.name}</span>
+                    </div>
+                    <span className="font-semibold">{formatCurrency(item.value)}</span>
+                  </div>
+                ))}
+              </div>
 
-              return (
-                <div
-                  key={item.category}
-                  className={`flex items-center justify-between p-3 rounded-lg transition-colors cursor-pointer ${
-                    isActive ? 'bg-muted' : 'hover:bg-muted/50'
-                  }`}
-                  onClick={() => setActiveCategory(item.category)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="flex h-3 w-3 shrink-0 rounded-full"
-                      style={{
-                        backgroundColor: `var(--color-${item.category})`,
-                      }}
-                    />
-                    <span className="font-medium">{config?.label}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold">${(item.amount / 1000).toFixed(1)}K</div>
-                    <div className="text-sm text-muted-foreground">{item.value}%</div>
-                  </div>
+              <div className="pt-3 border-t space-y-1.5 text-xs">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("dashboard.coursePayments")}:</span>
+                  <span className="font-medium text-foreground">{formatCurrency(courseRevenue)}</span>
                 </div>
-              )
-            })}
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{t("dashboard.membershipFees")}:</span>
+                  <span className="font-medium text-foreground">{formatCurrency(membershipRevenue)}</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )
