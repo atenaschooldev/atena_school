@@ -18,7 +18,7 @@ import { Roles } from '../../../core/decorators/roles.decorator';
 import { Audit } from '../../../core/decorators/audit.decorator';
 import { AuditInterceptor } from '../../../core/interceptors/audit.interceptor';
 import { PromoCodesAdminService } from './promo-codes.admin.service';
-import { CreatePromoCodeDto, UpdatePromoCodeDto, ValidatePromoCodeDto } from '../dto/promo-codes.admin.dto';
+import { CreatePromoCodeDto, UpdatePromoCodeDto, ValidatePromoCodeDto, ToggleAllPromoCodesDto } from '../dto/promo-codes.admin.dto';
 
 @ApiTags('Admin — Promo Codes')
 @ApiBearerAuth('JWT-auth')
@@ -41,6 +41,14 @@ export class PromoCodesAdminController {
   @ApiOperation({ summary: 'Validate promo code and compute discount' })
   async validate(@Body() dto: ValidatePromoCodeDto) {
     return this.promoCodesAdminService.validatePromoCode(dto);
+  }
+
+  @Patch('toggle-all')
+  @Roles('admin')
+  @Audit('promo_codes', 'TOGGLE_ALL')
+  @ApiOperation({ summary: 'Toggle all promo codes active or inactive globally' })
+  async toggleAll(@Body() dto: ToggleAllPromoCodesDto) {
+    return this.promoCodesAdminService.toggleAllPromoCodes(dto.is_active);
   }
 
   @Post()

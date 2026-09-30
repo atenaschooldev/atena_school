@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Plus, Tag, Sparkles, CheckCircle2 } from "lucide-react";
+import { Plus, Tag, Sparkles, CheckCircle2, Power, PowerOff, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { usePromoCodes } from "../hooks/use-promo-codes";
 import { getPromoCodesTableColumns } from "./promo-codes-table-columns";
 import { CreatePromoDialog } from "./create-promo-dialog";
@@ -40,8 +42,14 @@ export function PromotionsView() {
     createPromoCode,
     updatePromoCode,
     togglePromoCode,
+    toggleAllPromoCodes,
     deletePromoCode,
+    isTogglingAll,
   } = usePromoCodes();
+
+  const isAllActive = allPromoCodes.length > 0 && allPromoCodes.every((p) => p.is_active);
+  const isAllInactive = allPromoCodes.length > 0 && allPromoCodes.every((p) => !p.is_active);
+  const hasAnyActive = allPromoCodes.some((p) => p.is_active);
 
   const filteredPromoCodes = useMemo(() => {
     return allPromoCodes.filter((p) => {
@@ -68,6 +76,10 @@ export function PromotionsView() {
     } else {
       await createPromoCode(data);
     }
+  };
+
+  const handleToggleAll = async (targetActive: boolean) => {
+    await toggleAllPromoCodes(targetActive);
   };
 
   const columns = useMemo(
@@ -105,27 +117,6 @@ export function PromotionsView() {
     return { total, active, totalUses };
   }, [allPromoCodes]);
 
-  const metrics = [
-    {
-      title: t("promotions.totalPromoCodes"),
-      value: stats.total,
-      description: t("promotions.totalPromoCodes"),
-      icon: Tag,
-    },
-    {
-      title: t("promotions.activePromoCodes"),
-      value: stats.active,
-      description: t("promotions.activePromoCodes"),
-      icon: CheckCircle2,
-    },
-    {
-      title: t("promotions.totalUses"),
-      value: stats.totalUses,
-      description: t("promotions.totalUses"),
-      icon: Sparkles,
-    },
-  ];
-
   const statusOptions = [
     { value: "all", label: t("common.all") },
     { value: "active", label: t("common.active") },
@@ -134,24 +125,115 @@ export function PromotionsView() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Metric summary banner */}
+      {/* Metric summary banner with Master Promo Switch */}
       <div className="@container/main px-4 lg:px-6">
         <div className="grid gap-4 sm:grid-cols-3">
-          {metrics.map((metric, index) => (
-            <Card key={index} className="border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
-              <CardContent className="space-y-3 p-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs font-semibold">{metric.title}</span>
-                  <div className="p-2 bg-primary/10 text-primary rounded-lg">
-                    <metric.icon className="size-4" />
-                  </div>
+          {/* Card 1: Total Promo Codes */}
+          <Card className="border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
+            <CardContent className="space-y-3 p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold">{t("promotions.totalPromoCodes")}</span>
+                <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                  <Tag className="size-4" />
                 </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-foreground">{stats.total}</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 2: Total Uses in Enrollments */}
+          <Card className="border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
+            <CardContent className="space-y-3 p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold">{t("promotions.totalUses")}</span>
+                <div className="p-2 bg-primary/10 text-primary rounded-lg">
+                  <Sparkles className="size-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-foreground">{stats.totalUses}</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card 3: Master Promotions Toggle */}
+          <Card className={`border backdrop-blur-sm shadow-xs transition-all ${
+            stats.total === 0
+              ? "border-border/60 bg-card/70"
+              : isAllActive
+              ? "border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/10"
+              : isAllInactive
+              ? "border-rose-500/30 bg-rose-50/20 dark:bg-rose-950/10"
+              : "border-amber-500/30 bg-amber-50/20 dark:bg-amber-950/10"
+          }`}>
+            <CardContent className="space-y-3 p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-xs font-semibold flex items-center gap-1.5">
+                  <Power className="size-3.5 text-primary" />
+                  {t("promotions.globalStatus") || "Stato Globale Promozioni"}
+                </span>
+                <div className="flex items-center gap-2">
+                  {isTogglingAll && <RefreshCw className="size-3.5 animate-spin text-muted-foreground" />}
+                  <Switch
+                    checked={hasAnyActive}
+                    disabled={stats.total === 0 || isTogglingAll}
+                    onCheckedChange={(checked) => handleToggleAll(checked)}
+                    className="cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="text-2xl font-bold text-foreground">{metric.value}</div>
+                  {stats.total === 0 ? (
+                    <span className="text-xs text-muted-foreground">0 codici configurati</span>
+                  ) : isAllActive ? (
+                    <Badge variant="outline" className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30 border-emerald-500/30 gap-1">
+                      <CheckCircle2 className="size-3" />
+                      {t("promotions.allActive") || "Tutti i codici attivi"} ({stats.active}/{stats.total})
+                    </Badge>
+                  ) : isAllInactive ? (
+                    <Badge variant="outline" className="text-xs font-bold text-rose-600 bg-rose-50 dark:text-rose-400 dark:bg-rose-900/30 border-rose-500/30 gap-1">
+                      <PowerOff className="size-3" />
+                      {t("promotions.allDisabled") || "Tutti i codici disattivati"} (0/{stats.total})
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs font-bold text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-900/30 border-amber-500/30">
+                      {stats.active} su {stats.total} attivi
+                    </Badge>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+
+                {stats.total > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isAllActive || isTogglingAll}
+                      onClick={() => handleToggleAll(true)}
+                      className="h-6 px-2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer rounded-md"
+                    >
+                      {t("promotions.enableAll") || "Attiva tutti"}
+                    </Button>
+                    <span className="text-muted-foreground/40 text-xs">|</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isAllInactive || isTogglingAll}
+                      onClick={() => handleToggleAll(false)}
+                      className="h-6 px-2 text-[10px] font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 cursor-pointer rounded-md"
+                    >
+                      {t("promotions.disableAll") || "Disattiva tutti"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
@@ -168,17 +250,19 @@ export function PromotionsView() {
           onFilterChange={setStatusFilter}
           filterOptions={statusOptions}
           actionButton={
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingItem(null);
-                setCreateDialogOpen(true);
-              }}
-              className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
-            >
-              <Plus className="h-4 w-4" />
-              <span>{t("promotions.createPromoCode")}</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingItem(null);
+                  setCreateDialogOpen(true);
+                }}
+                className="h-8 text-xs font-semibold gap-1.5 cursor-pointer rounded-lg shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>{t("promotions.createPromoCode")}</span>
+              </Button>
+            </div>
           }
         />
 

@@ -156,3 +156,8 @@ export class ValidatePromoCodeDto {
   purchaserTaxCode?: string;
 }
 
+export class ToggleAllPromoCodesDto {
+  @ApiProperty({ example: true, description: 'True to activate all promo codes, false to deactivate all' })
+  @IsBoolean()
+  is_active: boolean;
+}

@@ -194,6 +194,28 @@ export class PromoCodesAdminService {
     return updated;
   }
 
+  async toggleAllPromoCodes(isActive: boolean) {
+    const { data: updated, error } = await this.supabaseAdmin
+      .from('promo_codes')
+      .update({
+        is_active: isActive,
+        updated_at: new Date().toISOString(),
+      })
+      .neq('id', '00000000-0000-0000-0000-000000000000')
+      .select();
+
+    if (error) {
+      this.logger.error('Failed to toggle all promo codes:', error);
+      throw new BadRequestException(error?.message || 'Failed to toggle all promo codes');
+    }
+
+    return {
+      success: true,
+      is_active: isActive,
+      count: updated?.length || 0,
+    };
+  }
+
   async deletePromoCode(id: string) {
     const { error } = await this.supabaseAdmin
       .from('promo_codes')

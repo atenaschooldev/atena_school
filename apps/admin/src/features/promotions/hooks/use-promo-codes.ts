@@ -81,6 +81,26 @@ export function usePromoCodes() {
     },
   });
 
+  const toggleAllMutation = useMutation({
+    mutationFn: async (isActive: boolean) => {
+      return apiFetch<{ success: boolean; is_active: boolean; count: number }>("/admin/promo-codes/toggle-all", {
+        method: "PATCH",
+        body: JSON.stringify({ is_active: isActive }),
+      });
+    },
+    onSuccess: (data) => {
+      toast.success(
+        data.is_active
+          ? `Tutti i codici promozionali sono stati attivati (${data.count})`
+          : `Tutti i codici promozionali sono stati disattivati (${data.count})`
+      );
+      queryClient.invalidateQueries({ queryKey: ["promo-codes"] });
+    },
+    onError: (e: any) => {
+      toast.error(e?.message || "Errore durante la modifica globale dei codici promo");
+    },
+  });
+
   return {
     promoCodes,
     loading: isLoading,
@@ -88,9 +108,11 @@ export function usePromoCodes() {
     updatePromoCode: (id: string, payload: Partial<CreatePromoCodeInput>) =>
       updateMutation.mutateAsync({ id, payload }),
     togglePromoCode: (id: string) => toggleStatusMutation.mutateAsync(id),
+    toggleAllPromoCodes: (isActive: boolean) => toggleAllMutation.mutateAsync(isActive),
     deletePromoCode: (id: string) => deleteMutation.mutateAsync(id),
     refresh: refetch,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
+    isTogglingAll: toggleAllMutation.isPending,
   };
 }

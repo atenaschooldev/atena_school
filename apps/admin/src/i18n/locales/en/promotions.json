@@ -36,5 +36,14 @@
   "createPromoCode": "Create Promo Code",
   "emptyState": {
     "title": "No promotions found"
-  }
+  },
+  "globalStatus": "Global Promotions Status",
+  "enableAll": "Enable All",
+  "disableAll": "Disable All",
+  "allActive": "All codes active",
+  "allDisabled": "All codes disabled",
+  "partiallyActive": "Active codes:",
+  "bulkToggle": "Master Promotion Controls",
+  "toggleAllSuccessActive": "All promo codes have been enabled",
+  "toggleAllSuccessInactive": "All promo codes have been disabled"
 }
