@@ -555,7 +555,16 @@ export async function handleStripeWebhook(
         );
 
         if (nextLessons && nextLessons.length > 0) {
-          await generateAndSaveLessons(booking.id, course, nextLessons, supabase);
+          await generateAndSaveLessons(
+            booking.id,
+            course,
+            nextLessons,
+            supabase,
+            booking.student_id,
+            nextPeriodStart,
+            booking.start_time || '10:00',
+            booking.group_id
+          );
         }
 
         // Record renewal payment in ledger
