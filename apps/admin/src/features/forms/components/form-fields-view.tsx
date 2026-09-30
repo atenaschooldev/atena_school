@@ -61,6 +61,7 @@ import {
   Phone,
   Hash,
   List,
+  Check,
   CheckSquare,
   FileText,
   HelpCircle,
@@ -754,12 +755,14 @@ export function FormFieldsView() {
                             : "border-border/70 hover:border-border hover:bg-muted/40 text-muted-foreground"
                         }`}
                       >
-                        <div className="mt-0.5 flex items-center justify-center">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => {}}
-                            className="pointer-events-none"
-                          />
+                        <div
+                          className={`mt-0.5 size-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                            isSelected
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-muted-foreground/40 bg-background"
+                          }`}
+                        >
+                          {isSelected && <Check className="size-3 stroke-[3]" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 text-xs text-foreground">
