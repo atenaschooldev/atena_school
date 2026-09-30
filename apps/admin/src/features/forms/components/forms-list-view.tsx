@@ -113,6 +113,10 @@ export function FormsListView() {
     }
   }, [targetCourseParam, forms]);
 
+  const customCatalogFields = useMemo(() => {
+    return catalogFields.filter((f) => !f.is_system);
+  }, [catalogFields]);
+
   const metricsData = useMemo(() => {
     const total = forms.length;
     const active = forms.filter((f) => f.is_active).length;
@@ -140,12 +144,12 @@ export function FormsListView() {
       },
       {
         title: t("forms.metricFieldsCatalog"),
-        value: catalogFields.length,
+        value: customCatalogFields.length,
         description: t("forms.metricFieldsCatalogDesc"),
         icon: Sliders,
       },
     ];
-  }, [forms, catalogFields, t]);
+  }, [forms, customCatalogFields, t]);
 
   const filteredForms = useMemo(() => {
     return forms.filter((f) => {
@@ -549,7 +553,7 @@ export function FormsListView() {
             }`}
           >
             <Sliders className="h-4 w-4 text-primary" />
-            {t("forms.tabFieldsCatalog") || "Catalogo Campi"} ({catalogFields.length})
+            {t("forms.tabFieldsCatalog") || "Catalogo Campi"} ({customCatalogFields.length})
           </button>
         </div>
       </div>
