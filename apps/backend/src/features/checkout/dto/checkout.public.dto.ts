@@ -282,6 +282,11 @@ export class CreateReservationDto {
   @IsOptional()
   @IsInt({ message: 'billingScheme должен быть числовым энамом (1..4)' })
   billingScheme?: BillingScheme;
+
+  @ApiPropertyOptional({ description: 'ID группы для принудительного зачисления (если выбрана конкретная группа)', example: '12' })
+  @IsOptional()
+  @IsString()
+  groupId?: string;
 }
 
 // ---------------------------------------------------------------------------

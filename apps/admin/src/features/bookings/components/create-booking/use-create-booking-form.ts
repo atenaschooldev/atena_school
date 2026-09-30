@@ -110,6 +110,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
       registrationFee: 0,
       paymentStatus: "reserved",
       paymentMethod: "cash",
+      groupId: "",
       notes: "",
     },
   });
@@ -635,6 +636,7 @@ export function useCreateBookingForm({ open, setOpen, onCreateBooking }: UseCrea
         billingScheme: data.billingScheme || "full",
         paymentStatus: data.paymentStatus,
         paymentMethod: data.paymentMethod,
+        groupId: data.groupId || undefined,
         sdiCode: data.needsCompanyInvoice ? data.sdiCode : undefined,
         pecEmail: data.needsCompanyInvoice ? data.pecEmail : undefined,
         notes: data.notes || undefined,

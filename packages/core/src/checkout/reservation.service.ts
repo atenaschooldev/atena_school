@@ -28,30 +28,49 @@ import { runBackgroundTask } from '../utils/background';
 import { getSchoolProfile } from '../system/school-profile.service';
 import type { CreateReservationParams, SupabaseCourseRow, SupabaseBookingRow } from '../types';
 
+import { findOrCreateGroupAndEnroll } from './group-matcher.service';
+
 export async function generateAndSaveLessons(
   bookingId: string,
   course: SupabaseCourseRow | null,
   lessons: Array<{ startsAt: string; endsAt: string }>,
   supabase: SupabaseClient,
-  studentId?: string | null
+  studentId?: string | null,
+  startDateStr?: string | null,
+  timeStr?: string | null,
+  explicitGroupId?: string | null
 ): Promise<void> {
   if (!lessons || lessons.length === 0) return;
   try {
-    const teacherId = course?.teacher_id || null;
-    const courseId = course?.id || null;
-    const lessonRows = lessons.map((l) => ({
-      booking_id: bookingId,
-      course_id: courseId,
-      student_id: studentId || null,
-      teacher_id: teacherId,
-      starts_at: l.startsAt,
-      ends_at: l.endsAt,
-      status: LessonStatus.SCHEDULED,
-    }));
+    if (studentId) {
+      await findOrCreateGroupAndEnroll({
+        supabase,
+        course,
+        courseId: course?.id || 0,
+        studentId,
+        bookingId,
+        startDateStr: startDateStr || lessons[0].startsAt,
+        timeStr: timeStr || '10:00',
+        calculatedLessons: lessons,
+        explicitGroupId,
+      });
+    } else {
+      const teacherId = course?.teacher_id || null;
+      const courseId = course?.id || null;
+      const lessonRows = lessons.map((l) => ({
+        booking_id: bookingId,
+        course_id: courseId,
+        student_id: null,
+        teacher_id: teacherId,
+        starts_at: l.startsAt,
+        ends_at: l.endsAt,
+        status: LessonStatus.SCHEDULED,
+      }));
 
-    await supabase.from('lessons').insert(lessonRows);
+      await supabase.from('lessons').insert(lessonRows);
+    }
   } catch (err) {
-    console.warn('Lessons insert error:', err);
+    console.warn('Lessons generation error:', err);
   }
 }
 
@@ -320,20 +339,29 @@ export async function createReservationWorkflow(
     }
 
     // Group assignment lookup for group courses
-    let assignedGroupId: string | null = null;
+    let assignedGroupId: string | null = dto.groupId ? String(dto.groupId) : null;
     let assignedGroup: any = null;
     try {
-      const { data: matchedGroup } = await supabase
-        .from('groups')
-        .select('id, name, room, schedule_days, start_time, end_time, max_students')
-        .eq('course_id', courseId)
-        .eq('status', 1) // 1=RECRUITING
-        .limit(1)
-        .maybeSingle();
+      if (assignedGroupId) {
+        const { data: explicitG } = await supabase
+          .from('groups')
+          .select('id, name, room, schedule_days, start_time, end_time, max_students')
+          .eq('id', assignedGroupId)
+          .maybeSingle();
+        if (explicitG) assignedGroup = explicitG;
+      } else {
+        const { data: matchedGroup } = await supabase
+          .from('groups')
+          .select('id, name, room, schedule_days, start_time, end_time, max_students')
+          .eq('course_id', courseId)
+          .eq('status', 1) // 1=RECRUITING
+          .limit(1)
+          .maybeSingle();
 
-      if (matchedGroup) {
-        assignedGroupId = matchedGroup.id;
-        assignedGroup = matchedGroup;
+        if (matchedGroup) {
+          assignedGroupId = matchedGroup.id;
+          assignedGroup = matchedGroup;
+        }
       }
     } catch {
       // Non-blocking group lookup
@@ -438,7 +466,16 @@ export async function createReservationWorkflow(
         }
       }
 
-      await generateAndSaveLessons(booking.id, course, lessons, supabase, createdStudentId);
+      await generateAndSaveLessons(
+        booking.id,
+        course,
+        lessons,
+        supabase,
+        createdStudentId,
+        dto.date || subStartsAt,
+        dto.time || '10:00',
+        assignedGroupId
+      );
       await recordPaymentLedger(booking.id, effectiveCoursePrice, effectiveRegFee, pMethod, pStatus, supabase, createdStudentId, studentTaxCode, linkedUserId);
     } catch (stepErr) {
       // Rollback created booking record on linkage / lessons failure

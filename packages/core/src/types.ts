@@ -47,6 +47,7 @@ export interface CreateReservationParams {
   paymentMethod?: PaymentMethod | string | number;
   paymentStatus?: BookingPaymentStatus | string | number;
   idempotencyKey?: string;
+  groupId?: string;
   custom_fields?: Record<string, any>;
   form_id?: string;
 }

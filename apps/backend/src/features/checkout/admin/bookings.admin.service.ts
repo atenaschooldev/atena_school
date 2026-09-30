@@ -244,6 +244,7 @@ export class BookingsAdminService {
     pecEmail?: string;
     notes?: string;
     startDate?: string;
+    groupId?: string;
   }) {
     let resolvedCourseId = dto.courseId;
     if (!resolvedCourseId) {
@@ -319,6 +320,7 @@ export class BookingsAdminService {
       notes: dto.notes || '',
       paymentStatus: normalizedStatus,
       paymentMethod: normalizedMethod,
+      groupId: dto.groupId || undefined,
     });
 
     const bookingId = reservation.booking?.id;

@@ -32,6 +32,8 @@ import {
   Hourglass,
   Layers,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { Course } from "@/features/courses/types";
 import type { CreateBookingValues } from "./types";
@@ -64,6 +66,13 @@ export function StepCourseSchedule({
   previewLessons,
 }: StepCourseScheduleProps) {
   const [showFullCalendar, setShowFullCalendar] = useState(false);
+
+  const { data: openGroupsData } = useQuery({
+    queryKey: ["groups", "course", selectedCourse?.id],
+    queryFn: () => api.get<any[]>(`/admin/groups?courseId=${selectedCourse?.id}&status=1`),
+    enabled: !!selectedCourse?.id,
+  });
+  const availableGroups = Array.isArray(openGroupsData) ? openGroupsData : [];
 
   // Generate 6 upcoming allowed start dates matching landing UX
   const upcomingDates = useMemo(() => {
@@ -117,7 +126,46 @@ export function StepCourseSchedule({
         )}
       />
 
-      {/* 2. Course Details & Schedule */}
+      {/* 2. Optional Group Selector */}
+      {selectedCourse && (
+        <FormField
+          control={form.control}
+          name="groupId"
+          render={({ field }) => (
+            <FormItem>
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Gruppo / Classe (Opzionale)
+                </FormLabel>
+                <span className="text-[10px] text-muted-foreground">Predefinito: Auto-assegnazione</span>
+              </div>
+              <Select
+                onValueChange={(val) => field.onChange(val === "auto" ? "" : val)}
+                value={field.value || "auto"}
+              >
+                <FormControl>
+                  <SelectTrigger className="cursor-pointer h-9 text-xs bg-background border-border/70 rounded-xl">
+                    <SelectValue placeholder="Auto-assegnazione intelligente (Consigliato)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-56">
+                  <SelectItem value="auto" className="cursor-pointer text-xs font-medium text-primary">
+                    ✨ Auto-assegnazione intelligente (trova o crea gruppo)
+                  </SelectItem>
+                  {availableGroups.map((g: any) => (
+                    <SelectItem key={g.id} value={g.id} className="cursor-pointer text-xs">
+                      👥 {g.name} ({g.members?.length || 0}/{g.maxStudents || 8} iscritti)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+
+      {/* 3. Course Details & Schedule */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <FormLabel className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">

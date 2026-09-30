@@ -41,9 +41,12 @@ export class CheckoutCoreService {
     course: SupabaseCourseRow | null,
     lessons: Array<{ startsAt: string; endsAt: string }>,
     supabase: SupabaseClient,
-    studentId?: string | null
+    studentId?: string | null,
+    startDateStr?: string | null,
+    timeStr?: string | null,
+    explicitGroupId?: string | null
   ) {
-    return generateAndSaveLessonsCore(bookingId, course, lessons, supabase, studentId);
+    return generateAndSaveLessonsCore(bookingId, course, lessons, supabase, studentId, startDateStr, timeStr, explicitGroupId);
   }
 
   async recordPaymentLedger(

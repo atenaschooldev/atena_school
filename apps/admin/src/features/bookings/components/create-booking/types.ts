@@ -120,6 +120,7 @@ export const createBookingSchema = z.object({
   billingScheme: z.string().default("full"),
   paymentStatus: z.string().min(1),
   paymentMethod: z.string().min(1),
+  groupId: z.string().optional(),
   notes: z.string().optional(),
 });
 
