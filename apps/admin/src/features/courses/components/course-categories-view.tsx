@@ -57,7 +57,7 @@ export function CourseCategoriesView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sorting, setSorting] = useState<SortingState>([
-    { id: "sortOrder", desc: false },
+    { id: "name", desc: false },
   ]);
 
   // Dialog states
@@ -203,18 +203,7 @@ export function CourseCategoriesView() {
         cell: ({ row }) => <CellCopyableId id={row.original.id} />,
         size: 110,
       },
-      {
-        accessorKey: "sortOrder",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="#" />
-        ),
-        cell: ({ row }) => (
-          <span className="font-mono text-xs text-muted-foreground font-semibold">
-            {row.original.sortOrder ?? row.original.sort_order ?? 0}
-          </span>
-        ),
-        size: 50,
-      },
+
       {
         accessorKey: "name",
         header: ({ column }) => (
