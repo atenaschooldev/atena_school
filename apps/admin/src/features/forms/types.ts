@@ -8,6 +8,8 @@ import {
   FormFieldTarget,
   FORM_FIELD_TARGET_DICTIONARY,
   parseFormFieldTarget,
+  parseFormFieldTargets,
+  getFieldTargets,
   type FormFieldOption,
   type FormFieldConfig,
   type FormFieldItem,
@@ -29,6 +31,8 @@ export {
   FormFieldTarget,
   FORM_FIELD_TARGET_DICTIONARY,
   parseFormFieldTarget,
+  parseFormFieldTargets,
+  getFieldTargets,
 };
 
 export type {

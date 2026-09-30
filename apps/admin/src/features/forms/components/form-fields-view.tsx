@@ -19,8 +19,11 @@ import {
   FormFieldTarget,
   FORM_FIELD_TYPE_DICTIONARY,
   FORM_FIELD_TARGET_DICTIONARY,
+  parseFormFieldTargets,
+  getFieldTargets,
 } from "../types";
 import { useTranslation } from "@/i18n/context";
+import { toast } from "sonner";
 
 // UI Components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,7 +105,7 @@ export function FormFieldsView() {
     placeholder_it: string;
     placeholder_en: string;
     field_type: FormFieldType;
-    target: FormFieldTarget;
+    targets: FormFieldTarget[];
     is_required_default: boolean;
     sort_order: number;
     options: { label: string; value: string }[];
@@ -113,7 +116,7 @@ export function FormFieldsView() {
     placeholder_it: "",
     placeholder_en: "",
     field_type: FormFieldType.TEXT,
-    target: FormFieldTarget.PURCHASER,
+    targets: [FormFieldTarget.PURCHASER],
     is_required_default: false,
     sort_order: 0,
     options: [],
@@ -192,9 +195,11 @@ export function FormFieldsView() {
   // Top Metrics computation (identical styling to CoursesMetrics)
   const metricsData = useMemo(() => {
     const total = customFields.length;
-    const purchaserCount = customFields.filter((f) => f.target === FormFieldTarget.PURCHASER).length;
-    const studentCount = customFields.filter((f) => f.target === FormFieldTarget.STUDENT).length;
-    const bookingContactCount = customFields.filter((f) => f.target === FormFieldTarget.BOOKING || f.target === FormFieldTarget.CONTACT).length;
+    const purchaserCount = customFields.filter((f) => getFieldTargets(f).includes(FormFieldTarget.PURCHASER)).length;
+    const studentCount = customFields.filter((f) => getFieldTargets(f).includes(FormFieldTarget.STUDENT)).length;
+    const bookingContactCount = customFields.filter((f) =>
+      getFieldTargets(f).some((t) => t === FormFieldTarget.BOOKING || t === FormFieldTarget.CONTACT)
+    ).length;
 
     return [
       {
@@ -234,7 +239,7 @@ export function FormFieldsView() {
       placeholder_it: "",
       placeholder_en: "",
       field_type: FormFieldType.TEXT,
-      target: FormFieldTarget.PURCHASER,
+      targets: [FormFieldTarget.PURCHASER],
       is_required_default: false,
       sort_order: (fields.length + 1) * 10,
       options: [],
@@ -245,6 +250,7 @@ export function FormFieldsView() {
   // Open Edit Modal
   const handleOpenEdit = (field: FormFieldItem) => {
     setEditingField(field);
+    const itemTargets = getFieldTargets(field);
     setFormData({
       key: field.key,
       label_it: field.label_it,
@@ -252,7 +258,7 @@ export function FormFieldsView() {
       placeholder_it: field.placeholder_it || "",
       placeholder_en: field.placeholder_en || "",
       field_type: field.field_type,
-      target: field.target,
+      targets: itemTargets.length > 0 ? itemTargets : [FormFieldTarget.PURCHASER],
       is_required_default: field.is_required_default,
       sort_order: field.sort_order ?? 0,
       options: Array.isArray(field.options) ? [...field.options] : [],
@@ -268,6 +274,11 @@ export function FormFieldsView() {
       toast.error(locale === "en" ? "Please enter an Italian label" : "Inserisci l'etichetta in italiano per il campo");
       return;
     }
+    if (!formData.targets || formData.targets.length === 0) {
+      toast.error(locale === "en" ? "Please select at least one target entity" : "Seleziona almeno una destinazione per il campo");
+      return;
+    }
+
     const labelEn = formData.label_en.trim() || labelIt;
     let fieldKey = formData.key.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
     if (!fieldKey) {
@@ -282,7 +293,8 @@ export function FormFieldsView() {
           placeholder_it: formData.placeholder_it.trim() || undefined,
           placeholder_en: formData.placeholder_en.trim() || undefined,
           field_type: formData.field_type,
-          target: formData.target,
+          targets: formData.targets,
+          target: formData.targets[0] || FormFieldTarget.PURCHASER,
           is_required_default: formData.is_required_default,
           sort_order: Number(formData.sort_order) || 0,
           options: formData.options,
@@ -295,7 +307,8 @@ export function FormFieldsView() {
           placeholder_it: formData.placeholder_it.trim() || undefined,
           placeholder_en: formData.placeholder_en.trim() || undefined,
           field_type: formData.field_type,
-          target: formData.target,
+          targets: formData.targets,
+          target: formData.targets[0] || FormFieldTarget.PURCHASER,
           is_required_default: formData.is_required_default,
           sort_order: Number(formData.sort_order) || 0,
           options: formData.options,
@@ -311,7 +324,10 @@ export function FormFieldsView() {
   // Filtered data (only custom fields)
   const filteredData = useMemo(() => {
     return customFields.filter((f) => {
-      if (targetFilter !== "all" && f.target !== targetFilter) return false;
+      if (targetFilter !== "all") {
+        const itemTargets = getFieldTargets(f);
+        if (!itemTargets.includes(targetFilter as FormFieldTarget)) return false;
+      }
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -383,13 +399,14 @@ export function FormFieldsView() {
         ),
         cell: ({ row }) => {
           const item = row.original;
-          const targetMeta = getTargetMeta(item.target);
+          const targets = getFieldTargets(item);
+          const isStudent = targets.includes(FormFieldTarget.STUDENT);
           return (
             <div className="flex items-center gap-2">
               <CellAvatar
                 title={locale === "en" ? item.label_en : item.label_it}
                 subtitle={item.key}
-                icon={item.target === FormFieldTarget.STUDENT ? Users : User}
+                icon={isStudent ? Users : User}
                 badgeColor="bg-primary/10 text-primary"
               />
               {item.is_system && (
@@ -407,16 +424,27 @@ export function FormFieldsView() {
         header: ({ column }) => (
           <DataTableColumnHeader
             column={column}
-            title={locale === "en" ? "Target" : "Destinazione"}
+            title={locale === "en" ? "Targets" : "Destinazioni"}
           />
         ),
         cell: ({ row }) => {
-          const meta = getTargetMeta(row.original.target);
+          const targets = getFieldTargets(row.original);
           return (
-            <Badge variant="outline" className={`text-xs font-semibold border flex items-center w-fit py-1 px-2.5 ${meta.badgeClass}`}>
-              {meta.icon}
-              {meta.label}
-            </Badge>
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {targets.map((t) => {
+                const meta = getTargetMeta(t);
+                return (
+                  <Badge
+                    key={t}
+                    variant="outline"
+                    className={`text-[11px] font-semibold border flex items-center py-0.5 px-2 ${meta.badgeClass}`}
+                  >
+                    {meta.icon}
+                    <span>{meta.shortLabel}</span>
+                  </Badge>
+                );
+              })}
+            </div>
           );
         },
       },
@@ -654,64 +682,126 @@ export function FormFieldsView() {
                 )}
               </div>
 
-              {/* Target & Field Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+              {/* Target Entities (Multiple selection) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
                   <Label className="text-xs font-semibold">
-                    {locale === "en" ? "Target Entity" : "Destinazione Dato"}
+                    {locale === "en" ? "Target Entities (Where can this field be used?)" : "Destinazioni Dato (Dove può comparire questo campo?)"}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
-                  <Select
-                    modal={false}
-                    value={formData.target}
-                    onValueChange={(val: FormFieldTarget) => setFormData({ ...formData, target: val })}
-                  >
-                    <SelectTrigger className="mt-1 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="z-[99999]">
-                      <SelectItem value={FormFieldTarget.PURCHASER}>
-                        {locale === "en" ? "Purchaser / Parent (Billing)" : "Acquirente / Genitore (Pagatore)"}
-                      </SelectItem>
-                      <SelectItem value={FormFieldTarget.STUDENT}>
-                        {locale === "en" ? "Student / Child (Participant)" : "Studente / Figlio (Partecipante)"}
-                      </SelectItem>
-                      <SelectItem value={FormFieldTarget.BOOKING}>
-                        {locale === "en" ? "Booking / Course Notes" : "Iscrizione / Corso (Note & Extra)"}
-                      </SelectItem>
-                      <SelectItem value={FormFieldTarget.CONTACT}>
-                        {locale === "en" ? "Contact Form (Website Lead)" : "Modulo Contatto (Richieste Sito)"}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {formData.targets.length} {locale === "en" ? "selected" : "selezionati"}
+                  </span>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    {
+                      target: FormFieldTarget.PURCHASER,
+                      label: locale === "en" ? "Purchaser / Parent" : "Acquirente / Genitore",
+                      sub: locale === "en" ? "Billing & payer details" : "Anagrafica pagatore / genitore",
+                      icon: User,
+                      color: "text-blue-500",
+                      activeBorder: "border-blue-500 bg-blue-500/10 text-foreground",
+                    },
+                    {
+                      target: FormFieldTarget.STUDENT,
+                      label: locale === "en" ? "Student / Child" : "Studente / Figlio",
+                      sub: locale === "en" ? "Participant & academic info" : "Dati studente / partecipante",
+                      icon: Users,
+                      color: "text-emerald-500",
+                      activeBorder: "border-emerald-500 bg-emerald-500/10 text-foreground",
+                    },
+                    {
+                      target: FormFieldTarget.BOOKING,
+                      label: locale === "en" ? "Booking / Course" : "Iscrizione / Corso",
+                      sub: locale === "en" ? "Course options & notes" : "Note e opzioni corso",
+                      icon: Calendar,
+                      color: "text-purple-500",
+                      activeBorder: "border-purple-500 bg-purple-500/10 text-foreground",
+                    },
+                    {
+                      target: FormFieldTarget.CONTACT,
+                      label: locale === "en" ? "Contact Form" : "Modulo Contatto",
+                      sub: locale === "en" ? "Website lead inquiries" : "Richieste sito web / contatti",
+                      icon: Mail,
+                      color: "text-amber-500",
+                      activeBorder: "border-amber-500 bg-amber-500/10 text-foreground",
+                    },
+                  ].map((item) => {
+                    const isSelected = formData.targets.includes(item.target);
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.target}
+                        type="button"
+                        onClick={() => {
+                          const exists = formData.targets.includes(item.target);
+                          let newTargets: FormFieldTarget[];
+                          if (exists) {
+                            if (formData.targets.length === 1) {
+                              toast.warning(locale === "en" ? "Select at least one target entity" : "Seleziona almeno una destinazione");
+                              return;
+                            }
+                            newTargets = formData.targets.filter((t) => t !== item.target);
+                          } else {
+                            newTargets = [...formData.targets, item.target];
+                          }
+                          setFormData({ ...formData, targets: newTargets });
+                        }}
+                        className={`flex items-start gap-2.5 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? `${item.activeBorder} shadow-xs font-semibold`
+                            : "border-border/70 hover:border-border hover:bg-muted/40 text-muted-foreground"
+                        }`}
+                      >
+                        <div className="mt-0.5 flex items-center justify-center">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => {}}
+                            className="pointer-events-none"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 text-xs text-foreground">
+                            <Icon className={`w-3.5 h-3.5 ${item.color}`} />
+                            <span>{item.label}</span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight font-normal">
+                            {item.sub}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-                <div>
-                  <Label className="text-xs font-semibold">
-                    {locale === "en" ? "Field Type" : "Tipo di Input"}
-                    <span className="text-destructive ml-1">*</span>
-                  </Label>
-                  <Select
-                    modal={false}
-                    value={formData.field_type}
-                    onValueChange={(val: FormFieldType) => setFormData({ ...formData, field_type: val })}
-                  >
-                    <SelectTrigger className="mt-1 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent position="popper" className="z-[99999]">
-                      <SelectItem value={FormFieldType.TEXT}>{locale === "en" ? "Text input" : "Campo di testo"}</SelectItem>
-                      <SelectItem value={FormFieldType.EMAIL}>{locale === "en" ? "Email address" : "Indirizzo Email"}</SelectItem>
-                      <SelectItem value={FormFieldType.PHONE}>{locale === "en" ? "Phone number" : "Numero di Telefono"}</SelectItem>
-                      <SelectItem value={FormFieldType.NUMBER}>{locale === "en" ? "Number" : "Numero"}</SelectItem>
-                      <SelectItem value={FormFieldType.DATE}>{locale === "en" ? "Date picker" : "Data"}</SelectItem>
-                      <SelectItem value={FormFieldType.TEXTAREA}>{locale === "en" ? "Long text (Textarea)" : "Testo lungo (Area di testo)"}</SelectItem>
-                      <SelectItem value={FormFieldType.SELECT}>{locale === "en" ? "Dropdown select" : "Menu a tendina (Select)"}</SelectItem>
-                      <SelectItem value={FormFieldType.RADIO}>{locale === "en" ? "Radio options" : "Scelta singola (Radio)"}</SelectItem>
-                      <SelectItem value={FormFieldType.CHECKBOX}>{locale === "en" ? "Checkbox toggle" : "Casella di controllo (Checkbox)"}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Field Type */}
+              <div>
+                <Label className="text-xs font-semibold">
+                  {locale === "en" ? "Field Type" : "Tipo di Input"}
+                  <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Select
+                  modal={false}
+                  value={formData.field_type}
+                  onValueChange={(val: FormFieldType) => setFormData({ ...formData, field_type: val })}
+                >
+                  <SelectTrigger className="mt-1 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="z-[99999]">
+                    <SelectItem value={FormFieldType.TEXT}>{locale === "en" ? "Text input" : "Campo di testo"}</SelectItem>
+                    <SelectItem value={FormFieldType.EMAIL}>{locale === "en" ? "Email address" : "Indirizzo Email"}</SelectItem>
+                    <SelectItem value={FormFieldType.PHONE}>{locale === "en" ? "Phone number" : "Numero di Telefono"}</SelectItem>
+                    <SelectItem value={FormFieldType.NUMBER}>{locale === "en" ? "Number" : "Numero"}</SelectItem>
+                    <SelectItem value={FormFieldType.DATE}>{locale === "en" ? "Date picker" : "Data"}</SelectItem>
+                    <SelectItem value={FormFieldType.TEXTAREA}>{locale === "en" ? "Long text (Textarea)" : "Testo lungo (Area di testo)"}</SelectItem>
+                    <SelectItem value={FormFieldType.SELECT}>{locale === "en" ? "Dropdown select" : "Menu a tendina (Select)"}</SelectItem>
+                    <SelectItem value={FormFieldType.RADIO}>{locale === "en" ? "Radio options" : "Scelta singola (Radio)"}</SelectItem>
+                    <SelectItem value={FormFieldType.CHECKBOX}>{locale === "en" ? "Checkbox toggle" : "Casella di controllo (Checkbox)"}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Bilingual Labels */}

@@ -143,9 +143,15 @@ export class CreateFormFieldDto {
   @IsString()
   field_type: string;
 
-  @ApiProperty({ description: 'Целевой объект (purchaser, student, booking, contact)' })
+  @ApiPropertyOptional({ description: 'Целевой объект (purchaser, student, booking, contact)' })
+  @IsOptional()
   @IsString()
-  target: string;
+  target?: string;
+
+  @ApiPropertyOptional({ description: 'Массив целевых объектов', type: [String] })
+  @IsOptional()
+  @IsArray()
+  targets?: string[];
 
   @ApiPropertyOptional({ description: 'Опции для селекта / радио' })
   @IsOptional()
@@ -197,6 +203,11 @@ export class UpdateFormFieldDto {
   @IsOptional()
   @IsString()
   target?: string;
+
+  @ApiPropertyOptional({ description: 'Массив целевых объектов', type: [String] })
+  @IsOptional()
+  @IsArray()
+  targets?: string[];
 
   @ApiPropertyOptional({ description: 'Опции для селекта / радио' })
   @IsOptional()

@@ -238,6 +238,34 @@ export function parseFormFieldTarget(val: any): FormFieldTarget {
   return FormFieldTarget.PURCHASER;
 }
 
+export function parseFormFieldTargets(val: any): FormFieldTarget[] {
+  if (Array.isArray(val)) {
+    const list = val.map(parseFormFieldTarget).filter(Boolean);
+    const unique = Array.from(new Set(list));
+    return unique.length > 0 ? unique : [FormFieldTarget.PURCHASER];
+  }
+  if (typeof val === 'string' && val.includes(',')) {
+    const list = val.split(',').map((s) => parseFormFieldTarget(s.trim())).filter(Boolean);
+    const unique = Array.from(new Set(list));
+    return unique.length > 0 ? unique : [FormFieldTarget.PURCHASER];
+  }
+  if (val) {
+    return [parseFormFieldTarget(val)];
+  }
+  return [FormFieldTarget.PURCHASER];
+}
+
+export function getFieldTargets(field?: { target?: any; targets?: any[] } | null): FormFieldTarget[] {
+  if (!field) return [FormFieldTarget.PURCHASER];
+  if (Array.isArray(field.targets) && field.targets.length > 0) {
+    return parseFormFieldTargets(field.targets);
+  }
+  if (field.target) {
+    return parseFormFieldTargets(field.target);
+  }
+  return [FormFieldTarget.PURCHASER];
+}
+
 // ----------------------------------------------------------------------------
 // 4. FormFieldOption & FormFieldConfig & FormFieldItem (Catalog)
 // ----------------------------------------------------------------------------
@@ -256,6 +284,7 @@ export interface FormFieldItem {
   placeholder_en?: string | null;
   field_type: FormFieldType;
   target: FormFieldTarget;
+  targets?: FormFieldTarget[];
   options?: FormFieldOption[];
   is_system: boolean;
   is_required_default: boolean;
@@ -271,7 +300,8 @@ export interface CreateFormFieldDto {
   placeholder_it?: string;
   placeholder_en?: string;
   field_type: FormFieldType;
-  target: FormFieldTarget;
+  target?: FormFieldTarget;
+  targets?: FormFieldTarget[];
   options?: FormFieldOption[];
   is_system?: boolean;
   is_required_default?: boolean;
@@ -285,6 +315,7 @@ export interface UpdateFormFieldDto {
   placeholder_en?: string;
   field_type?: FormFieldType;
   target?: FormFieldTarget;
+  targets?: FormFieldTarget[];
   options?: FormFieldOption[];
   is_required_default?: boolean;
   sort_order?: number;

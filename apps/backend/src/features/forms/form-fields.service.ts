@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SupabaseService } from '../../core/supabase/supabase.service';
-import { FormFieldItem, FormFieldTarget } from '@atena/api-types';
+import { FormFieldItem, FormFieldTarget, parseFormFieldTargets } from '@atena/api-types';
 import { CreateFormFieldDto, UpdateFormFieldDto } from './dto/forms.dto';
 
 @Injectable()
@@ -16,6 +16,15 @@ export class FormFieldsService {
 
   private get supabase() {
     return this.supabaseService.clientInstance;
+  }
+
+  private mapFieldItem(row: any): FormFieldItem {
+    const targets = parseFormFieldTargets(row.target || 'purchaser');
+    return {
+      ...row,
+      target: targets[0] || FormFieldTarget.PURCHASER,
+      targets,
+    };
   }
 
   /**
@@ -29,8 +38,8 @@ export class FormFieldsService {
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true });
 
-      if (filter?.target) {
-        query = query.eq('target', filter.target);
+      if (filter?.target && filter.target !== 'all') {
+        query = query.ilike('target', `%${filter.target}%`);
       }
       if (typeof filter?.is_system === 'boolean') {
         query = query.eq('is_system', filter.is_system);
@@ -42,7 +51,7 @@ export class FormFieldsService {
         throw new BadRequestException(`Errore caricamento campi: ${error.message}`);
       }
 
-      return (data || []) as FormFieldItem[];
+      return (data || []).map((row) => this.mapFieldItem(row));
     } catch (err: any) {
       this.logger.error(`getFields exception: ${err.message}`);
       throw err;
@@ -63,7 +72,7 @@ export class FormFieldsService {
       throw new NotFoundException(`Campo con ID "${id}" non trovato.`);
     }
 
-    return data as FormFieldItem;
+    return this.mapFieldItem(data);
   }
 
   /**
@@ -86,6 +95,13 @@ export class FormFieldsService {
       throw new BadRequestException(`Un campo con la chiave "${normalizedKey}" esiste già.`);
     }
 
+    let targetStr = 'purchaser';
+    if (Array.isArray(dto.targets) && dto.targets.length > 0) {
+      targetStr = dto.targets.join(',');
+    } else if (dto.target) {
+      targetStr = dto.target;
+    }
+
     const { data, error } = await this.supabase
       .from('form_fields')
       .insert({
@@ -95,7 +111,7 @@ export class FormFieldsService {
         placeholder_it: dto.placeholder_it?.trim() || null,
         placeholder_en: dto.placeholder_en?.trim() || null,
         field_type: dto.field_type || 'text',
-        target: dto.target || 'purchaser',
+        target: targetStr,
         options: dto.options || [],
         is_system: dto.is_system ?? false,
         is_required_default: dto.is_required_default ?? false,
@@ -109,7 +125,7 @@ export class FormFieldsService {
       throw new BadRequestException(`Errore creazione campo: ${error?.message}`);
     }
 
-    return data as FormFieldItem;
+    return this.mapFieldItem(data);
   }
 
   /**
@@ -124,7 +140,13 @@ export class FormFieldsService {
     if (dto.placeholder_it !== undefined) updatePayload.placeholder_it = dto.placeholder_it?.trim() || null;
     if (dto.placeholder_en !== undefined) updatePayload.placeholder_en = dto.placeholder_en?.trim() || null;
     if (dto.field_type !== undefined) updatePayload.field_type = dto.field_type;
-    if (dto.target !== undefined) updatePayload.target = dto.target;
+    
+    if (Array.isArray(dto.targets) && dto.targets.length > 0) {
+      updatePayload.target = dto.targets.join(',');
+    } else if (dto.target !== undefined) {
+      updatePayload.target = dto.target;
+    }
+
     if (dto.options !== undefined) updatePayload.options = dto.options;
     if (dto.is_required_default !== undefined) updatePayload.is_required_default = dto.is_required_default;
     if (dto.sort_order !== undefined) updatePayload.sort_order = dto.sort_order;
@@ -141,7 +163,7 @@ export class FormFieldsService {
       throw new BadRequestException(`Errore aggiornamento campo: ${error?.message}`);
     }
 
-    return data as FormFieldItem;
+    return this.mapFieldItem(data);
   }
 
   /**

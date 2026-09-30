@@ -12,6 +12,7 @@ import {
   FORM_FIELD_TYPE_DICTIONARY,
   FORM_FIELD_TARGET_DICTIONARY,
   parseFormType,
+  getFieldTargets,
 } from "../types";
 import { useFormFields } from "../hooks/use-form-fields";
 import { toast } from "sonner";
@@ -201,10 +202,11 @@ export function VisualFormBuilder({
   const availableCatalogFields = useMemo(() => {
     return catalogFields.filter((cf) => {
       if (cf.is_system) return false;
+      const targets = getFieldTargets(cf);
       if (formData.form_type === FormType.CONTACT) {
-        return cf.target === "contact";
+        return targets.includes(FormFieldTarget.CONTACT);
       }
-      return cf.target !== "contact";
+      return targets.some((t) => t !== FormFieldTarget.CONTACT);
     });
   }, [catalogFields, formData.form_type]);
 
@@ -212,10 +214,11 @@ export function VisualFormBuilder({
   const systemCatalogFields = useMemo(() => {
     return catalogFields.filter((cf) => {
       if (!cf.is_system) return false;
+      const targets = getFieldTargets(cf);
       if (formData.form_type === FormType.CONTACT) {
-        return cf.target === "contact";
+        return targets.includes(FormFieldTarget.CONTACT);
       }
-      return cf.target !== "contact";
+      return targets.some((t) => t !== FormFieldTarget.CONTACT);
     });
   }, [catalogFields, formData.form_type]);
 
@@ -223,8 +226,11 @@ export function VisualFormBuilder({
   const filteredCatalogFields = useMemo(() => {
     return availableCatalogFields.filter((cf) => {
       // Filter by target
-      if (catalogTargetFilter !== "all" && cf.target !== catalogTargetFilter) {
-        return false;
+      if (catalogTargetFilter !== "all") {
+        const targets = getFieldTargets(cf);
+        if (!targets.includes(catalogTargetFilter as FormFieldTarget)) {
+          return false;
+        }
       }
       // Filter by search query
       if (catalogSearch.trim()) {
@@ -242,13 +248,25 @@ export function VisualFormBuilder({
     const existing = formData.fields_config.find((f) => f.key === catalogField.key);
     if (existing) return;
 
+    const targets = getFieldTargets(catalogField);
+    let resolvedTarget = targets[0] || FormFieldTarget.PURCHASER;
+    if (formData.form_type === FormType.CONTACT) {
+      resolvedTarget = FormFieldTarget.CONTACT;
+    } else if (targets.includes(FormFieldTarget.PURCHASER)) {
+      resolvedTarget = FormFieldTarget.PURCHASER;
+    } else if (targets.includes(FormFieldTarget.STUDENT)) {
+      resolvedTarget = FormFieldTarget.STUDENT;
+    } else if (targets.includes(FormFieldTarget.BOOKING)) {
+      resolvedTarget = FormFieldTarget.BOOKING;
+    }
+
     const newField: FormFieldConfig = {
       id: `field-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       key: catalogField.key,
       label: locale === "en" ? catalogField.label_en : catalogField.label_it,
       placeholder: (locale === "en" ? catalogField.placeholder_en : catalogField.placeholder_it) || undefined,
       field_type: catalogField.field_type,
-      target: catalogField.target,
+      target: resolvedTarget,
       is_required: catalogField.is_required_default,
       is_enabled: true,
       is_system: catalogField.is_system ?? false,
@@ -1333,8 +1351,7 @@ export function VisualFormBuilder({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {filteredCatalogFields.map((cf) => {
                   const isAttached = formData.fields_config.some((fc) => fc.key === cf.key);
-                  const isStudent = cf.target === FormFieldTarget.STUDENT;
-                  const isPurchaser = cf.target === FormFieldTarget.PURCHASER;
+                  const targets = getFieldTargets(cf);
 
                   return (
                     <div
@@ -1346,19 +1363,28 @@ export function VisualFormBuilder({
                       }`}
                     >
                       <div className="space-y-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <span
-                            className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded font-medium ${
-                              isStudent
-                                ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
-                                : isPurchaser
-                                ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                                : "bg-purple-500/10 text-purple-700 dark:text-purple-400"
-                            }`}
-                          >
-                            {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
-                            {getFieldTargetLabel(cf.target)}
-                          </span>
+                        <div className="flex flex-wrap items-center justify-between gap-1">
+                          <div className="flex flex-wrap gap-1">
+                            {targets.map((t) => {
+                              const isStudent = t === FormFieldTarget.STUDENT;
+                              const isPurchaser = t === FormFieldTarget.PURCHASER;
+                              return (
+                                <span
+                                  key={t}
+                                  className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.2 rounded font-medium ${
+                                    isStudent
+                                      ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                                      : isPurchaser
+                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                                      : "bg-purple-500/10 text-purple-700 dark:text-purple-400"
+                                  }`}
+                                >
+                                  {isStudent ? <User className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
+                                  {getFieldTargetLabel(t)}
+                                </span>
+                              );
+                            })}
+                          </div>
                           <span className="text-[10px] font-semibold text-muted-foreground uppercase bg-muted px-1.5 py-0.2 rounded">
                             {getFieldTypeLabel(cf.field_type)}
                           </span>
