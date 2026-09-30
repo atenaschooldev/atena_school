@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { createClient } from '@supabase/supabase-js';
 import { CoursesRepository } from './domain/courses.repository.interface';
 import { CourseEntity } from './domain/course.entity';
 import { PrismaService } from '../../core/prisma/prisma.service';
@@ -643,5 +644,62 @@ export class CoursesService {
       teacherId: t.id.toString(),
       fullName: t.fullName ?? '',
     }));
+  }
+
+  async uploadImage(dto: { fileName?: string; fileBase64: string; contentType?: string }) {
+    if (!dto.fileBase64) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase Storage is not configured on server');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let base64Data = dto.fileBase64;
+    let contentType = dto.contentType || 'image/webp';
+
+    if (base64Data.startsWith('data:')) {
+      const match = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        contentType = match[1];
+        base64Data = match[2];
+      }
+    }
+
+    const buffer = Buffer.from(base64Data, 'base64');
+    const ext = contentType.includes('png') ? 'png' : contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'webp';
+    const cleanName = (dto.fileName || 'course_cover').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+    const timestamp = Date.now();
+    const filename = `${cleanName}_${timestamp}.${ext}`;
+    const bucket = 'courses_images';
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filename, buffer, {
+        contentType,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      const { error: fallbackError } = await supabase.storage
+        .from('course-images')
+        .upload(filename, buffer, {
+          contentType,
+          upsert: true,
+        });
+      if (fallbackError) {
+        throw new Error(`Failed to upload image to Supabase Storage: ${uploadError.message}`);
+      }
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/course-images/${filename}`;
+      return { url: publicUrl, filename, bucket: 'course-images' };
+    }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
+    return { url: publicUrl, filename, bucket };
   }
 }

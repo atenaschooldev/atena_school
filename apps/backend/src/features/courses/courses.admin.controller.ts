@@ -133,4 +133,12 @@ export class CoursesController {
   async deleteCourse(@Param('id') id: string) {
     await this.coursesService.deleteCourse(id);
   }
+
+  @Post('upload-image')
+  @Roles('admin')
+  @Audit('courses', 'upload_image')
+  @ApiOperation({ summary: 'Загрузить изображение курса в Supabase Storage' })
+  async uploadImage(@Body() dto: { fileName?: string; fileBase64: string; contentType?: string }) {
+    return this.coursesService.uploadImage(dto);
+  }
 }
