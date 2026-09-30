@@ -6,8 +6,6 @@ import type { CourseFormValues } from "../types";
 import type { Teacher } from "@/features/teachers";
 import {
   X,
-  FileText,
-  ExternalLink,
   Clock,
   Users,
   Award,
@@ -15,7 +13,6 @@ import {
   Calendar,
   Sparkles,
   Check,
-  DollarSign,
   Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -710,34 +707,7 @@ export function CourseForm({ initialValues, onSubmit, onCancel, submitLabel }: C
         )}
       </div>
 
-      {/* ── Section 5: Modulo di Iscrizione & Form Engine ── */}
-      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-3.5 border border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-1">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2 bg-primary text-primary-foreground rounded-xl shadow-2xs shrink-0">
-            <FileText className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              {t("courses.formEngineTitle") || "Modulo di Iscrizione & Form Engine"}
-              <span className="bg-primary/15 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full">
-                Database-First
-              </span>
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-              {t("courses.formEngineDesc") || "Personalizza le domande e i campi richiesti al corsista durante il checkout."}
-            </p>
-          </div>
-        </div>
-        <a
-          href={`/moduli?courseId=${form.slug || (initialValues as any).id || ""}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-3 py-1.5 bg-background hover:bg-muted text-foreground border border-border rounded-xl text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
-        >
-          <ExternalLink className="w-3.5 h-3.5 text-primary" />
-          {t("courses.formEngineBtn") || "Personalizza Modulo"}
-        </a>
-      </div>
+
 
       {/* ── Dialog Footer Buttons ── */}
       <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
