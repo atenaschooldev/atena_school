@@ -10,7 +10,9 @@
     "dev:dev": "node scripts/dev-runner.js dev",
     "dev:dev:all": "node scripts/dev-runner.js dev",
     "dev:prod": "node scripts/dev-runner.js prod",
-    "dev:prod:all": "node scripts/dev-runner.js prod"
+    "dev:prod:all": "node scripts/dev-runner.js prod",
+    "start:crm": "node scripts/start-crm-prod.js prod",
+    "start:prod": "node scripts/start-crm-prod.js prod"
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
