@@ -53,18 +53,20 @@ if (!fs.existsSync(backendDist) || !fs.existsSync(adminDist)) {
 }
 
 // 2. Start Backend process
+const isWin = process.platform === "win32";
 const backendProcess = spawn("node", ["dist/main.js"], {
   cwd: path.join(rootDir, "apps/backend"),
   stdio: "inherit",
-  shell: true,
+  shell: isWin,
   env: { ...process.env, NODE_ENV: "production", FORCE_COLOR: "1" },
 });
 
 // 3. Start Admin production preview server
-const adminProcess = spawn("npx", ["vite", "preview", "--port", "3001", "--host"], {
+const npxCmd = isWin ? "npx.cmd" : "npx";
+const adminProcess = spawn(npxCmd, ["vite", "preview", "--port", "3001", "--host"], {
   cwd: path.join(rootDir, "apps/admin"),
   stdio: "inherit",
-  shell: true,
+  shell: isWin,
   env: { ...process.env, FORCE_COLOR: "1" },
 });
 
