@@ -59,5 +59,11 @@ export class PrismaMembershipsRepository extends MembershipsRepository {
       data: { status: numericStatus },
     });
   }
+
+  async delete(id: string): Promise<MembershipEntity> {
+    return this.prisma.annualMembership.delete({
+      where: { id },
+    });
+  }
 }
 

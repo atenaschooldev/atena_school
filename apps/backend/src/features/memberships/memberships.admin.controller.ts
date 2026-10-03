@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { IsIn, IsString } from 'class-validator';
 import { AuthGuard } from '../../core/guards/auth.guard';
@@ -61,6 +61,14 @@ export class MembershipsController {
   @ApiOperation({ summary: 'Тоггл статуса (активный → отозван, отозван → активный)' })
   toggleStatus(@Param('id') id: string) {
     return this.membershipsService.toggleStatus(id);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  @Audit('memberships', 'delete')
+  @ApiOperation({ summary: 'Удалить взнос (членство)' })
+  deleteMembership(@Param('id') id: string) {
+    return this.membershipsService.deleteMembership(id);
   }
 
   @Get('stats')

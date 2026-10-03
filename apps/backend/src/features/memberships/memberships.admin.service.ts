@@ -175,6 +175,55 @@ export class MembershipsService {
     return this.updateStatus(id, newStatus);
   }
 
+  async deleteMembership(id: string) {
+    const existing = await this.findOne(id);
+    const sId = existing.studentId || existing.userId;
+    const sTaxCode = existing.taxCode;
+
+    // 1. Delete membership record
+    await this.membershipsRepository.delete(id);
+
+    // 2. Check if student has any other active memberships
+    if (sId || sTaxCode) {
+      const remainingActive = await this.prisma.annualMembership.count({
+        where: {
+          OR: [
+            ...(sId ? [{ studentId: sId }] : []),
+            ...(sTaxCode ? [{ taxCode: { equals: sTaxCode, mode: 'insensitive' as const } }] : []),
+          ],
+          status: MembershipStatus.ACTIVE,
+        },
+      });
+
+      if (remainingActive === 0) {
+        if (sId) {
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE students SET annual_fee_paid = false, annual_fee_paid_at = null WHERE id = '${sId}'::uuid`
+          ).catch(() => null);
+        } else if (sTaxCode) {
+          await this.prisma.$executeRawUnsafe(
+            `UPDATE students SET annual_fee_paid = false, annual_fee_paid_at = null WHERE LOWER(tax_code) = LOWER('${sTaxCode}')`
+          ).catch(() => null);
+        }
+      }
+    }
+
+    // 3. Delete or unlink associated fee payment
+    if (existing.paymentId) {
+      await this.prisma.payment.delete({
+        where: { id: existing.paymentId },
+      }).catch(() => null);
+    } else {
+      await this.prisma.payment.deleteMany({
+        where: {
+          notes: { contains: `[membership_id:${id}]` },
+        },
+      }).catch(() => null);
+    }
+
+    return { success: true, id };
+  }
+
   async getStats() {
     const all = await this.prisma.annualMembership.groupBy({
       by: ['status'],

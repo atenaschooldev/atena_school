@@ -6,11 +6,13 @@ import { MembershipsMetrics } from "./memberships-metrics";
 import { getMembershipsTableColumns } from "./memberships-table-columns";
 import { CreateMembershipDialog } from "./create-membership-dialog";
 import { RegistrationFeeSettingsDialog } from "./registration-fee-settings-dialog";
+import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
 import { Button } from "@/components/ui/button";
 import { Plus, Settings } from "lucide-react";
 import { useTranslation } from "@/i18n/context";
+import type { Membership } from "../types";
 import {
   type SortingState,
   type ColumnFiltersState,
@@ -26,6 +28,10 @@ export function MembershipsView() {
   const { t } = useTranslation();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [membershipToDelete, setMembershipToDelete] = useState<Membership | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [academicYearFilter, setAcademicYearFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,7 +41,7 @@ export function MembershipsView() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const { memberships, stats, loading, toggleStatus, refresh } = useMemberships({
+  const { memberships, stats, loading, toggleStatus, deleteMembership, refresh } = useMemberships({
     status: statusFilter === "all" ? undefined : statusFilter,
     academicYear: academicYearFilter === "all" ? undefined : academicYearFilter,
     search: debouncedSearch || undefined,
@@ -49,10 +55,28 @@ export function MembershipsView() {
     return () => clearTimeout(handler);
   };
 
+  const handleDeleteClick = (m: Membership) => {
+    setMembershipToDelete(m);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!membershipToDelete) return;
+    try {
+      setDeleting(true);
+      await deleteMembership(membershipToDelete.id);
+      setDeleteDialogOpen(false);
+      setMembershipToDelete(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const columns = useMemo(
     () =>
       getMembershipsTableColumns({
         onToggleStatus: (id) => toggleStatus(id),
+        onDelete: (m) => handleDeleteClick(m),
         t,
       }),
     [toggleStatus, t]
@@ -158,6 +182,20 @@ export function MembershipsView() {
         onSaved={() => {
           refresh();
         }}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title={t("memberships.deleteConfirmTitle") || "Elimina Quota Associativa"}
+        description={
+          t("memberships.deleteConfirmDesc") ||
+          `Sei sicuro di voler eliminare definitivamente la quota associativa per ${
+            membershipToDelete?.studentName || membershipToDelete?.taxCode || "questo socio"
+          }? L'operazione rimuoverà la tessera e reimposterà lo stato della quota annuale dello studente.`
+        }
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
       />
     </div>
   );

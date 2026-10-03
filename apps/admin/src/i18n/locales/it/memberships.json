@@ -21,6 +21,9 @@
   "revoked": "Revocata",
   "reactivated": "Riattivata",
   "toggleSuccess": "Stato iscrizione aggiornato",
+  "deleteConfirmTitle": "Elimina Quota Associativa",
+  "deleteConfirmDesc": "Sei sicuro di voler eliminare definitivamente questa quota associativa? L'operazione rimuoverà la tessera e reimposterà lo stato della quota dello studente.",
+  "deletedSuccess": "Quota associativa eliminata con successo",
   "metrics": {
     "totalTitle": "Totale Soci",
     "totalDesc": "Registro generale soci registrati",

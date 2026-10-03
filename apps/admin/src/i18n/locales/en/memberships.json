@@ -21,6 +21,9 @@
   "revoked": "Revoked",
   "reactivated": "Reactivated",
   "toggleSuccess": "Membership status updated",
+  "deleteConfirmTitle": "Delete Membership",
+  "deleteConfirmDesc": "Are you sure you want to permanently delete this membership? This will remove the membership record and reset the student's annual fee status.",
+  "deletedSuccess": "Membership deleted successfully",
   "metrics": {
     "totalTitle": "Total Members",
     "totalDesc": "Official register of all memberships",

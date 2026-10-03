@@ -21,4 +21,5 @@ export abstract class MembershipsRepository {
   abstract findAll(filters?: { status?: number | string; academicYear?: string; search?: string }): Promise<MembershipEntity[]>;
   abstract findById(id: string): Promise<MembershipEntity | null>;
   abstract updateStatus(id: string, status: number | string): Promise<MembershipEntity>;
+  abstract delete(id: string): Promise<MembershipEntity>;
 }

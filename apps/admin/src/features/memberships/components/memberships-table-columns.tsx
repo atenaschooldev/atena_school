@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Ban, RotateCcw, Award, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Ban, RotateCcw, Award, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import type { Membership } from "../types";
 
 export interface GetMembershipsTableColumnsProps {
   onToggleStatus: (id: string) => void;
+  onDelete?: (membership: Membership) => void;
   t: (k: string) => string;
 }
 
@@ -87,6 +88,7 @@ function MembershipStatusBadge({
 
 export function getMembershipsTableColumns({
   onToggleStatus,
+  onDelete,
   t,
 }: GetMembershipsTableColumnsProps): ColumnDef<Membership>[] {
   return [
@@ -271,7 +273,7 @@ export function getMembershipsTableColumns({
           String(m.status ?? "").toLowerCase() === "revoked" ||
           Number(m.status) === MembershipStatus.REVOKED;
         return (
-          <div className="flex items-center justify-end pr-1">
+          <div className="flex items-center justify-end gap-1 pr-1">
             <Button
               variant="ghost"
               size="sm"
@@ -293,10 +295,21 @@ export function getMembershipsTableColumns({
                 </>
               )}
             </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                onClick={() => onDelete(m)}
+                title={t("common.delete")}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
         );
       },
-      size: 100,
+      size: 140,
     },
   ];
 }

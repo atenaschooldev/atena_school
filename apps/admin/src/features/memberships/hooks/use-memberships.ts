@@ -79,6 +79,24 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     },
   });
 
+  // Delete membership
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiFetch<{ success: boolean; id: string }>(`/admin/memberships/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      toast.success("Quota associativa eliminata con successo");
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships-stats"] });
+    },
+    onError: (e) => {
+      console.error("Failed to delete membership:", e);
+      toast.error("Errore nell'eliminazione della quota associativa");
+    },
+  });
+
   const updateStatus = async (id: string, status: string) => {
     return updateStatusMutation.mutateAsync({ id, status });
   };
@@ -87,12 +105,17 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     return toggleStatusMutation.mutateAsync(id);
   };
 
+  const deleteMembership = async (id: string) => {
+    return deleteMutation.mutateAsync(id);
+  };
+
   return {
     memberships,
     stats: stats ?? { total: 0, active: 0, pending: 0, expiredOrRevoked: 0 },
     loading: isLoading,
     updateStatus,
     toggleStatus,
+    deleteMembership,
     refresh: refetch,
   };
 }
