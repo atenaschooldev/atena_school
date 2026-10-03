@@ -34,5 +34,11 @@
   "membershipsList": "Storico Tesseramento",
   "noCoursesFound": "Nessun corso o prenotazione trovata per questo studente.",
   "noMembershipsFound": "Nessun tesseramento registrato.",
-  "noTaxCode": "Nessun Codice Fiscale inserito"
+  "noTaxCode": "Nessun Codice Fiscale inserito",
+  "export": "Esporta Dati",
+  "exportCsv": "Esporta CSV",
+  "exportExcel": "Esporta Excel (.xls)",
+  "exportJson": "Esporta JSON",
+  "exportFiltered": "Esporta Filtrati",
+  "exportAll": "Esporta Tutti"
 }

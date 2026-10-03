@@ -5,3 +5,5 @@ export * from "./components/students-metrics";
 export * from "./components/students-table-columns";
 export * from "./components/create-student-dialog";
 export * from "./components/student-detail-dialog";
+export * from "./components/export-students-dropdown";
+export * from "./utils/export-students";

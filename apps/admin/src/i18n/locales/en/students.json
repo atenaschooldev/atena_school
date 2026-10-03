@@ -34,5 +34,11 @@
   "membershipsList": "Membership History",
   "noCoursesFound": "No courses or bookings found for this student.",
   "noMembershipsFound": "No memberships found.",
-  "noTaxCode": "No Tax Code provided"
+  "noTaxCode": "No Tax Code provided",
+  "export": "Export Data",
+  "exportCsv": "Export CSV",
+  "exportExcel": "Export Excel (.xls)",
+  "exportJson": "Export JSON",
+  "exportFiltered": "Export Filtered",
+  "exportAll": "Export All"
 }

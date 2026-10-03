@@ -6,6 +6,7 @@ import { StudentsMetrics } from "./students-metrics";
 import { getStudentsTableColumns } from "./students-table-columns";
 import { CreateStudentDialog } from "./create-student-dialog";
 import { StudentDetailDialog } from "./student-detail-dialog";
+import { ExportStudentsDropdown } from "./export-students-dropdown";
 import { Button } from "@/components/ui/button";
 import { Plus, UserCheck, RefreshCw } from "lucide-react";
 import {
@@ -120,6 +121,10 @@ export function StudentsView() {
             <RefreshCw className="w-3.5 h-3.5" />
             {t("common.refresh")}
           </Button>
+          <ExportStudentsDropdown
+            students={students}
+            filteredStudents={filteredStudents}
+          />
           <Button
             size="sm"
             onClick={() => setIsCreateOpen(true)}
