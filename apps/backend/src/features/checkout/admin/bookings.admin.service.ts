@@ -600,15 +600,21 @@ export class BookingsAdminService {
       ? Number(profile.registration_fee_eur)
       : 30.0;
 
+    const paymentMethodNum = parsePaymentMethod(pMethod) ?? PaymentMethod.CASH;
+    const nextMembershipNumber = isPaid
+      ? await generateNextMembershipNumber(this.supabaseAdmin, academicYear)
+      : null;
+
     const { data: membership, error: mErr } = await this.supabaseAdmin
       .from('annual_memberships')
       .insert({
         student_id: studentId || null,
         tax_code: sTaxCode,
-        email: sEmail,
-        phone: dto.phone || null,
         academic_year: academicYear,
         status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
+        amount: feeAmount,
+        payment_method: paymentMethodNum,
+        membership_number: nextMembershipNumber,
         paid_at: isPaid ? new Date().toISOString() : null,
         expires_at: fallbackExpiresAt,
       })
@@ -618,19 +624,26 @@ export class BookingsAdminService {
     if (mErr) throw new BadRequestException(mErr.message);
 
     try {
-      await this.prisma.payment.create({
+      const createdPayment = await this.prisma.payment.create({
         data: {
           bookingId: null,
           studentId: studentId || null,
           amount: feeAmount,
           currency: PaymentCurrency.EUR,
-          paymentMethod: parsePaymentMethod(pMethod) ?? PaymentMethod.CASH,
+          paymentMethod: paymentMethodNum,
           type: PaymentType.REGISTRATION_FEE,
           status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
           provider: PaymentProvider.MANUAL,
           notes: `Quota d'iscrizione annuale A.A. ${academicYear} (${sName}) [membership_id:${membership.id}]`,
         },
       });
+
+      if (createdPayment?.id && membership?.id) {
+        await this.supabaseAdmin
+          .from('annual_memberships')
+          .update({ payment_id: createdPayment.id })
+          .eq('id', membership.id);
+      }
     } catch (payErr) {
       this.logger.warn('Standalone membership payment error:', payErr);
     }
