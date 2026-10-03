@@ -375,15 +375,48 @@ export class PaymentsService {
         }
 
         if (memId) {
-          await this.prisma.$executeRawUnsafe(
-            `UPDATE annual_memberships SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = '${id}'::uuid WHERE id = '${memId}'::uuid`
-          ).catch(() => null);
+          const mem = await this.prisma.annualMembership.findUnique({ where: { id: memId } });
+          let memNum = mem?.membershipNumber;
+          if (!memNum) {
+            const currentYear = mem?.academicYear || getCurrentAcademicYear().academicYear;
+            const count = await this.prisma.annualMembership.count({
+              where: {
+                academicYear: currentYear,
+                membershipNumber: { not: null },
+              },
+            });
+            const yearPrefix = currentYear.split('/')[0] || String(new Date().getFullYear());
+            memNum = `ATN-${yearPrefix}-${String(count + 1).padStart(4, '0')}`;
+          }
+          await this.prisma.annualMembership.update({
+            where: { id: memId },
+            data: {
+              status: MembershipStatus.ACTIVE,
+              paidAt: new Date(),
+              paymentId: id,
+              membershipNumber: memNum,
+            },
+          }).catch(() => null);
         } else if (studentTaxCode) {
           const { academicYear, expiresAt } = getCurrentAcademicYear();
+          const count = await this.prisma.annualMembership.count({
+            where: {
+              academicYear,
+              membershipNumber: { not: null },
+            },
+          });
+          const yearPrefix = academicYear.split('/')[0] || String(new Date().getFullYear());
+          const nextMemNum = `ATN-${yearPrefix}-${String(count + 1).padStart(4, '0')}`;
+
           await this.prisma.$executeRawUnsafe(`
-            INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, payment_id, paid_at, expires_at)
-            VALUES (gen_random_uuid(), '${studentTaxCode}', '${academicYear}', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${id}'::uuid, NOW(), '${expiresAt}'::timestamptz)
-            ON CONFLICT (tax_code, academic_year) DO UPDATE SET status = ${MembershipStatus.ACTIVE}, paid_at = NOW(), payment_id = EXCLUDED.payment_id, student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id);
+            INSERT INTO annual_memberships (id, tax_code, academic_year, status, student_id, payment_id, membership_number, paid_at, expires_at)
+            VALUES (gen_random_uuid(), '${studentTaxCode}', '${academicYear}', ${MembershipStatus.ACTIVE}, ${sId ? `'${sId}'::uuid` : 'NULL'}, '${id}'::uuid, '${nextMemNum}', NOW(), '${expiresAt}'::timestamptz)
+            ON CONFLICT (tax_code, academic_year) DO UPDATE SET
+              status = ${MembershipStatus.ACTIVE},
+              paid_at = NOW(),
+              payment_id = EXCLUDED.payment_id,
+              student_id = COALESCE(EXCLUDED.student_id, annual_memberships.student_id),
+              membership_number = COALESCE(annual_memberships.membership_number, EXCLUDED.membership_number);
           `).catch(() => null);
         }
       } else {

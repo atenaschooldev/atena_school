@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Ban, RotateCcw, Award, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
+import { Ban, RotateCcw, Award, CheckCircle2, Clock, AlertCircle, Trash2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import type { Membership } from "../types";
 
 export interface GetMembershipsTableColumnsProps {
   onToggleStatus: (id: string) => void;
+  onMarkAsPaid?: (membership: Membership) => void;
   onDelete?: (membership: Membership) => void;
   t: (k: string) => string;
 }
@@ -269,21 +270,35 @@ export function getMembershipsTableColumns({
       enableHiding: false,
       cell: ({ row }) => {
         const m = row.original;
-        const isRevoked =
-          String(m.status ?? "").toLowerCase() === "revoked" ||
-          Number(m.status) === MembershipStatus.REVOKED;
+        const parsedStatus = parseMembershipStatus(m.status);
+        const isPending = parsedStatus === MembershipStatus.PENDING;
+        const isRevoked = parsedStatus === MembershipStatus.REVOKED;
+
         return (
-          <div className="flex items-center justify-end gap-1 pr-1">
+          <div className="flex items-center justify-end gap-1.5 pr-1">
+            {isPending && onMarkAsPaid && (
+              <Button
+                variant="default"
+                size="sm"
+                className="h-7 px-2.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs cursor-pointer gap-1 transition-all"
+                onClick={() => onMarkAsPaid(m)}
+                title="Registra pagamento e attiva tessera"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Paga</span>
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="sm"
-              className={`h-8 text-xs cursor-pointer rounded-lg transition-all ${
+              className={`h-7 px-2 text-xs cursor-pointer rounded-lg transition-all ${
                 isRevoked
                   ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10"
-                  : "text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
+                  : "text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
               }`}
               onClick={() => onToggleStatus(m.id)}
-              title={isRevoked ? t("common.confirm") : t("common.cancel")}
+              title={isRevoked ? "Riattiva quota" : "Revoca quota"}
             >
               {isRevoked ? (
                 <>
@@ -295,11 +310,12 @@ export function getMembershipsTableColumns({
                 </>
               )}
             </Button>
+
             {onDelete && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg cursor-pointer transition-colors"
                 onClick={() => onDelete(m)}
                 title={t("common.delete")}
               >
@@ -309,7 +325,7 @@ export function getMembershipsTableColumns({
           </div>
         );
       },
-      size: 140,
+      size: 160,
     },
   ];
 }

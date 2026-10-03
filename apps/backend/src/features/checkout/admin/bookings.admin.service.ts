@@ -601,6 +601,103 @@ export class BookingsAdminService {
       : 30.0;
 
     const paymentMethodNum = parsePaymentMethod(pMethod) ?? PaymentMethod.CASH;
+
+    // Check if membership already exists for this student/taxCode and academic year
+    let existingMem: any = null;
+    if (studentId) {
+      const { data } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('academic_year', academicYear)
+        .maybeSingle();
+      if (data?.id) existingMem = data;
+    }
+    if (!existingMem && sTaxCode) {
+      const { data } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .select('*')
+        .ilike('tax_code', sTaxCode)
+        .eq('academic_year', academicYear)
+        .maybeSingle();
+      if (data?.id) existingMem = data;
+    }
+
+    if (existingMem) {
+      if (existingMem.status === MembershipStatus.ACTIVE && isPaid) {
+        throw new BadRequestException(
+          `Questo studente ha già una quota associativa attiva (Tessera: ${existingMem.membership_number || 'N/D'}) per l'A.A. ${academicYear}`,
+        );
+      }
+
+      const finalNumber = isPaid
+        ? (existingMem.membership_number || await generateNextMembershipNumber(this.supabaseAdmin, academicYear))
+        : existingMem.membership_number;
+
+      const { data: updatedMem, error: uErr } = await this.supabaseAdmin
+        .from('annual_memberships')
+        .update({
+          status: isPaid ? MembershipStatus.ACTIVE : MembershipStatus.PENDING,
+          amount: feeAmount,
+          payment_method: paymentMethodNum,
+          membership_number: finalNumber,
+          paid_at: isPaid ? (existingMem.paid_at || new Date().toISOString()) : null,
+          expires_at: fallbackExpiresAt,
+          student_id: studentId || existingMem.student_id,
+          tax_code: sTaxCode || existingMem.tax_code,
+        })
+        .eq('id', existingMem.id)
+        .select('*')
+        .single();
+
+      if (uErr) throw new BadRequestException(uErr.message);
+
+      let paymentId = existingMem.payment_id;
+      if (paymentId) {
+        await this.prisma.payment.update({
+          where: { id: paymentId },
+          data: {
+            status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
+            paymentMethod: paymentMethodNum,
+            paidAt: isPaid ? new Date() : null,
+            amount: feeAmount,
+          },
+        }).catch(() => null);
+      } else {
+        const createdPayment = await this.prisma.payment.create({
+          data: {
+            bookingId: null,
+            studentId: studentId || null,
+            amount: feeAmount,
+            currency: PaymentCurrency.EUR,
+            paymentMethod: paymentMethodNum,
+            type: PaymentType.REGISTRATION_FEE,
+            status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
+            provider: PaymentProvider.MANUAL,
+            notes: `Quota d'iscrizione annuale A.A. ${academicYear} (${sName}) [membership_id:${existingMem.id}]`,
+            paidAt: isPaid ? new Date() : null,
+          },
+        });
+        await this.supabaseAdmin
+          .from('annual_memberships')
+          .update({ payment_id: createdPayment.id })
+          .eq('id', existingMem.id);
+      }
+
+      if (isPaid && studentId) {
+        await this.supabaseAdmin
+          .from('students')
+          .update({
+            status: 'active',
+            annual_fee_paid: true,
+            annual_fee_paid_at: new Date().toISOString(),
+          })
+          .eq('id', studentId);
+      }
+
+      return { success: true, membership: updatedMem };
+    }
+
     const nextMembershipNumber = isPaid
       ? await generateNextMembershipNumber(this.supabaseAdmin, academicYear)
       : null;
@@ -635,6 +732,7 @@ export class BookingsAdminService {
           status: isPaid ? PaymentRecordStatus.SUCCEEDED : PaymentRecordStatus.PENDING,
           provider: PaymentProvider.MANUAL,
           notes: `Quota d'iscrizione annuale A.A. ${academicYear} (${sName}) [membership_id:${membership.id}]`,
+          paidAt: isPaid ? new Date() : null,
         },
       });
 
@@ -681,8 +779,18 @@ export class BookingsAdminService {
               ? student.birth_date.toISOString().split('T')[0]
               : String(student.birth_date).split('T')[0])
           : '';
+
+        const { academicYear } = getCurrentAcademicYear();
+        const { data: mem } = await this.supabaseAdmin
+          .from('annual_memberships')
+          .select('id, status, membership_number')
+          .or(`student_id.eq.${student.id},tax_code.ilike.${student.tax_code || 'NONE'}`)
+          .eq('academic_year', academicYear)
+          .maybeSingle();
+
         return {
           found: true,
+          studentId: student.id,
           purchaserName: student.full_name || '',
           purchaserEmail: student.email || '',
           purchaserPhone: student.phone || '',
@@ -692,6 +800,11 @@ export class BookingsAdminService {
           studentPhone: student.phone || '',
           studentTaxCode: student.tax_code || '',
           studentBirthDate: birthDateStr,
+          annualFeePaid: student.annual_fee_paid,
+          annualFeePaidAt: student.annual_fee_paid_at,
+          membershipId: mem?.id || null,
+          membershipStatus: mem?.status != null ? Number(mem.status) : null,
+          membershipNumber: mem?.membership_number || null,
         };
       }
 

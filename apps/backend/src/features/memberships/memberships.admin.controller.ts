@@ -55,6 +55,17 @@ export class MembershipsController {
     return this.membershipsService.updateStatus(id, dto.status);
   }
 
+  @Patch(':id/pay')
+  @Roles('admin')
+  @Audit('memberships', 'mark_as_paid')
+  @ApiOperation({ summary: 'Зафиксировать оплату взноса' })
+  markAsPaid(
+    @Param('id') id: string,
+    @Body() dto: { paymentMethod?: string | number; amount?: number },
+  ) {
+    return this.membershipsService.markAsPaid(id, dto?.paymentMethod, dto?.amount);
+  }
+
   @Patch(':id/toggle-status')
   @Roles('admin')
   @Audit('memberships', 'toggle_status')

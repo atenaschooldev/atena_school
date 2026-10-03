@@ -6,6 +6,7 @@ import { MembershipsMetrics } from "./memberships-metrics";
 import { getMembershipsTableColumns } from "./memberships-table-columns";
 import { CreateMembershipDialog } from "./create-membership-dialog";
 import { RegistrationFeeSettingsDialog } from "./registration-fee-settings-dialog";
+import { PayMembershipDialog } from "./pay-membership-dialog";
 import { DeleteConfirmDialog } from "@/components/delete-confirm-dialog";
 import { AtenaDataTable } from "@/components/shared/data-table/atena-data-table";
 import { DataTableToolbar } from "@/components/shared/data-table/data-table-toolbar";
@@ -28,6 +29,8 @@ export function MembershipsView() {
   const { t } = useTranslation();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [membershipToPay, setMembershipToPay] = useState<Membership | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [membershipToDelete, setMembershipToDelete] = useState<Membership | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -41,7 +44,15 @@ export function MembershipsView() {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const { memberships, stats, loading, toggleStatus, deleteMembership, refresh } = useMemberships({
+  const {
+    memberships,
+    stats,
+    loading,
+    toggleStatus,
+    markAsPaid,
+    deleteMembership,
+    refresh,
+  } = useMemberships({
     status: statusFilter === "all" ? undefined : statusFilter,
     academicYear: academicYearFilter === "all" ? undefined : academicYearFilter,
     search: debouncedSearch || undefined,
@@ -53,6 +64,16 @@ export function MembershipsView() {
       setDebouncedSearch(val);
     }, 300);
     return () => clearTimeout(handler);
+  };
+
+  const handlePayClick = (m: Membership) => {
+    setMembershipToPay(m);
+    setPayDialogOpen(true);
+  };
+
+  const handleConfirmPay = async (paymentMethod: string, amount: number) => {
+    if (!membershipToPay) return;
+    await markAsPaid(membershipToPay.id, paymentMethod, amount);
   };
 
   const handleDeleteClick = (m: Membership) => {
@@ -76,6 +97,7 @@ export function MembershipsView() {
     () =>
       getMembershipsTableColumns({
         onToggleStatus: (id) => toggleStatus(id),
+        onMarkAsPaid: (m) => handlePayClick(m),
         onDelete: (m) => handleDeleteClick(m),
         t,
       }),
@@ -182,6 +204,13 @@ export function MembershipsView() {
         onSaved={() => {
           refresh();
         }}
+      />
+
+      <PayMembershipDialog
+        open={payDialogOpen}
+        onOpenChange={setPayDialogOpen}
+        membership={membershipToPay}
+        onConfirm={handleConfirmPay}
       />
 
       <DeleteConfirmDialog

@@ -97,12 +97,46 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     },
   });
 
+  // Mark as paid mutation
+  const markAsPaidMutation = useMutation({
+    mutationFn: async ({
+      id,
+      paymentMethod,
+      amount,
+    }: {
+      id: string;
+      paymentMethod?: number | string;
+      amount?: number;
+    }) => {
+      return apiFetch<Membership>(`/admin/memberships/${id}/pay`, {
+        method: "PATCH",
+        body: JSON.stringify({ paymentMethod, amount }),
+      });
+    },
+    onSuccess: () => {
+      toast.success("Pagamento quota registrato con successo");
+      queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      queryClient.invalidateQueries({ queryKey: ["memberships-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["payments"] });
+      queryClient.invalidateQueries({ queryKey: ["payments-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (e: any) => {
+      console.error("Failed to mark membership as paid:", e);
+      toast.error(e?.message || "Errore nella registrazione del pagamento");
+    },
+  });
+
   const updateStatus = async (id: string, status: string) => {
     return updateStatusMutation.mutateAsync({ id, status });
   };
 
   const toggleStatus = async (id: string) => {
     return toggleStatusMutation.mutateAsync(id);
+  };
+
+  const markAsPaid = async (id: string, paymentMethod?: number | string, amount?: number) => {
+    return markAsPaidMutation.mutateAsync({ id, paymentMethod, amount });
   };
 
   const deleteMembership = async (id: string) => {
@@ -115,6 +149,7 @@ export function useMemberships(filters?: { status?: string; academicYear?: strin
     loading: isLoading,
     updateStatus,
     toggleStatus,
+    markAsPaid,
     deleteMembership,
     refresh: refetch,
   };

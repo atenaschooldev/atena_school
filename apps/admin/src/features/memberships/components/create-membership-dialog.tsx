@@ -86,6 +86,9 @@ export function CreateMembershipDialog({
     taxCode?: string;
     phone?: string;
     birthDate?: string;
+    annualFeePaid?: boolean;
+    membershipStatus?: number | null;
+    membershipNumber?: string | null;
   } | null>(null);
 
   const form = useForm<FormValues>({
@@ -145,6 +148,9 @@ export function CreateMembershipDialog({
           taxCode,
           phone,
           birthDate,
+          annualFeePaid: res.annualFeePaid,
+          membershipStatus: res.membershipStatus,
+          membershipNumber: res.membershipNumber,
         });
 
         form.setValue("studentId", res.studentId || "");
@@ -155,7 +161,15 @@ export function CreateMembershipDialog({
         form.setValue("taxCode", taxCode);
         if (birthDate) form.setValue("birthDate", birthDate);
 
-        toast.success(t("payments.clientFound") || "Anagrafica trovata!");
+        if (res.annualFeePaid || res.membershipNumber) {
+          toast.info(
+            `Studente trovato. Ha già una quota attiva (Tessera: ${res.membershipNumber || "Sì"})`
+          );
+        } else if (res.membershipStatus === 2) {
+          toast.info("Studente trovato. Ha una quota in attesa di pagamento.");
+        } else {
+          toast.success(t("payments.clientFound") || "Anagrafica trovata!");
+        }
       } else {
         toast.error(t("payments.clientNotFound") || "Nessuno studente trovato.");
       }
