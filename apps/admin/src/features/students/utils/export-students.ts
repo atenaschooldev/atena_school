@@ -1,19 +1,4 @@
 import type { Student } from "../types";
-import { parseLanguageLevel } from "@atena/api-types";
-
-const LEVEL_LABELS: Record<number, string> = {
-  1: "A1",
-  2: "A2",
-  3: "B1",
-  4: "B2",
-  5: "C1",
-  6: "C2",
-};
-
-export function formatLevel(level: unknown): string {
-  const num = parseLanguageLevel(level as any);
-  return LEVEL_LABELS[num] || "A1";
-}
 
 function downloadFile(content: BlobPart, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
@@ -37,25 +22,27 @@ function getTimestampString(): string {
   return `${yyyy}-${mm}-${dd}_${hh}${min}`;
 }
 
-export function exportStudentsToCsv(students: Student[], customFilename?: string) {
-  const headers = [
-    "ID",
-    "Nome Completo",
-    "Nome",
-    "Cognome",
-    "Email",
-    "Telefono",
-    "Codice Fiscale",
-    "Data di Nascita",
-    "Luogo di Nascita",
-    "Livello Linguistico",
-    "Quota Associativa (€30)",
-    "Data Pagamento Quota",
-    "Stato",
-    "Data Registrazione",
-    "Note",
-  ];
+const DB_HEADERS = [
+  "id",
+  "full_name",
+  "first_name",
+  "last_name",
+  "email",
+  "phone",
+  "tax_code",
+  "birth_date",
+  "birth_place",
+  "language_level",
+  "annual_fee_paid",
+  "annual_fee_paid_at",
+  "status",
+  "notes",
+  "parent_id",
+  "student_user_id",
+  "registration_date",
+];
 
+export function exportStudentsToCsv(students: Student[], customFilename?: string) {
   const escapeCsvValue = (val: unknown): string => {
     if (val === null || val === undefined) return '""';
     const str = String(val).replace(/"/g, '""');
@@ -72,43 +59,27 @@ export function exportStudentsToCsv(students: Student[], customFilename?: string
     escapeCsvValue(s.tax_code || ""),
     escapeCsvValue(s.birth_date || ""),
     escapeCsvValue(s.birth_place || ""),
-    escapeCsvValue(formatLevel(s.language_level)),
-    escapeCsvValue(s.annual_fee_paid ? "Saldata" : "Da Saldare"),
+    escapeCsvValue(s.language_level ?? ""),
+    escapeCsvValue(s.annual_fee_paid ? "true" : "false"),
     escapeCsvValue(s.annual_fee_paid_at || ""),
-    escapeCsvValue(s.status ?? "attivo"),
-    escapeCsvValue(s.registration_date || ""),
+    escapeCsvValue(s.status ?? ""),
     escapeCsvValue(s.notes || ""),
+    escapeCsvValue(s.parent_id || ""),
+    escapeCsvValue(s.student_user_id || ""),
+    escapeCsvValue(s.registration_date || ""),
   ]);
 
   // Include UTF-8 BOM (\uFEFF) for seamless Microsoft Excel import
   const csvContent =
     "\uFEFF" +
-    [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\r\n");
+    [DB_HEADERS.join(";"), ...rows.map((row) => row.join(";"))].join("\r\n");
 
   const filename =
-    customFilename || `studenti_export_${getTimestampString()}.csv`;
+    customFilename || `students_db_export_${getTimestampString()}.csv`;
   downloadFile(csvContent, filename, "text/csv;charset=utf-8;");
 }
 
 export function exportStudentsToExcel(students: Student[], customFilename?: string) {
-  const headers = [
-    "ID",
-    "Nome Completo",
-    "Nome",
-    "Cognome",
-    "Email",
-    "Telefono",
-    "Codice Fiscale",
-    "Data di Nascita",
-    "Luogo di Nascita",
-    "Livello Linguistico",
-    "Quota Associativa (€30)",
-    "Data Pagamento Quota",
-    "Stato",
-    "Data Registrazione",
-    "Note",
-  ];
-
   const escapeXml = (unsafe: unknown): string => {
     if (unsafe === null || unsafe === undefined) return "";
     return String(unsafe)
@@ -141,28 +112,28 @@ export function exportStudentsToExcel(students: Student[], customFilename?: stri
    <Borders>
     <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CBD5E1"/>
    </Borders>
-   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#0F172A" ss:Bold="1"/>
+   <Font ss:FontName="Consolas" x:Family="Swiss" ss:Size="11" ss:Color="#0F172A" ss:Bold="1"/>
    <Interior ss:Color="#F1F5F9" ss:Pattern="Solid"/>
   </Style>
-  <Style ss:ID="FeePaid">
+  <Style ss:ID="BoolTrue">
    <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#166534" ss:Bold="1"/>
    <Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/>
    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
   </Style>
-  <Style ss:ID="FeePending">
+  <Style ss:ID="BoolFalse">
    <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#991B1B" ss:Bold="1"/>
    <Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/>
    <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
   </Style>
  </Styles>
- <Worksheet ss:Name="Studenti Atena">
+ <Worksheet ss:Name="students">
   <Table>
    <Row ss:Height="24">
-    ${headers.map((h) => `<Cell ss:StyleID="Header"><Data ss:Type="String">${escapeXml(h)}</Data></Cell>`).join("")}
+    ${DB_HEADERS.map((h) => `<Cell ss:StyleID="Header"><Data ss:Type="String">${escapeXml(h)}</Data></Cell>`).join("")}
    </Row>`;
 
   for (const s of students) {
-    const feeStyle = s.annual_fee_paid ? "FeePaid" : "FeePending";
+    const feeStyle = s.annual_fee_paid ? "BoolTrue" : "BoolFalse";
     xml += `
    <Row ss:Height="20">
     <Cell><Data ss:Type="String">${escapeXml(s.id)}</Data></Cell>
@@ -174,12 +145,14 @@ export function exportStudentsToExcel(students: Student[], customFilename?: stri
     <Cell><Data ss:Type="String">${escapeXml(s.tax_code || "")}</Data></Cell>
     <Cell><Data ss:Type="String">${escapeXml(s.birth_date || "")}</Data></Cell>
     <Cell><Data ss:Type="String">${escapeXml(s.birth_place || "")}</Data></Cell>
-    <Cell><Data ss:Type="String">${escapeXml(formatLevel(s.language_level))}</Data></Cell>
-    <Cell ss:StyleID="${feeStyle}"><Data ss:Type="String">${s.annual_fee_paid ? "Saldata" : "Da Saldare"}</Data></Cell>
+    <Cell><Data ss:Type="String">${escapeXml(s.language_level ?? "")}</Data></Cell>
+    <Cell ss:StyleID="${feeStyle}"><Data ss:Type="String">${s.annual_fee_paid ? "true" : "false"}</Data></Cell>
     <Cell><Data ss:Type="String">${escapeXml(s.annual_fee_paid_at || "")}</Data></Cell>
-    <Cell><Data ss:Type="String">${escapeXml(s.status ?? "attivo")}</Data></Cell>
-    <Cell><Data ss:Type="String">${escapeXml(s.registration_date || "")}</Data></Cell>
+    <Cell><Data ss:Type="String">${escapeXml(s.status ?? "")}</Data></Cell>
     <Cell><Data ss:Type="String">${escapeXml(s.notes || "")}</Data></Cell>
+    <Cell><Data ss:Type="String">${escapeXml(s.parent_id || "")}</Data></Cell>
+    <Cell><Data ss:Type="String">${escapeXml(s.student_user_id || "")}</Data></Cell>
+    <Cell><Data ss:Type="String">${escapeXml(s.registration_date || "")}</Data></Cell>
    </Row>`;
   }
 
@@ -189,13 +162,13 @@ export function exportStudentsToExcel(students: Student[], customFilename?: stri
 </Workbook>`;
 
   const filename =
-    customFilename || `studenti_export_${getTimestampString()}.xls`;
+    customFilename || `students_db_export_${getTimestampString()}.xls`;
   downloadFile(xml, filename, "application/vnd.ms-excel;charset=utf-8;");
 }
 
 export function exportStudentsToJson(students: Student[], customFilename?: string) {
   const jsonString = JSON.stringify(students, null, 2);
   const filename =
-    customFilename || `studenti_export_${getTimestampString()}.json`;
+    customFilename || `students_db_export_${getTimestampString()}.json`;
   downloadFile(jsonString, filename, "application/json;charset=utf-8;");
 }
