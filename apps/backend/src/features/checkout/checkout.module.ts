@@ -8,9 +8,12 @@ import { StripeWebhookController } from './stripe-webhook.controller';
 import { BookingsAdminController } from './admin/bookings.admin.controller';
 import { PromoCodesAdminController } from './admin/promo-codes.admin.controller';
 import { SettingsAdminController } from './admin/settings.admin.controller';
+import { MarketingPopupsAdminController } from './admin/marketing-popups.admin.controller';
+import { MarketingPopupsPublicController } from './public/marketing-popups.public.controller';
 import { CheckoutService } from './public/checkout.public.service';
 import { BookingsAdminService } from './admin/bookings.admin.service';
 import { PromoCodesAdminService } from './admin/promo-codes.admin.service';
+import { MarketingPopupsAdminService } from './admin/marketing-popups.admin.service';
 import { CheckoutCoreService } from './checkout-core.service';
 import { PrismaModule } from '../../core/prisma/prisma.module';
 import { MailModule } from '../mail/mail.module';
@@ -27,8 +30,23 @@ import { MailModule } from '../mail/mail.module';
     BookingsAdminController,
     PromoCodesAdminController,
     SettingsAdminController,
+    MarketingPopupsAdminController,
+    MarketingPopupsPublicController,
   ],
-  providers: [CheckoutCoreService, CheckoutService, BookingsAdminService, PromoCodesAdminService],
-  exports: [CheckoutCoreService, CheckoutService, BookingsAdminService, PromoCodesAdminService],
+  providers: [
+    CheckoutCoreService,
+    CheckoutService,
+    BookingsAdminService,
+    PromoCodesAdminService,
+    MarketingPopupsAdminService,
+  ],
+  exports: [
+    CheckoutCoreService,
+    CheckoutService,
+    BookingsAdminService,
+    PromoCodesAdminService,
+    MarketingPopupsAdminService,
+  ],
 })
 export class CheckoutModule {}
+

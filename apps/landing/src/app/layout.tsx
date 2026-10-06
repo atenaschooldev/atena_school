@@ -15,6 +15,9 @@ import type { Viewport } from 'next';
 
 const CookieBanner = dynamic(() => import('@/components/layout/CookieBanner'));
 const ScrollToTop = dynamic(() => import('@/components/layout/ScrollToTop'));
+const MarketingPopupManager = dynamic(
+  () => import('@/components/marketing/MarketingPopupManager').then((m) => m.MarketingPopupManager)
+);
 const SentryMonitoring = dynamic(
   () => import('@/components/monitoring/SentryMonitoring').then((m) => m.SentryMonitoring)
 );
@@ -169,6 +172,7 @@ export default async function RootLayout({
               <CookieBanner />
             </div>
             <ScrollToTop />
+            <MarketingPopupManager />
             <Toaster position="top-right" richColors />
             <GoogleAnalytics initialAnalytics={analytics} />
             <SentryMonitoring initialDsn={sentry.dsn} />

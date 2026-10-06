@@ -699,3 +699,50 @@ model integration_secrets {
 
   @@index([provider], map: "idx_integration_secrets_provider")
 }
+
+model MarketingPopup {
+  id                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title                     String    @db.VarChar(255)
+  isActive                  Boolean   @default(true) @map("is_active")
+  contentType               String    @default("combined") @map("content_type") @db.VarChar(32)
+  position                  String    @default("center") @db.VarChar(32)
+  customThemeColor          String?   @map("custom_theme_color") @db.VarChar(32)
+  
+  imageUrl                  String?   @map("image_url")
+  badgeText                 String?   @map("badge_text") @db.VarChar(100)
+  displayTitle              String?   @map("display_title") @db.VarChar(255)
+  displayText               String?   @map("display_text")
+  
+  ctaText                   String?   @map("cta_text") @db.VarChar(100)
+  ctaUrl                    String?   @map("cta_url")
+  ctaActionType             String    @default("link") @map("cta_action_type") @db.VarChar(32)
+  ctaTarget                 String    @default("_blank") @map("cta_target") @db.VarChar(16)
+  promoCodeToCopy           String?   @map("promo_code_to_copy") @db.VarChar(100)
+  
+  secondaryCtaText          String?   @map("secondary_cta_text") @db.VarChar(100)
+  secondaryCtaActionType    String    @default("dismiss") @map("secondary_cta_action_type") @db.VarChar(32)
+  secondaryCtaUrl           String?   @map("secondary_cta_url")
+  secondaryCtaTarget        String    @default("_blank") @map("secondary_cta_target") @db.VarChar(16)
+  
+  triggerType               String    @default("delay") @map("trigger_type") @db.VarChar(32)
+  triggerDelaySeconds       Int       @default(5) @map("trigger_delay_seconds")
+  triggerScrollPercentage   Int       @default(40) @map("trigger_scroll_percentage")
+  triggerInactivitySeconds  Int       @default(0) @map("trigger_inactivity_seconds")
+  multiTrigger              Boolean   @default(false) @map("multi_trigger")
+  
+  frequency                 String    @default("once_per_day") @db.VarChar(32)
+  targetDevices             String    @default("all") @map("target_devices") @db.VarChar(32)
+  targetLanguages           String[]  @default(["*"]) @map("target_languages")
+  targetRoutes              String[]  @default(["*"]) @map("target_routes")
+  
+  startDate                 DateTime? @map("start_date") @db.Timestamptz(6)
+  endDate                   DateTime? @map("end_date") @db.Timestamptz(6)
+  priority                  Int       @default(0)
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive, priority(sort: Desc)], map: "idx_marketing_popups_active")
+  @@index([startDate, endDate], map: "idx_marketing_popups_schedule")
+  @@map("marketing_popups")
+}
+

@@ -74,6 +74,27 @@ export const api = {
     resolve: (params: { form_type?: string; course_id?: string; category_slug?: string }) =>
       baseClient.landing.forms.resolve(params),
   },
+  marketingPopups: {
+    getActive: async (
+      route: string = '/',
+      device: 'desktop' | 'mobile' | 'all' = 'all',
+      lang: string = '*'
+    ): Promise<{ success: boolean; popup: any | null }> => {
+      const query = `route=${encodeURIComponent(route)}&device=${encodeURIComponent(device)}&lang=${encodeURIComponent(lang)}`;
+      const endpoint = backendUrl && baseClient.isNest
+        ? `${backendUrl}/v1/landing/marketing-popups/active?${query}`
+        : (backendUrl ? `${backendUrl}/landing/marketing-popups/active?${query}` : `/landing/marketing-popups/active?${query}`);
+      try {
+        const res = await fetch(endpoint, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return await res.json();
+      } catch (err: unknown) {
+        return { success: false, popup: null };
+      }
+    },
+  },
   auth: {
     async sendMagicLink(email: string): Promise<{ success: boolean; error?: string }> {
       const endpoint = backendUrl && baseClient.isNest

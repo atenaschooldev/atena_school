@@ -41,6 +41,7 @@ export * from './academic/memberships';
 export * from './commerce/bookings';
 export * from './commerce/payments';
 export * from './commerce/discounts';
+export * from './commerce/marketing-popups';
 
 // ----------------------------------------------------------------------------
 // 5. System & Platform Domain (Settings, Notifications, Contact Leads, Integrations, Forms)
