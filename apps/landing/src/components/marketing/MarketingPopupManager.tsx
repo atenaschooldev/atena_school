@@ -424,19 +424,48 @@ export function MarketingPopupManager() {
         {isCombined && (
           <div className="flex flex-col w-full overflow-y-auto">
             {popup.image_url && (
-              <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[320px] sm:max-h-[360px]">
-                {/* Ambient glow from image colors */}
-                <div
-                  className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-125"
-                  style={{ backgroundImage: `url(${popup.image_url})` }}
-                />
-                {/* Crisp uncropped foreground image */}
-                <img
-                  src={popup.image_url}
-                  alt={popup.display_title || popup.title}
-                  className="relative z-10 w-full h-auto max-h-[320px] sm:max-h-[360px] object-contain mx-auto transition-transform duration-300"
-                />
-              </div>
+              <>
+                {popup.image_fit === 'cover' ? (
+                  <div className="relative w-full overflow-hidden bg-slate-100 dark:bg-slate-800 h-[220px] sm:h-[260px]">
+                    <img
+                      src={popup.image_url}
+                      alt={popup.display_title || popup.title}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                ) : popup.image_fit === 'contain' ? (
+                  <div className="relative w-full overflow-hidden bg-slate-100/90 dark:bg-slate-800/80 flex items-center justify-center h-[220px] sm:h-[260px] p-3 sm:p-4">
+                    <img
+                      src={popup.image_url}
+                      alt={popup.display_title || popup.title}
+                      className="w-full h-full object-contain mx-auto"
+                    />
+                  </div>
+                ) : popup.image_fit === 'padded' ? (
+                  <div className="px-5 pt-5 pb-0 w-full">
+                    <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm h-[180px] sm:h-[220px]">
+                      <img
+                        src={popup.image_url}
+                        alt={popup.display_title || popup.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* Ambient glow mode (default) */
+                  <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[300px] sm:max-h-[340px]">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-125"
+                      style={{ backgroundImage: `url(${popup.image_url})` }}
+                    />
+                    <img
+                      src={popup.image_url}
+                      alt={popup.display_title || popup.title}
+                      className="relative z-10 w-full h-auto max-h-[300px] sm:max-h-[340px] object-contain mx-auto transition-transform duration-300"
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="p-6 sm:p-7 space-y-4">

@@ -15,6 +15,11 @@ const migration2 = fs.readFileSync(
   'utf8'
 );
 
+const migration3 = fs.readFileSync(
+  path.join(__dirname, '../supabase/migrations/20261006200000_add_image_fit_to_marketing_popups.sql'),
+  'utf8'
+);
+
 async function runOnDb(name, connStr) {
   console.log(`\n⏳ Applying migrations to ${name}...`);
   const client = new Client({
@@ -26,6 +31,7 @@ async function runOnDb(name, connStr) {
     await client.connect();
     await client.query(migration1);
     await client.query(migration2);
+    await client.query(migration3);
     console.log(`✅ [${name}] All migrations applied successfully!`);
   } catch (err) {
     console.error(`❌ [${name}] Error:`, err.message);

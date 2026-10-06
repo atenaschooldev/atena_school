@@ -105,6 +105,7 @@ export class MarketingPopupsAdminService {
         custom_theme_color: dto.custom_theme_color || null,
         
         image_url: dto.image_url || null,
+        image_fit: dto.image_fit || 'ambient',
         badge_text: dto.badge_text?.trim() || null,
         display_title: dto.display_title?.trim() || null,
         display_text: dto.display_text?.trim() || null,
@@ -162,6 +163,7 @@ export class MarketingPopupsAdminService {
     if (dto.custom_theme_color !== undefined) updatePayload.custom_theme_color = dto.custom_theme_color || null;
     
     if (dto.image_url !== undefined) updatePayload.image_url = dto.image_url || null;
+    if (dto.image_fit !== undefined) updatePayload.image_fit = dto.image_fit;
     if (dto.badge_text !== undefined) updatePayload.badge_text = dto.badge_text?.trim() || null;
     if (dto.display_title !== undefined) updatePayload.display_title = dto.display_title?.trim() || null;
     if (dto.display_text !== undefined) updatePayload.display_text = dto.display_text?.trim() || null;

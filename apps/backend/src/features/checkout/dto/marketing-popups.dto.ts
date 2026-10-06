@@ -18,6 +18,7 @@ import type {
   PopupCtaActionType,
   PopupSecondaryCtaActionType,
   PopupDeviceTarget,
+  PopupImageFit,
 } from '@atena/api-types';
 
 export class CreateMarketingPopupDto {
@@ -57,6 +58,15 @@ export class CreateMarketingPopupDto {
   @IsOptional()
   @IsString()
   image_url?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Image rendering fit: ambient, cover, contain, padded',
+    enum: ['ambient', 'cover', 'contain', 'padded'],
+    default: 'ambient',
+  })
+  @IsOptional()
+  @IsEnum(['ambient', 'cover', 'contain', 'padded'])
+  image_fit?: PopupImageFit;
 
   @ApiPropertyOptional({ description: 'Badge tag text (e.g. SCONTO 20%)' })
   @IsOptional()

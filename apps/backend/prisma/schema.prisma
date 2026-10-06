@@ -709,6 +709,7 @@ model MarketingPopup {
   customThemeColor          String?   @map("custom_theme_color") @db.VarChar(32)
   
   imageUrl                  String?   @map("image_url")
+  imageFit                  String?   @default("ambient") @map("image_fit") @db.VarChar(32)
   badgeText                 String?   @map("badge_text") @db.VarChar(100)
   displayTitle              String?   @map("display_title") @db.VarChar(255)
   displayText               String?   @map("display_text")

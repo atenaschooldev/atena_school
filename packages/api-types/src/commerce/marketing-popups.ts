@@ -19,6 +19,9 @@ export type PopupSecondaryCtaActionType = typeof POPUP_SECONDARY_CTA_ACTIONS[num
 export const POPUP_DEVICE_TARGETS = ['all', 'desktop_only', 'mobile_only'] as const;
 export type PopupDeviceTarget = typeof POPUP_DEVICE_TARGETS[number];
 
+export const POPUP_IMAGE_FITS = ['ambient', 'cover', 'contain', 'padded'] as const;
+export type PopupImageFit = typeof POPUP_IMAGE_FITS[number];
+
 export interface MarketingPopupItem {
   id: string;
   title: string;
@@ -29,6 +32,7 @@ export interface MarketingPopupItem {
   
   // Content fields
   image_url?: string | null;
+  image_fit?: PopupImageFit;
   badge_text?: string | null;
   display_title?: string | null;
   display_text?: string | null;
@@ -76,6 +80,7 @@ export interface CreateMarketingPopupInput {
   custom_theme_color?: string | null;
   
   image_url?: string | null;
+  image_fit?: PopupImageFit;
   badge_text?: string | null;
   display_title?: string | null;
   display_text?: string | null;

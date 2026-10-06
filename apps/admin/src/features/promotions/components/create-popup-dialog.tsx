@@ -67,6 +67,7 @@ const popupFormSchema = z.object({
   custom_theme_color: z.string().optional().nullable(),
   
   image_url: z.string().optional().nullable(),
+  image_fit: z.enum(["ambient", "cover", "contain", "padded"]).default("ambient"),
   badge_text: z.string().optional().nullable(),
   display_title: z.string().optional().nullable(),
   display_text: z.string().optional().nullable(),
@@ -128,6 +129,7 @@ export function CreatePopupDialog({
       position: "center",
       custom_theme_color: "",
       image_url: "",
+      image_fit: "ambient",
       badge_text: "OFFERTA SPECIALE",
       display_title: "Impara una nuova lingua con noi!",
       display_text: "Iscriviti subito ai corsi autunnali e ricevi uno sconto esclusivo del 15%.",
@@ -165,6 +167,7 @@ export function CreatePopupDialog({
           position: initialData.position || "center",
           custom_theme_color: initialData.custom_theme_color || "",
           image_url: initialData.image_url || "",
+          image_fit: initialData.image_fit || "ambient",
           badge_text: initialData.badge_text || "",
           display_title: initialData.display_title || "",
           display_text: initialData.display_text || "",
@@ -206,6 +209,7 @@ export function CreatePopupDialog({
           position: "center",
           custom_theme_color: "",
           image_url: "",
+          image_fit: "ambient",
           badge_text: "OFFERTA SPECIALE",
           display_title: "Impara una nuova lingua con noi!",
           display_text: "Iscriviti subito ai nostri corsi e ricevi uno sconto esclusivo.",
@@ -293,6 +297,7 @@ export function CreatePopupDialog({
         custom_theme_color: values.custom_theme_color || null,
         
         image_url: values.image_url || null,
+        image_fit: values.image_fit,
         badge_text: values.badge_text || null,
         display_title: values.display_title || null,
         display_text: values.display_text || null,
@@ -531,6 +536,45 @@ export function CreatePopupDialog({
                             />
                           </div>
                         </div>
+
+                        {watched.content_type !== "text_only" && (
+                          <div className="pt-2 border-t border-border/60">
+                            <FormField
+                              control={form.control}
+                              name="image_fit"
+                              render={({ field }) => (
+                                <FormItem className="min-w-0">
+                                  <FormLabel className="text-xs font-bold">{t("promotions.popups.imageFitLabel") || "Stile Adattamento Immagine"}</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="cursor-pointer text-xs w-full min-w-0 overflow-hidden [&>span]:truncate">
+                                        <SelectValue placeholder="Seleziona stile immagine" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="ambient" className="cursor-pointer text-xs">
+                                        {t("promotions.popups.fitAmbient") || "✨ Ambient Glow (Intera con alone sfocato soft, zero ritagli)"}
+                                      </SelectItem>
+                                      <SelectItem value="cover" className="cursor-pointer text-xs">
+                                        {t("promotions.popups.fitCover") || "🖼️ Cover Banner (Ritaglio proporzionato a tutto spazio)"}
+                                      </SelectItem>
+                                      <SelectItem value="contain" className="cursor-pointer text-xs">
+                                        {t("promotions.popups.fitContain") || "📐 Contain (Immagine intera con sfondo neutro)"}
+                                      </SelectItem>
+                                      <SelectItem value="padded" className="cursor-pointer text-xs">
+                                        {t("promotions.popups.fitPadded") || "🪟 Scheda Card (Cornice fluttuante interna con bordi)"}
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormDescription className="text-[11px]">
+                                    {t("promotions.popups.imageFitHint") || "Controlla come l'immagine viene mostrata senza tagli sgradevoli"}
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1104,17 +1148,48 @@ export function CreatePopupDialog({
                 {watched.content_type === "combined" && (
                   <div className="flex flex-col">
                     {watched.image_url ? (
-                      <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[220px]">
-                        <div
-                          className="absolute inset-0 bg-cover bg-center blur-xl opacity-35 scale-125"
-                          style={{ backgroundImage: `url(${watched.image_url})` }}
-                        />
-                        <img
-                          src={watched.image_url}
-                          alt=""
-                          className="relative z-10 w-full h-auto max-h-[220px] object-contain mx-auto"
-                        />
-                      </div>
+                      <>
+                        {watched.image_fit === "cover" ? (
+                          <div className="relative w-full overflow-hidden bg-slate-100 dark:bg-slate-800 h-[170px] sm:h-[190px]">
+                            <img
+                              src={watched.image_url}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : watched.image_fit === "contain" ? (
+                          <div className="relative w-full overflow-hidden bg-slate-100/90 dark:bg-slate-800/80 flex items-center justify-center h-[160px] sm:h-[180px] p-2.5">
+                            <img
+                              src={watched.image_url}
+                              alt=""
+                              className="w-full h-full object-contain mx-auto"
+                            />
+                          </div>
+                        ) : watched.image_fit === "padded" ? (
+                          <div className="px-4 pt-4 pb-0 w-full">
+                            <div className="relative w-full overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 shadow-sm h-[130px] sm:h-[150px]">
+                              <img
+                                src={watched.image_url}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          /* Ambient glow mode (default) */
+                          <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[220px]">
+                            <div
+                              className="absolute inset-0 bg-cover bg-center blur-xl opacity-35 scale-125"
+                              style={{ backgroundImage: `url(${watched.image_url})` }}
+                            />
+                            <img
+                              src={watched.image_url}
+                              alt=""
+                              className="relative z-10 w-full h-auto max-h-[220px] object-contain mx-auto"
+                            />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <div className="w-full h-28 bg-primary/10 border-b border-primary/20 flex items-center justify-center text-primary/60">
                         <ImageIcon className="size-8" />
