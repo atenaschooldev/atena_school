@@ -1104,11 +1104,19 @@ export function CreatePopupDialog({
                 {watched.content_type === "combined" && (
                   <div className="flex flex-col">
                     {watched.image_url ? (
-                      <div className="w-full aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                        <img src={watched.image_url} alt="" className="w-full h-full object-cover" />
+                      <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[220px]">
+                        <div
+                          className="absolute inset-0 bg-cover bg-center blur-xl opacity-35 scale-125"
+                          style={{ backgroundImage: `url(${watched.image_url})` }}
+                        />
+                        <img
+                          src={watched.image_url}
+                          alt=""
+                          className="relative z-10 w-full h-auto max-h-[220px] object-contain mx-auto"
+                        />
                       </div>
                     ) : (
-                      <div className="w-full aspect-[16/9] bg-primary/10 border-b border-primary/20 flex items-center justify-center text-primary/60">
+                      <div className="w-full h-28 bg-primary/10 border-b border-primary/20 flex items-center justify-center text-primary/60">
                         <ImageIcon className="size-8" />
                       </div>
                     )}

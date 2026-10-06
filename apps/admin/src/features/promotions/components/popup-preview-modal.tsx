@@ -68,11 +68,15 @@ export function PopupPreviewModal({ popup, open, onOpenChange }: PopupPreviewMod
           {isCombined && (
             <div className="flex flex-col w-full">
               {popup.image_url && (
-                <div className="relative w-full aspect-[16/10] bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
+                <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[300px]">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-125"
+                    style={{ backgroundImage: `url(${popup.image_url})` }}
+                  />
                   <img
                     src={popup.image_url}
                     alt={popup.display_title || popup.title}
-                    className="w-full h-full object-cover"
+                    className="relative z-10 w-full h-auto max-h-[300px] object-contain mx-auto"
                   />
                 </div>
               )}

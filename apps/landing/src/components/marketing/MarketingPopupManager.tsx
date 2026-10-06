@@ -424,11 +424,17 @@ export function MarketingPopupManager() {
         {isCombined && (
           <div className="flex flex-col w-full overflow-y-auto">
             {popup.image_url && (
-              <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0">
+              <div className="relative w-full overflow-hidden bg-slate-900/5 dark:bg-slate-800/80 flex items-center justify-center max-h-[320px] sm:max-h-[360px]">
+                {/* Ambient glow from image colors */}
+                <div
+                  className="absolute inset-0 bg-cover bg-center blur-2xl opacity-35 scale-125"
+                  style={{ backgroundImage: `url(${popup.image_url})` }}
+                />
+                {/* Crisp uncropped foreground image */}
                 <img
                   src={popup.image_url}
                   alt={popup.display_title || popup.title}
-                  className="w-full h-full object-cover"
+                  className="relative z-10 w-full h-auto max-h-[320px] sm:max-h-[360px] object-contain mx-auto transition-transform duration-300"
                 />
               </div>
             )}
