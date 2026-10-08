@@ -1,5 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import {
+  HealthCheckService,
+  HealthCheck,
+  MemoryHealthIndicator,
+  PrismaHealthIndicator,
+} from '@nestjs/terminus';
 import { PrismaService } from './core/prisma/prisma.service';
 import {
   getResendCredentials,
@@ -11,7 +17,12 @@ import {
 @ApiTags('System Health & Diagnostics')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly health: HealthCheckService,
+    private readonly memory: MemoryHealthIndicator,
+    private readonly prismaHealth: PrismaHealthIndicator,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Диагностика состояния API, базы данных и интеграций' })
@@ -34,6 +45,7 @@ export class HealthController {
       getSentryCredentials().then((c: any) => Boolean(c.dsn)).catch(() => false),
     ]);
 
+    const memUsage = process.memoryUsage();
     const isHealthy = dbStatus === 'connected';
 
     return {
@@ -41,6 +53,11 @@ export class HealthController {
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.floor(process.uptime()),
       environment: process.env.NODE_ENV || 'development',
+      memory: {
+        heapUsedMb: Math.round((memUsage.heapUsed / 1024 / 1024) * 100) / 100,
+        heapTotalMb: Math.round((memUsage.heapTotal / 1024 / 1024) * 100) / 100,
+        rssMb: Math.round((memUsage.rss / 1024 / 1024) * 100) / 100,
+      },
       database: {
         status: dbStatus,
         latencyMs,
@@ -53,4 +70,16 @@ export class HealthController {
       },
     };
   }
+
+  @Get('terminus')
+  @HealthCheck()
+  @ApiOperation({ summary: 'Стандартная детальная проверка здоровья NestJS Terminus' })
+  async checkTerminus() {
+    return this.health.check([
+      () => this.prismaHealth.pingCheck('database', this.prisma),
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
+    ]);
+  }
 }
+
