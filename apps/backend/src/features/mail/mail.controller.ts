@@ -68,7 +68,7 @@ export class SendTelegramDto {
   @IsString()
   text: string;
 
-  @ApiProperty({ description: 'Ряды инлайн-кнопок', required: false, type: [[TelegramButtonDto]] })
+  @ApiProperty({ description: 'Ряды инлайн-кнопок', required: false, isArray: true, type: () => Object })
   @IsOptional()
   @IsArray()
   buttons?: TelegramButton[][];

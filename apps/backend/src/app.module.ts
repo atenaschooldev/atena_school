@@ -34,6 +34,7 @@ import { ApiLoggingInterceptor } from './core/interceptors/api-logging.intercept
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ObserveModule } from './observe';
 
 const businessModules = [
   DictionaryModule,
@@ -66,6 +67,17 @@ const businessModules = [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    // NestJS Observe APM & Observability (автоматически активируется при наличии OBSERVE_APP_KEY)
+    ...(process.env.OBSERVE_APP_KEY
+      ? [
+          ObserveModule.forRoot({
+            appKey: process.env.OBSERVE_APP_KEY,
+            appSecret: process.env.OBSERVE_APP_SECRET || '',
+            serviceId: process.env.OBSERVE_SERVICE_ID || 'atena-school-api',
+          }),
+        ]
+      : []),
 
     // Защита от DDoS и флуда (Rate Limiting)
     ThrottlerModule.forRoot([

@@ -8,6 +8,7 @@ import fastifyHelmet from '@fastify/helmet';
 
 import { DictionaryService } from './features/dictionary/dictionary.service';
 import { BigIntInterceptor } from './core/interceptors/bigint.interceptor';
+import { ObserveInstrument } from './observe';
 
 // Enable automatic JSON serialization for BigInt (Prisma BIGSERIAL / int8 IDs)
 (BigInt.prototype as any).toJSON = function () {
@@ -25,12 +26,15 @@ class CleanNestLogger extends ConsoleLogger {
 }
 
 async function bootstrap() {
-  // Инициализация адаптера Fastify с увеличенным лимитом размера тела запроса (10MB) и подписью rawBody для Stripe
+  const isObserveEnabled = Boolean(process.env.OBSERVE_APP_KEY);
+
+  // Инициализация адаптера Fastify с увеличенным лимитом тела запроса (10MB), rawBody для Stripe и NestJS Observe
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ bodyLimit: 10485760, rawBody: true } as any),
     {
       logger: new CleanNestLogger(),
+      ...(isObserveEnabled ? { instrument: ObserveInstrument } : {}),
     },
   );
 
