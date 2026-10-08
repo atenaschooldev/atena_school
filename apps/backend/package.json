@@ -33,7 +33,6 @@
     "@nestjs/common": "^11.1.11",
     "@nestjs/config": "^4.0.1",
     "@nestjs/core": "^11.1.11",
-    "@nestjs/devtools-integration": "^12.0.0",
     "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/observe": "^0.3.6",
     "@nestjs/passport": "^11.0.5",

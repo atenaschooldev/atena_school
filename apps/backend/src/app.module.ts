@@ -35,7 +35,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ObserveModule } from './observe';
-import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { TerminusModule } from '@nestjs/terminus';
 
 const businessModules = [
@@ -69,15 +68,6 @@ const businessModules = [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
-    // NestJS Devtools (Интерактивный граф архитектуры на devtools.nestjs.com)
-    ...(process.env.NODE_ENV !== 'production' || process.env.DEVTOOLS_ENABLED
-      ? [
-          DevtoolsModule.register({
-            port: 8000,
-          }),
-        ]
-      : []),
 
     // NestJS Terminus (Глубокий мониторинг здоровья системы и БД)
     TerminusModule,

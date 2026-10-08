@@ -28,13 +28,12 @@ class CleanNestLogger extends ConsoleLogger {
 async function bootstrap() {
   const isObserveEnabled = Boolean(process.env.OBSERVE_APP_KEY);
 
-  // Инициализация адаптера Fastify с увеличенным лимитом тела запроса (10MB), rawBody для Stripe, Devtools и Observe
+  // Инициализация адаптера Fastify с увеличенным лимитом тела запроса (10MB), rawBody для Stripe и NestJS Observe
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ bodyLimit: 10485760, rawBody: true } as any),
     {
       logger: new CleanNestLogger(),
-      snapshot: true,
       ...(isObserveEnabled ? { instrument: ObserveInstrument } : {}),
     },
   );
