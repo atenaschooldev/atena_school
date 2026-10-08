@@ -8,6 +8,7 @@
     "dev:webpack": "next dev -p 3002 --webpack",
     "dev:turbo": "next dev -p 3002 --turbo",
     "build": "next build",
+    "analyze": "ANALYZE=true next build",
     "start": "next start -p 3002",
     "lint": "next lint",
     "test": "vitest run"
@@ -74,6 +75,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.4.0",
     "@tailwindcss/postcss": "^4.3.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

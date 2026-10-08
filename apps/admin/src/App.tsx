@@ -12,6 +12,7 @@ import { LanguageProvider } from '@/i18n/context'
 import { ThemeCustomizerProvider } from '@/contexts/theme-customizer-context'
 import { DiagnosticLoggerWidget } from '@/components/shared/diagnostic-logger-widget'
 import { diagnosticLogger } from '@/utils/diagnostic-logger'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 // Get basename from environment (for deployment) or use empty string for development
 const basename = import.meta.env.VITE_BASENAME || ''
@@ -73,6 +74,9 @@ function App() {
                     <AppRouter />
                     <DiagnosticLoggerWidget />
                   </Router>
+                  {import.meta.env.DEV && (
+                    <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+                  )}
                 </SidebarConfigProvider>
               </LanguageProvider>
             </ThemeCustomizerProvider>

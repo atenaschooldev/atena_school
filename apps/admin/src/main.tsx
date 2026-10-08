@@ -5,6 +5,14 @@ import App from './App.tsx'
 import { applyGoogleTranslateDomPatch } from '@/utils/fix-google-translate'
 import { initPointerEventsWatchdog } from '@/utils/fix-pointer-events'
 import { ErrorBoundary } from '@/components/error-boundary'
+import { scan } from 'react-scan'
+
+// Enable React Scan in local development to visually detect & optimize component re-renders
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  scan({
+    enabled: true,
+  })
+}
 
 // Apply DOM patch to safely handle Google Translate / browser extension mutations
 applyGoogleTranslateDomPatch()

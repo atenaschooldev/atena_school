@@ -1,4 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import withBundleAnalyzer from '@next/bundle-analyzer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -6,6 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -55,7 +59,7 @@ const nextConfig = {
   },
 };
 
-const config = withNextIntl(nextConfig);
+const config = withAnalyzer(withNextIntl(nextConfig));
 if (config.experimental?.turbo) {
   delete config.experimental.turbo;
 }
