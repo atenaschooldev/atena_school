@@ -38,6 +38,7 @@ ${cyan}║${reset}  🏢 ${bold}Admin CRM (Секретарь):${reset}     ${ma
 ${cyan}║${reset}  🎓 ${bold}Student Portal (ЛК):${reset}       ${yellow}http://localhost:3002${reset}                  ${cyan}║${reset}
 ${cyan}║${reset}  ⚙️  ${bold}Backend API (NestJS):${reset}      ${green}http://localhost:4000/v1${reset}               ${cyan}║${reset}
 ${cyan}║${reset}  📚 ${bold}Swagger Hub (Docs):${reset}        ${blue}http://localhost:4000/docs${reset}             ${cyan}║${reset}
+${cyan}║${reset}  ⚡ ${bold}Scalar API Reference:${reset}      ${magenta}http://localhost:4000/scalar${reset}           ${cyan}║${reset}
 ${cyan}║${reset}  📖 ${bold}Data Dictionary:${reset}           ${blue}http://localhost:4000/docs/dictionary${reset}  ${cyan}║${reset}
 ${cyan}╚════════════════════════════════════════════════════════════════════════════╝${reset}
 `);

@@ -9,6 +9,7 @@ import fastifyHelmet from '@fastify/helmet';
 import { DictionaryService } from './features/dictionary/dictionary.service';
 import { BigIntInterceptor } from './core/interceptors/bigint.interceptor';
 import { ObserveInstrument } from './observe';
+import { apiReference } from '@scalar/nestjs-api-reference';
 
 // Enable automatic JSON serialization for BigInt (Prisma BIGSERIAL / int8 IDs)
 (BigInt.prototype as any).toJSON = function () {
@@ -290,6 +291,7 @@ async function bootstrap() {
                 <a href="/docs/admin" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'admin' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'admin' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">⚙️ CRM Admin</a>
                 <a href="/docs" style="display: inline-flex; align-items: center; gap: 6px; background: ${activeTab === 'all' ? '#2563EB' : '#1F2937'}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid ${activeTab === 'all' ? '#3B82F6' : '#374151'}; transition: all 0.15s ease;">📑 Все ручки</a>
                 <a href="/docs/dictionary" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #047857; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid #059669; transition: all 0.15s ease;">📖 Словарь</a>
+                <a href="/scalar" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #4F46E5; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 6px; text-decoration: none; border: 1px solid #6366F1; transition: all 0.15s ease;">⚡ Scalar API</a>
               </div>
             \`;
             if (document.body) {
@@ -312,6 +314,19 @@ async function bootstrap() {
   SwaggerModule.setup('docs/portal', app, portalDocument, createSwaggerCustomOptions('portal'));
   SwaggerModule.setup('docs/admin', app, adminDocument, createSwaggerCustomOptions('admin'));
   SwaggerModule.setup('docs', app, fullDocument, createSwaggerCustomOptions('all'));
+
+  // Интеграция Scalar API Reference (ультрасовременный интерфейс документации)
+  app.use(
+    '/scalar',
+    apiReference({
+      withFastify: true,
+      spec: {
+        content: fullDocument,
+      },
+      theme: 'deepSpace',
+      pageTitle: 'Atena School API Reference & Playground',
+    }),
+  );
 
   // Маршруты для отдачи OpenAPI JSON спецификаций напрямую
   const fastify = app.getHttpAdapter().getInstance();
@@ -346,6 +361,7 @@ async function bootstrap() {
 \x1b[36m║\x1b[0m  🎓 \x1b[1mStudent LK (Кабинет):\x1b[0m  \x1b[33mhttp://localhost:3002\x1b[0m                  \x1b[36m║\x1b[0m
 \x1b[36m║\x1b[0m  ⚙️  \x1b[1mBackend REST API:\x1b[0m      \x1b[32mhttp://localhost:${port}/v1\x1b[0m               \x1b[36m║\x1b[0m
 \x1b[36m║\x1b[0m  📚 \x1b[1mSwagger Hub (Docs):\x1b[0m    \x1b[34mhttp://localhost:${port}/docs\x1b[0m             \x1b[36m║\x1b[0m
+\x1b[36m║\x1b[0m  ⚡ \x1b[1mScalar API Reference:\x1b[0m  \x1b[35mhttp://localhost:${port}/scalar\x1b[0m           \x1b[36m║\x1b[0m
 \x1b[36m║\x1b[0m  📖 \x1b[1mData Dictionary:\x1b[0m       \x1b[34mhttp://localhost:${port}/docs/dictionary\x1b[0m  \x1b[36m║\x1b[0m
 \x1b[36m╚════════════════════════════════════════════════════════════════════════════╝\x1b[0m
 `);

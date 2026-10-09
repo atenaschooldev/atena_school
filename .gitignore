@@ -92,7 +92,8 @@ apps/admin-v2/
 tmp/
 .tmp/
 .cache/
-.eslintcache/
 prompt.md
+documentation/
+graph.html
 
 

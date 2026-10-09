@@ -18,6 +18,10 @@
     "analyze:app": "pnpm --filter app analyze",
     "doc:arch": "pnpm --filter backend compodoc",
     "doc:arch:build": "pnpm --filter backend compodoc:build",
+    "graph:code": "skott apps/backend/src/main.ts --displayMode=webapp --port=3333 --open",
+    "graph:circular": "skott apps/backend/src/main.ts --showCircularDependencies --displayMode=file-tree",
+    "graph:unused": "skott apps/backend/src/main.ts --showUnusedFiles --displayMode=file-tree",
+    "graph:repo": "turbo run build --graph=graph.html && open graph.html",
     "start:crm": "node scripts/start-crm-prod.js prod",
     "start:prod": "node scripts/start-crm-prod.js prod"
   },
@@ -25,6 +29,7 @@
     "@types/pg": "^8.23.1",
     "pg": "^8.23.0",
     "prettier": "^3.7.3",
+    "skott": "^0.35.12",
     "turbo": "^2.4.0",
     "typescript": "^5.8.3",
     "vitest": "^5.0.0"
@@ -36,6 +41,7 @@
   "pnpm": {
     "only-built-dependencies": [
       "@nestjs/core",
+      "@parcel/watcher",
       "@prisma/client",
       "@prisma/engines",
       "esbuild",

@@ -45,6 +45,7 @@
     "@nestjs/terminus": "^12.1.0",
     "@nestjs/throttler": "^6.7.0",
     "@prisma/client": "^5.14.0",
+    "@scalar/nestjs-api-reference": "^1.2.28",
     "@supabase/supabase-js": "^2.43.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

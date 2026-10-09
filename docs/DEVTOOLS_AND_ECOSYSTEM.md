@@ -13,6 +13,7 @@
 | **Student Portal (ЛК)** | [http://localhost:3002](http://localhost:3002) | Личный кабинет студента и родителя (Magic Link OTP) |
 | **Backend API (NestJS)** | [http://localhost:4000/v1](http://localhost:4000/v1) | REST API бэкенд на Fastify + Prisma |
 | **Swagger Hub (Все ручки)** | [http://localhost:4000/docs](http://localhost:4000/docs) | Интерактивная документация всего API |
+| **Scalar API Reference (Stripe-like)** | [http://localhost:4000/scalar](http://localhost:4000/scalar) | Современный интерактивный API портал и песочница запросов |
 | **Swagger: Landing API** | [http://localhost:4000/docs/landing](http://localhost:4000/docs/landing) | Документация ручек публичного каталога и чекаута |
 | **Swagger: Portal API** | [http://localhost:4000/docs/portal](http://localhost:4000/docs/portal) | Документация ручек личного кабинета ученика |
 | **Swagger: CRM Admin API** | [http://localhost:4000/docs/admin](http://localhost:4000/docs/admin) | Документация ручек CRM и секретарской панели |
@@ -21,6 +22,7 @@
 | **Terminus Healthcheck** | [http://localhost:4000/health/terminus](http://localhost:4000/health/terminus) | Стандартный healthcheck NestJS Terminus (ping БД, RSS/Heap) |
 | **Prisma Studio (UI базы данных)** | [http://localhost:5555](http://localhost:5555) | Визуальный просмотр и редактирование таблиц PostgreSQL |
 | **Compodoc (Архитектура и Граф DI)** | [http://localhost:8080](http://localhost:8080) | Интерактивный визуальный граф модулей NestJS и JSDoc |
+| **Skott (Живой Граф & Анализ Циклов)** | [http://localhost:3333](http://localhost:3333) | 2D/3D интерактивный граф связей файлов и детектор циклов |
 
 ---
 
@@ -147,6 +149,28 @@
 - **Подключение:** Модуль `EventEmitterModule.forRoot()` подключен в `AppModule`.
 - **Назначение:** Асинхронное выполнение фоновых задач без блокировки HTTP-ответов:
   - `booking.created` / `payment.received` ➔ отправка писем через Resend, отправка Telegram-уведомлений, запись в `audit_logs`.
+
+### 5.6. Skott (2D/3D Интерактивный Граф Кода и Детектор Циклов)
+- **Запуск интерактивного веб-графа:**
+  ```bash
+  pnpm graph:code
+  ```
+  👉 Откроется на [http://localhost:3333](http://localhost:3333)
+- **Консольная проверка циклических зависимостей:**
+  ```bash
+  pnpm graph:circular
+  ```
+- **Консольный поиск неиспользуемых файлов/экспортов:**
+  ```bash
+  pnpm graph:unused
+  ```
+
+### 5.7. Turborepo Dependency Graph
+- **Генерация визуальной карты связей пакетов монорепозитория:**
+  ```bash
+  pnpm graph:repo
+  ```
+  Создает и открывает `graph.html` с картой пакетов (`landing`, `admin`, `app`, `backend`, `@atena/core`, `@atena/utils`, `@atena/api-types`, `@atena/validators`).
 
 ---
 
