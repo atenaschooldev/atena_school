@@ -16,6 +16,8 @@
     "studio:dev": "node scripts/run-studio.js dev",
     "analyze:landing": "pnpm --filter landing analyze",
     "analyze:app": "pnpm --filter app analyze",
+    "doc:arch": "pnpm --filter backend compodoc",
+    "doc:arch:build": "pnpm --filter backend compodoc:build",
     "start:crm": "node scripts/start-crm-prod.js prod",
     "start:prod": "node scripts/start-crm-prod.js prod"
   },

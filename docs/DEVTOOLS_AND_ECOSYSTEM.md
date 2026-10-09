@@ -20,6 +20,7 @@
 | **System Diagnostics (Health)**| [http://localhost:4000/health](http://localhost:4000/health) | Диагностика БД, памяти и статуса интеграций |
 | **Terminus Healthcheck** | [http://localhost:4000/health/terminus](http://localhost:4000/health/terminus) | Стандартный healthcheck NestJS Terminus (ping БД, RSS/Heap) |
 | **Prisma Studio (UI базы данных)** | [http://localhost:5555](http://localhost:5555) | Визуальный просмотр и редактирование таблиц PostgreSQL |
+| **Compodoc (Архитектура и Граф DI)** | [http://localhost:8080](http://localhost:8080) | Интерактивный визуальный граф модулей NestJS и JSDoc |
 
 ---
 
@@ -130,6 +131,22 @@
 - **Интеграция:** Подключен агент `@nestjs/observe` в `apps/backend/src/observe.ts` и `main.ts`.
 - **Что отслеживает:** Трейсы HTTP-запросов, задержки контроллеров, медленные запросы к БД Prisma, распределение памяти и ошибки.
 - **Активация:** Задайте `OBSERVE_APP_KEY` и `OBSERVE_APP_ID` в `apps/backend/.env`.
+
+### 5.4. Compodoc (Интерактивная Архитектура и Граф DI)
+- **Запуск локального сервера документации:**
+  ```bash
+  pnpm doc:arch
+  ```
+  👉 Доступно по адресу: [http://localhost:8080](http://localhost:8080)
+- **Что визуализирует:**
+  - **Module Dependency Graph:** Интерактивная карта связей всех модулей NestJS (`AppModule`, `CheckoutModule`, `MailModule`, `PrismaModule` и т.д.).
+  - Полный каталог провайдеров, сервисов, контроллеров, гардов и DTO с JSDoc описанием.
+  - Поиск по кодовой базе и аудит покрытия документацией.
+
+### 5.5. Event-Driven Architecture (`@nestjs/event-emitter`)
+- **Подключение:** Модуль `EventEmitterModule.forRoot()` подключен в `AppModule`.
+- **Назначение:** Асинхронное выполнение фоновых задач без блокировки HTTP-ответов:
+  - `booking.created` / `payment.received` ➔ отправка писем через Resend, отправка Telegram-уведомлений, запись в `audit_logs`.
 
 ---
 
