@@ -18,7 +18,7 @@
     "analyze:app": "pnpm --filter app analyze",
     "doc:arch": "pnpm --filter backend compodoc",
     "doc:arch:build": "pnpm --filter backend compodoc:build",
-    "graph:code": "skott apps/backend/src/main.ts --displayMode=webapp --port=3333 --open",
+    "graph:code": "skott apps/backend/src/main.ts --trackThirdPartyDependencies",
     "graph:circular": "skott apps/backend/src/main.ts --showCircularDependencies --displayMode=file-tree",
     "graph:unused": "skott apps/backend/src/main.ts --showUnusedFiles --displayMode=file-tree",
     "graph:repo": "turbo run build --graph=graph.html && open graph.html",
