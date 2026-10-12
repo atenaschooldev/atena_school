@@ -22,7 +22,10 @@
     "graph:circular": "skott apps/backend/src/main.ts --showCircularDependencies --displayMode=file-tree",
     "graph:unused": "skott apps/backend/src/main.ts --showUnusedFiles --displayMode=file-tree",
     "graph:repo": "turbo run build --graph=graph.html && open graph.html",
-    "start:crm": "node scripts/start-crm-prod.js prod",
+    "start:crm": "node scripts/start-crm-prod.js dev",
+    "start:crm:dev": "node scripts/start-crm-prod.js dev",
+    "start:crm:prod": "node scripts/start-crm-prod.js prod",
+    "start:dev": "node scripts/start-crm-prod.js dev",
     "start:prod": "node scripts/start-crm-prod.js prod"
   },
   "devDependencies": {

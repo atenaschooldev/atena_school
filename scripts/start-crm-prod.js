@@ -14,12 +14,12 @@ const magenta = "\x1b[35m";
 const bold = "\x1b[1m";
 const reset = "\x1b[0m";
 
-// Ensure .env files exist
+// Switch .env files to match the requested environment
 const apps = ["backend", "admin"];
 apps.forEach((app) => {
   const envSrc = path.join(rootDir, `apps/${app}/.env.${envType}`);
   const envDest = path.join(rootDir, `apps/${app}/.env`);
-  if (!fs.existsSync(envDest) && fs.existsSync(envSrc)) {
+  if (fs.existsSync(envSrc)) {
     fs.copyFileSync(envSrc, envDest);
   }
 });

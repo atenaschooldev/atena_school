@@ -5,8 +5,16 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$DIR"
 
+ENV_MODE="${1:-dev}"
+
+if [ "$ENV_MODE" = "prod" ]; then
+    ENV_LABEL="🟢 ПРОДАКШЕН БАЗА (jnfbfihz)"
+else
+    ENV_LABEL="🟡 DEV БАЗА (hcxpfzsm)"
+fi
+
 echo "==================================================="
-echo "  🎓 ATENA SCHOOL CRM — ЗАПУСК ПРОДАКШЕН ВЕРСИИ"
+echo "  🎓 ATENA SCHOOL CRM — ЗАПУСК ($ENV_LABEL)"
 echo "==================================================="
 echo ""
 
@@ -49,4 +57,4 @@ echo ""
     fi
 ) &
 
-node scripts/start-crm-prod.js prod
+node scripts/start-crm-prod.js "$ENV_MODE"

@@ -1,9 +1,12 @@
 @echo off
 chcp 65001 > nul
-title Atena School CRM — Production
+set "ENV_MODE=%~1"
+if "%ENV_MODE%"=="" set "ENV_MODE=dev"
+
+title Atena School CRM (%ENV_MODE%)
 
 echo ===================================================
-echo   🎓 ATENA SCHOOL CRM — ЗАПУСК ПРОДАКШЕН ВЕРСИИ
+echo   🎓 ATENA SCHOOL CRM — ЗАПУСК (%ENV_MODE% БАЗА)
 echo ===================================================
 echo.
 
@@ -26,5 +29,5 @@ echo.
 :: Автоматическое открытие браузера через 2 секунды
 start "" cmd /c "timeout /t 3 >nul & start http://localhost:3001"
 
-call node scripts/start-crm-prod.js prod
+call node scripts/start-crm-prod.js %ENV_MODE%
 pause
