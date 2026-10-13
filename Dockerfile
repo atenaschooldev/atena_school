@@ -1,43 +1,32 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine
 
-# Install system dependencies for Prisma engine
+# Install system dependencies required by Prisma engine on Alpine Linux
 RUN apk add --no-cache openssl libc6-compat
 
-# Enable Corepack & pnpm
+# Enable Corepack and activate exact pnpm version from package.json
 RUN corepack enable && corepack prepare pnpm@11.13.1 --activate
 
 WORKDIR /app
 
-# Copy root workspace files
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-
-# Copy package manifests for monorepo packages
-COPY apps/backend/package.json ./apps/backend/
-COPY packages/api-types/package.json ./packages/api-types/
-COPY packages/utils/package.json ./packages/utils/
-COPY packages/validators/package.json ./packages/validators/
-COPY packages/config/package.json ./packages/config/
-COPY packages/contracts/package.json ./packages/contracts/
-COPY packages/design/package.json ./packages/design/
-COPY packages/types/package.json ./packages/types/
-COPY packages/ui/package.json ./packages/ui/
-COPY tooling/eslint/package.json ./tooling/eslint/
-COPY tooling/prettier/package.json ./tooling/prettier/
-COPY tooling/typescript/package.json ./tooling/typescript/
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source code
+# Copy repository source files (.dockerignore excludes local node_modules, caches, and builds)
 COPY . .
 
-# Generate Prisma client and build backend
-RUN pnpm --filter backend exec prisma generate
-RUN pnpm --filter backend build
+# Install dependencies inside the Linux container
+RUN pnpm install --frozen-lockfile
 
-EXPOSE 4000
+# Generate Prisma Client for Linux Alpine
+RUN pnpm --filter backend exec prisma generate
+
+# Build packages, Backend REST API and Admin CRM
+RUN npx turbo build --filter=backend --filter=admin
+
+# Expose ports:
+# 3001: Admin CRM Web UI (Vite preview)
+# 4000: Backend API, Swagger Hub, and Scalar Playground
+EXPOSE 3001 4000
 
 ENV NODE_ENV=production
 ENV PORT=4000
 
-CMD ["node", "apps/backend/dist/main.js"]
+# Launch CRM standalone runner (defaults to DEV database: hcxpfzsm)
+CMD ["node", "scripts/start-crm-prod.js", "dev"]

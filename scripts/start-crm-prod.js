@@ -3,7 +3,8 @@ const fs = require("fs");
 const path = require("path");
 
 const rootDir = path.resolve(__dirname, "..");
-const envType = process.argv[2] === "dev" ? "dev" : "prod";
+const rawArg = process.argv[2] || process.env.CRM_ENV || "dev";
+const envType = rawArg === "prod" ? "prod" : "dev";
 const isProd = envType === "prod";
 
 // Colors

@@ -1,0 +1,16 @@
+services:
+  crm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: atena-crm:latest
+    container_name: atena-crm
+    ports:
+      - "3001:3001"
+      - "4000:4000"
+    environment:
+      # Режим базы данных: 'dev' (по умолчанию: hcxpfzsm) или 'prod' (jnfbfihz)
+      - CRM_ENV=dev
+      - NODE_ENV=production
+      - PORT=4000
+    restart: unless-stopped
