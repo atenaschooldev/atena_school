@@ -40,6 +40,8 @@ vercel-landing-env.txt
 *vercel-env*
 vercel-*.txt
 *.txt.env
+docker-compose.override.yml
+docker-compose*.override.yml
 !.env.example
 !*.env.example
 
