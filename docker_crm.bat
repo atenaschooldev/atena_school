@@ -30,8 +30,8 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/2] Запуск контейнера CRM (DEV база)...
-docker compose up -d
+echo [1/2] Сборка и запуск контейнера CRM (DEV база)...
+docker compose up -d --build
 
 echo.
 echo [2/2] CRM успешно запущена!
