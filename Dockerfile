@@ -11,8 +11,8 @@ WORKDIR /app
 # Copy repository source files (.dockerignore excludes local node_modules, caches, and builds)
 COPY . .
 
-# Install dependencies inside the Linux container
-RUN pnpm install --frozen-lockfile
+# Install dependencies ONLY for Backend REST API, Admin CRM, and their shared packages
+RUN pnpm install --frozen-lockfile --filter backend... --filter admin...
 
 # Generate Prisma Client for Linux Alpine
 RUN pnpm --filter backend exec prisma generate
