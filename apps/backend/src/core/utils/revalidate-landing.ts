@@ -10,22 +10,20 @@ const logger = new Logger('LandingRevalidation');
 export async function revalidateLanding(options?: { path?: string; tag?: string }): Promise<boolean> {
   const candidateUrls = new Set<string>();
 
+  // Explicitly configured target URLs via environment variables (12-factor / white-label ready)
   if (process.env.LANDING_URL) candidateUrls.add(process.env.LANDING_URL);
-  if (process.env.NEXT_PUBLIC_SITE_URL) candidateUrls.add(process.env.NEXT_PUBLIC_SITE_URL);
   if (process.env.SITE_URL) candidateUrls.add(process.env.SITE_URL);
+  if (process.env.NEXT_PUBLIC_SITE_URL) candidateUrls.add(process.env.NEXT_PUBLIC_SITE_URL);
 
-  // In local development or testing, always include localhost landing
-  candidateUrls.add('http://localhost:3000');
-  candidateUrls.add('http://127.0.0.1:3000');
+  // In local development or testing, fallback to localhost
+  if (process.env.NODE_ENV !== 'production') {
+    candidateUrls.add('http://localhost:3000');
+    candidateUrls.add('http://127.0.0.1:3000');
+  }
 
-  // Prevent DEV database operations from triggering production landing revalidations:
-  // Only notify production if connected to the PROD database or running in production environment.
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const isDevDatabase = supabaseUrl.includes('hcxpfzsmzusolvhtuhhm');
-  const isProdDatabase = supabaseUrl.includes('jnfbfihzpplyersbhkch');
-
-  if (!isDevDatabase && (isProdDatabase || process.env.NODE_ENV === 'production')) {
-    candidateUrls.add('https://atenaschool.com');
+  if (candidateUrls.size === 0) {
+    logger.warn('[Revalidation Skipped] No LANDING_URL or SITE_URL configured in environment.');
+    return false;
   }
 
   const revalidationSecret =
