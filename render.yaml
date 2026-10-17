@@ -5,7 +5,7 @@ services:
     region: frankfurt
     plan: free
     rootDir: apps/backend
-    buildCommand: cd ../.. && corepack enable && pnpm install && pnpm --filter backend... build
+    buildCommand: cd ../.. && npx --yes pnpm install && npx --yes pnpm --filter backend... build
     startCommand: node dist/main
     healthCheckPath: /health
     envVars:
