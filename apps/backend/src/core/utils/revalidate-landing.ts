@@ -21,8 +21,28 @@ export async function revalidateLanding(options?: { path?: string; tag?: string 
     candidateUrls.add('http://127.0.0.1:3000');
   }
 
+  // Safety Guard: NEVER trigger production landing revalidations when running with DEV database!
+  // All edits in DEV database (Render, staging, local dev) must never consume Vercel ISR quotas.
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const databaseUrl = process.env.DATABASE_URL || '';
+  const isDevDatabase =
+    supabaseUrl.includes('hcxpfzsmzusolvhtuhhm') ||
+    databaseUrl.includes('hcxpfzsmzusolvhtuhhm') ||
+    process.env.APP_ENV === 'development';
+
+  if (isDevDatabase) {
+    for (const url of Array.from(candidateUrls)) {
+      if (url.includes('atenaschool.com') || url.includes('.vercel.app')) {
+        logger.debug(
+          `[Revalidation Blocked] Stripped production target "${url}" because backend is connected to DEV database.`,
+        );
+        candidateUrls.delete(url);
+      }
+    }
+  }
+
   if (candidateUrls.size === 0) {
-    logger.warn('[Revalidation Skipped] No LANDING_URL or SITE_URL configured in environment.');
+    logger.debug('[Revalidation Skipped] No eligible revalidation target URLs after environment filtering.');
     return false;
   }
 

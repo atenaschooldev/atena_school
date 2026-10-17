@@ -16,11 +16,11 @@ services:
       - key: PORT
         value: "10000"
       - key: APP_ENV
-        value: production
+        value: development
       - key: LANDING_URL
-        value: "https://atenaschool.com"
+        value: ""
       - key: NEXT_PUBLIC_SITE_URL
-        value: "https://atenaschool.com"
+        value: ""
       - key: NEXT_PUBLIC_APP_URL
         value: "https://atena-school-app.vercel.app"
       - key: ADMIN_URL
