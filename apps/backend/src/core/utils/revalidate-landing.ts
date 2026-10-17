@@ -18,8 +18,15 @@ export async function revalidateLanding(options?: { path?: string; tag?: string 
   candidateUrls.add('http://localhost:3000');
   candidateUrls.add('http://127.0.0.1:3000');
 
-  // Also include production domain if not already present
-  candidateUrls.add('https://atenaschool.com');
+  // Prevent DEV database operations from triggering production landing revalidations:
+  // Only notify production if connected to the PROD database or running in production environment.
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const isDevDatabase = supabaseUrl.includes('hcxpfzsmzusolvhtuhhm');
+  const isProdDatabase = supabaseUrl.includes('jnfbfihzpplyersbhkch');
+
+  if (!isDevDatabase && (isProdDatabase || process.env.NODE_ENV === 'production')) {
+    candidateUrls.add('https://atenaschool.com');
+  }
 
   const revalidationSecret =
     process.env.REVALIDATION_SECRET ||
