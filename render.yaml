@@ -5,7 +5,7 @@ services:
     region: frankfurt
     plan: free
     rootDir: apps/backend
-    buildCommand: cd ../.. && npx --yes pnpm install && npx --yes pnpm --filter backend... build
+    buildCommand: cd ../.. && npx --yes pnpm install && npx --yes pnpm --filter backend exec prisma generate && npx --yes pnpm --filter backend... build
     startCommand: node dist/main
     healthCheckPath: /health
     envVars:
