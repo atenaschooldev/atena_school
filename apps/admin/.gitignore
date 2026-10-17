@@ -91,3 +91,4 @@ storybook-static
 nextjs-version/
 vite-version/
 
+.env*
