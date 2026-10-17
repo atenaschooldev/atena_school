@@ -156,7 +156,7 @@ export const getContactData = unstable_cache(
     };
   },
   ['contact-data'],
-  { tags: [CACHE_TAGS.CONTACT], revalidate: 60 }
+  { tags: [CACHE_TAGS.CONTACT], revalidate: CACHE_TTL }
 );
 
 export const getTeachers = unstable_cache(
@@ -195,7 +195,7 @@ export const getCourses = unstable_cache(
     }));
   },
   ['courses-data'],
-  { tags: [CACHE_TAGS.COURSES], revalidate: 60 }
+  { tags: [CACHE_TAGS.COURSES], revalidate: CACHE_TTL }
 );
 
 export const getSingleCourse = (id: string) => unstable_cache(
@@ -217,7 +217,7 @@ export const getSingleCourse = (id: string) => unstable_cache(
     };
   },
   [`course-${id}`],
-  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: 60 }
+  { tags: [CACHE_TAGS.COURSES, `course-${id}`], revalidate: CACHE_TTL }
 )();
 
 

@@ -107,12 +107,12 @@ export default function NavigationProgressBar() {
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-[#FAA904] via-[#F8861D] to-[#043569] transition-all ease-out"
+        className="h-full bg-gradient-to-r from-secondary-light via-secondary to-primary transition-all ease-out"
         style={{
           width: `${progress}%`,
           transitionDuration: progress === 100 ? "200ms" : "250ms",
           opacity: visible ? 1 : 0,
-          boxShadow: "0 0 10px rgba(248, 134, 29, 0.7), 0 0 5px rgba(250, 169, 4, 0.5)",
+          boxShadow: "0 0 10px var(--secondary), 0 0 5px var(--secondary-hover)",
         }}
       />
     </div>

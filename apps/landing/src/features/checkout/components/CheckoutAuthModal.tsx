@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { getStudentPortalUrl } from "@/lib/urls";
 import type { User } from "@supabase/supabase-js";
+import { brandConfig } from "@/config/brand.config";
 
 interface CheckoutAuthModalProps {
   isOpen: boolean;
@@ -100,12 +101,12 @@ export function CheckoutAuthModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-[#043569] p-5 text-white flex items-center justify-between relative">
+        <div className="bg-primary p-5 text-white flex items-center justify-between relative">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Sparkle className="w-4 h-4 text-[#F8861D]" weight="fill" />
+              <Sparkle className="w-4 h-4 text-secondary" weight="fill" />
               <span className="text-[10px] uppercase font-bold tracking-wider text-white/80">
-                Atena School
+                {brandConfig.defaultName}
               </span>
             </div>
             <h3 className="text-lg font-black tracking-tight">Accesso Studente / Genitore</h3>
@@ -131,7 +132,7 @@ export function CheckoutAuthModal({
             }}
             className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
               tab === "password"
-                ? "bg-white text-[#043569] shadow-sm border border-slate-200/60"
+                ? "bg-white text-primary shadow-sm border border-slate-200/60"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -145,7 +146,7 @@ export function CheckoutAuthModal({
             }}
             className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${
               tab === "magic"
-                ? "bg-white text-[#043569] shadow-sm border border-slate-200/60"
+                ? "bg-white text-primary shadow-sm border border-slate-200/60"
                 : "text-slate-500 hover:text-slate-700"
             }`}
           >
@@ -169,7 +170,7 @@ export function CheckoutAuthModal({
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="mariorossi@example.it"
                     required
-                    className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#043569] focus:ring-2 focus:ring-[#043569]/10 outline-none transition-all font-medium text-slate-800"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all font-medium text-slate-800"
                   />
                 </div>
               </div>
@@ -186,7 +187,7 @@ export function CheckoutAuthModal({
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#043569] focus:ring-2 focus:ring-[#043569]/10 outline-none transition-all font-medium text-slate-800"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all font-medium text-slate-800"
                   />
                 </div>
               </div>
@@ -194,7 +195,7 @@ export function CheckoutAuthModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-[#043569] hover:bg-[#032850] text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
+                className="w-full py-2.5 px-4 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mt-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -233,7 +234,7 @@ export function CheckoutAuthModal({
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="mariorossi@example.it"
                         required
-                        className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-[#043569] focus:ring-2 focus:ring-[#043569]/10 outline-none transition-all font-medium text-slate-800"
+                        className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-all font-medium text-slate-800"
                       />
                     </div>
                   </div>
@@ -245,7 +246,7 @@ export function CheckoutAuthModal({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 px-4 bg-[#F8861D] hover:bg-[#e07516] text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-2.5 px-4 bg-secondary hover:bg-secondary-hover text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {loading ? (
                       <>

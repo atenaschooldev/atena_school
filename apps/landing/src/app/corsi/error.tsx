@@ -23,7 +23,7 @@ export default function CoursesError({
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-[#043569] tracking-tight">
+          <h1 className="text-2xl font-black text-primary tracking-tight">
             Qualcosa è andato storto
           </h1>
           <p className="text-sm text-slate-500 leading-relaxed">
@@ -34,7 +34,7 @@ export default function CoursesError({
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <button
             onClick={() => reset()}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#043569] text-white font-bold text-sm hover:bg-[#F8861D] transition-all duration-200 active:scale-95 shadow-sm shadow-slate-200"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-bold text-sm hover:bg-secondary transition-all duration-200 active:scale-95 shadow-sm shadow-slate-200"
           >
             <ArrowClockwise className="w-4 h-4" weight="bold" />
             Riprova

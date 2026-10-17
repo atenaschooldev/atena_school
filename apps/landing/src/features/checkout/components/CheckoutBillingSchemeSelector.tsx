@@ -44,8 +44,8 @@ export function CheckoutBillingSchemeSelector({
         <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400">
           Opzione di Fatturazione
         </h3>
-        <span className="text-[10px] font-bold text-[#F8861D] bg-[#F8861D]/10 px-2 py-0.5 rounded-full">
-          Flessibilità Atena
+        <span className="text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">
+          Flessibile
         </span>
       </div>
 
@@ -56,7 +56,7 @@ export function CheckoutBillingSchemeSelector({
             onClick={() => setBillingScheme(BillingScheme.FULL)}
             className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
               billingScheme === BillingScheme.FULL
-                ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+                ? "border-primary ring-2 ring-primary/10 shadow-sm"
                 : "border-slate-200 hover:border-slate-300 opacity-75"
             }`}
           >
@@ -65,12 +65,12 @@ export function CheckoutBillingSchemeSelector({
               name="billingScheme"
               checked={billingScheme === BillingScheme.FULL}
               onChange={() => setBillingScheme(BillingScheme.FULL)}
-              className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
+              className="w-3.5 h-3.5 text-primary border-slate-300 focus:ring-primary mt-0.5 cursor-pointer"
             />
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-[#043569] flex items-center gap-1">
-                  <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                <span className="text-[11px] font-black text-primary flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-primary" weight="bold" />
                   Saldo Unico
                 </span>
                 <span className="text-xs font-black text-slate-800">
@@ -90,7 +90,7 @@ export function CheckoutBillingSchemeSelector({
             onClick={() => setBillingScheme(BillingScheme.SUBSCRIPTION)}
             className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 relative overflow-hidden ${
               billingScheme === BillingScheme.SUBSCRIPTION
-                ? "border-[#F8861D] ring-2 ring-[#F8861D]/10 shadow-sm bg-orange-50/20"
+                ? "border-secondary ring-2 ring-secondary/10 shadow-sm bg-secondary-light/30"
                 : "border-slate-200 hover:border-slate-300 opacity-75"
             }`}
           >
@@ -99,15 +99,15 @@ export function CheckoutBillingSchemeSelector({
               name="billingScheme"
               checked={billingScheme === BillingScheme.SUBSCRIPTION}
               onChange={() => setBillingScheme(BillingScheme.SUBSCRIPTION)}
-              className="w-3.5 h-3.5 text-[#F8861D] border-slate-300 focus:ring-[#F8861D] mt-0.5 cursor-pointer"
+              className="w-3.5 h-3.5 text-secondary border-slate-300 focus:ring-secondary mt-0.5 cursor-pointer"
             />
             <div className="space-y-0.5 flex-1">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black text-[#F8861D] flex items-center gap-1">
-                  <ArrowsClockwise className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+                <span className="text-[11px] font-black text-secondary flex items-center gap-1">
+                  <ArrowsClockwise className="w-3.5 h-3.5 text-secondary" weight="bold" />
                   Abbonamento Mensile
                 </span>
-                <span className="text-xs font-black text-[#F8861D]">
+                <span className="text-xs font-black text-secondary">
                   {subscriptionPrice.toFixed(2)}€<span className="text-[9px] font-normal text-slate-500">/mese</span>
                 </span>
               </div>

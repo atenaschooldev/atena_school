@@ -55,7 +55,7 @@ const FaqSidebar = ({ school = DEFAULT_SCHOOL_PROFILE }: FaqSidebarProps) => {
       <div className="bg-white rounded-3xl border border-gray-100 shadow-xl p-6 flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Header */}
         <div className="mb-5">
-          <p className="text-[10px] font-black text-[#F8861D] uppercase tracking-widest mb-1">FAQ</p>
+          <p className="text-[10px] font-black text-secondary uppercase tracking-widest mb-1">FAQ</p>
           <h2 className="text-lg font-black text-gray-900 leading-tight">
             Domande frequenti
           </h2>
@@ -74,7 +74,7 @@ const FaqSidebar = ({ school = DEFAULT_SCHOOL_PROFILE }: FaqSidebarProps) => {
                 >
                   <span
                     className={`text-xs font-bold leading-snug transition-colors duration-200 ${
-                      isOpen ? "text-[#F8861D]" : "text-gray-800 group-hover:text-[#F8861D]"
+                      isOpen ? "text-secondary" : "text-gray-800 group-hover:text-secondary"
                     }`}
                   >
                     {faq.q}
@@ -82,8 +82,8 @@ const FaqSidebar = ({ school = DEFAULT_SCHOOL_PROFILE }: FaqSidebarProps) => {
                   <span
                     className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
                       isOpen
-                        ? "bg-[#F8861D] text-white"
-                        : "bg-gray-100 text-gray-400 group-hover:bg-[#F8861D]/10 group-hover:text-[#F8861D]"
+                        ? "bg-secondary text-white"
+                        : "bg-gray-100 text-gray-400 group-hover:bg-secondary/10 group-hover:text-secondary"
                     }`}
                   >
                     {isOpen ? (

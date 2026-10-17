@@ -21,52 +21,58 @@ async function revalidateHandler(request: NextRequest) {
       'atena-revalidation-secret';
 
     const isDev = process.env.NODE_ENV === 'development';
-    if (!isDev && secret && secret !== expectedSecret) {
+    
+    // Strict authentication: in production, require matching secret. Missing or wrong secret -> 401.
+    if (!isDev && (!secret || secret !== expectedSecret)) {
       return withCors(
         NextResponse.json({ success: false, error: 'Unauthorized revalidation' }, { status: 401 })
       );
     }
 
     let body: any = {};
-    try {
-      body = await request.json();
-    } catch {
-      // Body might be empty, that's completely normal
+    if (request.method === 'POST') {
+      try {
+        body = await request.json();
+      } catch {
+        // Body might be empty
+      }
     }
 
     const path = body?.path || request.nextUrl.searchParams.get('path');
     const tag = body?.tag || request.nextUrl.searchParams.get('tag');
 
+    let revalidatedTag = false;
+    let revalidatedPath = false;
+
+    // 1. Tag-specific targeted revalidation (e.g. 'marketing-popups', 'courses', 'school-profile')
     if (tag) {
       try {
         revalidateTag(tag, 'max');
       } catch {
-        // Fallback if older Next signature
         (revalidateTag as any)(tag);
       }
+      revalidatedTag = true;
     }
 
+    // 2. Path-specific targeted revalidation (e.g. '/corsi', '/test-inglese')
     if (path) {
       revalidatePath(path);
-      if (path === '/' || path === '') {
-        revalidatePath('/', 'layout');
-      }
-    } else {
-      // Default: purge entire site layout & core pages
+      revalidatedPath = true;
+    }
+
+    // 3. Fallback: ONLY if NEITHER tag NOR path was specified, perform full site revalidation
+    if (!revalidatedTag && !revalidatedPath) {
       revalidatePath('/', 'layout');
       revalidatePath('/');
       revalidatePath('/corsi');
-      revalidatePath('/test-inglese');
       try {
         revalidateTag('school-profile', 'max');
         revalidateTag('form-templates', 'max');
         revalidateTag('courses', 'max');
-        revalidateTag('analytics', 'max');
       } catch {
         (revalidateTag as any)('school-profile');
         (revalidateTag as any)('form-templates');
         (revalidateTag as any)('courses');
-        (revalidateTag as any)('analytics');
       }
     }
 
@@ -74,8 +80,9 @@ async function revalidateHandler(request: NextRequest) {
       NextResponse.json({
         success: true,
         revalidated: true,
-        path: path || 'all',
-        tag: tag || 'all',
+        type: revalidatedTag ? 'tag' : revalidatedPath ? 'path' : 'all',
+        path: path || (revalidatedTag ? null : 'all'),
+        tag: tag || (revalidatedPath ? null : 'all'),
         timestamp: new Date().toISOString(),
       })
     );

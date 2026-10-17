@@ -79,7 +79,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
             <button
               type="button"
               onClick={resetForm}
-              className="mt-4 text-xs font-bold text-[#00328F] hover:underline cursor-pointer"
+              className="mt-4 text-xs font-bold text-primary hover:underline cursor-pointer"
             >
               ← Invia un altro messaggio
             </button>
@@ -93,7 +93,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   <h3 className="text-2xl 2xl:text-4xl font-black leading-tight text-left text-gray-900">
                     Contatta
                   </h3>
-                  <span className="text-2xl 2xl:text-4xl font-black text-[#00328F] block text-left">
+                  <span className="text-2xl 2xl:text-4xl font-black text-primary block text-left">
                     {school.name}
                   </span>
                 </div>
@@ -105,7 +105,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                 {/* Contact Rows */}
                 <div className="space-y-4.5 pt-2">
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F8861D] flex items-center justify-center shrink-0 border border-orange-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-secondary flex items-center justify-center shrink-0 border border-orange-100/50">
                       <Phone className="w-4 h-4" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -116,7 +116,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F8861D] flex items-center justify-center shrink-0 border border-orange-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-secondary flex items-center justify-center shrink-0 border border-orange-100/50">
                       <Envelope className="w-4 h-4" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -126,7 +126,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F8861D] flex items-center justify-center shrink-0 border border-orange-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-secondary flex items-center justify-center shrink-0 border border-orange-100/50">
                       <MapPin className="w-4 h-4" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -136,7 +136,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-[#F8861D] flex items-center justify-center shrink-0 border border-orange-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-orange-50 text-secondary flex items-center justify-center shrink-0 border border-orange-100/50">
                       <Clock className="w-4 h-4" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -163,7 +163,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                         href={school.socials.instagram}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-secondary hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
                         aria-label="Instagram"
                       >
                         <InstagramLogo className="w-4 h-4" weight="bold" />
@@ -174,7 +174,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                         href={school.socials.facebook}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-secondary hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
                         aria-label="Facebook"
                       >
                         <FacebookLogo className="w-4 h-4" weight="bold" />
@@ -185,7 +185,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                         href={school.socials.tiktok}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-secondary hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
                         aria-label="TikTok"
                       >
                         <TikTokLogo size={15} />
@@ -196,7 +196,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                         href={school.socials.youtube}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                        className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-secondary hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
                         aria-label="YouTube"
                       >
                         <YoutubeLogo size={15} />
@@ -206,7 +206,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       href={`https://wa.me/${phone.replace(/[^0-9]/g, "")}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-[#FAA904] hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+                      className="w-8 h-8 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:bg-secondary hover:text-white flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
                       aria-label="WhatsApp"
                     >
                       <WhatsappLogo className="w-4 h-4" weight="bold" />
@@ -227,13 +227,13 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       <path d="M 15,0 L 15,80 M 35,0 L 35,80 M 55,0 L 55,80 M 75,0 L 75,80" />
                       <path d="M 0,0 L 80,80" strokeWidth="2.5" className="text-gray-250/20" />
                     </svg>
-                    <div className="absolute w-3.5 h-3.5 bg-[#F8861D]/20 rounded-full animate-ping z-0" />
-                    <MapPin className="w-6 h-6 text-[#F8861D] relative z-10 group-hover/map:scale-110 transition-transform duration-300" weight="fill" />
+                    <div className="absolute w-3.5 h-3.5 bg-secondary/20 rounded-full animate-ping z-0" />
+                    <MapPin className="w-6 h-6 text-secondary relative z-10 group-hover/map:scale-110 transition-transform duration-300" weight="fill" />
                   </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="text-xs font-black text-gray-800">{school.name}</p>
                     <p className="text-[10px] text-gray-500 truncate mt-0.5">{address}</p>
-                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-[#F8861D] mt-1">
+                    <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-secondary mt-1">
                       Apri in Google Maps →
                     </span>
                   </div>
@@ -267,7 +267,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="relative group/field flex items-center">
-                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                     <input
                       type="text"
                       name="nome"
@@ -277,7 +277,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       required
                       className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
                         fieldErrors?.nome ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
-                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                      } focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
                     />
                   </div>
                   {fieldErrors?.nome && (
@@ -287,7 +287,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
 
                 <div>
                   <div className="relative group/field flex items-center">
-                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <User className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                     <input
                       type="text"
                       name="cognome"
@@ -297,7 +297,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       required
                       className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
                         fieldErrors?.cognome ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
-                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                      } focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
                     />
                   </div>
                   {fieldErrors?.cognome && (
@@ -307,7 +307,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
 
                 <div>
                   <div className="relative group/field flex items-center">
-                    <Envelope className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <Envelope className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                     <input
                       type="email"
                       name="email"
@@ -317,7 +317,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       required
                       className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
                         fieldErrors?.email ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
-                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                      } focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
                     />
                   </div>
                   {fieldErrors?.email && (
@@ -327,7 +327,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
 
                 <div>
                   <div className="relative group/field flex items-center">
-                    <Phone className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                    <Phone className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                     <input
                       type="tel"
                       name="telefono"
@@ -336,7 +336,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                       placeholder="Telefono (es. +39 340 1234567)"
                       className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
                         fieldErrors?.telefono ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
-                      } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                      } focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none transition-all duration-300 text-gray-900 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
                     />
                   </div>
                   {fieldErrors?.telefono && (
@@ -347,12 +347,12 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
 
               <div>
                 <div className="relative group/field flex items-center">
-                  <GraduationCap className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                  <GraduationCap className="absolute left-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                   <select
                     name="interesse"
                     value={formData.interesse}
                     onChange={handleChange}
-                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400/85 outline-none appearance-none transition-all duration-300 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)] cursor-pointer"
+                    className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-10 text-sm text-gray-700 placeholder-gray-400/85 outline-none appearance-none transition-all duration-300 shadow-sm focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)] cursor-pointer"
                   >
                     <option value="" disabled hidden>
                       Sono interessato a...
@@ -362,13 +362,13 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                     <option value="doposcuola" className="bg-white text-gray-900">Doposcuola & Recupero materie</option>
                     <option value="altro" className="bg-white text-gray-900">Altro</option>
                   </select>
-                  <CaretDown className="absolute right-3.5 w-3.5 h-3.5 text-gray-400 pointer-events-none group-focus-within/field:text-[#00328F] group-focus-within/field:rotate-180 transition-all duration-300" />
+                  <CaretDown className="absolute right-3.5 w-3.5 h-3.5 text-gray-400 pointer-events-none group-focus-within/field:text-primary group-focus-within/field:rotate-180 transition-all duration-300" />
                 </div>
               </div>
 
               <div>
                 <div className="relative flex flex-col group/field">
-                  <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-[#00328F] transition-colors duration-300" />
+                  <Chat className="absolute left-3.5 top-3.5 w-4 h-4 text-gray-400 group-focus-within/field:text-primary transition-colors duration-300" />
                   <textarea
                     name="messaggio"
                     value={formData.messaggio}
@@ -377,7 +377,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                     maxLength={2000}
                     className={`w-full bg-gray-50/50 hover:bg-gray-50 border ${
                       fieldErrors?.messaggio ? "border-red-500 bg-red-50/20" : "border-gray-200/80"
-                    } focus:border-[#00328F] focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px] focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
+                    } focus:border-primary focus:bg-white rounded-2xl py-3 pl-10 pr-4 text-sm placeholder-gray-400/85 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px] focus:shadow-[0_0_0_4px_rgba(0,50,143,0.08)]`}
                   />
                   <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400 font-bold bg-white/80 px-1.5 py-0.5 rounded-md backdrop-blur-sm border border-gray-100">
                     {formData.messaggio.length} / 2000
@@ -403,7 +403,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                               <select
                                 value={val}
                                 onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
-                                className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-3 px-4 text-xs appearance-none outline-none transition-all duration-300 text-gray-900 cursor-pointer"
+                                className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-primary focus:bg-white rounded-2xl py-3 px-4 text-xs appearance-none outline-none transition-all duration-300 text-gray-900 cursor-pointer"
                               >
                                 <option value="">{field.placeholder || "Seleziona un'opzione..."}</option>
                                 {field.options?.map((opt: any) => {
@@ -424,7 +424,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                               onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
                               placeholder={field.placeholder}
                               rows={2}
-                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
+                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-primary focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
                             />
                           ) : (
                             <input
@@ -432,7 +432,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                               value={val}
                               onChange={(e) => handleCustomFieldChange(field.key, e.target.value)}
                               placeholder={field.placeholder}
-                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-[#00328F] focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900"
+                              className="w-full bg-gray-50/50 hover:bg-gray-50 border border-gray-200/80 focus:border-primary focus:bg-white rounded-2xl py-2.5 px-3 text-xs outline-none transition-all text-gray-900"
                             />
                           )}
 
@@ -452,14 +452,14 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                     type="checkbox"
                     checked={formData.privacy}
                     onChange={handleCheckboxChange}
-                    className="rounded border-gray-300 text-[#00328F] focus:ring-[#00328F]/20 focus:ring-offset-0 focus:ring-2 w-4 h-4 mt-0.5 transition-all cursor-pointer"
+                    className="rounded border-gray-300 text-primary focus:ring-[#00328F]/20 focus:ring-offset-0 focus:ring-2 w-4 h-4 mt-0.5 transition-all cursor-pointer"
                   />
                   <span className="text-[10px] text-gray-500 text-left leading-normal">
                     Accetto l'
                     <a
                       href="/privacy"
                       target="_blank"
-                      className="text-[#00328F] hover:underline underline-offset-2 ml-1 font-bold"
+                      className="text-primary hover:underline underline-offset-2 ml-1 font-bold"
                     >
                       Informativa sulla Privacy *
                     </a>
@@ -480,7 +480,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`group/btn w-full bg-gradient-to-r from-[#00328F] to-[#004eac] hover:from-[#002770] hover:to-[#00328F] text-white font-extrabold text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-blue-500/10 active:scale-[0.98] cursor-pointer select-none ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`group/btn w-full bg-gradient-to-r from-primary to-primary-hover hover:from-primary-dark hover:to-primary text-white font-extrabold text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-md hover:shadow-xl hover:shadow-primary/10 active:scale-[0.98] cursor-pointer select-none ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <PaperPlaneRight className="w-4 h-4 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-0.5 transition-transform duration-300" weight="fill" />
                   {loading ? 'Invio in corso...' : 'Invia richiesta'}
@@ -497,14 +497,14 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
             <div className="hidden lg:flex lg:col-span-3 flex-col justify-between space-y-6 pl-6 border-l border-gray-200/80 text-left">
               {/* Why Us Highlights */}
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-[#00328F]">
+                <h4 className="text-xs font-black uppercase tracking-widest text-primary">
                   Perché sceglierci?
                 </h4>
-                <div className="w-8 h-0.5 bg-[#00328F]/40" />
+                <div className="w-8 h-0.5 bg-primary/40" />
 
                 <div className="space-y-4 pt-2">
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00328F] flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0 border border-blue-100/50">
                       <GraduationCap className="w-4 h-4" weight="bold" />
                     </div>
                     <p className="text-[11px] font-bold text-gray-700">
@@ -513,7 +513,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00328F] flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0 border border-blue-100/50">
                       <ShieldCheck className="w-4 h-4" weight="bold" />
                     </div>
                     <p className="text-[11px] font-bold text-gray-700">
@@ -522,7 +522,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00328F] flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0 border border-blue-100/50">
                       <ChartBar className="w-4 h-4" weight="bold" />
                     </div>
                     <p className="text-[11px] font-bold text-gray-700">
@@ -531,7 +531,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                   </div>
 
                   <div className="flex gap-3.5 items-center">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-[#00328F] flex items-center justify-center shrink-0 border border-blue-100/50">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 text-primary flex items-center justify-center shrink-0 border border-blue-100/50">
                       <Headset className="w-4 h-4" weight="bold" />
                     </div>
                     <p className="text-[11px] font-bold text-gray-700">
@@ -543,7 +543,7 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
 
               {/* Course List Card */}
               <div className="border border-gray-200/80 bg-white p-4.5 rounded-2xl shadow-sm flex flex-col gap-3">
-                <div className="flex items-center gap-2.5 text-[#00328F] border-b border-gray-100 pb-3">
+                <div className="flex items-center gap-2.5 text-primary border-b border-gray-100 pb-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100 shrink-0">
                     <GraduationCap className="w-4.5 h-4.5" weight="bold" />
                   </div>
@@ -551,15 +551,14 @@ const ContactSection = ({ data, school = DEFAULT_SCHOOL_PROFILE, initialFormTemp
                 </div>
                 <ul className="space-y-3">
                   {[
-                    "Corsi di inglese – A1 · A2 · B1 · B2 · C1",
-                    "Cambridge Esami: KET, PET, FCE, CAE",
-                    "Certificazioni EIPASS – IT & Web",
+                    "Corsi di lingua individuali e di gruppo",
+                    "Preparazione esami e certificazioni",
                     "Doposcuola & recupero materie",
                     "Preparazione esami universitari",
                     "Corsi estivi per bambini e ragazzi",
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2.5 text-[11px] text-gray-700 font-bold leading-normal">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#F8861D] shrink-0 mt-1.5" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-secondary shrink-0 mt-1.5" />
                       <span className="flex-1">{item}</span>
                     </li>
                   ))}

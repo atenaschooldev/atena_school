@@ -89,7 +89,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
               {selectedAns}
             </span>
           ) : (
-            <span className="inline-block w-16 border-b-2 border-dashed border-[#F8861D] mx-1 transform translate-y-0.5"></span>
+            <span className="inline-block w-16 border-b-2 border-dashed border-secondary mx-1 transform translate-y-0.5"></span>
           )}
           {parts[1]}
         </span>
@@ -102,7 +102,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
   if (shuffledQuestions.length === 0 || answers.length === 0) {
     return (
       <div className="w-full max-w-2xl mx-auto glass-card rounded-3xl border border-slate-100/50 shadow-2xl p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-        <div className="w-10 h-10 border-4 border-[#F8861D] border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-10 h-10 border-4 border-secondary border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-slate-400 text-xs font-bold uppercase tracking-wider animate-pulse">
           Caricamento del test...
         </p>
@@ -120,19 +120,19 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
     return (
       <div className="w-full max-w-2xl mx-auto relative">
         {/* Ambient background glow for high-end feel */}
-        <div className="glow-orb bg-[#043569] w-72 h-72 -top-12 -left-12 opacity-10 blur-3xl pointer-events-none absolute" />
-        <div className="glow-orb bg-[#F8861D] w-72 h-72 -bottom-12 -right-12 opacity-10 blur-3xl pointer-events-none absolute" />
+        <div className="glow-orb bg-primary w-72 h-72 -top-12 -left-12 opacity-10 blur-3xl pointer-events-none absolute" />
+        <div className="glow-orb bg-secondary w-72 h-72 -bottom-12 -right-12 opacity-10 blur-3xl pointer-events-none absolute" />
 
         <div className="w-full bg-white/90 backdrop-blur-md rounded-3xl border border-slate-100/50 shadow-[0_20px_50px_rgba(4,53,105,0.04)] p-8 sm:p-12 text-center animate-in zoom-in-95 duration-500 relative z-10">
           
           <div className="mb-8">
-            <span className="inline-block px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-[#F8861D] bg-orange-50 border border-orange-100 rounded-full mb-5 select-none">
+            <span className="inline-block px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-secondary bg-orange-50 border border-orange-100 rounded-full mb-5 select-none">
               Test Completato
             </span>
             <span className="block text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1 select-none">
               {t("resultTitle")}
             </span>
-            <div className="text-7xl sm:text-8xl font-serif font-black text-[#043569] leading-none mb-3 tracking-tight">
+            <div className="text-7xl sm:text-8xl font-serif font-black text-primary leading-none mb-3 tracking-tight">
               {levelCode}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 leading-tight">
@@ -146,7 +146,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
               <span className="block text-[9px] uppercase font-black tracking-widest text-slate-400">
                 Risposte Corrette
               </span>
-              <span className="block text-xl sm:text-2xl font-black text-[#043569] mt-1.5">
+              <span className="block text-xl sm:text-2xl font-black text-primary mt-1.5">
                 {correctAnswersCount} <span className="text-slate-400 text-sm font-medium">/ {shuffledQuestions.length}</span>
               </span>
             </div>
@@ -154,7 +154,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
               <span className="block text-[9px] uppercase font-black tracking-widest text-slate-400">
                 Precisione
               </span>
-              <span className="block text-xl sm:text-2xl font-black text-[#043569] mt-1.5">
+              <span className="block text-xl sm:text-2xl font-black text-primary mt-1.5">
                 {pct}%
               </span>
             </div>
@@ -170,7 +170,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/#contatti"
-              className="group inline-flex items-center justify-center gap-2 bg-[#F8861D] hover:bg-[#e0730d] text-white px-8 py-4 rounded-full font-black text-sm transition-all duration-300 shadow-md shadow-orange-500/10 hover:shadow-orange-500/25 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer w-full sm:w-auto"
+              className="group inline-flex items-center justify-center gap-2 bg-secondary hover:bg-secondary-hover text-white px-8 py-4 rounded-full font-black text-sm transition-all duration-300 shadow-md shadow-orange-500/10 hover:shadow-orange-500/25 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer w-full sm:w-auto"
             >
               {t("btnContact")}
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" weight="bold" />
@@ -200,8 +200,8 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
   return (
     <div className="w-full max-w-2xl mx-auto relative">
       {/* Background glow orbs for high-end look */}
-      <div className="glow-orb bg-[#043569] w-72 h-72 -top-12 -left-12 opacity-8 blur-3xl pointer-events-none absolute" />
-      <div className="glow-orb bg-[#F8861D] w-72 h-72 -bottom-12 -right-12 opacity-8 blur-3xl pointer-events-none absolute" />
+      <div className="glow-orb bg-primary w-72 h-72 -top-12 -left-12 opacity-8 blur-3xl pointer-events-none absolute" />
+      <div className="glow-orb bg-secondary w-72 h-72 -bottom-12 -right-12 opacity-8 blur-3xl pointer-events-none absolute" />
 
       <div className="w-full bg-white/90 backdrop-blur-md rounded-3xl border border-slate-100/50 shadow-[0_20px_50px_rgba(4,53,105,0.05)] p-6 sm:p-10 relative z-10">
         
@@ -229,7 +229,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
                   ? "bg-emerald-50 border-emerald-500" 
                   : "bg-rose-500 border-rose-500";
               } else if (isCurrent) {
-                barColor = "bg-[#F8861D] border-[#F8861D] scale-y-125 shadow-[0_0_8px_rgba(248,134,29,0.3)]";
+                barColor = "bg-secondary border-secondary scale-y-125 shadow-secondary/30";
               }
               
               // Only allow clicking to answered questions, or the active one
@@ -257,10 +257,10 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
 
         {/* Content Question Card */}
         <div className="mb-6 sm:mb-8 text-left animate-in fade-in duration-300">
-          <span className="inline-block px-2.5 py-1 text-[9px] font-black tracking-wider uppercase text-[#043569] bg-[#043569]/5 rounded-md border border-[#043569]/10 mb-3 select-none">
+          <span className="inline-block px-2.5 py-1 text-[9px] font-black tracking-wider uppercase text-primary bg-primary/5 rounded-md border border-primary/10 mb-3 select-none">
             {t("questionOf", { current: currentIndex + 1, total: shuffledQuestions.length })}
           </span>
-          <h2 className="text-xl sm:text-2xl font-serif font-black text-[#043569] leading-snug my-2 min-h-[64px] flex items-center">
+          <h2 className="text-xl sm:text-2xl font-serif font-black text-primary leading-snug my-2 min-h-[64px] flex items-center">
             {formatQuestionText(currentQuestion, currentAnswer)}
           </h2>
         </div>
@@ -327,7 +327,7 @@ export default function EnglishTestQuiz({ onRestart }: EnglishTestQuizProps) {
           {isCurrentQuestionAnswered && (
             <button
               onClick={handleNext}
-              className="group inline-flex items-center gap-2 bg-[#043569] hover:bg-[#032b55] text-white px-6 py-3 rounded-full font-black text-xs sm:text-sm transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer shadow-lg shadow-[#043569]/10"
+              className="group inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-full font-black text-xs sm:text-sm transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 select-none cursor-pointer shadow-lg shadow-primary/10"
             >
               {currentIndex === shuffledQuestions.length - 1 ? (
                 <>

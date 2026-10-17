@@ -40,10 +40,10 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
             suppressHydrationWarning
           >
             <div className="space-y-3.5">
-              <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F8861D]">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-secondary">
                 CHI SIAMO
               </span>
-              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-[#043569] leading-tight">
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black text-primary leading-tight">
                 Unire la ricchezza della cultura classica con il mondo moderno e le sue sfide.
               </h2>
               <p className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest leading-none pt-1">
@@ -97,7 +97,7 @@ const AboutSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: AboutSectionPro
               {/* Right Column of Collage */}
               <div className="relative flex flex-col h-full">
                 {/* Decorative Dot Grid Pattern */}
-                <div className="absolute -top-4 -right-4 w-24 h-24 pointer-events-none text-[#F8861D]/25 z-0">
+                <div className="absolute -top-4 -right-4 w-24 h-24 pointer-events-none text-secondary/25 z-0">
                   <svg width="100%" height="100%" fill="currentColor">
                     <pattern id="dot-grid-about" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
                       <circle cx="2" cy="2" r="2" />

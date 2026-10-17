@@ -185,8 +185,8 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                 />
               </div>
               <div className="flex flex-col items-center leading-tight" translate="no">
-                <span className="font-serif font-black text-sm xs:text-base md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : '#00328F' }}>
-                  {school.name.split(' ')[0]} <span style={{ color: '#FAA904' }}>{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
+                <span className="font-serif font-black text-sm xs:text-base md:text-xl tracking-wider uppercase select-none whitespace-nowrap" style={{ color: isLightHeader ? '#ffffff' : 'var(--primary-dark)' }}>
+                  {school.name.split(' ')[0]} <span style={{ color: 'var(--secondary)' }}>{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                 </span>
                 {school.tagline && (
                   <span
@@ -208,7 +208,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   key={l.href}
                   href={l.href}
                   className={`text-sm font-bold px-4 py-1.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 relative ${isLightHeader
-                      ? "text-white hover:text-[#FAA904] hover:bg-white/10"
+                      ? "text-white hover:text-secondary hover:bg-white/10"
                       : "text-gray-700 hover:text-primary hover:bg-primary/10"
                     }`}
                   onClick={(e) => handleLinkClick(e, l.href)}
@@ -228,7 +228,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   <>
                     <Link
                       href="/corsi"
-                      className="text-sm font-bold text-slate-500 hover:text-[#043569] transition-colors duration-200 flex items-center gap-1.5 group"
+                      className="text-sm font-bold text-slate-500 hover:text-primary transition-colors duration-200 flex items-center gap-1.5 group"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:-translate-x-0.5">
                         <polyline points="15 18 9 12 15 6" />
@@ -242,7 +242,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   href={getStudentPortalUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full bg-[#043569] text-white hover:bg-[#F8861D] transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
+                  className="text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full bg-primary text-white hover:bg-secondary transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm"
                 >
                   Area Personale
                 </a>
@@ -255,8 +255,8 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`text-xs font-black uppercase tracking-wider px-5 py-2.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm ${isLightHeader
-                      ? "bg-[#F8861D] text-white hover:bg-white hover:text-primary"
-                      : "bg-[#043569] text-white hover:bg-[#F8861D]"
+                      ? "bg-secondary text-white hover:bg-white hover:text-primary"
+                      : "bg-primary text-white hover:bg-secondary"
                     }`}
                 >
                   Area Personale
@@ -270,7 +270,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
             {isCoursePage && (
               <Link
                 href="/corsi"
-                className="text-xs font-bold text-[#043569] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shrink-0"
+                className="text-xs font-bold text-primary bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shrink-0"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="15 18 9 12 15 6" />
@@ -368,8 +368,8 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                   className="object-contain"
                 />
                 <div className="flex flex-col items-start leading-tight">
-                  <span className="font-serif font-black text-sm tracking-wider uppercase select-none whitespace-nowrap text-[#00328F]">
-                    {school.name.split(' ')[0]} <span className="text-[#FAA904]">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
+                  <span className="font-serif font-black text-sm tracking-wider uppercase select-none whitespace-nowrap text-primary-dark">
+                    {school.name.split(' ')[0]} <span className="text-secondary">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                   </span>
                   {school.tagline && (
                     <span className="text-[8px] tracking-widest uppercase select-none whitespace-nowrap text-[#9FA2AC]">
@@ -406,7 +406,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                       onClick={(e) => handleLinkClick(e, l.href)}
                     >
                       <div className="flex items-center gap-4">
-                        {Icon && <Icon className="w-5 h-5 text-[#FAA904]" weight="bold" />}
+                        {Icon && <Icon className="w-5 h-5 text-secondary" weight="bold" />}
                         <span>{l.label}</span>
                       </div>
                     </Link>
@@ -422,7 +422,7 @@ const Navbar = ({ school = DEFAULT_SCHOOL_PROFILE }: NavbarProps) => {
                     href={getStudentPortalUrl()}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-[#043569] hover:bg-[#F8861D] rounded-xl shadow-md transition-all active:scale-95 text-center"
+                    className="w-full flex items-center justify-center py-3.5 px-4 text-sm font-black uppercase tracking-wider text-white bg-primary hover:bg-secondary rounded-xl shadow-md transition-all active:scale-95 text-center"
                     onClick={() => setOpen(false)}
                   >
                     Area Personale

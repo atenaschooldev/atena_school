@@ -109,7 +109,7 @@ export function CheckoutView({
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 font-sans">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#043569]" />
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Caricamento informazioni...</p>
         </div>
       </div>

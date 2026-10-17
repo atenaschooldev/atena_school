@@ -53,21 +53,28 @@ export default async function PrivacyPolicy() {
         <div className="space-y-12">
           <section>
             <p className="text-lg leading-relaxed text-foreground/80">
-              {t("content.intro")}
+              {t("content.intro").replace(/Atena School/g, school.name)}
             </p>
           </section>
 
           <div className="grid gap-10">
-            {sections.map((index) => (
-              <section key={index} className="space-y-3">
-                <h2 className="text-2xl font-semibold text-primary/90">
-                  {t(`content.sections.${index}.title`)}
-                </h2>
-                <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {t(`content.sections.${index}.text`)}
-                </div>
-              </section>
-            ))}
+            {sections.map((index) => {
+              const text = t(`content.sections.${index}.text`)
+                .replace(/Atena School/g, school.name)
+                .replace(/Cittanova/g, school.city || "Cittanova")
+                .replace(/atenaschool20@gmail.com/g, contactEmail);
+
+              return (
+                <section key={index} className="space-y-3">
+                  <h2 className="text-2xl font-semibold text-primary/90">
+                    {t(`content.sections.${index}.title`)}
+                  </h2>
+                  <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                    {text}
+                  </div>
+                </section>
+              );
+            })}
           </div>
 
           <section className="mt-16 p-8 rounded-2xl bg-muted/50 border border-primary/10">

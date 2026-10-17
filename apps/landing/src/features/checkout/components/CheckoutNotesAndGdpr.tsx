@@ -29,7 +29,7 @@ export function CheckoutNotesAndGdpr({
           maxLength={500}
           {...register("notes")}
           placeholder="Es. preferenze orarie, segnalazioni didattiche..."
-          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white resize-none font-medium transition-all"
+          className="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white resize-none font-medium transition-all"
         />
         {errors.notes && (
           <p className="text-[10px] text-red-500 mt-1 font-semibold">{errors.notes.message}</p>
@@ -41,7 +41,7 @@ export function CheckoutNotesAndGdpr({
         <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <span>
           I tuoi dati sono protetti e trattati nel rispetto del Regolamento UE 2016/679 (GDPR). Inviando la richiesta confermi di aver preso visione della nostra{" "}
-          <Link href="/privacy" target="_blank" className="text-[#043569] font-bold underline hover:text-[#F8861D]">
+          <Link href="/privacy" target="_blank" className="text-primary font-bold underline hover:text-secondary">
             Informativa sulla Privacy
           </Link>
           .

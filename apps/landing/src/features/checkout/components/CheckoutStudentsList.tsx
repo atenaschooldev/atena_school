@@ -78,8 +78,8 @@ export function CheckoutStudentsList({
     <div className="space-y-4 pt-3 border-t border-slate-100">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <GraduationCap className="w-5 h-5 text-[#043569]" weight="bold" />
-          <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight text-[#043569]">
+          <GraduationCap className="w-5 h-5 text-primary" weight="bold" />
+          <h3 className="text-xs sm:text-sm font-black uppercase tracking-tight text-primary">
             Dati degli Studenti ({studentsList.length})
           </h3>
         </div>
@@ -100,9 +100,9 @@ export function CheckoutStudentsList({
                 key={sIdx}
                 type="button"
                 onClick={() => onSelectSavedStudent?.(s, 0)}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#043569] bg-white border border-slate-200 hover:border-[#043569] px-2.5 py-1 rounded-lg transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary bg-white border border-slate-200 hover:border-primary px-2.5 py-1 rounded-lg transition-all shadow-2xs hover:shadow-xs cursor-pointer"
               >
-                <User className="w-3 h-3 text-[#F8861D]" weight="bold" />
+                <User className="w-3 h-3 text-secondary" weight="bold" />
                 <span>{s.firstName} {s.lastName}</span>
               </button>
             ))}
@@ -118,15 +118,15 @@ export function CheckoutStudentsList({
           return (
             <div
               key={idx}
-              className="bg-[#043569]/[0.02] border border-[#043569]/15 rounded-xl p-3.5 space-y-3 relative transition-all"
+              className="bg-primary/[0.02] border border-primary/15 rounded-xl p-3.5 space-y-3 relative transition-all"
             >
               {/* Student Card Header */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#043569] text-white text-[10px] font-black flex items-center justify-center">
+                  <span className="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center">
                     {idx + 1}
                   </span>
-                  <span className="text-xs font-black text-[#043569] uppercase tracking-wider">
+                  <span className="text-xs font-black text-primary uppercase tracking-wider">
                     Studente #{idx + 1} {student.firstName ? `— ${student.firstName} ${student.lastName}` : ""}
                   </span>
                 </div>
@@ -135,7 +135,7 @@ export function CheckoutStudentsList({
                   {/* Individual Fee Status Badge */}
                   {studentFee === FeeCheckStatus.CHECKING && (
                     <span className="flex items-center gap-1 text-[10px] text-slate-500 font-bold bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
-                      <Spinner className="w-3 h-3 animate-spin text-[#043569]" />
+                      <Spinner className="w-3 h-3 animate-spin text-primary" />
                       Verifica quota...
                     </span>
                   )}
@@ -177,7 +177,7 @@ export function CheckoutStudentsList({
                       value={student.firstName || ""}
                       onChange={(e) => updateStudent(idx, "firstName", e.target.value)}
                       placeholder="Luca"
-                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {(studentErrors?.firstName || (idx === 0 && errors.studentFirstName)) && (
@@ -196,7 +196,7 @@ export function CheckoutStudentsList({
                       value={student.lastName || ""}
                       onChange={(e) => updateStudent(idx, "lastName", e.target.value)}
                       placeholder="Rossi"
-                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {(studentErrors?.lastName || (idx === 0 && errors.studentLastName)) && (
@@ -230,7 +230,7 @@ export function CheckoutStudentsList({
                     value={student.taxCode || ""}
                     onChange={(e) => updateStudent(idx, "taxCode", sanitizeTaxCode(e.target.value).slice(0, 16))}
                     placeholder="RSSLCU10A01H501Z"
-                    className="w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium tracking-wider transition-all"
+                    className="w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium tracking-wider transition-all"
                   />
                 </div>
                 {(studentErrors?.taxCode || (idx === 0 && errors.taxCode)) && (
@@ -250,7 +250,7 @@ export function CheckoutStudentsList({
                       type="date"
                       value={student.birthDate || ""}
                       onChange={(e) => updateStudent(idx, "birthDate", e.target.value)}
-                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs appearance-none box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {(studentErrors?.birthDate || (idx === 0 && errors.studentBirthDate)) && (
@@ -269,7 +269,7 @@ export function CheckoutStudentsList({
                       value={student.birthPlace || ""}
                       onChange={(e) => updateStudent(idx, "birthPlace", e.target.value)}
                       placeholder="es. Roma (RM)"
-                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="block w-full max-w-full min-w-0 pl-8 pr-2.5 py-2 text-xs box-border border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {(studentErrors?.birthPlace || (idx === 0 && errors.studentBirthPlace)) && (
@@ -288,7 +288,7 @@ export function CheckoutStudentsList({
                       value={student.email || ""}
                       onChange={(e) => updateStudent(idx, "email", e.target.value)}
                       placeholder="studente@email.com"
-                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {studentErrors?.email && (
@@ -305,7 +305,7 @@ export function CheckoutStudentsList({
                       value={student.phone || ""}
                       onChange={(e) => updateStudent(idx, "phone", e.target.value)}
                       placeholder="+39 340 0000000"
-                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white font-medium transition-all"
+                      className="w-full pl-8 pr-2.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white font-medium transition-all"
                     />
                   </div>
                   {studentErrors?.phone && (
@@ -334,7 +334,7 @@ export function CheckoutStudentsList({
         type="button"
         onClick={addStudent}
         disabled={studentsList.length >= 10}
-        className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-[#043569]/30 hover:border-[#043569] text-[#043569] hover:bg-[#043569]/5 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary text-primary hover:bg-primary/5 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Plus className="w-4 h-4" weight="bold" />
         Aggiungi un altro studente (+{coursePrice.toFixed(2)}€)

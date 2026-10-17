@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "seed:instance": "node scripts/seed-instance.js",
     "dev:desktop": "pnpm --filter desktop dev",
     "dev:all": "node scripts/dev-runner.js prod",
     "dev:dev": "node scripts/dev-runner.js dev",

@@ -39,9 +39,9 @@ export function CheckoutSuccessView() {
 
   if (verifying) {
     return (
-      <main className="h-screen flex items-center justify-center bg-gradient-to-br from-[#043569] via-[#054080] to-[#021f42] px-4">
+      <main className="h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-hover to-primary-dark px-4">
         <div className="flex flex-col items-center gap-4 text-white">
-          <CircleNotch className="w-10 h-10 animate-spin text-[#F8861D]" />
+          <CircleNotch className="w-10 h-10 animate-spin text-secondary" />
           <p className="font-bold text-sm uppercase tracking-widest text-white/60">
             Conferma in corso...
           </p>
@@ -51,7 +51,7 @@ export function CheckoutSuccessView() {
   }
 
   const dateLocale = it;
-  const courseName = bookingData?.item_name || bookingData?.course_name || bookingData?.name || bookingData?.title_it || bookingData?.title || "Corso Atena School";
+  const courseName = bookingData?.item_name || bookingData?.course_name || bookingData?.name || bookingData?.title_it || bookingData?.title || "Corso";
   const regFee = Number(bookingData?.registration_fee || 0);
   const coursePrice = Number(bookingData?.course_price ?? bookingData?.item_price ?? 0);
   const totalPaid = Number(bookingData?.amount_paid || (coursePrice + regFee));
@@ -71,10 +71,10 @@ export function CheckoutSuccessView() {
     : null;
 
   return (
-    <main className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-[#043569]/[0.02] to-[#F8861D]/[0.03] text-foreground flex flex-col items-center justify-center relative">
+    <main className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 bg-gradient-to-br from-slate-50 via-primary/[0.02] to-secondary/[0.03] text-foreground flex flex-col items-center justify-center relative">
       {/* Subtle Ambient Decorative Glow Orbs */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-[#043569]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-[#F8861D]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Centered Premium SaaS Success Card */}
       <div className="max-w-lg w-full bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-7 sm:p-9 flex flex-col items-center text-center space-y-6 relative z-10 overflow-hidden select-none">
@@ -89,7 +89,7 @@ export function CheckoutSuccessView() {
           <span className="inline-block text-[11px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-0.5 rounded-full">
             {isPaid ? "Pagamento confermato" : "Prenotazione confermata"}
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#043569] pt-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-primary pt-1">
             {isPaid ? "Grazie per il tuo acquisto!" : "Prenotazione ricevuta!"}
           </h1>
           <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed pt-0.5">
@@ -113,7 +113,7 @@ export function CheckoutSuccessView() {
 
         {/* Order Receipt Box */}
         <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-left space-y-2.5">
-          <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 text-xs font-bold text-[#043569]">
+          <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 text-xs font-bold text-primary">
             <span>Riepilogo lezione</span>
             <span className="text-[10px] font-bold text-emerald-600 bg-emerald-100/60 px-2 py-0.5 rounded-md">
               {isPaid ? "Pagato" : "Paga in sede"}
@@ -156,7 +156,7 @@ export function CheckoutSuccessView() {
 
             <div className="flex justify-between items-center pt-2 border-t border-slate-200/60">
               <span className="font-bold text-slate-700">Totale</span>
-              <span className="font-extrabold text-[#043569] text-base">€{totalPaid.toFixed(2)}</span>
+              <span className="font-extrabold text-primary text-base">€{totalPaid.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -164,7 +164,7 @@ export function CheckoutSuccessView() {
         {/* Email Sent Confirmation Badge */}
         {emailDisplay && (
           <div className="w-full flex items-center justify-center gap-2 text-xs text-slate-500 bg-slate-50 border border-slate-100 rounded-xl py-2 px-3">
-            <Envelope className="w-3.5 h-3.5 text-[#F8861D]" />
+            <Envelope className="w-3.5 h-3.5 text-secondary" />
             <span>Conferma inviata a <strong className="text-slate-800">{emailDisplay}</strong></span>
           </div>
         )}
@@ -176,7 +176,7 @@ export function CheckoutSuccessView() {
               onClick={() => {
                 window.location.href = getStudentPortalUrl('/dashboard');
               }}
-              className="w-full py-3.5 px-6 bg-[#043569] hover:bg-[#032850] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+              className="w-full py-3.5 px-6 bg-primary hover:bg-primary-hover active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
               <SquaresFour className="w-4 h-4" />
               <span>Vai alla tua Dashboard</span>
@@ -186,7 +186,7 @@ export function CheckoutSuccessView() {
               onClick={() => {
                 window.location.href = getStudentPortalUrl('/autenticazione/accedi?redirect=/dashboard');
               }}
-              className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+              className="w-full py-3.5 px-6 bg-secondary hover:bg-secondary-hover active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
             >
               <GoogleLogo className="w-4 h-4" weight="bold" />
               <span>Accedi con Google</span>
@@ -195,7 +195,7 @@ export function CheckoutSuccessView() {
             <button
               onClick={handleSendMagicLink}
               disabled={sendingMagicLink}
-              className="w-full py-3.5 px-6 bg-[#F8861D] hover:bg-[#e07516] active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
+              className="w-full py-3.5 px-6 bg-secondary hover:bg-secondary-hover active:scale-[0.99] text-white rounded-2xl font-bold text-xs transition-all duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
             >
               {sendingMagicLink ? (
                 <CircleNotch className="w-4 h-4 animate-spin" />
@@ -211,9 +211,9 @@ export function CheckoutSuccessView() {
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5 w-full">
             <Link
               href="/corsi"
-              className="w-full sm:w-1/2 py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-[#043569] font-bold text-xs border border-slate-200 shadow-xs hover:shadow transition-all flex items-center justify-center gap-1.5"
+              className="w-full sm:w-1/2 py-2.5 px-3 rounded-xl bg-white hover:bg-slate-50 text-primary font-bold text-xs border border-slate-200 shadow-xs hover:shadow transition-all flex items-center justify-center gap-1.5"
             >
-              <GraduationCap className="w-4 h-4 text-[#F8861D]" weight="bold" />
+              <GraduationCap className="w-4 h-4 text-secondary" weight="bold" />
               <span>Esplora altri Corsi</span>
             </Link>
             <Link

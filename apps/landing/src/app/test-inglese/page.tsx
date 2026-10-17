@@ -1,9 +1,13 @@
 import { EnglishTest } from "@/features/test-inglese";
 import { env } from "@/config/env";
+import { getSchoolProfile } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 export async function generateMetadata() {
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
-  const title = "Test di Inglese Online Gratis — Atena School";
+  const title = `Test di Inglese Online Gratis — ${school.name}`;
   const description =
     "Metti alla prova le tue competenze in soli 2 minuti. Rispondi a 6 domande rapide e scopri subito il tuo livello CEFR stimato (da A1 a C2).";
 
@@ -25,7 +29,7 @@ export async function generateMetadata() {
       type: "website",
       locale: "it_IT",
       url: `${siteUrl}/test-inglese`,
-      siteName: "Atena School",
+      siteName: school.name,
       title,
       description,
       images: [
@@ -33,7 +37,7 @@ export async function generateMetadata() {
           url: `${siteUrl}/og-default.webp`,
           width: 1200,
           height: 630,
-          alt: "Atena School English Test",
+          alt: `${school.name} English Test`,
         },
       ],
     },
@@ -41,8 +45,6 @@ export async function generateMetadata() {
       card: "summary_large_image",
       title,
       description,
-      site: "@atenaschool",
-      creator: "@atenaschool",
     },
   };
 }

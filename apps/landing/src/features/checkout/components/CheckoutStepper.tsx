@@ -35,7 +35,7 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
         {/* Connecting Line Track with Active Progress inside */}
         <div className={`absolute top-4 left-8 right-8 h-[2px] -translate-y-1/2 z-0 ${dark ? "bg-white/20" : "bg-slate-200"}`}>
           <div
-            className="h-full bg-[#043569] transition-all duration-500 ease-out"
+            className="h-full bg-primary transition-all duration-500 ease-out"
             style={{
               width: currentStep === 1 ? "0%" : currentStep === 2 ? "50%" : "100%",
             }}
@@ -56,10 +56,10 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
                   w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 shadow-sm
                   ${
                     isCompleted
-                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/10 group-hover:scale-110 group-hover:bg-[#F8861D]"
+                      ? "bg-primary text-white ring-4 ring-primary/10 group-hover:scale-110 group-hover:bg-secondary"
                       : isCurrent
-                      ? "bg-[#043569] text-white ring-4 ring-[#043569]/15 shadow-md scale-105"
-                      : "bg-white text-slate-300 border border-slate-200 group-hover:border-[#043569] group-hover:scale-110"
+                      ? "bg-primary text-white ring-4 ring-primary/15 shadow-md scale-105"
+                      : "bg-white text-slate-300 border border-slate-200 group-hover:border-primary group-hover:scale-110"
                   }
                 `}
               >
@@ -70,7 +70,7 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
                     className={`w-4 h-4 transition-colors ${
                       isCurrent
                         ? "text-white"
-                        : "text-slate-400 group-hover:text-[#043569]"
+                        : "text-slate-400 group-hover:text-primary"
                     }`}
                   />
                 )}
@@ -82,10 +82,10 @@ export function CheckoutStepper({ currentStep, dark, id: propId }: CheckoutStepp
                   mt-1.5 text-[11px] sm:text-xs font-semibold text-center transition-colors whitespace-nowrap leading-tight
                   ${
                     isCurrent
-                      ? "text-[#043569] font-bold"
+                      ? "text-primary font-bold"
                       : isCompleted
-                      ? "text-slate-600 group-hover:text-[#043569]"
-                      : "text-slate-400 group-hover:text-[#043569]"
+                      ? "text-slate-600 group-hover:text-primary"
+                      : "text-slate-400 group-hover:text-primary"
                   }
                 `}
               >

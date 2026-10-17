@@ -52,7 +52,7 @@ export function DynamicCustomFields({
 
         const inputErrorClasses = errorText
           ? "border-red-400 focus:border-red-500 focus:ring-red-100 ring-1 ring-red-300"
-          : "border-slate-200 focus:ring-[#043569]/10 focus:border-[#043569]";
+          : "border-slate-200 focus:ring-primary/10 focus:border-primary";
 
         return (
           <div
@@ -108,7 +108,7 @@ export function DynamicCustomFields({
                   {...register(fieldName, {
                     required: field.is_required ? requiredMsg : false,
                   })}
-                  className="w-4 h-4 rounded text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5"
+                  className="w-4 h-4 rounded text-primary border-slate-300 focus:ring-primary mt-0.5"
                 />
                 <div>
                   <span className="text-xs font-bold text-slate-800 block leading-snug">

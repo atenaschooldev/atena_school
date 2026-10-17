@@ -291,7 +291,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                 {/* Contact Rows */}
                 <div className="space-y-4 pt-2">
                   <div className="flex gap-3 items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#F8861D] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <Phone className="w-4 h-4 text-white" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -302,7 +302,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                   </div>
 
                   <div className="flex gap-3 items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#F8861D] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <Envelope className="w-4 h-4 text-white" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -312,7 +312,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                   </div>
 
                   <div className="flex gap-3 items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#F8861D] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <MapPin className="w-4 h-4 text-white" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -322,7 +322,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                   </div>
 
                   <div className="flex gap-3 items-center">
-                    <div className="w-8 h-8 rounded-full bg-[#F8861D] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <Clock className="w-4 h-4 text-white" weight="fill" />
                     </div>
                     <div className="text-left">
@@ -408,7 +408,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                     <div className="absolute w-full h-[2px] bg-gray-300 top-1/3 -rotate-12" />
                     <div className="absolute w-[2px] h-full bg-gray-300 left-1/2 rotate-12" />
                     <div className="absolute w-full h-[2px] bg-gray-300 bottom-1/4 rotate-6" />
-                    <MapPin className="w-6 h-6 text-[#F8861D] relative z-10 animate-bounce" weight="fill" />
+                    <MapPin className="w-6 h-6 text-secondary relative z-10 animate-bounce" weight="fill" />
                   </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="text-xs font-black text-gray-800 truncate">{school.name}</p>
@@ -417,7 +417,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       href={school.maps_url || `https://maps.google.com/?q=${encodeURIComponent(address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block text-[10px] font-bold text-[#F8861D] hover:underline mt-1.5"
+                      className="inline-block text-[10px] font-bold text-secondary hover:underline mt-1.5"
                     >
                       Apri in Google Maps →
                     </a>
@@ -453,7 +453,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                         required
                         className={`w-full bg-gray-50 border ${
                           fieldErrors.nome ? "border-red-500 bg-red-50/20" : "border-gray-200"
-                        } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                        } focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
                       />
                     </div>
                     {fieldErrors.nome && (
@@ -472,7 +472,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                         required
                         className={`w-full bg-gray-50 border ${
                           fieldErrors.cognome ? "border-red-500 bg-red-50/20" : "border-gray-200"
-                        } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                        } focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
                       />
                     </div>
                     {fieldErrors.cognome && (
@@ -493,7 +493,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       required
                       className={`w-full bg-gray-50 border ${
                         fieldErrors.email ? "border-red-500 bg-red-50/20" : "border-gray-200"
-                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                      } focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
                     />
                   </div>
                   {fieldErrors.email && (
@@ -512,7 +512,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       placeholder="Telefono (es. +39 340 1234567)"
                       className={`w-full bg-gray-50 border ${
                         fieldErrors.telefono ? "border-red-500 bg-red-50/20" : "border-gray-200"
-                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
+                      } focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none transition-all duration-300 text-gray-900`}
                     />
                   </div>
                   {fieldErrors.telefono && (
@@ -526,7 +526,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                     name="interesse"
                     value={formData.interesse}
                     onChange={handleChange}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-10 text-base md:text-xs text-gray-700 placeholder-gray-400 outline-none appearance-none transition-all duration-300"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-10 text-base md:text-xs text-gray-700 placeholder-gray-400 outline-none appearance-none transition-all duration-300"
                   >
                     <option value="" disabled hidden>
                       Sono interessato a...
@@ -551,7 +551,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       rows={8}
                       className={`w-full bg-gray-50 border ${
                         fieldErrors.messaggio ? "border-red-500 bg-red-50/20" : "border-gray-200"
-                      } focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px]`}
+                      } focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-3 pl-10 pr-3 text-base md:text-xs placeholder-gray-400 outline-none resize-none transition-all duration-300 text-gray-900 min-h-[140px]`}
                     />
                     <span className="absolute bottom-2.5 right-3 text-[9px] text-gray-400">
                       {formData.messaggio.length} / 2000
@@ -580,7 +580,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                                 <select
                                   value={val}
                                   onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] focus:ring-1 focus:ring-[#F8861D]/30 rounded-xl py-2.5 px-3 text-xs appearance-none outline-none transition-all text-gray-900 cursor-pointer"
+                                  className="w-full bg-gray-50 border border-gray-200 focus:border-secondary focus:ring-1 focus:ring-secondary/30 rounded-xl py-2.5 px-3 text-xs appearance-none outline-none transition-all text-gray-900 cursor-pointer"
                                 >
                                   <option value="">{field.placeholder || "Seleziona un'opzione..."}</option>
                                   {field.options?.map((opt: any) => {
@@ -601,7 +601,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                                 onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                                 placeholder={field.placeholder}
                                 rows={2}
-                                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
+                                className="w-full bg-gray-50 border border-gray-200 focus:border-secondary rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900 resize-none"
                               />
                             ) : (
                               <input
@@ -609,7 +609,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                                 value={val}
                                 onChange={(e) => setCustomFieldsValues(prev => ({ ...prev, [field.key]: e.target.value }))}
                                 placeholder={field.placeholder}
-                                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F8861D] rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900"
+                                className="w-full bg-gray-50 border border-gray-200 focus:border-secondary rounded-xl py-2 px-3 text-xs outline-none transition-all text-gray-900"
                               />
                             )}
 
@@ -629,14 +629,14 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       type="checkbox"
                       checked={formData.privacy}
                       onChange={handleCheckboxChange}
-                      className="rounded border-gray-300 bg-gray-50 text-[#F8861D] focus:ring-offset-0 focus:ring-0 mt-0.5"
+                      className="rounded border-gray-300 bg-gray-50 text-secondary focus:ring-offset-0 focus:ring-0 mt-0.5"
                     />
                     <span className="text-[10px] text-gray-500 text-left leading-normal">
                       Accetto l'
                       <a
                         href="/privacy"
                         target="_blank"
-                        className="text-[#F8861D] hover:underline underline-offset-2 ml-1"
+                        className="text-secondary hover:underline underline-offset-2 ml-1"
                       >
                         Informativa sulla Privacy *
                       </a>
@@ -658,7 +658,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full bg-[#F8861D] hover:bg-[#e0730d] text-white font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`w-full bg-secondary hover:bg-secondary-hover text-white font-black text-sm py-3.5 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg shadow-orange-500/10 cursor-pointer select-none ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <PaperPlaneRight className="w-4 h-4" weight="fill" />
                   {loading ? 'Invio in corso...' : 'Invia richiesta'}
@@ -675,35 +675,35 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
             <div className="hidden md:flex md:col-span-3 flex-col justify-between space-y-6 md:pl-4 md:border-l border-gray-150 text-left">
               {/* Why Us Highlights */}
               <div className="space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-widest text-[#F8861D]">
+                <h4 className="text-xs font-black uppercase tracking-widest text-secondary">
                   Perché sceglierci?
                 </h4>
-                <div className="w-8 h-0.5 bg-[#F8861D]/55" />
+                <div className="w-8 h-0.5 bg-secondary/55" />
 
                 <div className="space-y-4 pt-2">
                   <div className="flex gap-3 items-start">
-                    <GraduationCap className="w-5 h-5 text-[#F8861D] shrink-0 mt-0.5" />
+                    <GraduationCap className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                     <p className="text-[11px] leading-relaxed font-bold text-gray-700">
                       Docenti qualificati e certificati
                     </p>
                   </div>
 
                   <div className="flex gap-3 items-start">
-                    <ShieldCheck className="w-5 h-5 text-[#F8861D] shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                     <p className="text-[11px] leading-relaxed font-bold text-gray-700">
                       Certificazioni riconosciute
                     </p>
                   </div>
 
                   <div className="flex gap-3 items-start">
-                    <ChartBar className="w-5 h-5 text-[#F8861D] shrink-0 mt-0.5" />
+                    <ChartBar className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                     <p className="text-[11px] leading-relaxed font-bold text-gray-700">
                       Percorsi personalizzati per ogni esigenza
                     </p>
                   </div>
 
                   <div className="flex gap-3 items-start">
-                    <Headset className="w-5 h-5 text-[#F8861D] shrink-0 mt-0.5" />
+                    <Headset className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
                     <p className="text-[11px] leading-relaxed font-bold text-gray-700">
                       Supporto costante e orientamento
                     </p>
@@ -713,7 +713,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
 
               {/* Promo Card */}
               <div className="border border-gray-150 bg-gradient-to-br from-white to-gray-50 p-4 rounded-2xl flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-[#F8861D]">
+                <div className="flex items-center gap-2 text-secondary">
                   <Calendar className="w-5 h-5" weight="bold" />
                   <span className="text-[10px] font-black uppercase tracking-widest leading-none">Voucher omaggio</span>
                 </div>
@@ -736,7 +736,7 @@ const ContactModal = ({ isOpen, onClose, contactData, school = DEFAULT_SCHOOL_PR
                       messaggio: "Vorrei richiedere una consulenza gratuita.",
                     }));
                   }}
-                  className="w-full border border-[#F8861D] hover:bg-[#F8861D] hover:text-white text-[#F8861D] font-bold text-[10px] py-2 px-4 rounded-xl transition-all duration-300 text-center select-none cursor-pointer"
+                  className="w-full border border-secondary hover:bg-secondary hover:text-white text-secondary font-bold text-[10px] py-2 px-4 rounded-xl transition-all duration-300 text-center select-none cursor-pointer"
                 >
                   Prenota ora →
                 </button>

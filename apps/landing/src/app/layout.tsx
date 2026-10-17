@@ -39,6 +39,7 @@ const nunito = Nunito({
 });
 
 import { env } from '@/config/env';
+import { brandConfig, getEffectiveSchoolProfile } from '@/config/brand.config';
 import { getAnalyticsCredentials, getSchoolProfile, getSentryCredentials } from '@atena/core';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
 
@@ -46,7 +47,8 @@ const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
   const supabase = getSupabaseAdmin();
-  const school = await getSchoolProfile(supabase);
+  const rawSchool = await getSchoolProfile(supabase);
+  const school = getEffectiveSchoolProfile(rawSchool);
   const title = `${school.name} — Scuola di Lingue e Formazione a ${school.city}`;
   const description = `Corsi di lingua, recupero scolastico e certificazioni a ${school.city} (${school.province}). Lezioni individuali e di gruppo, online e in presenza.`;
 
@@ -110,7 +112,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const supabase = getSupabaseAdmin();
-  const [messages, school, analytics, sentry] = await Promise.all([
+  const [messages, rawSchool, analytics, sentry] = await Promise.all([
     getMessages(),
     getSchoolProfile(supabase),
     getAnalyticsCredentials(supabase as any).catch(() => ({
@@ -123,11 +125,26 @@ export default async function RootLayout({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || process.env.SENTRY_DSN || '',
     })),
   ]);
+  const school = getEffectiveSchoolProfile(rawSchool);
 
   return (
     <html lang="it" translate="no" suppressHydrationWarning className={`notranslate ${nunito.variable}`} data-scroll-behavior="smooth">
       <head>
         <meta name="google" content="notranslate" />
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root {
+                --primary: ${(school as any)?.primary_color || brandConfig.theme.primary};
+                --primary-dark: ${(school as any)?.primary_dark_color || brandConfig.theme.primaryDark};
+                --primary-hover: ${(school as any)?.primary_hover_color || brandConfig.theme.primaryHover};
+                --secondary: ${(school as any)?.secondary_color || brandConfig.theme.secondary};
+                --secondary-hover: ${(school as any)?.secondary_hover_color || brandConfig.theme.secondaryHover};
+                --secondary-light: ${(school as any)?.secondary_light_color || brandConfig.theme.secondaryLight};
+              }
+            `,
+          }}
+        />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://www.clarity.ms" />

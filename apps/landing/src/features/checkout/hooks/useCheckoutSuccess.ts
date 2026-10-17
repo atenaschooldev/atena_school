@@ -11,6 +11,7 @@ import { trackEvent } from "@/lib/analytics";
 import { BookingPaymentStatus } from "@atena/api-types";
 import type { User } from "@supabase/supabase-js";
 import type { BookingRecord } from "@atena/api-types";
+import { brandConfig } from "@/config/brand.config";
 
 export function useCheckoutSuccess(overrideBookingId?: string) {
   const router = useRouter();
@@ -123,7 +124,7 @@ export function useCheckoutSuccess(overrideBookingId?: string) {
       particleCount: 150,
       spread: 70,
       origin: { y: 0.6 },
-      colors: ["#F8861D", "#043569", "#FFFFFF"],
+      colors: [brandConfig.theme.secondary, brandConfig.theme.primary, "#FFFFFF"],
     });
 
     if (bookingData) {

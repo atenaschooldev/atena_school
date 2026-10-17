@@ -66,15 +66,15 @@ export function CheckoutMobileSummary({
         )}
         <div className="min-w-0 flex-1">
           {item?.category && (
-            <span className="text-[9px] font-black uppercase tracking-wider text-[#043569] bg-[#043569]/10 px-2 py-0.5 rounded-md inline-block mb-0.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-md inline-block mb-0.5">
               {formatCategoryName(item.category)}
             </span>
           )}
-          <h3 className="text-sm font-black text-[#043569] truncate leading-tight">
+          <h3 className="text-sm font-black text-primary truncate leading-tight">
             {title}
           </h3>
           <div className="flex items-center gap-2 mt-0.5">
-            <p className="text-xs font-bold text-[#F8861D]">
+            <p className="text-xs font-bold text-secondary">
               Prezzo corso: {coursePrice.toFixed(2)}€
             </p>
             {discountAmount > 0 && (
@@ -93,12 +93,12 @@ export function CheckoutMobileSummary({
           suppressHydrationWarning
         >
           <span className="font-semibold text-slate-600 flex items-center gap-1">
-            <CalendarIcon className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
-            Data inizio: <strong className="text-[#043569] uppercase">{formattedDateString(dateParam)}</strong>
+            <CalendarIcon className="w-3.5 h-3.5 text-secondary" weight="bold" />
+            Data inizio: <strong className="text-primary uppercase">{formattedDateString(dateParam)}</strong>
           </span>
           {timeParam && (
             <span className="font-semibold text-slate-600 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+              <Clock className="w-3.5 h-3.5 text-primary" weight="bold" />
               Orario: <strong className="text-slate-800">{timeParam}</strong>
             </span>
           )}
@@ -110,7 +110,7 @@ export function CheckoutMobileSummary({
         <div className="pt-2 border-t border-slate-100 space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-              <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+              <Tag className="w-3.5 h-3.5 text-primary" weight="bold" />
               Codice Promozionale
             </span>
           </div>
@@ -150,13 +150,13 @@ export function CheckoutMobileSummary({
                   }
                 }}
                 placeholder="es. PROMO10"
-                className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
+                className="flex-1 min-w-0 px-2.5 py-1.5 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
               />
               <button
                 type="button"
                 onClick={() => applyPromoCode()}
                 disabled={applyingPromo || !promoCodeInput.trim()}
-                className="px-3 py-1.5 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[64px]"
+                className="px-3 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[64px]"
               >
                 {applyingPromo ? <Spinner className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
               </button>

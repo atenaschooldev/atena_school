@@ -188,10 +188,10 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
               <Star key={i} size={11} weight="fill" />
             ))}
           </div>
-          <span className="text-[11px] font-black text-[#043569]">5.0</span>
+          <span className="text-[11px] font-black text-primary">5.0</span>
         </div>
 
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-[#043569] leading-tight tracking-tight">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-primary leading-tight tracking-tight">
           Cosa dicono i nostri studenti
         </h2>
 
@@ -205,7 +205,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
             href={googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] transition-colors py-1 px-3 rounded-lg hover:bg-white/80"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-secondary transition-colors py-1 px-3 rounded-lg hover:bg-white/80"
           >
             <span>Visualizza su Google Maps</span>
             <ArrowUpRight size={14} weight="bold" />
@@ -235,7 +235,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
                       tabIndex={0}
                       aria-haspopup="dialog"
                       aria-label={`Leggi recensione di ${item.author}`}
-                      className="h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#043569] rounded-3xl"
+                      className="h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
                       onClick={() => setActiveTestimonial(item)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
@@ -283,7 +283,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
                         {/* Bottom Action */}
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400">
                           <span>Google Maps</span>
-                          <span className="text-[#F8861D] group-hover:translate-x-0.5 transition-transform font-extrabold">
+                          <span className="text-secondary group-hover:translate-x-0.5 transition-transform font-extrabold">
                             Leggi tutto →
                           </span>
                         </div>
@@ -304,7 +304,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
               key={index}
               onClick={() => emblaApi?.scrollTo(index)}
               className={`h-1.5 transition-all duration-500 rounded-full cursor-pointer ${
-                index === selectedIndex ? "w-6 bg-[#F8861D]" : "w-1.5 bg-slate-200"
+                index === selectedIndex ? "w-6 bg-secondary" : "w-1.5 bg-slate-200"
               }`}
               aria-label={`Vai alla recensione ${index + 1}`}
             />
@@ -367,7 +367,7 @@ const TestimonialsSection = ({ data, school = DEFAULT_SCHOOL_PROFILE }: Testimon
                 href={googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#043569] hover:text-[#F8861D] transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-secondary transition-colors"
               >
                 <span>Vedi scheda su Google Maps</span>
                 <ArrowUpRight size={14} weight="bold" />

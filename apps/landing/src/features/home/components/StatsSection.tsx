@@ -8,6 +8,7 @@ import cambridgeLogo from "@/assets/cambridge.webp";
 import eipassLogo from "@/assets/eipass_logo.webp";
 import trinityLogo from "@/assets/trinity_transparent.webp";
 import LogoLoop, { LogoItem } from "@/components/ui/LogoLoop";
+import { brandConfig } from "@/config/brand.config";
 
 type StatItem =
   | { type: "icon"; icon: React.ElementType; value: string; label: string }
@@ -20,11 +21,17 @@ const StatsSection = () => {
     const stats: StatItem[] = [
       { type: "icon", icon: Users, value: t("students_val"), label: t("students_lbl") },
       { type: "icon", icon: CheckCircle, value: t("pass_rate_val"), label: t("pass_rate_lbl") },
-      { type: "logo", src: cambridgeLogo, alt: "Cambridge English", label: "Preparazione Esami", href: "https://www.cambridgeenglish.org/", height: 48, scale: 1.5 },
+      ...(brandConfig.features.enableAccreditations
+        ? [{ type: "logo" as const, src: cambridgeLogo, alt: "Cambridge English", label: "Preparazione Esami", href: "https://www.cambridgeenglish.org/", height: 48, scale: 1.5 }]
+        : []),
       { type: "icon", icon: TrendUp, value: t("experience_val"), label: t("experience_lbl") },
-      { type: "logo", src: trinityLogo, alt: "Trinity College London", label: "Registered Exam Centre", href: "https://www.trinitycollege.it", filter: "brightness(0) invert(1)", height: 36, scale: 1.5 },
+      ...(brandConfig.features.enableAccreditations
+        ? [{ type: "logo" as const, src: trinityLogo, alt: "Trinity College London", label: "Registered Exam Centre", href: "https://www.trinitycollege.it", filter: "brightness(0) invert(1)", height: 36, scale: 1.5 }]
+        : []),
       { type: "icon", icon: Trophy, value: t("certifications_val"), label: t("certifications_lbl") },
-      { type: "logo", src: eipassLogo, alt: "EIPASS", label: "Centro autorizzato", href: "https://it.eipass.com/", filter: "brightness(0) invert(1)", height: 32, scale: 1.2 },
+      ...(brandConfig.features.enableAccreditations
+        ? [{ type: "logo" as const, src: eipassLogo, alt: "EIPASS", label: "Centro autorizzato", href: "https://it.eipass.com/", filter: "brightness(0) invert(1)", height: 32, scale: 1.2 }]
+        : []),
     ];
 
     return stats.map((stat) => ({
@@ -34,7 +41,7 @@ const StatsSection = () => {
         <div className="inline-flex items-center gap-4 px-6 shrink-0">
           {stat.type === "icon" ? (
             <>
-              <stat.icon size={18} weight="bold" className="text-[#FAA904] shrink-0" />
+              <stat.icon size={18} weight="bold" className="text-secondary shrink-0" />
               <span className="font-black text-base uppercase tracking-widest text-white">{stat.value}</span>
               <span className="text-white text-xs font-bold uppercase tracking-widest">{stat.label}</span>
             </>
@@ -64,8 +71,12 @@ const StatsSection = () => {
     }));
   }, [t]);
 
+  if (!brandConfig.features.enableStatsBanner) {
+    return null;
+  }
+
   return (
-    <div className="relative z-30 w-full bg-[#00328F] overflow-hidden border-y border-white/10 py-4">
+    <div className="relative z-30 w-full bg-primary-dark overflow-hidden border-y border-white/10 py-4">
       <LogoLoop
         logos={logoItems}
         speed={60}

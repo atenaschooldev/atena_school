@@ -1,11 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { env } from "@/config/env";
+import { getSchoolProfile } from "@atena/core";
+import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export async function generateMetadata() {
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const title = 'Cookie Policy';
-  const description = 'Informativa sull\'utilizzo dei cookie su Atena School. Scopri quali cookie utilizziamo e come gestirli.';
+  const description = `Informativa sull'utilizzo dei cookie su ${school.name}. Scopri quali cookie utilizziamo e come gestirli.`;
   const url = `${siteUrl}/cookies`;
 
   return {
@@ -19,7 +23,7 @@ export async function generateMetadata() {
       type: 'website',
       locale: 'it_IT',
       url,
-      siteName: 'Atena School',
+      siteName: school.name,
       title,
       description,
     },
@@ -28,6 +32,8 @@ export async function generateMetadata() {
 
 export default async function CookiePolicy() {
   const t = await getTranslations("cookies");
+  const supabase = getSupabaseAdmin();
+  const school = await getSchoolProfile(supabase);
   const locale = 'it';
   const sections = [0, 1, 2];
 
@@ -44,7 +50,7 @@ export default async function CookiePolicy() {
         <div className="space-y-12">
           <section>
             <p className="text-lg leading-relaxed text-foreground/80">
-              {t("description")}
+              {t("description").replace(/Atena School/g, school.name)}
             </p>
           </section>
 

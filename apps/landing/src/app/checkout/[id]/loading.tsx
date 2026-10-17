@@ -7,7 +7,7 @@ export default function CheckoutLoading() {
         {/* Steps Progress Skeleton */}
         <div className="flex items-center justify-center gap-3 sm:gap-6 mb-8 sm:mb-12 animate-pulse">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#043569]/30" />
+            <div className="w-8 h-8 rounded-full bg-primary/30" />
             <div className="h-4 w-20 bg-slate-200 rounded hidden sm:block" />
           </div>
           <div className="w-12 h-0.5 bg-slate-200" />
@@ -74,7 +74,7 @@ export default function CheckoutLoading() {
                   <div className="h-6 w-24 bg-slate-300 rounded" />
                 </div>
               </div>
-              <div className="h-14 w-full bg-[#043569]/30 rounded-2xl mt-4" />
+              <div className="h-14 w-full bg-primary/30 rounded-2xl mt-4" />
             </div>
           </div>
         </div>

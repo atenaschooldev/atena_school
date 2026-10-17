@@ -28,7 +28,7 @@ export function CheckoutPaymentModeSelector({
           onClick={() => setSelectedPaymentMode(SubmitAction.PAY)}
           className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
             selectedPaymentMode === SubmitAction.PAY
-              ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+              ? "border-primary ring-2 ring-primary/10 shadow-sm"
               : "border-slate-200 hover:border-slate-300 opacity-75"
           }`}
         >
@@ -37,11 +37,11 @@ export function CheckoutPaymentModeSelector({
             name="paymentMode"
             checked={selectedPaymentMode === SubmitAction.PAY}
             onChange={() => setSelectedPaymentMode(SubmitAction.PAY)}
-            className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
+            className="w-3.5 h-3.5 text-primary border-slate-300 focus:ring-primary mt-0.5 cursor-pointer"
           />
           <div className="space-y-0.5">
-            <span className="text-[11px] font-black text-[#043569] flex items-center gap-1">
-              <CreditCard className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+            <span className="text-[11px] font-black text-primary flex items-center gap-1">
+              <CreditCard className="w-3.5 h-3.5 text-primary" weight="bold" />
               Paga subito online
             </span>
             <span className="text-[10px] text-slate-500 font-medium leading-tight block">
@@ -55,7 +55,7 @@ export function CheckoutPaymentModeSelector({
           onClick={() => setSelectedPaymentMode(SubmitAction.BOOK)}
           className={`p-2.5 rounded-xl border-2 transition-all cursor-pointer bg-white flex items-start gap-2 ${
             selectedPaymentMode === SubmitAction.BOOK
-              ? "border-[#043569] ring-2 ring-[#043569]/10 shadow-sm"
+              ? "border-primary ring-2 ring-primary/10 shadow-sm"
               : "border-slate-200 hover:border-slate-300 opacity-75"
           }`}
         >
@@ -64,11 +64,11 @@ export function CheckoutPaymentModeSelector({
             name="paymentMode"
             checked={selectedPaymentMode === SubmitAction.BOOK}
             onChange={() => setSelectedPaymentMode(SubmitAction.BOOK)}
-            className="w-3.5 h-3.5 text-[#043569] border-slate-300 focus:ring-[#043569] mt-0.5 cursor-pointer"
+            className="w-3.5 h-3.5 text-primary border-slate-300 focus:ring-primary mt-0.5 cursor-pointer"
           />
           <div className="space-y-0.5">
             <span className="text-[11px] font-black text-slate-800 flex items-center gap-1">
-              <Storefront className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+              <Storefront className="w-3.5 h-3.5 text-secondary" weight="bold" />
               Prenota e paga in sede
             </span>
             <span className="text-[10px] text-slate-500 font-medium leading-tight block">

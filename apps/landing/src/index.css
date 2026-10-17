@@ -5,8 +5,12 @@
 
 :root {
   --primary: #043569;
+  --primary-dark: #00328F;
+  --primary-hover: #032852;
   --primary-foreground: #ffffff;
   --secondary: #F8861D;
+  --secondary-hover: #e0730d;
+  --secondary-light: #fff5eb;
   --secondary-foreground: #ffffff;
   --accent: #fff5eb;
   --accent-foreground: #043569;
@@ -16,8 +20,12 @@
 
 .dark {
   --primary: #F8861D;
+  --primary-dark: #e0730d;
+  --primary-hover: #FAA904;
   --primary-foreground: #043569;
   --secondary: #043569;
+  --secondary-hover: #032852;
+  --secondary-light: #1e130a;
   --secondary-foreground: #ffffff;
   --accent: #1e130a;
   --accent-foreground: #F8861D;
@@ -25,6 +33,11 @@
 }
 
 @theme {
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-light: var(--secondary-light);
+
   --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-nunito), Georgia, serif;
   
@@ -168,7 +181,7 @@
 
 /* Custom styles for React Day Picker v9 */
 .rdp-root {
-  --rdp-accent-color: #F8861D !important;
+  --rdp-accent-color: var(--secondary) !important;
   --rdp-accent-text-color: #ffffff !important;
   --rdp-day-radius: 50% !important;
   width: 100% !important;
@@ -213,7 +226,7 @@
 
 .rdp-day_button:hover:not(:disabled) {
   background-color: rgba(248, 134, 29, 0.1) !important;
-  color: #F8861D !important;
+  color: var(--secondary) !important;
 }
 
 .rdp-weekday {
@@ -229,7 +242,7 @@
 .rdp-selected .rdp-day_button,
 .rdp-selected .rdp-day_button:hover,
 .rdp-selected .rdp-day_button:focus {
-  background-color: #043569 !important;
+  background-color: var(--primary) !important;
   color: #ffffff !important;
   box-shadow: 0 8px 16px -4px rgba(4, 53, 105, 0.4) !important;
   font-weight: 900 !important;
@@ -237,8 +250,8 @@
 }
 
 .rdp-today .rdp-day_button {
-  border: 2px solid #F8861D !important;
-  color: #F8861D !important;
+  border: 2px solid var(--secondary) !important;
+  color: var(--secondary) !important;
   font-weight: 900 !important;
   position: relative !important;
 }
@@ -253,21 +266,21 @@
   width: 4px !important;
   height: 4px !important;
   border-radius: 50% !important;
-  background-color: #F8861D !important;
+  background-color: var(--secondary) !important;
 }
 
 /* Ensure today is visible even if disabled (e.g., falls on a weekend) */
 .rdp-disabled.rdp-today .rdp-day_button {
   opacity: 0.75 !important;
-  border-color: rgba(248, 134, 29, 0.5) !important;
-  color: rgba(248, 134, 29, 0.8) !important;
+  border-color: color-mix(in srgb, var(--secondary) 50%, transparent) !important;
+  color: color-mix(in srgb, var(--secondary) 80%, transparent) !important;
 }
 
 .rdp-selected.rdp-today .rdp-day_button,
 .rdp-selected.rdp-today .rdp-day_button:hover,
 .rdp-selected.rdp-today .rdp-day_button:focus {
   border-color: transparent !important;
-  background-color: #043569 !important;
+  background-color: var(--primary) !important;
   color: #ffffff !important;
   opacity: 1 !important;
 }
@@ -333,9 +346,9 @@
   align-items: center !important;
   justify-content: center !important;
   border-radius: 9999px !important;
-  border: 1px solid rgba(4, 53, 105, 0.15) !important;
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent) !important;
   background-color: white !important;
-  color: #043569 !important;
+  color: var(--primary) !important;
   cursor: pointer !important;
   transition: all 0.2s ease-in-out !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05) !important;
@@ -344,10 +357,10 @@
 
 .rdp-button_next:hover,
 .rdp-button_previous:hover {
-  background-color: #F8861D !important;
-  border-color: #F8861D !important;
+  background-color: var(--secondary) !important;
+  border-color: var(--secondary) !important;
   color: white !important;
-  box-shadow: 0 4px 6px -1px rgba(248, 134, 29, 0.2) !important;
+  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--secondary) 25%, transparent) !important;
 }
 
 .rdp-chevron {
@@ -484,12 +497,12 @@
   background-color: white;
   border: none;
   border-radius: 0.625rem;
-  color: #043569;
+  color: var(--primary);
   font-weight: 800;
   font-size: 0.8125rem;
   gap: 8px;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(248, 134, 29, 0.12);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--secondary) 15%, transparent);
   position: relative;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, color 0.3s ease;
@@ -503,7 +516,7 @@
 }
 
 .Btn-orange .svgIcon path {
-  fill: #043569;
+  fill: var(--primary);
   transition: fill 0.3s ease;
 }
 
@@ -512,7 +525,7 @@
   aspect-ratio: 1 / 1;
   position: absolute;
   content: "";
-  background-color: #F8861D;
+  background-color: var(--secondary);
   border-radius: 50%;
   left: -140%;
   top: 50%;

@@ -8,10 +8,10 @@ export default function CourseDetailLoading() {
           {/* LEFT — Course Detail Skeleton */}
           <div className="flex flex-col gap-4">
             {/* Hero Image Skeleton */}
-            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-[#043569]/30 animate-pulse aspect-[16/8] sm:aspect-[16/6] lg:aspect-[16/5.5] xl:aspect-[16/6] w-full max-h-[220px] sm:max-h-[250px] p-6 flex flex-col justify-end">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-primary/30 animate-pulse aspect-[16/8] sm:aspect-[16/6] lg:aspect-[16/5.5] xl:aspect-[16/6] w-full max-h-[220px] sm:max-h-[250px] p-6 flex flex-col justify-end">
               <div className="flex gap-2 mb-3">
                 <div className="h-5 w-24 bg-white/30 rounded-full" />
-                <div className="h-5 w-28 bg-[#F8861D]/50 rounded-full" />
+                <div className="h-5 w-28 bg-secondary/50 rounded-full" />
               </div>
               <div className="h-8 w-3/4 bg-white/40 rounded-xl" />
             </div>
@@ -67,7 +67,7 @@ export default function CourseDetailLoading() {
               </div>
 
               {/* CTA button placeholder */}
-              <div className="h-12 w-full bg-[#F8861D]/40 rounded-xl" />
+              <div className="h-12 w-full bg-secondary/40 rounded-xl" />
             </div>
           </div>
         </div>

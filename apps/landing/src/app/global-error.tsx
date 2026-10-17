@@ -22,7 +22,7 @@ export default function GlobalError({
             !
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-black text-[#043569]">Si è verificato un errore</h1>
+            <h1 className="text-xl font-black text-primary">Si è verificato un errore</h1>
             <p className="text-xs text-slate-500 font-medium">
               Si è verificato un problema imprevisto durante il caricamento della pagina.
             </p>
@@ -30,7 +30,7 @@ export default function GlobalError({
           <div className="pt-2">
             <button
               onClick={() => reset()}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#043569] text-white text-xs font-bold hover:bg-[#032852] transition-colors shadow-md"
+              className="w-full py-2.5 px-4 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover transition-colors shadow-md"
             >
               Riprova
             </button>

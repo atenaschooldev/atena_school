@@ -12,7 +12,7 @@ export default function TestIngleseLoading() {
 
         {/* Card Question Skeleton */}
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-          <div className="h-4 w-28 bg-[#F8861D]/30 rounded-full" />
+          <div className="h-4 w-28 bg-secondary/30 rounded-full" />
           <div className="h-6 w-full bg-slate-200 rounded-lg" />
           <div className="space-y-3 pt-2">
             <div className="h-12 w-full bg-slate-50 rounded-xl border border-slate-100" />

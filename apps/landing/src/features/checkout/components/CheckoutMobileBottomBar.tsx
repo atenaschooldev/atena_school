@@ -26,7 +26,7 @@ export function CheckoutMobileBottomBar({
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {selectedPaymentMode === SubmitAction.PAY ? "Totale Checkout" : "Totale da Saldare"}
           </p>
-          <p className="text-xl font-black text-[#F8861D] leading-none">{totalPrice.toFixed(2)}€</p>
+          <p className="text-xl font-black text-secondary leading-none">{totalPrice.toFixed(2)}€</p>
         </div>
 
         <button
@@ -38,8 +38,8 @@ export function CheckoutMobileBottomBar({
           disabled={!!submitting || isAnyFeeChecking}
           className={`px-5 py-3 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm shadow-lg active:scale-95 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
             selectedPaymentMode === SubmitAction.PAY
-              ? "bg-[#F8861D] text-white shadow-[#F8861D]/30"
-              : "bg-[#043569] text-white shadow-[#043569]/30"
+              ? "bg-secondary text-white shadow-secondary/30"
+              : "bg-primary text-white shadow-primary/30"
           }`}
         >
           {submitting ? (

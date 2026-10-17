@@ -73,7 +73,7 @@ const CtaBanner = () => {
                   return (
                     <div key={index} className="flex sm:flex-col lg:flex-row items-center sm:items-start lg:items-center gap-3 sm:gap-2 text-left">
                       {/* Mobile: rounded-full container, Desktop: standard icon color without container */}
-                      <div className="text-[#F8861D] shrink-0 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-full border border-white/10 sm:border-none shadow-sm sm:shadow-none flex items-center justify-center">
+                      <div className="text-secondary shrink-0 bg-white/5 sm:bg-transparent p-2 sm:p-0 rounded-full border border-white/10 sm:border-none shadow-sm sm:shadow-none flex items-center justify-center">
                         <Icon className="w-5 h-5 sm:w-[22px] sm:h-[22px] 2xl:w-6 2xl:h-6" weight="light" />
                       </div>
                       <div className="flex flex-col">
@@ -94,7 +94,7 @@ const CtaBanner = () => {
 
           {/* Right Column - Orange CTA with diagonal slash on desktop and rounded top corners on mobile */}
           <div
-            className="lg:col-span-5 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[38%] 2xl:relative 2xl:w-full 2xl:h-auto bg-[#F8861D] p-6 sm:p-8 lg:p-10 2xl:p-10 flex flex-col justify-center text-left text-white z-20 min-h-[220px] lg:min-h-0 cta-orange-side"
+            className="lg:col-span-5 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[38%] 2xl:relative 2xl:w-full 2xl:h-auto bg-secondary p-6 sm:p-8 lg:p-10 2xl:p-10 flex flex-col justify-center text-left text-white z-20 min-h-[220px] lg:min-h-0 cta-orange-side"
           >
             {/* Inner wrapper to shift text right and avoid getting clipped */}
             <div className="lg:pl-10 2xl:pl-0 space-y-4">

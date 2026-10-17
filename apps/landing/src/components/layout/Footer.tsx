@@ -26,12 +26,12 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
   const resolvedLogo = (!school.logo_url || school.logo_url === "/assets/logo.webp") ? logo : school.logo_url;
 
   return (
-    <footer className="w-full bg-[#043569] text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10 cv-auto">
+    <footer className="w-full bg-primary text-white pt-12 sm:pt-16 pb-8 px-4 sm:px-6 lg:px-12 relative overflow-hidden rounded-t-3xl sm:rounded-t-[40px] border-t border-white/10 cv-auto">
       {/* Centered Content Container */}
       <div className="max-w-7xl mx-auto relative z-10">
 
         {/* Ambient Light */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#F8861D]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Header Row */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-10 border-b border-white/10">
@@ -51,7 +51,7 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-serif font-black text-lg tracking-wider uppercase text-white">
-                  {school.name.split(' ')[0]} <span className="text-[#F8861D]">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
+                  {school.name.split(' ')[0]} <span className="text-secondary">{school.name.split(' ').slice(1).join(' ') || 'School'}</span>
                 </span>
                 {school.tagline && (
                   <span className="text-[8px] tracking-widest uppercase text-white/50">
@@ -84,62 +84,62 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             </h4>
             <ul className="space-y-2.5 text-xs text-white/85 font-medium">
               <li>
-                <Link prefetch={false} href="/corsi/toddlers-3-5-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/toddlers-3-5-anni" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Toddlers (3-5 anni)
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/kids-6-7-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/kids-6-7-anni" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Kids (6-7 anni)
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/beginners-starters-8-10-anni" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/beginners-starters-8-10-anni" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Starters (8-10 anni)
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/movers" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/movers" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Movers
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/flyers" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/flyers" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Flyers
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/a2-key-for-schools" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/a2-key-for-schools" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   A2 Key for Schools
                 </Link>
               </li>
               <li className="flex items-center gap-2">
-                <Link prefetch={false} href="/corsi/b1-preliminary" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/b1-preliminary" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   B1 Preliminary
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/b2-first" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/b2-first" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   B2 First
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/c1-advanced" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/c1-advanced" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   C1 Advanced
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/c2-advanced" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/c2-advanced" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   C2 Advanced
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/lezioni-private-singole" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/lezioni-private-singole" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Lezioni Private Singole
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/pacchetto-10-lezioni-private" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/pacchetto-10-lezioni-private" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Pacchetto 10 Lezioni Private
                 </Link>
               </li>
@@ -153,32 +153,32 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             </h4>
             <ul className="space-y-2.5 text-xs text-white/85 font-medium">
               <li className="flex items-center gap-2">
-                <Link prefetch={false} href="/corsi/eipass-7-moduli-user" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-7-moduli-user" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS 7 Moduli User
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/eipass-it-security" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-it-security" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS IT Security
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/eipass-coding" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-coding" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS Coding
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/eipass-lim" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-lim" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS LIM
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/eipass-personale-ata" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-personale-ata" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS Personale ATA
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi/eipass-tablet" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi/eipass-tablet" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   EIPASS Tablet
                 </Link>
               </li>
@@ -192,22 +192,22 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             </h4>
             <ul className="space-y-2.5 text-xs text-white/85 font-medium">
               <li>
-                <Link prefetch={false} href="/" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Home
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/#chi-siamo" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/#chi-siamo" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Chi Siamo
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/corsi" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/corsi" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Tutti i Corsi
                 </Link>
               </li>
               <li>
-                <Link prefetch={false} href="/#contatti" className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <Link prefetch={false} href="/#contatti" className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   Contatti
                 </Link>
               </li>
@@ -222,33 +222,33 @@ const Footer = ({ school = DEFAULT_SCHOOL_PROFILE }: FooterProps) => {
             <ul className="space-y-3 text-xs text-white/85 font-medium">
               {school.phone && (
                 <li className="flex items-center gap-2.5">
-                  <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                  <a href={`tel:${school.phone.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  <Phone size={16} className="text-secondary shrink-0" weight="bold" />
+                  <a href={`tel:${school.phone.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                     {school.phone}
                   </a>
                 </li>
               )}
               {school.landline && (
                 <li className="flex items-center gap-2.5">
-                  <Phone size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                  <a href={`tel:${school.landline.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                  <Phone size={16} className="text-secondary shrink-0" weight="bold" />
+                  <a href={`tel:${school.landline.replace(/[^0-9+]/g, '')}`} className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                     {school.landline}
                   </a>
                 </li>
               )}
               <li className="flex items-center gap-2.5">
-                <EnvelopeSimple size={16} className="text-[#F8861D] shrink-0" weight="bold" />
-                <a href={`mailto:${school.secretariat_email || school.email}`} className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5">
+                <EnvelopeSimple size={16} className="text-secondary shrink-0" weight="bold" />
+                <a href={`mailto:${school.secretariat_email || school.email}`} className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5">
                   {school.secretariat_email || school.email}
                 </a>
               </li>
               <li className="flex items-start gap-2.5 pt-1">
-                <MapPin size={16} className="text-[#F8861D] shrink-0 mt-0.5" weight="bold" />
+                <MapPin size={16} className="text-secondary shrink-0 mt-0.5" weight="bold" />
                 <a
                   href={school.maps_url || `https://maps.google.com/?q=${encodeURIComponent(formatFullSchoolAddress(school))}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block transition-all duration-200 hover:text-[#F8861D] hover:translate-x-1.5"
+                  className="inline-block transition-all duration-200 hover:text-secondary hover:translate-x-1.5"
                 >
                   {formatFullSchoolAddress(school)}
                 </a>

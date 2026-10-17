@@ -180,7 +180,7 @@ export function CourseDetailClient({
       ? { icon: CalendarIcon, label: "Orario", value: formattedScheduleText, color: "text-purple-600 bg-purple-50" }
       : null,
     course?.teacher_name
-      ? { icon: User, label: "Docente", value: course.teacher_name, color: "text-[#043569] bg-[#043569]/10" }
+      ? { icon: User, label: "Docente", value: course.teacher_name, color: "text-primary bg-primary/10" }
       : null,
   ].filter(Boolean) as { icon: any; label: string; value: string; color: string }[];
 
@@ -196,7 +196,7 @@ export function CourseDetailClient({
 
             {/* Hero Image with Overlay Title */}
             <div className="relative rounded-2xl overflow-hidden shadow-lg group cursor-default">
-              <div className="relative aspect-[16/8] sm:aspect-[16/6] lg:aspect-[16/5.5] xl:aspect-[16/6] w-full max-h-[220px] sm:max-h-[250px] bg-[#043569]">
+              <div className="relative aspect-[16/8] sm:aspect-[16/6] lg:aspect-[16/5.5] xl:aspect-[16/6] w-full max-h-[220px] sm:max-h-[250px] bg-primary">
                 {course?.photo_url ? (
                   <Image
                     src={course.photo_url}
@@ -207,7 +207,7 @@ export function CourseDetailClient({
                     className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-[#043569] to-[#0a5ba8] flex items-center justify-center">
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
                     <GraduationCap className="w-16 h-16 text-white/20" />
                   </div>
                 )}
@@ -221,7 +221,7 @@ export function CourseDetailClient({
                         {formatCategoryName(course.category)}
                       </span>
                     )}
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#F8861D] text-white flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-secondary text-white flex items-center gap-1.5">
                       <FormatIcon className="w-3 h-3" weight="bold" />
                       {courseFormat.label}
                     </span>
@@ -277,14 +277,14 @@ export function CourseDetailClient({
                     onClick={() => setActiveTab(tab)}
                     className={`flex-1 px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                       activeTab === tab
-                        ? "text-[#043569] border-b-2 border-[#043569] bg-[#043569]/[0.03]"
+                        ? "text-primary border-b-2 border-primary bg-primary/[0.03]"
                         : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
                     }`}
                   >
                     {tab === CourseDetailTab.INFO ? (
                       <>
                         <BookOpen
-                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INFO ? "text-[#F8861D]" : ""}`}
+                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INFO ? "text-secondary" : ""}`}
                           weight="bold"
                         />
                         Informazioni
@@ -292,7 +292,7 @@ export function CourseDetailClient({
                     ) : (
                       <>
                         <Trophy
-                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INCLUDED ? "text-[#F8861D]" : ""}`}
+                          className={`w-4 h-4 ${activeTab === CourseDetailTab.INCLUDED ? "text-secondary" : ""}`}
                           weight="bold"
                         />
                         Cosa è incluso
@@ -326,7 +326,7 @@ export function CourseDetailClient({
                       },
                       {
                         title: "Attestato finale",
-                        desc: "Certificato di frequenza ufficiale Atena",
+                        desc: "Certificato di frequenza ufficiale",
                         color: "bg-amber-50 text-amber-600",
                       },
                       {
@@ -370,19 +370,19 @@ export function CourseDetailClient({
                       {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? "Abbonamento Mensile" : "Prezzo Corso"}
                     </p>
                     {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? (
-                      <p className="text-3xl sm:text-4xl font-black text-[#F8861D] leading-none tracking-tight">
+                      <p className="text-3xl sm:text-4xl font-black text-secondary leading-none tracking-tight">
                         {subPriceNum.toFixed(2)}€
                         <span className="text-sm font-bold text-slate-400 ml-1">/mese</span>
                       </p>
                     ) : (
-                      <p className="text-3xl sm:text-4xl font-black text-[#F8861D] leading-none tracking-tight">
+                      <p className="text-3xl sm:text-4xl font-black text-secondary leading-none tracking-tight">
                         {priceDisplay || "---"}
                       </p>
                     )}
                     {billingTypeNum === CourseBillingType.BOTH && (
-                      <p className="text-xs font-bold text-[#043569] mt-2 flex items-center gap-1.5">
-                        <ArrowsClockwise className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
-                        Disponibile anche in abbonamento: <span className="text-[#F8861D] font-black">{subPriceNum.toFixed(2)}€/mese</span>
+                      <p className="text-xs font-bold text-primary mt-2 flex items-center gap-1.5">
+                        <ArrowsClockwise className="w-3.5 h-3.5 text-secondary" weight="bold" />
+                        Disponibile anche in abbonamento: <span className="text-secondary font-black">{subPriceNum.toFixed(2)}€/mese</span>
                       </p>
                     )}
                   </div>
@@ -393,7 +393,7 @@ export function CourseDetailClient({
                 </div>
 
                 <div className="flex items-start gap-2 text-xs text-slate-500 bg-slate-50 rounded-xl p-2.5 sm:p-3 border border-slate-100">
-                  <Info className="w-3.5 h-3.5 text-[#043569] shrink-0 mt-0.5" weight="fill" />
+                  <Info className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" weight="fill" />
                   <span>
                     Quota iscrizione annuale{" "}
                     <strong className="text-slate-700">{(initialSchoolProfile?.registration_fee_eur ?? ANNUAL_REGISTRATION_FEE_EUR)}€</strong> selezionabile al checkout (valida 12 mesi).
@@ -405,7 +405,7 @@ export function CourseDetailClient({
               <div className="flex-1 p-4 sm:p-5 space-y-3 sm:space-y-4 border-b border-slate-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-6 h-6 rounded-full bg-[#043569] text-white text-xs font-black flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center shrink-0">
                       1
                     </div>
                     <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">
@@ -415,7 +415,7 @@ export function CourseDetailClient({
                   {isFixedSchedule && (
                     <button
                       onClick={() => setShowFullCalendar(!showFullCalendar)}
-                      className="text-xs text-[#043569] font-semibold hover:underline cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
+                      className="text-xs text-primary font-semibold hover:underline cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
                     >
                       {showFullCalendar ? "Scorciatoie" : "Calendario"}
                     </button>
@@ -424,9 +424,9 @@ export function CourseDetailClient({
 
                 {isFlexibleSchedule ? (
                   <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <CalendarCheck className="w-5 h-5 text-[#043569] shrink-0 mt-0.5" weight="duotone" />
+                    <CalendarCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" weight="duotone" />
                     <div>
-                      <p className="text-sm font-bold text-[#043569] mb-0.5">Date concordabili</p>
+                      <p className="text-sm font-bold text-primary mb-0.5">Date concordabili</p>
                       <p className="text-xs text-slate-500 leading-relaxed">
                         Dopo l'iscrizione ti contatteremo per fissare insieme giorni e orari più comodi.
                       </p>
@@ -449,13 +449,13 @@ export function CourseDetailClient({
                                 }}
                                 className={`relative p-2.5 sm:p-3 rounded-xl text-center transition-all duration-200 cursor-pointer border-2 select-none ${
                                   isSelected
-                                    ? "bg-[#043569] border-[#043569] shadow-lg shadow-[#043569]/20 scale-[1.04]"
-                                    : "bg-white border-slate-200 hover:border-[#043569]/30 hover:bg-[#043569]/[0.03] hover:scale-[1.02] active:scale-[0.99]"
+                                    ? "bg-primary border-primary shadow-lg shadow-primary/20 scale-[1.04]"
+                                    : "bg-white border-slate-200 hover:border-primary/30 hover:bg-primary/[0.03] hover:scale-[1.02] active:scale-[0.99]"
                                 }`}
                               >
                                 {isSelected && (
                                   <div className="absolute top-1.5 right-1.5">
-                                    <CheckCircle className="w-3 h-3 text-[#F8861D]" weight="fill" />
+                                    <CheckCircle className="w-3 h-3 text-secondary" weight="fill" />
                                   </div>
                                 )}
                                 <p
@@ -515,12 +515,12 @@ export function CourseDetailClient({
 
                     {/* Selected date confirmation row */}
                     {selectedDate && (
-                      <div className="flex items-center justify-between p-3 bg-[#043569]/[0.05] rounded-xl border border-[#043569]/10">
+                      <div className="flex items-center justify-between p-3 bg-primary/[0.05] rounded-xl border border-primary/10">
                         <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4 text-[#043569]" weight="bold" />
+                          <CalendarIcon className="w-4 h-4 text-primary" weight="bold" />
                           <span className="text-xs font-semibold text-slate-500">Inizio corso:</span>
                         </div>
-                        <span className="text-sm font-black text-[#043569]">
+                        <span className="text-sm font-black text-primary">
                           {format(selectedDate, "d MMMM yyyy", { locale: dateLocale })}
                         </span>
                       </div>
@@ -536,7 +536,7 @@ export function CourseDetailClient({
                           {previewLessons.slice(0, 12).map((les, idx) => (
                             <span
                               key={idx}
-                              className="text-[12px] font-bold bg-white text-[#043569] border border-slate-200 px-2.5 py-1 rounded-lg"
+                              className="text-[12px] font-bold bg-white text-primary border border-slate-200 px-2.5 py-1 rounded-lg"
                             >
                               {format(new Date(les.startsAt), "dd/MM", { locale: dateLocale })}
                             </span>
@@ -574,7 +574,7 @@ export function CourseDetailClient({
                     flex items-center justify-center gap-2.5
                     transition-all duration-200 cursor-pointer
                     ${canContinue
-                      ? "bg-[#F8861D] text-white hover:bg-[#e8741a] shadow-lg shadow-[#F8861D]/25 hover:shadow-xl hover:shadow-[#F8861D]/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
+                      ? "bg-secondary text-white hover:bg-secondary-hover shadow-lg shadow-secondary/25 hover:shadow-xl hover:shadow-secondary/35 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]"
                       : "bg-slate-100 text-slate-400 cursor-not-allowed"
                     }
                   `}
@@ -597,8 +597,8 @@ export function CourseDetailClient({
                   </div>
                   <div className="w-px h-4 bg-slate-200" />
                   <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <Headset className="w-3.5 h-3.5 text-[#043569]" weight="fill" />
-                    <span className="font-medium">Supporto Atena</span>
+                    <Headset className="w-3.5 h-3.5 text-primary" weight="fill" />
+                    <span className="font-medium">Supporto dedicato</span>
                   </div>
                 </div>
               </div>
@@ -616,11 +616,11 @@ export function CourseDetailClient({
               {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? "Abbonamento" : "Prezzo corso"}
             </p>
             <div className="flex items-baseline gap-1.5">
-              <p className="text-xl font-black text-[#F8861D] leading-none">
+              <p className="text-xl font-black text-secondary leading-none">
                 {billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? `${subPriceNum.toFixed(2)}€/mese` : (priceDisplay || "---")}
               </p>
               {billingTypeNum === CourseBillingType.BOTH && (
-                <span className="text-[10px] font-bold text-[#043569]">
+                <span className="text-[10px] font-bold text-primary">
                   (o {subPriceNum.toFixed(2)}€/m)
                 </span>
               )}
@@ -633,7 +633,7 @@ export function CourseDetailClient({
               px-5 py-2.5 rounded-xl font-black uppercase tracking-wide text-xs sm:text-sm
               flex items-center gap-2 transition-all duration-200 shrink-0 cursor-pointer
               ${canContinue
-                ? "bg-[#F8861D] text-white shadow-lg shadow-[#F8861D]/30 active:scale-95"
+                ? "bg-secondary text-white shadow-lg shadow-secondary/30 active:scale-95"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
               }
             `}

@@ -6,12 +6,14 @@ import { env } from "@/config/env";
 import { getSchoolProfile, resolveActiveFormTemplate } from "@atena/core";
 import { FormType } from "@atena/api-types";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
+import { getEffectiveSchoolProfile } from "@/config/brand.config";
 
 export const revalidate = 3600;
 
 export async function generateMetadata() {
   const supabase = getSupabaseAdmin();
-  const school = await getSchoolProfile(supabase);
+  const rawSchool = await getSchoolProfile(supabase);
+  const school = getEffectiveSchoolProfile(rawSchool);
   const siteUrl = env.NEXT_PUBLIC_SITE_URL;
   const title = `${school.name} — Scuola di Lingue e Formazione a ${school.city}`;
   const description = `Corsi di lingua, recupero scolastico e preparazione esami a ${school.city} (${school.province}). Prenota la tua lezione oggi.`;
@@ -45,7 +47,7 @@ export async function generateMetadata() {
 
 export default async function IndexPage() {
   const supabase = getSupabaseAdmin();
-  const [school, homeData, templatesResult] = await Promise.all([
+  const [rawSchool, homeData, templatesResult] = await Promise.all([
     getSchoolProfile(supabase),
     getHomePageData(),
     Promise.resolve(
@@ -55,6 +57,8 @@ export default async function IndexPage() {
         .eq('is_active', true)
     ).catch(() => ({ data: [] })),
   ]);
+
+  const school = getEffectiveSchoolProfile(rawSchool);
 
   const contactTemplate = resolveActiveFormTemplate(templatesResult?.data || [], {
     form_type: FormType.CONTACT,

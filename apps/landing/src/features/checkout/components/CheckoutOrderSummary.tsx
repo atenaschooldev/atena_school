@@ -116,16 +116,16 @@ export function CheckoutOrderSummary({
 
           <div>
             {item?.category && (
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#043569] bg-[#043569]/10 px-2.5 py-0.5 rounded-md inline-block mb-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-0.5 rounded-md inline-block mb-1">
                 {formatCategoryName(item.category)}
               </span>
             )}
-            <h3 className="text-lg font-black text-[#043569] leading-tight">
+            <h3 className="text-lg font-black text-primary leading-tight">
               {title}
             </h3>
             {item?.teacher_name && (
               <p className="text-xs text-slate-500 font-medium mt-1 flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+                <User className="w-3.5 h-3.5 text-secondary" weight="bold" />
                 Docente: {item.teacher_name}
               </p>
             )}
@@ -140,17 +140,17 @@ export function CheckoutOrderSummary({
           >
             <div className="flex items-center justify-between">
               <span className="font-semibold text-slate-500 flex items-center gap-1.5">
-                <CalendarIcon className="w-3.5 h-3.5 text-[#F8861D]" weight="bold" />
+                <CalendarIcon className="w-3.5 h-3.5 text-secondary" weight="bold" />
                 Data inizio:
               </span>
-              <span className="font-black text-[#043569] uppercase">
+              <span className="font-black text-primary uppercase">
                 {formattedDateString(dateParam)}
               </span>
             </div>
             {timeParam && (
               <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
                 <span className="font-semibold text-slate-500 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                  <Clock className="w-3.5 h-3.5 text-primary" weight="bold" />
                   Orario lezioni:
                 </span>
                 <span className="font-bold text-slate-800">{timeParam}</span>
@@ -164,7 +164,7 @@ export function CheckoutOrderSummary({
           <div className="pt-2 border-t border-slate-100 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Tag className="w-3.5 h-3.5 text-[#043569]" weight="bold" />
+                <Tag className="w-3.5 h-3.5 text-primary" weight="bold" />
                 Codice Promozionale
               </span>
             </div>
@@ -204,13 +204,13 @@ export function CheckoutOrderSummary({
                     }
                   }}
                   placeholder="es. FAMIGLIA10"
-                  className="flex-1 min-w-0 px-3 py-2 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#043569]/10 focus:border-[#043569] bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
+                  className="flex-1 min-w-0 px-3 py-2 text-xs font-mono uppercase border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary bg-white tracking-wider placeholder:normal-case placeholder:font-sans"
                 />
                 <button
                   type="button"
                   onClick={() => applyPromoCode()}
                   disabled={applyingPromo || !promoCodeInput.trim()}
-                  className="px-3 py-2 bg-[#043569] hover:bg-[#032852] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
+                  className="px-3 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 flex items-center justify-center min-w-[70px]"
                 >
                   {applyingPromo ? <Spinner className="w-3.5 h-3.5 animate-spin" /> : "Applica"}
                 </button>
@@ -264,12 +264,12 @@ export function CheckoutOrderSummary({
       <div className="pt-3 border-t border-slate-100 space-y-3">
         <div className="flex items-baseline justify-between" aria-live="polite" aria-atomic="true">
           <div>
-            <span className="text-xs font-black text-[#043569] uppercase tracking-wider block">Totale</span>
+            <span className="text-xs font-black text-primary uppercase tracking-wider block">Totale</span>
             <span className="text-[10px] text-slate-400 font-semibold">
               {isSubscription ? "1° mese + quota (se dovuta)" : "Tasse e IVA incluse"}
             </span>
           </div>
-          <span className="text-3xl font-black text-[#F8861D]">{totalPrice.toFixed(2)}€</span>
+          <span className="text-3xl font-black text-secondary">{totalPrice.toFixed(2)}€</span>
         </div>
 
         {/* Action Button — Dynamically matches selectedPaymentMode */}
@@ -283,8 +283,8 @@ export function CheckoutOrderSummary({
             disabled={!!submitting || isAnyFeeChecking}
             className={`w-full py-3.5 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all duration-200 shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed ${
               selectedPaymentMode === SubmitAction.PAY
-                ? "bg-[#F8861D] text-white hover:bg-[#e8741a] shadow-[#F8861D]/20"
-                : "bg-[#043569] text-white hover:bg-[#032852] shadow-[#043569]/20"
+                ? "bg-secondary text-white hover:bg-secondary-hover shadow-secondary/20"
+                : "bg-primary text-white hover:bg-primary-hover shadow-primary/20"
             }`}
           >
             {submitting ? (
@@ -315,8 +315,8 @@ export function CheckoutOrderSummary({
             {stripeEnabled ? "Stripe 256-bit SSL" : "Prenotazione Protetta"}
           </span>
           <span className="flex items-center gap-1.5">
-            <Headset className="w-3.5 h-3.5 text-[#043569]" weight="fill" />
-            Assistenza Atena
+            <Headset className="w-3.5 h-3.5 text-primary" weight="fill" />
+            Assistenza dedicata
           </span>
         </div>
       </div>

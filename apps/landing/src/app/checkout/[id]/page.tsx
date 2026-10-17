@@ -32,7 +32,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ id: s
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-slate-100 font-sans">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#043569]" />
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
         </div>
       }
     >

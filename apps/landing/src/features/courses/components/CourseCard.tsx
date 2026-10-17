@@ -124,7 +124,7 @@ const CourseCard = ({
       <div className="relative h-64 w-full overflow-hidden bg-muted">
         {/* Category Badge */}
         {category && (
-          <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm text-[#043569] text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 shadow-sm select-none">
+          <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-sm text-primary text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10 shadow-sm select-none">
             {formatCategoryName(category)}
           </div>
         )}
@@ -159,8 +159,8 @@ const CourseCard = ({
             `}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#043569]/5 to-[#F8861D]/10 flex items-center justify-center p-8 text-center transition-all duration-500">
-            <span className="text-[#043569]/30 font-black uppercase tracking-widest text-sm leading-tight select-none">
+          <div className="w-full h-full bg-gradient-to-br from-primary/5 to-secondary/10 flex items-center justify-center p-8 text-center transition-all duration-500">
+            <span className="text-primary/30 font-black uppercase tracking-widest text-sm leading-tight select-none">
               {title}
             </span>
           </div>
@@ -169,7 +169,7 @@ const CourseCard = ({
       
       {/* Content wrapper */}
       <div className="p-6 sm:p-8 flex flex-col flex-grow relative z-20">
-        <h3 className="text-xl sm:text-2xl font-black text-foreground mb-3 leading-tight tracking-tight group-hover:text-[#043569] transition-colors duration-300">
+        <h3 className="text-xl sm:text-2xl font-black text-foreground mb-3 leading-tight tracking-tight group-hover:text-primary transition-colors duration-300">
           {title}
         </h3>
 
@@ -178,25 +178,25 @@ const CourseCard = ({
           <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground mb-4 font-bold select-none">
             {formattedDuration && (
               <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-[#F8861D]" />
+                <Clock className="w-3.5 h-3.5 text-secondary" />
                 <span>{formattedDuration}</span>
               </div>
             )}
             {showSchedule && (
               <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
+                <Calendar className="w-3.5 h-3.5 text-secondary" />
                 <span>{formattedSchedule}</span>
               </div>
             )}
             {lessonsPerWeek && (
-              <div className="flex items-center gap-1.5 text-[#043569]">
-                <Calendar className="w-3.5 h-3.5 text-[#F8861D]" />
+              <div className="flex items-center gap-1.5 text-primary">
+                <Calendar className="w-3.5 h-3.5 text-secondary" />
                 <span>{lessonsPerWeek}</span>
               </div>
             )}
             {teacher_name && (
               <div className="flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-[#F8861D]" />
+                <User className="w-3.5 h-3.5 text-secondary" />
                 <span>{teacher_name}</span>
               </div>
             )}
@@ -217,10 +217,10 @@ const CourseCard = ({
                 <span className="text-[10px] font-bold text-slate-400">oppure in abbonamento</span>
               </div>
               <div className="text-right">
-                <span className="text-lg font-black text-[#F8861D] block leading-tight">
+                <span className="text-lg font-black text-secondary block leading-tight">
                   {price || "---"}
                 </span>
-                <span className="text-[10px] font-extrabold text-[#043569] bg-blue-50 px-1.5 py-0.5 rounded inline-block mt-0.5">
+                <span className="text-[10px] font-extrabold text-primary bg-primary/5 px-1.5 py-0.5 rounded inline-block mt-0.5">
                   o da {subPriceNum.toFixed(2)}€/mese
                 </span>
               </div>
@@ -228,14 +228,14 @@ const CourseCard = ({
           ) : billingTypeNum === CourseBillingType.SUBSCRIPTION_ONLY ? (
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 select-none">Abbonamento</span>
-              <span className="text-lg font-black text-[#F8861D]">
+              <span className="text-lg font-black text-secondary">
                 {subPriceNum.toFixed(2)}€<span className="text-xs font-semibold text-slate-500">/mese</span>
               </span>
             </div>
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/80 select-none">Prezzo</span>
-              <span className="text-lg font-black text-[#F8861D]">
+              <span className="text-lg font-black text-secondary">
                 {price || "---"}
               </span>
             </div>
@@ -247,7 +247,7 @@ const CourseCard = ({
               <span
                 onMouseEnter={() => setIsButtonHovered(true)}
                 onMouseLeave={() => setIsButtonHovered(false)}
-                className="w-full py-3 bg-[#F8861D] text-white hover:bg-[#043569] rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 shadow-md shadow-[#F8861D]/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
+                className="w-full py-3 bg-secondary text-white hover:bg-primary rounded-xl text-xs font-black uppercase tracking-widest text-center transition-all duration-300 shadow-md shadow-secondary/15 hover:shadow-none flex items-center justify-center gap-1 active:scale-95"
               >
                 {type === "shop" ? "Acquista" : "Prenota"}
                 <CaretRight className="w-3.5 h-3.5" weight="bold" />
@@ -255,7 +255,7 @@ const CourseCard = ({
             ) : (
               <button
                 disabled
-                className="w-full py-3 bg-[#F8861D]/50 text-white rounded-xl text-xs font-black uppercase tracking-widest text-center cursor-not-allowed flex items-center justify-center gap-1"
+                className="w-full py-3 bg-secondary/50 text-white rounded-xl text-xs font-black uppercase tracking-widest text-center cursor-not-allowed flex items-center justify-center gap-1"
               >
                 {type === "shop" ? "Acquista" : "Prenota"}
                 <CaretRight className="w-3.5 h-3.5" weight="bold" />
