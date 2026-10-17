@@ -5,10 +5,12 @@ services:
     region: frankfurt
     plan: free
     rootDir: apps/backend
-    buildCommand: cd ../.. && npm install -g pnpm@latest && pnpm install --frozen-lockfile && pnpm --filter backend... build
+    buildCommand: cd ../.. && corepack enable && pnpm install && pnpm --filter backend... build
     startCommand: node dist/main
     healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: NODE_ENV
         value: production
       - key: PORT
