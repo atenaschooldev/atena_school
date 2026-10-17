@@ -35,7 +35,6 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ObserveModule } from './observe';
-import { TerminusModule } from '@nestjs/terminus';
 
 const businessModules = [
   DictionaryModule,
@@ -69,10 +68,7 @@ const businessModules = [
       isGlobal: true,
     }),
 
-    // NestJS Terminus (Глубокий мониторинг здоровья системы и БД)
-    TerminusModule,
-
-    // NestJS Observe APM & Observability (автоматически активируется при наличии OBSERVE_APP_KEY)
+// NestJS Observe APM & Observability (автоматически активируется при наличии OBSERVE_APP_KEY)
     ...(process.env.OBSERVE_APP_KEY
       ? [
           ObserveModule.forRoot({
