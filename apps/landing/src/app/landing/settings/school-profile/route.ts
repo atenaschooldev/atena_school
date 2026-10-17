@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSchoolProfile, updateSchoolProfile } from '@atena/core';
 import type { SchoolProfile } from '@atena/api-types';
 import { getSupabaseAdmin } from '@/lib/server/supabase-admin';
@@ -32,15 +32,30 @@ async function getHandler() {
 
 async function patchHandler(request: NextRequest) {
   try {
+    const secret =
+      request.headers.get('x-revalidation-secret') ||
+      request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+      request.nextUrl.searchParams.get('secret');
+
+    const expectedSecret =
+      process.env.REVALIDATION_SECRET ||
+      process.env.INTERNAL_API_SECRET ||
+      'atena-revalidation-secret';
+
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev && (!secret || secret !== expectedSecret)) {
+      return withCors(
+        NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
+      );
+    }
+
     const body = (await request.json()) as Partial<SchoolProfile>;
     const supabase = getSupabaseAdmin();
     const updated = await updateSchoolProfile(supabase, body);
     try {
-      revalidatePath('/', 'layout');
-      revalidatePath('/');
-      revalidatePath('/corsi');
-    } catch (revErr) {
-      console.warn('[SchoolProfile PATCH] revalidatePath warning:', revErr);
+      revalidateTag('school-profile', 'max');
+    } catch {
+      (revalidateTag as any)('school-profile');
     }
     return withCors(NextResponse.json({ success: true, profile: updated }));
   } catch (err: any) {
